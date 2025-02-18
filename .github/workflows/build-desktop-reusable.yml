@@ -48,6 +48,8 @@ jobs:
     steps:
       - shell: bash
         run: pnpm fail-test
+        if: ${{ matrix.config.name == 'linux' }}
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.sha }}
