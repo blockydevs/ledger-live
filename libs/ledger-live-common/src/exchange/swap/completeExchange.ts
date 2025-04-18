@@ -89,10 +89,14 @@ const completeExchange = (
             subAccountId: undefined,
             amount: BigNumber(0),
           };
+          console.log("complete exchange prepareTransaction 1");
           transaction = await accountBridge.prepareTransaction(refundAccount, transactionFixed);
         } else {
+          console.log("complete exchange prepareTransaction 2");
           transaction = await accountBridge.prepareTransaction(refundAccount, transaction);
         }
+        console.log("TRANSACTION", { transaction });
+
         if (unsubscribed) return;
 
         const { errors, estimatedFees } = await accountBridge.getTransactionStatus(
@@ -120,6 +124,7 @@ const completeExchange = (
           exchange.transactionType === ExchangeTypes.SwapNg
             ? { payload: Buffer.from("." + binaryPayload), format: "jws" }
             : { payload: Buffer.from(binaryPayload, "hex"), format: "raw" };
+        console.log("before process transaction", { exchange });
         await exchange.processTransaction(payload, estimatedFees, format);
         if (unsubscribed) return;
 
@@ -128,6 +133,8 @@ const completeExchange = (
         currentStep = "CHECK_TRANSACTION_SIGNATURE";
         await exchange.checkTransactionSignature(goodSign);
         if (unsubscribed) return;
+
+        console.log("getting payoutAddressParameters", { payoutAccount, mainPayoutCurrency });
 
         const payoutAddressParameters = payoutAccountBridge.getSerializedAddressParameters(
           payoutAccount,
@@ -138,9 +145,17 @@ const completeExchange = (
           throw new Error(`Family not supported: ${mainPayoutCurrency.family}`);
         }
 
+        console.log({ payoutAccount, refundAccount });
+
         //-- CHECK_PAYOUT_ADDRESS
         const { config: payoutAddressConfig, signature: payoutAddressConfigSignature } =
           await getCurrencyExchangeConfig(payoutCurrency);
+
+        console.log("check payout address", {
+          payoutAddressConfig,
+          payoutAddressConfigSignature,
+          payoutAddressParameters,
+        });
 
         try {
           currentStep = "CHECK_PAYOUT_ADDRESS";
@@ -169,6 +184,8 @@ const completeExchange = (
 
         // Swap specific checks to confirm the refund address is correct.
         if (unsubscribed) return;
+        console.log("getting payoutAddressParameters", { refundAccount, mainPayoutCurrency });
+
         const refundAddressParameters = accountBridge.getSerializedAddressParameters(
           refundAccount,
           mainRefundCurrency.id,
@@ -184,6 +201,13 @@ const completeExchange = (
 
         try {
           currentStep = "CHECK_REFUND_ADDRESS";
+
+          console.log("check refund address", {
+            refundAddressConfig,
+            refundAddressConfigSignature,
+            refundAddressParameters,
+          });
+
           await exchange.checkRefundAddress(
             refundAddressConfig,
             refundAddressConfigSignature,

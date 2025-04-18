@@ -207,6 +207,7 @@ export const prepareTransaction = async (
 ): Promise<EvmTransaction> => {
   const { currency } = account;
   const nodeApi = getNodeApi(currency);
+  console.log("coin-evm prepareTransaction", { account, transaction });
   // Get the current network status fees
   const feeData: FeeData = await (async (): Promise<FeeData> => {
     if (transaction.feesStrategy === "custom") {

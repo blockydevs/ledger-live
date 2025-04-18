@@ -206,6 +206,15 @@ export default class Exchange {
       ]);
     }
 
+    console.log("PROCESS_TRANSACTION_RESPONSE", {
+      CLA,
+      ins: PROCESS_TRANSACTION_RESPONSE,
+      p1: this.transactionRate,
+      p2: p2Value,
+      data: bufferToSend,
+      statusList: this.allowedStatuses,
+    });
+
     const result: Buffer = await this.transport.send(
       CLA,
       PROCESS_TRANSACTION_RESPONSE,
@@ -284,6 +293,19 @@ export default class Exchange {
       Buffer.from([addressParameters.length]),
       addressParameters,
     ]);
+
+    console.log({
+      CLA,
+      ins:
+        this.transactionType === ExchangeTypes.Swap || this.transactionType === ExchangeTypes.SwapNg
+          ? CHECK_PAYOUT_ADDRESS
+          : CHECK_ASSET_IN_AND_DISPLAY,
+      p1: this.transactionRate,
+      p2: this.transactionType,
+      data: bufferToSend,
+      statusList: this.allowedStatuses,
+    });
+
     const result: Buffer = await this.transport.send(
       CLA,
       this.transactionType === ExchangeTypes.Swap || this.transactionType === ExchangeTypes.SwapNg
@@ -294,6 +316,9 @@ export default class Exchange {
       bufferToSend,
       this.allowedStatuses,
     );
+
+    console.log("result available", { result });
+
     maybeThrowProtocolError(result);
   }
 
@@ -327,6 +352,15 @@ export default class Exchange {
   }
 
   async signCoinTransaction(): Promise<void> {
+    console.log("signCoinTransaction", {
+      CLA,
+      ins: SIGN_COIN_TRANSACTION,
+      p1: this.transactionRate,
+      p2: this.transactionType,
+      data: Buffer.alloc(0),
+      statusList: this.allowedStatuses,
+    });
+
     const result: Buffer = await this.transport.send(
       CLA,
       SIGN_COIN_TRANSACTION,

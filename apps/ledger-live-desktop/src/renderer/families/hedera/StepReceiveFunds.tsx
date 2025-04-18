@@ -18,6 +18,7 @@ import AccountTagDerivationMode from "~/renderer/components/AccountTagDerivation
 import { StepProps } from "~/renderer/modals/Receive/Body";
 import { AccountLike } from "@ledgerhq/types-live";
 import { useAccountName } from "~/renderer/reducers/wallet";
+
 const QRCodeWrapper = styled.div`
   border: 24px solid white;
   height: 208px;

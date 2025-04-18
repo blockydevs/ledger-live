@@ -53,7 +53,10 @@ function buildAccountBridge(
     receive: receive(getAddressWrapper(getAddress)),
     signOperation,
     broadcast,
-    getSerializedAddressParameters,
+    getSerializedAddressParameters: (account, addressFormat) => {
+      console.log("coin-hedera", "getSerializedAddressParameters", { account, addressFormat });
+      return getSerializedAddressParameters(account);
+    },
   };
 }
 

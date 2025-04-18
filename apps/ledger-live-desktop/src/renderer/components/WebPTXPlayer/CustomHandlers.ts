@@ -49,6 +49,9 @@ export function usePTXCustomHandlers(manifest: WebviewProps["manifest"], account
         manifest,
         uiHooks: {
           "custom.exchange.start": ({ exchangeParams, onSuccess, onCancel }) => {
+            console.log("LLD customhandlers calls openExchangeDrawer action with EXCHANGE_START", {
+              exchangeParams,
+            });
             dispatch(
               openExchangeDrawer({
                 type: "EXCHANGE_START",
@@ -64,6 +67,12 @@ export function usePTXCustomHandlers(manifest: WebviewProps["manifest"], account
             );
           },
           "custom.exchange.complete": ({ exchangeParams, onSuccess, onCancel }) => {
+            console.log(
+              "LLD customhandlers calls openExchangeDrawer action with EXCHANGE_COMPLETE",
+              {
+                exchangeParams,
+              },
+            );
             dispatch(
               openExchangeDrawer({
                 type: "EXCHANGE_COMPLETE",

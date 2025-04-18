@@ -120,6 +120,7 @@ export const createAction = (
     const [state, setState] = useState(initialState);
     const reduxDeviceFrozen = useFrozenValue(reduxDevice, state?.freezeReduxDevice);
 
+    console.log("hw:actions createAction", { completeExchangeRequest });
     const { provider, transaction, binaryPayload, signature, exchange, exchangeType, rateType } =
       completeExchangeRequest;
 

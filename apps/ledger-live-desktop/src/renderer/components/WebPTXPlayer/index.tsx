@@ -29,6 +29,8 @@ export default function WebPTXPlayer({ manifest, inputs }: WebviewProps) {
   const accounts = useSelector(flattenAccountsSelector);
   const customHandlers = usePTXCustomHandlers(manifest, accounts);
 
+  console.log("WEBPTXPLAYER");
+
   return (
     <Container>
       <Wrapper>

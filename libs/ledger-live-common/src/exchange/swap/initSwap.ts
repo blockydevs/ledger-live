@@ -44,6 +44,8 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
   let { transaction } = input;
   const { exchange, exchangeRate, deviceId } = input;
 
+  console.log("INIT SWAP", { input });
+
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, transaction);
   return new Observable(o => {
     let unsubscribed = false;
@@ -126,6 +128,8 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
 
         const swapResult = res.data;
         swapId = swapResult.swapId;
+
+        console.log(`initSwap.ts from "${getSwapAPIBaseURL()}/swap"`, { swapResult });
 
         const accountBridge = getAccountBridge(refundAccount);
         transaction = accountBridge.updateTransaction(transaction, {

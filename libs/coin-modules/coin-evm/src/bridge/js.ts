@@ -59,7 +59,10 @@ export function buildAccountBridge(
     signOperation,
     broadcast,
     estimateMaxSpendable,
-    getSerializedAddressParameters,
+    getSerializedAddressParameters: (account, addressFormat) => {
+      console.log("coin-evm", "getSerializedAddressParameters", { account, addressFormat });
+      return getSerializedAddressParameters(account);
+    },
   };
 }
 

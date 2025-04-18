@@ -480,6 +480,18 @@ export function completeExchangeLogic(
     },
   );
 
+  console.log("common:wallet-api:logic.ts", {
+    provider,
+    exchange,
+    transaction: tx,
+    binaryPayload,
+    signature,
+    feesStrategy,
+    exchangeType,
+    swapId,
+    rate,
+  });
+
   return uiNavigation({
     provider,
     exchange,
