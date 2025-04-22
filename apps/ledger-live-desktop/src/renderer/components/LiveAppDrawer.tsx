@@ -188,7 +188,7 @@ export const LiveAppDrawer = () => {
             }
           }
 
-          console.log("EXCHANGE_START rendered", { action, data });
+          console.log("[DEBUG] EXCHANGE_START rendered", { action, data });
 
           return (
             <DeviceAction
@@ -198,7 +198,7 @@ export const LiveAppDrawer = () => {
               location={HOOKS_TRACKING_LOCATIONS.exchange}
               onResult={result => {
                 if ("startExchangeResult" in result) {
-                  console.log("EXCHANGE_START onResult", result);
+                  console.log("[DEBUG] EXCHANGE_START onResult", result);
                   data.onResult(result.startExchangeResult);
                 }
                 if ("startExchangeError" in result) {
@@ -213,7 +213,7 @@ export const LiveAppDrawer = () => {
       }
       case "EXCHANGE_COMPLETE":
         console.log(
-          "EXCHANGE_COMPLETE rendered (live app drawer renders CompleteExchange (Body))",
+          "[DEBUG] EXCHANGE_COMPLETE rendered (live app drawer renders CompleteExchange (Body))",
           { data },
         );
 

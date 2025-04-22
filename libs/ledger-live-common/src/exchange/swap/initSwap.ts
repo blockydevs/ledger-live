@@ -101,12 +101,15 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         };
 
         try {
+          console.log(`[DEBUG] initSwap.ts from "${getSwapAPIBaseURL()}/swap"`);
+
           res = await network({
             method: "POST",
             url: `${getSwapAPIBaseURL()}/swap`,
             headers,
             data,
           });
+          console.log(`[DEBUG] initSwap.ts from "${getSwapAPIBaseURL()}/swap"`, { res });
 
           if (unsubscribed || !res || !res.data) return;
         } catch (e: any) {

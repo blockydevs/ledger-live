@@ -159,6 +159,8 @@ async function init() {
     }),
   );
   const accountData = await getKey("app", "accounts", []);
+  console.log("[DEBUG] init.tsx - getKey.app.accounts called", { accountData });
+
   if (accountData) {
     const e = initAccounts(accountData);
     store.dispatch(e);

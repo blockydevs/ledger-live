@@ -54,7 +54,7 @@ function buildAccountBridge(
     signOperation,
     broadcast,
     getSerializedAddressParameters: (account, addressFormat) => {
-      console.log("coin-hedera", "getSerializedAddressParameters", { account, addressFormat });
+      console.log("[DEBUG] coin-hedera getSerializedAddressParameters", { account, addressFormat });
       return getSerializedAddressParameters(account);
     },
   };

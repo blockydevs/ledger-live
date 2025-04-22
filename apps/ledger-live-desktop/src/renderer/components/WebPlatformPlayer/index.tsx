@@ -59,7 +59,7 @@ export default function WebPlatformPlayer({ manifest, inputs, onClose, config, .
 
   const currentAccountHistDb: CurrentAccountHistDB = useCurrentAccountHistDB();
 
-  console.log("WEBPLATFORMPLAYER");
+  console.log("[DEBUG] WEBPLATFORMPLAYER");
 
   return (
     <Container>
