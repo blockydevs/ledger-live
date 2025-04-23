@@ -151,7 +151,8 @@ const modes: Readonly<Record<DerivationMode, ModeSpec>> = Object.freeze({
     overridesDerivation: "44'/501'/<account>'",
   },
   hederaBip44: {
-    overridesDerivation: "44/3030/<account>/<node>/<address>",
+    overridesDerivation: "44/3030",
+    // overridesDerivation: "44/3030/<account>/<node>/<address>",
   },
   cardano: {
     purpose: 1852,
