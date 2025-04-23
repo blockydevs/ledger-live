@@ -11,7 +11,7 @@ import { Resolver } from "../../hw/getAddress/types";
 import { TransactionStatus, Transaction } from "@ledgerhq/coin-hedera/types/index";
 
 const createSigner: CreateSigner<Hedera> = (transport: Transport) => {
-  console.log(transport);
+  console.log("[DEBUG] ledger-live-common setup.ts", { transport });
   return new Hedera(transport);
 };
 

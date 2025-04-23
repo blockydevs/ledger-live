@@ -47,6 +47,20 @@ export const getAccountShape: GetAccountShape<Account> = async (
   );
   const operations = mergeOps(oldOperations, newOperations);
 
+  console.log("[DEBUG] coin-hedera bridge getAccountShape", {
+    info,
+    output: {
+      id: liveAccountId,
+      freshAddress: address,
+      balance: accountBalance.balance,
+      spendableBalance: accountBalance.balance,
+      operations,
+      // NOTE: there are no "blocks" in hedera
+      // Set a value just so that operations are considered confirmed according to isConfirmedOperation
+      blockHeight: 10,
+    },
+  });
+
   return {
     id: liveAccountId,
     freshAddress: address,
@@ -63,6 +77,8 @@ export const buildIterateResult: IterateResultBuilder = async ({ result: rootRes
   const accounts = await getAccountsForPublicKey(rootResult.publicKey);
   const addresses = accounts.map(a => a.accountId.toString());
 
+  console.log("[DEBUG] coin-hedera bridge buildIterateResult - prep", { accounts, addresses });
+
   return async ({ currency, derivationMode, index }) => {
     const derivationScheme = getDerivationScheme({
       derivationMode,
@@ -71,6 +87,21 @@ export const buildIterateResult: IterateResultBuilder = async ({ result: rootRes
     const freshAddressPath = runDerivationScheme(derivationScheme, currency, {
       account: index,
     });
+
+    console.log("[DEBUG] coin-hedera bridge buildIterateResult - return", {
+      derivationScheme,
+      derivationMode,
+      currency,
+      freshAddressPath,
+      output: addresses[index]
+        ? ({
+            address: addresses[index],
+            publicKey: addresses[index],
+            path: freshAddressPath,
+          } as Result)
+        : null,
+    });
+
     return addresses[index]
       ? ({
           address: addresses[index],
