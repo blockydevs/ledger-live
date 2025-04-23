@@ -297,13 +297,17 @@ export const getDerivationScheme = ({
   const { overridesDerivation } = modes[derivationMode] as {
     overridesDerivation: string;
   };
-  console.log("[DEBUG] getDerivationScheme - early return", {
-    modes,
-    derivationMode,
-    currency,
-    overridesDerivation,
-  });
-  if (overridesDerivation) return overridesDerivation;
+
+  if (overridesDerivation) {
+    console.log("[DEBUG] getDerivationScheme - early return", {
+      modes,
+      derivationMode,
+      currency,
+      overridesDerivation,
+    });
+    return overridesDerivation;
+  }
+
   const splitFrom = isUnsplitDerivationMode(derivationMode) && currency.forkedFrom;
   const coinType = splitFrom ? getCryptoCurrencyById(splitFrom).coinType : "<coin_type>";
   const purpose = getPurposeDerivationMode(derivationMode);
@@ -456,6 +460,11 @@ export const getDerivationModesForCurrency = (currency: CryptoCurrency): Derivat
   if (!disableBIP44[currency.id]) {
     all.push("");
   }
+
+  console.log("[DEBUG] getDerivationModesForCurrency", {
+    currency,
+    output: getEnv("SCAN_FOR_INVALID_PATHS") ? all : all.filter(a => !isInvalidDerivationMode(a)),
+  });
 
   if (!getEnv("SCAN_FOR_INVALID_PATHS")) {
     return all.filter(a => !isInvalidDerivationMode(a));
