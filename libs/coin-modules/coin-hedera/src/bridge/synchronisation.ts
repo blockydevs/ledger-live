@@ -49,6 +49,10 @@ export const getAccountShape: GetAccountShape<Account> = async (
 
   console.log("[DEBUG] coin-hedera bridge getAccountShape", {
     info,
+    accountBalance,
+    oldOperations,
+    operations,
+    latestOperationTimestamp,
     output: {
       id: liveAccountId,
       freshAddress: address,

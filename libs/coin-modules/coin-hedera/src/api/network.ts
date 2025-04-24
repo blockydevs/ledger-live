@@ -38,6 +38,11 @@ export async function buildUnsignedTransaction({
 
 export interface AccountBalance {
   balance: BigNumber;
+  tokens: {
+    tokenId: string;
+    balance: BigNumber;
+    decimals: number;
+  }[];
 }
 
 export async function getAccountBalance(address: string): Promise<AccountBalance> {
@@ -54,6 +59,11 @@ export async function getAccountBalance(address: string): Promise<AccountBalance
 
   return {
     balance: accountBalance.hbars.to(HbarUnit.Tinybar),
+    tokens: accountBalance.toJSON().tokens.map(token => ({
+      tokenId: token.tokenId,
+      balance: BigNumber(token.balance).dividedBy(10 ** token.decimals),
+      decimals: token.decimals,
+    })),
   };
 }
 

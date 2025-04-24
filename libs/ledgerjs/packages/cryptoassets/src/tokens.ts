@@ -4,6 +4,7 @@ import { findCryptoCurrencyById, getCryptoCurrencyById } from "./currencies";
 import jettonTokens, { TonJettonToken } from "./data/ton-jetton";
 import { tokens as sepoliaTokens } from "./data/evm/11155111";
 import stellarTokens, { StellarToken } from "./data/stellar";
+import hederaTokens, { HederaToken } from "./data/hedera";
 import vechainTokens, { Vip180Token } from "./data/vip180";
 import esdttokens, { MultiversXESDTToken } from "./data/esdt";
 import asatokens, { AlgorandASAToken } from "./data/asa";
@@ -34,6 +35,8 @@ addTokens(mainnetTokens.map(convertERC20));
 addTokens(sepoliaTokens.map(convertERC20));
 // Polygon tokens
 addTokens(polygonTokens.map(convertERC20));
+// Hedera tokens
+addTokens(hederaTokens.map(convertHederaTokens));
 // Binance Smart Chain tokens
 addTokens(bnbTokens.map(convertERC20));
 // Tron tokens
@@ -421,6 +424,37 @@ function convertSplTokens([id, network, name, symbol, address, decimals]: SPLTok
       {
         name,
         code: symbol,
+        magnitude: decimals,
+      },
+    ],
+  };
+}
+
+function convertHederaTokens([tokenId, name, ticker, decimals]: HederaToken):
+  | TokenCurrency
+  | undefined {
+  const parentCurrencyId = "hedera";
+  const parentCurrency = getCryptoCurrencyById(parentCurrencyId);
+
+  console.log("[DEBUG] convertHederaTokens", { tokenId, name, ticker, decimals, parentCurrency });
+
+  if (!parentCurrency) {
+    return;
+  }
+
+  return {
+    type: "TokenCurrency",
+    id: `${parentCurrencyId}/${tokenId}`, // FIXME:
+    contractAddress: tokenId,
+    parentCurrency,
+    tokenType: "hts", // FIXME:
+    name,
+    ticker,
+    disableCountervalue: false,
+    units: [
+      {
+        name,
+        code: ticker,
         magnitude: decimals,
       },
     ],
