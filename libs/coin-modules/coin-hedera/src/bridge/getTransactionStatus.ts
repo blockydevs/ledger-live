@@ -43,7 +43,21 @@ export const getTransactionStatus: AccountBridge<Transaction>["getTransactionSta
     errors.amount = new NotEnoughBalance("");
   }
 
-  const estimatedFees = await getEstimatedFees(account);
+  // FIXME:
+  // 1. verify coin & token balance
+  // 2. see if token is associated based on https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/0.0.9124531/tokens
+  // remember about cache, see how often this runs
+
+  // FIXME:
+  const estimatedFees = await getEstimatedFees(account, "CryptoTransfer");
+
+  console.log("[DEBUG] getTransactionStatus", {
+    amount,
+    errors,
+    estimatedFees,
+    totalSpent,
+    warnings: {},
+  });
 
   return {
     amount,

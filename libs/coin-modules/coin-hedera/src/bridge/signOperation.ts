@@ -27,8 +27,17 @@ export const buildSignOperation =
 
           const res = await signerContext(deviceId, async signer => {
             await hederaTransaction.signWith(accountPublicKey, async bodyBytes => {
+              console.log("[DEBUG] signing hedera transaction...", {
+                hederaTransaction,
+                deviceId,
+                accountPublicKey,
+                bodyBytes,
+              });
+
               return await signer.signTransaction(bodyBytes);
             });
+
+            console.log("[DEBUG] signed hedera transaction", { hederaTransaction });
             return hederaTransaction.toBytes();
           });
 

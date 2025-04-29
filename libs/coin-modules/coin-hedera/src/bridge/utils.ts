@@ -1,13 +1,32 @@
 import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
+import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import cvsApi from "@ledgerhq/live-countervalues/api/index";
 import { getFiatCurrencyByTicker } from "@ledgerhq/cryptoassets";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import type { Transaction } from "../types";
+import { HbarUnit } from "@hashgraph/sdk";
+import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 
 export const estimatedFeeSafetyRate = 2;
 
-export async function getEstimatedFees(account: Account): Promise<BigNumber> {
+// FIXME:
+// - check if sdk contains this type
+// - understand how it is calculated
+// - better getEstimatedFees usage
+// - something better than TINYBAR_SCALE
+export type HederaOperation = "CryptoTransfer" | "TokenTransfer";
+
+const TINYBAR_SCALE = 8;
+
+const baseUsdFeeByOperation: Record<HederaOperation, number> = {
+  CryptoTransfer: 0.0001 * 10 ** TINYBAR_SCALE,
+  TokenTransfer: 0.001 * 10 ** TINYBAR_SCALE,
+} as const;
+
+export async function getEstimatedFees(
+  account: Account,
+  operation: HederaOperation,
+): Promise<BigNumber> {
   try {
     const data = await cvsApi.fetchLatest([
       {
@@ -18,7 +37,7 @@ export async function getEstimatedFees(account: Account): Promise<BigNumber> {
     ]);
 
     if (data[0]) {
-      return new BigNumber(10000)
+      return new BigNumber(baseUsdFeeByOperation[operation])
         .dividedBy(new BigNumber(data[0]))
         .integerValue(BigNumber.ROUND_CEIL)
         .multipliedBy(estimatedFeeSafetyRate);
@@ -31,24 +50,62 @@ export async function getEstimatedFees(account: Account): Promise<BigNumber> {
   return new BigNumber("150200").multipliedBy(estimatedFeeSafetyRate); // 0.001502 ℏ (as of 2023-03-14)
 }
 
+// FIXME: review
+interface CalculateAmountResult {
+  amount: BigNumber;
+  totalSpent: BigNumber;
+}
+
+async function calculateCoinAmount({
+  account,
+  transaction,
+}: {
+  account: Account;
+  transaction: Transaction;
+}): Promise<CalculateAmountResult> {
+  const estimatedFee = await getEstimatedFees(account, "CryptoTransfer");
+  const amount = transaction.useAllAmount
+    ? await estimateMaxSpendable({ account, transaction })
+    : transaction.amount;
+
+  return {
+    amount,
+    totalSpent: amount.plus(estimatedFee),
+  };
+}
+
+async function calculateTokenAmount({
+  account,
+  tokenAccount,
+  transaction,
+}: {
+  account: Account;
+  tokenAccount: TokenAccount;
+  transaction: Transaction;
+}): Promise<CalculateAmountResult> {
+  const amount = transaction.useAllAmount
+    ? await estimateMaxSpendable({ account: tokenAccount, parentAccount: account, transaction })
+    : transaction.amount;
+
+  return {
+    amount,
+    totalSpent: amount,
+  };
+}
+
 export async function calculateAmount({
   account,
   transaction,
 }: {
   account: Account;
   transaction: Transaction;
-}): Promise<{
-  amount: BigNumber;
-  totalSpent: BigNumber;
-}> {
-  const amount = transaction.useAllAmount
-    ? await estimateMaxSpendable({ account })
-    : transaction.amount;
+}): Promise<CalculateAmountResult> {
+  const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
+  const isTokenTransaction = isTokenAccount(subAccount);
 
-  return {
-    amount,
-    totalSpent: amount.plus(await getEstimatedFees(account)),
-  };
+  return isTokenTransaction
+    ? calculateTokenAmount({ account, tokenAccount: subAccount, transaction })
+    : calculateCoinAmount({ account, transaction });
 }
 
 // NOTE: convert from the non-url-safe version of base64 to the url-safe version (that the explorer uses)

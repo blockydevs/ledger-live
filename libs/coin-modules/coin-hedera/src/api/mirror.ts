@@ -6,6 +6,8 @@ import { getEnv } from "@ledgerhq/live-env";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { getAccountBalance } from "./network";
 import { base64ToUrlSafeBase64 } from "../bridge/utils";
+import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
+import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 
 const getMirrorApiUrl = (): string => getEnv("API_HEDERA_MIRROR");
 
@@ -46,6 +48,7 @@ export async function getAccountsForPublicKey(publicKey: string): Promise<Accoun
 
 interface HederaMirrorTransaction {
   transfers: HederaMirrorTransfer[];
+  token_transfers: HederaMirrorTokenTransfer[];
   charged_tx_fee: string;
   transaction_hash: string;
   consensus_timestamp: string;
@@ -56,12 +59,26 @@ interface HederaMirrorTransfer {
   amount: number;
 }
 
+// FIXME: review
+interface HederaMirrorTokenTransfer {
+  token_id: string;
+  account: string;
+  amount: number;
+  is_approval: boolean;
+}
+
 export async function getOperationsForAccount(
   ledgerAccountId: string,
   address: string,
   latestOperationTimestamp: string,
-): Promise<Operation[]> {
-  const operations: Operation[] = [];
+): Promise<{
+  coinOperations: Operation[];
+  tokenOperations: Operation[];
+}> {
+  const coinOperations: Operation[] = [];
+  const tokenOperations: Operation[] = [];
+
+  // FIXME: no filter is set for transaction type, so TOKENASSOCIATE is rendered for example
   let r = await fetch(
     `/api/v1/transactions?account.id=${address}&timestamp=gt:${latestOperationTimestamp}`,
   );
@@ -73,6 +90,12 @@ export async function getOperationsForAccount(
     rawOperations.push(...newOperations);
   }
 
+  console.log("[DEBUG] fetched raw operations for account", {
+    address,
+    latestOperationTimestamp,
+    rawOperations,
+  });
+
   for (const raw of rawOperations) {
     const { consensus_timestamp } = raw;
     const timestamp = new Date(parseInt(consensus_timestamp.split(".")[0], 10) * 1000);
@@ -81,6 +104,79 @@ export async function getOperationsForAccount(
     const fee = new BigNumber(raw.charged_tx_fee);
     let value = new BigNumber(0);
     let type: OperationType = "NONE";
+
+    // FIXME: rewrite
+    if (raw.token_transfers.length > 0) {
+      let tokenId: string | undefined;
+
+      for (let i = raw.token_transfers.length - 1; i >= 0; i--) {
+        const tokenTransfer = raw.token_transfers[i];
+        const amount = new BigNumber(tokenTransfer.amount);
+        const account = AccountId.fromString(tokenTransfer.account);
+        tokenId = tokenTransfer.token_id;
+
+        if (tokenTransfer.account === address) {
+          if (amount.isNegative()) {
+            value = amount.abs();
+            type = "OUT";
+          } else {
+            value = amount;
+            type = "IN";
+          }
+        }
+
+        if (amount.isNegative()) {
+          senders.push(tokenTransfer.account);
+        } else {
+          if (account.shard.eq(0) && account.realm.eq(0)) {
+            if (account.num.lt(100)) {
+              // account is a node, only add to list if we have none
+              if (recipients.length === 0) {
+                recipients.push(tokenTransfer.account);
+              }
+            } else if (account.num.lt(1000)) {
+              // account is a system account that is not a node
+              // do NOT add
+            } else {
+              recipients.push(tokenTransfer.account);
+            }
+          } else {
+            recipients.push(tokenTransfer.account);
+          }
+        }
+      }
+
+      if (tokenId) {
+        // NOTE: earlier addresses are the "fee" addresses
+        recipients.reverse();
+        senders.reverse();
+
+        const hash = base64ToUrlSafeBase64(raw.transaction_hash);
+        const token = findTokenByAddressInCurrency(tokenId, "hedera");
+
+        if (token) {
+          const encodedTokenId = encodeTokenAccountId(tokenId, token);
+
+          tokenOperations.push({
+            value,
+            date: timestamp,
+            // NOTE: there are no "blocks" in hedera
+            // Set a value just so that it's considered confirmed according to isConfirmedOperation
+            blockHeight: 5,
+            blockHash: null,
+            extra: { consensusTimestamp: consensus_timestamp },
+            fee,
+            hash,
+            recipients,
+            senders,
+            accountId: ledgerAccountId,
+            tokenId: encodedTokenId,
+            id: encodeOperationId(encodedTokenId, hash, type),
+            type,
+          });
+        }
+      }
+    }
 
     for (let i = raw.transfers.length - 1; i >= 0; i--) {
       const transfer = raw.transfers[i];
@@ -124,7 +220,7 @@ export async function getOperationsForAccount(
 
     const hash = base64ToUrlSafeBase64(raw.transaction_hash);
 
-    operations.push({
+    coinOperations.push({
       value,
       date: timestamp,
       // NOTE: there are no "blocks" in hedera
@@ -142,5 +238,5 @@ export async function getOperationsForAccount(
     });
   }
 
-  return operations;
+  return { coinOperations, tokenOperations };
 }

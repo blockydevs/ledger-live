@@ -68,7 +68,7 @@ export async function decodeSwapPayload(payload: string): Promise<SwapPayload> {
   const testPayloadMessage = TransactionResponse.create({
     ...decodePayload,
     // payoutAddress: "0x0000000000000000000000000000000000856cc0",
-    payoutAddress: "0xe029d0730819115c2010d1a4587378115df1fc6464bcc0dec470b5a8e17f8e92",
+    refundAddress: "0xe029d0730819115c2010d1a4587378115df1fc6464bcc0dec470b5a8e17f8e92",
   });
   const testPayloadMessageEncoded = TransactionResponse.encode(testPayloadMessage).finish();
   const testPayload = Buffer.from(testPayloadMessageEncoded).toString("hex");

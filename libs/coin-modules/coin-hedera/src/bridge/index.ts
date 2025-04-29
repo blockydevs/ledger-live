@@ -46,7 +46,10 @@ function buildAccountBridge(
   return {
     estimateMaxSpendable,
     createTransaction,
-    updateTransaction,
+    updateTransaction: (transaction, patch) => {
+      console.log("[DEBUG] coin-hedera updateTransaction", { transaction, patch });
+      return updateTransaction(transaction, patch);
+    },
     getTransactionStatus,
     prepareTransaction,
     sync,

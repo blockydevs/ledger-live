@@ -3,16 +3,22 @@ import type { AccountBridge } from "@ledgerhq/types-live";
 import { getMainAccount } from "@ledgerhq/coin-framework/account/index";
 import type { Transaction } from "../types";
 import { getEstimatedFees } from "./utils";
+import { isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 
 export const estimateMaxSpendable: AccountBridge<Transaction>["estimateMaxSpendable"] = async ({
   account,
   parentAccount,
 }) => {
+  console.log("[DEBUG] estimateMaxSpendable", { account, parentAccount });
   const balance = account.balance;
-
   const mainAccount = getMainAccount(account, parentAccount);
-  const estimatedFees = await getEstimatedFees(mainAccount);
+  const isTokenTransaction = isTokenAccount(account);
 
+  if (isTokenTransaction) {
+    return Promise.resolve(balance);
+  }
+
+  const estimatedFees = await getEstimatedFees(mainAccount, "CryptoTransfer");
   let maxSpendable = balance.minus(estimatedFees);
 
   // set max spendable to 0 if negative
