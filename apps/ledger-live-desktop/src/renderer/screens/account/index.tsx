@@ -103,7 +103,7 @@ const AccountPage = ({
   const [shouldFilterTokenOpsZeroAmount] = useFilterTokenOperationsZeroAmount();
   const { hiddenNftCollections } = useNftCollectionsStatus(true);
 
-  console.log("AccountView", { account, parentAccount });
+  console.log("[DEBUG] AccountView", { account, parentAccount });
 
   const nftReworked = useFeature("lldNftsGalleryNewArch");
   const isNftReworkedEnabled = nftReworked?.enabled;

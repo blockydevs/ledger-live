@@ -20,7 +20,7 @@ import {
 } from "@ledgerhq/coin-framework/account";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { AccountBalance, getAccountBalance } from "../api/network";
-import { decodeOperationId } from "@ledgerhq/coin-framework/operation";
+import { decodeOperationId, encodeOperationId } from "@ledgerhq/coin-framework/operation";
 
 export const getAccountShape: GetAccountShape<Account> = async (
   info,
@@ -46,29 +46,35 @@ export const getAccountShape: GetAccountShape<Account> = async (
   const latestOperationTimestamp = oldOperations[0]
     ? Math.floor(oldOperations[0].date.getTime() / 1000)
     : 0;
-
-  accountBalance.tokens;
-  // merge new operations w/ previously synced ones
-  const newOperations = await getOperationsForAccount(
+  const latestAccountOperations = await getOperationsForAccount(
     liveAccountId,
     address,
     new BigNumber(latestOperationTimestamp).toString(),
   );
 
-  const operations = mergeOps(oldOperations, newOperations.coinOperations);
   const newSubAccounts = await getSubAccounts(
     liveAccountId,
-    newOperations.tokenOperations,
+    latestAccountOperations.tokenOperations,
     accountBalance,
     blacklistedTokenIds,
   );
-
   const subAccounts = mergeSubAccounts(initialAccount, newSubAccounts);
+
+  // parse operations
+  const newOperations = getOperationsWithLinks(
+    latestAccountOperations.coinOperations,
+    latestAccountOperations.tokenOperations,
+  );
+
+  // merge new operations w/ previously synced ones
+  const operations = mergeOps(oldOperations, newOperations);
 
   console.log("[DEBUG] coin-hedera bridge getAccountShape", {
     info,
     accountBalance,
+    latestAccountOperations,
     oldOperations,
+    newOperations,
     operations,
     latestOperationTimestamp,
     blacklistedTokenIds,
@@ -97,6 +103,92 @@ export const getAccountShape: GetAccountShape<Account> = async (
     blockHeight: 10,
     subAccounts,
   };
+};
+
+/**
+ * Helper in charge of linking operations together based on transaction hash.
+ * Token operations & NFT operations are the result of a coin operation
+ * and if this coin operation is originated by our user we want
+ * to link those operations together as main & children ops.
+ *
+ * A sub operation should always be linked to a coin operation,
+ * even if the user isn't at the origin of the sub op.
+ * "NONE" coin ops can be added when necessary.
+ */
+const getOperationsWithLinks = (
+  _coinOperations: Operation[],
+  _tokenOperations: Operation[],
+  filters: { blacklistedTokenIds: string[] | undefined } = { blacklistedTokenIds: [] },
+): Operation[] => {
+  const { blacklistedTokenIds } = filters;
+
+  // Creating deep copies of each Operation[] to prevent mutating the originals
+  const coinOperations = _coinOperations.map(op => ({ ...op }));
+  const tokenOperations = _tokenOperations.map(op => ({ ...op }));
+
+  type OperationWithRequiredChildren = Operation &
+    Required<Pick<Operation, "nftOperations" | "subOperations" | "internalOperations">>;
+
+  // Helper to create a coin operation with type NONE as a parent of an orphan child operation
+  const makeCoinOpForOrphanChildOp = (childOp: Operation): OperationWithRequiredChildren => {
+    const type = "NONE";
+    const { accountId } = decodeTokenAccountId(childOp.accountId);
+    const id = encodeOperationId(accountId, childOp.hash, type);
+
+    return {
+      id,
+      hash: childOp.hash,
+      type,
+      value: new BigNumber(0),
+      fee: new BigNumber(0),
+      senders: [],
+      recipients: [],
+      blockHeight: childOp.blockHeight,
+      blockHash: childOp.blockHash,
+      transactionSequenceNumber: childOp.transactionSequenceNumber,
+      subOperations: [],
+      nftOperations: [],
+      internalOperations: [],
+      accountId: "",
+      date: childOp.date,
+      extra: {},
+    };
+  };
+
+  // Create a Map of hash => operation
+  const coinOperationsByHash: Record<string, OperationWithRequiredChildren[]> = {};
+  coinOperations.forEach(op => {
+    if (!coinOperationsByHash[op.hash]) {
+      coinOperationsByHash[op.hash] = [];
+    }
+
+    // Adding arrays just in case but this is defined
+    // by the adapters so it should never be needed
+    op.subOperations = [];
+    op.nftOperations = [];
+    op.internalOperations = [];
+    coinOperationsByHash[op.hash].push(op as OperationWithRequiredChildren);
+  });
+
+  // Looping through token operations to potentially copy them as a child operation of a coin operation
+  for (const tokenOperation of tokenOperations) {
+    const { token } = decodeTokenAccountId(tokenOperation.accountId);
+    if (!token || blacklistedTokenIds?.includes(token.id)) continue;
+
+    let mainOperations = coinOperationsByHash[tokenOperation.hash];
+    if (!mainOperations?.length) {
+      const noneOperation = makeCoinOpForOrphanChildOp(tokenOperation);
+      mainOperations = [noneOperation];
+      coinOperations.push(noneOperation);
+    }
+
+    // Ugly loop in loop but in theory, this can only be a 2 elements array maximum in the case of a self send
+    for (const mainOperation of mainOperations) {
+      mainOperation.subOperations.push(tokenOperation);
+    }
+  }
+
+  return coinOperations;
 };
 
 const getSubAccounts = async (

@@ -59,12 +59,82 @@ interface HederaMirrorTransfer {
   amount: number;
 }
 
-// FIXME: review
+// FIXME: verify if ok
 interface HederaMirrorTokenTransfer {
   token_id: string;
   account: string;
   amount: number;
   is_approval: boolean;
+}
+
+async function getAccountTransactions(
+  address: string,
+  since: string,
+): Promise<HederaMirrorTransaction[]> {
+  const transactions: HederaMirrorTransaction[] = [];
+  let nextUrl = `/api/v1/transactions?account.id=${address}&timestamp=gt:${since}`;
+
+  while (nextUrl) {
+    const res = await fetch(nextUrl);
+    const newTransactions = res.data.transactions as HederaMirrorTransaction[];
+    transactions.push(...newTransactions);
+    nextUrl = res.data.links.next;
+  }
+
+  return transactions;
+}
+
+// FIXME: maybe other types would be useful too
+// FIXME: move to utils or something
+function parseTransfers(
+  transfers: (HederaMirrorTransfer | HederaMirrorTokenTransfer)[],
+  address: string,
+): Pick<Operation, "type" | "value" | "senders" | "recipients"> {
+  let value = new BigNumber(0);
+  let type: OperationType = "NONE";
+
+  const senders: string[] = [];
+  const recipients: string[] = [];
+
+  for (const transfer of transfers) {
+    const amount = new BigNumber(transfer.amount);
+    const accountId = AccountId.fromString(transfer.account);
+
+    if (transfer.account === address) {
+      value = amount.abs();
+      type = amount.isNegative() ? "OUT" : "IN";
+    }
+
+    if (amount.isNegative()) {
+      senders.push(transfer.account);
+    } else if (shouldIncludeRecipient(accountId, recipients)) {
+      recipients.push(transfer.account);
+    }
+  }
+
+  return {
+    type,
+    value,
+    senders: senders.reverse(),
+    recipients: recipients.reverse(),
+  };
+}
+
+function shouldIncludeRecipient(accId: AccountId, currentRecipients: string[]): boolean {
+  if (accId.shard.eq(0) && accId.realm.eq(0)) {
+    if (accId.num.lt(100)) {
+      // account is a node, only add to list if we have none
+      return currentRecipients.length === 0;
+    }
+
+    // account is a system account that is not a node
+    // do NOT add
+    if (accId.num.lt(1000)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export async function getOperationsForAccount(
@@ -75,167 +145,57 @@ export async function getOperationsForAccount(
   coinOperations: Operation[];
   tokenOperations: Operation[];
 }> {
+  const rawTransactions = await getAccountTransactions(address, latestOperationTimestamp);
   const coinOperations: Operation[] = [];
   const tokenOperations: Operation[] = [];
 
-  // FIXME: no filter is set for transaction type, so TOKENASSOCIATE is rendered for example
-  let r = await fetch(
-    `/api/v1/transactions?account.id=${address}&timestamp=gt:${latestOperationTimestamp}`,
-  );
-  const rawOperations = r.data.transactions as HederaMirrorTransaction[];
+  for (const rawTx of rawTransactions) {
+    const timestamp = new Date(parseInt(rawTx.consensus_timestamp.split(".")[0], 10) * 1000);
+    const hash = base64ToUrlSafeBase64(rawTx.transaction_hash);
+    const fee = new BigNumber(rawTx.charged_tx_fee);
+    const tokenTransfers = rawTx.token_transfers ?? [];
+    const transfers = rawTx.transfers ?? [];
 
-  while (r.data.links.next) {
-    r = await fetch(r.data.links.next);
-    const newOperations = r.data.transactions as HederaMirrorTransaction[];
-    rawOperations.push(...newOperations);
-  }
+    if (tokenTransfers.length > 0) {
+      const tokenId = rawTx.token_transfers[0].token_id;
+      const token = findTokenByAddressInCurrency(tokenId, "hedera");
+      if (!token) continue;
 
-  console.log("[DEBUG] fetched raw operations for account", {
-    address,
-    latestOperationTimestamp,
-    rawOperations,
-  });
+      const encodedTokenId = encodeTokenAccountId(ledgerAccountId, token);
+      const { type, value, senders, recipients } = parseTransfers(rawTx.token_transfers, address);
 
-  for (const raw of rawOperations) {
-    const { consensus_timestamp } = raw;
-    const timestamp = new Date(parseInt(consensus_timestamp.split(".")[0], 10) * 1000);
-    const senders: string[] = [];
-    const recipients: string[] = [];
-    const fee = new BigNumber(raw.charged_tx_fee);
-    let value = new BigNumber(0);
-    let type: OperationType = "NONE";
+      tokenOperations.push({
+        id: encodeOperationId(encodedTokenId, hash, type),
+        accountId: encodedTokenId,
+        type,
+        value,
+        recipients,
+        senders,
+        hash,
+        fee,
+        date: timestamp,
+        blockHeight: 5,
+        blockHash: null,
+        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+      });
+    } else if (transfers.length > 0) {
+      const { type, value, senders, recipients } = parseTransfers(rawTx.transfers, address);
 
-    // FIXME: rewrite
-    if (raw.token_transfers.length > 0) {
-      let tokenId: string | undefined;
-
-      for (let i = raw.token_transfers.length - 1; i >= 0; i--) {
-        const tokenTransfer = raw.token_transfers[i];
-        const amount = new BigNumber(tokenTransfer.amount);
-        const account = AccountId.fromString(tokenTransfer.account);
-        tokenId = tokenTransfer.token_id;
-
-        if (tokenTransfer.account === address) {
-          if (amount.isNegative()) {
-            value = amount.abs();
-            type = "OUT";
-          } else {
-            value = amount;
-            type = "IN";
-          }
-        }
-
-        if (amount.isNegative()) {
-          senders.push(tokenTransfer.account);
-        } else {
-          if (account.shard.eq(0) && account.realm.eq(0)) {
-            if (account.num.lt(100)) {
-              // account is a node, only add to list if we have none
-              if (recipients.length === 0) {
-                recipients.push(tokenTransfer.account);
-              }
-            } else if (account.num.lt(1000)) {
-              // account is a system account that is not a node
-              // do NOT add
-            } else {
-              recipients.push(tokenTransfer.account);
-            }
-          } else {
-            recipients.push(tokenTransfer.account);
-          }
-        }
-      }
-
-      if (tokenId) {
-        // NOTE: earlier addresses are the "fee" addresses
-        recipients.reverse();
-        senders.reverse();
-
-        const hash = base64ToUrlSafeBase64(raw.transaction_hash);
-        const token = findTokenByAddressInCurrency(tokenId, "hedera");
-
-        if (token) {
-          const encodedTokenId = encodeTokenAccountId(tokenId, token);
-
-          tokenOperations.push({
-            value,
-            date: timestamp,
-            // NOTE: there are no "blocks" in hedera
-            // Set a value just so that it's considered confirmed according to isConfirmedOperation
-            blockHeight: 5,
-            blockHash: null,
-            extra: { consensusTimestamp: consensus_timestamp },
-            fee,
-            hash,
-            recipients,
-            senders,
-            accountId: ledgerAccountId,
-            tokenId: encodedTokenId,
-            id: encodeOperationId(encodedTokenId, hash, type),
-            type,
-          });
-        }
-      }
+      coinOperations.push({
+        id: encodeOperationId(ledgerAccountId, hash, type),
+        accountId: ledgerAccountId,
+        type,
+        value,
+        recipients,
+        senders,
+        hash,
+        fee,
+        date: timestamp,
+        blockHeight: 5,
+        blockHash: null,
+        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+      });
     }
-
-    for (let i = raw.transfers.length - 1; i >= 0; i--) {
-      const transfer = raw.transfers[i];
-      const amount = new BigNumber(transfer.amount);
-      const account = AccountId.fromString(transfer.account);
-
-      if (transfer.account === address) {
-        if (amount.isNegative()) {
-          value = amount.abs();
-          type = "OUT";
-        } else {
-          value = amount;
-          type = "IN";
-        }
-      }
-
-      if (amount.isNegative()) {
-        senders.push(transfer.account);
-      } else {
-        if (account.shard.eq(0) && account.realm.eq(0)) {
-          if (account.num.lt(100)) {
-            // account is a node, only add to list if we have none
-            if (recipients.length === 0) {
-              recipients.push(transfer.account);
-            }
-          } else if (account.num.lt(1000)) {
-            // account is a system account that is not a node
-            // do NOT add
-          } else {
-            recipients.push(transfer.account);
-          }
-        } else {
-          recipients.push(transfer.account);
-        }
-      }
-    }
-
-    // NOTE: earlier addresses are the "fee" addresses
-    recipients.reverse();
-    senders.reverse();
-
-    const hash = base64ToUrlSafeBase64(raw.transaction_hash);
-
-    coinOperations.push({
-      value,
-      date: timestamp,
-      // NOTE: there are no "blocks" in hedera
-      // Set a value just so that it's considered confirmed according to isConfirmedOperation
-      blockHeight: 5,
-      blockHash: null,
-      extra: { consensusTimestamp: consensus_timestamp },
-      fee,
-      hash,
-      recipients,
-      senders,
-      accountId: ledgerAccountId,
-      id: encodeOperationId(ledgerAccountId, hash, type),
-      type,
-    });
   }
 
   return { coinOperations, tokenOperations };
