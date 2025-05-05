@@ -8,19 +8,25 @@ import {
 import { AccountId } from "@hashgraph/sdk";
 import type { AccountBridge } from "@ledgerhq/types-live";
 import { calculateAmount, getEstimatedFees } from "./utils";
-import type { Transaction } from "../types";
+import type { HederaOperationType, Transaction } from "../types";
+import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
 
 export const getTransactionStatus: AccountBridge<Transaction>["getTransactionStatus"] = async (
   account,
   transaction,
 ) => {
   const errors: Record<string, Error> = {};
+  const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
+  const isTokenTransaction = isTokenAccount(subAccount);
+  const operationType: HederaOperationType = isTokenTransaction
+    ? "TokenTransfer"
+    : "CryptoTransfer";
 
   if (!transaction.recipient || transaction.recipient.length === 0) {
-    errors.recipient = new RecipientRequired("");
+    errors.recipient = new RecipientRequired();
   } else {
     if (account.freshAddress === transaction.recipient) {
-      errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource("");
+      errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
     }
 
     try {
@@ -32,38 +38,50 @@ export const getTransactionStatus: AccountBridge<Transaction>["getTransactionSta
     }
   }
 
-  const { amount, totalSpent } = await calculateAmount({
-    transaction,
-    account,
-  });
+  const [calculatedAmount, estimatedFees] = await Promise.all([
+    calculateAmount({ transaction, account }),
+    getEstimatedFees(account, operationType),
+  ]);
 
   if (transaction.amount.eq(0) && !transaction.useAllAmount) {
     errors.amount = new AmountRequired();
-  } else if (account.balance.isLessThan(totalSpent)) {
-    errors.amount = new NotEnoughBalance("");
   }
 
-  // FIXME:
-  // 1. verify coin & token balance
-  // 2. see if token is associated based on https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/0.0.9124531/tokens
-  // remember about cache, see how often this runs
+  if (isTokenTransaction) {
+    if (subAccount.balance.isLessThan(calculatedAmount.totalSpent)) {
+      errors.amount = new NotEnoughBalance();
+    }
 
-  // FIXME:
-  const estimatedFees = await getEstimatedFees(account, "CryptoTransfer");
+    if (account.balance.isLessThan(estimatedFees)) {
+      errors.amount = new NotEnoughBalance();
+    }
+  } else {
+    if (transaction.amount.eq(0) && !transaction.useAllAmount) {
+      errors.amount = new AmountRequired();
+    }
+
+    if (account.balance.isLessThan(calculatedAmount.totalSpent)) {
+      errors.amount = new NotEnoughBalance("");
+    }
+  }
 
   console.log("[DEBUG] getTransactionStatus", {
-    amount,
+    account,
+    subAccount,
+    isTokenTransaction,
+    transaction,
+    amount: calculatedAmount.amount,
     errors,
     estimatedFees,
-    totalSpent,
+    totalSpent: calculatedAmount.totalSpent,
     warnings: {},
   });
 
   return {
-    amount,
+    amount: calculatedAmount.amount,
     errors,
     estimatedFees,
-    totalSpent,
+    totalSpent: calculatedAmount.totalSpent,
     warnings: {},
   };
 };

@@ -90,7 +90,7 @@ export const buildOptimisticOperation = async ({
   account: Account;
   transaction: Transaction;
 }): Promise<Operation> => {
-  const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
+  const subAccount = findSubAccountById(account, transaction.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
   if (isTokenTransaction) {

@@ -34,3 +34,5 @@ export type HederaOperationExtra = {
 export type HederaOperationExtraRaw = {
   consensusTimestamp?: string;
 };
+
+export type HederaOperationType = "CryptoTransfer" | "TokenTransfer";
