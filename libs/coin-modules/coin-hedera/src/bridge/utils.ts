@@ -2,8 +2,6 @@ import BigNumber from "bignumber.js";
 import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
 import cvsApi from "@ledgerhq/live-countervalues/api/index";
 import { findTokenByAddressInCurrency, getFiatCurrencyByTicker } from "@ledgerhq/cryptoassets";
-import { estimateMaxSpendable } from "./estimateMaxSpendable";
-import type { HederaOperationType, Transaction } from "../types";
 import {
   decodeTokenAccountId,
   emptyHistoryCache,
@@ -13,8 +11,10 @@ import {
 } from "@ledgerhq/coin-framework/account";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { AccountBalance } from "../api/network";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
+import { AccountBalance } from "../api/network";
+import { estimateMaxSpendable } from "./estimateMaxSpendable";
+import type { HederaOperationType, Transaction } from "../types";
 
 export const estimatedFeeSafetyRate = 2;
 

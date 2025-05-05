@@ -1,18 +1,18 @@
+import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import {
   getDerivationScheme,
   Result,
   runDerivationScheme,
 } from "@ledgerhq/coin-framework/derivation";
-import { BigNumber } from "bignumber.js";
 import type { Account } from "@ledgerhq/types-live";
-import { getAccountsForPublicKey, getOperationsForAccount } from "../api/mirror";
 import {
   GetAccountShape,
   IterateResultBuilder,
   mergeOps,
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { encodeAccountId } from "@ledgerhq/coin-framework/account";
+import { getAccountsForPublicKey, getOperationsForAccount } from "../api/mirror";
 import { getAccountBalance } from "../api/network";
 import { getSubAccounts, linkSubOperationsToCoinOperations, mergeSubAccounts } from "./utils";
 
