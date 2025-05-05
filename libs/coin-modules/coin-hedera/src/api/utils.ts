@@ -45,10 +45,14 @@ export function parseTransfers(
     }
   }
 
+  // NOTE: earlier addresses are the "fee" addresses
+  senders.reverse();
+  recipients.reverse();
+
   return {
     type,
     value,
-    senders: senders.reverse(),
-    recipients: recipients.reverse(),
+    senders,
+    recipients,
   };
 }

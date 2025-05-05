@@ -54,16 +54,13 @@ async function buildUnsignedTokenTransaction({
     amount: transaction.amount,
   });
 
-  return (
-    new TransferTransaction()
-      .setNodeAccountIds([new AccountId(3)])
-      .setTransactionId(TransactionId.generate(accountId))
-      .setTransactionMemo(transaction.memo ?? "")
-      // FIXME: verify if .toNumber() is enough or if "Long" should be used
-      .addTokenTransfer(tokenId, accountId, transaction.amount.negated().toNumber())
-      .addTokenTransfer(tokenId, transaction.recipient, transaction.amount.toNumber())
-      .freeze()
-  );
+  return new TransferTransaction()
+    .setNodeAccountIds([new AccountId(3)])
+    .setTransactionId(TransactionId.generate(accountId))
+    .setTransactionMemo(transaction.memo ?? "")
+    .addTokenTransfer(tokenId, accountId, transaction.amount.negated().toNumber())
+    .addTokenTransfer(tokenId, transaction.recipient, transaction.amount.toNumber())
+    .freeze();
 }
 
 export async function buildUnsignedTransaction({

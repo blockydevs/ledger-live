@@ -53,7 +53,6 @@ export const buildOptimisticTokenOperation = async ({
     account,
     transaction: {
       ...transaction,
-      // FIXME: review & understand this part
       recipient: tokenAccount.token.contractAddress,
       amount: new BigNumber(0),
     },

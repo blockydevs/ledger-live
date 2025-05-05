@@ -435,6 +435,7 @@ function convertHederaTokens([tokenId, name, ticker, decimals]: HederaToken):
   | undefined {
   const parentCurrencyId = "hedera";
   const parentCurrency = getCryptoCurrencyById(parentCurrencyId);
+  const tokenType = "hts";
 
   console.log("[DEBUG] convertHederaTokens", { tokenId, name, ticker, decimals, parentCurrency });
 
@@ -444,10 +445,10 @@ function convertHederaTokens([tokenId, name, ticker, decimals]: HederaToken):
 
   return {
     type: "TokenCurrency",
-    id: `${parentCurrencyId}/${tokenId}`, // FIXME:
+    id: `${parentCurrencyId}/${tokenType}/${tokenId}`,
     contractAddress: tokenId,
     parentCurrency,
-    tokenType: "hts", // FIXME:
+    tokenType,
     name,
     ticker,
     disableCountervalue: false,
