@@ -115,7 +115,7 @@ export async function getAccountBalance(address: string): Promise<AccountBalance
     balance: accountBalance.hbars.to(HbarUnit.Tinybar),
     tokens: accountBalance.toJSON().tokens.map(token => ({
       tokenId: token.tokenId,
-      balance: BigNumber(token.balance).dividedBy(10 ** token.decimals),
+      balance: BigNumber(token.balance),
       decimals: token.decimals,
     })),
   };
