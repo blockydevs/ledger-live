@@ -78,6 +78,7 @@ export async function getOperationsForAccount(
     const fee = new BigNumber(rawTx.charged_tx_fee);
     const tokenTransfers = rawTx.token_transfers ?? [];
     const transfers = rawTx.transfers ?? [];
+    const hasFailed = rawTx.result !== "SUCCESS";
 
     if (tokenTransfers.length > 0) {
       const tokenId = rawTx.token_transfers[0].token_id;
@@ -99,6 +100,7 @@ export async function getOperationsForAccount(
         date: timestamp,
         blockHeight: 5,
         blockHash: null,
+        hasFailed,
         extra: { consensusTimestamp: rawTx.consensus_timestamp },
       });
     } else if (transfers.length > 0) {
@@ -116,6 +118,7 @@ export async function getOperationsForAccount(
         date: timestamp,
         blockHeight: 5,
         blockHash: null,
+        hasFailed,
         extra: { consensusTimestamp: rawTx.consensus_timestamp },
       });
     }
