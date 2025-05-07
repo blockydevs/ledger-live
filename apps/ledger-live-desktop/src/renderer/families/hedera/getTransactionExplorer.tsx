@@ -7,10 +7,10 @@ const getTransactionExplorer = (
   explorerView: ExplorerView | null | undefined,
   operation: Operation,
 ): string | undefined => {
-  return explorerView?.tx?.replace(
-    "$hash",
-    (operation.extra as HederaOperationExtra).consensusTimestamp ?? "0",
-  );
+  console.log("[DEBUG] getTransactionExplorer", { explorerView, operation });
+  const extra = operation.extra as HederaOperationExtra;
+
+  return explorerView?.tx?.replace("$hash", extra.consensusTimestamp ?? extra.transactionId ?? "0");
 };
 
 export default getTransactionExplorer;

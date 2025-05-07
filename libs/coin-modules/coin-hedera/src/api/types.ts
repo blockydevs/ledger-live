@@ -24,4 +24,5 @@ export interface HederaMirrorTransaction {
   charged_tx_fee: string;
   transaction_hash: string;
   consensus_timestamp: string;
+  result: string;
 }

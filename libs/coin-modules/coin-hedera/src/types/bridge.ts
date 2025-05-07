@@ -29,6 +29,7 @@ export type TransactionStatusRaw = TransactionStatusCommonRaw;
 
 export type HederaOperationExtra = {
   consensusTimestamp?: string;
+  transactionId?: string;
 };
 
 export type HederaOperationExtraRaw = {
