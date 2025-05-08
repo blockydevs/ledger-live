@@ -59,17 +59,24 @@ interface HederaMirrorTransfer {
 export async function getOperationsForAccount(
   ledgerAccountId: string,
   address: string,
-  latestOperationTimestamp: string,
+  latestOperationTimestamp: string | null,
 ): Promise<Operation[]> {
   const operations: Operation[] = [];
-  let r = await fetch(
-    `/api/v1/transactions?account.id=${address}&timestamp=gt:${latestOperationTimestamp}`,
-  );
+  const params = new URLSearchParams({
+    "account.id": address,
+  });
+
+  if (latestOperationTimestamp) {
+    params.append("timestamp", `gt:${latestOperationTimestamp}`);
+  }
+
+  let r = await fetch(`/api/v1/transactions?${params.toString()}`);
   const rawOperations = r.data.transactions as HederaMirrorTransaction[];
 
   while (r.data.links.next) {
     r = await fetch(r.data.links.next);
     const newOperations = r.data.transactions as HederaMirrorTransaction[];
+    if (newOperations.length === 0) break;
     rawOperations.push(...newOperations);
   }
 
