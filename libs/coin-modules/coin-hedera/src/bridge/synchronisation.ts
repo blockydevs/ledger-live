@@ -34,15 +34,22 @@ export const getAccountShape: GetAccountShape<Account> = async (
   // get current account balance
   const accountBalance = await getAccountBalance(address);
 
+  // FIXME: compare initial account balance & subaccounts with mirror node account balance
+  const shouldSyncFromScratch =
+    !initialAccount?.subAccounts ||
+    (initialAccount.subAccounts.length === 0 && accountBalance.tokens.length > 0);
+
   // grab latest operation's consensus timestamp for incremental sync
   const oldOperations = initialAccount?.operations ?? [];
-  const latestOperationTimestamp = oldOperations[0]
-    ? Math.floor(oldOperations[0].date.getTime() / 1000)
-    : 0;
+  const latestOperationTimestamp = shouldSyncFromScratch
+    ? null
+    : oldOperations[0]
+      ? Math.floor(oldOperations[0].date.getTime() / 1000)
+      : null;
   const latestAccountOperations = await getOperationsForAccount(
     liveAccountId,
     address,
-    new BigNumber(latestOperationTimestamp).toString(),
+    latestOperationTimestamp ? new BigNumber(latestOperationTimestamp).toString() : null,
   );
 
   const newSubAccounts = await getSubAccounts(

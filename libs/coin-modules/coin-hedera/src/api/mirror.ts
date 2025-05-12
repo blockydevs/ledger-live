@@ -45,15 +45,24 @@ export async function getAccountsForPublicKey(publicKey: string): Promise<Hedera
 
 async function getAccountTransactions(
   address: string,
-  since: string,
+  since: string | null,
 ): Promise<HederaMirrorTransaction[]> {
   const transactions: HederaMirrorTransaction[] = [];
-  let nextUrl = `/api/v1/transactions?account.id=${address}&timestamp=gt:${since}`;
+  const params = new URLSearchParams({
+    "account.id": address,
+  });
+
+  if (since) {
+    params.append("timestamp", `gt:${since}`);
+  }
+
+  let nextUrl = `/api/v1/transactions?${params.toString()}`;
 
   while (nextUrl) {
     const res = await fetch(nextUrl);
     const newTransactions = res.data.transactions as HederaMirrorTransaction[];
     transactions.push(...newTransactions);
+    if (newTransactions.length === 0) break;
     nextUrl = res.data.links.next;
   }
 
@@ -63,7 +72,7 @@ async function getAccountTransactions(
 export async function getOperationsForAccount(
   ledgerAccountId: string,
   address: string,
-  latestOperationTimestamp: string,
+  latestOperationTimestamp: string | null,
 ): Promise<{
   coinOperations: Operation[];
   tokenOperations: Operation[];
