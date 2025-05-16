@@ -88,6 +88,7 @@ export function useListHeaderComponents({
   listHeaderComponents: ReactNode[];
   stickyHeaderIndices?: number[];
 } {
+  const llmNftSupport = useFeature("llNftSupport");
   const llmSolanaNfts = useFeature("llmSolanaNfts");
   if (!account) return { listHeaderComponents: [], stickyHeaderIndices: undefined };
 
@@ -134,8 +135,14 @@ export function useListHeaderComponents({
     isStuckOperation({ family: mainAccount.currency.family, operation: oldestEditableOperation });
 
   const displayNftCollections = isNFTCollectionsDisplayable(account, empty, {
-    llmSolanaNftsEnabled: llmSolanaNfts?.enabled,
+    llmNftSupportEnabled: !!llmNftSupport?.enabled,
+    llmSolanaNftsEnabled: !!llmSolanaNfts?.enabled,
   });
+
+  const disableDelegation =
+    currencyConfig &&
+    "disableDelegation" in currencyConfig &&
+    currencyConfig.disableDelegation === true;
 
   return {
     listHeaderComponents: [
@@ -177,6 +184,7 @@ export function useListHeaderComponents({
         <FabAccountMainActions account={account} parentAccount={parentAccount} />
       </SectionContainer>,
       ...(!empty &&
+      !disableDelegation &&
       (AccountHeaderRendered || AccountBalanceSummaryFooterRendered || secondaryActions.length > 0)
         ? [
             <SectionContainer key="AccountHeader">

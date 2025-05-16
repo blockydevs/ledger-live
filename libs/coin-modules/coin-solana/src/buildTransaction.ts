@@ -3,6 +3,8 @@ import {
   buildTransferInstructions,
   buildTokenTransferInstructions,
   buildCreateAssociatedTokenAccountInstruction,
+  buildApproveTransactionInstructions,
+  buildRevokeTransactionInstructions,
   buildStakeCreateAccountInstructions,
   buildStakeDelegateInstructions,
   buildStakeUndelegateInstructions,
@@ -16,6 +18,7 @@ import {
   TransactionInstruction,
   TransactionMessage,
   BlockhashWithExpiryBlockHeight,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import { ChainAPI } from "./network";
 
@@ -30,27 +33,28 @@ export const buildTransactionWithAPI = async (
     (signature: Buffer) => OnChainTransaction,
   ]
 > => {
-  const [instructions, recentBlockhash] = await Promise.all([
-    buildInstructions(api, transaction),
-    api.getLatestBlockhash(),
-  ]);
+  const recentBlockhash = await api.getLatestBlockhash();
 
-  const feePayer = new PublicKey(address);
+  let web3SolanaTransaction: VersionedTransaction;
+  if (transaction.raw) {
+    web3SolanaTransaction = OnChainTransaction.deserialize(Buffer.from(transaction.raw, "base64"));
+  } else {
+    const instructions = await buildInstructions(api, transaction);
+    const transactionMessage = new TransactionMessage({
+      payerKey: new PublicKey(address),
+      recentBlockhash: recentBlockhash.blockhash,
+      instructions,
+    });
 
-  const tm = new TransactionMessage({
-    payerKey: feePayer,
-    recentBlockhash: recentBlockhash.blockhash,
-    instructions,
-  });
-
-  const tx = new OnChainTransaction(tm.compileToLegacyMessage());
+    web3SolanaTransaction = new OnChainTransaction(transactionMessage.compileToLegacyMessage());
+  }
 
   return [
-    tx,
+    web3SolanaTransaction,
     recentBlockhash,
     (signature: Buffer) => {
-      tx.addSignature(new PublicKey(address), signature);
-      return tx;
+      web3SolanaTransaction.addSignature(new PublicKey(address), signature);
+      return web3SolanaTransaction;
     },
   ];
 };
@@ -80,6 +84,10 @@ async function buildInstructionsForCommand(
       return buildTokenTransferInstructions(api, command);
     case "token.createATA":
       return buildCreateAssociatedTokenAccountInstruction(api, command);
+    case "token.approve":
+      return buildApproveTransactionInstructions(api, command);
+    case "token.revoke":
+      return buildRevokeTransactionInstructions(api, command);
     case "stake.createAccount":
       return buildStakeCreateAccountInstructions(api, command);
     case "stake.delegate":

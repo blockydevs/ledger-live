@@ -8,17 +8,11 @@ import { DeviceManagementKit } from "@ledgerhq/device-management-kit";
 import { render } from "@testing-library/react";
 import { expect } from "vitest";
 
-vi.mock("@ledgerhq/live-common/featureFlags/index", () => ({
-  useFeature: () => ({
-    enabled: true,
-  }),
-}));
-
 const TestComponent: React.FC = () => {
   const dmk = useDeviceManagementKit();
 
   return (
-    <DeviceManagementKitProvider>
+    <DeviceManagementKitProvider dmkEnabled={true}>
       <span data-testid="dmk">{JSON.stringify(dmk)}</span>
     </DeviceManagementKitProvider>
   );
@@ -42,10 +36,10 @@ describe("useDeviceManagementKit", () => {
     });
   });
   describe("<DeviceManagementKitProvider />", () => {
-    it("provides a dmk instance to child element if enabled", async () => {
+    it("provides a dmk instance to child element if feature flag enabled", async () => {
       // given
       const { getByTestId } = render(
-        <DeviceManagementKitProvider>
+        <DeviceManagementKitProvider dmkEnabled={true}>
           <TestComponent />
         </DeviceManagementKitProvider>,
       );
@@ -54,10 +48,10 @@ describe("useDeviceManagementKit", () => {
       // then
       expect(dmkStr).toHaveTextContent(JSON.stringify(getDeviceManagementKit()));
     });
-    it("provides children if disabled", () => {
+    it("provides children if feature flag disabled", () => {
       // given
       const { getByTestId } = render(
-        <DeviceManagementKitProvider disabled>
+        <DeviceManagementKitProvider dmkEnabled={false}>
           <TestComponent />
         </DeviceManagementKitProvider>,
       );

@@ -39,6 +39,7 @@ import { getLLDCoinFamily } from "~/renderer/families";
 import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
 import { isBitcoinBasedAccount, isBitcoinAccount } from "@ledgerhq/live-common/account/typeGuards";
 import { useNftCollectionsStatus } from "~/renderer/hooks/nfts/useNftCollectionsStatus";
+import { useNftSupportFeature } from "~/renderer/hooks/nfts/useNftSupportFeature";
 
 type Params = {
   id: string;
@@ -104,6 +105,7 @@ const AccountPage = ({
   const { hiddenNftCollections } = useNftCollectionsStatus(true);
 
   console.log("[DEBUG] AccountView", { account, parentAccount });
+  const { nftSupportEnabled } = useNftSupportFeature();
 
   const nftReworked = useFeature("lldNftsGalleryNewArch");
   const isNftReworkedEnabled = nftReworked?.enabled;
@@ -188,7 +190,7 @@ const AccountPage = ({
           {AccountBodyHeader ? (
             <AccountBodyHeader account={account} parentAccount={parentAccount} />
           ) : null}
-          {account.type === "Account" && isNFTActive(account.currency) ? (
+          {nftSupportEnabled && account.type === "Account" && isNFTActive(account.currency) ? (
             isNftReworkedEnabled ? (
               <NftCollections account={account} />
             ) : (

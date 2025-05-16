@@ -1,5 +1,71 @@
 # @ledgerhq/react-ui
 
+## 0.24.0
+
+### Minor Changes
+
+- [#10018](https://github.com/LedgerHQ/ledger-live/pull/10018) [`1d3be0d`](https://github.com/LedgerHQ/ledger-live/commit/1d3be0d5b13b09ec08908406711400ef5b286d69) Thanks [@ejaycoleman](https://github.com/ejaycoleman)! - Add Asset Type List component
+
+### Patch Changes
+
+- Updated dependencies [[`de92b67`](https://github.com/LedgerHQ/ledger-live/commit/de92b67ab9c8a553a817a245cecbfe292249d431), [`a4b6b29`](https://github.com/LedgerHQ/ledger-live/commit/a4b6b29df7ef74129345278cf07942619b36435b)]:
+  - @ledgerhq/crypto-icons-ui@1.13.0
+  - @ledgerhq/icons-ui@0.10.0
+
+## 0.24.0-next.0
+
+### Minor Changes
+
+- [#10018](https://github.com/LedgerHQ/ledger-live/pull/10018) [`1d3be0d`](https://github.com/LedgerHQ/ledger-live/commit/1d3be0d5b13b09ec08908406711400ef5b286d69) Thanks [@ejaycoleman](https://github.com/ejaycoleman)! - Add Asset Type List component
+
+### Patch Changes
+
+- Updated dependencies [[`de92b67`](https://github.com/LedgerHQ/ledger-live/commit/de92b67ab9c8a553a817a245cecbfe292249d431), [`a4b6b29`](https://github.com/LedgerHQ/ledger-live/commit/a4b6b29df7ef74129345278cf07942619b36435b)]:
+  - @ledgerhq/crypto-icons-ui@1.13.0-next.0
+  - @ledgerhq/icons-ui@0.10.0-next.0
+
+## 0.23.0
+
+### Minor Changes
+
+- [#10003](https://github.com/LedgerHQ/ledger-live/pull/10003) [`8e627c3`](https://github.com/LedgerHQ/ledger-live/commit/8e627c3823b3c798c9807a40f47897c7e36f485b) Thanks [@thesan](https://github.com/thesan)! - Implement the new search component UI
+
+- [#9962](https://github.com/LedgerHQ/ledger-live/pull/9962) [`6685d6d`](https://github.com/LedgerHQ/ledger-live/commit/6685d6df4cd13b8124264ea8d782cdab6871c8f8) Thanks [@thesan](https://github.com/thesan)! - Fix Storybook types and hot reload after an error
+
+## 0.23.0-next.0
+
+### Minor Changes
+
+- [#10003](https://github.com/LedgerHQ/ledger-live/pull/10003) [`8e627c3`](https://github.com/LedgerHQ/ledger-live/commit/8e627c3823b3c798c9807a40f47897c7e36f485b) Thanks [@thesan](https://github.com/thesan)! - Implement the new search component UI
+
+- [#9962](https://github.com/LedgerHQ/ledger-live/pull/9962) [`6685d6d`](https://github.com/LedgerHQ/ledger-live/commit/6685d6df4cd13b8124264ea8d782cdab6871c8f8) Thanks [@thesan](https://github.com/thesan)! - Fix Storybook types and hot reload after an error
+
+## 0.22.0
+
+### Minor Changes
+
+- [#9920](https://github.com/LedgerHQ/ledger-live/pull/9920) [`babf5ca`](https://github.com/LedgerHQ/ledger-live/commit/babf5ca9fabb65654861cc896e1caac3de1e1e4c) Thanks [@thesan](https://github.com/thesan)! - Setup a section of react-ui to migrate to the new DS
+
+## 0.22.0-next.0
+
+### Minor Changes
+
+- [#9920](https://github.com/LedgerHQ/ledger-live/pull/9920) [`babf5ca`](https://github.com/LedgerHQ/ledger-live/commit/babf5ca9fabb65654861cc896e1caac3de1e1e4c) Thanks [@thesan](https://github.com/thesan)! - Setup a section of react-ui to migrate to the new DS
+
+## 0.21.2
+
+### Patch Changes
+
+- Updated dependencies [[`bf3dec3`](https://github.com/LedgerHQ/ledger-live/commit/bf3dec3eb166f80e066f466e0e03291c9a141a81)]:
+  - @ledgerhq/crypto-icons-ui@1.12.0
+
+## 0.21.2-next.0
+
+### Patch Changes
+
+- Updated dependencies [[`bf3dec3`](https://github.com/LedgerHQ/ledger-live/commit/bf3dec3eb166f80e066f466e0e03291c9a141a81)]:
+  - @ledgerhq/crypto-icons-ui@1.12.0-next.0
+
 ## 0.21.1
 
 ### Patch Changes

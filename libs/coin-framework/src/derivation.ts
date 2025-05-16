@@ -171,6 +171,9 @@ const modes: Readonly<Record<DerivationMode, ModeSpec>> = Object.freeze({
   internet_computer: {
     overridesDerivation: "44'/223'/0'/0/<account>",
   },
+  minabip44: {
+    overridesDerivation: "44'/12586'/<account>'/0/0",
+  },
   stacks_wallet: {
     overridesDerivation: "44'/5757'/0'/0/<account>",
     startsAt: 1,
@@ -399,6 +402,7 @@ const seedIdentifierPath = (currencyId: string): SeedPathFn => {
     case "cardano_testnet":
     case "internet_computer":
     case "vechain":
+    case "mina":
       return ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`;
     case "solana":
       return ({ purpose, coinType }) => `${purpose}'/${coinType}'`;

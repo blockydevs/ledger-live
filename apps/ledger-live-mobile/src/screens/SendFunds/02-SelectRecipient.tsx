@@ -39,6 +39,7 @@ import { currencySettingsForAccountSelector } from "~/reducers/settings";
 import type { State } from "~/reducers/types";
 import { MemoTagDrawer } from "LLM/features/MemoTag/components/MemoTagDrawer";
 import { useMemoTagInput } from "LLM/features/MemoTag/hooks/useMemoTagInput";
+import { hasMemoDisclaimer } from "LLM/features/MemoTag/utils/hasMemoTag";
 import DomainServiceRecipientRow from "./DomainServiceRecipientRow";
 import RecipientRow from "./RecipientRow";
 
@@ -164,14 +165,23 @@ export default function SendSelectRecipient({ navigation, route }: Props) {
     MemoTagDrawerState.INITIAL,
   );
 
+  const handleMemoTagDrawerClose = useCallback(
+    () => setMemoTagDrawerState(MemoTagDrawerState.SHOWN),
+    [],
+  );
+
   const onPressContinue = useCallback(() => {
-    if (memoTag?.isEmpty && memoTagDrawerState === MemoTagDrawerState.INITIAL) {
+    if (
+      memoTag?.isEmpty &&
+      memoTagDrawerState === MemoTagDrawerState.INITIAL &&
+      hasMemoDisclaimer(currency)
+    ) {
       return setMemoTagDrawerState(MemoTagDrawerState.SHOWING);
     }
 
     track("SendRecipientContinue");
 
-    // ERC721 transactions are always sending 1 NFT, so amount step is unecessary
+    // ERC721 transactions are always sending 1 NFT, so amount step is unnecessary
     if (shouldSkipAmount) {
       return navigation.navigate(ScreenName.SendSummary, {
         ...route.params,
@@ -206,6 +216,7 @@ export default function SendSelectRecipient({ navigation, route }: Props) {
     route.params,
     memoTag?.isEmpty,
     memoTagDrawerState,
+    currency,
   ]);
 
   if (!account || !transaction) return null;
@@ -321,7 +332,7 @@ export default function SendSelectRecipient({ navigation, route }: Props) {
                 <memoTag.Input
                   testID="memo-tag-input"
                   placeholder={t("send.summary.memo.title")}
-                  autoFocus={memoTagDrawerState !== MemoTagDrawerState.INITIAL}
+                  autoFocus={memoTagDrawerState === MemoTagDrawerState.SHOWN}
                   onChange={memoTag.handleChange}
                 />
                 <Text mt={4} pl={2} color="alert">
@@ -358,7 +369,7 @@ export default function SendSelectRecipient({ navigation, route }: Props) {
 
       <MemoTagDrawer
         open={memoTagDrawerState === MemoTagDrawerState.SHOWING}
-        onClose={() => setMemoTagDrawerState(MemoTagDrawerState.SHOWN)}
+        onClose={handleMemoTagDrawerClose}
         onNext={onPressContinue}
       />
 

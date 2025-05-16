@@ -1879,7 +1879,8 @@
       "palletMethod": "Method",
       "transferAmount": "Transfer Amount",
       "validatorsCount": "Validators ({{number}})",
-      "version": "Version"
+      "version": "Version",
+      "accountCreationFee": "Account Creation Fee"
     }
   },
   "operationList": {
@@ -5440,7 +5441,9 @@
     "stringHash": "Message Hash",
     "domainHash": "Domain Hash",
     "messageHash": "Message Hash",
-    "message": "Message"
+    "message": "Message",
+    "title": "Continue on your Ledger {{wording}}",
+    "description": "Follow the instructions displayed on your Secure Touchscreen."
   },
   "TransactionConfirm": {
     "title": "Please confirm the operation on your device to finalize it",
@@ -5565,6 +5568,9 @@
       "memo": "Tag / Memo",
       "memoPlaceholder": "Optional",
       "requiredMemoPlaceholder": "Required"
+    },
+    "mina": {
+      "memoPlaceholder": "Optional Memo"
     }
   },
   "errors": {
@@ -6595,6 +6601,15 @@
         "swap": "Swap",
         "deposit": "Deposit"
       }
+    },
+    "InvalidMemoMina": {
+      "title": "Memo text cannot be longer than 32 characters"
+    },
+    "AccountCreationFeeWarning": {
+      "title": "This transaction will incur an account creation fee of {{fee}}"
+    },
+    "AmountTooSmall": {
+      "title": "Minimum required amount for this transaction is {{amount}}"
     }
   },
   "cryptoOrg": {
@@ -6623,7 +6638,8 @@
       "title": "choose asset"
     },
     "selectAccount": {
-      "title": "choose account"
+      "title": "choose account",
+      "addAccount": "Add new or existing account"
     }
   },
   "customImage": {
@@ -7053,6 +7069,14 @@
     "opted_out": {
       "description": "The limited memory of your Ledger Nano S restricts your access to the latest features, blockchain changes and security enhancements. For long-term use, upgrade to a newer Ledger device.",
       "cta": "Learn more"
+    }
+  },
+  "modularAssetDrawer": {
+    "searchPlaceholder": "Search",
+    "assetFlow": {
+      "selectTemplate": "Select {{dynamic}}",
+      "asset": "asset",
+      "network": "network"
     }
   }
 }
