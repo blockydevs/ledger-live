@@ -23,7 +23,9 @@ export type TransactionRaw = TransactionCommonRaw & {
   memo?: string | undefined;
 };
 
-export type TransactionStatus = TransactionStatusCommon;
+export type TransactionStatus = TransactionStatusCommon & {
+  warningAlerts: Record<string, Error>;
+};
 
 export type TransactionStatusRaw = TransactionStatusCommonRaw;
 

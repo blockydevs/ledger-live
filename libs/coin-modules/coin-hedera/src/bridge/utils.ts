@@ -12,9 +12,11 @@ import {
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
+import { makeLRUCache, minutes } from "@ledgerhq/live-network/cache";
 import { AccountBalance } from "../api/network";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import type { HederaOperationType, Transaction } from "../types";
+import { getAccount } from "../api/mirror";
 
 export const estimatedFeeSafetyRate = 2;
 
@@ -324,3 +326,20 @@ export const mergeSubAccounts = (
   const updatedSubAccounts = Object.values(oldSubAccountsById);
   return [...updatedSubAccounts, ...newSubAccountsToAdd];
 };
+
+export const checkAccountTokenAssociationStatus = makeLRUCache(
+  async (accountId: string, tokenId: string) => {
+    const accountDetails = await getAccount(accountId);
+
+    // auto association is enabled
+    if (accountDetails.maxAutomaticTokenAssociations === -1) {
+      return true;
+    }
+
+    const isTokenAssociated = accountDetails.tokens.some(token => token.tokenId === tokenId);
+
+    return isTokenAssociated;
+  },
+  (accountId, tokenId) => `${accountId}-${tokenId}`,
+  minutes(1), // FIXME: adjust
+);

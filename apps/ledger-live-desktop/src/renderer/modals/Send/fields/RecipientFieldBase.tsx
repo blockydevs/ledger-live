@@ -1,11 +1,13 @@
 import React, { memo } from "react";
-import { RecipientRequired } from "@ledgerhq/errors";
+import { RecipientRequired, RecipientTokenAssociationRequired } from "@ledgerhq/errors";
 import { Account } from "@ledgerhq/types-live";
 import { TransactionStatus } from "@ledgerhq/live-common/generated/types";
 import { TFunction } from "i18next";
 import Box from "~/renderer/components/Box";
 import Label from "~/renderer/components/Label";
 import RecipientAddress, { OnChangeExtra } from "~/renderer/components/RecipientAddress";
+import Alert from "~/renderer/components/Alert";
+import TranslatedError from "~/renderer/components/TranslatedError";
 
 type Props = {
   account: Account;
@@ -34,6 +36,7 @@ const RecipientFieldBase = ({
 }: Props) => {
   const { recipient: recipientError } = status.errors;
   const { recipient: recipientWarning } = status.warnings;
+  const recipientWarningAlert = "warningAlerts" in status ? status.warningAlerts.recipient : null;
 
   return (
     <Box flow={1}>
@@ -52,6 +55,19 @@ const RecipientFieldBase = ({
         id={"send-recipient-input"}
         data-testid="send-recipient-input"
       />
+      {recipientWarningAlert && (
+        <Alert
+          type="warning"
+          mt={4}
+          // FIXME: [DEBUG] hardcoded values
+          {...(recipientWarningAlert instanceof RecipientTokenAssociationRequired && {
+            learnMoreUrl: "https://google.com",
+            learnMoreLabel: "Learn more.",
+          })}
+        >
+          <TranslatedError error={recipientWarningAlert} />
+        </Alert>
+      )}
     </Box>
   );
 };

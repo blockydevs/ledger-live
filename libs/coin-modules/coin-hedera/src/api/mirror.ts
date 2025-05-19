@@ -8,7 +8,7 @@ import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import { getAccountBalance } from "./network";
 import { base64ToUrlSafeBase64 } from "../bridge/utils";
-import { HederaAccount, HederaMirrorTransaction } from "./types";
+import { HederaAccount, HederaMirrorAccount, HederaMirrorTransaction } from "./types";
 import { parseTransfers } from "./utils";
 
 const getMirrorApiUrl = (): string => getEnv("API_HEDERA_MIRROR");
@@ -134,4 +134,18 @@ export async function getOperationsForAccount(
   }
 
   return { coinOperations, tokenOperations };
+}
+
+export async function getAccount(address: string) {
+  const res = await fetch(`/api/v1/accounts/${address}`);
+  const account = res.data as HederaMirrorAccount;
+
+  return {
+    accountId: account.account,
+    maxAutomaticTokenAssociations: account.max_automatic_token_associations,
+    tokens: account.balance.tokens.map(token => ({
+      tokenId: token.token_id,
+      balance: BigNumber(token.balance),
+    })),
+  };
 }

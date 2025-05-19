@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { AccountId } from "@hashgraph/sdk";
 import { Operation, OperationType } from "@ledgerhq/types-live";
-import { HederaMirrorTokenTransfer, HederaMirrorTransfer } from "./types";
+import { HederaMirrorTokenTransfer, HederaMirrorCoinTransfer } from "./types";
 
 function isValidRecipient(accountId: AccountId, recipients: string[]): boolean {
   if (accountId.shard.eq(0) && accountId.realm.eq(0)) {
@@ -20,7 +20,7 @@ function isValidRecipient(accountId: AccountId, recipients: string[]): boolean {
 }
 
 export function parseTransfers(
-  transfers: (HederaMirrorTransfer | HederaMirrorTokenTransfer)[],
+  transfers: (HederaMirrorCoinTransfer | HederaMirrorTokenTransfer)[],
   address: string,
 ): Pick<Operation, "type" | "value" | "senders" | "recipients"> {
   let value = new BigNumber(0);

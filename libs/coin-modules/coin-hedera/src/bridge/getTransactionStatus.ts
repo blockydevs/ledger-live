@@ -4,18 +4,24 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
+  RecipientTokenAssociationRequired,
+  RecipientTokenAssociationUnverified,
 } from "@ledgerhq/errors";
 import { AccountId } from "@hashgraph/sdk";
-import type { AccountBridge } from "@ledgerhq/types-live";
-import { calculateAmount, getEstimatedFees } from "./utils";
-import type { HederaOperationType, Transaction } from "../types";
+import type { Account, AccountBridge } from "@ledgerhq/types-live";
+import { calculateAmount, checkAccountTokenAssociationStatus, getEstimatedFees } from "./utils";
+import type { HederaOperationType, Transaction, TransactionStatus } from "../types";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
 
-export const getTransactionStatus: AccountBridge<Transaction>["getTransactionStatus"] = async (
-  account,
-  transaction,
-) => {
+export const getTransactionStatus: AccountBridge<
+  Transaction,
+  Account,
+  TransactionStatus
+>["getTransactionStatus"] = async (account, transaction) => {
   const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
+  const warningAlerts: Record<string, Error> = {};
+
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
   const operationType: HederaOperationType = isTokenTransaction
@@ -48,6 +54,21 @@ export const getTransactionStatus: AccountBridge<Transaction>["getTransactionSta
   }
 
   if (isTokenTransaction) {
+    if (!errors.recipient) {
+      try {
+        const hasRecipientTokenAssociated = await checkAccountTokenAssociationStatus(
+          transaction.recipient,
+          subAccount.token.contractAddress,
+        );
+
+        if (!hasRecipientTokenAssociated) {
+          warningAlerts.recipient = new RecipientTokenAssociationRequired("", { test: true });
+        }
+      } catch {
+        warningAlerts.recipient = new RecipientTokenAssociationUnverified();
+      }
+    }
+
     if (subAccount.balance.isLessThan(calculatedAmount.totalSpent)) {
       errors.amount = new NotEnoughBalance();
     }
@@ -74,7 +95,8 @@ export const getTransactionStatus: AccountBridge<Transaction>["getTransactionSta
     errors,
     estimatedFees,
     totalSpent: calculatedAmount.totalSpent,
-    warnings: {},
+    warnings,
+    warningAlerts,
   });
 
   return {
@@ -82,6 +104,7 @@ export const getTransactionStatus: AccountBridge<Transaction>["getTransactionSta
     errors,
     estimatedFees,
     totalSpent: calculatedAmount.totalSpent,
-    warnings: {},
+    warnings,
+    warningAlerts,
   };
 };

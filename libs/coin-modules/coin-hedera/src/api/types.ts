@@ -6,7 +6,7 @@ export interface HederaAccount {
   balance: BigNumber;
 }
 
-export interface HederaMirrorTransfer {
+export interface HederaMirrorCoinTransfer {
   account: string;
   amount: number;
 }
@@ -19,10 +19,23 @@ export interface HederaMirrorTokenTransfer {
 }
 
 export interface HederaMirrorTransaction {
-  transfers: HederaMirrorTransfer[];
+  transfers: HederaMirrorCoinTransfer[];
   token_transfers: HederaMirrorTokenTransfer[];
   charged_tx_fee: string;
   transaction_hash: string;
   consensus_timestamp: string;
   result: string;
+}
+
+export interface HederaMirrorAccount {
+  account: string;
+  max_automatic_token_associations: number;
+  balance: {
+    balance: number;
+    timestamp: string;
+    tokens: {
+      token_id: string;
+      balance: number;
+    }[];
+  };
 }
