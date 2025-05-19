@@ -280,6 +280,11 @@ export type LLDCoinFamily<
   };
 
   /**
+   * Allow to add component below the token select field on account step
+   */
+  StepReceiveAccountPostAlert?: React.ComponentType<ReceiveStepProps>;
+
+  /**
    * Change Receive funds with this component (example: Hedera)
    */
   StepReceiveFunds?: React.ComponentType<ReceiveStepProps>;

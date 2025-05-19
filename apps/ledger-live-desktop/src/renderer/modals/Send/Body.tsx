@@ -203,6 +203,9 @@ const Body = ({
   } = useBridgeTransaction(() => {
     const parentAccount = params?.parentAccount;
     const account = params?.account || accounts[0];
+
+    console.log("[DEBUG] useBridgeTransaction", params.transaction);
+
     return {
       account,
       parentAccount,
