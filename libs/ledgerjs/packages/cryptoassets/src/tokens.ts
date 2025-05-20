@@ -437,27 +437,24 @@ export function convertSplTokens([
   };
 }
 
-function convertHederaTokens([tokenId, name, ticker, decimals]: HederaToken):
-  | TokenCurrency
-  | undefined {
-  const parentCurrencyId = "hedera";
-  const parentCurrency = getCryptoCurrencyById(parentCurrencyId);
-  const tokenType = "hts";
-
-  console.log("[DEBUG] convertHederaTokens", { tokenId, name, ticker, decimals, parentCurrency });
-
-  if (!parentCurrency) {
-    return;
-  }
-
+function convertHederaTokens([
+  id,
+  tokenId,
+  name,
+  ticker,
+  network,
+  decimals,
+  delisted,
+]: HederaToken): TokenCurrency {
   return {
     type: "TokenCurrency",
-    id: `${parentCurrencyId}/${tokenType}/${tokenId}`,
+    id,
     contractAddress: tokenId,
-    parentCurrency,
-    tokenType,
+    parentCurrency: getCryptoCurrencyById(network),
+    tokenType: "hts",
     name,
     ticker,
+    delisted,
     disableCountervalue: false,
     units: [
       {

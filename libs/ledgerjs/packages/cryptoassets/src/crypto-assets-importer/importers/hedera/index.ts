@@ -5,9 +5,11 @@ import { fetchTokensFromCALService } from "../../fetch";
 // FIXME: finish importer when CAL is ready
 
 type HederaToken = [
+  string, // id
   string, // tokenId
   string, // name
   string, // ticker
+  string, // network
   number, // decimals
 ];
 
@@ -15,23 +17,29 @@ export const importHederaTokens = async (outputDir: string) => {
   try {
     console.log("importing hedera tokens...");
     const { tokens, hash } = await fetchTokensFromCALService({ blockchain_name: "hedera" }, [
+      "id",
       "contract_address",
       "name",
       "ticker",
+      "network",
       "decimals",
     ]);
     const hederaTokens: HederaToken[] = tokens.map(token => [
-      token.contract_address.toLowerCase(),
+      token.id,
+      token.contract_address,
       token.name,
-      token.ticker.toLowerCase(),
+      token.ticker,
+      token.network,
       token.decimals,
     ]);
 
     const filePath = path.join(outputDir, "hedera");
     const hederaTypeStringified = `export type HederaToken = [
+  string, // id
   string, // tokenId
   string, // name
   string, // ticker
+  string, // network
   number, // decimals
 ];`;
 
