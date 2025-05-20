@@ -8,6 +8,7 @@ import {
   TransactionId,
   AccountBalanceQuery,
   HbarUnit,
+  TokenAssociateTransaction,
 } from "@hashgraph/sdk";
 import { Account, TokenAccount } from "@ledgerhq/types-live";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
@@ -60,6 +61,32 @@ async function buildUnsignedTokenTransaction({
     .setTransactionMemo(transaction.memo ?? "")
     .addTokenTransfer(tokenId, accountId, transaction.amount.negated().toNumber())
     .addTokenTransfer(tokenId, transaction.recipient, transaction.amount.toNumber())
+    .freeze();
+}
+
+async function buildAssociateTokenTransaction({
+  account,
+  tokenAccount,
+  transaction,
+}: {
+  account: Account;
+  tokenAccount: TokenAccount;
+  transaction: Transaction;
+}): Promise<TokenAssociateTransaction> {
+  const accountId = account.freshAddress;
+  const tokenId = tokenAccount.token.contractAddress;
+
+  console.log("[DEBUG] buildAssociateTokenTransaction", {
+    negatedAmount: transaction.amount,
+    amount: transaction.amount,
+  });
+
+  return new TokenAssociateTransaction()
+    .setNodeAccountIds([new AccountId(3)])
+    .setTransactionId(TransactionId.generate(accountId))
+    .setTransactionMemo(transaction.memo ?? "")
+    .setAccountId(accountId)
+    .setTokenIds([tokenId])
     .freeze();
 }
 
