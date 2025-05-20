@@ -2,8 +2,6 @@ import fs from "fs";
 import path from "path";
 import { fetchTokensFromCALService } from "../../fetch";
 
-// FIXME: finish importer when CAL is ready
-
 type HederaToken = [
   string, // id
   string, // tokenId
@@ -11,6 +9,7 @@ type HederaToken = [
   string, // ticker
   string, // network
   number, // decimals
+  boolean, // delisted
 ];
 
 export const importHederaTokens = async (outputDir: string) => {
@@ -23,6 +22,7 @@ export const importHederaTokens = async (outputDir: string) => {
       "ticker",
       "network",
       "decimals",
+      "delisted",
     ]);
     const hederaTokens: HederaToken[] = tokens.map(token => [
       token.id,
@@ -31,6 +31,7 @@ export const importHederaTokens = async (outputDir: string) => {
       token.ticker,
       token.network,
       token.decimals,
+      token.delisted,
     ]);
 
     const filePath = path.join(outputDir, "hedera");
@@ -41,6 +42,7 @@ export const importHederaTokens = async (outputDir: string) => {
   string, // ticker
   string, // network
   number, // decimals
+  boolean, // delisted
 ];`;
 
     fs.writeFileSync(`${filePath}.json`, JSON.stringify(hederaTokens));
