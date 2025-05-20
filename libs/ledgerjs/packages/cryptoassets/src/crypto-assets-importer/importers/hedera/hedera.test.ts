@@ -65,7 +65,9 @@ export default tokens as HederaToken[];
     expect(mockedFs).toHaveBeenNthCalledWith(
       1,
       "hedera.json",
-      JSON.stringify([["hedera/hts/hbark_0.0.5022567", "0.0.5022567", "hBARK", "HBARK", 0]]),
+      JSON.stringify([
+        ["hedera/hts/hbark_0.0.5022567", "0.0.5022567", "hBARK", "hBARK", "hedera", 0, false],
+      ]),
     );
     expect(mockedFs).toHaveBeenNthCalledWith(2, "hedera-hash.json", JSON.stringify("commitHash"));
     expect(mockedFs).toHaveBeenNthCalledWith(3, "hedera.ts", expectedFile);
