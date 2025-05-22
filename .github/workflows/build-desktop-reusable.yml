@@ -69,7 +69,7 @@ jobs:
         id: build-desktop
         uses: LedgerHQ/ledger-live/tools/actions/composites/setup-build-desktop@develop
         with:
-          os: ${{ matrix.config.name }}
+          os: ${{ matrix.config.output-name }}
 
       - name: Build the app
         id: build-app
@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-desktop.outputs.version }}-${{ matrix.config.image }}
-          path: ${{ github.workspace }}/apps/ledger-live-desktop/dist/${{ steps.build-desktop.outputs.output-name }}-${{ steps.build-desktop.outputs.version }}-${{ matrix.config.image }}
+          path: ${{ github.workspace }}/apps/ledger-live-desktop/dist/ledger-live-desktop-${{ steps.build-desktop.outputs.version }}-${{ matrix.config.image }}
 
       - name: Upload bundle metafiles
         uses: actions/upload-artifact@v4
@@ -100,7 +100,7 @@ jobs:
     name: "Build Desktop > Report"
     needs: build-desktop-app
     runs-on: ubuntu-22.04
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'pull_request')}}
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'pull_request') && needs.build-desktop-app.outputs.linux == 'success' && needs.build-desktop-app.outputs.win == 'success' && needs.build-desktop-app.outputs.mac == 'success' }}
     steps:
       - uses: actions/checkout@v4
         with:

@@ -47,15 +47,14 @@ export const getAccountShape: GetAccountShape<Account> = async (
   const pendingOperations = initialAccount?.pendingOperations ?? [];
 
   // grab latest operation's consensus timestamp for incremental sync
-  const latestOperationTimestamp = shouldSyncFromScratch
-    ? null
-    : oldOperations[0]
-      ? Math.floor(oldOperations[0].date.getTime() / 1000)
+  const latestOperationTimestamp =
+    !shouldSyncFromScratch && oldOperations[0]
+      ? new BigNumber(Math.floor(oldOperations[0].date.getTime() / 1000))
       : null;
   const latestAccountOperations = await getOperationsForAccount(
     liveAccountId,
     address,
-    latestOperationTimestamp ? new BigNumber(latestOperationTimestamp).toString() : null,
+    latestOperationTimestamp ? latestOperationTimestamp.toString() : null,
   );
 
   const newSubAccounts = await getSubAccounts(

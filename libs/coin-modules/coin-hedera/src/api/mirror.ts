@@ -8,7 +8,7 @@ import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import { getAccountBalance } from "./network";
 import { base64ToUrlSafeBase64 } from "../bridge/utils";
-import { HederaAccount, HederaMirrorAccount, HederaMirrorTransaction } from "./types";
+import { HederaMirrorAccount, HederaMirrorTransaction } from "./types";
 import { parseTransfers } from "./utils";
 
 const getMirrorApiUrl = (): string => getEnv("API_HEDERA_MIRROR");
@@ -20,7 +20,7 @@ const fetch = (path: string) => {
   });
 };
 
-export async function getAccountsForPublicKey(publicKey: string): Promise<HederaAccount[]> {
+export async function getAccountsForPublicKey(publicKey: string): Promise<HederaMirrorAccount[]> {
   let r;
   try {
     r = await fetch(`/api/v1/accounts?account.publicKey=${publicKey}&balance=false`);
@@ -29,7 +29,7 @@ export async function getAccountsForPublicKey(publicKey: string): Promise<Hedera
     throw e;
   }
   const rawAccounts = r.data.accounts;
-  const accounts: HederaAccount[] = [];
+  const accounts: HederaMirrorAccount[] = [];
 
   for (const raw of rawAccounts) {
     const accountBalance = await getAccountBalance(raw.account);
@@ -43,13 +43,15 @@ export async function getAccountsForPublicKey(publicKey: string): Promise<Hedera
   return accounts;
 }
 
-async function getAccountTransactions(
+export async function getAccountTransactions(
   address: string,
   since: string | null,
 ): Promise<HederaMirrorTransaction[]> {
   const transactions: HederaMirrorTransaction[] = [];
   const params = new URLSearchParams({
     "account.id": address,
+    order: "desc",
+    limit: "100",
   });
 
   if (since) {
@@ -61,8 +63,8 @@ async function getAccountTransactions(
   while (nextUrl) {
     const res = await fetch(nextUrl);
     const newTransactions = res.data.transactions as HederaMirrorTransaction[];
-    transactions.push(...newTransactions);
     if (newTransactions.length === 0) break;
+    transactions.push(...newTransactions);
     nextUrl = res.data.links.next;
   }
 
