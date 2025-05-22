@@ -67,7 +67,7 @@ const ReceiveModal = () => {
   const hasAccounts = !!accounts.length;
 
   const openAddAccounts = useCallback(() => {
-    dispatch(closeModal("MODAL_RECEIVE"));
+    dispatch(closeModal("MODAL_HEDERA_RECEIVE"));
     dispatch(
       openModal("MODAL_ADD_ACCOUNTS", {
         currency: null,
