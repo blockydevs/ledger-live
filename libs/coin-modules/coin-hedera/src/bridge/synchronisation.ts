@@ -14,7 +14,12 @@ import {
 import { encodeAccountId } from "@ledgerhq/coin-framework/account";
 import { getAccountsForPublicKey, getOperationsForAccount } from "../api/mirror";
 import { getAccountBalance } from "../api/network";
-import { getSubAccounts, linkSubOperationsToCoinOperations, mergeSubAccounts } from "./utils";
+import {
+  getSubAccounts,
+  linkSubOperationsToCoinOperations,
+  applyPendingExtras,
+  mergeSubAccounts,
+} from "./utils";
 
 export const getAccountShape: GetAccountShape<Account> = async (
   info,
@@ -34,13 +39,14 @@ export const getAccountShape: GetAccountShape<Account> = async (
   // get current account balance
   const accountBalance = await getAccountBalance(address);
 
-  // FIXME: compare initial account balance & subaccounts with mirror node account balance
   const shouldSyncFromScratch =
     !initialAccount?.subAccounts ||
     (initialAccount.subAccounts.length === 0 && accountBalance.tokens.length > 0);
 
-  // grab latest operation's consensus timestamp for incremental sync
   const oldOperations = initialAccount?.operations ?? [];
+  const pendingOperations = initialAccount?.pendingOperations ?? [];
+
+  // grab latest operation's consensus timestamp for incremental sync
   const latestOperationTimestamp = shouldSyncFromScratch
     ? null
     : oldOperations[0]
@@ -65,7 +71,8 @@ export const getAccountShape: GetAccountShape<Account> = async (
     latestAccountOperations.tokenOperations,
   );
 
-  const operations = mergeOps(oldOperations, newOperations);
+  const mergedOperations = mergeOps(oldOperations, newOperations);
+  const enrichedOperations = applyPendingExtras(mergedOperations, pendingOperations);
 
   console.log("[DEBUG] coin-hedera bridge getAccountShape", {
     info,
@@ -73,7 +80,7 @@ export const getAccountShape: GetAccountShape<Account> = async (
     latestAccountOperations,
     oldOperations,
     newOperations,
-    operations,
+    operations: enrichedOperations,
     latestOperationTimestamp,
     newSubAccounts,
     subAccounts,
@@ -82,7 +89,7 @@ export const getAccountShape: GetAccountShape<Account> = async (
       freshAddress: address,
       balance: accountBalance.balance,
       spendableBalance: accountBalance.balance,
-      operations,
+      operations: enrichedOperations,
       // NOTE: there are no "blocks" in hedera
       // Set a value just so that operations are considered confirmed according to isConfirmedOperation
       blockHeight: 10,
@@ -94,7 +101,7 @@ export const getAccountShape: GetAccountShape<Account> = async (
     freshAddress: address,
     balance: accountBalance.balance,
     spendableBalance: accountBalance.balance,
-    operations,
+    operations: enrichedOperations,
     // NOTE: there are no "blocks" in hedera
     // Set a value just so that operations are considered confirmed according to isConfirmedOperation
     blockHeight: 10,

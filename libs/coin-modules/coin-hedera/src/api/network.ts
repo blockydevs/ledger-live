@@ -14,6 +14,7 @@ import { Account, TokenAccount } from "@ledgerhq/types-live";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import { HederaAddAccountError } from "../errors";
 import { Transaction } from "../types";
+import invariant from "invariant";
 
 export function broadcastTransaction(transaction: HederaTransaction): Promise<TransactionResponse> {
   return transaction.execute(getClient());
@@ -66,17 +67,17 @@ async function buildUnsignedTokenTransaction({
 
 async function buildAssociateTokenTransaction({
   account,
-  tokenAccount,
   transaction,
 }: {
   account: Account;
-  tokenAccount: TokenAccount;
   transaction: Transaction;
 }): Promise<TokenAssociateTransaction> {
+  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction type");
+
   const accountId = account.freshAddress;
-  const tokenId = tokenAccount.token.contractAddress;
 
   console.log("[DEBUG] buildAssociateTokenTransaction", {
+    transaction,
     negatedAmount: transaction.amount,
     amount: transaction.amount,
   });
@@ -86,7 +87,7 @@ async function buildAssociateTokenTransaction({
     .setTransactionId(TransactionId.generate(accountId))
     .setTransactionMemo(transaction.memo ?? "")
     .setAccountId(accountId)
-    .setTokenIds([tokenId])
+    .setTokenIds([transaction.properties.token.contractAddress])
     .freeze();
 }
 
@@ -96,7 +97,7 @@ export async function buildUnsignedTransaction({
 }: {
   account: Account;
   transaction: Transaction;
-}): Promise<TransferTransaction> {
+}): Promise<TransferTransaction | TokenAssociateTransaction> {
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
@@ -107,7 +108,9 @@ export async function buildUnsignedTransaction({
     transaction,
   });
 
-  if (isTokenTransaction) {
+  if (transaction.properties?.name === "tokenAssociate") {
+    return buildAssociateTokenTransaction({ account, transaction });
+  } else if (isTokenTransaction) {
     return buildUnsignedTokenTransaction({ account, tokenAccount: subAccount, transaction });
   } else {
     return buildUnsignedCoinTransaction({ account, transaction });

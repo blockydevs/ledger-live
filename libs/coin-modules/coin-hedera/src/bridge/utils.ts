@@ -24,6 +24,7 @@ const TINYBAR_SCALE = 8;
 const BASE_USD_FEE_BY_OPERATION_TYPE: Record<HederaOperationType, number> = {
   CryptoTransfer: 0.0001 * 10 ** TINYBAR_SCALE,
   TokenTransfer: 0.001 * 10 ** TINYBAR_SCALE,
+  TokenAssociate: 0.05 * 10 ** TINYBAR_SCALE,
 } as const;
 
 export async function getEstimatedFees(
@@ -156,6 +157,7 @@ export const getSubAccounts = async (
 
   const subAccounts: TokenAccount[] = [];
 
+  // extract token accounts from existing operations
   for (const [token, tokenOperations] of operationsByToken.entries()) {
     const parentAccountId = accountId;
     const balance = accountBalance.tokens.find(t => t.tokenId === token.contractAddress)?.balance;
@@ -174,6 +176,39 @@ export const getSubAccounts = async (
       creationDate: new Date(),
       operations: tokenOperations,
       operationsCount: tokenOperations.length,
+      pendingOperations: [],
+      balanceHistoryCache: emptyHistoryCache,
+      swapHistory: [],
+    });
+  }
+
+  // extract token accounts existing in the account's balance, but with no recorded operations yet
+  // e.g. tokens added via association flow, without any subsequent activity
+  for (const rawToken of accountBalance.tokens) {
+    const parentAccountId = accountId;
+    const balance = rawToken.balance;
+    const token = findTokenByAddressInCurrency(rawToken.tokenId, "hedera");
+
+    if (!token) {
+      continue;
+    }
+
+    const id = encodeTokenAccountId(parentAccountId, token);
+
+    if (subAccounts.some(a => a.id === id)) {
+      continue;
+    }
+
+    subAccounts.push({
+      type: "TokenAccount",
+      id: encodeTokenAccountId(parentAccountId, token),
+      parentId: parentAccountId,
+      token,
+      balance,
+      spendableBalance: balance,
+      creationDate: new Date(),
+      operations: [],
+      operationsCount: 0,
       pendingOperations: [],
       balanceHistoryCache: emptyHistoryCache,
       swapHistory: [],
@@ -327,6 +362,25 @@ export const mergeSubAccounts = (
   return [...updatedSubAccounts, ...newSubAccountsToAdd];
 };
 
+export const applyPendingExtras = (existing: Operation[], pending: Operation[]) => {
+  const pendingMap = new Map(pending.map(op => [op.hash, op]));
+
+  return existing.map(op => {
+    const pendingOp = pendingMap.get(op.hash);
+    if (!pendingOp) return op;
+    if (!op.extra || typeof op.extra !== "object") return op;
+    if (!pendingOp.extra || typeof pendingOp.extra !== "object") return op;
+
+    return {
+      ...op,
+      extra: {
+        ...pendingOp.extra,
+        ...op.extra,
+      },
+    };
+  });
+};
+
 export const checkAccountTokenAssociationStatus = makeLRUCache(
   async (accountId: string, tokenId: string) => {
     const accountDetails = await getAccount(accountId);
@@ -341,5 +395,5 @@ export const checkAccountTokenAssociationStatus = makeLRUCache(
     return isTokenAssociated;
   },
   (accountId, tokenId) => `${accountId}-${tokenId}`,
-  minutes(1), // FIXME: adjust
+  minutes(1),
 );

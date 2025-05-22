@@ -25,6 +25,7 @@ export interface HederaMirrorTransaction {
   transaction_hash: string;
   consensus_timestamp: string;
   result: string;
+  name: string;
 }
 
 export interface HederaMirrorAccount {

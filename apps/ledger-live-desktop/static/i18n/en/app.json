@@ -202,7 +202,8 @@
       "UNSTAKE": "Unstaked",
       "WITHDRAW_UNSTAKED": "Withdrawn",
       "SENDING": "Sending",
-      "BURN": "Burned"
+      "BURN": "Burned",
+      "TOKEN_ASSOCIATE": "Token associated"
     },
     "edit": {
       "title": "Speed up or Cancel",

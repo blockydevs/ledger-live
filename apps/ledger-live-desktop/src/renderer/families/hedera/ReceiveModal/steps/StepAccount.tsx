@@ -20,11 +20,12 @@ import SelectCurrency from "~/renderer/components/SelectCurrency";
 import CurrencyDownStatusAlert from "~/renderer/components/CurrencyDownStatusAlert";
 import ErrorBanner from "~/renderer/components/ErrorBanner";
 import Alert from "~/renderer/components/Alert";
-import { getLLDCoinFamily } from "~/renderer/families";
 import { StepProps } from "../Body";
 import { supportLinkByTokenType } from "~/config/urls";
+import StepReceiveAccountPostAlert from "~/renderer/families/hedera/ReceiveModal/components/StepReceiveAccountPostAlert";
 
 type OnChangeAccount = (account?: AccountLike | null, tokenAccount?: Account | null) => void;
+
 const AccountSelection = ({
   onChangeAccount,
   account,
@@ -39,6 +40,7 @@ const AccountSelection = ({
     <SelectAccount autoFocus withSubAccounts onChange={onChangeAccount} value={account} />
   </>
 );
+
 const TokenParentSelection = ({
   onChangeAccount,
   mainAccount,
@@ -64,6 +66,7 @@ const TokenParentSelection = ({
     </>
   );
 };
+
 const TokenSelection = ({
   currency,
   token,
@@ -87,6 +90,7 @@ const TokenSelection = ({
     </>
   );
 };
+
 export default function StepAccount(props: StepProps) {
   const {
     token,
@@ -125,7 +129,6 @@ export default function StepAccount(props: StepProps) {
           onChangeToken={onChangeToken}
         />
       ) : null}
-
       {account && !receiveTokenMode && tokenTypes.length ? (
         <div>
           <Alert type="warning" learnMoreUrl={url} mt={3}>
@@ -152,23 +155,33 @@ export default function StepAccount(props: StepProps) {
           </Alert>
         </div>
       ) : null}
+      {account && <StepReceiveAccountPostAlert {...props} account={account} />}
     </Box>
   );
 }
+
 export function StepAccountFooter({
   transitionTo,
+  isAssociateFlow,
   receiveTokenMode,
   token,
   account,
   parentAccount,
 }: StepProps) {
   const error = account ? getReceiveFlowError(account, parentAccount) : null;
+  const isMissingToken = receiveTokenMode && !token;
+
+  const redirectToDeviceStep = () => {
+    const deviceStepId = isAssociateFlow ? "associateDevice" : "device";
+    transitionTo(deviceStepId);
+  };
+
   return (
     <Button
-      data-testid="modal-continue-button"
-      disabled={!account || (receiveTokenMode && !token) || !!error}
       primary
-      onClick={() => transitionTo("device")}
+      data-testid="modal-continue-button"
+      disabled={!account || isMissingToken || !!error}
+      onClick={redirectToDeviceStep}
     >
       <Trans i18nKey="common.continue" />
     </Button>

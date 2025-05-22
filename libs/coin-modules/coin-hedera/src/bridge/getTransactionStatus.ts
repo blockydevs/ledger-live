@@ -12,6 +12,7 @@ import type { Account, AccountBridge } from "@ledgerhq/types-live";
 import { calculateAmount, checkAccountTokenAssociationStatus, getEstimatedFees } from "./utils";
 import type { HederaOperationType, Transaction, TransactionStatus } from "../types";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
+import BigNumber from "bignumber.js";
 
 export const getTransactionStatus: AccountBridge<
   Transaction,
@@ -21,6 +22,21 @@ export const getTransactionStatus: AccountBridge<
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
   const warningAlerts: Record<string, Error> = {};
+
+  if (transaction.properties?.name === "tokenAssociate") {
+    const amount = BigNumber(0);
+    const estimatedFees = await getEstimatedFees(account, "TokenAssociate");
+    const totalSpent = amount.plus(estimatedFees);
+
+    return {
+      amount,
+      errors,
+      estimatedFees,
+      totalSpent,
+      warnings,
+      warningAlerts,
+    };
+  }
 
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);

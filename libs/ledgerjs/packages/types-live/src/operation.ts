@@ -55,7 +55,9 @@ export type OperationType =
   | "UNSTAKE"
   | "WITHDRAW_UNSTAKED"
   // SOLANA
-  | "BURN";
+  | "BURN"
+  // HEDERA
+  | "TOKEN_ASSOCIATE";
 
 export type OperationExtra = unknown;
 /**

@@ -114,11 +114,12 @@ export async function getOperationsForAccount(
       });
     } else if (transfers.length > 0) {
       const { type, value, senders, recipients } = parseTransfers(rawTx.transfers, address);
+      const operationType = rawTx.name === "TOKENASSOCIATE" ? "TOKEN_ASSOCIATE" : type;
 
       coinOperations.push({
         id: encodeOperationId(ledgerAccountId, hash, type),
         accountId: ledgerAccountId,
-        type,
+        type: operationType,
         value,
         recipients,
         senders,

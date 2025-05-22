@@ -4,8 +4,42 @@ import { getEstimatedFees } from "./utils";
 import { Transaction } from "../types";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import BigNumber from "bignumber.js";
+import invariant from "invariant";
 
-export const buildOptimisticCoinOperation = async ({
+const buildOptimisticAssociateTokenOperation = async ({
+  account,
+  transaction,
+}: {
+  account: Account;
+  transaction: Transaction;
+}): Promise<Operation> => {
+  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction type");
+
+  const estimatedFee = await getEstimatedFees(account, "TokenAssociate");
+  const value = transaction.amount;
+  const type: OperationType = "TOKEN_ASSOCIATE";
+
+  const operation: Operation = {
+    id: encodeOperationId(account.id, "", type),
+    hash: "",
+    type,
+    value,
+    fee: estimatedFee,
+    blockHash: null,
+    blockHeight: null,
+    senders: [account.freshAddress.toString()],
+    recipients: [transaction.recipient],
+    accountId: account.id,
+    date: new Date(),
+    extra: {
+      associatedTokenId: transaction.properties.token.contractAddress,
+    },
+  };
+
+  return operation;
+};
+
+const buildOptimisticCoinOperation = async ({
   account,
   transaction,
   transactionType,
@@ -16,10 +50,10 @@ export const buildOptimisticCoinOperation = async ({
 }): Promise<Operation> => {
   const estimatedFee = await getEstimatedFees(account, "CryptoTransfer");
   const value = transaction.amount;
-  const type = transactionType ?? "OUT";
+  const type: OperationType = transactionType ?? "OUT";
 
   const operation: Operation = {
-    id: encodeOperationId(account.id, "", "OUT"),
+    id: encodeOperationId(account.id, "", type),
     hash: "",
     type,
     value,
@@ -36,7 +70,7 @@ export const buildOptimisticCoinOperation = async ({
   return operation;
 };
 
-export const buildOptimisticTokenOperation = async ({
+const buildOptimisticTokenOperation = async ({
   account,
   tokenAccount,
   transaction,
@@ -45,9 +79,9 @@ export const buildOptimisticTokenOperation = async ({
   tokenAccount: TokenAccount;
   transaction: Transaction;
 }): Promise<Operation> => {
-  const type = "OUT";
   const estimatedFee = await getEstimatedFees(account, "TokenTransfer");
   const value = transaction.amount;
+  const type: OperationType = "OUT";
 
   const coinOperation = await buildOptimisticCoinOperation({
     account,
@@ -63,7 +97,7 @@ export const buildOptimisticTokenOperation = async ({
     ...coinOperation,
     subOperations: [
       {
-        id: encodeOperationId(tokenAccount.id, "", "OUT"),
+        id: encodeOperationId(tokenAccount.id, "", type),
         hash: "",
         type,
         value,
@@ -92,7 +126,9 @@ export const buildOptimisticOperation = async ({
   const subAccount = findSubAccountById(account, transaction.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
-  if (isTokenTransaction) {
+  if (transaction.properties?.name === "tokenAssociate") {
+    return buildOptimisticAssociateTokenOperation({ account, transaction });
+  } else if (isTokenTransaction) {
     return buildOptimisticTokenOperation({ account, tokenAccount: subAccount, transaction });
   } else {
     return buildOptimisticCoinOperation({ account, transaction });

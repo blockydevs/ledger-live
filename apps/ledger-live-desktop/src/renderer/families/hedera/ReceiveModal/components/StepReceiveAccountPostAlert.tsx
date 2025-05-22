@@ -1,11 +1,15 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { closeModal, openModal } from "~/renderer/actions/modals";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { openModal } from "~/renderer/actions/modals";
 import Alert from "~/renderer/components/Alert";
-import { StepProps } from "~/renderer/modals/Receive/Body";
 import styled from "styled-components";
 import Box from "~/renderer/components/Box";
 import Text from "~/renderer/components/Text";
+import { useBalanceHistoryWithCountervalue } from "~/renderer/actions/portfolio";
+import { useTimeRange } from "~/renderer/actions/settings";
+import { counterValueCurrencySelector } from "~/renderer/reducers/settings";
+import { StepProps } from "~/renderer/families/hedera/ReceiveModal/Body";
+import { AccountLike } from "@ledgerhq/types-live";
 
 const Container = styled.div`
   margin-top: 16px;
@@ -32,29 +36,37 @@ const InlineTextButton = styled(Box).attrs(() => ({
   }
 `;
 
+interface Props extends StepProps {
+  account: AccountLike;
+}
+
 // FIXME:
 // - css
 // - translations
 // - learnMoreUrl
+// - review logic for calculating balance in usd
 const StepReceiveAccountPostAlert = ({
   account,
   token,
-  parentAccount,
   receiveTokenMode,
+  isAssociateFlow,
   closeModal,
-  ...rest
-}: StepProps) => {
+}: Props) => {
   const dispatch = useDispatch();
+  const [range] = useTimeRange();
+  const counterValue = useSelector(counterValueCurrencySelector);
+  const accountBalance = useBalanceHistoryWithCountervalue({ account, range });
+
   const isTokenAccount = account?.type === "TokenAccount";
-  const subAccounts = !!account && "subAccounts" in account ? account.subAccounts ?? [] : [];
-  const isTokenAssociated = subAccounts.some(item => !!token && item.token.id === token.id);
-  const hasEnoughBalanceForAssociation = false;
-  console.log("[DEBUG]", { account, receiveTokenMode, parentAccount, rest });
+  const balance = accountBalance.history[accountBalance.history.length - 1].countervalue;
+  const unit = counterValue.units[0];
+  const currentHbarWorth = typeof balance === "number" ? balance / 10 ** unit.magnitude : null;
+  const hasEnoughBalanceForAssociation = !!currentHbarWorth && currentHbarWorth > 0.05;
 
   if (!receiveTokenMode && !isTokenAccount) {
     const triggerAssociate = () => {
       closeModal();
-      dispatch(openModal("MODAL_RECEIVE", { account, receiveTokenMode: true }));
+      dispatch(openModal("MODAL_HEDERA_RECEIVE", { account, receiveTokenMode: true }));
     };
 
     return (
@@ -68,7 +80,7 @@ const StepReceiveAccountPostAlert = ({
     );
   }
 
-  if (token && !isTokenAssociated) {
+  if (token && isAssociateFlow) {
     return (
       <Container>
         {!hasEnoughBalanceForAssociation && (

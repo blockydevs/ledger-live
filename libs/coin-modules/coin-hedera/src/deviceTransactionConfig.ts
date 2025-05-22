@@ -12,25 +12,26 @@ function getDeviceTransactionConfig({
   status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const fields: Array<DeviceTransactionField> = [];
+  const isTokenAssociateTransaction = transaction.properties?.name === "tokenAssociate";
 
-  if (transaction.useAllAmount) {
-    fields.push({
-      type: "text",
-      label: "Method",
-      value: "Transfer All",
-    });
-  } else {
-    fields.push({
-      type: "text",
-      label: "Method",
-      value: "Transfer",
-    });
-  }
+  const method = (() => {
+    if (transaction.useAllAmount) return "Transfer All";
+    else if (isTokenAssociateTransaction) return "Token Association";
+    else return "Transfer";
+  })();
 
   fields.push({
-    type: "amount",
-    label: "Amount",
+    type: "text",
+    label: "Method",
+    value: method,
   });
+
+  if (!isTokenAssociateTransaction) {
+    fields.push({
+      type: "amount",
+      label: "Amount",
+    });
+  }
 
   if (!estimatedFees.isZero()) {
     fields.push({

@@ -17,6 +17,7 @@ export const broadcast: AccountBridge<Transaction>["broadcast"] = async ({ signe
   const base64HashUrlSafe = base64ToUrlSafeBase64(base64Hash);
   const operationWithHash = patchOperationWithHash(operation, base64HashUrlSafe);
   const extra = {
+    ...(operation.extra && typeof operation.extra === "object" ? operation.extra : null),
     transactionId: response.transactionId.toString(),
   } satisfies HederaOperationExtra;
 
