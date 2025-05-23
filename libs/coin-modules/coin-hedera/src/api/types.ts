@@ -1,11 +1,6 @@
 import { AccountId } from "@hashgraph/sdk";
 import BigNumber from "bignumber.js";
 
-export interface HederaAccount {
-  accountId: AccountId;
-  balance: BigNumber;
-}
-
 export interface HederaMirrorCoinTransfer {
   account: string;
   amount: number;

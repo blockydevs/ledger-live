@@ -20,7 +20,12 @@ const fetch = (path: string) => {
   });
 };
 
-export async function getAccountsForPublicKey(publicKey: string): Promise<HederaMirrorAccount[]> {
+interface HederaAccount {
+  accountId: AccountId;
+  balance: BigNumber;
+}
+
+export async function getAccountsForPublicKey(publicKey: string): Promise<HederaAccount[]> {
   let r;
   try {
     r = await fetch(`/api/v1/accounts?account.publicKey=${publicKey}&balance=false`);
@@ -29,7 +34,7 @@ export async function getAccountsForPublicKey(publicKey: string): Promise<Hedera
     throw e;
   }
   const rawAccounts = r.data.accounts;
-  const accounts: HederaMirrorAccount[] = [];
+  const accounts: HederaAccount[] = [];
 
   for (const raw of rawAccounts) {
     const accountBalance = await getAccountBalance(raw.account);
