@@ -15,7 +15,7 @@ import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { makeLRUCache, minutes } from "@ledgerhq/live-network/cache";
 import { AccountBalance } from "../api/network";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
-import type { HederaOperationType, Transaction } from "../types";
+import type { HederaOperationType, HederaOperationExtra, Transaction } from "../types";
 import { getAccount } from "../api/mirror";
 
 export const estimatedFeeSafetyRate = 2;
@@ -397,3 +397,15 @@ export const checkAccountTokenAssociationStatus = makeLRUCache(
   (accountId, tokenId) => `${accountId}-${tokenId}`,
   minutes(1),
 );
+
+export function patchOperationWithExtra(
+  operation: Operation,
+  extra: HederaOperationExtra,
+): Operation {
+  return {
+    ...operation,
+    extra,
+    subOperations: (operation.subOperations ?? []).map(op => ({ ...op, extra })),
+    nftOperations: (operation.nftOperations ?? []).map(op => ({ ...op, extra })),
+  };
+}

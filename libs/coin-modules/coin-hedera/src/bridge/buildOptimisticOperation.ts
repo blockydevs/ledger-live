@@ -1,7 +1,7 @@
 import { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { getEstimatedFees } from "./utils";
-import { Transaction } from "../types";
+import { HederaOperationExtra, Transaction } from "../types";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
@@ -33,7 +33,7 @@ const buildOptimisticAssociateTokenOperation = async ({
     date: new Date(),
     extra: {
       associatedTokenId: transaction.properties.token.contractAddress,
-    },
+    } satisfies HederaOperationExtra,
   };
 
   return operation;

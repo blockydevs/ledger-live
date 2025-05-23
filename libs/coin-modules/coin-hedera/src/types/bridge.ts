@@ -40,10 +40,7 @@ export type TransactionStatusRaw = TransactionStatusCommonRaw;
 export type HederaOperationExtra = {
   consensusTimestamp?: string;
   transactionId?: string;
-};
-
-export type HederaOperationExtraRaw = {
-  consensusTimestamp?: string;
+  associatedTokenId?: string;
 };
 
 export type HederaOperationType = "CryptoTransfer" | "TokenTransfer" | "TokenAssociate";
