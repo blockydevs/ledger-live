@@ -3,19 +3,14 @@ import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
 
 import { useBroadcast } from "@ledgerhq/live-common/hooks/useBroadcast";
-import connectApp from "@ledgerhq/live-common/hw/connectApp";
-import { createAction } from "@ledgerhq/live-common/hw/actions/transaction";
-import { getEnv } from "@ledgerhq/live-env";
 import { SignedOperation } from "@ledgerhq/types-live";
-import { mockedEventEmitter } from "~/renderer/components/debug/DebugMock";
 import DeviceAction from "~/renderer/components/DeviceAction";
 import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
 import StepProgress from "~/renderer/components/StepProgress";
 import { DeviceBlocker } from "~/renderer/components/DeviceAction/DeviceBlocker";
+import { useTransactionAction } from "~/renderer/hooks/useConnectAppAction";
 import { mevProtectionSelector } from "~/renderer/reducers/settings";
 import { StepProps } from "../Body";
-
-const action = createAction(getEnv("MOCK") ? mockedEventEmitter : connectApp);
 
 const Result = (
   props:
@@ -38,6 +33,7 @@ const Result = (
 
 export default function StepAssociationDevice(props: StepProps) {
   const {
+    token,
     account,
     transaction,
     status,
@@ -48,20 +44,26 @@ export default function StepAssociationDevice(props: StepProps) {
     onTransactionError,
   } = props;
   const mevProtected = useSelector(mevProtectionSelector);
+  const action = useTransactionAction();
   const broadcastConfig = useMemo(() => ({ mevProtected }), [mevProtected]);
   const broadcast = useBroadcast({ account, parentAccount, broadcastConfig });
 
+  const tokenCurrency = (account && account.type === "TokenAccount" && account.token) || token;
+
   const request = useMemo(
     () => ({
+      tokenCurrency,
       parentAccount,
       account,
       transaction,
       status,
     }),
-    [parentAccount, account, transaction, status],
+    [tokenCurrency, parentAccount, account, transaction, status],
   );
 
-  console.log({ transaction, request });
+  if (!transaction || !account) {
+    return null;
+  }
 
   return (
     <DeviceAction

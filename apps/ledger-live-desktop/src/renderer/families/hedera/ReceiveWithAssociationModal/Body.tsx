@@ -112,7 +112,9 @@ const createSteps = (isAssociationFlow: boolean): Array<St> => [
   },
   {
     id: "associationConfirmation",
-    label: <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.title" />,
+    label: (
+      <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.breadcrumbTitle" />
+    ),
     excludeFromBreadcrumb: !isAssociationFlow,
     component: StepAssociationConfirmation,
     footer: StepAssociationConfirmationFooter,
