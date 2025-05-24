@@ -29,6 +29,7 @@ const BodyByMode = {
 export default function AccountList({ accounts, range, onAccountClick, mode }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+
   const blacklistedTokenIds = useSelector(blacklistedTokenIdsSelector);
 
   const lookupParentAccount = useCallback(

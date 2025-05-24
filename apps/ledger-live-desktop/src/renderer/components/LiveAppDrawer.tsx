@@ -186,7 +186,6 @@ export const LiveAppDrawer = () => {
               );
             }
           }
-
           return (
             <DeviceAction
               action={action}

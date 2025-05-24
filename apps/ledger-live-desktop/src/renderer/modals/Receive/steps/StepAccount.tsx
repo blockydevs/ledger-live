@@ -20,7 +20,6 @@ import SelectCurrency from "~/renderer/components/SelectCurrency";
 import CurrencyDownStatusAlert from "~/renderer/components/CurrencyDownStatusAlert";
 import ErrorBanner from "~/renderer/components/ErrorBanner";
 import Alert from "~/renderer/components/Alert";
-import { getLLDCoinFamily } from "~/renderer/families";
 import { StepProps } from "../Body";
 import { supportLinkByTokenType } from "~/config/urls";
 
@@ -87,16 +86,15 @@ const TokenSelection = ({
     </>
   );
 };
-export default function StepAccount(props: StepProps) {
-  const {
-    token,
-    account,
-    parentAccount,
-    receiveTokenMode,
-    onChangeAccount,
-    onChangeToken,
-    eventType,
-  } = props;
+export default function StepAccount({
+  token,
+  account,
+  parentAccount,
+  receiveTokenMode,
+  onChangeAccount,
+  onChangeToken,
+  eventType,
+}: StepProps) {
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
   const error = account ? getReceiveFlowError(account, parentAccount) : null;
   const tokenTypes = mainAccount ? listTokenTypesForCryptoCurrency(mainAccount.currency) : [];
@@ -107,7 +105,6 @@ export default function StepAccount(props: StepProps) {
       ? mainAccount.currency.name
       : tokenTypes.map(tt => tt.toUpperCase()).join("/");
   const url = supportLinkByTokenType[tokenTypes[0] as keyof typeof supportLinkByTokenType];
-
   return (
     <Box flow={1}>
       <TrackPage category={`Receive Flow${eventType ? ` (${eventType})` : ""}`} name="Step 1" />

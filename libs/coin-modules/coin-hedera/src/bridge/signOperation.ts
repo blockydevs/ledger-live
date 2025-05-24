@@ -29,7 +29,6 @@ export const buildSignOperation =
             await hederaTransaction.signWith(accountPublicKey, async bodyBytes => {
               return await signer.signTransaction(bodyBytes);
             });
-
             return hederaTransaction.toBytes();
           });
 

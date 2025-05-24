@@ -203,7 +203,6 @@ const Body = ({
   } = useBridgeTransaction(() => {
     const parentAccount = params?.parentAccount;
     const account = params?.account || accounts[0];
-
     return {
       account,
       parentAccount,

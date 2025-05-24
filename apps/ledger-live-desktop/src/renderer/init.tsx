@@ -162,7 +162,6 @@ async function init() {
     }),
   );
   const accountData = await getKey("app", "accounts", []);
-
   if (accountData) {
     const e = initAccounts(accountData);
     store.dispatch(e);

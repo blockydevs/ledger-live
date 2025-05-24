@@ -149,7 +149,6 @@ export const createAction = (
     const appState = createAppAction(connectAppExec).useHook(reduxDeviceFrozen, request);
     const { device, opened, error } = appState;
     const hasError = error || state.error;
-
     useEffect(() => {
       if (!opened || !device) {
         setState({ ...initialState, isLoading: !!device });

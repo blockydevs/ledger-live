@@ -18,7 +18,6 @@ import AccountTagDerivationMode from "~/renderer/components/AccountTagDerivation
 import { StepProps } from "~/renderer/modals/Receive/Body";
 import { AccountLike } from "@ledgerhq/types-live";
 import { useAccountName } from "~/renderer/reducers/wallet";
-
 const QRCodeWrapper = styled.div`
   border: 24px solid white;
   height: 208px;
@@ -95,7 +94,6 @@ const StepReceiveFunds = ({
     onChangeAddressVerified(null);
     onResetSkip();
   }, [device, isAddressVerified, onChangeAddressVerified, onResetSkip, transitionTo]);
-
   return (
     <>
       <Box px={2}>
@@ -104,28 +102,30 @@ const StepReceiveFunds = ({
           name="Step 3"
           currencyName={currencyName}
         />
-        {verifyAddressError ? (
-          <ErrorDisplay error={verifyAddressError} onRetry={onVerify} />
-        ) : (
-          // verification with device
-          <>
-            <Receive1ShareAddress
-              account={mainAccount}
-              address={address}
-              showQRCodeModal={showQRCodeModal}
-            />
-
-            {/* show warning for unverified address */}
-            <Alert type="security" mt={4}>
-              <Trans
-                i18nKey="hedera.currentAddress.messageIfVirtual"
-                values={{
-                  name,
-                }}
+        {
+          verifyAddressError ? (
+            <ErrorDisplay error={verifyAddressError} onRetry={onVerify} />
+          ) : device ? (
+            // verification with device
+            <>
+              <Receive1ShareAddress
+                account={mainAccount}
+                address={address}
+                showQRCodeModal={showQRCodeModal}
               />
-            </Alert>
-          </>
-        )}
+
+              {/* show warning for unverified address */}
+              <Alert type="security" mt={4}>
+                <Trans
+                  i18nKey="hedera.currentAddress.messageIfVirtual"
+                  values={{
+                    name,
+                  }}
+                />
+              </Alert>
+            </>
+          ) : null // should not happen
+        }
       </Box>
 
       <Modal isOpened={modalVisible} onClose={hideQRCodeModal} centered width={460}>
