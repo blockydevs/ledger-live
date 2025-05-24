@@ -4,15 +4,23 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
+  HederaInsufficientFundsForAssociation,
   HederaRecipientTokenAssociationRequired,
   HederaRecipientTokenAssociationUnverified,
 } from "@ledgerhq/errors";
 import { AccountId } from "@hashgraph/sdk";
 import type { Account, AccountBridge } from "@ledgerhq/types-live";
-import { calculateAmount, checkAccountTokenAssociationStatus, getEstimatedFees } from "./utils";
+import {
+  calculateAmount,
+  checkAccountTokenAssociationStatus,
+  getCurrencyToUSDRate,
+  getEstimatedFees,
+} from "./utils";
 import type { HederaOperationType, Transaction, TransactionStatus } from "../types";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
 import BigNumber from "bignumber.js";
+import { getEnv } from "@ledgerhq/live-env";
+import { isTokenAssociationRequired } from "../logic";
 
 export const getTransactionStatus: AccountBridge<
   Transaction,
@@ -23,9 +31,22 @@ export const getTransactionStatus: AccountBridge<
   const warnings: Record<string, Error> = {};
 
   if (transaction.properties?.name === "tokenAssociate") {
+    const [usdRate, estimatedFees] = await Promise.all([
+      getCurrencyToUSDRate(account.currency),
+      getEstimatedFees(account, "TokenAssociate"),
+    ]);
     const amount = BigNumber(0);
-    const estimatedFees = await getEstimatedFees(account, "TokenAssociate");
     const totalSpent = amount.plus(estimatedFees);
+    const hbarBalance = account.balance.dividedBy(10 ** account.currency.units[0].magnitude);
+    const currentWorthInUSD = usdRate ? hbarBalance.multipliedBy(usdRate) : new BigNumber(0);
+    const requiredWorthInUSD = getEnv("HEDERA_TOKEN_ASSOCIATION_MIN_USD");
+    const isAssociationFlow = isTokenAssociationRequired(account, transaction.properties.token);
+
+    if (isAssociationFlow && currentWorthInUSD.isLessThan(requiredWorthInUSD)) {
+      errors.insufficientAssociateBalance = new HederaInsufficientFundsForAssociation("", {
+        requiredWorthInUSD,
+      });
+    }
 
     return {
       amount,

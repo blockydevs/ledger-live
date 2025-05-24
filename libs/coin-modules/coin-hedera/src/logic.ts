@@ -15,13 +15,11 @@ const getTransactionExplorer = (
 const isTokenAssociationRequired = (
   account: AccountLike,
   token: TokenCurrency | null | undefined,
-  receiveTokenMode: boolean,
 ) => {
   const subAccounts = !!account && "subAccounts" in account ? account.subAccounts ?? [] : [];
   const isTokenAssociated = subAccounts.some(item => item.token.id === token?.id);
-  const isAssociationFlow = receiveTokenMode && !!token && !isTokenAssociated;
 
-  return isAssociationFlow;
+  return !!token && !isTokenAssociated;
 };
 
 export { getTransactionExplorer, isTokenAssociationRequired };

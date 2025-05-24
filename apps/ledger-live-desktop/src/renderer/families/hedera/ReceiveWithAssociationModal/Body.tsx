@@ -160,7 +160,7 @@ const Body = ({
   const dispatch = useDispatch();
 
   const receiveTokenMode = !!params.receiveTokenMode;
-  const isAssociationFlow = isTokenAssociationRequired(account, token, receiveTokenMode);
+  const isAssociationFlow = receiveTokenMode ? isTokenAssociationRequired(account, token) : false;
   const [steps, setSteps] = useState(() => createSteps(isAssociationFlow));
 
   const currency = getAccountCurrency(account);
@@ -291,9 +291,27 @@ const Body = ({
   }, [steps, stepId, t, currency.name]);
 
   useEffect(() => {
+    console.log("updating steps");
     const updatedSteps = createSteps(isAssociationFlow);
     setSteps(updatedSteps);
   }, [isAssociationFlow]);
+
+  useEffect(() => {
+    console.log("updating transaction");
+    const updatedTransactionProperties = !!token
+      ? ({
+          name: "tokenAssociate",
+          token,
+        } satisfies Transaction["properties"])
+      : undefined;
+
+    updateTransaction(prev => {
+      return {
+        ...prev,
+        properties: updatedTransactionProperties,
+      };
+    });
+  }, [token, updateTransaction]);
 
   const error = transactionError || bridgeError;
   const errorSteps = [];

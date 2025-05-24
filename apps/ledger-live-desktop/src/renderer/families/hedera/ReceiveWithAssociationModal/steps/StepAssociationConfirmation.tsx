@@ -50,7 +50,7 @@ function StepAssociationConfirmation({
           description={
             <Trans
               i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.success.description"
-              value={{ tokenName }}
+              values={{ tokenName }}
             />
           }
         />

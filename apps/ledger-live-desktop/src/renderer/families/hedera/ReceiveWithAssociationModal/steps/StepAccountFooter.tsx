@@ -8,32 +8,19 @@ import type { StepId, StepProps } from "../Body";
 
 export function StepAccountFooter({
   transitionTo,
-  onUpdateTransaction,
   isAssociationFlow,
   receiveTokenMode,
   token,
   account,
   parentAccount,
+  status,
 }: StepProps) {
   const error = account ? getReceiveFlowError(account, parentAccount) : null;
   const isMissingToken = receiveTokenMode && !token;
+  const isTransactionError = Object.keys(status.errors).length > 0;
 
   const redirectToDeviceStep = () => {
     const deviceStepId: StepId = isAssociationFlow ? "associationDevice" : "device";
-    const updatedTransactionProperties = !!token
-      ? ({
-          name: "tokenAssociate",
-          token,
-        } satisfies Transaction["properties"])
-      : undefined;
-
-    onUpdateTransaction(prev => {
-      return {
-        ...prev,
-        properties: updatedTransactionProperties,
-      };
-    });
-
     transitionTo(deviceStepId);
   };
 
@@ -41,7 +28,7 @@ export function StepAccountFooter({
     <Button
       primary
       data-testid="modal-continue-button"
-      disabled={!account || isMissingToken || !!error}
+      disabled={!account || isMissingToken || !!error || isTransactionError}
       onClick={redirectToDeviceStep}
     >
       <Trans i18nKey="common.continue" />

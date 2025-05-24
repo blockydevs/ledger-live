@@ -1,23 +1,22 @@
 import React from "react";
 import { Trans } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { AccountLike } from "@ledgerhq/types-live";
 import { isTokenAssociationRequired } from "@ledgerhq/live-common/families/hedera/logic";
+import { isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import { urls } from "~/config/urls";
 import { openModal } from "~/renderer/actions/modals";
 import Alert from "~/renderer/components/Alert";
 import Box from "~/renderer/components/Box";
 import Text from "~/renderer/components/Text";
-import { useBalanceHistoryWithCountervalue } from "~/renderer/actions/portfolio";
-import { useTimeRange } from "~/renderer/actions/settings";
-import { counterValueCurrencySelector } from "~/renderer/reducers/settings";
-import { StepProps } from "~/renderer/modals/Receive/Body";
-import { getEnv } from "@ledgerhq/live-env";
+import { StepProps as ReceiveStepProps } from "~/renderer/modals/Receive/Body";
+import { StepProps as ReceiveWithAssociationStepProps } from "./ReceiveWithAssociationModal/Body";
+import TranslatedError from "~/renderer/components/TranslatedError";
 
-interface Props extends StepProps {
+type Props = (ReceiveStepProps | ReceiveWithAssociationStepProps) & {
   account: AccountLike;
-}
+};
 
 const Container = styled.div`
   margin-top: 16px;
@@ -71,11 +70,23 @@ const AssociationPrerequisiteAlert = ({ account, closeModal }: Props) => {
   );
 };
 
-const AssociationInsufficientFundsError = () => {
+const AssociationInsufficientFundsError = (props: Props) => {
+  const isReceiveWithAssociationModal = "transaction" in props;
+
+  if (!isReceiveWithAssociationModal) {
+    return null;
+  }
+
+  const { insufficientAssociateBalance } = props.status.errors;
+
+  if (!insufficientAssociateBalance) {
+    return null;
+  }
+
   return (
     <ErrorBox>
       <Text fontSize={12} fontWeight="medium">
-        <Trans i18nKey="hedera.receive.errors.associationInsufficientFunds.text" />
+        <TranslatedError error={insufficientAssociateBalance} field="description" noLink />
       </Text>
     </ErrorBox>
   );
@@ -95,28 +106,16 @@ const AssociationRequiredAlert = () => {
 
 const StepReceiveAccountCustomAlert = (props: Props) => {
   const { account, token, receiveTokenMode } = props;
-  const [range] = useTimeRange();
-  const counterValue = useSelector(counterValueCurrencySelector);
-  const accountBalance = useBalanceHistoryWithCountervalue({ account, range });
+  const isAssociationFlow = receiveTokenMode ? isTokenAssociationRequired(account, token) : false;
 
-  const isTokenAccount = account?.type === "TokenAccount";
-
-  if (!receiveTokenMode && !isTokenAccount) {
+  if (!receiveTokenMode && !isTokenAccount(account)) {
     return <AssociationPrerequisiteAlert {...props} />;
   }
-
-  const isAssociationFlow = isTokenAssociationRequired(account, token, receiveTokenMode);
-  const balance = accountBalance.history[accountBalance.history.length - 1].countervalue;
-  const unit = counterValue.units[0];
-  const currentWorthInUSD = typeof balance === "number" ? balance / 10 ** unit.magnitude : null;
-  const requiredWorthInUSD = getEnv("HEDERA_TOKEN_ASSOCIATION_MIN_USD");
-  const hasEnoughBalanceForAssociation =
-    !!currentWorthInUSD && currentWorthInUSD > requiredWorthInUSD;
 
   if (token && isAssociationFlow) {
     return (
       <Container>
-        {!hasEnoughBalanceForAssociation && <AssociationInsufficientFundsError />}
+        <AssociationInsufficientFundsError {...props} />
         <AssociationRequiredAlert />
       </Container>
     );
