@@ -24,7 +24,6 @@ export const Web3AppWebview = forwardRef<WebviewAPI, WebviewProps>(
     <TrackPage category="Platform" name="App" appId={manifest.id} params={inputs} />;
 
     if (semver.satisfies(WALLET_API_VERSION, manifest.apiVersion)) {
-      console.log("[DEBUG] rendering WalletAPIWebview");
       return (
         <WalletAPIWebview
           key={manifest.id}
@@ -40,7 +39,6 @@ export const Web3AppWebview = forwardRef<WebviewAPI, WebviewProps>(
       );
     }
 
-    console.log("[DEBUG] rendering PlatformAPIWebview");
     return (
       <PlatformAPIWebview
         key={manifest.id}

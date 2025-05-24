@@ -46,20 +46,14 @@ function buildAccountBridge(
   return {
     estimateMaxSpendable,
     createTransaction,
-    updateTransaction: (transaction, patch) => {
-      console.log("[DEBUG] coin-hedera updateTransaction", { transaction, patch });
-      return updateTransaction(transaction, patch);
-    },
+    updateTransaction,
     getTransactionStatus,
     prepareTransaction,
     sync,
     receive: receive(getAddressWrapper(getAddress)),
     signOperation,
     broadcast,
-    getSerializedAddressParameters: (account, addressFormat) => {
-      console.log("[DEBUG] coin-hedera getSerializedAddressParameters", { account, addressFormat });
-      return getSerializedAddressParameters(account);
-    },
+    getSerializedAddressParameters,
   };
 }
 

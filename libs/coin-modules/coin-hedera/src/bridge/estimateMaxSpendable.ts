@@ -9,7 +9,6 @@ export const estimateMaxSpendable: AccountBridge<Transaction>["estimateMaxSpenda
   account,
   parentAccount,
 }) => {
-  console.log("[DEBUG] estimateMaxSpendable", { account, parentAccount });
   const mainAccount = getMainAccount(account, parentAccount);
   const isTokenTransaction = isTokenAccount(account);
   const balance = account.balance;

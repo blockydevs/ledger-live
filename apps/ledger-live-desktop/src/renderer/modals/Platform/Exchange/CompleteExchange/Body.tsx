@@ -67,7 +67,6 @@ const Root = styled.div`
 
 const Body = ({ data, onClose }: { data: Data; onClose?: () => void | undefined }) => {
   const dispatch = useDispatch();
-  console.log("[DEBUG] completeexchange body renders", { data });
   const { onResult, onCancel, swapId, magnitudeAwareRate, ...exchangeParams } = data;
   const { exchange, provider, transaction: transactionParams } = exchangeParams;
   const { fromAccount: account, fromParentAccount: parentAccount } = exchange;

@@ -56,8 +56,6 @@ export const getCurrencyExchangeConfig = async (
     }
   }
 
-  console.log("getCurrencyExchangeConfig", { config: res.config, signature: res.signature });
-
   return {
     config: Buffer.from(res.config, "hex"),
     signature: Buffer.from(res.signature, "hex"),

@@ -245,16 +245,6 @@ export function completeExchangeLogic(
     },
   );
 
-  console.log("common:platform:logic.ts", {
-    provider,
-    exchange,
-    transaction: tx,
-    binaryPayload,
-    signature,
-    feesStrategy,
-    exchangeType,
-  });
-
   return uiNavigation({
     provider,
     exchange,

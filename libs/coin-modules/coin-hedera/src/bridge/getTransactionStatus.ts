@@ -102,19 +102,6 @@ export const getTransactionStatus: AccountBridge<
     }
   }
 
-  console.log("[DEBUG] getTransactionStatus", {
-    account,
-    subAccount,
-    isTokenTransaction,
-    transaction,
-    amount: calculatedAmount.amount,
-    errors,
-    estimatedFees,
-    totalSpent: calculatedAmount.totalSpent,
-    warnings,
-    warningAlerts,
-  });
-
   return {
     amount: calculatedAmount.amount,
     errors,

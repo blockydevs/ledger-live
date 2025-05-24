@@ -152,7 +152,6 @@ const modes: Readonly<Record<DerivationMode, ModeSpec>> = Object.freeze({
   },
   hederaBip44: {
     overridesDerivation: "44/3030",
-    // overridesDerivation: "44/3030/<account>/<node>/<address>",
   },
   cardano: {
     purpose: 1852,
@@ -300,31 +299,10 @@ export const getDerivationScheme = ({
   const { overridesDerivation } = modes[derivationMode] as {
     overridesDerivation: string;
   };
-
-  if (overridesDerivation) {
-    console.log("[DEBUG] getDerivationScheme - early return", {
-      modes,
-      derivationMode,
-      currency,
-      overridesDerivation,
-    });
-    return overridesDerivation;
-  }
-
+  if (overridesDerivation) return overridesDerivation;
   const splitFrom = isUnsplitDerivationMode(derivationMode) && currency.forkedFrom;
   const coinType = splitFrom ? getCryptoCurrencyById(splitFrom).coinType : "<coin_type>";
   const purpose = getPurposeDerivationMode(derivationMode);
-
-  console.log("[DEBUG] getDerivationScheme", {
-    modes,
-    derivationMode,
-    currency,
-    splitFrom,
-    coinType,
-    purpose,
-    output: `${purpose}'/${coinType}'/<account>'/<node>/<address>`,
-  });
-
   return `${purpose}'/${coinType}'/<account>'/<node>/<address>`;
 };
 
@@ -341,15 +319,12 @@ export const runDerivationScheme = (
     node?: number | string;
     address?: number | string;
   } = {},
-) => {
-  console.log("[DEBUG] runDerivationScheme", { derivationScheme, coinType, opts });
-
-  return derivationScheme
+) =>
+  derivationScheme
     .replace("<coin_type>", String(coinType))
     .replace("<account>", String(opts.account || 0))
     .replace("<node>", String(opts.node || 0))
     .replace("<address>", String(opts.address || 0));
-};
 // execute the derivation on the account part of the scheme
 export const runAccountDerivationScheme = (
   scheme: string,
@@ -465,11 +440,6 @@ export const getDerivationModesForCurrency = (currency: CryptoCurrency): Derivat
     all.push("");
   }
 
-  console.log("[DEBUG] getDerivationModesForCurrency", {
-    currency,
-    output: getEnv("SCAN_FOR_INVALID_PATHS") ? all : all.filter(a => !isInvalidDerivationMode(a)),
-  });
-
   if (!getEnv("SCAN_FOR_INVALID_PATHS")) {
     return all.filter(a => !isInvalidDerivationMode(a));
   }
@@ -557,7 +527,6 @@ export function walletDerivation<R>({
             return empty();
           }
 
-          console.log("[DEBUG] walletDerivation runs", { shouldDerivesOnAccount });
           const path = shouldDerivesOnAccount
             ? runAccountDerivationScheme(derivationScheme, currency, {
                 account: index,
@@ -565,7 +534,6 @@ export function walletDerivation<R>({
             : runDerivationScheme(derivationScheme, currency, {
                 account: index,
               });
-
           return derivateAddress({
             currency,
             path,

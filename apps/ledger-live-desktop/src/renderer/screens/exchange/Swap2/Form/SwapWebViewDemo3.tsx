@@ -216,7 +216,6 @@ const SwapWebView = ({ manifest, liveAppUnavailable }: SwapWebProps) => {
           customGasLimit: params.gasLimit ? new BigNumber(params.gasLimit) : null,
           ...transformToBigNumbers(params.customFeeConfig),
         });
-
         let status = await bridge.getTransactionStatus(mainAccount, preparedTransaction);
         const statusInit = status;
         let finalTx = preparedTransaction;
@@ -227,8 +226,6 @@ const SwapWebView = ({ manifest, liveAppUnavailable }: SwapWebProps) => {
           finalTx = newTransaction;
           return newTransaction;
         };
-
-        console.log("SWAPWEBVIEWDEMO3", { status, preparedTransaction });
 
         const hasDrawer =
           ["evm", "bitcoin"].includes(transaction.family) &&

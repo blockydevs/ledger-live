@@ -150,13 +150,6 @@ export const createAction = (
     const { device, opened, error } = appState;
     const hasError = error || state.error;
 
-    console.log("init swap hw action", {
-      exchange,
-      exchangeRate,
-      transaction,
-      deviceId: device?.deviceId,
-    });
-
     useEffect(() => {
       if (!opened || !device) {
         setState({ ...initialState, isLoading: !!device });

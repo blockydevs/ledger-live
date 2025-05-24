@@ -14,8 +14,6 @@ export const prepareTransaction: AccountBridge<Transaction>["prepareTransaction"
   account,
   transaction,
 ): Promise<Transaction> => {
-  console.log("[DEBUG] coin-hedera prepareTransaction", { account, transaction });
-
   // explicitly calculate transaction amount to account for `useAllAmount` flag (send max flow)
   // i.e. if `useAllAmount` has been toggled to true, this is where it will update the transaction to reflect that action
   const { amount } = await calculateAmount({ account, transaction });

@@ -89,7 +89,6 @@ export const BodyContent = (props: BodyContentProps) => {
     );
   }
 
-  console.log("[DEBUG] body content renders deviceAction completeExchange", props.request);
   return (
     <DeviceAction
       key="completeExchange"
@@ -97,10 +96,8 @@ export const BodyContent = (props: BodyContentProps) => {
       request={props.request}
       onResult={result => {
         if ("completeExchangeError" in result) {
-          console.log("[DEBUG] BodyContext.tsx DeviceAction onError", result);
           props.onError(result.completeExchangeError);
         } else {
-          console.log("[DEBUG] BodyContext.tsx DeviceAction onTransactionComplete", result);
           props.onTransactionComplete(result.completeExchangeResult);
         }
       }}

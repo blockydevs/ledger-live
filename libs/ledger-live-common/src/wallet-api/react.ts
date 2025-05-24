@@ -834,8 +834,6 @@ export function useWalletAPIServer({
         tokenCurrency: params.exchangeType !== "SELL" ? params.tokenCurrency : undefined,
       };
 
-      console.log("wallet-api", { params, request });
-
       return completeExchangeLogic(
         { manifest, accounts, tracking },
         request,

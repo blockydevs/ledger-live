@@ -62,7 +62,6 @@ export class ExchangeModule extends CustomModule {
     toAccountId,
     tokenCurrency,
   }: ExchangeStartSwapParams) {
-    console.log("exchange-module:startSwap calling 'custom.exchange.start'");
     const result = await this.request<ExchangeStartSwapParams, ExchangeStartResult>(
       "custom.exchange.start",
       {
@@ -117,18 +116,6 @@ export class ExchangeModule extends CustomModule {
     feeStrategy: ExchangeCompleteParams["feeStrategy"];
     tokenCurrency?: string;
   }) {
-    console.log("**** exchange-module:completeSwap calling 'custom.exchange.complete' ****", {
-      provider,
-      fromAccountId,
-      toAccountId,
-      swapId,
-      transaction,
-      binaryPayload,
-      signature,
-      feeStrategy,
-      tokenCurrency,
-    });
-
     const result = await this.request<ExchangeCompleteParams, ExchangeCompleteResult>(
       "custom.exchange.complete",
       {
@@ -176,17 +163,6 @@ export class ExchangeModule extends CustomModule {
     signature: string | Buffer; // Support Coinify Buffer legacy
     feeStrategy: ExchangeCompleteParams["feeStrategy"];
   }): Promise<string> {
-    console.log("**** exchange-module:completeSell calling 'custom.exchange.complete' ****", {
-      exchangeType: "SELL",
-      provider,
-      fromAccountId,
-      rawTransaction: serializeTransaction(transaction),
-      hexBinaryPayload:
-        typeof binaryPayload === "string" ? binaryPayload : binaryPayload.toString("hex"),
-      hexSignature: typeof signature === "string" ? signature : signature.toString("hex"),
-      feeStrategy,
-    });
-
     const result = await this.request<ExchangeCompleteParams, ExchangeCompleteResult>(
       "custom.exchange.complete",
       {
@@ -248,17 +224,6 @@ export class ExchangeModule extends CustomModule {
     feeStrategy: ExchangeCompleteParams["feeStrategy"];
     tokenCurrency?: string;
   }): Promise<string> {
-    console.log("**** exchange-module:completeFund calling 'custom.exchange.complete' ****", {
-      exchangeType: "FUND",
-      provider,
-      fromAccountId,
-      rawTransaction: serializeTransaction(transaction),
-      hexBinaryPayload: binaryPayload.toString("hex"),
-      hexSignature: signature.toString("hex"),
-      feeStrategy,
-      tokenCurrency,
-    });
-
     const result = await this.request<ExchangeCompleteParams, ExchangeCompleteResult>(
       "custom.exchange.complete",
       {

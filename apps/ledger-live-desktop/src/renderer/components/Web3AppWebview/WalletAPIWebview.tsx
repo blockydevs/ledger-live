@@ -203,7 +203,6 @@ function useUiHook(manifest: AppManifest, tracking: TrackingAPI): UiHook {
         );
       },
       "exchange.start": ({ exchangeType, onSuccess, onCancel }) => {
-        console.log("[DEBUG] walletapiwebview calls openExchangeDrawer action with EXCHANGE_START");
         ipcRenderer.send("show-app", {});
         dispatch(
           openExchangeDrawer({
@@ -219,12 +218,6 @@ function useUiHook(manifest: AppManifest, tracking: TrackingAPI): UiHook {
         );
       },
       "exchange.complete": ({ exchangeParams, onSuccess, onCancel }) => {
-        console.log(
-          "[DEBUG] walletapiwebview calls openExchangeDrawer action with EXCHANGE_COMPLETE",
-          {
-            exchangeParams,
-          },
-        );
         ipcRenderer.send("show-app", {});
         dispatch(
           openExchangeDrawer({

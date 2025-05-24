@@ -51,11 +51,6 @@ async function buildUnsignedTokenTransaction({
   const accountId = account.freshAddress;
   const tokenId = tokenAccount.token.contractAddress;
 
-  console.log("[DEBUG] buildUnsignedTokenTransaction", {
-    negatedAmount: transaction.amount,
-    amount: transaction.amount,
-  });
-
   return new TransferTransaction()
     .setNodeAccountIds([new AccountId(3)])
     .setTransactionId(TransactionId.generate(accountId))
@@ -76,12 +71,6 @@ async function buildAssociateTokenTransaction({
 
   const accountId = account.freshAddress;
 
-  console.log("[DEBUG] buildAssociateTokenTransaction", {
-    transaction,
-    negatedAmount: transaction.amount,
-    amount: transaction.amount,
-  });
-
   return new TokenAssociateTransaction()
     .setNodeAccountIds([new AccountId(3)])
     .setTransactionId(TransactionId.generate(accountId))
@@ -100,13 +89,6 @@ export async function buildUnsignedTransaction({
 }): Promise<TransferTransaction | TokenAssociateTransaction> {
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
-
-  console.log("[DEBUG] buildUnsignedTransaction", {
-    isTokenTransaction,
-    account,
-    subAccount,
-    transaction,
-  });
 
   if (transaction.properties?.name === "tokenAssociate") {
     return buildAssociateTokenTransaction({ account, transaction });

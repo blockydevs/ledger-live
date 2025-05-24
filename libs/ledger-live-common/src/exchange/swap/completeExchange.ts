@@ -6,7 +6,6 @@ import {
 } from "@ledgerhq/errors";
 import {
   createExchange,
-  decodeSwapPayload,
   ExchangeTypes,
   getExchangeErrorMessage,
   PayloadSignatureComputedFormat,
@@ -90,13 +89,10 @@ const completeExchange = (
             subAccountId: undefined,
             amount: BigNumber(0),
           };
-          console.log("[DEBUG] complete exchange prepareTransaction 1");
           transaction = await accountBridge.prepareTransaction(refundAccount, transactionFixed);
         } else {
-          console.log("[DEBUG] complete exchange prepareTransaction 2");
           transaction = await accountBridge.prepareTransaction(refundAccount, transaction);
         }
-        console.log("[DEBUG] TRANSACTION", { transaction });
 
         if (transaction.family === "bitcoin") {
           const transactionFixed = {
@@ -129,30 +125,18 @@ const completeExchange = (
         if (unsubscribed) return;
 
         currentStep = "PROCESS_TRANSACTION";
-        const decodedPayload = await decodeSwapPayload(binaryPayload);
-        // @ts-expect-error - just testing
-        const testBinaryPayload = decodedPayload.testPayload;
-        console.log("[DEBUG] before process transaction", {
-          exchange,
-          decodedPayload,
-          decodedTestPayload: await decodeSwapPayload(testBinaryPayload),
-        });
         const { payload, format }: { payload: Buffer; format: PayloadSignatureComputedFormat } =
           exchange.transactionType === ExchangeTypes.SwapNg
-            ? { payload: Buffer.from("." + testBinaryPayload), format: "jws" }
-            : { payload: Buffer.from(testBinaryPayload, "hex"), format: "raw" };
-        console.log({ testBinaryPayload, binaryPayload });
-
+            ? { payload: Buffer.from("." + binaryPayload), format: "jws" }
+            : { payload: Buffer.from(binaryPayload, "hex"), format: "raw" };
         await exchange.processTransaction(payload, estimatedFees, format);
         if (unsubscribed) return;
 
         const goodSign = convertSignature(signature, exchange.transactionType);
 
         currentStep = "CHECK_TRANSACTION_SIGNATURE";
-        // await exchange.checkTransactionSignature(goodSign);
+        await exchange.checkTransactionSignature(goodSign);
         if (unsubscribed) return;
-
-        console.log("getting payoutAddressParameters", { payoutAccount, mainPayoutCurrency });
 
         const payoutAddressParameters = payoutAccountBridge.getSerializedAddressParameters(
           payoutAccount,
@@ -163,18 +147,9 @@ const completeExchange = (
           throw new Error(`Family not supported: ${mainPayoutCurrency.family}`);
         }
 
-        console.log("[DEBUG]", { payoutAccount, refundAccount });
-
         //-- CHECK_PAYOUT_ADDRESS
-        console.log("[DEBUG]", { payoutCurrency });
         const { config: payoutAddressConfig, signature: payoutAddressConfigSignature } =
           await getCurrencyExchangeConfig(payoutCurrency);
-
-        console.log("[DEBUG] check payout address", {
-          payoutAddressConfig,
-          payoutAddressConfigSignature,
-          payoutAddressParameters,
-        });
 
         try {
           currentStep = "CHECK_PAYOUT_ADDRESS";
@@ -203,11 +178,6 @@ const completeExchange = (
 
         // Swap specific checks to confirm the refund address is correct.
         if (unsubscribed) return;
-        console.log("[DEBUG] getting payoutAddressParameters", {
-          refundAccount,
-          mainPayoutCurrency,
-        });
-
         const refundAddressParameters = accountBridge.getSerializedAddressParameters(
           refundAccount,
           mainRefundCurrency.id,
@@ -223,13 +193,6 @@ const completeExchange = (
 
         try {
           currentStep = "CHECK_REFUND_ADDRESS";
-
-          console.log("check refund address", {
-            refundAddressConfig,
-            refundAddressConfigSignature,
-            refundAddressParameters,
-          });
-
           await exchange.checkRefundAddress(
             refundAddressConfig,
             refundAddressConfigSignature,

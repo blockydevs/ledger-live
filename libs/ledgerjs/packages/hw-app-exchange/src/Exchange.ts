@@ -198,7 +198,6 @@ export default class Exchange {
         p2Value = this.transactionType | P2_EXTEND;
       }
     } else {
-      console.log("[DEBUG] jumping into else condition", { transaction, feeHex });
       bufferToSend = Buffer.concat([
         Buffer.from([transaction.length]),
         transaction,
@@ -206,15 +205,6 @@ export default class Exchange {
         feeHex,
       ]);
     }
-
-    console.log("[DEBUG] PROCESS_TRANSACTION_RESPONSE", {
-      CLA,
-      ins: PROCESS_TRANSACTION_RESPONSE,
-      p1: this.transactionRate,
-      p2: p2Value,
-      data: bufferToSend,
-      statusList: this.allowedStatuses,
-    });
 
     const result: Buffer = await this.transport.send(
       CLA,
@@ -272,19 +262,6 @@ export default class Exchange {
       this.transactionType,
       transactionSignature,
       this.allowedStatuses,
-    );
-
-    console.log(
-      "[DEBUG] checkTransactionSignature",
-      {
-        CLA,
-        ins: CHECK_TRANSACTION_SIGNATURE,
-        p1: this.transactionRate,
-        p2: this.transactionType,
-        data: transactionSignature,
-        statusList: this.allowedStatuses,
-      },
-      result,
     );
 
     maybeThrowProtocolError(result);

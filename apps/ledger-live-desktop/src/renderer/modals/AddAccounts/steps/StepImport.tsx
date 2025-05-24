@@ -146,7 +146,6 @@ class StepImport extends PureComponent<
         )
         .subscribe({
           next: account => {
-            console.log("[DEBUG] StepImport subscribe on scanSubscription", { account });
             const { scannedAccounts, checkedAccountsIds, existingAccounts } = this.props;
             const hasAlreadyBeenScanned = !!scannedAccounts.find(a => account.id === a.id);
             const hasAlreadyBeenImported = !!existingAccounts.find(a => account.id === a.id);
@@ -190,7 +189,6 @@ class StepImport extends PureComponent<
   };
 
   handleToggleAccount = (account: Account) => {
-    console.log("[DEBUG] handleToggleAccount", { account });
     const { checkedAccountsIds, setScannedAccounts } = this.props;
     const isChecked = checkedAccountsIds.find(id => id === account.id) !== undefined;
     if (isChecked) {

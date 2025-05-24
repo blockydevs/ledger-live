@@ -125,16 +125,9 @@ export const getSubAccounts = async (
   lastTokenOperations: Operation[],
   accountBalance: AccountBalance,
 ): Promise<TokenAccount[]> => {
-  console.log("[DEBUG] getsubaccounts", {
-    accountId,
-    lastTokenOperations,
-    accountBalance,
-  });
-
   // Creating a Map of Operations by TokenCurrencies in order to know which TokenAccounts should be synced as well
   const operationsByToken = lastTokenOperations.reduce<Map<TokenCurrency, Operation[]>>(
     (acc, tokenOperation) => {
-      console.log("[DEBUG] getsubaccounts reduce", { tokenOperation, accountId });
       const { token } = decodeTokenAccountId(tokenOperation.accountId);
       if (!token) return acc;
 

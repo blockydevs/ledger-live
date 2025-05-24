@@ -61,14 +61,6 @@ export default class Hedera {
     const p1 = 0x00;
     const p2 = 0x00;
 
-    console.log("[DEBUG] signTransaction", {
-      cla: CLA,
-      ins: INS.SIGN_TRANSACTION,
-      p1,
-      p2,
-      payload,
-    });
-
     const response = await this.transport.send(CLA, INS.SIGN_TRANSACTION, p1, p2, payload);
 
     const returnCodeBytes = response.slice(-2);

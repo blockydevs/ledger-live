@@ -147,11 +147,6 @@ export const handlers = ({
           };
         }
 
-        console.log("custom.exchange.start is running in common:wallet-api:Exchange:server.ts", {
-          params,
-          exchangeParams,
-        });
-
         return new Promise((resolve, reject) =>
           uiExchangeStart({
             exchangeParams,
@@ -169,10 +164,6 @@ export const handlers = ({
     ),
     "custom.exchange.complete": customWrapper<ExchangeCompleteParams, ExchangeCompleteResult>(
       async params => {
-        console.log(
-          "custom.exchange.complete called in common:wallet-api:Exchange:server.ts",
-          params,
-        );
         if (!params) {
           tracking.completeExchangeNoParams(manifest);
           return { transactionHash: "" };
@@ -298,7 +289,6 @@ export const handlers = ({
         if (params.exchangeType === "SWAP") {
           // Get amountExpectedTo and magnitudeAwareRate from binary payload
           const decodePayload = await decodeSwapPayload(params.hexBinaryPayload);
-          console.log({ decodePayload });
           amountExpectedTo = new BigNumber(decodePayload.amountToWallet.toString());
           magnitudeAwareRate = tx.amount && amountExpectedTo.dividedBy(tx.amount);
         }

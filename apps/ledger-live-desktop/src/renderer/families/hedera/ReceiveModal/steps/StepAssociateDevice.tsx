@@ -37,7 +37,6 @@ const Result = (
   );
 };
 
-// FIXME: make it generic
 export default function StepAssociateDevice(props: StepProps) {
   const {
     account,
@@ -62,8 +61,6 @@ export default function StepAssociateDevice(props: StepProps) {
     }),
     [parentAccount, account, transaction, status],
   );
-
-  console.log("[DEBUG] StepAssociateDevice", props);
 
   return (
     <DeviceAction
