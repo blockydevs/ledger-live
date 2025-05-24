@@ -31,9 +31,7 @@ export type TransactionRaw = TransactionCommonRaw & {
   properties?: TokenAssociateProperties;
 };
 
-export type TransactionStatus = TransactionStatusCommon & {
-  warningAlerts: Record<string, Error>;
-};
+export type TransactionStatus = TransactionStatusCommon;
 
 export type TransactionStatusRaw = TransactionStatusCommonRaw;
 

@@ -4,8 +4,8 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
-  RecipientTokenAssociationRequired,
-  RecipientTokenAssociationUnverified,
+  HederaRecipientTokenAssociationRequired,
+  HederaRecipientTokenAssociationUnverified,
 } from "@ledgerhq/errors";
 import { AccountId } from "@hashgraph/sdk";
 import type { Account, AccountBridge } from "@ledgerhq/types-live";
@@ -21,7 +21,6 @@ export const getTransactionStatus: AccountBridge<
 >["getTransactionStatus"] = async (account, transaction) => {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
-  const warningAlerts: Record<string, Error> = {};
 
   if (transaction.properties?.name === "tokenAssociate") {
     const amount = BigNumber(0);
@@ -34,7 +33,6 @@ export const getTransactionStatus: AccountBridge<
       estimatedFees,
       totalSpent,
       warnings,
-      warningAlerts,
     };
   }
 
@@ -78,10 +76,10 @@ export const getTransactionStatus: AccountBridge<
         );
 
         if (!hasRecipientTokenAssociated) {
-          warningAlerts.recipient = new RecipientTokenAssociationRequired("", { test: true });
+          warnings.missingAssociation = new HederaRecipientTokenAssociationRequired();
         }
       } catch {
-        warningAlerts.recipient = new RecipientTokenAssociationUnverified();
+        warnings.unverifiedAssociation = new HederaRecipientTokenAssociationUnverified();
       }
     }
 
@@ -108,6 +106,5 @@ export const getTransactionStatus: AccountBridge<
     estimatedFees,
     totalSpent: calculatedAmount.totalSpent,
     warnings,
-    warningAlerts,
   };
 };

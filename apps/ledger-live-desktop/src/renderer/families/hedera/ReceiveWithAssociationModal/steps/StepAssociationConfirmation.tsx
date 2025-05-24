@@ -25,9 +25,7 @@ const Container = styled(Box).attrs<{
   justify-content: ${p => (p.shouldSpace ? "space-between" : "center")};
 `;
 
-// FIXME:
-// - i18n
-function StepAssociateConfirmation({
+function StepAssociationConfirmation({
   t,
   transaction,
   optimisticOperation,
@@ -42,12 +40,19 @@ function StepAssociateConfirmation({
         <TrackPage
           category="Hedera Token Association Flow"
           name="Step Confirmed"
-          flow="associate"
+          flow="tokenAssociation"
         />
         <SyncOneAccountOnMount priority={10} accountId={optimisticOperation.accountId} />
         <SuccessDisplay
-          title="Transaction sent"
-          description={`You'll be able to receive ${tokenName} once the network confirms the token association.`}
+          title={
+            <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.success.title" />
+          }
+          description={
+            <Trans
+              i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.success.description"
+              value={{ tokenName }}
+            />
+          }
         />
       </Container>
     );
@@ -59,9 +64,15 @@ function StepAssociateConfirmation({
         <TrackPage
           category="Hedera Token Association Flow"
           name="Step Confirmation Error"
-          flow="associate"
+          flow="tokenAssociation"
         />
-        {signed ? <BroadcastErrorDisclaimer title="boradcast error title" /> : null}
+        {signed ? (
+          <BroadcastErrorDisclaimer
+            title={
+              <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.broadcastError" />
+            }
+          />
+        ) : null}
         <ErrorDisplay error={error} withExportLogs />
       </Container>
     );
@@ -70,7 +81,7 @@ function StepAssociateConfirmation({
   return null;
 }
 
-export function StepAssociateConfirmationFooter({
+export function StepAssociationConfirmationFooter({
   account,
   parentAccount,
   optimisticOperation,
@@ -107,8 +118,7 @@ export function StepAssociateConfirmationFooter({
           }}
           primary
         >
-          {/* FIXME: i18n */}
-          View details
+          <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.success.cta" />
         </Button>
       ) : error ? (
         <RetryButton primary ml={2} onClick={onRetry} />
@@ -117,4 +127,4 @@ export function StepAssociateConfirmationFooter({
   );
 }
 
-export default StepAssociateConfirmation;
+export default StepAssociationConfirmation;

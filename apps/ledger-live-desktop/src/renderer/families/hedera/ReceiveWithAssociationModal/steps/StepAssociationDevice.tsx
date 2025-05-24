@@ -1,23 +1,22 @@
 import React, { useMemo } from "react";
+import { Trans } from "react-i18next";
+import { useSelector } from "react-redux";
 
-import { StepProps } from "../Body";
 import { useBroadcast } from "@ledgerhq/live-common/hooks/useBroadcast";
-import DeviceAction from "~/renderer/components/DeviceAction";
-import { mockedEventEmitter } from "~/renderer/components/debug/DebugMock";
 import connectApp from "@ledgerhq/live-common/hw/connectApp";
 import { createAction } from "@ledgerhq/live-common/hw/actions/transaction";
 import { getEnv } from "@ledgerhq/live-env";
-import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
 import { SignedOperation } from "@ledgerhq/types-live";
+import { mockedEventEmitter } from "~/renderer/components/debug/DebugMock";
+import DeviceAction from "~/renderer/components/DeviceAction";
+import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
 import StepProgress from "~/renderer/components/StepProgress";
 import { DeviceBlocker } from "~/renderer/components/DeviceAction/DeviceBlocker";
-import { Trans } from "react-i18next";
-import { useSelector } from "react-redux";
 import { mevProtectionSelector } from "~/renderer/reducers/settings";
+import { StepProps } from "../Body";
 
 const action = createAction(getEnv("MOCK") ? mockedEventEmitter : connectApp);
 
-// FIXME: translation, ui
 const Result = (
   props:
     | {
@@ -32,12 +31,12 @@ const Result = (
   return (
     <StepProgress>
       <DeviceBlocker />
-      <Trans i18nKey="send.steps.confirmation.pending.title" />
+      <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.pending.title" />
     </StepProgress>
   );
 };
 
-export default function StepAssociateDevice(props: StepProps) {
+export default function StepAssociationDevice(props: StepProps) {
   const {
     account,
     transaction,
@@ -62,6 +61,8 @@ export default function StepAssociateDevice(props: StepProps) {
     [parentAccount, account, transaction, status],
   );
 
+  console.log({ transaction, request });
+
   return (
     <DeviceAction
       action={action}
@@ -75,20 +76,20 @@ export default function StepAssociateDevice(props: StepProps) {
           broadcast(signedOperation).then(
             operation => {
               onOperationBroadcasted(operation);
-              transitionTo("associateConfirmation");
+              transitionTo("associationConfirmation");
             },
             error => {
               onTransactionError(error);
-              transitionTo("associateConfirmation");
+              transitionTo("associationConfirmation");
             },
           );
         } else if ("transactionSignError" in result) {
           const { transactionSignError } = result;
           onTransactionError(transactionSignError);
-          transitionTo("associateConfirmation");
+          transitionTo("associationConfirmation");
         }
       }}
-      analyticsPropertyFlow="receive"
+      analyticsPropertyFlow="tokenAssociation"
       location={HOOKS_TRACKING_LOCATIONS.receiveModal}
     />
   );

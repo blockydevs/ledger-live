@@ -20,6 +20,7 @@ import {
   TokenAccount,
   TransactionCommon,
   MessageProperties,
+  AccountLike,
 } from "@ledgerhq/types-live";
 // FIXME: ideally we need to have <A,T,TS> parametric version of StepProps
 import { StepProps as SendStepProps } from "../modals/Send/types";
@@ -242,6 +243,11 @@ export type LLDCoinFamily<
   };
 
   /**
+   * Allow to disable "Continue" button on Recipient step in Send modal
+   */
+  sendRecipientCanNext?: (status: TS) => boolean;
+
+  /**
    *  One time modal that is trigger only one time on a account that never send
    */
   sendWarning?: {
@@ -280,6 +286,11 @@ export type LLDCoinFamily<
   };
 
   /**
+   * Allow to add component below the token select on Account step in Receive modal
+   */
+  StepReceiveAccountCustomAlert?: React.ComponentType<ReceiveStepProps & { account: AccountLike }>;
+
+  /**
    * Change Receive funds with this component (example: Hedera)
    */
   StepReceiveFunds?: React.ComponentType<ReceiveStepProps>;
@@ -293,6 +304,11 @@ export type LLDCoinFamily<
    * Replace Networkfees row on Summary Step
    */
   StepSummaryNetworkFeesRow?: React.ComponentType<SummaryNetworkFeesRowProps>;
+
+  /**
+   * Allow to add specific component in Send modal below the recipient address
+   */
+  StepRecipientCustomAlert?: React.ComponentType<{ status: TS }>;
 
   /**
    * Allow to add specific component in Send modal at the end of Summary Step

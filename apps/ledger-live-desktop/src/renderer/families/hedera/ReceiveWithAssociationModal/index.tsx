@@ -67,7 +67,7 @@ const ReceiveModal = () => {
   const hasAccounts = !!accounts.length;
 
   const openAddAccounts = useCallback(() => {
-    dispatch(closeModal("MODAL_HEDERA_RECEIVE"));
+    dispatch(closeModal("MODAL_HEDERA_RECEIVE_WITH_ASSOCIATION"));
     dispatch(
       openModal("MODAL_ADD_ACCOUNTS", {
         currency: null,
@@ -87,7 +87,7 @@ const ReceiveModal = () => {
 
   return (
     <Modal
-      name="MODAL_HEDERA_RECEIVE"
+      name="MODAL_HEDERA_RECEIVE_WITH_ASSOCIATION"
       centered
       onHide={handleReset}
       preventBackdropClick={isModalLocked}

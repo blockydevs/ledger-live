@@ -114,12 +114,6 @@ export const TimeoutTagged = createCustomErrorClass("TimeoutTagged");
 export const UnexpectedBootloader = createCustomErrorClass("UnexpectedBootloader");
 export const MCUNotGenuineToDashboard = createCustomErrorClass("MCUNotGenuineToDashboard");
 export const RecipientRequired = createCustomErrorClass("RecipientRequired");
-export const RecipientTokenAssociationRequired = createCustomErrorClass(
-  "RecipientTokenAssociationRequired",
-);
-export const RecipientTokenAssociationUnverified = createCustomErrorClass(
-  "RecipientTokenAssociationUnverified",
-);
 export const UnavailableTezosOriginatedAccountReceive = createCustomErrorClass(
   "UnavailableTezosOriginatedAccountReceive",
 );
@@ -193,6 +187,14 @@ export const ReplacementTransactionUnderpriced = createCustomErrorClass(
 // Bitcoin family
 export const OpReturnDataSizeLimit = createCustomErrorClass("OpReturnSizeLimit");
 export const DustLimit = createCustomErrorClass("DustLimit");
+
+// Hedera family
+export const HederaRecipientTokenAssociationRequired = createCustomErrorClass(
+  "HederaRecipientTokenAssociationRequired",
+);
+export const HederaRecipientTokenAssociationUnverified = createCustomErrorClass(
+  "HederaRecipientTokenAssociationUnverified",
+);
 
 // Language
 export const LanguageNotFound = createCustomErrorClass("LanguageNotFound");

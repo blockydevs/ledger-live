@@ -6465,6 +6465,14 @@
     "HederaAddAccountError": {
       "title": "Your account has not been added. Please try again."
     },
+    "HederaRecipientTokenAssociationRequired": {
+      "title": "Token association required",
+      "description": "The token you’re trying to send is not associated with the destination account. It needs to be associated by the recipient account to be received."
+    },
+    "HederaRecipientTokenAssociationUnverified": {
+      "title": "Unable to verify token association",
+      "description": "We couldn’t confirm if the destination account can receive this token. The address might be invalid, or there could be a network or service problem."
+    },
     "ImageIncorrectFileTypeError": {
       "title": "Image loading from file failed.",
       "description": "Please try again with an image."
@@ -6634,10 +6642,52 @@
     "currentAddress": {
       "messageIfVirtual": "Your {{name}} address cannot be confirmed on your Ledger device. Use at your own risk."
     },
+    "receive": {
+      "warnings": {
+        "associationPrerequisite": {
+          "learnMore": "Learn more",
+          "text": "To receive HTS token your account might need to be associated. <0>Click here</0> to start the token association flow."
+        },
+        "associationRequired": {
+          "learnMore": "Learn more",
+          "text": "Hedera tokens must be associated with an account before they can be transferred to that account. Click continue to associate the account."
+        }
+      },
+      "errors": {
+        "associationInsufficientFunds": {
+          "text": "Not enough HBAR to pay for the token association. At least $0.05 worth of HBAR is required."
+        }
+      }
+    },
+    "receiveWithAssociation": {
+      "steps": {
+        "associationConfirmation": {
+          "breadcrumbTitle": "Associate",
+          "title": "Associate Token",
+          "pending": {
+            "title": "Broadcasting transaction..."
+          },
+          "success": {
+            "title": "Transaction sent",
+            "description": "You'll be able to receive {{tokenName}} once the network confirms the token association.",
+            "cta": "View details"
+          },
+          "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+        }
+      }
+    },
     "send": {
       "memo": {
         "label": "Memo (optional)",
         "characterCount": "{{memoLength}} / {{memoMaxLength}}"
+      },
+      "warnings": {
+        "missingAssociation": {
+          "learnMore": "Learn more"
+        },
+        "unverifiedAssociation": {
+          "learnMore": "Learn more"
+        }
       }
     }
   },

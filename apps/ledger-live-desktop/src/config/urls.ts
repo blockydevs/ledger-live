@@ -163,6 +163,8 @@ export const urls = {
   },
   hedera: {
     supportArticleLink: "https://support.ledger.com/article/4494505217565-zd",
+    // FIXME:
+    tokenAssociation: "https://google.com",
   },
   celo: {
     ledgerByFigmentTC:

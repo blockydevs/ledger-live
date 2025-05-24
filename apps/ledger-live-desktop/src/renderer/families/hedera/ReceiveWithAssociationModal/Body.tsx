@@ -1,81 +1,65 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { compose } from "redux";
 import { connect, useDispatch } from "react-redux";
-import { TFunction } from "i18next";
 import { Trans, withTranslation } from "react-i18next";
 import { createStructuredSelector } from "reselect";
 import { SyncSkipUnderPriority } from "@ledgerhq/live-common/bridge/react/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
-import { Transaction, TransactionStatus } from "@ledgerhq/live-common/families/hedera/types";
+import type { Transaction, TransactionStatus } from "@ledgerhq/live-common/families/hedera/types";
+import { isTokenAssociationRequired } from "@ledgerhq/live-common/families/hedera/logic";
 import Track from "~/renderer/analytics/Track";
-import { Account, AccountLike, Operation, TokenAccount } from "@ledgerhq/types-live";
+import { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { Device } from "@ledgerhq/live-common/hw/actions/types";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import { getCurrentDevice } from "~/renderer/reducers/devices";
 import { accountsSelector } from "~/renderer/reducers/accounts";
 import { closeModal } from "~/renderer/actions/modals";
 import Stepper, { Step } from "~/renderer/components/Stepper";
-import StepAccount, { StepAccountFooter } from "./steps/StepAccount";
-import StepAssociateToken from "./steps/StepAssociateDevice";
+import { StepAccountFooter } from "./steps/StepAccountFooter";
+import StepAssociationDevice from "./steps/StepAssociationDevice";
 import StepConnectDevice, {
   StepConnectDeviceFooter,
 } from "~/renderer/modals/Receive/steps/StepConnectDevice";
 import StepWarning, { StepWarningFooter } from "~/renderer/modals/Receive/steps/StepWarning";
 import StepReceiveFunds from "~/renderer/modals/Receive/steps/StepReceiveFunds";
-import { Data as DefaultData, StepId as DefaultStepId } from "~/renderer/modals/Receive/Body";
+import { StepId as DefaultStepId } from "~/renderer/modals/Receive/Body";
 import StepReceiveStakingFlow, {
   StepReceiveStakingFooter,
 } from "~/renderer/modals/Receive/steps/StepReceiveStakingFlow";
 import invariant from "invariant";
 import { updateAccountWithUpdater } from "~/renderer/actions/accounts";
 import { addPendingOperation } from "@ledgerhq/coin-framework/lib-es/account/pending";
-import StepAssociateConfirmation, {
-  StepAssociateConfirmationFooter,
-} from "~/renderer/families/hedera/ReceiveModal/steps/StepAssociateConfirmation";
+import StepAssociationConfirmation, {
+  StepAssociationConfirmationFooter,
+} from "~/renderer/families/hedera/ReceiveWithAssociationModal/steps/StepAssociationConfirmation";
 import { UserRefusedOnDevice } from "@ledgerhq/live-common/lib-es/device/use-cases/screenSpecs";
 import logger from "~/renderer/logger";
+import StepAccount from "~/renderer/modals/Receive/steps/StepAccount";
+import type {
+  Data as DefaultData,
+  StepProps as DefaultStepProps,
+  OwnProps as DefaultOwnProps,
+  StateProps as DefaultStateProps,
+} from "~/renderer/modals/Receive/Body";
 
-type CustomStepId = "associateDevice" | "associateConfirmation";
+type CustomStepId = "associationDevice" | "associationConfirmation";
 
 export type StepId = DefaultStepId | CustomStepId;
 
 export type Data = DefaultData;
 
-type OwnProps = {
+type OwnProps = Omit<DefaultOwnProps, "stepId" | "onChangeStepId"> & {
   stepId: StepId;
-  onClose?: () => void | undefined;
   onChangeStepId: (a: StepId) => void;
-  isAddressVerified: boolean | undefined | null;
-  verifyAddressError: Error | undefined | null;
-  onChangeAddressVerified: (isAddressVerified?: boolean | null, err?: Error | null) => void;
-  params: Data;
 };
 
-type StateProps = {
-  t: TFunction;
-  accounts: Account[];
-  device: Device | undefined | null;
-  closeModal: (a: string) => void;
-};
+type StateProps = DefaultStateProps;
 
-export type Props = OwnProps & StateProps;
+type Props = OwnProps & StateProps;
 
-export type StepProps = {
-  t: TFunction;
-  transitionTo: (id: string) => void;
-  device: Device | undefined | null;
-  account: AccountLike | undefined | null;
-  eventType?: string;
-  parentAccount: Account | undefined | null;
-  token: TokenCurrency | undefined | null;
-  receiveTokenMode: boolean;
-  receiveNFTMode: boolean;
-  receiveOrdinalMode: boolean;
-  isAssociateFlow: boolean;
-  isAddressVerified: boolean | undefined | null;
-  verifyAddressError: Error | undefined | null;
+export type StepProps = DefaultStepProps & {
+  isAssociationFlow: boolean;
   transaction: Transaction | undefined | null;
   optimisticOperation: Operation | undefined;
   error: Error | undefined;
@@ -87,22 +71,11 @@ export type StepProps = {
   onUpdateTransaction: (a: (a: Transaction) => Transaction) => void;
   onTransactionError: (a: Error) => void;
   onOperationBroadcasted: (a: Operation) => void;
-  closeModal: () => void;
-  onRetry: () => void;
-  onSkipConfirm: () => void;
-  onResetSkip: () => void;
-  onChangeToken: (token?: TokenCurrency | null) => void;
-  onChangeAccount: (account?: AccountLike | null, tokenAccount?: Account | null) => void;
-  onChangeAddressVerified: (b?: boolean | null, a?: Error | null) => void;
-  onClose: () => void;
-  toggleAssociateFlow: (enable: true) => void;
-  currencyName: string | undefined | null;
-  isFromPostOnboardingEntryPoint?: boolean;
 };
 
-export type St = Step<StepId, StepProps>;
+type St = Step<StepId, StepProps>;
 
-const createSteps = (isAssociateFlow: boolean): Array<St> => [
+const createSteps = (isAssociationFlow: boolean): Array<St> => [
   {
     id: "warning",
     excludeFromBreadcrumb: true,
@@ -119,7 +92,7 @@ const createSteps = (isAssociateFlow: boolean): Array<St> => [
   {
     id: "device",
     label: <Trans i18nKey="receive.steps.connectDevice.title" />,
-    excludeFromBreadcrumb: isAssociateFlow,
+    excludeFromBreadcrumb: isAssociationFlow,
     component: StepConnectDevice,
     footer: StepConnectDeviceFooter,
     onBack: ({ transitionTo }: StepProps) => transitionTo("account"),
@@ -127,22 +100,22 @@ const createSteps = (isAssociateFlow: boolean): Array<St> => [
   {
     id: "receive",
     label: <Trans i18nKey="receive.steps.receiveFunds.title" />,
-    excludeFromBreadcrumb: isAssociateFlow,
+    excludeFromBreadcrumb: isAssociationFlow,
     component: StepReceiveFunds,
   },
   {
-    id: "associateDevice",
-    label: <Trans i18nKey="receive.steps.connectDevice.title" />, // FIXME: i18n
-    excludeFromBreadcrumb: !isAssociateFlow,
-    component: StepAssociateToken,
+    id: "associationDevice",
+    label: <Trans i18nKey="receive.steps.connectDevice.title" />,
+    excludeFromBreadcrumb: !isAssociationFlow,
+    component: StepAssociationDevice,
     onBack: ({ transitionTo }: StepProps) => transitionTo("account"),
   },
   {
-    id: "associateConfirmation",
-    label: <>Associate</>, // FIXME: i18n
-    excludeFromBreadcrumb: !isAssociateFlow,
-    component: StepAssociateConfirmation,
-    footer: StepAssociateConfirmationFooter,
+    id: "associationConfirmation",
+    label: <Trans i18nKey="hedera.receiveWithAssociation.steps.associationConfirmation.title" />,
+    excludeFromBreadcrumb: !isAssociationFlow,
+    component: StepAssociationConfirmation,
+    footer: StepAssociationConfirmationFooter,
   },
   {
     id: "stakingFlow",
@@ -185,10 +158,8 @@ const Body = ({
   const dispatch = useDispatch();
 
   const receiveTokenMode = !!params.receiveTokenMode;
-  const subAccounts = !!account && "subAccounts" in account ? account.subAccounts ?? [] : [];
-  const isTokenAssociated = subAccounts.some(item => item.token.id === token?.id);
-  const isAssociateFlow = receiveTokenMode && !!token && !isTokenAssociated;
-  const [steps, setSteps] = useState(() => createSteps(isAssociateFlow));
+  const isAssociationFlow = isTokenAssociationRequired(account, token, receiveTokenMode);
+  const [steps, setSteps] = useState(() => createSteps(isAssociationFlow));
 
   const currency = getAccountCurrency(account);
   const currencyName = currency ? currency.name : undefined;
@@ -216,22 +187,16 @@ const Body = ({
   );
 
   const handleChangeToken = useCallback((token?: TokenCurrency | null) => {
+    const transactionProperties: Transaction["properties"] = !!token
+      ? { name: "tokenAssociate", token }
+      : undefined;
+
     setToken(token ?? null);
-    updateTransaction(prev => {
-      return {
-        ...prev,
-        properties: !!token
-          ? ({
-              name: "tokenAssociate",
-              token,
-            } satisfies Transaction["properties"])
-          : undefined,
-      };
-    });
+    updateTransaction(prev => ({ ...prev, properties: transactionProperties }));
   }, []);
 
   const handleCloseModal = useCallback(() => {
-    closeModal("MODAL_HEDERA_RECEIVE");
+    closeModal("MODAL_HEDERA_RECEIVE_WITH_ASSOCIATION");
   }, [closeModal]);
 
   const handleStepChange = useCallback(
@@ -251,7 +216,7 @@ const Body = ({
 
   const handleSkipConfirm = useCallback(() => {
     const connectStepIndex = steps.findIndex(
-      step => step.id === "device" || step.id === "associateDevice",
+      step => step.id === "device" || step.id === "associationDevice",
     );
     if (connectStepIndex > -1) {
       onChangeAddressVerified(false, null);
@@ -300,7 +265,7 @@ const Body = ({
   useEffect(() => {
     const currentStep = steps.find(step => step.id === stepId);
 
-    if (stepId !== "associateDevice") {
+    if (stepId !== "associationDevice") {
       setHideBreadcrumb(currentStep?.excludeFromBreadcrumb);
     }
 
@@ -308,9 +273,8 @@ const Body = ({
       case "warning":
         setTitle(t("common.information"));
         break;
-      case "associateDevice":
-        // FIXME: i18n
-        setTitle("Associate token");
+      case "associationDevice":
+        setTitle(t("hedera.receiveWithAssociation.steps.associationConfirmation.title"));
         break;
       case "stakingFlow":
         setTitle(
@@ -325,9 +289,9 @@ const Body = ({
   }, [steps, stepId, t, currency.name]);
 
   useEffect(() => {
-    const updatedSteps = createSteps(isAssociateFlow);
+    const updatedSteps = createSteps(isAssociationFlow);
     setSteps(updatedSteps);
-  }, [isAssociateFlow]);
+  }, [isAssociationFlow]);
 
   const error = transactionError || bridgeError;
   const errorSteps = [];
@@ -355,7 +319,7 @@ const Body = ({
     token,
     isAddressVerified,
     verifyAddressError,
-    isAssociateFlow,
+    isAssociationFlow,
     optimisticOperation,
     transaction,
     status,
@@ -363,6 +327,7 @@ const Body = ({
     signed,
     setSigned,
     onOperationBroadcasted: handleOperationBroadcasted,
+    onUpdateTransaction: updateTransaction,
     onTransactionError: handleTransactionError,
     closeModal: handleCloseModal,
     onRetry: handleRetry,
@@ -380,7 +345,7 @@ const Body = ({
   return (
     <Stepper {...stepperProps}>
       <SyncSkipUnderPriority priority={100} />
-      <Track onUnmount event="CloseModalReceive" />
+      <Track onUnmount event="CloseModalReceiveWithAssociation" />
     </Stepper>
   );
 };

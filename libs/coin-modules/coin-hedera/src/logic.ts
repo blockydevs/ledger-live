@@ -1,5 +1,5 @@
-import { ExplorerView } from "@ledgerhq/types-cryptoassets";
-import { Operation } from "@ledgerhq/types-live";
+import { ExplorerView, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { AccountLike, Operation } from "@ledgerhq/types-live";
 
 import { HederaOperationExtra } from "./types";
 
@@ -12,4 +12,16 @@ const getTransactionExplorer = (
   return explorerView?.tx?.replace("$hash", extra.consensusTimestamp ?? extra.transactionId ?? "0");
 };
 
-export { getTransactionExplorer };
+const isTokenAssociationRequired = (
+  account: AccountLike,
+  token: TokenCurrency | null | undefined,
+  receiveTokenMode: boolean,
+) => {
+  const subAccounts = !!account && "subAccounts" in account ? account.subAccounts ?? [] : [];
+  const isTokenAssociated = subAccounts.some(item => item.token.id === token?.id);
+  const isAssociationFlow = receiveTokenMode && !!token && !isTokenAssociated;
+
+  return isAssociationFlow;
+};
+
+export { getTransactionExplorer, isTokenAssociationRequired };

@@ -11,7 +11,9 @@ const ReceiveButton = ({ account }: { account: Account }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const onReceiveClick = () => {
-    dispatch(openModal("MODAL_HEDERA_RECEIVE", { account, receiveTokenMode: true }));
+    dispatch(
+      openModal("MODAL_HEDERA_RECEIVE_WITH_ASSOCIATION", { account, receiveTokenMode: true }),
+    );
   };
 
   return (
