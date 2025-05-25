@@ -33,7 +33,7 @@ function StepAssociationConfirmation({
   signed,
 }: StepProps) {
   if (optimisticOperation) {
-    const tokenName = transaction?.properties ? transaction.properties.token.name : "token";
+    const tokenName = transaction?.properties?.token.name ?? "token";
 
     return (
       <Container>

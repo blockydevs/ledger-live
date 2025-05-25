@@ -12,9 +12,9 @@ import {
 } from "@hashgraph/sdk";
 import { Account, TokenAccount } from "@ledgerhq/types-live";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
+import invariant from "invariant";
 import { HederaAddAccountError } from "../errors";
 import { Transaction } from "../types";
-import invariant from "invariant";
 
 export function broadcastTransaction(transaction: HederaTransaction): Promise<TransactionResponse> {
   return transaction.execute(getClient());
@@ -60,14 +60,14 @@ async function buildUnsignedTokenTransaction({
     .freeze();
 }
 
-async function buildAssociateTokenTransaction({
+async function buildTokenAssociateTransaction({
   account,
   transaction,
 }: {
   account: Account;
   transaction: Transaction;
 }): Promise<TokenAssociateTransaction> {
-  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction type");
+  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction properties");
 
   const accountId = account.freshAddress;
 
@@ -91,7 +91,7 @@ export async function buildUnsignedTransaction({
   const isTokenTransaction = isTokenAccount(subAccount);
 
   if (transaction.properties?.name === "tokenAssociate") {
-    return buildAssociateTokenTransaction({ account, transaction });
+    return buildTokenAssociateTransaction({ account, transaction });
   } else if (isTokenTransaction) {
     return buildUnsignedTokenTransaction({ account, tokenAccount: subAccount, transaction });
   } else {

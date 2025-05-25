@@ -22,7 +22,7 @@ const INITIAL_STATE = {
   verifyAddressError: null,
 };
 
-const ReceiveModal = () => {
+const ReceiveWithAssociationModal = () => {
   const [state, setState] = useState<State>(INITIAL_STATE);
   const device = useSelector(getCurrentDevice);
   const dispatch = useDispatch();
@@ -106,4 +106,4 @@ const ReceiveModal = () => {
   );
 };
 
-export default ReceiveModal;
+export default ReceiveWithAssociationModal;

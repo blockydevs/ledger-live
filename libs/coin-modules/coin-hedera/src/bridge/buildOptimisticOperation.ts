@@ -6,14 +6,14 @@ import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/acc
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 
-const buildOptimisticAssociateTokenOperation = async ({
+const buildOptimisticTokenAssociateOperation = async ({
   account,
   transaction,
 }: {
   account: Account;
   transaction: Transaction;
 }): Promise<Operation> => {
-  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction type");
+  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction properties");
 
   const estimatedFee = await getEstimatedFees(account, "TokenAssociate");
   const value = transaction.amount;
@@ -127,7 +127,7 @@ export const buildOptimisticOperation = async ({
   const isTokenTransaction = isTokenAccount(subAccount);
 
   if (transaction.properties?.name === "tokenAssociate") {
-    return buildOptimisticAssociateTokenOperation({ account, transaction });
+    return buildOptimisticTokenAssociateOperation({ account, transaction });
   } else if (isTokenTransaction) {
     return buildOptimisticTokenOperation({ account, tokenAccount: subAccount, transaction });
   } else {

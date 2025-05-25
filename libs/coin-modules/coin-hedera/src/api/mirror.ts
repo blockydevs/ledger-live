@@ -124,7 +124,7 @@ export async function getOperationsForAccount(
       const operationType = rawTx.name === "TOKENASSOCIATE" ? "TOKEN_ASSOCIATE" : type;
 
       coinOperations.push({
-        id: encodeOperationId(ledgerAccountId, hash, type),
+        id: encodeOperationId(ledgerAccountId, hash, operationType),
         accountId: ledgerAccountId,
         type: operationType,
         value,
