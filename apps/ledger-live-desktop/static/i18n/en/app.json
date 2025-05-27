@@ -6649,12 +6649,10 @@
     "receive": {
       "warnings": {
         "associationPrerequisite": {
-          "learnMore": "Learn more",
-          "text": "To receive HTS token your account might need to be associated. <0>Click here</0> to start the token association flow."
+          "text": "To receive HTS token your account might need to be associated. <0>Click here</0> to start the token association flow. <1>Learn more.</1>"
         },
         "associationRequired": {
-          "learnMore": "Learn more",
-          "text": "Hedera tokens must be associated with an account before they can be transferred to that account. Click continue to associate the account."
+          "text": "This token is not associated with the selected account. You will need to associate it first. Click continue to associate the account or click <0>here</0> to learn more"
         }
       }
     },
