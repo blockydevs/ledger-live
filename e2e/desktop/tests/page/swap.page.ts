@@ -5,6 +5,7 @@ import { ElectronApplication, expect } from "@playwright/test";
 import { Account } from "@ledgerhq/live-common/e2e/enum/Account";
 import { ChooseAssetDrawer } from "./drawer/choose.asset.drawer";
 import { Provider } from "@ledgerhq/live-common/e2e/enum/Swap";
+import { Device } from "@ledgerhq/live-common/e2e/enum/Device";
 import { Swap } from "@ledgerhq/live-common/e2e/models/Swap";
 import fs from "fs/promises";
 import * as path from "path";
@@ -120,6 +121,9 @@ export class SwapPage extends AppPage {
 
     const providersWithoutKYC = providersList.filter(providerName => {
       const provider = Object.values(Provider).find(p => p.uiName === providerName);
+      if (process.env.SPECULOS_DEVICE === Device.LNS) {
+        return provider && !provider.kyc && provider.availableOnLns;
+      }
       return provider && !provider.kyc;
     });
 
@@ -288,7 +292,7 @@ export class SwapPage extends AppPage {
   }
 
   @step("Check currency to swap from is $0")
-  async swithYouSendAndYouReceive(electronApp: ElectronApplication) {
+  async switchYouSendAndYouReceive(electronApp: ElectronApplication) {
     const [, webview] = electronApp.windows();
     await webview.getByTestId(this.switchButton).click();
   }
@@ -296,8 +300,8 @@ export class SwapPage extends AppPage {
   @step("Check currency to swap from is $1")
   async checkAssetFrom(electronApp: ElectronApplication, currency: string) {
     const [, webview] = electronApp.windows();
-    const fromAccount = await webview.getByTestId(this.fromAccountCoinSelector).innerText();
-    expect(fromAccount).toContain(currency);
+    const fromAccount = webview.getByTestId(this.fromAccountCoinSelector);
+    await expect(fromAccount).toContainText(currency);
   }
 
   @step("Expect asset or account selected $0 to be displayed")

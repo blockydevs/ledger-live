@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { Flex } from "@ledgerhq/native-ui";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Ticker } from "./Ticker";
@@ -8,13 +8,24 @@ import { TimeFrame } from "./TimeFrame";
 import { Performance } from "./Performance";
 import { PriceAndVariation } from "./PriceAndVariation";
 import { Footer } from "./Footer";
-import { CurrencyData, KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
+import {
+  CurrencyData,
+  KeysPriceChange,
+  MarketCoinDataChart,
+} from "@ledgerhq/live-common/market/utils/types";
 import getWindowDimensions from "~/logic/getWindowDimensions";
 import { Informations } from "./Information";
 import { useTheme } from "styled-components/native";
 import { getCryptoCurrencyById, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
+import { track } from "~/analytics";
+import { PAGE_NAME } from "../const";
+import { ScrollView } from "react-native-gesture-handler";
 
-type CardProps = CurrencyData & {
+type CardProps = {
+  data: CurrencyData;
+  chartData?: MarketCoinDataChart;
+  height: number;
+  loading: boolean;
   range: KeysPriceChange;
   setRange: (range: KeysPriceChange) => void;
 };
@@ -22,32 +33,46 @@ type CardProps = CurrencyData & {
 const { width } = getWindowDimensions();
 
 export const Card: React.FC<CardProps> = ({
-  id,
-  price,
-  priceChangePercentage,
+  data,
+  height,
+  loading,
   chartData,
-  low24h,
-  high24h,
   range,
   setRange,
-  ticker,
-  marketcap,
-  totalVolume,
-  marketCapChangePercentage24h,
-  maxSupply,
-  circulatingSupply,
-  totalSupply,
-  ath,
-  atl,
-  athDate,
-  atlDate,
 }) => {
+  const {
+    id,
+    price,
+    priceChangePercentage,
+    low24h,
+    high24h,
+    ticker,
+    marketcap,
+    totalVolume,
+    marketCapChangePercentage24h,
+    maxSupply,
+    circulatingSupply,
+    totalSupply,
+    ath,
+    atl,
+    athDate,
+    atlDate,
+  } = data;
+
   const graphWidth = width * 0.86;
   const timeframehWidth = width * 0.96;
   const { colors } = useTheme();
   const middleColor = colors.neutral.c20;
   const currency = getCryptoCurrencyById(id);
   const midColor = getCurrencyColor(currency);
+
+  const handleScroll = () => {
+    track("button_clicked", {
+      button: "Scroll",
+      coin: currency.name,
+      page: PAGE_NAME,
+    });
+  };
 
   return (
     <Flex
@@ -56,12 +81,12 @@ export const Card: React.FC<CardProps> = ({
       marginRight={5}
       marginLeft={5}
       overflow="hidden"
-      height="88%"
+      height={height}
     >
       <Flex alignItems="center" zIndex={10} top={4}>
         <Ticker currencyId={id} />
       </Flex>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} onScrollEndDrag={handleScroll}>
         <Svg style={styles.gradientTop}>
           <Defs>
             <LinearGradient id="midGlow" x1="0" y1="0" x2="0" y2="1">
@@ -84,8 +109,14 @@ export const Card: React.FC<CardProps> = ({
               range={range}
               currencyId={id}
               width={graphWidth}
+              loading={loading}
             />
-            <TimeFrame setRange={setRange} range={range} width={timeframehWidth} />
+            <TimeFrame
+              setRange={setRange}
+              range={range}
+              width={timeframehWidth}
+              coin={currency.name}
+            />
             <Performance low={low24h} high={high24h} price={price} />
             <Flex pt={8} width="100%" pb={80}>
               <Informations
@@ -124,6 +155,7 @@ export const Card: React.FC<CardProps> = ({
         bg="neutral.c20"
         bottom={0}
         borderRadius={20}
+        zIndex={10}
       >
         <Footer currency={currency} />
       </Flex>

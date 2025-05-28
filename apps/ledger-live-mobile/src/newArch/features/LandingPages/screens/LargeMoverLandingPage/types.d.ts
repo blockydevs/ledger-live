@@ -13,4 +13,10 @@ type InformationsProps = {
   allTimeLowDate: Date;
 };
 
-export type { InformationsProps };
+type CardType = {
+  id: string;
+  data?: CurrencyData | undefined;
+  chartData?: MarketCoinDataChart | undefined;
+};
+
+export type { InformationsProps, CardType };
