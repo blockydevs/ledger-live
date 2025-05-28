@@ -19,8 +19,7 @@ import type { HederaOperationType, HederaOperationExtra, Transaction } from "../
 import { getAccount } from "../api/mirror";
 import invariant from "invariant";
 
-export const estimatedFeeSafetyRate = 2;
-
+const ESTIMATED_FEE_SAFETY_RATE = 2;
 const TINYBAR_SCALE = 8;
 const BASE_USD_FEE_BY_OPERATION_TYPE: Record<HederaOperationType, number> = {
   CryptoTransfer: 0.0001 * 10 ** TINYBAR_SCALE,
@@ -28,7 +27,7 @@ const BASE_USD_FEE_BY_OPERATION_TYPE: Record<HederaOperationType, number> = {
   TokenAssociate: 0.05 * 10 ** TINYBAR_SCALE,
 } as const;
 
-// note: this is currently called frequently by getTransactionStatus; LRU cache prevents duplicate requests
+// note: this is currently called frequently by getTransactionStatus; LRU cache prevents duplicated requests
 export const getCurrencyToUSDRate = makeLRUCache(
   async (currency: Currency) => {
     try {
@@ -48,7 +47,7 @@ export const getCurrencyToUSDRate = makeLRUCache(
     }
   },
   currency => currency.name,
-  seconds(5),
+  seconds(3),
 );
 
 export async function getEstimatedFees(
@@ -62,14 +61,14 @@ export async function getEstimatedFees(
       return new BigNumber(BASE_USD_FEE_BY_OPERATION_TYPE[operationType])
         .dividedBy(new BigNumber(usdRate))
         .integerValue(BigNumber.ROUND_CEIL)
-        .multipliedBy(estimatedFeeSafetyRate);
+        .multipliedBy(ESTIMATED_FEE_SAFETY_RATE);
     }
     // eslint-disable-next-line no-empty
   } catch {}
 
   // as fees are based on a currency conversion, we stay
   // on the safe side here and double the estimate for "max spendable"
-  return new BigNumber("150200").multipliedBy(estimatedFeeSafetyRate); // 0.001502 ℏ (as of 2023-03-14)
+  return new BigNumber("150200").multipliedBy(ESTIMATED_FEE_SAFETY_RATE); // 0.001502 ℏ (as of 2023-03-14)
 }
 
 interface CalculateAmountResult {
@@ -80,11 +79,13 @@ interface CalculateAmountResult {
 async function calculateCoinAmount({
   account,
   transaction,
+  operationType,
 }: {
   account: Account;
   transaction: Transaction;
+  operationType: HederaOperationType;
 }): Promise<CalculateAmountResult> {
-  const estimatedFees = await getEstimatedFees(account, "CryptoTransfer");
+  const estimatedFees = await getEstimatedFees(account, operationType);
   const amount = transaction.useAllAmount
     ? await estimateMaxSpendable({ account, transaction })
     : transaction.amount;
@@ -124,9 +125,14 @@ export async function calculateAmount({
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
-  return isTokenTransaction
-    ? calculateTokenAmount({ account, tokenAccount: subAccount, transaction })
-    : calculateCoinAmount({ account, transaction });
+  if (isTokenTransaction) {
+    return calculateTokenAmount({ account, tokenAccount: subAccount, transaction });
+  }
+
+  const operationType: HederaOperationType =
+    transaction.properties?.name === "tokenAssociate" ? "TokenAssociate" : "CryptoTransfer";
+
+  return calculateCoinAmount({ account, transaction, operationType });
 }
 
 // NOTE: convert from the non-url-safe version of base64 to the url-safe version (that the explorer uses)
