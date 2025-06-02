@@ -6686,6 +6686,9 @@
           "learnMore": "Learn more"
         }
       }
+    },
+    "operationDetails": {
+      "postAlert": "Once this transaction has been confirmed you will be able to receive your token. <0>Click here</0> to start the receive flow. <1>Learn more.</1>"
     }
   },
   "drawers": {

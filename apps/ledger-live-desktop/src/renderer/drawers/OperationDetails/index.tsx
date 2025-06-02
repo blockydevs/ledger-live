@@ -189,6 +189,7 @@ const OperationD = (props: Props) => {
     : getDefaultTransactionExplorer(getDefaultExplorerView(mainAccount.currency), operation.hash);
 
   const OpDetailsExtra = specific?.operationDetails?.OperationDetailsExtra || OperationDetailsExtra;
+  const OpDetailsPostAlert = specific?.operationDetails?.OperationDetailsPostAlert;
   const { hasFailed } = operation;
   const subOperations: Operation[] = useMemo(
     () => operation.subOperations || [],
@@ -691,6 +692,9 @@ const OperationD = (props: Props) => {
         <OpDetailsExtra operation={operation} type={type} account={account as Account} />
       )}
       <B />
+      {OpDetailsPostAlert && (
+        <OpDetailsPostAlert operation={operation} type={type} account={account as Account} />
+      )}
     </Box>
   );
 };

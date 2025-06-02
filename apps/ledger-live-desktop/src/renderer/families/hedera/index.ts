@@ -7,11 +7,13 @@ import StepRecipientCustomAlert from "./StepRecipientCustomAlert";
 import StepReceiveFunds from "./StepReceiveFunds";
 import { HederaFamily } from "./types";
 import tokenList from "./TokenList";
+import operationDetails from "./OperationDetails";
 import { sendRecipientCanNext } from "./sendRecipientCanNext";
 
 const family: HederaFamily = {
   sendRecipientFields,
   tokenList,
+  operationDetails,
   AccountSubHeader,
   StepReceiveAccountCustomAlert,
   StepReceiveFunds,

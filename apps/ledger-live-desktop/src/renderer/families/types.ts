@@ -120,6 +120,11 @@ export type LLDCoinFamily<
      * Add extra info
      */
     OperationDetailsExtra?: React.ComponentType<OperationDetailsExtraProps<A, O>>;
+
+    /**
+     * Add custom component at the end in operation details drawer
+     */
+    OperationDetailsPostAlert?: React.ComponentType<OperationDetailsExtraProps<A, O>>;
   };
 
   accountActions?: {
