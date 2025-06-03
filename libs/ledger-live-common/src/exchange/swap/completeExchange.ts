@@ -25,6 +25,7 @@ import { CompleteExchangeStep, convertTransportError } from "../error";
 import type { CompleteExchangeInputSwap, CompleteExchangeRequestEvent } from "../platform/types";
 import { convertToAppExchangePartnerKey, getSwapProvider } from "../providers";
 import { CEXProviderConfig } from "../providers/swap";
+import { TLVMessageType, generateTlvPacket } from "./_debug";
 
 const COMPLETE_EXCHANGE_LOG = "SWAP-CompleteExchange";
 
@@ -146,6 +147,36 @@ const completeExchange = (
         if (!payoutAddressParameters) {
           throw new Error(`Family not supported: ${mainPayoutCurrency.family}`);
         }
+
+        // FIXME: remove
+        // -- DEBUG CODE
+        const pubkey = await fetch(
+          `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${refundAccount.freshAddress}`,
+        )
+          .then(r => r.json() as Promise<{ key: { key: string } }>)
+          .then(r => r.key.key);
+
+        console.log("[DEBUG] completeExchange", { payoutAccount, refundAccount, pubkey });
+
+        const tlvPairs = [
+          [TLVMessageType.TRUSTED_NAME, refundAccount.freshAddress],
+          [TLVMessageType.ADDRESS, pubkey],
+          [TLVMessageType.STRUCTURE_TYPE, 3],
+          [TLVMessageType.VERSION, 1],
+          [TLVMessageType.TRUSTED_NAME_TYPE, 6],
+          [TLVMessageType.TRUSTED_NAME_SOURCE, 6],
+          [TLVMessageType.CHAIN_ID, 1],
+          [TLVMessageType.CHALLENGE, 0xdeadbeef],
+          [TLVMessageType.SIGNER_KEY_ID, 0],
+          [TLVMessageType.SIGNER_ALGORITHM, 1],
+          [TLVMessageType.DER_SIGNATURE, Buffer.alloc(64, 0)],
+        ];
+
+        const tlvData = generateTlvPacket(tlvPairs);
+        await exchange.sendTrustedDescriptor(tlvData);
+        console.log("[DEBUG] done");
+        // -- DEBUG CODE
+        // FIXME: remove
 
         //-- CHECK_PAYOUT_ADDRESS
         const { config: payoutAddressConfig, signature: payoutAddressConfigSignature } =
