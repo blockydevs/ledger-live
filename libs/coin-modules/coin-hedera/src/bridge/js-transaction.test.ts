@@ -1,10 +1,9 @@
 import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
 import { updateTransaction } from "@ledgerhq/coin-framework/bridge/jsHelpers";
-import type { Transaction } from "../types";
+import type { HederaAccount, Transaction } from "../types";
 import { createBridges } from ".";
 
-const account: Account = {
+const account: HederaAccount = {
   type: "Account",
   id: "",
   seedIdentifier: "",
@@ -40,6 +39,9 @@ const account: Account = {
     WEEK: { latestDate: null, balances: [] },
   },
   swapHistory: [],
+  hederaResources: {
+    maxAutomaticTokenAssociations: 0,
+  },
 };
 
 const transaction: Transaction = {

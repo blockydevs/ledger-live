@@ -1,10 +1,10 @@
 import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
 import { createBridges } from ".";
 import { getEstimatedFees } from "./utils";
+import { HederaAccount } from "../types";
 
 // Balance is 1 Hbar
-const account: Account = {
+const account: HederaAccount = {
   type: "Account",
   id: "",
   seedIdentifier: "",
@@ -40,6 +40,9 @@ const account: Account = {
     WEEK: { latestDate: null, balances: [] },
   },
   swapHistory: [],
+  hederaResources: {
+    maxAutomaticTokenAssociations: 0,
+  },
 };
 
 describe("js-estimateMaxSpendable", () => {
