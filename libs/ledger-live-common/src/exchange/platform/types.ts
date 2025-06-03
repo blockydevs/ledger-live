@@ -4,6 +4,7 @@ import type { ExchangeTypes, RateTypes } from "@ledgerhq/hw-app-exchange";
 import type { Transaction } from "../../generated/types";
 import type { ExchangeSwap } from "../swap/types";
 import type { Device } from "../../hw/actions/types";
+import type { DeviceModelId } from "@ledgerhq/devices";
 
 export type CompleteExchangeRequestEvent =
   | { type: "complete-exchange" }
@@ -42,6 +43,7 @@ export type StartExchangeInput = {
 
 interface CompleteExchangeInputCommon {
   rateType?: RateTypes;
+  deviceModelId?: DeviceModelId;
   deviceId?: string;
   provider: string;
   binaryPayload: string;

@@ -11,6 +11,9 @@ import {
   PayloadSignatureComputedFormat,
 } from "@ledgerhq/hw-app-exchange";
 import { getDefaultAccountName } from "@ledgerhq/live-wallet/accountName";
+import { loadPKI } from "@ledgerhq/hw-bolos";
+import calService from "@ledgerhq/ledger-cal-service";
+import trustService from "@ledgerhq/ledger-trust-service";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { Observable } from "rxjs";
@@ -33,8 +36,16 @@ const completeExchange = (
   input: CompleteExchangeInputSwap,
 ): Observable<CompleteExchangeRequestEvent> => {
   let { transaction } = input; // TODO build a tx from the data
-
-  const { deviceId, exchange, provider, binaryPayload, signature, rateType, exchangeType } = input;
+  const {
+    deviceId,
+    deviceModelId,
+    exchange,
+    provider,
+    binaryPayload,
+    signature,
+    rateType,
+    exchangeType,
+  } = input;
 
   const { fromAccount, fromParentAccount } = exchange;
   const { toAccount, toParentAccount } = exchange;
@@ -139,6 +150,61 @@ const completeExchange = (
         await exchange.checkTransactionSignature(goodSign);
         if (unsubscribed) return;
 
+        if (transaction.family === "hedera") {
+          if (!deviceModelId) {
+            throw new Error("deviceModelId is not available");
+          }
+
+          const cert = await calService.getCertificate(deviceModelId);
+          console.log("[DEBUG] got cert", { cert });
+
+          await loadPKI(exchange.transport, "TRUSTED_NAME", cert.descriptor, cert.signature);
+          // FIXME: compare with exchange.sendPKICertificate
+          console.log("[DEBUG] loaded pki cert");
+
+          const challenge = await exchange.getChallenge();
+          console.log("[DEBUG] got challenge", { challenge });
+
+          // trustService.getPublicKey();
+          // exchange.sendTrustedDescriptor(signedDescriptor);
+
+          // FIXME: remove
+          // -- DEBUG CODE
+          const pubkey = await fetch(
+            `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${refundAccount.freshAddress}`,
+          )
+            .then(r => r.json() as Promise<{ key: { key: string } }>)
+            .then(r => r.key.key);
+
+          console.log("[DEBUG] between PROCESS_TRANSACTION and CHECK_PAYOUT_ADDRESS", {
+            input,
+            exchange,
+            deviceId,
+            payoutAccount,
+            refundAccount,
+            pubkey,
+          });
+
+          const tlvPairs = [
+            [TLVMessageType.TRUSTED_NAME, refundAccount.freshAddress],
+            [TLVMessageType.ADDRESS, pubkey],
+            [TLVMessageType.STRUCTURE_TYPE, 3],
+            [TLVMessageType.VERSION, 1],
+            [TLVMessageType.TRUSTED_NAME_TYPE, 6],
+            [TLVMessageType.TRUSTED_NAME_SOURCE, 6],
+            [TLVMessageType.CHAIN_ID, 1],
+            [TLVMessageType.CHALLENGE, 0xdeadbeef],
+            [TLVMessageType.SIGNER_KEY_ID, 0],
+            [TLVMessageType.SIGNER_ALGORITHM, 1],
+            [TLVMessageType.DER_SIGNATURE, Buffer.alloc(64, 0)],
+          ];
+
+          const tlvData = generateTlvPacket(tlvPairs);
+          await exchange.sendTrustedDescriptor(tlvData);
+          // -- DEBUG CODE
+          // FIXME: remove
+        }
+
         const payoutAddressParameters = payoutAccountBridge.getSerializedAddressParameters(
           payoutAccount,
           mainPayoutCurrency.id,
@@ -147,36 +213,6 @@ const completeExchange = (
         if (!payoutAddressParameters) {
           throw new Error(`Family not supported: ${mainPayoutCurrency.family}`);
         }
-
-        // FIXME: remove
-        // -- DEBUG CODE
-        const pubkey = await fetch(
-          `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${refundAccount.freshAddress}`,
-        )
-          .then(r => r.json() as Promise<{ key: { key: string } }>)
-          .then(r => r.key.key);
-
-        console.log("[DEBUG] completeExchange", { payoutAccount, refundAccount, pubkey });
-
-        const tlvPairs = [
-          [TLVMessageType.TRUSTED_NAME, refundAccount.freshAddress],
-          [TLVMessageType.ADDRESS, pubkey],
-          [TLVMessageType.STRUCTURE_TYPE, 3],
-          [TLVMessageType.VERSION, 1],
-          [TLVMessageType.TRUSTED_NAME_TYPE, 6],
-          [TLVMessageType.TRUSTED_NAME_SOURCE, 6],
-          [TLVMessageType.CHAIN_ID, 1],
-          [TLVMessageType.CHALLENGE, 0xdeadbeef],
-          [TLVMessageType.SIGNER_KEY_ID, 0],
-          [TLVMessageType.SIGNER_ALGORITHM, 1],
-          [TLVMessageType.DER_SIGNATURE, Buffer.alloc(64, 0)],
-        ];
-
-        const tlvData = generateTlvPacket(tlvPairs);
-        await exchange.sendTrustedDescriptor(tlvData);
-        console.log("[DEBUG] done");
-        // -- DEBUG CODE
-        // FIXME: remove
 
         //-- CHECK_PAYOUT_ADDRESS
         const { config: payoutAddressConfig, signature: payoutAddressConfigSignature } =

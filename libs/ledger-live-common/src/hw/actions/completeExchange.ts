@@ -6,6 +6,7 @@ import type { AppState } from "./app";
 import { log } from "@ledgerhq/logs";
 import { Exchange } from "../../exchange/types";
 import { Transaction } from "../../generated/types";
+import type { DeviceModelId } from "@ledgerhq/devices";
 
 type State = {
   completeExchangeResult: Transaction | null | undefined;
@@ -18,6 +19,7 @@ type State = {
 
 type CompleteExchangeState = AppState & State;
 type CompleteExchangeRequest = {
+  deviceModelId?: DeviceModelId;
   deviceId?: string;
   provider: string;
   transaction: Transaction;
@@ -130,6 +132,7 @@ export const createAction = (
         }),
         completeExchangeExec({
           deviceId: reduxDeviceFrozen?.deviceId,
+          deviceModelId: reduxDeviceFrozen?.modelId,
           provider,
           transaction,
           binaryPayload,
