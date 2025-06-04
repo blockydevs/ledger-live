@@ -13,11 +13,12 @@ import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { Currency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { makeLRUCache, minutes, seconds } from "@ledgerhq/live-network/cache";
-import { AccountBalance } from "../api/network";
+import invariant from "invariant";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import type { HederaOperationType, HederaOperationExtra, Transaction } from "../types";
 import { getAccount } from "../api/mirror";
-import invariant from "invariant";
+import type { HederaMirrorToken } from "../api/types";
+import { isValidExtra } from "../logic";
 
 const ESTIMATED_FEE_SAFETY_RATE = 2;
 const TINYBAR_SCALE = 8;
@@ -50,10 +51,10 @@ export const getCurrencyToUSDRate = makeLRUCache(
   seconds(3),
 );
 
-export async function getEstimatedFees(
+export const getEstimatedFees = async (
   account: Account,
   operationType: HederaOperationType,
-): Promise<BigNumber> {
+): Promise<BigNumber> => {
   try {
     const usdRate = await getCurrencyToUSDRate(account.currency);
 
@@ -69,14 +70,14 @@ export async function getEstimatedFees(
   // as fees are based on a currency conversion, we stay
   // on the safe side here and double the estimate for "max spendable"
   return new BigNumber("150200").multipliedBy(ESTIMATED_FEE_SAFETY_RATE); // 0.001502 ℏ (as of 2023-03-14)
-}
+};
 
 interface CalculateAmountResult {
   amount: BigNumber;
   totalSpent: BigNumber;
 }
 
-async function calculateCoinAmount({
+const calculateCoinAmount = async ({
   account,
   transaction,
   operationType,
@@ -84,7 +85,7 @@ async function calculateCoinAmount({
   account: Account;
   transaction: Transaction;
   operationType: HederaOperationType;
-}): Promise<CalculateAmountResult> {
+}): Promise<CalculateAmountResult> => {
   const estimatedFees = await getEstimatedFees(account, operationType);
   const amount = transaction.useAllAmount
     ? await estimateMaxSpendable({ account, transaction })
@@ -94,9 +95,9 @@ async function calculateCoinAmount({
     amount,
     totalSpent: amount.plus(estimatedFees),
   };
-}
+};
 
-async function calculateTokenAmount({
+const calculateTokenAmount = async ({
   account,
   tokenAccount,
   transaction,
@@ -104,7 +105,7 @@ async function calculateTokenAmount({
   account: Account;
   tokenAccount: TokenAccount;
   transaction: Transaction;
-}): Promise<CalculateAmountResult> {
+}): Promise<CalculateAmountResult> => {
   const amount = transaction.useAllAmount
     ? await estimateMaxSpendable({ account: tokenAccount, parentAccount: account, transaction })
     : transaction.amount;
@@ -113,15 +114,15 @@ async function calculateTokenAmount({
     amount,
     totalSpent: amount,
   };
-}
+};
 
-export async function calculateAmount({
+export const calculateAmount = ({
   account,
   transaction,
 }: {
   account: Account;
   transaction: Transaction;
-}): Promise<CalculateAmountResult> {
+}): Promise<CalculateAmountResult> => {
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
@@ -133,7 +134,7 @@ export async function calculateAmount({
     transaction.properties?.name === "tokenAssociate" ? "TokenAssociate" : "CryptoTransfer";
 
   return calculateCoinAmount({ account, transaction, operationType });
-}
+};
 
 // NOTE: convert from the non-url-safe version of base64 to the url-safe version (that the explorer uses)
 export function base64ToUrlSafeBase64(data: string): string {
@@ -147,7 +148,7 @@ export function base64ToUrlSafeBase64(data: string): string {
 export const getSubAccounts = async (
   accountId: string,
   lastTokenOperations: Operation[],
-  accountBalance: AccountBalance,
+  accountTokens: HederaMirrorToken[],
 ): Promise<TokenAccount[]> => {
   // Creating a Map of Operations by TokenCurrencies in order to know which TokenAccounts should be synced as well
   const operationsByToken = lastTokenOperations.reduce<Map<TokenCurrency, Operation[]>>(
@@ -177,9 +178,10 @@ export const getSubAccounts = async (
   // extract token accounts from existing operations
   for (const [token, tokenOperations] of operationsByToken.entries()) {
     const parentAccountId = accountId;
-    const balance = accountBalance.tokens.find(t => t.tokenId === token.contractAddress)?.balance;
+    const rawBalance = accountTokens.find(t => t.token_id === token.contractAddress)?.balance;
+    const balance = rawBalance !== undefined ? new BigNumber(rawBalance) : null;
 
-    if (balance === undefined) {
+    if (!balance) {
       continue;
     }
 
@@ -201,10 +203,11 @@ export const getSubAccounts = async (
 
   // extract token accounts existing in the account's balance, but with no recorded operations yet
   // e.g. tokens added via association flow, without any subsequent activity
-  for (const rawToken of accountBalance.tokens) {
+  for (const rawToken of accountTokens) {
     const parentAccountId = accountId;
-    const balance = rawToken.balance;
-    const token = findTokenByAddressInCurrency(rawToken.tokenId, "hedera");
+    const rawBalance = rawToken.balance;
+    const balance = new BigNumber(rawBalance);
+    const token = findTokenByAddressInCurrency(rawToken.token_id, "hedera");
 
     if (!token) {
       continue;
@@ -235,20 +238,21 @@ export const getSubAccounts = async (
   return subAccounts;
 };
 
-// based on libs/coin-modules/coin-evm/src/logic.ts
-export const linkSubOperationsToCoinOperations = (
-  _coinOperations: Operation[],
-  _tokenOperations: Operation[],
+type CoinOperationForOrphanChild = Operation & Required<Pick<Operation, "subOperations">>;
+
+// this util handles:
+// - linking sub operations with coin operations, e.g. token transfer with fee payment
+// - if possible, assigning `extra.associatedTokenId = mirrorToken.tokenId` based on operation's consensus timestamp
+export const prepareOperations = (
+  coinOperations: Operation[],
+  tokenOperations: Operation[],
+  mirrorTokens: HederaMirrorToken[],
 ): Operation[] => {
-  // Creating deep copies of each Operation[] to prevent mutating the originals
-  const coinOperations = _coinOperations.map(op => ({ ...op }));
-  const tokenOperations = _tokenOperations.map(op => ({ ...op }));
+  const preparedCoinOperations = coinOperations.map(op => ({ ...op }));
+  const preparedTokenOperations = tokenOperations.map(op => ({ ...op }));
 
-  type OperationWithRequiredChildren = Operation &
-    Required<Pick<Operation, "nftOperations" | "subOperations" | "internalOperations">>;
-
-  // Helper to create a coin operation with type NONE as a parent of an orphan child operation
-  const makeCoinOpForOrphanChildOp = (childOp: Operation): OperationWithRequiredChildren => {
+  // helper to create a coin operation with type NONE as a parent of an orphan child operation
+  const makeCoinOpForOrphanChildOp = (childOp: Operation): CoinOperationForOrphanChild => {
     const type = "NONE";
     const { accountId } = decodeTokenAccountId(childOp.accountId);
     const id = encodeOperationId(accountId, childOp.hash, type);
@@ -273,54 +277,70 @@ export const linkSubOperationsToCoinOperations = (
     };
   };
 
-  // Create a Map of hash => operation
-  const coinOperationsByHash: Record<string, OperationWithRequiredChildren[]> = {};
-  coinOperations.forEach(op => {
+  // loop through coin operations to:
+  // - enrich ASSOCIATE_TOKEN operations with extra.associatedTokenId
+  // - prepare a map of hash => operations
+  const coinOperationsByHash: Record<string, CoinOperationForOrphanChild[]> = {};
+  preparedCoinOperations.forEach(op => {
+    const extra = isValidExtra(op.extra) ? op.extra : null;
+
+    if (op.type === "ASSOCIATE_TOKEN" && extra?.consensusTimestamp) {
+      const relatedMirrorToken = mirrorTokens.find(t => {
+        return t.created_timestamp === extra.consensusTimestamp;
+      });
+
+      if (relatedMirrorToken) {
+        op.extra = {
+          ...extra,
+          associatedTokenId: relatedMirrorToken.token_id,
+        } satisfies HederaOperationExtra;
+      }
+    }
+
     if (!coinOperationsByHash[op.hash]) {
       coinOperationsByHash[op.hash] = [];
     }
 
-    // Adding arrays just in case but this is defined
-    // by the adapters so it should never be needed
     op.subOperations = [];
-    op.nftOperations = [];
-    op.internalOperations = [];
-    coinOperationsByHash[op.hash].push(op as OperationWithRequiredChildren);
+    coinOperationsByHash[op.hash].push(op as CoinOperationForOrphanChild);
   });
 
-  // Looping through token operations to potentially copy them as a child operation of a coin operation
-  for (const tokenOperation of tokenOperations) {
+  // loop through token operations to potentially copy them as a child operation of a coin operation
+  for (const tokenOperation of preparedTokenOperations) {
     const { token } = decodeTokenAccountId(tokenOperation.accountId);
     if (!token) continue;
 
     let mainOperations = coinOperationsByHash[tokenOperation.hash];
+
     if (!mainOperations?.length) {
       const noneOperation = makeCoinOpForOrphanChildOp(tokenOperation);
       mainOperations = [noneOperation];
-      coinOperations.push(noneOperation);
+      preparedCoinOperations.push(noneOperation);
     }
 
-    // Ugly loop in loop but in theory, this can only be a 2 elements array maximum in the case of a self send
+    // ugly loop in loop but in theory, this can only be a 2 elements array maximum in the case of a self send
     for (const mainOperation of mainOperations) {
       mainOperation.subOperations.push(tokenOperation);
     }
   }
 
-  return coinOperations;
+  return preparedCoinOperations;
 };
 
 /**
  * List of properties of a sub account that can be updated when 2 "identical" accounts are found
  */
-const updatableSubAccountProperties: { name: string; isOps: boolean }[] = [
+const updatableSubAccountProperties = [
   { name: "balance", isOps: false },
   { name: "spendableBalance", isOps: false },
   { name: "balanceHistoryCache", isOps: false },
   { name: "operations", isOps: true },
   { name: "pendingOperations", isOps: true },
-];
+] as const satisfies { name: string; isOps: boolean }[];
 
-// based on libs/coin-modules/coin-evm/src/logic.ts
+/**
+ * In charge of smartly merging sub accounts while maintaining references as much as possible
+ */
 export const mergeSubAccounts = (
   initialAccount: Account | undefined,
   newSubAccounts: TokenAccount[],
@@ -331,22 +351,20 @@ export const mergeSubAccounts = (
     return newSubAccounts;
   }
 
-  // Creating a map of already existing sub accounts by id
+  // map of already existing sub accounts by id
   const oldSubAccountsById: Record<string, TokenAccount> = {};
   for (const oldSubAccount of oldSubAccounts) {
-    oldSubAccountsById[oldSubAccount.id!] = oldSubAccount;
+    oldSubAccountsById[oldSubAccount.id] = oldSubAccount;
   }
 
-  // Looping on new sub accounts to compare them with already existing ones
-  // Already existing will be updated if necessary (see `updatableSubAccountProperties`)
-  // Fresh new sub accounts will be added/pushed after already existing
+  // looping through new sub accounts to compare them with already existing ones
+  // already existing will be updated if necessary (see `updatableSubAccountProperties`)
+  // new sub accounts will be added/pushed after already existing
   const newSubAccountsToAdd: TokenAccount[] = [];
   for (const newSubAccount of newSubAccounts) {
-    const duplicatedAccount: TokenAccount | undefined = oldSubAccountsById[newSubAccount.id!];
+    const duplicatedAccount: TokenAccount | undefined = oldSubAccountsById[newSubAccount.id];
 
-    // If this sub account was not already in the initialAccount
     if (!duplicatedAccount) {
-      // We'll add it later
       newSubAccountsToAdd.push(newSubAccount);
       continue;
     }
@@ -354,39 +372,40 @@ export const mergeSubAccounts = (
     const updates: Partial<TokenAccount> = {};
     for (const { name, isOps } of updatableSubAccountProperties) {
       if (!isOps) {
-        // @ts-expect-error FIXME: fix typings
         if (newSubAccount[name] !== duplicatedAccount[name]) {
-          // @ts-expect-error FIXME: fix typings
+          // @ts-expect-error - TypeScript assumes all possible types could be assigned here
           updates[name] = newSubAccount[name];
         }
       } else {
-        // @ts-expect-error FIXME: fix typings
         updates[name] = mergeOps(duplicatedAccount[name], newSubAccount[name]);
       }
     }
 
-    // Updating the operationsCount in case the mergeOps changed it
+    // update the operationsCount in case the mergeOps changed it
     updates.operationsCount =
       updates.operations?.length || duplicatedAccount?.operations?.length || 0;
 
-    // Modifying the Map with the updated sub account with a new ref
+    // modify the map with the updated sub account with a new ref
     oldSubAccountsById[newSubAccount.id!] = {
       ...duplicatedAccount,
       ...updates,
     };
   }
+
   const updatedSubAccounts = Object.values(oldSubAccountsById);
+
   return [...updatedSubAccounts, ...newSubAccountsToAdd];
 };
 
+//
 export const applyPendingExtras = (existing: Operation[], pending: Operation[]) => {
   const pendingMap = new Map(pending.map(op => [op.hash, op]));
 
   return existing.map(op => {
     const pendingOp = pendingMap.get(op.hash);
     if (!pendingOp) return op;
-    if (!op.extra || typeof op.extra !== "object") return op;
-    if (!pendingOp.extra || typeof pendingOp.extra !== "object") return op;
+    if (!isValidExtra(op.extra)) return op;
+    if (!isValidExtra(pendingOp.extra)) return op;
 
     return {
       ...op,
@@ -398,16 +417,19 @@ export const applyPendingExtras = (existing: Operation[], pending: Operation[]) 
   });
 };
 
+// FIXME: double check if this makes sense, considering this information is available on account level too
 export const checkAccountTokenAssociationStatus = makeLRUCache(
   async (accountId: string, tokenId: string) => {
-    const accountDetails = await getAccount(accountId);
+    const mirrorAccount = await getAccount(accountId);
 
     // auto association is enabled
-    if (accountDetails.maxAutomaticTokenAssociations === -1) {
+    if (mirrorAccount.max_automatic_token_associations === -1) {
       return true;
     }
 
-    const isTokenAssociated = accountDetails.tokens.some(token => token.tokenId === tokenId);
+    const isTokenAssociated = mirrorAccount.balance.tokens.some(token => {
+      return token.token_id === tokenId;
+    });
 
     return isTokenAssociated;
   },

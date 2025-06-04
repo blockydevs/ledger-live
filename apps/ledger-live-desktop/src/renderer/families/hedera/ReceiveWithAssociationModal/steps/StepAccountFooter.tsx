@@ -1,7 +1,6 @@
 import React from "react";
 import { Trans } from "react-i18next";
 import { getReceiveFlowError } from "@ledgerhq/live-common/account/index";
-import type { Transaction } from "@ledgerhq/live-common/families/hedera/types";
 
 import Button from "~/renderer/components/Button";
 import type { StepId, StepProps } from "../Body";

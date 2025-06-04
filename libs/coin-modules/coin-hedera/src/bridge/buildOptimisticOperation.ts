@@ -17,7 +17,7 @@ const buildOptimisticTokenAssociateOperation = async ({
 
   const estimatedFee = await getEstimatedFees(account, "TokenAssociate");
   const value = transaction.amount;
-  const type: OperationType = "TOKEN_ASSOCIATE";
+  const type: OperationType = "ASSOCIATE_TOKEN";
 
   const operation: Operation = {
     id: encodeOperationId(account.id, "", type),

@@ -1,7 +1,12 @@
 import BigNumber from "bignumber.js";
 import { AccountId } from "@hashgraph/sdk";
 import { Operation, OperationType } from "@ledgerhq/types-live";
-import { HederaMirrorTokenTransfer, HederaMirrorCoinTransfer } from "./types";
+import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
+import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
+import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
+import type { HederaMirrorTokenTransfer, HederaMirrorCoinTransfer } from "./types";
+import { getAccountTransactions } from "./mirror";
+import { base64ToUrlSafeBase64 } from "../bridge/utils";
 
 function isValidRecipient(accountId: AccountId, recipients: string[]): boolean {
   if (accountId.shard.eq(0) && accountId.realm.eq(0)) {
@@ -20,7 +25,7 @@ function isValidRecipient(accountId: AccountId, recipients: string[]): boolean {
 }
 
 export function parseTransfers(
-  transfers: (HederaMirrorCoinTransfer | HederaMirrorTokenTransfer)[],
+  mirrorTransfers: (HederaMirrorCoinTransfer | HederaMirrorTokenTransfer)[],
   address: string,
 ): Pick<Operation, "type" | "value" | "senders" | "recipients"> {
   let value = new BigNumber(0);
@@ -29,7 +34,7 @@ export function parseTransfers(
   const senders: string[] = [];
   const recipients: string[] = [];
 
-  for (const transfer of transfers) {
+  for (const transfer of mirrorTransfers) {
     const amount = new BigNumber(transfer.amount);
     const accountId = AccountId.fromString(transfer.account);
 
@@ -55,4 +60,72 @@ export function parseTransfers(
     senders,
     recipients,
   };
+}
+
+export async function getOperationsForAccount(
+  ledgerAccountId: string,
+  address: string,
+  latestOperationTimestamp: string | null,
+): Promise<{
+  coinOperations: Operation[];
+  tokenOperations: Operation[];
+}> {
+  const rawTransactions = await getAccountTransactions(address, latestOperationTimestamp);
+  const coinOperations: Operation[] = [];
+  const tokenOperations: Operation[] = [];
+
+  for (const rawTx of rawTransactions) {
+    const timestamp = new Date(parseInt(rawTx.consensus_timestamp.split(".")[0], 10) * 1000);
+    const hash = base64ToUrlSafeBase64(rawTx.transaction_hash);
+    const fee = new BigNumber(rawTx.charged_tx_fee);
+    const tokenTransfers = rawTx.token_transfers ?? [];
+    const transfers = rawTx.transfers ?? [];
+    const hasFailed = rawTx.result !== "SUCCESS";
+
+    if (tokenTransfers.length > 0) {
+      const tokenId = rawTx.token_transfers[0].token_id;
+      const token = findTokenByAddressInCurrency(tokenId, "hedera");
+      if (!token) continue;
+
+      const encodedTokenId = encodeTokenAccountId(ledgerAccountId, token);
+      const { type, value, senders, recipients } = parseTransfers(rawTx.token_transfers, address);
+
+      tokenOperations.push({
+        id: encodeOperationId(encodedTokenId, hash, type),
+        accountId: encodedTokenId,
+        type,
+        value,
+        recipients,
+        senders,
+        hash,
+        fee,
+        date: timestamp,
+        blockHeight: 5,
+        blockHash: null,
+        hasFailed,
+        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+      });
+    } else if (transfers.length > 0) {
+      const { type, value, senders, recipients } = parseTransfers(rawTx.transfers, address);
+      const operationType = rawTx.name === "TOKENASSOCIATE" ? "ASSOCIATE_TOKEN" : type;
+
+      coinOperations.push({
+        id: encodeOperationId(ledgerAccountId, hash, operationType),
+        accountId: ledgerAccountId,
+        type: operationType,
+        value,
+        recipients,
+        senders,
+        hash,
+        fee,
+        date: timestamp,
+        blockHeight: 5,
+        blockHash: null,
+        hasFailed,
+        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+      });
+    }
+  }
+
+  return { coinOperations, tokenOperations };
 }

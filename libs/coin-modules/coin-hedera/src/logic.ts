@@ -1,7 +1,6 @@
-import { ExplorerView, TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { AccountLike, Operation } from "@ledgerhq/types-live";
-
-import { HederaOperationExtra } from "./types";
+import type { ExplorerView, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { AccountLike, Operation } from "@ledgerhq/types-live";
+import type { HederaAccount, HederaOperationExtra } from "./types";
 
 const getTransactionExplorer = (
   explorerView: ExplorerView | null | undefined,
@@ -18,8 +17,14 @@ const isTokenAssociationRequired = (
 ) => {
   const subAccounts = !!account && "subAccounts" in account ? account.subAccounts ?? [] : [];
   const isTokenAssociated = subAccounts.some(item => item.token.id === token?.id);
+  const isAutoTokenAssociationsEnabled =
+    (account as HederaAccount).hederaResources?.isAutoTokenAssociationsEnabled ?? false;
 
-  return !!token && !isTokenAssociated;
+  return !!token && !isTokenAssociated && !isAutoTokenAssociationsEnabled;
 };
 
-export { getTransactionExplorer, isTokenAssociationRequired };
+const isValidExtra = (extra: unknown): extra is HederaOperationExtra => {
+  return !!extra && typeof extra === "object" && !Array.isArray(extra);
+};
+
+export { isValidExtra, getTransactionExplorer, isTokenAssociationRequired };

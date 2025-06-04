@@ -27,6 +27,11 @@ import { StepProps as SendStepProps } from "../modals/Send/types";
 import { StepProps as ReceiveStepProps } from "../modals/Receive/Body";
 import { StepProps as AddAccountsStepProps } from "../modals/AddAccounts";
 
+export type AddressCellProps<O extends Operation> = {
+  operation: O;
+  currency: CryptoCurrency;
+};
+
 export type AmountCellExtraProps<O extends Operation> = {
   operation: O;
   unit: Unit;
@@ -84,6 +89,11 @@ export type LLDCoinFamily<
   O extends Operation,
 > = {
   operationDetails?: {
+    /**
+     * Replace address cell
+     */
+    addressCell?: Partial<Record<OperationType, React.ComponentType<AddressCellProps<O>>>>;
+
     /**
      * Cell amount before the amount cell in operation row
      */

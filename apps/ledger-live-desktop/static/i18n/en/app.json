@@ -203,7 +203,7 @@
       "WITHDRAW_UNSTAKED": "Withdrawn",
       "SENDING": "Sending",
       "BURN": "Burned",
-      "TOKEN_ASSOCIATE": "Token associated"
+      "ASSOCIATE_TOKEN": "Associate token"
     },
     "edit": {
       "title": "Speed up or Cancel",

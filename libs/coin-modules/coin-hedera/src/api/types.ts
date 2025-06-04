@@ -1,3 +1,9 @@
+import BigNumber from "bignumber.js";
+
+type FreezeStatus = "NOT_APPLICABLE" | "FROZEN" | "UNFROZEN";
+
+type KycStatus = "NOT_APPLICABLE" | "GRANTED" | "REVOKED";
+
 export interface HederaMirrorCoinTransfer {
   account: string;
   amount: number;
@@ -18,6 +24,16 @@ export interface HederaMirrorTransaction {
   consensus_timestamp: string;
   result: string;
   name: string;
+}
+
+export interface HederaMirrorToken {
+  automatic_association: boolean;
+  balance: number;
+  created_timestamp: string;
+  decimals: number;
+  token_id: string;
+  freeze_status: FreezeStatus;
+  kyc_status: KycStatus;
 }
 
 export interface HederaMirrorAccount {

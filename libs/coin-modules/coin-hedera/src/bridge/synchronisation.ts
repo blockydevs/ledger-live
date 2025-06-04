@@ -5,25 +5,20 @@ import {
   Result,
   runDerivationScheme,
 } from "@ledgerhq/coin-framework/derivation";
-import type { Account } from "@ledgerhq/types-live";
 import {
   GetAccountShape,
   IterateResultBuilder,
   mergeOps,
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { encodeAccountId } from "@ledgerhq/coin-framework/account";
-import { getAccountsForPublicKey, getOperationsForAccount } from "../api/mirror";
-import { getAccountBalance } from "../api/network";
-import {
-  getSubAccounts,
-  linkSubOperationsToCoinOperations,
-  applyPendingExtras,
-  mergeSubAccounts,
-} from "./utils";
+import { getAccount, getAccountsForPublicKey, getAccountTokens } from "../api/mirror";
+import { getSubAccounts, prepareOperations, applyPendingExtras, mergeSubAccounts } from "./utils";
+import { HederaAccount } from "../types";
+import { getOperationsForAccount } from "../api/utils";
 
-export const getAccountShape: GetAccountShape<Account> = async (
+export const getAccountShape: GetAccountShape<HederaAccount> = async (
   info,
-): Promise<Partial<Account>> => {
+): Promise<Partial<HederaAccount>> => {
   const { currency, derivationMode, address, initialAccount } = info;
 
   invariant(address, "an hedera address is expected");
@@ -36,15 +31,22 @@ export const getAccountShape: GetAccountShape<Account> = async (
     derivationMode,
   });
 
-  // get current account balance
-  const accountBalance = await getAccountBalance(address);
-
-  const shouldSyncFromScratch =
-    !initialAccount?.subAccounts ||
-    (initialAccount.subAccounts.length === 0 && accountBalance.tokens.length > 0);
+  // get current account balance and tokens
+  // tokens are fetched with separate requests to get "created_timestamp" for each token
+  // based on this, ASSOCIATE_TOKEN operations can be connected with tokens
+  const [mirrorAccount, mirrorTokens] = await Promise.all([
+    getAccount(address),
+    getAccountTokens(address),
+  ]);
 
   const oldOperations = initialAccount?.operations ?? [];
   const pendingOperations = initialAccount?.pendingOperations ?? [];
+
+  // check if sync can be incremental
+  const isAccountWithoutTokenAccounts = !initialAccount?.subAccounts;
+  const isAccountWithMissingTokens =
+    initialAccount?.subAccounts?.length === 0 && mirrorTokens.length > 0;
+  const shouldSyncFromScratch = isAccountWithoutTokenAccounts || isAccountWithMissingTokens;
 
   // grab latest operation's consensus timestamp for incremental sync
   const latestOperationTimestamp =
@@ -60,51 +62,60 @@ export const getAccountShape: GetAccountShape<Account> = async (
   const newSubAccounts = await getSubAccounts(
     liveAccountId,
     latestAccountOperations.tokenOperations,
-    accountBalance,
+    mirrorTokens,
   );
 
   const subAccounts = mergeSubAccounts(initialAccount, newSubAccounts);
-
-  const newOperations = linkSubOperationsToCoinOperations(
+  const newOperations = prepareOperations(
     latestAccountOperations.coinOperations,
     latestAccountOperations.tokenOperations,
+    mirrorTokens,
   );
 
-  const mergedOperations = mergeOps(oldOperations, newOperations);
-  const enrichedOperations = applyPendingExtras(mergedOperations, pendingOperations);
+  const enrichedNewOperations = applyPendingExtras(newOperations, pendingOperations);
+  const mergedOperations = mergeOps(oldOperations, enrichedNewOperations);
 
   console.log("[DEBUG] coin-hedera bridge getAccountShape", {
     info,
-    accountBalance,
+    mirrorAccount,
     latestAccountOperations,
     oldOperations,
     newOperations,
-    operations: enrichedOperations,
+    operations: mergedOperations,
     latestOperationTimestamp,
     newSubAccounts,
     subAccounts,
     output: {
       id: liveAccountId,
       freshAddress: address,
-      balance: accountBalance.balance,
-      spendableBalance: accountBalance.balance,
-      operations: enrichedOperations,
+      balance: new BigNumber(mirrorAccount.balance.balance),
+      spendableBalance: new BigNumber(mirrorAccount.balance.balance),
+      operations: mergedOperations,
       // NOTE: there are no "blocks" in hedera
       // Set a value just so that operations are considered confirmed according to isConfirmedOperation
       blockHeight: 10,
+      subAccounts,
+      hederaResources: {
+        maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
+        isAutoTokenAssociationsEnabled: mirrorAccount.max_automatic_token_associations === -1,
+      },
     },
   });
 
   return {
     id: liveAccountId,
     freshAddress: address,
-    balance: accountBalance.balance,
-    spendableBalance: accountBalance.balance,
-    operations: enrichedOperations,
+    balance: new BigNumber(mirrorAccount.balance.balance),
+    spendableBalance: new BigNumber(mirrorAccount.balance.balance),
+    operations: mergedOperations,
     // NOTE: there are no "blocks" in hedera
     // Set a value just so that operations are considered confirmed according to isConfirmedOperation
     blockHeight: 10,
     subAccounts,
+    hederaResources: {
+      maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
+      isAutoTokenAssociationsEnabled: mirrorAccount.max_automatic_token_associations === -1,
+    },
   };
 };
 

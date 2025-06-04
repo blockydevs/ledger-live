@@ -42,6 +42,7 @@ const account: HederaAccount = {
   swapHistory: [],
   hederaResources: {
     maxAutomaticTokenAssociations: 0,
+    isAutoTokenAssociationsEnabled: false,
   },
 };
 

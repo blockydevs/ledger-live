@@ -2,6 +2,7 @@ import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type {
   Account,
   AccountRaw,
+  Operation,
   TransactionCommon,
   TransactionCommonRaw,
   TransactionStatusCommon,
@@ -39,15 +40,21 @@ export type TransactionStatusRaw = TransactionStatusCommonRaw;
 
 export interface HederaResources {
   maxAutomaticTokenAssociations: number;
+  isAutoTokenAssociationsEnabled: boolean;
 }
 
 export interface HederaResourcesRaw {
   maxAutomaticTokenAssociations: number;
+  isAutoTokenAssociationsEnabled: boolean;
 }
 
-export type HederaAccount = Account & { hederaResources: HederaResources };
+export type HederaAccount = Account & {
+  hederaResources?: HederaResources;
+};
 
-export type HederaAccountRaw = AccountRaw & { hederaResources: HederaResourcesRaw };
+export type HederaAccountRaw = AccountRaw & {
+  hederaResources?: HederaResourcesRaw;
+};
 
 export type HederaOperationExtra = {
   consensusTimestamp?: string;
@@ -56,3 +63,5 @@ export type HederaOperationExtra = {
 };
 
 export type HederaOperationType = "CryptoTransfer" | "TokenTransfer" | "TokenAssociate";
+
+export type HederaOperation = Operation<HederaOperationExtra>;

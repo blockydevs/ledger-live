@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { AccountLike } from "@ledgerhq/types-live";
 import { isTokenAssociationRequired } from "@ledgerhq/live-common/families/hedera/logic";
+import type { HederaAccount } from "@ledgerhq/live-common/families/hedera/types";
 import { isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import { Link } from "@ledgerhq/react-ui";
 import { urls } from "~/config/urls";
