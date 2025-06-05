@@ -27,4 +27,4 @@ const isValidExtra = (extra: unknown): extra is HederaOperationExtra => {
   return !!extra && typeof extra === "object" && !Array.isArray(extra);
 };
 
-export { isValidExtra, getTransactionExplorer, isTokenAssociationRequired };
+export { getTransactionExplorer, isValidExtra, isTokenAssociationRequired };

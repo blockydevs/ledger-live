@@ -70,11 +70,11 @@ export async function getOperationsForAccount(
   coinOperations: Operation[];
   tokenOperations: Operation[];
 }> {
-  const rawTransactions = await getAccountTransactions(address, latestOperationTimestamp);
+  const mirrorTransactions = await getAccountTransactions(address, latestOperationTimestamp);
   const coinOperations: Operation[] = [];
   const tokenOperations: Operation[] = [];
 
-  for (const rawTx of rawTransactions) {
+  for (const rawTx of mirrorTransactions) {
     const timestamp = new Date(parseInt(rawTx.consensus_timestamp.split(".")[0], 10) * 1000);
     const hash = base64ToUrlSafeBase64(rawTx.transaction_hash);
     const fee = new BigNumber(rawTx.charged_tx_fee);
