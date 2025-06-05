@@ -14,6 +14,7 @@ const defaultMockedTokenCurrency = getMockedTokenCurrency();
 const defaultMockAccountId = "js:2:hedera:0.0.1234567:hederaBip44";
 const defaultMockTokenAccountId = `${defaultMockAccountId}/${defaultMockedTokenCurrency.id}`;
 const defaultBalance = new BigNumber(100000000);
+const defaultTokenBalance = new BigNumber(10);
 
 export const mockHederaResources: HederaResources = {
   maxAutomaticTokenAssociations: 0,
@@ -29,6 +30,7 @@ export const mockHederaResourcesRaw: HederaResourcesRaw = {
  * default settings:
  * - account balance is 1 HBAR
  * - auto token association is disabled
+ * - subAccounts array is empty (no tokens account are used)
  */
 export const getMockedAccount = (overrides?: Partial<HederaAccount>): HederaAccount => {
   return {
@@ -41,7 +43,7 @@ export const getMockedAccount = (overrides?: Partial<HederaAccount>): HederaAcco
     freshAddressPath: "",
     used: false,
     balance: defaultBalance,
-    spendableBalance: new BigNumber(0),
+    spendableBalance: defaultBalance,
     creationDate: new Date(),
     blockHeight: 0,
     currency: defaultMockedCurrency,
@@ -71,7 +73,7 @@ export const getMockedAccountRaw = (overrides?: Partial<HederaAccountRaw>): Hede
     freshAddressPath: "",
     used: false,
     balance: defaultBalance.toString(),
-    spendableBalance: new BigNumber(0).toString(),
+    spendableBalance: defaultBalance.toString(),
     creationDate: new Date().toISOString(),
     blockHeight: 0,
     currencyId: defaultMockedCurrency.id,
@@ -91,6 +93,10 @@ export const getMockedAccountRaw = (overrides?: Partial<HederaAccountRaw>): Hede
   };
 };
 
+/**
+ * default settings:
+ * - balance is 10
+ */
 export const getMockedTokenAccount = (
   token: TokenCurrency,
   overrides?: Partial<TokenAccount>,
@@ -100,11 +106,11 @@ export const getMockedTokenAccount = (
     id: defaultMockTokenAccountId,
     parentId: defaultMockAccountId,
     token,
-    balance: new BigNumber(1),
-    spendableBalance: new BigNumber(1),
+    balance: defaultTokenBalance,
+    spendableBalance: defaultTokenBalance,
     creationDate: new Date(),
     operations: [],
-    operationsCount: 1,
+    operationsCount: 0,
     pendingOperations: [],
     swapHistory: [],
     balanceHistoryCache: {

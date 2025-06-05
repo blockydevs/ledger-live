@@ -1,26 +1,53 @@
 import BigNumber from "bignumber.js";
 import { createBridges } from ".";
 import { getEstimatedFees } from "./utils";
-import { getMockedAccount } from "../test/fixtures/account";
-
-const mockedAccount = getMockedAccount();
+import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account";
+import { getMockedTokenCurrency } from "../test/fixtures/currency";
 
 describe("js-estimateMaxSpendable", () => {
   let bridge: ReturnType<typeof createBridges>;
-  let estimatedFees = new BigNumber("150200").multipliedBy(2); // 0.001502 ℏ (as of 2023-03-14)
+  let estimatedFees: Record<"crypto", BigNumber>;
 
   beforeAll(async () => {
     const signer = jest.fn();
     bridge = createBridges(signer);
-    estimatedFees = await getEstimatedFees(mockedAccount, "CryptoTransfer");
+
+    const mockedAccount = getMockedAccount();
+    const crypto = await getEstimatedFees(mockedAccount, "CryptoTransfer");
+
+    estimatedFees = { crypto };
   });
 
-  test("estimateMaxSpendable", async () => {
+  test("estimateMaxSpendable returns balance minus fee", async () => {
+    const mockedAccount = getMockedAccount();
+
     const result = await bridge.accountBridge.estimateMaxSpendable({
       account: mockedAccount,
     });
-    const data = mockedAccount.balance.minus(estimatedFees);
 
-    expect(result).toEqual(data);
+    expect(result).toEqual(mockedAccount.balance.minus(estimatedFees.crypto));
+  });
+
+  test("estimateMaxSpendable returns 0 if balance < estimated fees", async () => {
+    const mockedAccount = getMockedAccount({ balance: estimatedFees.crypto.minus(1) });
+
+    const result = await bridge.accountBridge.estimateMaxSpendable({
+      account: mockedAccount,
+    });
+
+    expect(result).toEqual(new BigNumber(0));
+  });
+
+  test("estimateMaxSpendable returns token balance for token account", async () => {
+    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
+    const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
+
+    const result = await bridge.accountBridge.estimateMaxSpendable({
+      account: mockedTokenAccount,
+      parentAccount: mockedAccount,
+    });
+
+    expect(result).toEqual(mockedTokenAccount.balance);
   });
 });

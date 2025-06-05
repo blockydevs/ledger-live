@@ -14,6 +14,7 @@ describe("js-transaction", () => {
     const signer = jest.fn();
     bridge = createBridges(signer);
   });
+
   test("createTransaction", () => {
     const data = mockedTransaction;
     const result = bridge.accountBridge.createTransaction(mockedAccount);
