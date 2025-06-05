@@ -1,50 +1,9 @@
 import BigNumber from "bignumber.js";
 import { createBridges } from ".";
 import { getEstimatedFees } from "./utils";
-import { HederaAccount } from "../types";
+import { getMockedAccount } from "../test/fixtures/account";
 
-// Balance is 1 Hbar
-const account: HederaAccount = {
-  type: "Account",
-  id: "",
-  seedIdentifier: "",
-  derivationMode: "",
-  index: 0,
-  freshAddress: "",
-  freshAddressPath: "",
-  used: false,
-  balance: new BigNumber(100000000),
-  spendableBalance: new BigNumber(0),
-  creationDate: new Date(),
-  blockHeight: 0,
-  currency: {
-    type: "CryptoCurrency",
-    id: "hedera",
-    managerAppName: "",
-    coinType: 0,
-    scheme: "",
-    color: "",
-    family: "",
-    explorerViews: [],
-    name: "",
-    ticker: "",
-    units: [],
-  },
-  operationsCount: 0,
-  operations: [],
-  pendingOperations: [],
-  lastSyncDate: new Date(),
-  balanceHistoryCache: {
-    HOUR: { latestDate: null, balances: [] },
-    DAY: { latestDate: null, balances: [] },
-    WEEK: { latestDate: null, balances: [] },
-  },
-  swapHistory: [],
-  hederaResources: {
-    maxAutomaticTokenAssociations: 0,
-    isAutoTokenAssociationsEnabled: false,
-  },
-};
+const mockedAccount = getMockedAccount();
 
 describe("js-estimateMaxSpendable", () => {
   let bridge: ReturnType<typeof createBridges>;
@@ -53,15 +12,14 @@ describe("js-estimateMaxSpendable", () => {
   beforeAll(async () => {
     const signer = jest.fn();
     bridge = createBridges(signer);
-    // FIXME:
-    estimatedFees = await getEstimatedFees(account, "CryptoTransfer");
+    estimatedFees = await getEstimatedFees(mockedAccount, "CryptoTransfer");
   });
 
   test("estimateMaxSpendable", async () => {
     const result = await bridge.accountBridge.estimateMaxSpendable({
-      account,
+      account: mockedAccount,
     });
-    const data = account.balance.minus(estimatedFees);
+    const data = mockedAccount.balance.minus(estimatedFees);
 
     expect(result).toEqual(data);
   });

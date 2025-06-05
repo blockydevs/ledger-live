@@ -1,7 +1,8 @@
-import { BigNumber } from "bignumber.js";
-import { Operation } from "@ledgerhq/types-live";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
-import { getTransactionExplorer } from "./logic";
+import { getTransactionExplorer, isTokenAssociationRequired } from "./logic";
+import { getMockedAccount, getMockedTokenAccount } from "./test/fixtures/account";
+import { getMockOperation } from "./test/fixtures/operation";
+import { getMockedTokenCurrency } from "./test/fixtures/currency";
 
 describe("getTransactionExplorer", () => {
   test("Tx explorer URL is converted from hash to consensus timestamp", async () => {
@@ -9,22 +10,9 @@ describe("getTransactionExplorer", () => {
     expect(explorerView).toBeDefined();
     expect(explorerView.tx).toBeDefined();
 
-    const mockOperation: Operation = {
-      extra: {
-        consensusTimestamp: "1.2.3.4",
-      },
-      id: "",
-      hash: "",
-      type: "IN",
-      value: new BigNumber(0),
-      fee: new BigNumber(0),
-      senders: [],
-      recipients: [],
-      blockHeight: undefined,
-      blockHash: undefined,
-      accountId: "",
-      date: new Date(),
-    };
+    const mockOperation = getMockOperation({
+      extra: { consensusTimestamp: "1.2.3.4" },
+    });
 
     const newUrl = getTransactionExplorer(explorerView, mockOperation);
     expect(newUrl).toBe("https://hashscan.io/mainnet/transaction/1.2.3.4");
@@ -35,24 +23,57 @@ describe("getTransactionExplorer", () => {
     expect(explorerView).toBeDefined();
     expect(explorerView.tx).toBeDefined();
 
-    const mockOperation: Operation = {
-      extra: {
-        transactionId: "0.0.1234567-123-123",
-      },
-      id: "",
-      hash: "",
-      type: "IN",
-      value: new BigNumber(0),
-      fee: new BigNumber(0),
-      senders: [],
-      recipients: [],
-      blockHeight: undefined,
-      blockHash: undefined,
-      accountId: "",
-      date: new Date(),
-    };
+    const mockOperation = getMockOperation({
+      extra: { transactionId: "0.0.1234567-123-123" },
+    });
 
     const newUrl = getTransactionExplorer(explorerView, mockOperation);
     expect(newUrl).toBe("https://hashscan.io/mainnet/transaction/0.0.1234567-123-123");
+  });
+});
+
+describe("isTokenAssociationRequired", () => {
+  it("should return false if token is already associated (token account exists)", () => {
+    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
+    const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
+
+    expect(isTokenAssociationRequired(mockedAccount, mockedTokenCurrency)).toBe(false);
+  });
+
+  it("should return false if auto token associations are enabled", () => {
+    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedAccount = getMockedAccount({
+      subAccounts: [],
+      hederaResources: {
+        maxAutomaticTokenAssociations: -1,
+        isAutoTokenAssociationsEnabled: true,
+      },
+    });
+
+    expect(isTokenAssociationRequired(mockedAccount, mockedTokenCurrency)).toBe(false);
+  });
+
+  it("should return true if token is not associated and auto associations are disabled", () => {
+    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedAccount = getMockedAccount({ subAccounts: [] });
+
+    expect(isTokenAssociationRequired(mockedAccount, mockedTokenCurrency)).toBe(true);
+  });
+
+  it("should return false if token is undefined", () => {
+    const mockedAccount = getMockedAccount({ subAccounts: [] });
+
+    expect(isTokenAssociationRequired(mockedAccount, undefined)).toBe(false);
+  });
+
+  it("should return false for legacy accounts without subAccounts or hederaResources", () => {
+    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedAccount = getMockedAccount();
+
+    delete mockedAccount.subAccounts;
+    delete mockedAccount.hederaResources;
+
+    expect(isTokenAssociationRequired(mockedAccount, mockedTokenCurrency)).toBe(true);
   });
 });
