@@ -617,6 +617,9 @@ export const DEFAULT_FEATURES: Features = {
     },
   },
   ldmkConnectApp: DEFAULT_FEATURE,
+  lldNetworkBasedAddAccount: DEFAULT_FEATURE,
+  llmOfacGeoBlocking: DEFAULT_FEATURE,
+  lldOfacGeoBlocking: DEFAULT_FEATURE,
 };
 
 // Firebase SDK treat JSON values as strings

@@ -9,6 +9,9 @@ import { track } from "~/analytics";
 import QueuedDrawer from "~/components/QueuedDrawer";
 import { earnMenuModalSelector } from "~/reducers/earn";
 
+/** TODO Should be a shared constant throughout the app for all events */
+const BUTTON_CLICKED_TRACK_EVENT = "button_clicked";
+
 export function EarnMenuDrawer() {
   const dispatch = useDispatch();
   const [modalOpened, setModalOpened] = useState(false);
@@ -36,14 +39,14 @@ export function EarnMenuDrawer() {
           </Text>
         ) : null}
         <Flex rowGap={16}>
-          {modal?.options.map(({ label, metadata: { link, button, ...tracked } }) =>
+          {modal?.options.map(({ label, metadata: { link, ...tracked } }) =>
             link ? (
               <OptionButton
                 key={label}
-                onPress={() => {
-                  Linking.openURL(link);
-                  track(button, tracked);
+                onPress={async () => {
+                  await track(BUTTON_CLICKED_TRACK_EVENT, tracked);
                   closeDrawer();
+                  await Linking.openURL(link);
                 }}
               >
                 {label}
@@ -68,6 +71,7 @@ const OptionButton = styled(Button)<{
   justify-content: left;
   max-width: 100%;
   overflow: hidden;
+  height: auto;
   padding: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;

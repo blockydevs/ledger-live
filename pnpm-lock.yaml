@@ -457,8 +457,8 @@ importers:
         specifier: 7.5.8
         version: 7.5.8
       '@xstate/react':
-        specifier: 1.6.3
-        version: 1.6.3(@types/react@18.2.73)(react@18.3.1)(xstate@4.38.3)
+        specifier: ^5.0.2
+        version: 5.0.3(@types/react@18.2.73)(react@18.3.1)(xstate@5.19.2)
       allure-commandline:
         specifier: 2.28.0
         version: 2.28.0
@@ -643,8 +643,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       xstate:
-        specifier: 4.38.3
-        version: 4.38.3
+        specifier: ^5.19.2
+        version: 5.19.2
     devDependencies:
       '@electron/notarize':
         specifier: 2.3.2
@@ -682,6 +682,21 @@ importers:
       '@sentry/types':
         specifier: 8.16.0
         version: 8.16.0
+      '@storybook/addon-essentials':
+        specifier: 8.6.12
+        version: 8.6.12(@types/react@18.2.73)(storybook@8.6.12(prettier@3.2.5))
+      '@storybook/addon-interactions':
+        specifier: 8.6.12
+        version: 8.6.12(storybook@8.6.12(prettier@3.2.5))
+      '@storybook/react':
+        specifier: 8.6.12
+        version: 8.6.12(@storybook/test@8.6.12(storybook@8.6.12(prettier@3.2.5)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.12(prettier@3.2.5))(typescript@5.4.3)
+      '@storybook/react-vite':
+        specifier: 8.6.12
+        version: 8.6.12(@storybook/test@8.6.12(storybook@8.6.12(prettier@3.2.5)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.12(prettier@3.2.5))(typescript@5.4.3)(vite@4.5.6)
+      '@storybook/test':
+        specifier: ^8.6.12
+        version: 8.6.12(storybook@8.6.12(prettier@3.2.5))
       '@swc/core':
         specifier: 1.4.11
         version: 1.4.11
@@ -853,6 +868,9 @@ importers:
       serve-handler:
         specifier: 6.1.5
         version: 6.1.5
+      storybook:
+        specifier: 8.6.12
+        version: 8.6.12(prettier@3.2.5)
       ts-jest:
         specifier: 29.1.2
         version: 29.1.2(jest@29.7.0(ts-node@10.9.2(@swc/core@1.4.11)(typescript@5.4.3)))(typescript@5.4.3)
@@ -908,8 +926,8 @@ importers:
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-stacks
       '@ledgerhq/device-management-kit':
-        specifier: 0.7.0
-        version: 0.7.0(rxjs@7.8.1)
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../../libs/ledgerjs/packages/devices
@@ -2170,9 +2188,6 @@ importers:
       '@ledgerhq/logs':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/logs
-      '@ledgerhq/types-cryptoassets':
-        specifier: workspace:^
-        version: link:../../ledgerjs/packages/types-cryptoassets
       '@ledgerhq/types-live':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/types-live
@@ -2204,6 +2219,9 @@ importers:
       '@ledgerhq/disable-network-setup':
         specifier: workspace:^
         version: link:../../disable-network-setup
+      '@ledgerhq/types-cryptoassets':
+        specifier: workspace:^
+        version: link:../../ledgerjs/packages/types-cryptoassets
       '@types/invariant':
         specifier: ^2.2.37
         version: 2.2.37
@@ -4367,6 +4385,9 @@ importers:
       '@ledgerhq/hw-transport-node-speculos-http':
         specifier: workspace:^
         version: link:../ledgerjs/packages/hw-transport-node-speculos-http
+      '@ledgerhq/types-devices':
+        specifier: workspace:^
+        version: link:../ledgerjs/packages/types-devices
       axios:
         specifier: 1.7.7
         version: 1.7.7
@@ -4535,6 +4556,70 @@ importers:
       typescript:
         specifier: ^5.4.5
         version: 5.6.3
+
+  libs/coin-tester-modules/coin-tester-solana:
+    dependencies:
+      '@ledgerhq/coin-framework':
+        specifier: workspace:^
+        version: link:../../coin-framework
+      '@ledgerhq/coin-solana':
+        specifier: workspace:^
+        version: link:../../coin-modules/coin-solana
+      '@ledgerhq/coin-tester':
+        specifier: workspace:^
+        version: link:../../coin-tester
+      '@ledgerhq/cryptoassets':
+        specifier: workspace:^
+        version: link:../../ledgerjs/packages/cryptoassets
+      '@ledgerhq/live-env':
+        specifier: workspace:^
+        version: link:../../env
+      '@ledgerhq/live-signer-solana':
+        specifier: workspace:^
+        version: link:../../live-signer-solana
+      '@ledgerhq/types-cryptoassets':
+        specifier: workspace:^
+        version: link:../../ledgerjs/packages/types-cryptoassets
+      '@ledgerhq/types-live':
+        specifier: workspace:^
+        version: link:../../ledgerjs/packages/types-live
+      '@solana/spl-token':
+        specifier: 0.4.9
+        version: 0.4.9(@solana/web3.js@1.95.4)(typescript@5.8.3)
+      '@solana/web3.js':
+        specifier: 1.95.4
+        version: 1.95.4
+      bignumber.js:
+        specifier: ^9
+        version: 9.1.2
+      docker-compose:
+        specifier: ^1
+        version: 1.1.0
+      msw:
+        specifier: ^2
+        version: 2.7.3(typescript@5.8.3)
+    devDependencies:
+      '@types/jest':
+        specifier: ^29
+        version: 29.5.14
+      dotenv:
+        specifier: ^16
+        version: 16.4.7
+      jest:
+        specifier: ^29
+        version: 29.7.0(ts-node@10.9.2(typescript@5.8.3))
+      rimraf:
+        specifier: ^5
+        version: 5.0.10
+      ts-jest:
+        specifier: ^29
+        version: 29.3.2(jest@29.7.0(ts-node@10.9.2(typescript@5.8.3)))(typescript@5.8.3)
+      ts-node:
+        specifier: ^10
+        version: 10.9.2(typescript@5.8.3)
+      typescript:
+        specifier: ^5
+        version: 5.8.3
 
   libs/device-core:
     dependencies:
@@ -4797,11 +4882,11 @@ importers:
   libs/exchange-module:
     dependencies:
       '@ledgerhq/wallet-api-client':
-        specifier: ^1.8.0
-        version: 1.8.0(@ton/crypto@3.3.0)
+        specifier: ^1.9.0
+        version: 1.9.0(@ton/crypto@3.3.0)
       '@ledgerhq/wallet-api-core':
-        specifier: ^1.20.0
-        version: 1.20.0(@ton/crypto@3.3.0)
+        specifier: ^1.21.0
+        version: 1.21.0(@ton/crypto@3.3.0)
     devDependencies:
       '@types/node':
         specifier: ^22.10.10
@@ -5016,8 +5101,8 @@ importers:
         specifier: workspace:^
         version: link:../device-core
       '@ledgerhq/device-management-kit':
-        specifier: 0.7.0
-        version: 0.7.0(rxjs@7.8.1)
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../ledgerjs/packages/devices
@@ -5099,6 +5184,9 @@ importers:
       '@ledgerhq/live-countervalues-react':
         specifier: workspace:^
         version: link:../live-countervalues-react
+      '@ledgerhq/live-dmk-shared':
+        specifier: workspace:^
+        version: link:../live-dmk-shared
       '@ledgerhq/live-env':
         specifier: workspace:^
         version: link:../env
@@ -5133,17 +5221,17 @@ importers:
         specifier: workspace:^
         version: link:../wallet-api-acre-module
       '@ledgerhq/wallet-api-client':
-        specifier: ^1.8.0
-        version: 1.8.0(@ton/crypto@3.3.0)
+        specifier: ^1.9.0
+        version: 1.9.0(@ton/crypto@3.3.0)
       '@ledgerhq/wallet-api-core':
-        specifier: ^1.20.0
-        version: 1.20.0(@ton/crypto@3.3.0)
+        specifier: ^1.21.0
+        version: 1.21.0(@ton/crypto@3.3.0)
       '@ledgerhq/wallet-api-exchange-module':
         specifier: workspace:^
         version: link:../exchange-module
       '@ledgerhq/wallet-api-server':
-        specifier: ^1.9.0
-        version: 1.9.0(@ton/crypto@3.3.0)(react@18.3.1)(rxjs@7.8.1)
+        specifier: ^1.10.0
+        version: 1.10.0(@ton/crypto@3.3.0)(react@18.3.1)(rxjs@7.8.1)
       '@stricahq/typhonjs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -5172,8 +5260,8 @@ importers:
         specifier: ^2.6.2
         version: 2.6.5
       '@xstate/react':
-        specifier: ^1.6.3
-        version: 1.6.3(@types/react@18.2.73)(react@18.3.1)(xstate@4.38.3)
+        specifier: ^5.0.2
+        version: 5.0.3(@types/react@18.2.73)(react@18.3.1)(xstate@5.19.2)
       '@zondax/ledger-casper':
         specifier: ^2.6.1
         version: 2.6.1
@@ -5289,8 +5377,8 @@ importers:
         specifier: ^3.4.0
         version: 3.13.0
       xstate:
-        specifier: 4.38.3
-        version: 4.38.3
+        specifier: ^5.19.2
+        version: 5.19.2
       yargs:
         specifier: ^17.0.0
         version: 17.7.2
@@ -6063,6 +6151,9 @@ importers:
 
   libs/ledgerjs/packages/hw-app-exchange:
     dependencies:
+      '@ledgerhq/device-management-kit':
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701
       '@ledgerhq/errors':
         specifier: workspace:^
         version: link:../errors
@@ -7687,11 +7778,11 @@ importers:
   libs/live-dmk-desktop:
     dependencies:
       '@ledgerhq/device-management-kit':
-        specifier: 0.7.0
-        version: 0.7.0(rxjs@7.8.1)
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@ledgerhq/device-transport-kit-web-hid':
         specifier: 0.0.0-fix-rn-ble-20250425173318
-        version: 0.0.0-fix-rn-ble-20250425173318(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))(rxjs@7.8.1)
+        version: 0.0.0-fix-rn-ble-20250425173318(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))(rxjs@7.8.1)
       '@ledgerhq/hw-transport':
         specifier: workspace:^
         version: link:../ledgerjs/packages/hw-transport
@@ -7702,8 +7793,8 @@ importers:
         specifier: workspace:^
         version: link:../live-dmk-shared
       '@ledgerhq/logs':
-        specifier: ^6.12.0
-        version: 6.12.0
+        specifier: workspace:^
+        version: link:../ledgerjs/packages/logs
       '@ledgerhq/types-devices':
         specifier: workspace:^
         version: link:../ledgerjs/packages/types-devices
@@ -7751,11 +7842,11 @@ importers:
   libs/live-dmk-mobile:
     dependencies:
       '@ledgerhq/device-management-kit':
-        specifier: 0.7.0
-        version: 0.7.0(rxjs@7.8.1)
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@ledgerhq/device-transport-kit-react-native-ble':
         specifier: 1.0.0
-        version: 1.0.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))(react-native-ble-plx@3.4.0(react-native@0.76.3(react@18.3.1))(react@18.3.1))(react-native@0.76.3(react@18.3.1))(rxjs@7.8.1)
+        version: 1.0.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))(react-native-ble-plx@3.4.0(react-native@0.76.3(react@18.3.1))(react@18.3.1))(react-native@0.76.3(react@18.3.1))(rxjs@7.8.1)
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../ledgerjs/packages/devices
@@ -7769,8 +7860,8 @@ importers:
         specifier: workspace:^
         version: link:../live-dmk-shared
       '@ledgerhq/logs':
-        specifier: ^6.12.0
-        version: 6.12.0
+        specifier: workspace:^
+        version: link:../ledgerjs/packages/logs
       '@ledgerhq/types-devices':
         specifier: workspace:^
         version: link:../ledgerjs/packages/types-devices
@@ -7827,15 +7918,21 @@ importers:
         specifier: workspace:^
         version: link:../ledgerjs/packages/hw-transport
       '@ledgerhq/logs':
-        specifier: ^6.12.0
-        version: 6.12.0
+        specifier: workspace:^
+        version: link:../ledgerjs/packages/logs
       '@ledgerhq/types-devices':
         specifier: workspace:^
         version: link:../ledgerjs/packages/types-devices
+      purify-ts:
+        specifier: ^2.1.0
+        version: 2.1.0
+      xstate:
+        specifier: ^5.19.2
+        version: 5.19.2
     devDependencies:
       '@ledgerhq/device-management-kit':
-        specifier: 0.7.0
-        version: 0.7.0(rxjs@7.8.1)
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@testing-library/dom':
         specifier: ^9.3.4
         version: 9.3.4
@@ -8024,13 +8121,13 @@ importers:
         version: link:../coin-modules/coin-evm
       '@ledgerhq/context-module':
         specifier: 1.4.0
-        version: 1.4.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))
+        version: 1.4.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))
       '@ledgerhq/device-management-kit':
-        specifier: 0.7.0
-        version: 0.7.0(rxjs@7.8.1)
+        specifier: 0.0.0-connect-app-20250527074701
+        version: 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@ledgerhq/device-signer-kit-ethereum':
         specifier: 0.0.0-challenge-nano-s-20250515175634
-        version: 0.0.0-challenge-nano-s-20250515175634(@ledgerhq/context-module@1.4.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1)))(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))
+        version: 0.0.0-challenge-nano-s-20250515175634(@ledgerhq/context-module@1.4.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1)))(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))
       '@ledgerhq/errors':
         specifier: workspace:^
         version: link:../ledgerjs/packages/errors
@@ -9028,11 +9125,11 @@ importers:
   libs/wallet-api-acre-module:
     dependencies:
       '@ledgerhq/wallet-api-client':
-        specifier: ^1.8.0
-        version: 1.8.0(@ton/crypto@3.3.0)
+        specifier: ^1.9.0
+        version: 1.9.0(@ton/crypto@3.3.0)
       '@ledgerhq/wallet-api-core':
-        specifier: ^1.20.0
-        version: 1.20.0(@ton/crypto@3.3.0)
+        specifier: ^1.21.0
+        version: 1.21.0(@ton/crypto@3.3.0)
     devDependencies:
       '@types/node':
         specifier: ^22.10.10
@@ -9090,14 +9187,14 @@ importers:
         specifier: workspace:*
         version: link:../../libs/ledger-live-common
       '@ledgerhq/wallet-api-client':
-        specifier: ^1.8.0
-        version: 1.8.0(@ton/crypto@3.3.0)
+        specifier: ^1.9.0
+        version: 1.9.0(@ton/crypto@3.3.0)
       '@ledgerhq/wallet-api-client-react':
-        specifier: ^1.4.9
-        version: 1.4.9(@ton/crypto@3.3.0)(react@18.3.1)
+        specifier: ^1.4.10
+        version: 1.4.10(@ton/crypto@3.3.0)(react@18.3.1)
       '@ledgerhq/wallet-api-simulator':
-        specifier: ^1.2.10
-        version: 1.2.10(@ton/crypto@3.3.0)(react@18.3.1)
+        specifier: ^1.2.11
+        version: 1.2.11(@ton/crypto@3.3.0)(react@18.3.1)
       bignumber.js:
         specifier: ^9.1.2
         version: 9.1.2
@@ -9555,6 +9652,7 @@ packages:
   '@aptos-labs/aptos-client@0.1.1':
     resolution: {integrity: sha512-kJsoy4fAPTOhzVr7Vwq8s/AUg6BQiJDa7WOqRzev4zsuIS3+JCuIZ6vUd7UBsjnxtmguJJulMRs9qWCzVBt2XA==}
     engines: {node: '>=15.10.0'}
+    deprecated: <1.0.0 is no longer supported please upgrade to the latest version
 
   '@aptos-labs/ts-sdk@1.33.1':
     resolution: {integrity: sha512-d6nWtUI//fyEN8DeLjm3+ro87Ad6+IKwR9pCqfrs/Azahso1xR1Llxd/O6fj/m1DDsuDj/HAsCsy5TC/aKD6Eg==}
@@ -12739,6 +12837,7 @@ packages:
   '@faker-js/faker@9.4.0':
     resolution: {integrity: sha512-85+k0AxaZSTowL0gXp8zYWDIrWclTbRPg/pm/V0dSFZ6W6D4lhcG3uuZl4zLsEKfEvs69xDbLN2cHQudwp95JA==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
+    deprecated: Please update to a newer version
 
   '@faker-js/faker@9.6.0':
     resolution: {integrity: sha512-3vm4by+B5lvsFPSyep3ELWmZfE3kicDtmemVpuwl1yH7tqtnHdsA6hG8fbXedMVdkzgtvzWoRgjSB4Q+FHnZiw==}
@@ -13357,6 +13456,15 @@ packages:
     resolution: {integrity: sha512-u3UPsIilWKOM3F9CXtrG8LEJmNxwoCQC/XVj4IKYXvvpx7QIi/Kg1LI5uDmDpKlac62NUtX7eLjRh+jVZcLOzw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0':
+    resolution: {integrity: sha512-qYDdL7fPwLRI+bJNurVcis+tNgJmvWjH4YTBGXTA8xMuxFrnAz6E5o35iyzyKbq5J5Lr8mJGfrR5GXl+WGwhgQ==}
+    peerDependencies:
+      typescript: '>= 4.3.x'
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   '@jridgewell/gen-mapping@0.3.5':
     resolution: {integrity: sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==}
     engines: {node: '>=6.0.0'}
@@ -13451,8 +13559,8 @@ packages:
   '@ledgerhq/cryptoassets@6.37.0':
     resolution: {integrity: sha512-xwrDKTS9koQBNNzc7CqgV6zfGHvNFWJjlIL0Kc4O4DVWYR2vUdztUHcvwHD1KPjxNYhVnsgIopmtq47fHt3nMg==}
 
-  '@ledgerhq/device-management-kit@0.7.0':
-    resolution: {integrity: sha512-sqrSeq42nxJya3v9BA5gOlLLbNKrIZtiJy7jQUrc85NnxH99d0UjKrjc0loZRs8Q2mPBqZSDwG2ZcEHtSXfQ7w==}
+  '@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701':
+    resolution: {integrity: sha512-IuT257cR0HVcaMc4XF0Bb8Sh9Jbm+SclDidL9zw6zizZf8eutDXdMa0tlkHPv8FJHfYU8elSFcXawltj5RbaUg==}
     peerDependencies:
       rxjs: ^7.8.2
 
@@ -13551,19 +13659,19 @@ packages:
   '@ledgerhq/ui-shared@0.2.2':
     resolution: {integrity: sha512-3ASYnyqnZFMRnySADZziM3IIJ2SRQ7lKrRPwpihhf+SsyP7TIo6o4UXMY8eYOupdTARlElS4Qpk4nRL/Ln62Ng==}
 
-  '@ledgerhq/wallet-api-client-react@1.4.9':
-    resolution: {integrity: sha512-CYcXhDDwrzE2LOfN3jMKewZ4PQcA2PCNkkPnAOBecZ8jYKZVeAC2/qRZPXbysY7c7KiIjrd98Ppttj41u4tH4Q==}
+  '@ledgerhq/wallet-api-client-react@1.4.10':
+    resolution: {integrity: sha512-aTGTgOg4L1FflexEYkDntVySA+10dv7BiCBe/ateS8sN0L2vGZzbccLCCNoWUJvEBoXUoqs6aW/zd24DX2XkDA==}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18
 
-  '@ledgerhq/wallet-api-client@1.8.0':
-    resolution: {integrity: sha512-hYHwnO9GcoSstR/c7Z8sSAst70tK1n8G+a1SfFnjNYAzTnIcQYbq/LE6hITAFIbnh/qkj0eYDS0/OI5TMw1cLw==}
+  '@ledgerhq/wallet-api-client@1.9.0':
+    resolution: {integrity: sha512-WAnXW4MAU+NddAB+a+Qus8vgId0wkmTSBBRWy5ZaV2LWpv3kbtsoCzW371qQsNmXehYgDPLXBPJSGj5ngAzhYA==}
 
-  '@ledgerhq/wallet-api-core@1.20.0':
-    resolution: {integrity: sha512-GK7t/gKLH9prVmTIq/UUfse/UicR6gRwuN2G5p/93YnVRShxG0cYRR4Ystr4UC9T4G2gXpBcl99jj389c5Yfog==}
+  '@ledgerhq/wallet-api-core@1.21.0':
+    resolution: {integrity: sha512-YBwPM4Iv6rlJLUtstn+ftdg0x3QPHaXcQmqL6BQZ+ap0W4m+tXP2LAkdQpDKjegyEDYUWp5uK1LI/OxRibenzQ==}
 
-  '@ledgerhq/wallet-api-server@1.9.0':
-    resolution: {integrity: sha512-65TWBCFcbPrcZKaPyYIcc2LR6/Mc8oXpb3vxtP+eECdiMoZXau4DW3F389a1dq+mUQQ8qYOebVssqdzbByfrww==}
+  '@ledgerhq/wallet-api-server@1.10.0':
+    resolution: {integrity: sha512-T93IsvnMqwEFBS3q0xAcDOnxPtEuZE2xpBqJKj4dKtTR6v1w5sQQLc2LApBIODcP6Za9j2mT4Je1czChMkEnqw==}
     peerDependencies:
       react: ^17.x || ^18.x
       rxjs: ^7.x
@@ -13571,8 +13679,8 @@ packages:
       react:
         optional: true
 
-  '@ledgerhq/wallet-api-simulator@1.2.10':
-    resolution: {integrity: sha512-odeTD7PKxMeK6RSRq3MjveUmrKW4m4MMOwhNHSZYbkRI0LAp8IeB+Kp0UH7/Hz5AzF3pAUxzQZ8Bg+lSnw843w==}
+  '@ledgerhq/wallet-api-simulator@1.2.11':
+    resolution: {integrity: sha512-Sov/scl2y7PfEuuCuqBXHwrk+iS8oeGacU5wUxZ/41TwbWYL5Adqu9GhZuz7QtFdOaX6oBSrVdX9sE/VRh3Vyg==}
 
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
@@ -17049,6 +17157,12 @@ packages:
   '@storybook/builder-manager@7.6.20':
     resolution: {integrity: sha512-e2GzpjLaw6CM/XSmc4qJRzBF8GOoOyotyu3JrSPTYOt4RD8kjUsK4QlismQM1DQRu8i39aIexxmRbiJyD74xzQ==}
 
+  '@storybook/builder-vite@8.6.12':
+    resolution: {integrity: sha512-Gju21ud/3Qw4v2vLNaa5SuJECsI9ICNRr2G0UyCCzRvCHg8jpA9lDReu2NqhLDyFIuDG+ZYT38gcaHEUoNQ8KQ==}
+    peerDependencies:
+      storybook: ^8.6.12
+      vite: ^4.0.0 || ^5.0.0 || ^6.0.0
+
   '@storybook/builder-webpack5@7.6.20':
     resolution: {integrity: sha512-kUcMZHVo/jybwsje03MFN1ZucdjyH6QB+jlw9dzHrAhM6N1IItwHzhlixvxmseA5OB7jk1b0WcCN8tfD2qByFA==}
     peerDependencies:
@@ -17324,6 +17438,19 @@ packages:
       react: '*'
       react-native: '>=0.57.0'
       react-native-safe-area-context: '*'
+
+  '@storybook/react-vite@8.6.12':
+    resolution: {integrity: sha512-UA2Kule99oyFgHdhcuhrRwCKyWu/yMbqbl9U7NwowFHNwWWFjVMMir/AmfShb/H1C1DQ3LqOad6/QwJyPLjP8g==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@storybook/test': 8.6.12
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0-beta
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0-beta
+      storybook: ^8.6.12
+      vite: ^4.0.0 || ^5.0.0 || ^6.0.0
+    peerDependenciesMeta:
+      '@storybook/test':
+        optional: true
 
   '@storybook/react-webpack5@7.6.20':
     resolution: {integrity: sha512-xaLtadKczfUdpyPMk/e49qGnRpjMDtTwFq4RqkS7q+Z+EO72kTCUPGtK3jJXyv70pp/qbzM5OfjFLjXjMezvYw==}
@@ -17799,6 +17926,7 @@ packages:
     deprecated: |-
       DEPRECATED: This package is no longer maintained.
       Please use the built-in Jest matchers available in @testing-library/react-native v12.4+.
+
       See migration guide: https://callstack.github.io/react-native-testing-library/docs/migration/jest-matchers
     peerDependencies:
       react: '>=16.0.0'
@@ -19133,15 +19261,12 @@ packages:
     resolution: {integrity: sha512-IyMsxyjkJK8YWq566KyuFuh/PUiLzQ02RbUO5qa+vEQb6zIAR9MzFwN7wBmBy7wmKkjligcdNDMG5EaBRH8FxQ==}
     engines: {node: '>=16.0.0'}
 
-  '@xstate/react@1.6.3':
-    resolution: {integrity: sha512-NCUReRHPGvvCvj2yLZUTfR0qVp6+apc8G83oXSjN4rl89ZjyujiKrTff55bze/HrsvCsP/sUJASf2n0nzMF1KQ==}
+  '@xstate/react@5.0.3':
+    resolution: {integrity: sha512-Zdnn0VTPcVdoaAiW0OX6Nkvdoe7SNGjfaZqM61NKhjt2aNULqiicmDu2tOd1ChzlRWYDxGTdbzVqqVyMLpoHJw==}
     peerDependencies:
-      '@xstate/fsm': ^1.0.0
-      react: ^16.8.0 || ^17.0.0
-      xstate: ^4.11.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      xstate: ^5.19.2
     peerDependenciesMeta:
-      '@xstate/fsm':
-        optional: true
       xstate:
         optional: true
 
@@ -23638,6 +23763,7 @@ packages:
 
   formidable@2.1.2:
     resolution: {integrity: sha512-CM3GuJ57US06mlpQ47YcunuUZ9jpm8Vx+P2CGt2j7HpgkKZO/DJYQ0Bobim8G6PFQmK5lOqOOdUXboU+h73A4g==}
+    deprecated: 'ACTION REQUIRED: SWITCH TO v3 - v1 and v2 are VULNERABLE! v1 is DEPRECATED FOR OVER 2 YEARS! Use formidable@latest or try formidable-mini for fresh projects'
 
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -27540,6 +27666,7 @@ packages:
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    deprecated: Use your platform's native DOMException instead
 
   node-fetch-native@1.6.4:
     resolution: {integrity: sha512-IhOigYzAKHd244OC0JIMIUrjzctirCmPkaIfhDeGcEETWof5zKYUW7e7MYvChGWh/4CJeXEgsRyGzuF334rOOQ==}
@@ -29038,6 +29165,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode-terminal@0.11.0:
@@ -32141,10 +32269,6 @@ packages:
     resolution: {integrity: sha512-on5/Cw89wwqGZQu+yWO0gGMGu8VNxsaW9SB2HE8yJjllEk7IDTwnSN1dUVldYILhYPN5HzD7WAaw2cc/jBfn0Q==}
     engines: {node: '>=16'}
 
-  type-fest@4.37.0:
-    resolution: {integrity: sha512-S/5/0kFftkq27FPNye0XM1e2NsnoD/3FS+pBmbjmmtLT6I+i344KoOf7pvXreaFsDamWeaJX55nczA1m5PsBDg==}
-    engines: {node: '>=16'}
-
   type-fest@4.40.0:
     resolution: {integrity: sha512-ABHZ2/tS2JkvH1PEjxFDTUWC8dB5OsIGZP4IFLhR293GqT5Y5qB1WwL2kMPYhQW9DVgVD8Hd7I8gjwPIf5GFkw==}
     engines: {node: '>=16'}
@@ -32546,11 +32670,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  use-subscription@1.8.0:
-    resolution: {integrity: sha512-LISuG0/TmmoDoCRmV5XAqYkd3UCBNM0ML3gGBndze65WITcsExCD3DTvXXTLyNcOC0heFQZzluW88bN/oC1DQQ==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
 
   use-sync-external-store@1.2.0:
     resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
@@ -33596,9 +33715,6 @@ packages:
   xmlhttprequest@1.8.0:
     resolution: {integrity: sha512-58Im/U0mlVBLM38NdZjHyhuMtCqa61469k2YP/AaPbvCoV9aQGUpbJBj1QRm2ytRiVQBD/fsw7L2bJGDVQswBA==}
     engines: {node: '>=0.4.0'}
-
-  xstate@4.38.3:
-    resolution: {integrity: sha512-SH7nAaaPQx57dx6qvfcIgqKRXIh4L0A1iYEqim4s1u7c9VoCgzZc+63FY90AKU4ZzOC2cfJzTnpO4zK7fCUzzw==}
 
   xstate@5.19.2:
     resolution: {integrity: sha512-B8fL2aP0ogn5aviAXFzI5oZseAMqN00fg/TeDa3ZtatyDcViYLIfuQl4y8qmHCiKZgGEzmnTyNtNQL9oeJE2gw==}
@@ -35103,7 +35219,7 @@ snapshots:
 
   '@babel/helper-annotate-as-pure@7.25.9':
     dependencies:
-      '@babel/types': 7.26.7
+      '@babel/types': 7.27.0
 
   '@babel/helper-builder-binary-assignment-operator-visitor@7.22.15':
     dependencies:
@@ -36960,7 +37076,7 @@ snapshots:
       semver: 7.5.4
       sha.js: 2.4.11
       tiny-secp256k1: 1.1.6
-      typescript: 5.6.3
+      typescript: 5.8.3
       varuint-bitcoin: 1.1.2
 
   '@braze/react-native-sdk@10.0.0': {}
@@ -37450,14 +37566,14 @@ snapshots:
       '@commitlint/types': 17.8.1
       '@types/node': 20.5.1
       chalk: 4.1.2
-      cosmiconfig: 8.3.6(typescript@5.4.3)
-      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.4.3))(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.4.3))(typescript@5.4.3)
+      cosmiconfig: 8.3.6(typescript@5.8.3)
+      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.8.3))(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.8.3))(typescript@5.8.3)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
       resolve-from: 5.0.0
-      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.4.3)
-      typescript: 5.4.3
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.8.3)
+      typescript: 5.8.3
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -40988,6 +41104,15 @@ snapshots:
       '@types/yargs': 17.0.32
       chalk: 4.1.2
 
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.4.3)(vite@4.5.6)':
+    dependencies:
+      glob: 10.4.5
+      magic-string: 0.27.0
+      react-docgen-typescript: 2.2.2(typescript@5.4.3)
+      vite: 4.5.6
+    optionalDependencies:
+      typescript: 5.4.3
+
   '@jridgewell/gen-mapping@0.3.5':
     dependencies:
       '@jridgewell/set-array': 1.2.1
@@ -41079,9 +41204,9 @@ snapshots:
     dependencies:
       commander: 2.20.3
 
-  '@ledgerhq/context-module@1.4.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))':
+  '@ledgerhq/context-module@1.4.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))':
     dependencies:
-      '@ledgerhq/device-management-kit': 0.7.0(rxjs@7.8.1)
+      '@ledgerhq/device-management-kit': 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       axios: 1.8.2
       crypto-js: 4.2.0
       ethers: 6.13.4
@@ -41116,7 +41241,25 @@ snapshots:
     dependencies:
       invariant: 2.2.4
 
-  '@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1)':
+  '@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701':
+    dependencies:
+      '@sentry/minimal': 6.19.7
+      axios: 1.8.2
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      inversify-logger-middleware: 3.1.0
+      isomorphic-ws: 5.0.0(ws@8.18.0)
+      purify-ts: 2.1.0
+      reflect-metadata: 0.2.2
+      semver: 7.7.0
+      url: 0.11.4
+      uuid: 11.0.3
+      ws: 8.18.0
+      xstate: 5.19.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1)':
     dependencies:
       '@sentry/minimal': 6.19.7
       axios: 1.8.2
@@ -41135,11 +41278,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@ledgerhq/device-signer-kit-ethereum@0.0.0-challenge-nano-s-20250515175634(@ledgerhq/context-module@1.4.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1)))(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))':
+  '@ledgerhq/device-signer-kit-ethereum@0.0.0-challenge-nano-s-20250515175634(@ledgerhq/context-module@1.4.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1)))(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))':
     dependencies:
-      '@ledgerhq/context-module': 1.4.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))
-      '@ledgerhq/device-management-kit': 0.7.0(rxjs@7.8.1)
-      '@ledgerhq/signer-utils': 1.0.5(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))
+      '@ledgerhq/context-module': 1.4.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))
+      '@ledgerhq/device-management-kit': 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
+      '@ledgerhq/signer-utils': 1.0.5(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))
       ethers: 6.13.4
       inversify: 6.2.2(reflect-metadata@0.2.2)
       inversify-logger-middleware: 3.1.0
@@ -41151,9 +41294,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@ledgerhq/device-transport-kit-react-native-ble@1.0.0(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))(react-native-ble-plx@3.4.0(react-native@0.76.3(react@18.3.1))(react@18.3.1))(react-native@0.76.3(react@18.3.1))(rxjs@7.8.1)':
+  '@ledgerhq/device-transport-kit-react-native-ble@1.0.0(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))(react-native-ble-plx@3.4.0(react-native@0.76.3(react@18.3.1))(react@18.3.1))(react-native@0.76.3(react@18.3.1))(rxjs@7.8.1)':
     dependencies:
-      '@ledgerhq/device-management-kit': 0.7.0(rxjs@7.8.1)
+      '@ledgerhq/device-management-kit': 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@sentry/minimal': 6.19.7
       js-base64: 3.7.7
       purify-ts: 2.1.0
@@ -41162,9 +41305,9 @@ snapshots:
       rxjs: 7.8.1
       uuid: 11.0.3
 
-  '@ledgerhq/device-transport-kit-web-hid@0.0.0-fix-rn-ble-20250425173318(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))(rxjs@7.8.1)':
+  '@ledgerhq/device-transport-kit-web-hid@0.0.0-fix-rn-ble-20250425173318(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))(rxjs@7.8.1)':
     dependencies:
-      '@ledgerhq/device-management-kit': 0.7.0(rxjs@7.8.1)
+      '@ledgerhq/device-management-kit': 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
       '@sentry/minimal': 6.19.7
       purify-ts: 2.1.0
       rxjs: 7.8.1
@@ -41279,9 +41422,9 @@ snapshots:
 
   '@ledgerhq/logs@6.12.0': {}
 
-  '@ledgerhq/signer-utils@1.0.5(@ledgerhq/device-management-kit@0.7.0(rxjs@7.8.1))':
+  '@ledgerhq/signer-utils@1.0.5(@ledgerhq/device-management-kit@0.0.0-connect-app-20250527074701(rxjs@7.8.1))':
     dependencies:
-      '@ledgerhq/device-management-kit': 0.7.0(rxjs@7.8.1)
+      '@ledgerhq/device-management-kit': 0.0.0-connect-app-20250527074701(rxjs@7.8.1)
 
   '@ledgerhq/types-live@6.53.1':
     dependencies:
@@ -41290,24 +41433,24 @@ snapshots:
 
   '@ledgerhq/ui-shared@0.2.2': {}
 
-  '@ledgerhq/wallet-api-client-react@1.4.9(@ton/crypto@3.3.0)(react@18.3.1)':
+  '@ledgerhq/wallet-api-client-react@1.4.10(@ton/crypto@3.3.0)(react@18.3.1)':
     dependencies:
-      '@ledgerhq/wallet-api-client': 1.8.0(@ton/crypto@3.3.0)
+      '@ledgerhq/wallet-api-client': 1.9.0(@ton/crypto@3.3.0)
       react: 18.3.1
     transitivePeerDependencies:
       - '@ton/crypto'
       - encoding
 
-  '@ledgerhq/wallet-api-client@1.8.0(@ton/crypto@3.3.0)':
+  '@ledgerhq/wallet-api-client@1.9.0(@ton/crypto@3.3.0)':
     dependencies:
       '@ledgerhq/hw-transport': 6.31.4
-      '@ledgerhq/wallet-api-core': 1.20.0(@ton/crypto@3.3.0)
+      '@ledgerhq/wallet-api-core': 1.21.0(@ton/crypto@3.3.0)
       bignumber.js: 9.1.2
     transitivePeerDependencies:
       - '@ton/crypto'
       - encoding
 
-  '@ledgerhq/wallet-api-core@1.20.0(@ton/crypto@3.3.0)':
+  '@ledgerhq/wallet-api-core@1.21.0(@ton/crypto@3.3.0)':
     dependencies:
       '@ledgerhq/errors': 6.19.1
       '@stacks/transactions': 6.17.0
@@ -41320,9 +41463,9 @@ snapshots:
       - '@ton/crypto'
       - encoding
 
-  '@ledgerhq/wallet-api-server@1.9.0(@ton/crypto@3.3.0)(react@18.3.1)(rxjs@7.8.1)':
+  '@ledgerhq/wallet-api-server@1.10.0(@ton/crypto@3.3.0)(react@18.3.1)(rxjs@7.8.1)':
     dependencies:
-      '@ledgerhq/wallet-api-core': 1.20.0(@ton/crypto@3.3.0)
+      '@ledgerhq/wallet-api-core': 1.21.0(@ton/crypto@3.3.0)
       bignumber.js: 9.1.2
       picomatch: 4.0.2
       rxjs: 7.8.1
@@ -41332,12 +41475,12 @@ snapshots:
       - '@ton/crypto'
       - encoding
 
-  '@ledgerhq/wallet-api-simulator@1.2.10(@ton/crypto@3.3.0)(react@18.3.1)':
+  '@ledgerhq/wallet-api-simulator@1.2.11(@ton/crypto@3.3.0)(react@18.3.1)':
     dependencies:
       '@ledgerhq/hw-transport': 6.31.4
-      '@ledgerhq/wallet-api-client': 1.8.0(@ton/crypto@3.3.0)
-      '@ledgerhq/wallet-api-core': 1.20.0(@ton/crypto@3.3.0)
-      '@ledgerhq/wallet-api-server': 1.9.0(@ton/crypto@3.3.0)(react@18.3.1)(rxjs@7.8.1)
+      '@ledgerhq/wallet-api-client': 1.9.0(@ton/crypto@3.3.0)
+      '@ledgerhq/wallet-api-core': 1.21.0(@ton/crypto@3.3.0)
+      '@ledgerhq/wallet-api-server': 1.10.0(@ton/crypto@3.3.0)(react@18.3.1)(rxjs@7.8.1)
       rxjs: 7.8.1
       ws: 8.18.0
     transitivePeerDependencies:
@@ -45408,6 +45551,11 @@ snapshots:
       '@solana/errors': 2.0.0-rc.1(typescript@5.4.3)
       typescript: 5.4.3
 
+  '@solana/codecs-core@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      '@solana/errors': 2.0.0-rc.1(typescript@5.8.3)
+      typescript: 5.8.3
+
   '@solana/codecs-data-structures@2.0.0-rc.1(typescript@5.4.3)':
     dependencies:
       '@solana/codecs-core': 2.0.0-rc.1(typescript@5.4.3)
@@ -45415,11 +45563,24 @@ snapshots:
       '@solana/errors': 2.0.0-rc.1(typescript@5.4.3)
       typescript: 5.4.3
 
+  '@solana/codecs-data-structures@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-numbers': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/errors': 2.0.0-rc.1(typescript@5.8.3)
+      typescript: 5.8.3
+
   '@solana/codecs-numbers@2.0.0-rc.1(typescript@5.4.3)':
     dependencies:
       '@solana/codecs-core': 2.0.0-rc.1(typescript@5.4.3)
       '@solana/errors': 2.0.0-rc.1(typescript@5.4.3)
       typescript: 5.4.3
+
+  '@solana/codecs-numbers@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/errors': 2.0.0-rc.1(typescript@5.8.3)
+      typescript: 5.8.3
 
   '@solana/codecs-strings@2.0.0-rc.1(typescript@5.4.3)':
     dependencies:
@@ -45427,6 +45588,13 @@ snapshots:
       '@solana/codecs-numbers': 2.0.0-rc.1(typescript@5.4.3)
       '@solana/errors': 2.0.0-rc.1(typescript@5.4.3)
       typescript: 5.4.3
+
+  '@solana/codecs-strings@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-numbers': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/errors': 2.0.0-rc.1(typescript@5.8.3)
+      typescript: 5.8.3
 
   '@solana/codecs@2.0.0-rc.1(typescript@5.4.3)':
     dependencies:
@@ -45439,11 +45607,28 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
+  '@solana/codecs@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-data-structures': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-numbers': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-strings': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/options': 2.0.0-rc.1(typescript@5.8.3)
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+
   '@solana/errors@2.0.0-rc.1(typescript@5.4.3)':
     dependencies:
       chalk: 5.4.1
       commander: 12.1.0
       typescript: 5.4.3
+
+  '@solana/errors@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      chalk: 5.4.1
+      commander: 12.1.0
+      typescript: 5.8.3
 
   '@solana/options@2.0.0-rc.1(typescript@5.4.3)':
     dependencies:
@@ -45456,6 +45641,17 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
+  '@solana/options@2.0.0-rc.1(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-data-structures': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-numbers': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/codecs-strings': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/errors': 2.0.0-rc.1(typescript@5.8.3)
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+
   '@solana/spl-token-group@0.0.7(@solana/web3.js@1.95.4)(typescript@5.4.3)':
     dependencies:
       '@solana/codecs': 2.0.0-rc.1(typescript@5.4.3)
@@ -45464,9 +45660,25 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - typescript
 
+  '@solana/spl-token-group@0.0.7(@solana/web3.js@1.95.4)(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs': 2.0.0-rc.1(typescript@5.8.3)
+      '@solana/web3.js': 1.95.4
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+      - typescript
+
   '@solana/spl-token-metadata@0.1.6(@solana/web3.js@1.95.4)(typescript@5.4.3)':
     dependencies:
       '@solana/codecs': 2.0.0-rc.1(typescript@5.4.3)
+      '@solana/web3.js': 1.95.4
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+      - typescript
+
+  '@solana/spl-token-metadata@0.1.6(@solana/web3.js@1.95.4)(typescript@5.8.3)':
+    dependencies:
+      '@solana/codecs': 2.0.0-rc.1(typescript@5.8.3)
       '@solana/web3.js': 1.95.4
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
@@ -45487,10 +45699,25 @@ snapshots:
       - typescript
       - utf-8-validate
 
+  '@solana/spl-token@0.4.9(@solana/web3.js@1.95.4)(typescript@5.8.3)':
+    dependencies:
+      '@solana/buffer-layout': 4.0.1
+      '@solana/buffer-layout-utils': 0.2.0
+      '@solana/spl-token-group': 0.0.7(@solana/web3.js@1.95.4)(typescript@5.8.3)
+      '@solana/spl-token-metadata': 0.1.6(@solana/web3.js@1.95.4)(typescript@5.8.3)
+      '@solana/web3.js': 1.95.4
+      buffer: 6.0.3(patch_hash=2xnca52oxhztvr7iaoovwclcze)
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - fastestsmallesttextencoderdecoder
+      - typescript
+      - utf-8-validate
+
   '@solana/web3.js@1.95.4':
     dependencies:
       '@babel/runtime': 7.25.0
-      '@noble/curves': 1.6.0
+      '@noble/curves': 1.9.0
       '@noble/hashes': 1.7.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.5.0
@@ -46632,6 +46859,14 @@ snapshots:
       - encoding
       - supports-color
 
+  '@storybook/builder-vite@8.6.12(storybook@8.6.12(prettier@3.2.5))(vite@4.5.6)':
+    dependencies:
+      '@storybook/csf-plugin': 8.6.12(storybook@8.6.12(prettier@3.2.5))
+      browser-assert: 1.2.1
+      storybook: 8.6.12(prettier@3.2.5)
+      ts-dedent: 2.2.0
+      vite: 4.5.6
+
   '@storybook/builder-webpack5@7.6.20(metro@0.80.12)(typescript@5.4.3)':
     dependencies:
       '@babel/core': 7.24.3
@@ -47063,8 +47298,8 @@ snapshots:
       '@storybook/theming': 8.6.12(storybook@8.6.12(prettier@3.2.5))
       better-opn: 3.0.2
       browser-assert: 1.2.1
-      esbuild: 0.19.12
-      esbuild-register: 3.5.0(esbuild@0.19.12)
+      esbuild: 0.24.2
+      esbuild-register: 3.5.0(esbuild@0.24.2)
       jsdoc-type-pratt-parser: 4.1.0
       process: 0.11.10
       recast: 0.23.6
@@ -47421,6 +47656,28 @@ snapshots:
       - react-dom
       - typescript
       - webpack
+
+  '@storybook/react-vite@8.6.12(@storybook/test@8.6.12(storybook@8.6.12(prettier@3.2.5)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.12(prettier@3.2.5))(typescript@5.4.3)(vite@4.5.6)':
+    dependencies:
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.4.3)(vite@4.5.6)
+      '@rollup/pluginutils': 5.1.0
+      '@storybook/builder-vite': 8.6.12(storybook@8.6.12(prettier@3.2.5))(vite@4.5.6)
+      '@storybook/react': 8.6.12(@storybook/test@8.6.12(storybook@8.6.12(prettier@3.2.5)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.12(prettier@3.2.5))(typescript@5.4.3)
+      find-up: 5.0.0
+      magic-string: 0.30.17
+      react: 18.3.1
+      react-docgen: 7.0.3
+      react-dom: 18.3.1(react@18.3.1)
+      resolve: 1.22.8
+      storybook: 8.6.12(prettier@3.2.5)
+      tsconfig-paths: 4.2.0
+      vite: 4.5.6
+    optionalDependencies:
+      '@storybook/test': 8.6.12(storybook@8.6.12(prettier@3.2.5))
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
+      - typescript
 
   '@storybook/react-webpack5@7.6.20(@babel/core@7.24.3)(metro@0.80.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.3)(webpack-dev-server@4.15.2(webpack@5.94.0(metro@0.80.12)))':
     dependencies:
@@ -48072,7 +48329,7 @@ snapshots:
   '@testing-library/dom@10.4.0':
     dependencies:
       '@babel/code-frame': 7.26.2
-      '@babel/runtime': 7.24.1
+      '@babel/runtime': 7.25.0
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
       chalk: 4.1.2
@@ -49541,7 +49798,7 @@ snapshots:
     dependencies:
       '@vitest/spy': 2.0.5
       '@vitest/utils': 2.0.5
-      chai: 5.1.2
+      chai: 5.2.0
       tinyrainbow: 1.2.0
 
   '@vitest/expect@2.1.9':
@@ -49605,13 +49862,13 @@ snapshots:
     dependencies:
       '@vitest/pretty-format': 2.0.5
       estree-walker: 3.0.3
-      loupe: 3.1.2
+      loupe: 3.1.3
       tinyrainbow: 1.2.0
 
   '@vitest/utils@2.1.9':
     dependencies:
       '@vitest/pretty-format': 2.1.9
-      loupe: 3.1.2
+      loupe: 3.1.3
       tinyrainbow: 1.2.0
 
   '@vitest/utils@3.1.1':
@@ -50041,13 +50298,13 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@xstate/react@1.6.3(@types/react@18.2.73)(react@18.3.1)(xstate@4.38.3)':
+  '@xstate/react@5.0.3(@types/react@18.2.73)(react@18.3.1)(xstate@5.19.2)':
     dependencies:
       react: 18.3.1
       use-isomorphic-layout-effect: 1.1.2(@types/react@18.2.73)(react@18.3.1)
-      use-subscription: 1.8.0(react@18.3.1)
+      use-sync-external-store: 1.2.0(react@18.3.1)
     optionalDependencies:
-      xstate: 4.38.3
+      xstate: 5.19.2
     transitivePeerDependencies:
       - '@types/react'
 
@@ -52131,7 +52388,7 @@ snapshots:
       assertion-error: 2.0.1
       check-error: 2.1.1
       deep-eql: 5.0.2
-      loupe: 3.1.2
+      loupe: 3.1.3
       pathval: 2.0.0
 
   chainsaw@0.1.0:
@@ -52605,7 +52862,7 @@ snapshots:
   config-file-ts@0.2.6:
     dependencies:
       glob: 10.4.5
-      typescript: 5.6.3
+      typescript: 5.8.3
 
   confusing-browser-globals@1.0.11: {}
 
@@ -52731,12 +52988,12 @@ snapshots:
 
   corser@2.0.1: {}
 
-  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.4.3))(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.4.3))(typescript@5.4.3):
+  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.8.3))(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.8.3))(typescript@5.8.3):
     dependencies:
       '@types/node': 20.5.1
-      cosmiconfig: 8.3.6(typescript@5.4.3)
-      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.4.3)
-      typescript: 5.4.3
+      cosmiconfig: 8.3.6(typescript@5.8.3)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.8.3)
+      typescript: 5.8.3
 
   cosmiconfig@5.2.1:
     dependencies:
@@ -52770,14 +53027,14 @@ snapshots:
     optionalDependencies:
       typescript: 4.9.5
 
-  cosmiconfig@8.3.6(typescript@5.4.3):
+  cosmiconfig@8.3.6(typescript@5.8.3):
     dependencies:
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.4.3
+      typescript: 5.8.3
 
   cosmiconfig@9.0.0(typescript@5.4.3):
     dependencies:
@@ -54486,10 +54743,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  esbuild-register@3.5.0(esbuild@0.19.12):
+  esbuild-register@3.5.0(esbuild@0.24.2):
     dependencies:
       debug: 4.3.4
-      esbuild: 0.19.12
+      esbuild: 0.24.2
     transitivePeerDependencies:
       - supports-color
 
@@ -57888,7 +58145,7 @@ snapshots:
 
   istanbul-lib-instrument@5.2.1:
     dependencies:
-      '@babel/core': 7.24.3
+      '@babel/core': 7.26.7
       '@babel/parser': 7.27.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
@@ -57898,7 +58155,7 @@ snapshots:
 
   istanbul-lib-instrument@6.0.3:
     dependencies:
-      '@babel/core': 7.24.3
+      '@babel/core': 7.26.7
       '@babel/parser': 7.27.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
@@ -60612,8 +60869,8 @@ snapshots:
       strip-json-comments: 5.0.1
       summary: 2.1.0
       typescript: 5.4.3
-      zod: 3.23.8
-      zod-validation-error: 3.4.0(zod@3.23.8)
+      zod: 3.24.2
+      zod-validation-error: 3.4.0(zod@3.24.2)
 
   known-css-properties@0.26.0: {}
 
@@ -62709,7 +62966,7 @@ snapshots:
       path-to-regexp: 6.3.0
       picocolors: 1.1.1
       strict-event-emitter: 0.5.1
-      type-fest: 4.37.0
+      type-fest: 4.40.0
       yargs: 17.7.2
     optionalDependencies:
       typescript: 5.4.3
@@ -62734,7 +62991,7 @@ snapshots:
       path-to-regexp: 6.3.0
       picocolors: 1.1.1
       strict-event-emitter: 0.5.1
-      type-fest: 4.37.0
+      type-fest: 4.40.0
       yargs: 17.7.2
     optionalDependencies:
       typescript: 5.4.3
@@ -62759,10 +63016,35 @@ snapshots:
       path-to-regexp: 6.3.0
       picocolors: 1.1.1
       strict-event-emitter: 0.5.1
-      type-fest: 4.37.0
+      type-fest: 4.40.0
       yargs: 17.7.2
     optionalDependencies:
       typescript: 5.6.3
+    transitivePeerDependencies:
+      - '@types/node'
+
+  msw@2.7.3(typescript@5.8.3):
+    dependencies:
+      '@bundled-es-modules/cookie': 2.0.1
+      '@bundled-es-modules/statuses': 1.0.1
+      '@bundled-es-modules/tough-cookie': 0.1.6
+      '@inquirer/confirm': 5.1.7
+      '@mswjs/interceptors': 0.37.6
+      '@open-draft/deferred-promise': 2.2.0
+      '@open-draft/until': 2.1.0
+      '@types/cookie': 0.6.0
+      '@types/statuses': 2.0.5
+      graphql: 16.10.0
+      headers-polyfill: 4.0.3
+      is-node-process: 1.2.0
+      outvariant: 1.4.3
+      path-to-regexp: 6.3.0
+      picocolors: 1.1.1
+      strict-event-emitter: 0.5.1
+      type-fest: 4.40.0
+      yargs: 17.7.2
+    optionalDependencies:
+      typescript: 5.8.3
     transitivePeerDependencies:
       - '@types/node'
 
@@ -63117,7 +63399,7 @@ snapshots:
     dependencies:
       hosted-git-info: 4.1.0
       is-core-module: 2.13.1
-      semver: 7.7.1
+      semver: 7.5.4
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
@@ -63836,7 +64118,7 @@ snapshots:
 
   polished@4.3.1:
     dependencies:
-      '@babel/runtime': 7.24.1
+      '@babel/runtime': 7.25.0
 
   portfinder@1.0.32:
     dependencies:
@@ -65076,7 +65358,7 @@ snapshots:
 
   react-docgen@7.0.3:
     dependencies:
-      '@babel/core': 7.24.3
+      '@babel/core': 7.26.7
       '@babel/traverse': 7.27.0
       '@babel/types': 7.27.0
       '@types/babel__core': 7.20.5
@@ -69083,7 +69365,7 @@ snapshots:
     transitivePeerDependencies:
       - source-map-support
 
-  ts-node@10.9.2(@types/node@20.5.1)(typescript@5.4.3):
+  ts-node@10.9.2(@types/node@20.5.1)(typescript@5.8.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
@@ -69097,7 +69379,7 @@ snapshots:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.4.3
+      typescript: 5.8.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     transitivePeerDependencies:
@@ -69382,8 +69664,6 @@ snapshots:
   type-fest@3.13.1: {}
 
   type-fest@4.14.0: {}
-
-  type-fest@4.37.0: {}
 
   type-fest@4.40.0: {}
 
@@ -69804,11 +70084,6 @@ snapshots:
       tslib: 2.6.2
     optionalDependencies:
       '@types/react': 18.2.73
-
-  use-subscription@1.8.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-      use-sync-external-store: 1.2.0(react@18.3.1)
 
   use-sync-external-store@1.2.0(react@18.3.1):
     dependencies:
@@ -71387,8 +71662,6 @@ snapshots:
 
   xmlhttprequest@1.8.0: {}
 
-  xstate@4.38.3: {}
-
   xstate@5.19.2: {}
 
   xstream@11.14.0:
@@ -71512,9 +71785,9 @@ snapshots:
     dependencies:
       zod: 3.24.2
 
-  zod-validation-error@3.4.0(zod@3.23.8):
+  zod-validation-error@3.4.0(zod@3.24.2):
     dependencies:
-      zod: 3.23.8
+      zod: 3.24.2
 
   zod@3.23.8: {}
 
