@@ -1,4 +1,6 @@
+import { getCryptoCurrencyById, listTokensForCryptoCurrency } from "@ledgerhq/cryptoassets";
 import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import invariant from "invariant";
 
 export const getMockedCurrency = (overrides?: Partial<CryptoCurrency>): CryptoCurrency => {
   return {
@@ -28,9 +30,24 @@ export const getMockedCurrency = (overrides?: Partial<CryptoCurrency>): CryptoCu
   };
 };
 
+export const getTokenCurrencyFromCAL = (
+  index: number,
+  overrides?: Partial<TokenCurrency>,
+): TokenCurrency => {
+  const hedera = getCryptoCurrencyById("hedera");
+  const token = listTokensForCryptoCurrency(hedera)[index];
+
+  invariant(token, `token not found in CAL list on ${index} position`);
+
+  return {
+    ...token,
+    ...overrides,
+  };
+};
+
 export const getMockedTokenCurrency = (overrides?: Partial<TokenCurrency>): TokenCurrency => {
   return {
-    id: "hedera/hts/test_0.0.1001",
+    id: "hedera/hts/test_0.0.1234567",
     contractAddress: "0.0.1001",
     parentCurrency: getMockedCurrency(),
     tokenType: "hts",

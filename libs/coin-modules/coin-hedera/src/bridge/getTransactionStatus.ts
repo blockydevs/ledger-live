@@ -35,6 +35,7 @@ export const getTransactionStatus: AccountBridge<
       getCurrencyToUSDRate(account.currency),
       getEstimatedFees(account, "TokenAssociate"),
     ]);
+
     const amount = BigNumber(0);
     const totalSpent = amount.plus(estimatedFees);
     const hbarBalance = account.balance.dividedBy(10 ** account.currency.units[0].magnitude);

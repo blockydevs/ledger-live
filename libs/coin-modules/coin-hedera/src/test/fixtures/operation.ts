@@ -1,11 +1,8 @@
 import BigNumber from "bignumber.js";
-import type { Operation } from "@ledgerhq/types-live";
+import type { HederaOperation } from "../../types";
 
-export const getMockOperation = (overrides?: Partial<Operation>): Operation => {
+export const getMockedOperation = (overrides?: Partial<HederaOperation>): HederaOperation => {
   return {
-    extra: {
-      consensusTimestamp: "1.2.3.4",
-    },
     id: "",
     hash: "",
     type: "IN",
@@ -17,6 +14,7 @@ export const getMockOperation = (overrides?: Partial<Operation>): Operation => {
     blockHash: undefined,
     accountId: "",
     date: new Date(),
+    extra: {},
     ...overrides,
   };
 };

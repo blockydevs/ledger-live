@@ -148,7 +148,7 @@ export function base64ToUrlSafeBase64(data: string): string {
 export const getSubAccounts = async (
   accountId: string,
   lastTokenOperations: Operation[],
-  accountTokens: HederaMirrorToken[],
+  mirrorTokens: HederaMirrorToken[],
 ): Promise<TokenAccount[]> => {
   // Creating a Map of Operations by TokenCurrencies in order to know which TokenAccounts should be synced as well
   const operationsByToken = lastTokenOperations.reduce<Map<TokenCurrency, Operation[]>>(
@@ -178,7 +178,7 @@ export const getSubAccounts = async (
   // extract token accounts from existing operations
   for (const [token, tokenOperations] of operationsByToken.entries()) {
     const parentAccountId = accountId;
-    const rawBalance = accountTokens.find(t => t.token_id === token.contractAddress)?.balance;
+    const rawBalance = mirrorTokens.find(t => t.token_id === token.contractAddress)?.balance;
     const balance = rawBalance !== undefined ? new BigNumber(rawBalance) : null;
 
     if (!balance) {
@@ -203,7 +203,7 @@ export const getSubAccounts = async (
 
   // extract token accounts existing in the account's balance, but with no recorded operations yet
   // e.g. tokens added via association flow, without any subsequent activity
-  for (const rawToken of accountTokens) {
+  for (const rawToken of mirrorTokens) {
     const parentAccountId = accountId;
     const rawBalance = rawToken.balance;
     const balance = new BigNumber(rawBalance);
@@ -397,12 +397,11 @@ export const mergeSubAccounts = (
   return [...updatedSubAccounts, ...newSubAccountsToAdd];
 };
 
-//
 export const applyPendingExtras = (existing: Operation[], pending: Operation[]) => {
-  const pendingMap = new Map(pending.map(op => [op.hash, op]));
+  const pendingOperationsByHash = new Map(pending.map(op => [op.hash, op]));
 
   return existing.map(op => {
-    const pendingOp = pendingMap.get(op.hash);
+    const pendingOp = pendingOperationsByHash.get(op.hash);
     if (!pendingOp) return op;
     if (!isValidExtra(op.extra)) return op;
     if (!isValidExtra(pendingOp.extra)) return op;
@@ -417,7 +416,18 @@ export const applyPendingExtras = (existing: Operation[], pending: Operation[]) 
   });
 };
 
-// FIXME: double check if this makes sense, considering this information is available on account level too
+export function patchOperationWithExtra(
+  operation: Operation,
+  extra: HederaOperationExtra,
+): Operation {
+  return {
+    ...operation,
+    extra,
+    subOperations: (operation.subOperations ?? []).map(op => ({ ...op, extra })),
+    nftOperations: (operation.nftOperations ?? []).map(op => ({ ...op, extra })),
+  };
+}
+
 export const checkAccountTokenAssociationStatus = makeLRUCache(
   async (accountId: string, tokenId: string) => {
     const mirrorAccount = await getAccount(accountId);
@@ -436,15 +446,3 @@ export const checkAccountTokenAssociationStatus = makeLRUCache(
   (accountId, tokenId) => `${accountId}-${tokenId}`,
   minutes(1),
 );
-
-export function patchOperationWithExtra(
-  operation: Operation,
-  extra: HederaOperationExtra,
-): Operation {
-  return {
-    ...operation,
-    extra,
-    subOperations: (operation.subOperations ?? []).map(op => ({ ...op, extra })),
-    nftOperations: (operation.nftOperations ?? []).map(op => ({ ...op, extra })),
-  };
-}

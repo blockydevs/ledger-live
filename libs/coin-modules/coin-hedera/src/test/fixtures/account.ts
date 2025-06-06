@@ -12,7 +12,7 @@ import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 const defaultMockedCurrency = getMockedCurrency();
 const defaultMockedTokenCurrency = getMockedTokenCurrency();
 const defaultMockAccountId = "js:2:hedera:0.0.1234567:hederaBip44";
-const defaultMockTokenAccountId = `${defaultMockAccountId}/${defaultMockedTokenCurrency.id}`;
+const defaultMockTokenAccountId = `${defaultMockAccountId}+${defaultMockedTokenCurrency.id}`;
 const defaultBalance = new BigNumber(100000000);
 const defaultTokenBalance = new BigNumber(10);
 
@@ -39,8 +39,8 @@ export const getMockedAccount = (overrides?: Partial<HederaAccount>): HederaAcco
     seedIdentifier: "",
     derivationMode: "",
     index: 0,
-    freshAddress: "",
-    freshAddressPath: "",
+    freshAddress: "0.0.12345",
+    freshAddressPath: "44/3030",
     used: false,
     balance: defaultBalance,
     spendableBalance: defaultBalance,
@@ -69,8 +69,8 @@ export const getMockedAccountRaw = (overrides?: Partial<HederaAccountRaw>): Hede
     seedIdentifier: "",
     derivationMode: "",
     index: 0,
-    freshAddress: "",
-    freshAddressPath: "",
+    freshAddress: "0.0.12345",
+    freshAddressPath: "44/3030",
     used: false,
     balance: defaultBalance.toString(),
     spendableBalance: defaultBalance.toString(),

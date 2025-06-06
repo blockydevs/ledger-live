@@ -1,7 +1,7 @@
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { getTransactionExplorer, isTokenAssociationRequired } from "./logic";
 import { getMockedAccount, getMockedTokenAccount } from "./test/fixtures/account";
-import { getMockOperation } from "./test/fixtures/operation";
+import { getMockedOperation } from "./test/fixtures/operation";
 import { getMockedTokenCurrency } from "./test/fixtures/currency";
 
 describe("getTransactionExplorer", () => {
@@ -10,11 +10,11 @@ describe("getTransactionExplorer", () => {
     expect(explorerView).toBeDefined();
     expect(explorerView.tx).toBeDefined();
 
-    const mockOperation = getMockOperation({
+    const mockedOperation = getMockedOperation({
       extra: { consensusTimestamp: "1.2.3.4" },
     });
 
-    const newUrl = getTransactionExplorer(explorerView, mockOperation);
+    const newUrl = getTransactionExplorer(explorerView, mockedOperation);
     expect(newUrl).toBe("https://hashscan.io/mainnet/transaction/1.2.3.4");
   });
 
@@ -23,11 +23,11 @@ describe("getTransactionExplorer", () => {
     expect(explorerView).toBeDefined();
     expect(explorerView.tx).toBeDefined();
 
-    const mockOperation = getMockOperation({
+    const mockedOperation = getMockedOperation({
       extra: { transactionId: "0.0.1234567-123-123" },
     });
 
-    const newUrl = getTransactionExplorer(explorerView, mockOperation);
+    const newUrl = getTransactionExplorer(explorerView, mockedOperation);
     expect(newUrl).toBe("https://hashscan.io/mainnet/transaction/0.0.1234567-123-123");
   });
 });

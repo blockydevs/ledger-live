@@ -1,19 +1,19 @@
+import BigNumber from "bignumber.js";
 import { formatTransaction, fromTransactionRaw, toTransactionRaw } from "../transaction";
 import { getMockedAccount } from "../test/fixtures/account";
 import { getMockedTransaction, getMockedTransactionRaw } from "../test/fixtures/transaction";
-import BigNumber from "bignumber.js";
-
-const mockedAccount = getMockedAccount();
-const mockedTransaction = getMockedTransaction({
-  amount: new BigNumber(100000000),
-  recipient: "0.0.3",
-});
-const mockedTransactionRaw = getMockedTransactionRaw({
-  amount: "100000000",
-  recipient: "0.0.3",
-});
 
 describe("transaction", () => {
+  const mockedAccount = getMockedAccount();
+  const mockedTransaction = getMockedTransaction({
+    amount: new BigNumber(100000000),
+    recipient: "0.0.3",
+  });
+  const mockedTransactionRaw = getMockedTransactionRaw({
+    amount: "100000000",
+    recipient: "0.0.3",
+  });
+
   test("formatTransaction", () => {
     const result = formatTransaction(mockedTransaction, mockedAccount);
     const nonBreakingSpace = String.fromCharCode(160);

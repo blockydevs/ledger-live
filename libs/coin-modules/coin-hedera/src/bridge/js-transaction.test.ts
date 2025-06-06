@@ -3,12 +3,12 @@ import { updateTransaction } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { createBridges } from ".";
 import { getMockedAccount } from "../test/fixtures/account";
 import { getMockedTransaction } from "../test/fixtures/transaction";
-
-const mockedAccount = getMockedAccount();
-const mockedTransaction = getMockedTransaction();
+import type { Transaction } from "../types";
 
 describe("js-transaction", () => {
   let bridge: ReturnType<typeof createBridges>;
+  const mockedAccount = getMockedAccount();
+  const mockedTransaction = getMockedTransaction();
 
   beforeAll(() => {
     const signer = jest.fn();
@@ -23,7 +23,7 @@ describe("js-transaction", () => {
   });
 
   test("updateTransaction", () => {
-    const patch = {
+    const patch: Partial<Transaction> = {
       amount: new BigNumber(5),
       recipient: "0.0.3",
       useAllAmount: true,
