@@ -18,12 +18,12 @@ const defaultTokenBalance = new BigNumber(10);
 
 export const mockHederaResources: HederaResources = {
   maxAutomaticTokenAssociations: 0,
-  isAutoTokenAssociationsEnabled: false,
+  isAutoTokenAssociationEnabled: false,
 };
 
 export const mockHederaResourcesRaw: HederaResourcesRaw = {
   maxAutomaticTokenAssociations: 0,
-  isAutoTokenAssociationsEnabled: false,
+  isAutoTokenAssociationEnabled: false,
 };
 
 /**

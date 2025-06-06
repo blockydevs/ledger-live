@@ -2,20 +2,20 @@ import { AccountRaw, Account } from "@ledgerhq/types-live";
 import { HederaAccount, HederaAccountRaw, HederaResources, HederaResourcesRaw } from "../types";
 
 export function toHederaResourcesRaw(resources: HederaResources): HederaResourcesRaw {
-  const { maxAutomaticTokenAssociations, isAutoTokenAssociationsEnabled } = resources;
+  const { maxAutomaticTokenAssociations, isAutoTokenAssociationEnabled } = resources;
 
   return {
     maxAutomaticTokenAssociations,
-    isAutoTokenAssociationsEnabled,
+    isAutoTokenAssociationEnabled,
   };
 }
 
 export function fromHederaResourcesRaw(rawResources: HederaResourcesRaw): HederaResources {
-  const { maxAutomaticTokenAssociations, isAutoTokenAssociationsEnabled } = rawResources;
+  const { maxAutomaticTokenAssociations, isAutoTokenAssociationEnabled } = rawResources;
 
   return {
     maxAutomaticTokenAssociations,
-    isAutoTokenAssociationsEnabled,
+    isAutoTokenAssociationEnabled,
   };
 }
 

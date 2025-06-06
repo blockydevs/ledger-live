@@ -6666,7 +6666,7 @@
           },
           "success": {
             "title": "Transaction sent",
-            "description": "You'll be able to receive {{tokenName}} once the network confirms the token association.",
+            "description": "You will be able to receive this token once the Associate Token transaction has been confirmed",
             "cta": "View details"
           },
           "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."

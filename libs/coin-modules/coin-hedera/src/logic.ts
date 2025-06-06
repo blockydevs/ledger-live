@@ -22,16 +22,19 @@ const isTokenAssociateTransaction = (
   return tx.properties?.name === "tokenAssociate";
 };
 
+const isAutoTokenAssociationEnabled = (account: AccountLike) => {
+  const hederaAccount = "hederaResources" in account ? (account as HederaAccount) : null;
+  return hederaAccount?.hederaResources?.isAutoTokenAssociationEnabled ?? false;
+};
+
 const isTokenAssociationRequired = (
   account: AccountLike,
   token: TokenCurrency | null | undefined,
 ) => {
   const subAccounts = !!account && "subAccounts" in account ? account.subAccounts ?? [] : [];
   const isTokenAssociated = subAccounts.some(item => item.token.id === token?.id);
-  const isAutoTokenAssociationsEnabled =
-    (account as HederaAccount).hederaResources?.isAutoTokenAssociationsEnabled ?? false;
 
-  return !!token && !isTokenAssociated && !isAutoTokenAssociationsEnabled;
+  return !!token && !isTokenAssociated && !isAutoTokenAssociationEnabled(account);
 };
 
 const isValidExtra = (extra: unknown): extra is HederaOperationExtra => {
@@ -43,4 +46,5 @@ export {
   isValidExtra,
   isTokenAssociateTransaction,
   isTokenAssociationRequired,
+  isAutoTokenAssociationEnabled,
 };

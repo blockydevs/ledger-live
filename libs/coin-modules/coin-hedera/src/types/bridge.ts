@@ -40,12 +40,12 @@ export type TransactionStatusRaw = TransactionStatusCommonRaw;
 
 export interface HederaResources {
   maxAutomaticTokenAssociations: number;
-  isAutoTokenAssociationsEnabled: boolean;
+  isAutoTokenAssociationEnabled: boolean;
 }
 
 export interface HederaResourcesRaw {
   maxAutomaticTokenAssociations: number;
-  isAutoTokenAssociationsEnabled: boolean;
+  isAutoTokenAssociationEnabled: boolean;
 }
 
 export type HederaAccount = Account & {

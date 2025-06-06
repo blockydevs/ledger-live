@@ -54,7 +54,7 @@ describe("logic", () => {
         subAccounts: [],
         hederaResources: {
           maxAutomaticTokenAssociations: -1,
-          isAutoTokenAssociationsEnabled: true,
+          isAutoTokenAssociationEnabled: true,
         },
       });
 

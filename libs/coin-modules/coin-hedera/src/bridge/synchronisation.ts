@@ -97,7 +97,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
       subAccounts,
       hederaResources: {
         maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
-        isAutoTokenAssociationsEnabled: mirrorAccount.max_automatic_token_associations === -1,
+        isAutoTokenAssociationEnabled: mirrorAccount.max_automatic_token_associations === -1,
       },
     },
   });
@@ -114,7 +114,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     subAccounts,
     hederaResources: {
       maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
-      isAutoTokenAssociationsEnabled: mirrorAccount.max_automatic_token_associations === -1,
+      isAutoTokenAssociationEnabled: mirrorAccount.max_automatic_token_associations === -1,
     },
   };
 };
