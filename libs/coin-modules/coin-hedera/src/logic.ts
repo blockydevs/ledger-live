@@ -1,6 +1,11 @@
 import type { ExplorerView, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { AccountLike, Operation } from "@ledgerhq/types-live";
-import type { HederaAccount, HederaOperationExtra } from "./types";
+import type {
+  HederaAccount,
+  HederaOperationExtra,
+  TokenAssociateProperties,
+  Transaction,
+} from "./types";
 
 const getTransactionExplorer = (
   explorerView: ExplorerView | null | undefined,
@@ -9,6 +14,12 @@ const getTransactionExplorer = (
   const extra = operation.extra as HederaOperationExtra;
 
   return explorerView?.tx?.replace("$hash", extra.consensusTimestamp ?? extra.transactionId ?? "0");
+};
+
+const isTokenAssociateTransaction = (
+  tx: Transaction,
+): tx is Extract<Required<Transaction>, { properties: TokenAssociateProperties }> => {
+  return tx.properties?.name === "tokenAssociate";
 };
 
 const isTokenAssociationRequired = (
@@ -27,4 +38,9 @@ const isValidExtra = (extra: unknown): extra is HederaOperationExtra => {
   return !!extra && typeof extra === "object" && !Array.isArray(extra);
 };
 
-export { getTransactionExplorer, isValidExtra, isTokenAssociationRequired };
+export {
+  getTransactionExplorer,
+  isValidExtra,
+  isTokenAssociateTransaction,
+  isTokenAssociationRequired,
+};

@@ -1,6 +1,7 @@
 import type { AccountLike, Account } from "@ledgerhq/types-live";
 import type { Transaction, TransactionStatus } from "./types";
 import type { CommonDeviceTransactionField as DeviceTransactionField } from "@ledgerhq/coin-framework/transaction/common";
+import { isTokenAssociateTransaction } from "./logic";
 
 function getDeviceTransactionConfig({
   transaction,
@@ -12,11 +13,10 @@ function getDeviceTransactionConfig({
   status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const fields: Array<DeviceTransactionField> = [];
-  const isTokenAssociateTransaction = transaction.properties?.name === "tokenAssociate";
 
   const method = (() => {
     if (transaction.useAllAmount) return "Transfer All";
-    else if (isTokenAssociateTransaction) return "Token Association";
+    else if (isTokenAssociateTransaction(transaction)) return "Token Association";
     else return "Transfer";
   })();
 
@@ -26,7 +26,7 @@ function getDeviceTransactionConfig({
     value: method,
   });
 
-  if (!isTokenAssociateTransaction) {
+  if (!isTokenAssociateTransaction(transaction)) {
     fields.push({
       type: "amount",
       label: "Amount",

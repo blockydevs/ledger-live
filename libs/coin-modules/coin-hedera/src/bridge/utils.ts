@@ -18,7 +18,7 @@ import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import type { HederaOperationType, HederaOperationExtra, Transaction } from "../types";
 import { getAccount } from "../api/mirror";
 import type { HederaMirrorToken } from "../api/types";
-import { isValidExtra } from "../logic";
+import { isTokenAssociateTransaction, isValidExtra } from "../logic";
 
 const ESTIMATED_FEE_SAFETY_RATE = 2;
 const TINYBAR_SCALE = 8;
@@ -130,8 +130,9 @@ export const calculateAmount = ({
     return calculateTokenAmount({ account, tokenAccount: subAccount, transaction });
   }
 
-  const operationType: HederaOperationType =
-    transaction.properties?.name === "tokenAssociate" ? "TokenAssociate" : "CryptoTransfer";
+  const operationType: HederaOperationType = isTokenAssociateTransaction(transaction)
+    ? "TokenAssociate"
+    : "CryptoTransfer";
 
   return calculateCoinAmount({ account, transaction, operationType });
 };

@@ -15,6 +15,7 @@ import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/acc
 import invariant from "invariant";
 import { HederaAddAccountError } from "../errors";
 import { Transaction } from "../types";
+import { isTokenAssociateTransaction } from "../logic";
 
 export function broadcastTransaction(transaction: HederaTransaction): Promise<TransactionResponse> {
   return transaction.execute(getClient());
@@ -67,7 +68,7 @@ async function buildTokenAssociateTransaction({
   account: Account;
   transaction: Transaction;
 }): Promise<TokenAssociateTransaction> {
-  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction properties");
+  invariant(isTokenAssociateTransaction(transaction), "invalid transaction properties");
 
   const accountId = account.freshAddress;
 
@@ -90,7 +91,7 @@ export async function buildUnsignedTransaction({
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
-  if (transaction.properties?.name === "tokenAssociate") {
+  if (isTokenAssociateTransaction(transaction)) {
     return buildTokenAssociateTransaction({ account, transaction });
   } else if (isTokenTransaction) {
     return buildUnsignedTokenTransaction({ account, tokenAccount: subAccount, transaction });

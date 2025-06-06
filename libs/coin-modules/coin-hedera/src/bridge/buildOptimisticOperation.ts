@@ -5,6 +5,7 @@ import { HederaOperationExtra, Transaction } from "../types";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
+import { isTokenAssociateTransaction } from "../logic";
 
 const buildOptimisticTokenAssociateOperation = async ({
   account,
@@ -13,7 +14,7 @@ const buildOptimisticTokenAssociateOperation = async ({
   account: Account;
   transaction: Transaction;
 }): Promise<Operation> => {
-  invariant(transaction.properties?.name === "tokenAssociate", "invalid transaction properties");
+  invariant(isTokenAssociateTransaction(transaction), "invalid transaction properties");
 
   const estimatedFee = await getEstimatedFees(account, "TokenAssociate");
   const value = transaction.amount;
@@ -126,7 +127,7 @@ export const buildOptimisticOperation = async ({
   const subAccount = findSubAccountById(account, transaction.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
-  if (transaction.properties?.name === "tokenAssociate") {
+  if (isTokenAssociateTransaction(transaction)) {
     return buildOptimisticTokenAssociateOperation({ account, transaction });
   } else if (isTokenTransaction) {
     return buildOptimisticTokenOperation({ account, tokenAccount: subAccount, transaction });

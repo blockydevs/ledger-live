@@ -20,7 +20,7 @@ import type { HederaOperationType, Transaction, TransactionStatus } from "../typ
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
 import BigNumber from "bignumber.js";
 import { getEnv } from "@ledgerhq/live-env";
-import { isTokenAssociationRequired } from "../logic";
+import { isTokenAssociateTransaction, isTokenAssociationRequired } from "../logic";
 
 export const getTransactionStatus: AccountBridge<
   Transaction,
@@ -30,7 +30,7 @@ export const getTransactionStatus: AccountBridge<
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
 
-  if (transaction.properties?.name === "tokenAssociate") {
+  if (isTokenAssociateTransaction(transaction)) {
     const [usdRate, estimatedFees] = await Promise.all([
       getCurrencyToUSDRate(account.currency),
       getEstimatedFees(account, "TokenAssociate"),

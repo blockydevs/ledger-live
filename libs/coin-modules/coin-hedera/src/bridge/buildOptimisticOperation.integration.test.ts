@@ -21,7 +21,7 @@ describe("buildOptimisticOperation", () => {
   test("builds optimistic operation for token association", async () => {
     const mockedAccount = getMockedAccount();
     const mockedToken = getMockedTokenCurrency();
-    const tx = getMockedTransaction({
+    const mockedTransaction = getMockedTransaction({
       amount: new BigNumber(0),
       recipient: "0.0.1234",
       properties: {
@@ -30,7 +30,10 @@ describe("buildOptimisticOperation", () => {
       },
     });
 
-    const op = await buildOptimisticOperation({ account: mockedAccount, transaction: tx });
+    const op = await buildOptimisticOperation({
+      account: mockedAccount,
+      transaction: mockedTransaction,
+    });
 
     expect(op.type).toBe("ASSOCIATE_TOKEN");
     expect(op.extra).toEqual({ associatedTokenId: mockedToken.contractAddress });
@@ -41,12 +44,15 @@ describe("buildOptimisticOperation", () => {
 
   test("builds optimistic operation for coin", async () => {
     const mockedAccount = getMockedAccount();
-    const tx = getMockedTransaction({
+    const mockedTransaction = getMockedTransaction({
       amount: new BigNumber(123),
       recipient: "0.0.5678",
     });
 
-    const op = await buildOptimisticOperation({ account: mockedAccount, transaction: tx });
+    const op = await buildOptimisticOperation({
+      account: mockedAccount,
+      transaction: mockedTransaction,
+    });
 
     expect(op.type).toBe("OUT");
     expect(op.fee).toEqual(estimatedFees.crypto);
@@ -59,7 +65,7 @@ describe("buildOptimisticOperation", () => {
     const mockedTokenCurrency = getMockedTokenCurrency();
     const tokenAccount = getMockedTokenAccount(mockedTokenCurrency);
     const parentAccount = getMockedAccount({ subAccounts: [tokenAccount] });
-    const tx = getMockedTransaction({
+    const mockedTransaction = getMockedTransaction({
       subAccountId: tokenAccount.id,
       amount: new BigNumber(123),
       recipient: "0.0.9999",
@@ -67,7 +73,7 @@ describe("buildOptimisticOperation", () => {
 
     const op = await buildOptimisticOperation({
       account: parentAccount,
-      transaction: tx,
+      transaction: mockedTransaction,
     });
     const subOp = op.subOperations![0];
 
