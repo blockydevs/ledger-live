@@ -10,11 +10,16 @@ import {
   getCurrencyToUSDRate,
   getEstimatedFees,
   getSubAccounts,
+  getSyncHash,
   mergeSubAccounts,
   patchOperationWithExtra,
   prepareOperations,
 } from "./utils";
-import { getMockedTokenCurrency, getTokenCurrencyFromCAL } from "../test/fixtures/currency";
+import {
+  getMockedCurrency,
+  getMockedTokenCurrency,
+  getTokenCurrencyFromCAL,
+} from "../test/fixtures/currency";
 import { getMockedOperation } from "../test/fixtures/operation";
 import { HederaOperationExtra } from "../types";
 import { getAccount } from "../api/mirror";
@@ -152,7 +157,7 @@ describe("utils", () => {
     test("returns estimated fee based on USD rate for CryptoTransfer", async () => {
       // 1 HBAR = 1 USD
       const usdRate = 1;
-      mockedFetchLatest.mockResolvedValue([usdRate]);
+      mockedFetchLatest.mockResolvedValueOnce([usdRate]);
 
       const result = await getEstimatedFees(mockedAccount, "CryptoTransfer");
 
@@ -168,7 +173,7 @@ describe("utils", () => {
     test("returns estimated fee based on USD rate for TokenTransfer", async () => {
       // 1 HBAR = 0.5 USD
       const usdRate = 0.5;
-      mockedFetchLatest.mockResolvedValue([usdRate]);
+      mockedFetchLatest.mockResolvedValueOnce([usdRate]);
 
       const result = await getEstimatedFees(mockedAccount, "TokenTransfer");
 
@@ -184,7 +189,7 @@ describe("utils", () => {
     test("returns estimated fee based on USD rate for TokenAssociate", async () => {
       // 1 HBAR = 2 USD
       const usdRate = 2;
-      mockedFetchLatest.mockResolvedValue([usdRate]);
+      mockedFetchLatest.mockResolvedValueOnce([usdRate]);
 
       const result = await getEstimatedFees(mockedAccount, "TokenAssociate");
 
@@ -199,7 +204,7 @@ describe("utils", () => {
 
     test("falls back to default estimate when cvs api returns null", async () => {
       const usdRate = null;
-      mockedFetchLatest.mockResolvedValue([usdRate]);
+      mockedFetchLatest.mockResolvedValueOnce([usdRate]);
 
       const result = await getEstimatedFees(mockedAccount, "CryptoTransfer");
 
@@ -208,12 +213,30 @@ describe("utils", () => {
     });
 
     test("falls back to default estimate on cvs api failure", async () => {
-      mockedFetchLatest.mockRejectedValue(new Error("Network error"));
+      mockedFetchLatest.mockRejectedValueOnce(new Error("Network error"));
 
       const result = await getEstimatedFees(mockedAccount, "CryptoTransfer");
 
       const expected = new BigNumber("150200").multipliedBy(2);
       expect(result.toFixed()).toBe(expected.toFixed());
+    });
+  });
+
+  describe("getSyncHash", () => {
+    const mockedCurrency = getMockedCurrency();
+
+    test("returns a consistent hash for same input", () => {
+      const hash1 = getSyncHash(mockedCurrency, []);
+      const hash2 = getSyncHash(mockedCurrency, []);
+
+      expect(hash2).toBe(hash1);
+    });
+
+    test("produces different hash if blacklistedTokenIds changes", () => {
+      const hash1 = getSyncHash(mockedCurrency, []);
+      const hash2 = getSyncHash(mockedCurrency, ["random_token"]);
+
+      expect(hash1).not.toBe(hash2);
     });
   });
 

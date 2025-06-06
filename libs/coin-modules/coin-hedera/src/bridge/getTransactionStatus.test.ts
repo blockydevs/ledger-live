@@ -23,8 +23,8 @@ describe("getTransactionStatus", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest.spyOn(utils, "getCurrencyToUSDRate").mockResolvedValue(mockedUsdRate);
-    jest.spyOn(utils, "getEstimatedFees").mockResolvedValue(mockedEstimatedFee);
+    jest.spyOn(utils, "getCurrencyToUSDRate").mockResolvedValueOnce(mockedUsdRate);
+    jest.spyOn(utils, "getEstimatedFees").mockResolvedValueOnce(mockedEstimatedFee);
   });
 
   test("coin transfer with valid recipient and sufficient balance completes successfully", async () => {

@@ -1,7 +1,12 @@
 import BigNumber from "bignumber.js";
+import murmurhash from "imurmurhash";
 import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
 import cvsApi from "@ledgerhq/live-countervalues/api/index";
-import { findTokenByAddressInCurrency, getFiatCurrencyByTicker } from "@ledgerhq/cryptoassets";
+import {
+  findTokenByAddressInCurrency,
+  getFiatCurrencyByTicker,
+  listTokensForCryptoCurrency,
+} from "@ledgerhq/cryptoassets";
 import {
   decodeTokenAccountId,
   emptyHistoryCache,
@@ -10,7 +15,7 @@ import {
   isTokenAccount,
 } from "@ledgerhq/coin-framework/account";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
-import { Currency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { CryptoCurrency, Currency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { makeLRUCache, minutes, seconds } from "@ledgerhq/live-network/cache";
 import invariant from "invariant";
@@ -145,6 +150,26 @@ export function base64ToUrlSafeBase64(data: string): string {
 
   return data.replace(/\//g, "_").replace(/\+/g, "-");
 }
+
+const simpleSyncHashMemoize: Record<string, string> = {};
+
+export const getSyncHash = (
+  currency: CryptoCurrency,
+  blacklistedTokenIds: string[] = [],
+): string => {
+  const tokens = listTokensForCryptoCurrency(currency);
+
+  const stringToHash =
+    currency.id +
+    tokens.map(token => token.id + token.contractAddress + token.name + token.ticker).join("") +
+    blacklistedTokenIds.join("");
+
+  if (!simpleSyncHashMemoize[stringToHash]) {
+    simpleSyncHashMemoize[stringToHash] = `0x${murmurhash(stringToHash).result().toString(16)}`;
+  }
+
+  return simpleSyncHashMemoize[stringToHash];
+};
 
 export const getSubAccounts = async (
   accountId: string,

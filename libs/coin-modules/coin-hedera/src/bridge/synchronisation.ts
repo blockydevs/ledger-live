@@ -12,12 +12,19 @@ import {
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { encodeAccountId } from "@ledgerhq/coin-framework/account";
 import { getAccount, getAccountsForPublicKey, getAccountTokens } from "../api/mirror";
-import { getSubAccounts, prepareOperations, applyPendingExtras, mergeSubAccounts } from "./utils";
+import {
+  getSubAccounts,
+  prepareOperations,
+  applyPendingExtras,
+  mergeSubAccounts,
+  getSyncHash,
+} from "./utils";
 import { HederaAccount } from "../types";
 import { getOperationsForAccount } from "../api/utils";
 
 export const getAccountShape: GetAccountShape<HederaAccount> = async (
   info,
+  { blacklistedTokenIds },
 ): Promise<Partial<HederaAccount>> => {
   const { currency, derivationMode, address, initialAccount } = info;
 
@@ -42,11 +49,9 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   const oldOperations = initialAccount?.operations ?? [];
   const pendingOperations = initialAccount?.pendingOperations ?? [];
 
-  // check if sync can be incremental
-  const isAccountWithoutTokenAccounts = !initialAccount?.subAccounts;
-  const isAccountWithMissingTokens =
-    initialAccount?.subAccounts?.length === 0 && mirrorTokens.length > 0;
-  const shouldSyncFromScratch = isAccountWithoutTokenAccounts || isAccountWithMissingTokens;
+  // we should sync again when new tokens are added or blacklist changes
+  const syncHash = getSyncHash(currency, blacklistedTokenIds);
+  const shouldSyncFromScratch = syncHash !== initialAccount?.syncHash || !initialAccount;
 
   // grab latest operation's consensus timestamp for incremental sync
   const latestOperationTimestamp =
@@ -88,6 +93,8 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     output: {
       id: liveAccountId,
       freshAddress: address,
+      syncHash,
+      lastSyncDate: new Date(),
       balance: new BigNumber(mirrorAccount.balance.balance),
       spendableBalance: new BigNumber(mirrorAccount.balance.balance),
       operations: mergedOperations,
@@ -105,6 +112,8 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   return {
     id: liveAccountId,
     freshAddress: address,
+    syncHash,
+    lastSyncDate: new Date(),
     balance: new BigNumber(mirrorAccount.balance.balance),
     spendableBalance: new BigNumber(mirrorAccount.balance.balance),
     operations: mergedOperations,
