@@ -150,7 +150,15 @@ const completeExchange = (
         await exchange.checkTransactionSignature(goodSign);
         if (unsubscribed) return;
 
-        if (transaction.family === "hedera") {
+        console.log("[DEBUG]", { transaction, refundAccount, payoutAccount });
+
+        const hederaAccount = (() => {
+          if (payoutAccount.currency.family === "hedera") return payoutAccount;
+          if (refundAccount.currency.family === "hedera") return refundAccount;
+          return null;
+        })();
+
+        if (hederaAccount) {
           if (!deviceModelId) {
             throw new Error("deviceModelId is not available");
           }
@@ -171,22 +179,13 @@ const completeExchange = (
           // FIXME: remove
           // -- DEBUG CODE
           const pubkey = await fetch(
-            `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${refundAccount.freshAddress}`,
+            `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${hederaAccount.freshAddress}`,
           )
             .then(r => r.json() as Promise<{ key: { key: string } }>)
             .then(r => r.key.key);
 
-          console.log("[DEBUG] between PROCESS_TRANSACTION and CHECK_PAYOUT_ADDRESS", {
-            input,
-            exchange,
-            deviceId,
-            payoutAccount,
-            refundAccount,
-            pubkey,
-          });
-
           const tlvPairs = [
-            [TLVMessageType.TRUSTED_NAME, refundAccount.freshAddress],
+            [TLVMessageType.TRUSTED_NAME, hederaAccount.freshAddress],
             [TLVMessageType.ADDRESS, pubkey],
             [TLVMessageType.STRUCTURE_TYPE, 3],
             [TLVMessageType.VERSION, 1],
@@ -201,9 +200,8 @@ const completeExchange = (
 
           const tlvData = generateTlvPacket(tlvPairs);
           await exchange.sendTrustedDescriptor(tlvData);
-          // -- DEBUG CODE
-          // FIXME: remove
         }
+        // -- DEBUG CODE
 
         const payoutAddressParameters = payoutAccountBridge.getSerializedAddressParameters(
           payoutAccount,
