@@ -5,6 +5,7 @@ import type {
   HederaOperationExtra,
   TokenAssociateProperties,
   Transaction,
+  TransactionStatus,
 } from "./types";
 
 const getTransactionExplorer = (
@@ -41,7 +42,14 @@ const isValidExtra = (extra: unknown): extra is HederaOperationExtra => {
   return !!extra && typeof extra === "object" && !Array.isArray(extra);
 };
 
+const sendRecipientCanNext = (status: TransactionStatus) => {
+  const { missingAssociation, unverifiedAssociation } = status.warnings;
+
+  return !missingAssociation && !unverifiedAssociation;
+};
+
 export {
+  sendRecipientCanNext,
   getTransactionExplorer,
   isValidExtra,
   isTokenAssociateTransaction,
