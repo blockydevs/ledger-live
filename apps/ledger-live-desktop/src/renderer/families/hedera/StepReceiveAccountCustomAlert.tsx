@@ -43,7 +43,13 @@ const AssociationPrerequisiteAlert = ({ account, closeModal }: Props) => {
 
   return (
     <Container>
-      <Alert type="primary" learnMoreUrl={urls.hedera.tokenAssociation} learnMoreLabel="Learn more">
+      <Alert
+        type="primary"
+        learnMoreUrl={urls.hedera.tokenAssociation}
+        learnMoreLabel={
+          <Trans i18nKey="hedera.receive.warnings.associationPrerequisite.learnMore" />
+        }
+      >
         <Trans i18nKey="hedera.receive.warnings.associationPrerequisite.text">
           <Link onClick={triggerAssociate} color="inherit" textProps={{ fontWeight: "medium" }} />
         </Trans>
@@ -76,7 +82,11 @@ const AssociationInsufficientFundsError = (props: Props) => {
 
 const AssociationRequiredAlert = () => {
   return (
-    <Alert type="warning" learnMoreUrl={urls.hedera.tokenAssociation} learnMoreLabel="Learn more">
+    <Alert
+      type="warning"
+      learnMoreUrl={urls.hedera.tokenAssociation}
+      learnMoreLabel={<Trans i18nKey="hedera.receive.warnings.associationRequired.learnMore" />}
+    >
       <Trans i18nKey="hedera.receive.warnings.associationRequired.text" />
     </Alert>
   );

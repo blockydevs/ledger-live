@@ -86,8 +86,12 @@ const OperationDetailsPostAlert = ({
   };
 
   return (
-    <Alert type="primary" learnMoreUrl={urls.hedera.tokenAssociation} learnMoreLabel="Learn more">
-      <Trans i18nKey="hedera.operationDetails.postAlert">
+    <Alert
+      type="primary"
+      learnMoreUrl={urls.hedera.tokenAssociation}
+      learnMoreLabel={<Trans i18nKey="hedera.operationDetails.postAlert.learnMore" />}
+    >
+      <Trans i18nKey="hedera.operationDetails.postAlert.text">
         <Link onClick={triggerAssociate} color="inherit" textProps={{ fontWeight: "medium" }} />
       </Trans>
     </Alert>
