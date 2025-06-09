@@ -7,7 +7,11 @@ import { Trans } from "react-i18next";
 import ReactNativeModal from "react-native-modal";
 import { Text } from "@ledgerhq/native-ui";
 import type { Account, TokenAccount } from "@ledgerhq/types-live";
-import { getMainAccount, getAccountCurrency } from "@ledgerhq/live-common/account/index";
+import {
+  getMainAccount,
+  getAccountCurrency,
+  isTokenAccount,
+} from "@ledgerhq/live-common/account/index";
 import { isAutoTokenAssociationEnabled } from "@ledgerhq/live-common/families/hedera/logic";
 import { CompositeScreenProps, useTheme } from "@react-navigation/native";
 import getWindowDimensions from "~/logic/getWindowDimensions";
@@ -38,6 +42,7 @@ import type {
 } from "~/components/RootNavigator/types/helpers";
 import { useMaybeAccountName } from "~/reducers/wallet";
 import { urls } from "~/utils/urls";
+import { NavigatorName } from "../../const/navigation";
 
 type ScreenProps = CompositeScreenProps<
   StackNavigatorProps<ReceiveFundsStackParamList, ScreenName.ReceiveConfirmation>,
@@ -77,7 +82,14 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
   }
 
   function onAssociationClickHere(): void {
-    console.log("FIXME: clicked");
+    if (!account) return;
+
+    navigation.navigate(NavigatorName.HederaAssociateTokenFlow, {
+      screen: ScreenName.HederaAssociateTokenSelectToken,
+      params: {
+        accountId: account.id,
+      },
+    });
   }
 
   function onZoom(): void {
@@ -116,6 +128,8 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
   const address = mainAccount.freshAddress;
   const currency = getAccountCurrency(account);
   const name = mainAccountName;
+  const showTokenAssociationAlert =
+    !isTokenAccount(account) && !isAutoTokenAssociationEnabled(mainAccount);
 
   return (
     <SafeAreaView
@@ -212,7 +226,7 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
             />
           </Alert>
           {/* message about token association */}
-          {!isAutoTokenAssociationEnabled(mainAccount) && (
+          {showTokenAssociationAlert && (
             <Alert
               type="primary"
               learnMoreUrl={urls.hedera.tokenAssociation}
