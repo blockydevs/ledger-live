@@ -1,5 +1,3 @@
-import BigNumber from "bignumber.js";
-
 type FreezeStatus = "NOT_APPLICABLE" | "FROZEN" | "UNFROZEN";
 
 type KycStatus = "NOT_APPLICABLE" | "GRANTED" | "REVOKED";

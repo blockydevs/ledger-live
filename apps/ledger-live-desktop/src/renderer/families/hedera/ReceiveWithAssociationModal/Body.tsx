@@ -8,10 +8,12 @@ import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransact
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import type { Transaction, TransactionStatus } from "@ledgerhq/live-common/families/hedera/types";
 import { isTokenAssociationRequired } from "@ledgerhq/live-common/families/hedera/logic";
-import Track from "~/renderer/analytics/Track";
+import { UserRefusedOnDevice } from "@ledgerhq/errors";
 import { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
+import invariant from "invariant";
+import Track from "~/renderer/analytics/Track";
 import { getCurrentDevice } from "~/renderer/reducers/devices";
 import { accountsSelector } from "~/renderer/reducers/accounts";
 import { closeModal } from "~/renderer/actions/modals";
@@ -27,13 +29,11 @@ import { StepId as DefaultStepId } from "~/renderer/modals/Receive/Body";
 import StepReceiveStakingFlow, {
   StepReceiveStakingFooter,
 } from "~/renderer/modals/Receive/steps/StepReceiveStakingFlow";
-import invariant from "invariant";
 import { updateAccountWithUpdater } from "~/renderer/actions/accounts";
 import { addPendingOperation } from "@ledgerhq/coin-framework/lib-es/account/pending";
 import StepAssociationConfirmation, {
   StepAssociationConfirmationFooter,
 } from "~/renderer/families/hedera/ReceiveWithAssociationModal/steps/StepAssociationConfirmation";
-import { UserRefusedOnDevice } from "@ledgerhq/live-common/lib-es/device/use-cases/screenSpecs";
 import logger from "~/renderer/logger";
 import StepAccount from "~/renderer/modals/Receive/steps/StepAccount";
 import type {
@@ -188,14 +188,17 @@ const Body = ({
     [setParentAccount, setAccount],
   );
 
-  const handleChangeToken = useCallback((token?: TokenCurrency | null) => {
-    const transactionProperties: Transaction["properties"] = !!token
-      ? { name: "tokenAssociate", token }
-      : undefined;
+  const handleChangeToken = useCallback(
+    (token?: TokenCurrency | null) => {
+      const transactionProperties: Transaction["properties"] = token
+        ? { name: "tokenAssociate", token }
+        : undefined;
 
-    setToken(token ?? null);
-    updateTransaction(prev => ({ ...prev, properties: transactionProperties }));
-  }, []);
+      setToken(token ?? null);
+      updateTransaction(prev => ({ ...prev, properties: transactionProperties }));
+    },
+    [updateTransaction],
+  );
 
   const handleCloseModal = useCallback(() => {
     closeModal("MODAL_HEDERA_RECEIVE_WITH_ASSOCIATION");
@@ -214,7 +217,7 @@ const Body = ({
     onChangeAddressVerified(null, null);
     setTransactionError(null);
     onChangeStepId("account");
-  }, [onChangeAddressVerified]);
+  }, [onChangeStepId, onChangeAddressVerified]);
 
   const handleSkipConfirm = useCallback(() => {
     const connectStepIndex = steps.findIndex(
@@ -298,7 +301,7 @@ const Body = ({
 
   useEffect(() => {
     console.log("updating transaction");
-    const updatedTransactionProperties = !!token
+    const updatedTransactionProperties = token
       ? ({
           name: "tokenAssociate",
           token,

@@ -1,27 +1,61 @@
 import React from "react";
-import { Account, Operation, OperationType } from "@ledgerhq/types-live";
+import { OperationType } from "@ledgerhq/types-live";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import { isValidExtra } from "@ledgerhq/live-common/families/hedera/logic";
-import { HederaOperation } from "@ledgerhq/live-common/families/hedera/types";
+import { HederaAccount, HederaOperation } from "@ledgerhq/live-common/families/hedera/types";
 import Alert from "~/renderer/components/Alert";
-import { Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "@ledgerhq/react-ui";
-import { openURL } from "~/renderer/linking";
 import { urls } from "~/config/urls";
-import { track } from "~/renderer/analytics/segment";
 import { useDispatch } from "react-redux";
 import { openModal } from "~/renderer/actions/modals";
-import { AddressCellProps } from "~/renderer/families/types";
+import {
+  AddressCellProps,
+  OperationDetailsExtraProps,
+  OperationDetailsPostAccountSectionProps,
+} from "~/renderer/families/types";
 import { Cell } from "~/renderer/components/OperationsList/AddressCell";
 import Box from "~/renderer/components/Box";
+import {
+  OpDetailsData,
+  OpDetailsSection,
+  OpDetailsTitle,
+  TextEllipsis,
+} from "~/renderer/drawers/OperationDetails/styledComponents";
 
-interface Props {
-  operation: Operation;
-  account: Account;
-  type: OperationType;
-}
+const OperationDetailsPostAccountSection = ({
+  operation,
+}: OperationDetailsPostAccountSectionProps<HederaAccount, HederaOperation>) => {
+  const { t } = useTranslation();
 
-const OperationDetailsPostAlert = ({ account, operation }: Props) => {
+  if (operation.type !== "ASSOCIATE_TOKEN") {
+    return null;
+  }
+
+  const token = operation.extra.associatedTokenId
+    ? findTokenByAddressInCurrency(operation.extra.associatedTokenId, "hedera")
+    : null;
+
+  if (!token) {
+    return null;
+  }
+
+  return (
+    <OpDetailsSection>
+      <OpDetailsTitle>{t("hedera.operationDetails.postAccountSection")}</OpDetailsTitle>
+      <OpDetailsData>
+        <TextEllipsis>
+          {token.contractAddress} ({token.name})
+        </TextEllipsis>
+      </OpDetailsData>
+    </OpDetailsSection>
+  );
+};
+
+const OperationDetailsPostAlert = ({
+  account,
+  operation,
+}: OperationDetailsExtraProps<HederaAccount, HederaOperation>) => {
   const dispatch = useDispatch();
 
   if (operation.type !== "ASSOCIATE_TOKEN") {
@@ -42,11 +76,6 @@ const OperationDetailsPostAlert = ({ account, operation }: Props) => {
     a => a.token.contractAddress === token.contractAddress,
   );
 
-  const openLearnMore = () => {
-    openURL(urls.hedera.tokenAssociation);
-    track("Hedera Token Association Operation Details - learn more");
-  };
-
   const triggerAssociate = () => {
     dispatch(
       openModal(
@@ -57,10 +86,9 @@ const OperationDetailsPostAlert = ({ account, operation }: Props) => {
   };
 
   return (
-    <Alert type="primary">
+    <Alert type="primary" learnMoreUrl={urls.hedera.tokenAssociation} learnMoreLabel="Learn more">
       <Trans i18nKey="hedera.operationDetails.postAlert">
         <Link onClick={triggerAssociate} color="inherit" textProps={{ fontWeight: "medium" }} />
-        <Link onClick={openLearnMore} color="inherit" textProps={{ fontWeight: "medium" }} />
       </Trans>
     </Alert>
   );
@@ -89,6 +117,7 @@ const addressCell = {
 } satisfies Partial<Record<OperationType, unknown>>;
 
 export default {
+  OperationDetailsPostAccountSection,
   OperationDetailsPostAlert,
   addressCell,
 };

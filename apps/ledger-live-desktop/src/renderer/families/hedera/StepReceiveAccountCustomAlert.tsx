@@ -17,8 +17,6 @@ import Text from "~/renderer/components/Text";
 import { StepProps as ReceiveStepProps } from "~/renderer/modals/Receive/Body";
 import { StepProps as ReceiveWithAssociationStepProps } from "./ReceiveWithAssociationModal/Body";
 import TranslatedError from "~/renderer/components/TranslatedError";
-import { openURL } from "~/renderer/linking";
-import { track } from "~/renderer/analytics/segment";
 
 type Props = (ReceiveStepProps | ReceiveWithAssociationStepProps) & {
   account: AccountLike;
@@ -33,11 +31,6 @@ const ErrorBox = styled(Box)`
   color: ${p => p.theme.colors.pearl};
 `;
 
-const openLearnMore = () => {
-  openURL(urls.hedera.tokenAssociation);
-  track("Hedera Token Association Flow - learn more");
-};
-
 const AssociationPrerequisiteAlert = ({ account, closeModal }: Props) => {
   const dispatch = useDispatch();
 
@@ -50,10 +43,9 @@ const AssociationPrerequisiteAlert = ({ account, closeModal }: Props) => {
 
   return (
     <Container>
-      <Alert type="primary">
+      <Alert type="primary" learnMoreUrl={urls.hedera.tokenAssociation} learnMoreLabel="Learn more">
         <Trans i18nKey="hedera.receive.warnings.associationPrerequisite.text">
           <Link onClick={triggerAssociate} color="inherit" textProps={{ fontWeight: "medium" }} />
-          <Link onClick={openLearnMore} color="inherit" textProps={{ fontWeight: "medium" }} />
         </Trans>
       </Alert>
     </Container>
@@ -84,10 +76,8 @@ const AssociationInsufficientFundsError = (props: Props) => {
 
 const AssociationRequiredAlert = () => {
   return (
-    <Alert type="warning">
-      <Trans i18nKey="hedera.receive.warnings.associationRequired.text">
-        <Link onClick={openLearnMore} color="inherit" textProps={{ fontWeight: "medium" }} />
-      </Trans>
+    <Alert type="warning" learnMoreUrl={urls.hedera.tokenAssociation} learnMoreLabel="Learn more">
+      <Trans i18nKey="hedera.receive.warnings.associationRequired.text" />
     </Alert>
   );
 };

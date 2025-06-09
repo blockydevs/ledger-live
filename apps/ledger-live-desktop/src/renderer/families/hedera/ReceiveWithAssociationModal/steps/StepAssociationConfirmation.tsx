@@ -26,7 +26,6 @@ const Container = styled(Box).attrs<{
 `;
 
 function StepAssociationConfirmation({
-  t,
   transaction,
   optimisticOperation,
   error,

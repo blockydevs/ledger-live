@@ -123,7 +123,7 @@ const iconsComponent = {
   WITHDRAW_UNSTAKED: IconCoins,
   UNKNOWN: IconCheck,
   BURN: IconTrash,
-  ASSOCIATE_TOKEN: IconSend,
+  ASSOCIATE_TOKEN: IconPlus,
 };
 
 class ConfirmationCheck extends PureComponent<{

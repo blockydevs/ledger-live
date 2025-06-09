@@ -62,6 +62,12 @@ export type AmountTooltipProps<O extends Operation> = {
   amount: BigNumber;
 };
 
+export type OperationDetailsPostAccountSectionProps<A extends Account, O extends Operation> = {
+  operation: O;
+  account: A;
+  type: OperationType;
+};
+
 export type OperationDetailsExtraProps<A extends Account, O extends Operation> = {
   operation: O;
   account: A;
@@ -125,6 +131,13 @@ export type LLDCoinFamily<
      * Open external url on operation fees with an icon info
      */
     getURLFeesInfo?: (_: { op: O; currencyId: string }) => string | null | undefined;
+
+    /**
+     * Add custom component after the Account section in operation details drawer
+     */
+    OperationDetailsPostAccountSection?: React.ComponentType<
+      OperationDetailsPostAccountSectionProps<A, O>
+    >;
 
     /**
      * Add extra info

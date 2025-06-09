@@ -6649,10 +6649,10 @@
     "receive": {
       "warnings": {
         "associationPrerequisite": {
-          "text": "To receive HTS token your account might need to be associated. <0>Click here</0> to start the token association flow. <1>Learn more.</1>"
+          "text": "In order to receive HTS tokens, your account needs to be associated. If you did not already associate your account with the HTS token that you want to receive, <0>click here</0> to start the token association flow."
         },
         "associationRequired": {
-          "text": "This token is not associated with the selected account. You will need to associate it first. Click continue to associate the account or click <0>here</0> to learn more"
+          "text": "Hedera tokens must be associated with an account before they can be transferred to that account. Click continue to associate the account."
         }
       }
     },
@@ -6688,7 +6688,8 @@
       }
     },
     "operationDetails": {
-      "postAlert": "Once this transaction has been confirmed you will be able to receive your token. <0>Click here</0> to start the receive flow. <1>Learn more.</1>"
+      "postAccountSection": "Associated token",
+      "postAlert": "Once this transaction has been confirmed you will be able to receive your token. <0>Click here</0> to start the receive flow."
     }
   },
   "drawers": {
