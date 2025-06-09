@@ -152,6 +152,15 @@ export default function Content({
       specificOperationDetails as { getURLFeesInfo: (o: Operation, c: string) => string }
     )?.getURLFeesInfo(operation, mainAccount.currency.id);
 
+  const PostAccountSection =
+    specificOperationDetails &&
+    "OperationDetailsPostAccountSection" in specificOperationDetails &&
+    (specificOperationDetails.OperationDetailsPostAccountSection as React.ComponentType<{
+      type: typeof type;
+      account: AccountLike;
+      operation: Operation;
+    }>);
+
   const Extra =
     specificOperationDetails &&
     (specificOperationDetails as { OperationDetailsExtra: React.ComponentType })
@@ -341,6 +350,10 @@ export default function Content({
           testID="operationDetails-account"
         />
       ) : null}
+
+      {PostAccountSection && (
+        <PostAccountSection operation={operation} type={type} account={account} />
+      )}
 
       {isNftOperation ? (
         <>

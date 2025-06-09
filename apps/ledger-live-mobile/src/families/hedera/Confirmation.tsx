@@ -5,8 +5,10 @@ import { useSelector } from "react-redux";
 import QRCode from "react-native-qrcode-svg";
 import { Trans } from "react-i18next";
 import ReactNativeModal from "react-native-modal";
+import { Text } from "@ledgerhq/native-ui";
 import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import { getMainAccount, getAccountCurrency } from "@ledgerhq/live-common/account/index";
+import { isAutoTokenAssociationEnabled } from "@ledgerhq/live-common/families/hedera/logic";
 import { CompositeScreenProps, useTheme } from "@react-navigation/native";
 import getWindowDimensions from "~/logic/getWindowDimensions";
 import { accountScreenSelector } from "~/reducers/accounts";
@@ -35,6 +37,7 @@ import type {
   StackNavigatorProps,
 } from "~/components/RootNavigator/types/helpers";
 import { useMaybeAccountName } from "~/reducers/wallet";
+import { urls } from "~/utils/urls";
 
 type ScreenProps = CompositeScreenProps<
   StackNavigatorProps<ReceiveFundsStackParamList, ScreenName.ReceiveConfirmation>,
@@ -73,6 +76,10 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
     onModalHide.current = onDone;
   }
 
+  function onAssociationClickHere(): void {
+    console.log("FIXME: clicked");
+  }
+
   function onZoom(): void {
     setZoom(!zoom);
   }
@@ -109,6 +116,7 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
   const address = mainAccount.freshAddress;
   const currency = getAccountCurrency(account);
   const name = mainAccountName;
+
   return (
     <SafeAreaView
       style={[
@@ -131,12 +139,7 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
           <SkipLock />
         </>
       )}
-      <NavigationScrollView
-        style={{
-          flex: 1,
-        }}
-        contentContainerStyle={styles.root}
-      >
+      <NavigationScrollView style={styles.root}>
         <View style={styles.container}>
           <Touchable event="QRZoom" onPress={onZoom}>
             {width < 350 ? (
@@ -200,16 +203,31 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
         </View>
         <View style={styles.bottomContainer}>
           {/* warning message for unverified address */}
-          {
-            <Alert type="security">
-              <Trans
-                i18nKey="hedera.currentAddress.messageIfVirtual"
-                values={{
-                  name,
-                }}
-              />
+          <Alert type="security">
+            <Trans
+              i18nKey="hedera.currentAddress.messageIfVirtual"
+              values={{
+                name,
+              }}
+            />
+          </Alert>
+          {/* message about token association */}
+          {!isAutoTokenAssociationEnabled(mainAccount) && (
+            <Alert
+              type="primary"
+              learnMoreUrl={urls.hedera.tokenAssociation}
+              learnMoreKey="hedera.receive.warnings.associationPrerequisite.learnMore"
+            >
+              <Trans i18nKey="hedera.receive.warnings.associationPrerequisite.text">
+                <Text
+                  onPress={onAssociationClickHere}
+                  style={styles.textUnderline}
+                  variant="bodyLineHeight"
+                  fontWeight="semiBold"
+                />
+              </Trans>
             </Alert>
-          }
+          )}
         </View>
       </NavigationScrollView>
       <ReactNativeModal
@@ -259,6 +277,7 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    paddingBottom: 16,
   },
   container: {
     paddingHorizontal: 16,
@@ -267,6 +286,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bottomContainer: {
+    gap: 16,
     paddingHorizontal: 16,
     paddingBottom: 8,
     paddingTop: 32,
@@ -367,6 +387,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     top: 10,
+  },
+  textUnderline: {
+    textDecorationLine: "underline",
   },
   learnmore: {
     paddingLeft: 8,
