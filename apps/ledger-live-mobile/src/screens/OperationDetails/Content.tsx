@@ -161,6 +161,15 @@ export default function Content({
       operation: Operation;
     }>);
 
+  const PostAlert =
+    specificOperationDetails &&
+    "OperationDetailsPostAlert" in specificOperationDetails &&
+    (specificOperationDetails.OperationDetailsPostAlert as React.ComponentType<{
+      type: typeof type;
+      account: AccountLike;
+      operation: Operation;
+    }>);
+
   const Extra =
     specificOperationDetails &&
     (specificOperationDetails as { OperationDetailsExtra: React.ComponentType })
@@ -455,6 +464,12 @@ export default function Content({
       ) : null}
 
       <Extra operation={operation} type={type} account={account} />
+
+      {PostAlert && (
+        <View style={sectionStyles.wrapper}>
+          <PostAlert operation={operation} type={type} account={account} />
+        </View>
+      )}
 
       <Modal isOpened={isModalOpened} onClose={onModalClose} currency={currency} />
     </>

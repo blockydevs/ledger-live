@@ -6816,7 +6816,11 @@
       }
     },
     "operationDetails": {
-      "postAccountSection": "Associated token"
+      "postAccountSection": "Associated token",
+      "postAlert": {
+        "text": "Once this transaction has been confirmed you will be able to receive your token. <0>Click here</0> to start the receive flow.",
+        "learnMore": "Learn more"
+      }
     }
   },
   "asset": {

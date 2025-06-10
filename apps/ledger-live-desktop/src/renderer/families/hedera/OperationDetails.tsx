@@ -72,11 +72,11 @@ const OperationDetailsPostAlert = ({
     return null;
   }
 
-  const tokenAccount = account.subAccounts?.find(
-    a => a.token.contractAddress === token.contractAddress,
-  );
+  const openReceiveModal = () => {
+    const tokenAccount = account.subAccounts?.find(
+      a => a.token.contractAddress === token.contractAddress,
+    );
 
-  const triggerAssociate = () => {
     dispatch(
       openModal(
         "MODAL_RECEIVE",
@@ -92,7 +92,7 @@ const OperationDetailsPostAlert = ({
       learnMoreLabel={<Trans i18nKey="hedera.operationDetails.postAlert.learnMore" />}
     >
       <Trans i18nKey="hedera.operationDetails.postAlert.text">
-        <Link onClick={triggerAssociate} color="inherit" textProps={{ fontWeight: "medium" }} />
+        <Link onClick={openReceiveModal} color="inherit" textProps={{ fontWeight: "medium" }} />
       </Trans>
     </Alert>
   );

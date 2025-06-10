@@ -44,7 +44,7 @@ export default function ValidationSuccess({ navigation, route }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <TrackScreen category="AssociateTokenFlow" name="validationSuccess" currency="hedera" />
+      <TrackScreen category="AssociateTokenFlow" name="ValidationSuccess" currency="hedera" />
       <PreventNativeBack />
       <ValidateSuccess
         onClose={onClose}
