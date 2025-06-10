@@ -3,13 +3,18 @@ import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useTheme } from "@react-navigation/native";
-import { getStackNavigatorConfig, defaultNavigationOptions } from "~/navigation/navigatorConfig";
-import StepHeader from "~/components/StepHeader";
-import { ScreenName } from "~/const";
+
 import SelectToken from "./01-SelectToken";
-import { HederaAssociateTokenFlowParamList } from "./types";
+import Summary from "./02-Summary";
+import ValidationError from "./04-ValidationError";
+import ValidationSuccess from "./04-ValidationSuccess";
+import type { HederaAssociateTokenFlowParamList } from "./types";
 import { NavigationHeaderBackButton } from "~/components/NavigationHeaderBackButton";
 import { NavigationHeaderCloseButtonAdvanced } from "~/components/NavigationHeaderCloseButton";
+import { ScreenName } from "~/const";
+import { getStackNavigatorConfig } from "~/navigation/navigatorConfig";
+import SelectDevice from "~/screens/SelectDevice";
+import ConnectDevice from "~/screens/ConnectDevice";
 
 function AssociateTokenFlow() {
   const { t } = useTranslation();
@@ -30,6 +35,47 @@ function AssociateTokenFlow() {
           headerLeft: () => <NavigationHeaderBackButton />,
           headerTitle: "",
           headerRight: () => <NavigationHeaderCloseButtonAdvanced />,
+        }}
+      />
+      <Stack.Screen
+        name={ScreenName.HederaAssociateTokenSummary}
+        component={Summary}
+        options={{
+          headerLeft: () => <NavigationHeaderBackButton />,
+          headerTitle: t("hedera.associate.summary.title"),
+          headerRight: () => <NavigationHeaderCloseButtonAdvanced />,
+        }}
+      />
+      <Stack.Screen
+        name={ScreenName.HederaAssociateTokenSelectDevice}
+        component={SelectDevice}
+        options={{
+          headerTitle: t("hedera.associate.selectDevice.title"),
+        }}
+      />
+      <Stack.Screen
+        name={ScreenName.HederaAssociateTokenConnectDevice}
+        component={ConnectDevice}
+        options={{
+          headerLeft: undefined,
+          gestureEnabled: false,
+          headerTitle: t("hedera.associate.connectDevice.title"),
+        }}
+      />
+      <Stack.Screen
+        name={ScreenName.HederaAssociateTokenValidationError}
+        component={ValidationError}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name={ScreenName.HederaAssociateTokenValidationSuccess}
+        component={ValidationSuccess}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
         }}
       />
     </Stack.Navigator>

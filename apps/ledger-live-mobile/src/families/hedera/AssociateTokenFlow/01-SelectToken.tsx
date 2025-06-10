@@ -1,20 +1,22 @@
 import React, { useCallback, useMemo } from "react";
 import { FlatList } from "react-native";
 import { useSelector } from "react-redux";
-import { NavigatorName, ScreenName } from "~/const";
-import { TrackScreen } from "~/analytics";
-import { Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Flex, Text } from "@ledgerhq/native-ui";
-import { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { getEnv } from "@ledgerhq/live-env";
-import SafeAreaView from "~/components/SafeAreaView";
-import { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
-import { HederaAssociateTokenFlowParamList } from "~/families/hedera/AssociateTokenFlow/types";
+import { listTokens } from "@ledgerhq/live-common/currencies/index";
+import { getMainAccount } from "@ledgerhq/coin-framework/account/helpers";
+import invariant from "invariant";
+
+import { TrackScreen } from "~/analytics";
 import BigCurrencyRow from "~/components/BigCurrencyRow";
 import FilteredSearchBar from "~/components/FilteredSearchBar";
-import { accountScreenSelector, flattenAccountsSelector } from "~/reducers/accounts";
-import { listTokens } from "@ledgerhq/live-common/lib/currencies/index";
-import { getMainAccount } from "@ledgerhq/coin-framework/lib/account/helpers";
+import SafeAreaView from "~/components/SafeAreaView";
+import type { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
+import { NavigatorName, ScreenName } from "~/const";
+import type { HederaAssociateTokenFlowParamList } from "~/families/hedera/AssociateTokenFlow/types";
+import { accountScreenSelector } from "~/reducers/accounts";
 
 type Props = BaseComposite<
   StackNavigatorProps<HederaAssociateTokenFlowParamList, ScreenName.HederaAssociateTokenSelectToken>
@@ -32,18 +34,18 @@ const renderEmptyList = () => (
   </Flex>
 );
 
-// FIXME:
-// - actions tracking if needed
-// - i18n
+// FIXME: add actions tracking if needed
 export default function SelectToken({ navigation, route }: Props) {
-  const accounts = useSelector(flattenAccountsSelector);
-  const list = useMemo(() => listTokens().filter(t => t.parentCurrency.id === "hedera"), []);
+  const { t } = useTranslation();
   const { account, parentAccount } = useSelector(accountScreenSelector(route));
+  const list = useMemo(() => listTokens().filter(t => t.parentCurrency.id === "hedera"), []);
+
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
 
   const onPressItem = useCallback(
     (currency: CryptoOrTokenCurrency) => {
       if (currency.type !== "TokenCurrency") return;
+      invariant(mainAccount, "hedera: mainAccount is missing");
 
       const subAccount = (mainAccount?.subAccounts ?? []).find(acc => acc.token.id === currency.id);
 
@@ -57,10 +59,13 @@ export default function SelectToken({ navigation, route }: Props) {
           },
         });
       } else {
-        console.log("FIXME: redirect to next step", currency.name);
+        navigation.navigate(ScreenName.HederaAssociateTokenSummary, {
+          accountId: mainAccount.id,
+          tokenAddress: currency.contractAddress,
+        });
       }
     },
-    [accounts, navigation],
+    [mainAccount, navigation],
   );
 
   const renderList = useCallback(
@@ -80,10 +85,9 @@ export default function SelectToken({ navigation, route }: Props) {
 
   return (
     <SafeAreaView edges={["left", "right"]} isFlex>
-      <TrackScreen category="HederaAssociateTokenFlow" name="SelectToken" />
+      <TrackScreen category="AssociateTokenFlow" name="SelectToken" currency="hedera" />
       <Text variant="h4" fontWeight="semiBold" mx={6}>
-        {/* FIXME: i18n */}
-        Choose a token you want to receive
+        {t("hedera.associate.selectToken.title")}
       </Text>
       {list.length > 0 ? (
         <Flex flex={1} ml={6} mr={6} mt={3}>

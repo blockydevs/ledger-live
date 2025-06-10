@@ -1,8 +1,9 @@
-import { findTokenByAddress } from "@ledgerhq/live-common/lib/currencies/index";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { findTokenByAddress } from "@ledgerhq/live-common/currencies/index";
 import { getTransactionExplorer } from "@ledgerhq/live-common/families/hedera/logic";
 import type { HederaAccount, HederaOperation } from "@ledgerhq/live-common/families/hedera/types";
 import type { OperationType } from "@ledgerhq/types-live";
-import { useTranslation } from "react-i18next";
 import Section from "~/screens/OperationDetails/Section";
 
 interface OperationDetailsPostAccountSectionProps {

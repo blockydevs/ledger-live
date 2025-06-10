@@ -6778,10 +6778,31 @@
         "associationPrerequisite": {
           "text": "In order to receive HTS tokens, your account needs to be associated. If you did not already associate your account with the HTS token that you want to receive, <0>click here</0> to start the token association flow.",
           "learnMore": "Learn more"
-        },
-        "associationRequired": {
-          "text": "Hedera tokens must be associated with an account before they can be transferred to that account. Click continue to associate the account."
         }
+      }
+    },
+    "associate": {
+      "selectToken": {
+        "title": "Choose a token you want to receive"
+      },
+      "summary": {
+        "title": "Associate token",
+        "from": "Token",
+        "to": "To",
+        "warning": {
+          "text": "By clicking Continue you will associate the selected token to your Hedera account.",
+          "learnMore": "Learn more"
+        }
+      },
+      "selectDevice": {
+        "title": "Associate token"
+      },
+      "connectDevice": {
+        "title": "Associate token"
+      },
+      "validationSuccess": {
+        "title": "Transaction sent",
+        "text": "You will be able to receive this token once the Associate Token transaction has been confirmed"
       }
     },
     "send": {

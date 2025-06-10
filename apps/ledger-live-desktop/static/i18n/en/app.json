@@ -6653,7 +6653,7 @@
           "learnMore": "Learn more"
         },
         "associationRequired": {
-          "text": "Hedera tokens must be associated with an account before they can be transferred to that account. Click continue to associate the account.",
+          "text": "By clicking Continue you will associate the selected token to your Hedera account.",
           "learnMore": "Learn more"
         }
       }

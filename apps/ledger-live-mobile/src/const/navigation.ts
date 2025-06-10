@@ -476,6 +476,11 @@ export enum ScreenName {
   // hedera
   HederaEditMemo = "HederaEditMemo",
   HederaAssociateTokenSelectToken = "HederaAssociateTokenSelectToken",
+  HederaAssociateTokenSummary = "HederaAssociateTokenSummary",
+  HederaAssociateTokenSelectDevice = "HederaAssociateTokenSelectDevice",
+  HederaAssociateTokenConnectDevice = "HederaAssociateTokenConnectDevice",
+  HederaAssociateTokenValidationError = "HederaAssociateTokenValidationError",
+  HederaAssociateTokenValidationSuccess = "HederaAssociateTokenValidationSuccess",
   // near
   NearStakingValidator = "NearStakingValidator",
   NearStakingValidatorSelect = "NearStakingValidatorSelect",
