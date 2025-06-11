@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   },
   right: {
     flex: 1,
+    gap: 2,
   },
 });
 

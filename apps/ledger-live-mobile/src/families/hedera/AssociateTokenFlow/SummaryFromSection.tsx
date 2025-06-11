@@ -27,16 +27,11 @@ function SummaryFromSection({ token }: Props) {
         </Circle>
       }
       data={
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 4,
-          }}
-        >
+        <View style={styles.container}>
           <View style={styles.currencyIcon}>
             <CurrencyIcon size={16} forceIconScale={2} currency={token} circle />
           </View>
-          <LText numberOfLines={1} style={styles.summaryRowText}>
+          <LText numberOfLines={1} style={styles.text}>
             {token.name}
           </LText>
         </View>
@@ -46,8 +41,12 @@ function SummaryFromSection({ token }: Props) {
 }
 
 const styles = StyleSheet.create({
-  summaryRowText: {
-    fontSize: 16,
+  container: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  text: {
+    fontSize: 14,
     textAlign: "right",
   },
   currencyIcon: {

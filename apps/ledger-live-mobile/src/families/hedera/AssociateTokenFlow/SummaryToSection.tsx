@@ -29,10 +29,10 @@ function SummaryToSection({ account }: Props) {
       }
       data={
         <>
-          <LText numberOfLines={2} style={styles.domainRowText}>
+          <LText numberOfLines={1} style={styles.addressRowText}>
             {name}
           </LText>
-          <LText numberOfLines={2} style={styles.addressRowText} color="neutral.c70">
+          <LText numberOfLines={1} style={styles.addressRowText} color="neutral.c70">
             {account.freshAddress}
           </LText>
         </>
@@ -42,12 +42,6 @@ function SummaryToSection({ account }: Props) {
 }
 
 const styles = StyleSheet.create({
-  summaryRowText: {
-    fontSize: 16,
-  },
-  domainRowText: {
-    fontSize: 14,
-  },
   addressRowText: {
     fontSize: 14,
   },
