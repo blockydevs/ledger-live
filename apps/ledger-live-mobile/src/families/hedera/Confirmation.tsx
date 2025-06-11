@@ -302,8 +302,7 @@ const styles = StyleSheet.create({
   bottomContainer: {
     gap: 16,
     paddingHorizontal: 16,
-    paddingBottom: 32,
-    paddingTop: 32,
+    paddingVertical: 32,
   },
   qrWrapper: {
     borderWidth: 1,
