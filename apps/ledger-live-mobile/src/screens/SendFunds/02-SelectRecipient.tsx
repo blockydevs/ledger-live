@@ -244,9 +244,9 @@ export default function SendSelectRecipient({ route }: Props) {
       mainAccount.currency.family as keyof typeof perFamilySendSelectRecipient
     ];
   const CustomRecipientAlert =
-    "StepRecipientCustomAlert" in specific ? specific.StepRecipientCustomAlert : null;
+    specific && "StepRecipientCustomAlert" in specific ? specific.StepRecipientCustomAlert : null;
   const customSendRecipientCanNext =
-    "sendRecipientCanNext" in specific ? specific.sendRecipientCanNext : null;
+    specific && "sendRecipientCanNext" in specific ? specific.sendRecipientCanNext : null;
 
   const customValidationSuccess = customSendRecipientCanNext?.(status) ?? true;
   const isContinueDisabled =

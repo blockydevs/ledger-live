@@ -155,6 +155,7 @@ export default function Content({
   const PostAccountSection =
     specificOperationDetails &&
     "OperationDetailsPostAccountSection" in specificOperationDetails &&
+    specificOperationDetails.OperationDetailsPostAccountSection &&
     (specificOperationDetails.OperationDetailsPostAccountSection as React.ComponentType<{
       type: typeof type;
       account: AccountLike;
@@ -164,6 +165,7 @@ export default function Content({
   const PostAlert =
     specificOperationDetails &&
     "OperationDetailsPostAlert" in specificOperationDetails &&
+    specificOperationDetails.OperationDetailsPostAlert &&
     (specificOperationDetails.OperationDetailsPostAlert as React.ComponentType<{
       type: typeof type;
       account: AccountLike;
@@ -171,9 +173,7 @@ export default function Content({
     }>);
 
   const Extra =
-    specificOperationDetails &&
-    (specificOperationDetails as { OperationDetailsExtra: React.ComponentType })
-      .OperationDetailsExtra
+    specificOperationDetails && "OperationDetailsExtra" in specificOperationDetails
       ? (
           specificOperationDetails as {
             OperationDetailsExtra: React.ComponentType<{
