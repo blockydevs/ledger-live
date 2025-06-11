@@ -1,19 +1,19 @@
 import React from "react";
-import { OperationType } from "@ledgerhq/types-live";
+import { Trans, useTranslation } from "react-i18next";
+import type { OperationType } from "@ledgerhq/types-live";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import { isValidExtra } from "@ledgerhq/live-common/families/hedera/logic";
-import { HederaAccount, HederaOperation } from "@ledgerhq/live-common/families/hedera/types";
-import Alert from "~/renderer/components/Alert";
-import { Trans, useTranslation } from "react-i18next";
+import type { HederaAccount, HederaOperation } from "@ledgerhq/live-common/families/hedera/types";
 import { Link } from "@ledgerhq/react-ui";
 import { urls } from "~/config/urls";
 import { useDispatch } from "react-redux";
 import { openModal } from "~/renderer/actions/modals";
-import {
+import type {
   AddressCellProps,
   OperationDetailsExtraProps,
   OperationDetailsPostAccountSectionProps,
 } from "~/renderer/families/types";
+import Alert from "~/renderer/components/Alert";
 import { Cell } from "~/renderer/components/OperationsList/AddressCell";
 import Box from "~/renderer/components/Box";
 import {

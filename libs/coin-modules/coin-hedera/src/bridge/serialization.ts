@@ -1,5 +1,10 @@
-import { AccountRaw, Account } from "@ledgerhq/types-live";
-import { HederaAccount, HederaAccountRaw, HederaResources, HederaResourcesRaw } from "../types";
+import type { AccountRaw, Account } from "@ledgerhq/types-live";
+import type {
+  HederaAccount,
+  HederaAccountRaw,
+  HederaResources,
+  HederaResourcesRaw,
+} from "../types";
 
 export function toHederaResourcesRaw(resources: HederaResources): HederaResourcesRaw {
   const { maxAutomaticTokenAssociations, isAutoTokenAssociationEnabled } = resources;

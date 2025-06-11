@@ -20,7 +20,7 @@ describe("serialization", () => {
     expect(result).toEqual(mockHederaResourcesRaw);
   });
 
-  test("fromSuiResourcesRaw should convert HederaResourcesRaw to HederaResources", () => {
+  test("fromHederaResourcesRaw should convert HederaResourcesRaw to HederaResources", () => {
     const result = fromHederaResourcesRaw(mockHederaResourcesRaw);
     expect(result).toEqual(mockHederaResources);
   });

@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import invariant from "invariant";
 import type { Transaction as HederaTransaction, TransactionResponse } from "@hashgraph/sdk";
 import {
   Client,
@@ -10,9 +11,8 @@ import {
   HbarUnit,
   TokenAssociateTransaction,
 } from "@hashgraph/sdk";
-import { Account, TokenAccount } from "@ledgerhq/types-live";
+import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
-import invariant from "invariant";
 import { HederaAddAccountError } from "../errors";
 import { Transaction } from "../types";
 import { isTokenAssociateTransaction } from "../logic";

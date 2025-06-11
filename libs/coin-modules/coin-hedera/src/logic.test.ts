@@ -1,8 +1,11 @@
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import {
   getTransactionExplorer,
+  isAutoTokenAssociationEnabled,
   isTokenAssociateTransaction,
   isTokenAssociationRequired,
+  isValidExtra,
+  sendRecipientCanNext,
 } from "./logic";
 import { getMockedAccount, getMockedTokenAccount } from "./test/fixtures/account";
 import { getMockedOperation } from "./test/fixtures/operation";
@@ -37,7 +40,33 @@ describe("logic", () => {
     });
   });
 
-  describe(isTokenAssociateTransaction, () => {});
+  describe("isTokenAssociateTransaction", () => {
+    test("returns correct value based on tx.properties", () => {
+      expect(isTokenAssociateTransaction({ properties: { name: "tokenAssociate" } } as any)).toBe(
+        true,
+      );
+      expect(isTokenAssociateTransaction({ properties: { name: "transfer" } } as any)).toBe(false);
+      expect(isTokenAssociateTransaction({} as any)).toBe(false);
+    });
+  });
+
+  describe("isAutoTokenAssociationEnabled", () => {
+    test("returns value based on isAutoTokenAssociationEnabled flag", () => {
+      expect(
+        isAutoTokenAssociationEnabled({
+          hederaResources: { isAutoTokenAssociationEnabled: true },
+        } as any),
+      ).toBe(true);
+
+      expect(
+        isAutoTokenAssociationEnabled({
+          hederaResources: { isAutoTokenAssociationEnabled: false },
+        } as any),
+      ).toBe(false);
+
+      expect(isAutoTokenAssociationEnabled({} as any)).toBe(false);
+    });
+  });
 
   describe("isTokenAssociationRequired", () => {
     test("should return false if token is already associated (token account exists)", () => {
@@ -82,6 +111,29 @@ describe("logic", () => {
       delete mockedAccount.hederaResources;
 
       expect(isTokenAssociationRequired(mockedAccount, mockedTokenCurrency)).toBe(true);
+    });
+  });
+
+  describe("isValidExtra", () => {
+    test("returns true for object and false for invalid types", () => {
+      expect(isValidExtra({ some: "value" })).toBe(true);
+      expect(isValidExtra(null)).toBe(false);
+      expect(isValidExtra(undefined)).toBe(false);
+      expect(isValidExtra("string")).toBe(false);
+      expect(isValidExtra(123)).toBe(false);
+      expect(isValidExtra([])).toBe(false);
+    });
+  });
+
+  describe("sendRecipientCanNext", () => {
+    test("handles association warnings", () => {
+      expect(sendRecipientCanNext({ warnings: {} } as any)).toBe(true);
+      expect(sendRecipientCanNext({ warnings: { missingAssociation: new Error() } } as any)).toBe(
+        false,
+      );
+      expect(
+        sendRecipientCanNext({ warnings: { unverifiedAssociation: new Error() } } as any),
+      ).toBe(false);
     });
   });
 });

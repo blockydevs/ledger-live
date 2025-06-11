@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { AccountId } from "@hashgraph/sdk";
-import { Operation, OperationType } from "@ledgerhq/types-live";
+import type { Operation, OperationType } from "@ledgerhq/types-live";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";

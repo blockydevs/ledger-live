@@ -1,14 +1,14 @@
-import { SyncOneAccountOnMount } from "@ledgerhq/live-common/bridge/react/index";
 import React from "react";
 import { Trans } from "react-i18next";
 import styled from "styled-components";
+import { SyncOneAccountOnMount } from "@ledgerhq/live-common/bridge/react/index";
 import Box from "~/renderer/components/Box";
 import BroadcastErrorDisclaimer from "~/renderer/components/BroadcastErrorDisclaimer";
 import Button from "~/renderer/components/Button";
 import ErrorDisplay from "~/renderer/components/ErrorDisplay";
 import RetryButton from "~/renderer/components/RetryButton";
 import SuccessDisplay from "~/renderer/components/SuccessDisplay";
-import { StepProps } from "../Body";
+import type { StepProps } from "../Body";
 import TrackPage from "~/renderer/analytics/TrackPage";
 import { setDrawer } from "~/renderer/drawers/Provider";
 import { OperationDetails } from "~/renderer/drawers/OperationDetails";

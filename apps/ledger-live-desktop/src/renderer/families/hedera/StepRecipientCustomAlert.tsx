@@ -1,6 +1,6 @@
 import React from "react";
-import type { TransactionStatus } from "@ledgerhq/live-common/generated/types";
 import { Trans } from "react-i18next";
+import type { TransactionStatus } from "@ledgerhq/live-common/generated/types";
 import { urls } from "~/config/urls";
 import Alert from "~/renderer/components/Alert";
 import TranslatedError from "~/renderer/components/TranslatedError";

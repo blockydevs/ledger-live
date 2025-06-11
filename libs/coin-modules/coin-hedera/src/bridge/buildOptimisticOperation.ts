@@ -1,10 +1,10 @@
-import { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
-import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
-import { getEstimatedFees } from "./utils";
-import { HederaOperationExtra, Transaction } from "../types";
-import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
+import type { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
+import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
+import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
+import type { HederaOperationExtra, Transaction } from "../types";
+import { getEstimatedFees } from "./utils";
 import { isTokenAssociateTransaction } from "../logic";
 
 const buildOptimisticTokenAssociateOperation = async ({

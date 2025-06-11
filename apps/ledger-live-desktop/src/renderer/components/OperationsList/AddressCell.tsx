@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react";
 import styled from "styled-components";
-import { Operation } from "@ledgerhq/types-live";
-import { Currency } from "@ledgerhq/types-cryptoassets";
+import type { Operation } from "@ledgerhq/types-live";
+import type { Currency } from "@ledgerhq/types-cryptoassets";
 import Box from "~/renderer/components/Box";
 import { getLLDCoinFamily } from "~/renderer/families";
 

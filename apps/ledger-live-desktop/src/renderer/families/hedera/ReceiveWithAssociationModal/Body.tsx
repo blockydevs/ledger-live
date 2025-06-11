@@ -9,8 +9,8 @@ import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import type { Transaction, TransactionStatus } from "@ledgerhq/live-common/families/hedera/types";
 import { isTokenAssociationRequired } from "@ledgerhq/live-common/families/hedera/logic";
 import { UserRefusedOnDevice } from "@ledgerhq/errors";
-import { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
-import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
+import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import invariant from "invariant";
 import Track from "~/renderer/analytics/Track";
@@ -25,7 +25,7 @@ import StepConnectDevice, {
 } from "~/renderer/modals/Receive/steps/StepConnectDevice";
 import StepWarning, { StepWarningFooter } from "~/renderer/modals/Receive/steps/StepWarning";
 import StepReceiveFunds from "~/renderer/modals/Receive/steps/StepReceiveFunds";
-import { StepId as DefaultStepId } from "~/renderer/modals/Receive/Body";
+import type { StepId as DefaultStepId } from "~/renderer/modals/Receive/Body";
 import StepReceiveStakingFlow, {
   StepReceiveStakingFooter,
 } from "~/renderer/modals/Receive/steps/StepReceiveStakingFlow";

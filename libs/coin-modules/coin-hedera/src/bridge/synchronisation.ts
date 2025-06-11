@@ -1,15 +1,12 @@
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-import {
-  getDerivationScheme,
-  Result,
-  runDerivationScheme,
-} from "@ledgerhq/coin-framework/derivation";
-import {
+import type { Result } from "@ledgerhq/coin-framework/derivation";
+import { getDerivationScheme, runDerivationScheme } from "@ledgerhq/coin-framework/derivation";
+import type {
   GetAccountShape,
   IterateResultBuilder,
-  mergeOps,
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
+import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { encodeAccountId } from "@ledgerhq/coin-framework/account";
 import { getAccount, getAccountsForPublicKey, getAccountTokens } from "../api/mirror";
 import {
@@ -19,7 +16,7 @@ import {
   mergeSubAccounts,
   getSyncHash,
 } from "./utils";
-import { HederaAccount } from "../types";
+import type { HederaAccount } from "../types";
 import { getOperationsForAccount } from "../api/utils";
 
 export const getAccountShape: GetAccountShape<HederaAccount> = async (
@@ -51,7 +48,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
 
   // we should sync again when new tokens are added or blacklist changes
   const syncHash = getSyncHash(currency, blacklistedTokenIds);
-  const shouldSyncFromScratch = syncHash !== initialAccount?.syncHash || !initialAccount;
+  const shouldSyncFromScratch = !initialAccount || syncHash !== initialAccount?.syncHash;
 
   // grab latest operation's consensus timestamp for incremental sync
   const latestOperationTimestamp =
@@ -81,31 +78,20 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   const mergedOperations = mergeOps(oldOperations, enrichedNewOperations);
 
   console.log("[DEBUG] coin-hedera bridge getAccountShape", {
-    info,
-    mirrorAccount,
-    latestAccountOperations,
-    oldOperations,
-    newOperations,
+    id: liveAccountId,
+    freshAddress: address,
+    syncHash,
+    lastSyncDate: new Date(),
+    balance: new BigNumber(mirrorAccount.balance.balance),
+    spendableBalance: new BigNumber(mirrorAccount.balance.balance),
     operations: mergedOperations,
-    latestOperationTimestamp,
-    newSubAccounts,
+    // NOTE: there are no "blocks" in hedera
+    // Set a value just so that operations are considered confirmed according to isConfirmedOperation
+    blockHeight: 10,
     subAccounts,
-    output: {
-      id: liveAccountId,
-      freshAddress: address,
-      syncHash,
-      lastSyncDate: new Date(),
-      balance: new BigNumber(mirrorAccount.balance.balance),
-      spendableBalance: new BigNumber(mirrorAccount.balance.balance),
-      operations: mergedOperations,
-      // NOTE: there are no "blocks" in hedera
-      // Set a value just so that operations are considered confirmed according to isConfirmedOperation
-      blockHeight: 10,
-      subAccounts,
-      hederaResources: {
-        maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
-        isAutoTokenAssociationEnabled: mirrorAccount.max_automatic_token_associations === -1,
-      },
+    hederaResources: {
+      maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
+      isAutoTokenAssociationEnabled: mirrorAccount.max_automatic_token_associations === -1,
     },
   });
 

@@ -8,7 +8,8 @@ import { useTrackReceiveFlow } from "~/renderer/analytics/hooks/useTrackReceiveF
 import { trackingEnabledSelector } from "~/renderer/reducers/settings";
 import { getCurrentDevice } from "~/renderer/reducers/devices";
 import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
-import Body, { StepId } from "./Body";
+import type { StepId } from "./Body";
+import Body from "./Body";
 
 type State = {
   stepId: StepId;

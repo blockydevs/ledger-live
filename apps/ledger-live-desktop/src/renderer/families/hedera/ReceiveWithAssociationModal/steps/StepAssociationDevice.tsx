@@ -1,16 +1,15 @@
 import React, { useMemo } from "react";
 import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
-
 import { useBroadcast } from "@ledgerhq/live-common/hooks/useBroadcast";
-import { SignedOperation } from "@ledgerhq/types-live";
+import type { SignedOperation } from "@ledgerhq/types-live";
 import DeviceAction from "~/renderer/components/DeviceAction";
 import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
 import StepProgress from "~/renderer/components/StepProgress";
 import { DeviceBlocker } from "~/renderer/components/DeviceAction/DeviceBlocker";
 import { useTransactionAction } from "~/renderer/hooks/useConnectAppAction";
 import { mevProtectionSelector } from "~/renderer/reducers/settings";
-import { StepProps } from "../Body";
+import type { StepProps } from "../Body";
 
 const Result = (
   props:

@@ -2,7 +2,7 @@ import React from "react";
 import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { AccountLike } from "@ledgerhq/types-live";
+import type { AccountLike } from "@ledgerhq/types-live";
 import {
   isTokenAssociationRequired,
   isAutoTokenAssociationEnabled,
@@ -14,9 +14,9 @@ import { openModal } from "~/renderer/actions/modals";
 import Alert from "~/renderer/components/Alert";
 import Box from "~/renderer/components/Box";
 import Text from "~/renderer/components/Text";
-import { StepProps as ReceiveStepProps } from "~/renderer/modals/Receive/Body";
-import { StepProps as ReceiveWithAssociationStepProps } from "./ReceiveWithAssociationModal/Body";
+import type { StepProps as ReceiveStepProps } from "~/renderer/modals/Receive/Body";
 import TranslatedError from "~/renderer/components/TranslatedError";
+import type { StepProps as ReceiveWithAssociationStepProps } from "./ReceiveWithAssociationModal/Body";
 
 type Props = (ReceiveStepProps | ReceiveWithAssociationStepProps) & {
   account: AccountLike;

@@ -25,6 +25,7 @@ const isTokenAssociateTransaction = (
 
 const isAutoTokenAssociationEnabled = (account: AccountLike) => {
   const hederaAccount = "hederaResources" in account ? (account as HederaAccount) : null;
+
   return hederaAccount?.hederaResources?.isAutoTokenAssociationEnabled ?? false;
 };
 

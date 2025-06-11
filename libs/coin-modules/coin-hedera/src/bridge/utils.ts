@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import murmurhash from "imurmurhash";
+import invariant from "invariant";
 import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
 import cvsApi from "@ledgerhq/live-countervalues/api/index";
 import {
@@ -17,8 +18,7 @@ import {
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import type { CryptoCurrency, Currency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
-import { makeLRUCache, minutes, seconds } from "@ledgerhq/live-network/cache";
-import invariant from "invariant";
+import { makeLRUCache, seconds } from "@ledgerhq/live-network/cache";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import type { HederaOperationType, HederaOperationExtra, Transaction } from "../types";
 import { getAccount } from "../api/mirror";
@@ -470,5 +470,5 @@ export const checkAccountTokenAssociationStatus = makeLRUCache(
     return isTokenAssociated;
   },
   (accountId, tokenId) => `${accountId}-${tokenId}`,
-  minutes(1),
+  seconds(30),
 );
