@@ -16,7 +16,7 @@ import { isAutoTokenAssociationEnabled } from "@ledgerhq/live-common/families/he
 import { CompositeScreenProps, useTheme } from "@react-navigation/native";
 import getWindowDimensions from "~/logic/getWindowDimensions";
 import { accountScreenSelector } from "~/reducers/accounts";
-import { TrackScreen } from "~/analytics";
+import { TrackScreen, track } from "~/analytics";
 import PreventNativeBack from "~/components/PreventNativeBack";
 import LText from "~/components/LText/index";
 import DisplayAddress from "~/components/DisplayAddress";
@@ -83,6 +83,12 @@ export default function ReceiveConfirmation({ navigation, route }: Props) {
 
   function onAssociationClickHere(): void {
     if (!account) return;
+
+    track("button_clicked", {
+      currency,
+      button: "Click here to start the token association flow",
+      page: ScreenName.ReceiveConfirmation,
+    });
 
     navigation.navigate(NavigatorName.HederaAssociateTokenFlow, {
       screen: ScreenName.HederaAssociateTokenSelectToken,

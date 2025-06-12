@@ -9,7 +9,7 @@ import { listTokens } from "@ledgerhq/live-common/currencies/index";
 import { getMainAccount } from "@ledgerhq/coin-framework/account/helpers";
 import invariant from "invariant";
 
-import { TrackScreen } from "~/analytics";
+import { TrackScreen, track } from "~/analytics";
 import BigCurrencyRow from "~/components/BigCurrencyRow";
 import FilteredSearchBar from "~/components/FilteredSearchBar";
 import SafeAreaView from "~/components/SafeAreaView";
@@ -34,7 +34,6 @@ const renderEmptyList = () => (
   </Flex>
 );
 
-// FIXME: add actions tracking if needed
 export default function SelectToken({ navigation, route }: Props) {
   const { t } = useTranslation();
   const { account, parentAccount } = useSelector(accountScreenSelector(route));
@@ -48,8 +47,16 @@ export default function SelectToken({ navigation, route }: Props) {
       invariant(mainAccount, "hedera: mainAccount is missing");
 
       const subAccount = (mainAccount?.subAccounts ?? []).find(acc => acc.token.id === currency.id);
+      const isAlreadyAssociated = !!subAccount;
 
-      if (subAccount) {
+      track("asset_clicked", {
+        currency: currency.parentCurrency,
+        asset: currency.name,
+        page: ScreenName.HederaAssociateTokenSelectToken,
+        isAlreadyAssociated,
+      });
+
+      if (isAlreadyAssociated) {
         navigation.navigate(NavigatorName.ReceiveFunds, {
           screen: ScreenName.ReceiveConfirmation,
           params: {

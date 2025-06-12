@@ -15,13 +15,14 @@ import SummaryFromSection from "./SummaryFromSection";
 import type { HederaAssociateTokenFlowParamList } from "./types";
 import { TrackScreen } from "~/analytics";
 import { ScreenName } from "~/const";
-import { accountScreenSelector } from "~/reducers/accounts";
 import Button from "~/components/Button";
 import LText from "~/components/LText";
 import type { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import NavigationScrollView from "~/components/NavigationScrollView";
 import TranslatedError from "~/components/TranslatedError";
 import Alert from "~/components/Alert";
+import AssociationInsufficientFundsError from "~/families/hedera/AssociateTokenFlow/AssociationInsufficientFundsError";
+import { accountScreenSelector } from "~/reducers/accounts";
 import { urls } from "~/utils/urls";
 
 type Props = BaseComposite<
@@ -80,6 +81,7 @@ export default function Summary({ navigation, route }: Props) {
           ]}
         />
         <SummaryToSection account={mainAccount} />
+        <AssociationInsufficientFundsError status={status} />
       </NavigationScrollView>
       <LText style={styles.error} color="alert">
         <TranslatedError error={transactionError} />
@@ -93,7 +95,7 @@ export default function Summary({ navigation, route }: Props) {
           <Trans i18nKey="hedera.associate.summary.warning.text" />
         </Alert>
         <Button
-          event="SummaryContinue"
+          event="HederaAssociateTokenSummaryContinue"
           type="primary"
           title={<Trans i18nKey="common.continue" />}
           containerStyle={styles.continueButton}
