@@ -16,7 +16,7 @@ function getDeviceTransactionConfig({
 
   const method = (() => {
     if (transaction.useAllAmount) return "Transfer All";
-    else if (isTokenAssociateTransaction(transaction)) return "Token Association";
+    else if (isTokenAssociateTransaction(transaction)) return "Associate Token";
     else return "Transfer";
   })();
 
