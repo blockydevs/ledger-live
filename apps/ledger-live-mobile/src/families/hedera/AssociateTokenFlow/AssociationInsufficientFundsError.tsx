@@ -1,3 +1,4 @@
+import React from "react";
 import type { TransactionStatus } from "@ledgerhq/live-common/generated/types";
 import { Text } from "@ledgerhq/native-ui";
 import { useTheme } from "styled-components/native";
