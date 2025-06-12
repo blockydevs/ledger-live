@@ -43,12 +43,12 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     getAccountTokens(address),
   ]);
 
-  const oldOperations = initialAccount?.operations ?? [];
-  const pendingOperations = initialAccount?.pendingOperations ?? [];
-
   // we should sync again when new tokens are added or blacklist changes
   const syncHash = getSyncHash(currency, blacklistedTokenIds);
   const shouldSyncFromScratch = !initialAccount || syncHash !== initialAccount?.syncHash;
+
+  const oldOperations = initialAccount?.operations ?? [];
+  const pendingOperations = initialAccount?.pendingOperations ?? [];
 
   // grab latest operation's consensus timestamp for incremental sync
   const latestOperationTimestamp =
@@ -74,8 +74,16 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     mirrorTokens,
   );
 
-  const enrichedNewOperations = applyPendingExtras(newOperations, pendingOperations);
-  const mergedOperations = mergeOps(oldOperations, enrichedNewOperations);
+  const operations = (() => {
+    if (shouldSyncFromScratch) {
+      return newOperations;
+    }
+
+    const enrichedNewOperations = applyPendingExtras(newOperations, pendingOperations);
+    const mergedOperations = mergeOps(oldOperations, enrichedNewOperations);
+
+    return mergedOperations;
+  })();
 
   console.log("[DEBUG] coin-hedera bridge getAccountShape", {
     id: liveAccountId,
@@ -84,7 +92,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     lastSyncDate: new Date(),
     balance: new BigNumber(mirrorAccount.balance.balance),
     spendableBalance: new BigNumber(mirrorAccount.balance.balance),
-    operations: mergedOperations,
+    operations,
     // NOTE: there are no "blocks" in hedera
     // Set a value just so that operations are considered confirmed according to isConfirmedOperation
     blockHeight: 10,
@@ -102,7 +110,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     lastSyncDate: new Date(),
     balance: new BigNumber(mirrorAccount.balance.balance),
     spendableBalance: new BigNumber(mirrorAccount.balance.balance),
-    operations: mergedOperations,
+    operations,
     // NOTE: there are no "blocks" in hedera
     // Set a value just so that operations are considered confirmed according to isConfirmedOperation
     blockHeight: 10,

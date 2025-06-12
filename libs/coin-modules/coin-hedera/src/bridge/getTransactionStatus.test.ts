@@ -4,9 +4,9 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   AmountRequired,
   NotEnoughBalance,
+  HederaInsufficientFundsForAssociation,
   HederaRecipientTokenAssociationRequired,
   HederaRecipientTokenAssociationUnverified,
-  HederaInsufficientFundsForAssociation,
 } from "@ledgerhq/errors";
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account";
 import { getMockedTokenCurrency } from "../test/fixtures/currency";

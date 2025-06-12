@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useBroadcast } from "@ledgerhq/live-common/hooks/useBroadcast";
+import type { Device } from "@ledgerhq/live-common/hw/actions/types";
 import type { SignedOperation } from "@ledgerhq/types-live";
 import DeviceAction from "~/renderer/components/DeviceAction";
 import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";

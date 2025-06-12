@@ -52,7 +52,7 @@ export const getCurrencyToUSDRate = makeLRUCache(
       return null;
     }
   },
-  currency => currency.name,
+  currency => currency.ticker,
   seconds(3),
 );
 

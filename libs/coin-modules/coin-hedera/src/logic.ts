@@ -12,9 +12,12 @@ const getTransactionExplorer = (
   explorerView: ExplorerView | null | undefined,
   operation: Operation,
 ): string | undefined => {
-  const extra = operation.extra as HederaOperationExtra;
+  const extra = isValidExtra(operation.extra) ? operation.extra : null;
 
-  return explorerView?.tx?.replace("$hash", extra.consensusTimestamp ?? extra.transactionId ?? "0");
+  return explorerView?.tx?.replace(
+    "$hash",
+    extra?.consensusTimestamp ?? extra?.transactionId ?? "0",
+  );
 };
 
 const isTokenAssociateTransaction = (

@@ -37,7 +37,7 @@ const RecipientFieldBase = ({
   const { recipient: recipientWarning } = status.warnings;
 
   const specific = getLLDCoinFamily(account.currency.family);
-  const StepRecipientCustomAlert = specific.StepRecipientCustomAlert;
+  const StepRecipientCustomAlert = specific?.StepRecipientCustomAlert;
 
   return (
     <Box flow={1}>
