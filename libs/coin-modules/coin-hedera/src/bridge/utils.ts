@@ -218,7 +218,8 @@ export const getSubAccounts = async (
       token,
       balance,
       spendableBalance: balance,
-      creationDate: new Date(),
+      creationDate:
+        tokenOperations.length > 0 ? tokenOperations[tokenOperations.length - 1].date : new Date(),
       operations: tokenOperations,
       operationsCount: tokenOperations.length,
       pendingOperations: [],
@@ -252,7 +253,7 @@ export const getSubAccounts = async (
       token,
       balance,
       spendableBalance: balance,
-      creationDate: new Date(),
+      creationDate: new Date(parseFloat(rawToken.created_timestamp) * 1000),
       operations: [],
       operationsCount: 0,
       pendingOperations: [],
