@@ -198,8 +198,8 @@ export const urls = {
   hedera: {
     supportArticleLink:
       "https://launchbadge.com/blog/using-a-ledger-nano-to-create-your-hedera-account",
-    // FIXME:
-    tokenAssociation: "https://google.com",
+    tokenAssociation:
+      "https://support.ledger.com/article/How-to-manage-Hedera-tokens-with-Ledger-Live",
   },
   nft: {
     supportDisableIos: "https://support.ledger.com/article/7572912170653-zd",
