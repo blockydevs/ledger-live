@@ -28,7 +28,7 @@ import { CompleteExchangeStep, convertTransportError } from "../error";
 import type { CompleteExchangeInputSwap, CompleteExchangeRequestEvent } from "../platform/types";
 import { convertToAppExchangePartnerKey, getSwapProvider } from "../providers";
 import { CEXProviderConfig } from "../providers/swap";
-import { TLVMessageType, generateTlvPacket } from "./_debug";
+import { getEnv } from "@ledgerhq/live-env";
 
 const COMPLETE_EXCHANGE_LOG = "SWAP-CompleteExchange";
 
@@ -163,45 +163,45 @@ const completeExchange = (
             throw new Error("deviceModelId is not available");
           }
 
-          const cert = await calService.getCertificate(deviceModelId);
-          console.log("[DEBUG] got cert", { cert });
+          const signatureKind = getEnv("MOCK_EXCHANGE_TEST_CONFIG") ? "test" : "prod";
+          console.log("[DEBUG] calling calService.getCertificate", {
+            deviceModelId,
+            signatureKind,
+          });
+
+          const cert = await calService.getCertificate(deviceModelId, "trusted_name", "latest", {
+            signatureKind,
+          });
+
+          console.log("[DEBUG] result calService.getCertificate", { cert });
 
           await loadPKI(exchange.transport, "TRUSTED_NAME", cert.descriptor, cert.signature);
-          // FIXME: compare with exchange.sendPKICertificate
-          console.log("[DEBUG] loaded pki cert");
+          console.log("[DEBUG] called loadPKI");
 
           const challenge = await exchange.getChallenge();
-          console.log("[DEBUG] got challenge", { challenge });
+          const hexChallenge = `${challenge.toString(16)}`;
+          console.log("[DEBUG] got challenge", { challenge, hexChallenge });
 
-          // trustService.getPublicKey();
-          // exchange.sendTrustedDescriptor(signedDescriptor);
+          // FIXME: use trustService instead of hardcoded fetch
+          const trustServiceResult = await fetch(
+            `https://nft.api.live.ledger-stg.com/v2/hedera/pubkey/${hederaAccount.freshAddress}?challenge=${hexChallenge}`,
+          ).then(
+            r =>
+              r.json() as Promise<{
+                descriptorType: "TrustedDomainName";
+                descriptorVersion: number;
+                account: string;
+                key: string;
+                signedDescriptor: string;
+              }>,
+          );
 
-          // FIXME: remove
-          // -- DEBUG CODE
-          const pubkey = await fetch(
-            `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${hederaAccount.freshAddress}`,
-          )
-            .then(r => r.json() as Promise<{ key: { key: string } }>)
-            .then(r => r.key.key);
+          console.log("[DEBUG] got trustServiceResult", { trustServiceResult });
 
-          const tlvPairs = [
-            [TLVMessageType.TRUSTED_NAME, hederaAccount.freshAddress],
-            [TLVMessageType.ADDRESS, pubkey],
-            [TLVMessageType.STRUCTURE_TYPE, 3],
-            [TLVMessageType.VERSION, 1],
-            [TLVMessageType.TRUSTED_NAME_TYPE, 6],
-            [TLVMessageType.TRUSTED_NAME_SOURCE, 6],
-            [TLVMessageType.CHAIN_ID, 1],
-            [TLVMessageType.CHALLENGE, 0xdeadbeef],
-            [TLVMessageType.SIGNER_KEY_ID, 0],
-            [TLVMessageType.SIGNER_ALGORITHM, 1],
-            [TLVMessageType.DER_SIGNATURE, Buffer.alloc(64, 0)],
-          ];
-
-          const tlvData = generateTlvPacket(tlvPairs);
-          await exchange.sendTrustedDescriptor(tlvData);
+          const signedDescriptorBuffer = Buffer.from(trustServiceResult.signedDescriptor, "hex");
+          await exchange.sendTrustedDescriptor(signedDescriptorBuffer);
+          console.log("[DEBUG] sent trusted descriptor");
         }
-        // -- DEBUG CODE
 
         const payoutAddressParameters = payoutAccountBridge.getSerializedAddressParameters(
           payoutAccount,
