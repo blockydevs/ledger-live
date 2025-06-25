@@ -11,9 +11,6 @@ import {
   PayloadSignatureComputedFormat,
 } from "@ledgerhq/hw-app-exchange";
 import { getDefaultAccountName } from "@ledgerhq/live-wallet/accountName";
-import { loadPKI } from "@ledgerhq/hw-bolos";
-import calService from "@ledgerhq/ledger-cal-service";
-import trustService from "@ledgerhq/ledger-trust-service";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { Observable } from "rxjs";
@@ -28,7 +25,8 @@ import { CompleteExchangeStep, convertTransportError } from "../error";
 import type { CompleteExchangeInputSwap, CompleteExchangeRequestEvent } from "../platform/types";
 import { convertToAppExchangePartnerKey, getSwapProvider } from "../providers";
 import { CEXProviderConfig } from "../providers/swap";
-import { getEnv } from "@ledgerhq/live-env";
+import { handleHederaTrustedFlow } from "../../families/hedera/exchange";
+import invariant from "invariant";
 
 const COMPLETE_EXCHANGE_LOG = "SWAP-CompleteExchange";
 
@@ -159,48 +157,10 @@ const completeExchange = (
         })();
 
         if (hederaAccount) {
-          if (!deviceModelId) {
-            throw new Error("deviceModelId is not available");
-          }
-
-          const signatureKind = getEnv("MOCK_EXCHANGE_TEST_CONFIG") ? "test" : "prod";
-          console.log("[DEBUG] calling calService.getCertificate", {
-            deviceModelId,
-            signatureKind,
-          });
-
-          const cert = await calService.getCertificate(deviceModelId, "trusted_name", "latest", {
-            signatureKind,
-          });
-
-          console.log("[DEBUG] result calService.getCertificate", { cert });
-
-          await loadPKI(exchange.transport, "TRUSTED_NAME", cert.descriptor, cert.signature);
-          console.log("[DEBUG] called loadPKI");
-
-          const challenge = await exchange.getChallenge();
-          const hexChallenge = `${challenge.toString(16)}`;
-          console.log("[DEBUG] got challenge", { challenge, hexChallenge });
-
-          // FIXME: use trustService instead of hardcoded fetch
-          const trustServiceResult = await fetch(
-            `https://nft.api.live.ledger-stg.com/v2/hedera/pubkey/${hederaAccount.freshAddress}?challenge=${hexChallenge}`,
-          ).then(
-            r =>
-              r.json() as Promise<{
-                descriptorType: "TrustedDomainName";
-                descriptorVersion: number;
-                account: string;
-                key: string;
-                signedDescriptor: string;
-              }>,
-          );
-
-          console.log("[DEBUG] got trustServiceResult", { trustServiceResult });
-
-          const signedDescriptorBuffer = Buffer.from(trustServiceResult.signedDescriptor, "hex");
-          await exchange.sendTrustedDescriptor(signedDescriptorBuffer);
+          invariant(deviceModelId, "hedera: deviceModelId is not available");
+          await handleHederaTrustedFlow({ exchange, hederaAccount, deviceModelId });
           console.log("[DEBUG] sent trusted descriptor");
+          if (unsubscribed) return;
         }
 
         const payoutAddressParameters = payoutAccountBridge.getSerializedAddressParameters(
