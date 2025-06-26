@@ -4,6 +4,7 @@ import { loadPKI } from "@ledgerhq/hw-bolos";
 import { Account } from "@ledgerhq/types-live"; // adjust import if needed
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import Exchange from "@ledgerhq/hw-app-exchange";
+import trustService from "@ledgerhq/ledger-trust-service";
 
 export async function handleHederaTrustedFlow({
   exchange,
@@ -26,19 +27,11 @@ export async function handleHederaTrustedFlow({
   const challenge = await exchange.getChallenge();
   const hexChallenge = `${challenge.toString(16)}`;
 
-  const trustServiceResult = await fetch(
-    `https://nft.api.live.ledger-stg.com/v2/hedera/pubkey/${hederaAccount.freshAddress}?challenge=${hexChallenge}`,
-  ).then(
-    res =>
-      res.json() as Promise<{
-        descriptorType: "TrustedDomainName";
-        descriptorVersion: number;
-        account: string;
-        key: string;
-        signedDescriptor: string;
-      }>,
+  const trustServiceResult = await trustService.hedera.getPublicKey(
+    hederaAccount.freshAddress,
+    hexChallenge,
   );
-
   const signedDescriptorBuffer = Buffer.from(trustServiceResult.signedDescriptor, "hex");
+
   await exchange.sendTrustedDescriptor(signedDescriptorBuffer);
 }
