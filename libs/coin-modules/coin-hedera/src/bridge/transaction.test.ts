@@ -11,10 +11,14 @@ describe("transaction", () => {
   const mockedTransaction = getMockedTransaction({
     amount: new BigNumber(100000000),
     recipient: "0.0.3",
+    memo: "test",
+    maxFee: new BigNumber(1000000),
   });
   const mockedTransactionRaw = getMockedTransactionRaw({
     amount: "100000000",
     recipient: "0.0.3",
+    memo: "test",
+    maxFee: "1000000",
   });
 
   test("formatTransaction", () => {
