@@ -16,6 +16,7 @@ import { CosmosAccount } from "@ledgerhq/live-common/families/cosmos/types";
 import { PolkadotAccount } from "@ledgerhq/live-common/families/polkadot/types";
 import { MultiversXAccount } from "@ledgerhq/live-common/families/multiversx/types";
 import { NearAccount } from "@ledgerhq/live-common/families/near/types";
+import { HederaAccount } from "@ledgerhq/live-common/families/hedera/types";
 import { isEditableOperation, isStuckOperation } from "@ledgerhq/live-common/operation";
 import AccountGraphCard from "~/components/AccountGraphCard";
 import SubAccountsList from "./SubAccountsList";
@@ -122,6 +123,7 @@ export function useListHeaderComponents({
         CosmosAccount &
         PolkadotAccount &
         MultiversXAccount &
+        HederaAccount &
         NearAccount,
     });
 
