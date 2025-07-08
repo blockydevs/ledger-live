@@ -2,7 +2,6 @@ import Transport from "@ledgerhq/hw-transport";
 import { BigNumber } from "bignumber.js";
 import { TransportStatusError } from "@ledgerhq/errors";
 import invariant from "invariant";
-import { type DeviceManagementKit } from "@ledgerhq/device-management-kit";
 
 import { OkStatus, ErrorStatus } from "./ReturnCode";
 
@@ -53,17 +52,6 @@ const maybeThrowProtocolError = (result: Buffer): void => {
   if (resultCode !== OkStatus) {
     throw new TransportStatusError(resultCode);
   }
-};
-
-const isDmkTransport = (
-  transport: Transport,
-): transport is Transport & { dmk: DeviceManagementKit; sessionId: string } => {
-  return (
-    "dmk" in transport &&
-    transport.dmk !== undefined &&
-    "sessionId" in transport &&
-    transport.sessionId !== undefined
-  );
 };
 
 export type PartnerKeyInfo = {
@@ -210,6 +198,7 @@ export default class Exchange {
         p2Value = this.transactionType | P2_EXTEND;
       }
     } else {
+      console.log("[DEBUG] jumping into else condition", { transaction, feeHex });
       bufferToSend = Buffer.concat([
         Buffer.from([transaction.length]),
         transaction,
@@ -217,6 +206,15 @@ export default class Exchange {
         feeHex,
       ]);
     }
+
+    console.log("[DEBUG] PROCESS_TRANSACTION_RESPONSE", {
+      CLA,
+      ins: PROCESS_TRANSACTION_RESPONSE,
+      p1: this.transactionRate,
+      p2: p2Value,
+      data: bufferToSend,
+      statusList: this.allowedStatuses,
+    });
 
     const result: Buffer = await this.transport.send(
       CLA,
@@ -275,6 +273,20 @@ export default class Exchange {
       transactionSignature,
       this.allowedStatuses,
     );
+
+    console.log(
+      "[DEBUG] checkTransactionSignature",
+      {
+        CLA,
+        ins: CHECK_TRANSACTION_SIGNATURE,
+        p1: this.transactionRate,
+        p2: this.transactionType,
+        data: transactionSignature,
+        statusList: this.allowedStatuses,
+      },
+      result,
+    );
+
     maybeThrowProtocolError(result);
   }
 
@@ -296,6 +308,19 @@ export default class Exchange {
       Buffer.from([addressParameters.length]),
       addressParameters,
     ]);
+
+    console.log({
+      CLA,
+      ins:
+        this.transactionType === ExchangeTypes.Swap || this.transactionType === ExchangeTypes.SwapNg
+          ? CHECK_PAYOUT_ADDRESS
+          : CHECK_ASSET_IN_AND_DISPLAY,
+      p1: this.transactionRate,
+      p2: this.transactionType,
+      data: bufferToSend,
+      statusList: this.allowedStatuses,
+    });
+
     const result: Buffer = await this.transport.send(
       CLA,
       this.transactionType === ExchangeTypes.Swap || this.transactionType === ExchangeTypes.SwapNg
@@ -306,6 +331,9 @@ export default class Exchange {
       bufferToSend,
       this.allowedStatuses,
     );
+
+    console.log("result available", { result });
+
     maybeThrowProtocolError(result);
   }
 
@@ -339,35 +367,24 @@ export default class Exchange {
   }
 
   async signCoinTransaction(): Promise<void> {
-    if (isDmkTransport(this.transport)) {
-      const result: Buffer = await this.transport.dmk
-        .sendApdu({
-          sessionId: this.transport.sessionId,
-          apdu: new Uint8Array([
-            CLA,
-            SIGN_COIN_TRANSACTION,
-            this.transactionRate,
-            this.transactionType,
-            0,
-          ]),
-          triggersDisconnection: true,
-        })
-        .then(apduResponse => Buffer.from([...apduResponse.data, ...apduResponse.statusCode]))
-        .catch(e => {
-          throw e;
-        });
-      maybeThrowProtocolError(result);
-    } else {
-      const result: Buffer = await this.transport.send(
-        CLA,
-        SIGN_COIN_TRANSACTION,
-        this.transactionRate,
-        this.transactionType,
-        Buffer.alloc(0),
-        this.allowedStatuses,
-      );
-      maybeThrowProtocolError(result);
-    }
+    console.log("signCoinTransaction", {
+      CLA,
+      ins: SIGN_COIN_TRANSACTION,
+      p1: this.transactionRate,
+      p2: this.transactionType,
+      data: Buffer.alloc(0),
+      statusList: this.allowedStatuses,
+    });
+
+    const result: Buffer = await this.transport.send(
+      CLA,
+      SIGN_COIN_TRANSACTION,
+      this.transactionRate,
+      this.transactionType,
+      Buffer.alloc(0),
+      this.allowedStatuses,
+    );
+    maybeThrowProtocolError(result);
   }
 
   async getChallenge(): Promise<number> {

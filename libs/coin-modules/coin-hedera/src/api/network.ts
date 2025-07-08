@@ -72,6 +72,8 @@ async function buildUnsignedUpdateAccountTransaction({
     tx.clearStakedNodeId();
   }
 
+  console.log(JSON.stringify(tx));
+
   return tx.freeze();
 }
 

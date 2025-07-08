@@ -267,9 +267,11 @@ export default class Transport {
     }
 
     tracer.trace("Starting an exchange", { abortTimeoutMs });
+    const apdu = Buffer.concat([Buffer.from([cla, ins, p1, p2]), Buffer.from([data.length]), data]);
+    console.log("[DEBUG][APDU]: ", apdu.toString("hex").toUpperCase(), apdu);
     const response = await this.exchange(
       // The size of the data is added in 1 byte just before `data`
-      Buffer.concat([Buffer.from([cla, ins, p1, p2]), Buffer.from([data.length]), data]),
+      apdu,
       { abortTimeoutMs },
     );
     tracer.trace("Received response from exchange");
