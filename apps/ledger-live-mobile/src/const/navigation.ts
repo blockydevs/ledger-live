@@ -673,6 +673,8 @@ export enum NavigatorName {
   AptosUnstakingFlow = "AptosUnstakingFlow",
   AptosWithdrawingFlow = "AptosWithdrawingFlow",
   AptosRestakingFlow = "AptosRestakingFlow",
+  // Hedera
+  HederaDelegationFlow = "HederaDelegationFlow",
 
   // Tab
   Main = "Main",

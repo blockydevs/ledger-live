@@ -50,6 +50,7 @@ import type { AptosStakingFlowParamList } from "~/families/aptos/StakingFlow/typ
 import type { AptosRestakingFlowParamList } from "~/families/aptos/RestakingFlow/types";
 import type { AptosUnstakingFlowParamList } from "~/families/aptos/UnstakingFlow/types";
 import type { AptosWithdrawingFlowParamList } from "~/families/aptos/WithdrawingFlow/types";
+import type { HederaDelegationFlowParamList } from "~/families/hedera/DelegationFlow/types";
 import { SolanaDelegationFlowParamList } from "~/families/solana/DelegationFlow/types";
 import { StellarAddAssetFlowParamList } from "~/families/stellar/AddAssetFlow/types";
 import { TezosDelegationFlowParamList } from "~/families/tezos/DelegationFlow/types";
@@ -113,6 +114,7 @@ type Props =
   | StackNavigatorProps<AptosUnstakingFlowParamList, ScreenName.AptosUnstakingConnectDevice>
   | StackNavigatorProps<AptosWithdrawingFlowParamList, ScreenName.AptosWithdrawingConnectDevice>
   | StackNavigatorProps<SolanaDelegationFlowParamList, ScreenName.DelegationConnectDevice>
+  | StackNavigatorProps<HederaDelegationFlowParamList, ScreenName.DelegationConnectDevice>
   | StackNavigatorProps<StellarAddAssetFlowParamList, ScreenName.StellarAddAssetConnectDevice>
   | StackNavigatorProps<TezosDelegationFlowParamList, ScreenName.DelegationConnectDevice>
   | StackNavigatorProps<TronVoteFlowParamList, ScreenName.VoteConnectDevice>;
