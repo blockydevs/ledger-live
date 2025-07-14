@@ -58,7 +58,7 @@ export const Title = styled(Box).attrs(() => ({
     white-space: nowrap;
   }
 `;
-export const SubTitle = styled(Box).attrs(() => ({
+const SubTitle = styled(Box).attrs(() => ({
   horizontal: true,
 }))`
   font-size: 11px;
@@ -116,7 +116,7 @@ const MaxButton = styled.button`
   }
 `;
 
-export const Row = styled(Box).attrs(() => ({
+const Row = styled(Box).attrs(() => ({
   horizontal: true,
   flex: "0 0 56px",
   mb: 2,

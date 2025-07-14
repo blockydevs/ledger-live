@@ -218,11 +218,7 @@ export function Row({ account, delegationWithMeta, onManageAction, onExternalLin
           {() => (
             <Box horizontal alignItems="center">
               <Trans i18nKey="common.manage" />
-              <div
-                style={{
-                  transform: "rotate(90deg)",
-                }}
-              >
+              <div style={{ transform: "rotate(90deg)" }}>
                 <ChevronRight size={16} />
               </div>
             </Box>
