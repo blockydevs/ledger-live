@@ -1,16 +1,7 @@
 import BigNumber from "bignumber.js";
 import type { Transaction as HederaTransaction, TransactionResponse } from "@hashgraph/sdk";
-import {
-  Client,
-  TransferTransaction,
-  Hbar,
-  AccountId,
-  TransactionId,
-  AccountBalanceQuery,
-  HbarUnit,
-} from "@hashgraph/sdk";
+import { Client, TransferTransaction, Hbar, AccountId, TransactionId } from "@hashgraph/sdk";
 import { Account } from "@ledgerhq/types-live";
-import { HederaAddAccountError } from "../errors";
 import { Transaction } from "../types";
 
 export function broadcastTransaction(transaction: HederaTransaction): Promise<TransactionResponse> {
@@ -45,26 +36,7 @@ export interface AccountBalance {
   balance: BigNumber;
 }
 
-export async function getAccountBalance(address: string): Promise<AccountBalance> {
-  const accountId = AccountId.fromString(address);
-  let accountBalance;
-
-  try {
-    accountBalance = await new AccountBalanceQuery({
-      accountId,
-    }).execute(getBalanceClient());
-  } catch {
-    throw new HederaAddAccountError();
-  }
-
-  return {
-    balance: accountBalance.hbars.to(HbarUnit.Tinybar),
-  };
-}
-
 let _hederaClient: Client | null = null;
-
-let _hederaBalanceClient: Client | null = null;
 
 function getClient(): Client {
   _hederaClient ??= Client.forMainnet().setMaxNodesPerTransaction(1);
@@ -72,10 +44,4 @@ function getClient(): Client {
   //_hederaClient.setNetwork({ mainnet: "https://hedera.coin.ledger.com" });
 
   return _hederaClient;
-}
-
-function getBalanceClient(): Client {
-  _hederaBalanceClient ??= Client.forMainnet();
-
-  return _hederaBalanceClient;
 }

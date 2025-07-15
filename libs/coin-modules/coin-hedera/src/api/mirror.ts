@@ -4,9 +4,11 @@ import { Operation, OperationType } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
 import { getEnv } from "@ledgerhq/live-env";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
-import { getAccountBalance } from "./network";
 import { base64ToUrlSafeBase64 } from "../bridge/utils";
 import { HederaOperationExtra } from "../types";
+import { HederaMirrorAccount } from "./types";
+import { HederaAddAccountError } from "../errors";
+import { LedgerAPI4xx } from "@ledgerhq/errors";
 
 const getMirrorApiUrl = (): string => getEnv("API_HEDERA_MIRROR");
 
@@ -17,32 +19,33 @@ const fetch = (path: string) => {
   });
 };
 
-interface HederaMirrorAccount {
-  accountId: AccountId;
-  balance: BigNumber;
-}
-
 export async function getAccountsForPublicKey(publicKey: string): Promise<HederaMirrorAccount[]> {
   let r;
   try {
-    r = await fetch(`/api/v1/accounts?account.publicKey=${publicKey}&balance=false`);
+    r = await fetch(`/api/v1/accounts?account.publicKey=${publicKey}&balance=true&limit=100`);
   } catch (e: any) {
     if (e.name === "LedgerAPI4xx") return [];
     throw e;
   }
-  const rawAccounts = r.data.accounts;
-  const accounts: HederaMirrorAccount[] = [];
 
-  for (const raw of rawAccounts) {
-    const accountBalance = await getAccountBalance(raw.account);
-
-    accounts.push({
-      accountId: AccountId.fromString(raw.account),
-      balance: accountBalance.balance,
-    });
-  }
+  const accounts = r.data.accounts as HederaMirrorAccount[];
 
   return accounts;
+}
+
+export async function getAccount(address: string): Promise<HederaMirrorAccount> {
+  try {
+    const res = await fetch(`/api/v1/accounts/${address}`);
+    const account = res.data as HederaMirrorAccount;
+
+    return account;
+  } catch (error) {
+    if (error instanceof LedgerAPI4xx && "status" in error && error.status === 404) {
+      throw new HederaAddAccountError();
+    }
+
+    throw error;
+  }
 }
 
 interface HederaMirrorTransfer {
