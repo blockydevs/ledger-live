@@ -14,6 +14,8 @@ export class ReceiveModal extends Modal {
   private selectAccount = this.page.getByText("Choose a crypto asset");
   private warningMessage = this.page.locator('div[type="warning"]');
   readonly selectAccountInput = this.page.locator('[placeholder="Search"]');
+  readonly alertTriggerAssociation = this.page.getByTestId("trigger-association-alert");
+  readonly warningAssociationRequired = this.page.getByTestId("association-required-warning");
 
   private sendAssetWarningMessage = (
     account: Account,
@@ -28,6 +30,26 @@ export class ReceiveModal extends Modal {
     await this.selectAccount.click();
     await this.selectAccountInput.fill(SubAccount.currency.name);
     await this.selectAccountInput.press("Enter");
+  }
+
+  @step("Check alert")
+  async checkTriggerAssociationAlertVisibility(expectedState: "visible" | "hidden") {
+    await this.alertTriggerAssociation.waitFor({ state: expectedState });
+  }
+
+  @step("Check warning")
+  async checkAssociationRequiredWarningVisibility(expectedState: "visible" | "hidden") {
+    await this.warningAssociationRequired.waitFor({ state: expectedState });
+  }
+
+  @step("Check continue button enable")
+  async checkContinueButtonEnable() {
+    await expect(this.continueButton).toBeEnabled();
+  }
+
+  @step("Trigger association")
+  async triggerAssociationFlow() {
+    await this.alertTriggerAssociation.getByText("click here").click();
   }
 
   @step("Retrieve address displayed")

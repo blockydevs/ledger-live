@@ -12,6 +12,7 @@ interface AlertProps {
 const MissingAssociationAlert = ({ error }: AlertProps) => {
   return (
     <Alert
+      data-testid="missing-association-warning"
       type="warning"
       mt={4}
       learnMoreUrl={urls.hedera.tokenAssociation}

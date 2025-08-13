@@ -269,6 +269,10 @@ export class Account {
     0,
   );
 
+  static readonly HBAR_1 = new Account(Currency.HBAR, "Hedera 1", "0.0.8835924", 0);
+  static readonly HBAR_2 = new Account(Currency.HBAR, "Hedera 2", "0.0.9124531", 1);
+  static readonly HBAR_NO_TOKENS = new Account(Currency.HBAR, "Hedera - no tokens", "0.0.800", 2);
+
   static readonly INJ_1 = new Account(
     Currency.INJ,
     "Injective 1",
@@ -602,6 +606,24 @@ export class TokenAccount extends Account {
     0,
     TokenType.TRC20,
     Account.TRX_1,
+  );
+
+  static readonly HBAR_USDC_1 = new TokenAccount(
+    Currency.HBAR_USDC,
+    "USD Coin 1",
+    Account.HBAR_1.address,
+    0,
+    TokenType.HTS,
+    Account.HBAR_1,
+  );
+
+  static readonly HBAR_USDC_2 = new TokenAccount(
+    Currency.HBAR_USDC,
+    "USD Coin 2",
+    Account.HBAR_2.address,
+    1,
+    TokenType.HTS,
+    Account.HBAR_2,
   );
 }
 

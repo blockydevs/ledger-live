@@ -12,6 +12,7 @@ import { Fee } from "@ledgerhq/live-common/e2e/enum/Fee";
 import invariant from "invariant";
 import { getEnv } from "@ledgerhq/live-env";
 import { TransactionStatus } from "@ledgerhq/live-common/e2e/enum/TransactionStatus";
+import { findTokenByAddressInCurrency } from "../../../../libs/ledgerjs/packages/cryptoassets/lib";
 
 const subAccounts = [
   {
@@ -24,6 +25,7 @@ const subAccounts = [
   { account: Account.TRX_USDT, xrayTicket1: "B2CQA-2580", xrayTicket2: "B2CQA-2586" },
   { account: Account.BSC_BUSD_1, xrayTicket1: "B2CQA-2576", xrayTicket2: "B2CQA-2582" },
   { account: Account.POL_DAI_1, xrayTicket1: "B2CQA-2578", xrayTicket2: "B2CQA-2584" },
+  { account: TokenAccount.HBAR_USDC_1, xrayTicket1: "YYYYY-0000", xrayTicket2: "YYYYY-0000" },
 ];
 
 const subAccountReceive = [
@@ -34,6 +36,7 @@ const subAccountReceive = [
   { account: Account.BSC_SHIBA, xrayTicket: "B2CQA-2490" },
   { account: Account.POL_DAI_1, xrayTicket: "B2CQA-2493" },
   { account: Account.POL_UNI, xrayTicket: "B2CQA-2494" },
+  { account: TokenAccount.HBAR_USDC_1, xrayTicket: "YYYYY-0000" },
 ];
 
 for (const token of subAccounts) {
@@ -101,6 +104,12 @@ for (const token of subAccountReceive) {
 
         await app.receive.continue();
 
+        // FIXME: expectValidReceiveAddress and expectValidAddressDevice will fail
+        // hedera does not support address validation on device
+        if (token.account.currency.id === "hedera") {
+          return;
+        }
+
         const displayedAddress = await app.receive.getAddressDisplayed();
         await app.receive.expectValidReceiveAddress(displayedAddress);
 
@@ -147,6 +156,16 @@ const transactionE2E = [
       "noTag",
     ),
     xrayTicket: "B2CQA-3055, B2CQA-3057",
+  },
+  {
+    tx: new Transaction(
+      TokenAccount.HBAR_USDC_1,
+      TokenAccount.HBAR_USDC_2,
+      "0.01",
+      undefined,
+      "noTag",
+    ),
+    xrayTicket: "YYYYY-0000, YYYYY-0000",
   },
 ];
 
@@ -203,6 +222,8 @@ for (const transaction of transactionE2E) {
         await app.account.navigateToViewDetails();
         await app.sendDrawer.addressValueIsVisible(transaction.tx.accountToCredit.address);
         await app.drawer.closeDrawer();
+
+        // FIXME: this fails with timeout on `Click sync account button for: Hedera 2`
         if (!getEnv("DISABLE_TRANSACTION_BROADCAST")) {
           await app.layout.goToAccounts();
           await app.accounts.clickSyncBtnForAccount(
@@ -484,6 +505,137 @@ test.describe("Send token (subAccount) - valid address & amount input", () => {
       await app.send.continue();
       await app.send.fillAmount(tokenTransactionValid.amount);
       await app.send.checkContinueButtonEnable();
+    },
+  );
+});
+
+test.describe("Hedera token association", () => {
+  const accountWithAutoAssociation = Account.HBAR_1;
+  const accountWithoutAutoAssociation = Account.HBAR_2;
+  const accountWithoutTokens = Account.HBAR_NO_TOKENS;
+  const tokenAccount = TokenAccount.HBAR_USDC_1;
+
+  // FIXME: CAL list might change, so it can crash easily
+  const unassociatedToken = findTokenByAddressInCurrency(
+    "0.0.2009716",
+    accountWithAutoAssociation.currency.id,
+  );
+  invariant(unassociatedToken, "No unassociated token found");
+
+  test.use({
+    userdata: "skip-onboarding",
+    speculosApp: accountWithAutoAssociation.currency.speculosApp,
+    // FIXME: adjust accounts
+    cliCommands: [accountWithAutoAssociation, accountWithoutAutoAssociation, tokenAccount].map(
+      acc => {
+        return (appjsonPath: string) => {
+          return CLI.liveData({
+            currency: acc.currency.speculosApp.name,
+            index: acc.index,
+            add: true,
+            appjson: appjsonPath,
+          });
+        };
+      },
+    ),
+  });
+
+  test(
+    `Send from ${tokenAccount.accountName} to ${accountWithoutTokens.accountName} - missing association warning is visible`,
+    {
+      tag: ["@NanoSP", "@LNS", "@NanoX"],
+      annotation: {
+        type: "TMS",
+        description: "YYYYY-0000",
+      },
+    },
+    async ({ app }) => {
+      const invalidSendTx = new Transaction(
+        tokenAccount,
+        Account.HBAR_NO_TOKENS,
+        "0.01",
+        undefined,
+      );
+
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
+
+      await app.layout.goToAccounts();
+      await app.accounts.navigateToAccountByName(
+        getParentAccountName(invalidSendTx.accountToDebit),
+      );
+      await app.account.navigateToTokenInAccount(invalidSendTx.accountToDebit);
+      await app.account.clickSend();
+
+      await app.send.fillRecipient(invalidSendTx.accountToCredit.address);
+      await app.send.checkContinueButtonDisabled();
+      await app.send.checkMissingAssociationWarningVisibility("visible");
+    },
+  );
+
+  test(
+    `Receive on ${accountWithAutoAssociation.accountName} - token association alert is not visible`,
+    {
+      tag: ["@NanoSP", "@LNS", "@NanoX"],
+      annotation: {
+        type: "TMS",
+        description: "YYYYY-0000",
+      },
+    },
+    async ({ app }) => {
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
+
+      await app.layout.goToAccounts();
+      await app.accounts.navigateToAccountByName(getParentAccountName(accountWithAutoAssociation));
+      await app.account.clickReceive();
+      await app.receive.checkTriggerAssociationAlertVisibility("hidden");
+    },
+  );
+
+  test(
+    `Receive on ${accountWithoutAutoAssociation.accountName} - token association alert is visible`,
+    {
+      tag: ["@NanoSP", "@LNS", "@NanoX"],
+      annotation: {
+        type: "TMS",
+        description: "YYYYY-0000",
+      },
+    },
+    async ({ app }) => {
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
+
+      await app.layout.goToAccounts();
+      await app.accounts.navigateToAccountByName(
+        getParentAccountName(accountWithoutAutoAssociation),
+      );
+      await app.account.clickReceive();
+      await app.receive.checkTriggerAssociationAlertVisibility("visible");
+    },
+  );
+
+  test(
+    `Receive on ${accountWithoutAutoAssociation.accountName} - token association is possible`,
+    {
+      tag: ["@NanoSP", "@LNS", "@NanoX"],
+      annotation: {
+        type: "TMS",
+        description: "YYYYY-0000",
+      },
+    },
+    async ({ app }) => {
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
+
+      await app.layout.goToAccounts();
+      await app.accounts.navigateToAccountByName(
+        getParentAccountName(accountWithoutAutoAssociation),
+      );
+      await app.account.clickReceive();
+      await app.receive.checkTriggerAssociationAlertVisibility("visible");
+
+      await app.receive.triggerAssociationFlow();
+      // FIXME:
+      await app.receive.selectToken({ currency: { name: unassociatedToken.name } });
+      await app.receive.checkAssociationRequiredWarningVisibility("visible");
+      await app.receive.checkContinueButtonEnable();
     },
   );
 });

@@ -21,6 +21,7 @@ export class AccountPage extends AppPage {
   private accountBalance = this.page.getByTestId("total-balance");
   private operationList = this.page.locator("id=operation-list");
   private showMoreButton = this.page.getByText("Show more");
+  private showMoreTokensButton = this.page.getByRole("button", { name: /show tokens \(\d+\)/i });
   private seeMoreCollectionsButton = this.page.getByText("See more collections");
   private advancedButton = this.page.getByText("Advanced");
   private accountAdvancedLogs = this.page.getByTestId("Advanced_Logs");
@@ -183,6 +184,10 @@ export class AccountPage extends AppPage {
 
   @step("Navigate to token in account")
   async navigateToTokenInAccount(tokenAccount: AccountType) {
+    if (await this.showMoreTokensButton.isVisible()) {
+      await this.showMoreTokensButton.click();
+    }
+
     await this.tokenRow(tokenAccount.currency.ticker).click();
   }
 

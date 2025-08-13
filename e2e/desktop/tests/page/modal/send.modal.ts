@@ -21,6 +21,7 @@ export class SendModal extends Modal {
 
   readonly inputError = this.page.locator("id=input-error"); // no data-testid because css style is applied
   readonly insufficientFundsWarning = this.page.getByTestId("insufficient-funds-warning");
+  readonly missingAssociationWarning = this.page.getByTestId("missing-association-warning");
   readonly inputWarning = this.page.locator("id=input-warning");
   readonly cryptoAmountField = this.page.getByTestId("modal-amount-field");
 
@@ -158,6 +159,11 @@ export class SendModal extends Modal {
       const warningText = await this.insufficientFundsWarning.innerText();
       expect(warningText).toMatch(expectedWarningMessage);
     }
+  }
+
+  @step("Check warning message")
+  async checkMissingAssociationWarningVisibility(expectedState: "visible" | "hidden") {
+    await this.missingAssociationWarning.waitFor({ state: expectedState });
   }
 
   @step("Check warning message")

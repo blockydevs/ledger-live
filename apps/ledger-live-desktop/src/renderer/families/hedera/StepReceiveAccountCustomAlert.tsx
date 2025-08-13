@@ -44,6 +44,7 @@ const AssociationPrerequisiteAlert = ({ account, closeModal }: Props) => {
   return (
     <Container>
       <Alert
+        data-testid="trigger-association-alert"
         type="primary"
         learnMoreUrl={urls.hedera.tokenAssociation}
         learnMoreLabel={
@@ -83,6 +84,7 @@ const AssociationInsufficientFundsError = (props: Props) => {
 const AssociationRequiredAlert = () => {
   return (
     <Alert
+      data-testid="association-required-warning"
       type="warning"
       learnMoreUrl={urls.hedera.tokenAssociation}
       learnMoreLabel={<Trans i18nKey="hedera.receive.warnings.associationRequired.learnMore" />}

@@ -20851,6 +20851,46 @@
           "starred": false
         },
         "version": 1
+      },
+      {
+        "data": {
+          "id": "js:2:hedera:0.0.8835924:hederaBip44",
+          "seedIdentifier": "34e26415574250721e8869bd33ea2678c2bbccff5fc70bd8b0ec9239295fd2cf",
+          "used": true,
+          "derivationMode": "hederaBip44",
+          "index": 0,
+          "freshAddress": "0.0.8835924",
+          "freshAddressPath": "44/3030",
+          "blockHeight": 10,
+          "creationDate": "2025-04-23T14:20:12.000Z",
+          "operations": [],
+          "operationsCount": 0,
+          "pendingOperations": [],
+          "currencyId": "hedera",
+          "lastSyncDate": "2025-08-05T11:54:38.849Z",
+          "balance": "0",
+          "spendableBalance": "0",
+          "balanceHistoryCache": {
+            "HOUR": {
+              "balances": [],
+              "latestDate": 1754992800000
+            },
+            "DAY": {
+              "balances": [],
+              "latestDate": 1754949600000
+            },
+            "WEEK": {
+              "balances": [],
+              "latestDate": 1754776800000
+            }
+          },
+          "swapHistory": [],
+          "subAccounts": [],
+          "nfts": [],
+          "name": "Hedera 1",
+          "starred": false
+        },
+        "version": 1
       }
     ],
     "postOnboarding": {

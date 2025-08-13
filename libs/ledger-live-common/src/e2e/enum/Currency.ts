@@ -19,6 +19,8 @@ export class Currency {
 
   static readonly APT = new Currency("Aptos", "APT", "aptos", AppInfos.APTOS);
 
+  static readonly HBAR = new Currency("Hedera", "HBAR", "hedera", AppInfos.HEDERA);
+
   static readonly tBTC = new Currency(
     "Bitcoin Testnet",
     "𝚝BTC",
@@ -130,6 +132,13 @@ export class Currency {
     "solana",
     AppInfos.SOLANA,
     "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+  );
+  static readonly HBAR_USDC = new Currency(
+    "USD Coin",
+    "USDC",
+    "hedera",
+    AppInfos.HEDERA,
+    "0.0.456858",
   );
   static readonly OP = new Currency("OP Mainnet", "OP", "optimism", AppInfos.ETHEREUM);
 }
