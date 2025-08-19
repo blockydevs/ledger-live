@@ -1821,6 +1821,9 @@ importers:
 
   e2e/desktop:
     dependencies:
+      '@ledgerhq/cryptoassets':
+        specifier: workspace:^
+        version: link:../../libs/ledgerjs/packages/cryptoassets
       '@ledgerhq/hw-transport-node-speculos-http':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/hw-transport-node-speculos-http
@@ -70870,7 +70873,7 @@ snapshots:
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
       terser: 5.36.0
-      webpack: 5.94.0
+      webpack: 5.94.0(webpack-cli@4.10.0)
     transitivePeerDependencies:
       - metro
 

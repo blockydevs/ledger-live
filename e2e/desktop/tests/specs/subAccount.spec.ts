@@ -2,6 +2,7 @@ import { test } from "../fixtures/common";
 import { addTmsLink } from "../utils/allureUtils";
 import { getDescription } from "../utils/customJsonReporter";
 import { CLI } from "../utils/cliUtils";
+import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import {
   Account,
   TokenAccount,
@@ -12,7 +13,7 @@ import { Fee } from "@ledgerhq/live-common/e2e/enum/Fee";
 import invariant from "invariant";
 import { getEnv } from "@ledgerhq/live-env";
 import { TransactionStatus } from "@ledgerhq/live-common/e2e/enum/TransactionStatus";
-import { findTokenByAddressInCurrency } from "../../../../libs/ledgerjs/packages/cryptoassets/lib";
+import { setupEnv } from "tests/utils/setupEnv";
 
 const subAccounts = [
   {
@@ -515,7 +516,8 @@ test.describe("Hedera token association", () => {
   const accountWithoutTokens = Account.HBAR_NO_TOKENS;
   const tokenAccount = TokenAccount.HBAR_USDC_1;
 
-  // FIXME: CAL list might change, so it can crash easily
+  setupEnv(true);
+
   const unassociatedToken = findTokenByAddressInCurrency(
     "0.0.2009716",
     accountWithAutoAssociation.currency.id,

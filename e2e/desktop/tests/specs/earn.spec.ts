@@ -4,20 +4,8 @@ import { CLI } from "../utils/cliUtils";
 import { addTmsLink } from "tests/utils/allureUtils";
 import { getDescription } from "tests/utils/customJsonReporter";
 import { Provider } from "@ledgerhq/live-common/e2e/enum/Provider";
+import { setupEnv } from "../utils/setupEnv";
 
-function setupEnv(disableBroadcast?: boolean) {
-  const originalBroadcastValue = process.env.DISABLE_TRANSACTION_BROADCAST;
-  test.beforeAll(async () => {
-    if (disableBroadcast) process.env.DISABLE_TRANSACTION_BROADCAST = "1";
-  });
-  test.afterAll(async () => {
-    if (originalBroadcastValue !== undefined) {
-      process.env.DISABLE_TRANSACTION_BROADCAST = originalBroadcastValue;
-    } else {
-      delete process.env.DISABLE_TRANSACTION_BROADCAST;
-    }
-  });
-}
 const ethEarn = [
   {
     account: Account.ETH_1,

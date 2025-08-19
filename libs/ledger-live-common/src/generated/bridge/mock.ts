@@ -4,6 +4,7 @@ import cardano from "../../families/cardano/bridge/mock";
 import casper from "../../families/casper/bridge/mock";
 import cosmos from "../../families/cosmos/bridge/mock";
 import evm from "../../families/evm/bridge/mock";
+import hedera from "../../families/hedera/bridge/mock";
 import icon from "../../families/icon/bridge/mock";
 import multiversx from "../../families/multiversx/bridge/mock";
 import polkadot from "../../families/polkadot/bridge/mock";
@@ -20,6 +21,7 @@ export default {
   casper,
   cosmos,
   evm,
+  hedera,
   icon,
   multiversx,
   polkadot,

@@ -7,6 +7,7 @@
     "test:playwright:setup": "playwright install chromium"
   },
   "dependencies": {
+    "@ledgerhq/cryptoassets": "workspace:^",
     "@ledgerhq/hw-transport-node-speculos-http": "workspace:^",
     "@ledgerhq/ledger-key-ring-protocol": "workspace:^",
     "@ledgerhq/live-cli": "workspace:^",

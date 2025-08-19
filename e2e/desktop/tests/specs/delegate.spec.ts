@@ -6,20 +6,7 @@ import { Currency } from "@ledgerhq/live-common/e2e/enum/Currency";
 import { getEnv } from "@ledgerhq/live-env";
 import { addTmsLink } from "tests/utils/allureUtils";
 import { getDescription } from "tests/utils/customJsonReporter";
-
-function setupEnv(disableBroadcast?: boolean) {
-  const originalBroadcastValue = process.env.DISABLE_TRANSACTION_BROADCAST;
-  test.beforeAll(async () => {
-    if (disableBroadcast) process.env.DISABLE_TRANSACTION_BROADCAST = "1";
-  });
-  test.afterAll(async () => {
-    if (originalBroadcastValue !== undefined) {
-      process.env.DISABLE_TRANSACTION_BROADCAST = originalBroadcastValue;
-    } else {
-      delete process.env.DISABLE_TRANSACTION_BROADCAST;
-    }
-  });
-}
+import { setupEnv } from "tests/utils/setupEnv";
 
 const e2eDelegationAccounts = [
   {
