@@ -1,5 +1,5 @@
 import network from "@ledgerhq/live-network/network";
-import { getAccount, getAccountTransactions } from "./mirror";
+import { getAccount, getAccountTokens, getAccountTransactions } from "./mirror";
 
 jest.mock("@ledgerhq/live-network/network");
 const mockedNetwork = jest.mocked(network);
@@ -26,10 +26,10 @@ describe("getAccountTransactions", () => {
 
     await getAccountTransactions("0.0.1234", null);
 
-    const calledUrl = mockedNetwork.mock.calls[0][0].url;
-    expect(calledUrl).toContain("account.id=0.0.1234");
-    expect(calledUrl).toContain("limit=100");
-    expect(calledUrl).toContain("order=desc");
+    const requestUrl = mockedNetwork.mock.calls[0][0].url;
+    expect(requestUrl).toContain("account.id=0.0.1234");
+    expect(requestUrl).toContain("limit=100");
+    expect(requestUrl).toContain("order=desc");
   });
 
   test("should keep fetching if links.next is present", async () => {
@@ -97,5 +97,52 @@ describe("getAccount", () => {
     expect(result.account).toEqual("0.0.1234");
     expect(requestUrl).toContain("/api/v1/accounts/0.0.1234");
     expect(mockedNetwork).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getAccountTokens", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return all tokens if only one page is needed", async () => {
+    mockedNetwork.mockResolvedValueOnce(
+      makeMockResponse({
+        tokens: [
+          { token_id: "0.0.1001", balance: 10 },
+          { token_id: "0.0.1002", balance: 20 },
+        ],
+        links: { next: null },
+      }),
+    );
+
+    const result = await getAccountTokens("0.0.1234");
+    const requestUrl = mockedNetwork.mock.calls[0][0].url;
+
+    expect(result.map(t => t.token_id)).toEqual(["0.0.1001", "0.0.1002"]);
+    expect(requestUrl).toContain("/api/v1/accounts/0.0.1234/tokens");
+    expect(requestUrl).toContain("limit=100");
+    expect(mockedNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it("should keep fetching if links.next is present and new tokens are returned", async () => {
+    mockedNetwork
+      .mockResolvedValueOnce(
+        makeMockResponse({
+          tokens: [{ token_id: "0.0.1001", balance: 10 }],
+          links: { next: "/next-1" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        makeMockResponse({
+          tokens: [{ token_id: "0.0.1002", balance: 20 }],
+          links: { next: null },
+        }),
+      );
+
+    const result = await getAccountTokens("0.0.1234");
+
+    expect(result.map(t => t.token_id)).toEqual(["0.0.1001", "0.0.1002"]);
+    expect(mockedNetwork).toHaveBeenCalledTimes(2);
   });
 });
