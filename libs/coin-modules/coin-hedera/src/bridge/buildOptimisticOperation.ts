@@ -2,9 +2,9 @@ import invariant from "invariant";
 import type { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
-import type { HederaOperationExtra, Transaction } from "../types";
+import type { HederaAccount, HederaOperationExtra, Transaction } from "../types";
 import { getEstimatedFees } from "./utils";
-import { isTokenAssociateTransaction } from "../logic";
+import { isStakingTransaction, isTokenAssociateTransaction } from "../logic";
 import { HEDERA_OPERATION_TYPES } from "../constants";
 
 const buildOptimisticTokenAssociateOperation = async ({
@@ -120,6 +120,41 @@ const buildOptimisticTokenOperation = async ({
   return operation;
 };
 
+const buildOptimisticStakingOperation = async ({
+  account,
+  transaction,
+}: {
+  account: HederaAccount;
+  transaction: Transaction;
+}): Promise<Operation> => {
+  invariant(isStakingTransaction(transaction), "invalid transaction properties");
+
+  const estimatedFee = await getEstimatedFees(account, HEDERA_OPERATION_TYPES.CryptoUpdate);
+  const value = transaction.amount;
+  const type: OperationType = "UPDATE_ACCOUNT";
+
+  const operation: Operation = {
+    id: encodeOperationId(account.id, "", type),
+    hash: "",
+    type,
+    value,
+    fee: estimatedFee,
+    blockHash: null,
+    blockHeight: null,
+    senders: [account.freshAddress.toString()],
+    recipients: [transaction.recipient],
+    accountId: account.id,
+    date: new Date(),
+    extra: {
+      memo: transaction.memo ?? null,
+      targetStakingNodeId: transaction.properties?.stakingNodeId ?? null,
+      previousStakingNodeId: account.hederaResources?.delegation?.nodeId ?? null,
+    } satisfies Partial<HederaOperationExtra>,
+  };
+
+  return operation;
+};
+
 export const buildOptimisticOperation = async ({
   account,
   transaction,
@@ -132,6 +167,8 @@ export const buildOptimisticOperation = async ({
 
   if (isTokenAssociateTransaction(transaction)) {
     return buildOptimisticTokenAssociateOperation({ account, transaction });
+  } else if (isStakingTransaction(transaction)) {
+    return buildOptimisticStakingOperation({ account, transaction });
   } else if (isTokenTransaction) {
     return buildOptimisticTokenOperation({ account, tokenAccount: subAccount, transaction });
   } else {

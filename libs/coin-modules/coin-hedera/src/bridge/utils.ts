@@ -22,9 +22,9 @@ import { makeLRUCache, seconds } from "@ledgerhq/live-network/cache";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import type { HederaOperationExtra, Transaction } from "../types";
 import { getAccount } from "../api/mirror";
-import type { HederaMirrorToken } from "../api/types";
 import { isTokenAssociateTransaction, isValidExtra } from "../logic";
 import { BASE_USD_FEE_BY_OPERATION_TYPE, HEDERA_OPERATION_TYPES } from "../constants";
+import { HederaMirrorToken } from "../api/types";
 
 const ESTIMATED_FEE_SAFETY_RATE = 2;
 

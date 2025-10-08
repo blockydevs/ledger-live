@@ -1,12 +1,15 @@
 import BigNumber from "bignumber.js";
 import { AccountId } from "@hashgraph/sdk";
+import { getEnv } from "@ledgerhq/live-env";
 import type { Operation, OperationType } from "@ledgerhq/types-live";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
-import type { HederaMirrorTokenTransfer, HederaMirrorCoinTransfer } from "./types";
-import { getAccountTransactions } from "./mirror";
 import { base64ToUrlSafeBase64 } from "../bridge/utils";
+import { getMemo } from "../logic";
+import { getAccountTransactions } from "./mirror";
+import type { HederaMirrorTokenTransfer, HederaMirrorCoinTransfer } from "./types";
+import { HederaOperationExtra } from "../types";
 
 function isValidRecipient(accountId: AccountId, recipients: string[]): boolean {
   if (accountId.shard.eq(0) && accountId.realm.eq(0)) {
@@ -81,6 +84,10 @@ export async function getOperationsForAccount(
     const tokenTransfers = rawTx.token_transfers ?? [];
     const transfers = rawTx.transfers ?? [];
     const hasFailed = rawTx.result !== "SUCCESS";
+    const commonExtra: HederaOperationExtra = {
+      consensusTimestamp: rawTx.consensus_timestamp,
+      memo: getMemo(rawTx),
+    };
 
     if (tokenTransfers.length > 0) {
       const tokenId = rawTx.token_transfers[0].token_id;
@@ -105,7 +112,9 @@ export async function getOperationsForAccount(
           blockHeight: 5,
           blockHash: null,
           hasFailed,
-          extra: { consensusTimestamp: rawTx.consensus_timestamp },
+          extra: {
+            ...commonExtra,
+          },
         });
       }
 
@@ -122,11 +131,54 @@ export async function getOperationsForAccount(
         blockHeight: 5,
         blockHash: null,
         hasFailed,
-        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+        extra: {
+          ...commonExtra,
+        },
       });
     } else if (transfers.length > 0) {
       const { type, value, senders, recipients } = parseTransfers(rawTx.transfers, address);
-      const operationType = rawTx.name === "TOKENASSOCIATE" ? "ASSOCIATE_TOKEN" : type;
+      let operationType: OperationType = type;
+      const stakingReward = rawTx.staking_reward_transfers.reduce((acc, transfer) => {
+        const transferAmount = new BigNumber(transfer.amount);
+
+        if (transfer.account === address) {
+          acc = acc.plus(transferAmount);
+        }
+
+        return acc;
+      }, new BigNumber(0));
+
+      if (rawTx.name === "TOKENASSOCIATE") {
+        operationType = "ASSOCIATE_TOKEN";
+      }
+
+      if (rawTx.name === "CRYPTOUPDATEACCOUNT") {
+        operationType = "UPDATE_ACCOUNT";
+      }
+
+      if (stakingReward.gt(0)) {
+        // offset timestamp by +1ms to ensure it appears just before the triggering operation in the list
+        const stakingRewardTimestamp = new Date(timestamp.getTime() + 1);
+        const stakingRewardHash = `${hash}-staking-reward`;
+        const stakingRewardType: OperationType = "REWARD";
+
+        coinOperations.push({
+          id: encodeOperationId(ledgerAccountId, stakingRewardHash, stakingRewardType),
+          accountId: ledgerAccountId,
+          type: stakingRewardType,
+          value: stakingReward,
+          recipients: [address],
+          senders: [getEnv("HEDERA_STAKING_REWARD_ACCOUNT_ID")],
+          hash: stakingRewardHash,
+          fee: new BigNumber(0),
+          date: stakingRewardTimestamp,
+          blockHeight: 5,
+          blockHash: null,
+          extra: {
+            ...commonExtra,
+          },
+        });
+      }
 
       coinOperations.push({
         id: encodeOperationId(ledgerAccountId, hash, operationType),
@@ -141,7 +193,9 @@ export async function getOperationsForAccount(
         blockHeight: 5,
         blockHash: null,
         hasFailed,
-        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+        extra: {
+          ...commonExtra,
+        },
       });
     }
   }

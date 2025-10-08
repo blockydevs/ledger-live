@@ -10,12 +10,14 @@ import {
   AccountBalanceQuery,
   HbarUnit,
   TokenAssociateTransaction,
+  AccountUpdateTransaction,
 } from "@hashgraph/sdk";
 import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import { HederaAddAccountError } from "../errors";
 import { Transaction } from "../types";
-import { isTokenAssociateTransaction } from "../logic";
+import { isStakingTransaction, isTokenAssociateTransaction } from "../logic";
+import { HEDERA_TRANSACTION_MODES } from "../constants";
 
 export function broadcastTransaction(transaction: HederaTransaction): Promise<TransactionResponse> {
   return transaction.execute(getClient());
@@ -99,18 +101,55 @@ async function buildTokenAssociateTransaction({
   return tx.freeze();
 }
 
+async function buildUnsignedUpdateAccountTransaction({
+  account,
+  transaction,
+}: {
+  account: Account;
+  transaction: Transaction;
+}): Promise<AccountUpdateTransaction> {
+  invariant(isStakingTransaction(transaction), "invalid transaction properties");
+
+  const accountId = account.freshAddress;
+  const tx = new AccountUpdateTransaction()
+    .setNodeAccountIds([new AccountId(3)])
+    .setTransactionId(TransactionId.generate(accountId))
+    .setTransactionMemo(transaction.memo ?? "")
+    .setAccountId(accountId);
+
+  if (transaction.maxFee) {
+    tx.setMaxTransactionFee(Hbar.fromTinybars(transaction.maxFee.toNumber()));
+  }
+
+  if (typeof transaction.properties?.stakingNodeId === "number") {
+    tx.setStakedNodeId(transaction.properties.stakingNodeId);
+  }
+
+  if (transaction.properties?.stakingNodeId === null) {
+    tx.clearStakedNodeId();
+  }
+
+  return tx.freeze();
+}
+
 export async function buildUnsignedTransaction({
   account,
   transaction,
 }: {
   account: Account;
   transaction: Transaction;
-}): Promise<TransferTransaction | TokenAssociateTransaction> {
+}): Promise<TransferTransaction | TokenAssociateTransaction | AccountUpdateTransaction> {
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
   const isTokenTransaction = isTokenAccount(subAccount);
 
   if (isTokenAssociateTransaction(transaction)) {
     return buildTokenAssociateTransaction({ account, transaction });
+  } else if (isStakingTransaction(transaction)) {
+    const isClaimRewardsTx = transaction.mode === HEDERA_TRANSACTION_MODES.ClaimRewards;
+
+    return isClaimRewardsTx
+      ? buildUnsignedCoinTransaction({ account, transaction })
+      : buildUnsignedUpdateAccountTransaction({ account, transaction });
   } else if (isTokenTransaction) {
     return buildUnsignedTokenTransaction({ account, tokenAccount: subAccount, transaction });
   } else {
@@ -143,7 +182,7 @@ let _hederaClient: Client | null = null;
 
 let _hederaBalanceClient: Client | null = null;
 
-function getClient(): Client {
+export function getClient(): Client {
   _hederaClient ??= Client.forMainnet().setMaxNodesPerTransaction(1);
 
   //_hederaClient.setNetwork({ mainnet: "https://hedera.coin.ledger.com" });

@@ -13,7 +13,7 @@ import { getMockedTokenCurrency } from "../test/fixtures/currency.fixture";
 import { getMockedTransaction } from "../test/fixtures/transaction.fixture";
 import { getTransactionStatus } from "./getTransactionStatus";
 import * as utils from "./utils";
-import { HEDERA_TRANSACTION_KINDS } from "../constants";
+import { HEDERA_TRANSACTION_MODES } from "../constants";
 
 describe("getTransactionStatus", () => {
   const mockedEstimatedFee = new BigNumber(1);
@@ -66,8 +66,8 @@ describe("getTransactionStatus", () => {
     const mockedTokenCurrency = getMockedTokenCurrency();
     const mockedAccount = getMockedAccount();
     const mockedTransaction = getMockedTransaction({
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token: mockedTokenCurrency,
       },
     });
@@ -117,8 +117,8 @@ describe("getTransactionStatus", () => {
     const mockedTokenCurrency = getMockedTokenCurrency();
     const mockedAccount = getMockedAccount({ balance: new BigNumber(0) });
     const mockedTransaction = getMockedTransaction({
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token: mockedTokenCurrency,
       },
     });

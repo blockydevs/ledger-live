@@ -4,7 +4,7 @@ import { getMockedTokenCurrency } from "../test/fixtures/currency.fixture";
 import { getMockedTransaction } from "../test/fixtures/transaction.fixture";
 import { buildOptimisticOperation } from "./buildOptimisticOperation";
 import { getEstimatedFees } from "./utils";
-import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_KINDS } from "../constants";
+import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_MODES } from "../constants";
 
 describe("buildOptimisticOperation", () => {
   let estimatedFees: Record<"crypto" | "associate", BigNumber>;
@@ -23,10 +23,10 @@ describe("buildOptimisticOperation", () => {
     const mockedAccount = getMockedAccount();
     const mockedToken = getMockedTokenCurrency();
     const mockedTransaction = getMockedTransaction({
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       amount: new BigNumber(0),
       recipient: "0.0.1234",
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token: mockedToken,
       },
     });

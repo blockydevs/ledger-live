@@ -9,6 +9,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 1`] = `
     "freshAddress": "0.0.1040977",
     "freshAddressPath": "44/3030",
     "hederaResources": {
+      "delegation": null,
       "isAutoTokenAssociationEnabled": false,
       "maxAutomaticTokenAssociations": 0,
     },
@@ -63,6 +64,11 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 1`] = `
     "freshAddress": "0.0.7305122",
     "freshAddressPath": "44/3030",
     "hederaResources": {
+      "delegation": {
+        "delegated": "226095",
+        "nodeId": 0,
+        "pendingReward": "0",
+      },
       "isAutoTokenAssociationEnabled": false,
       "maxAutomaticTokenAssociations": 0,
     },
@@ -84,6 +90,11 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 1`] = `
     "freshAddress": "0.0.7560245",
     "freshAddressPath": "44/3030",
     "hederaResources": {
+      "delegation": {
+        "delegated": "80189",
+        "nodeId": 1,
+        "pendingReward": "0",
+      },
       "isAutoTokenAssociationEnabled": false,
       "maxAutomaticTokenAssociations": 0,
     },
@@ -105,6 +116,11 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 1`] = `
     "freshAddress": "0.0.7578015",
     "freshAddressPath": "44/3030",
     "hederaResources": {
+      "delegation": {
+        "delegated": "99836954",
+        "nodeId": 5,
+        "pendingReward": "0",
+      },
       "isAutoTokenAssociationEnabled": false,
       "maxAutomaticTokenAssociations": 0,
     },
@@ -126,6 +142,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 1`] = `
     "freshAddress": "0.0.8313485",
     "freshAddressPath": "44/3030",
     "hederaResources": {
+      "delegation": null,
       "isAutoTokenAssociationEnabled": false,
       "maxAutomaticTokenAssociations": 0,
     },
@@ -163,6 +180,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730811624.603795000",
+        "memo": null,
       },
       "fee": "225279",
       "hasFailed": false,
@@ -184,6 +202,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729155939.657319000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": false,
@@ -205,6 +224,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730813192.423784000",
+        "memo": "send",
       },
       "fee": "225507",
       "hasFailed": false,
@@ -226,6 +246,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730811403.115680000",
+        "memo": null,
       },
       "fee": "226772",
       "hasFailed": false,
@@ -247,6 +268,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1726477122.251592000",
+        "memo": "small send QA samy",
       },
       "fee": "203103",
       "hasFailed": false,
@@ -268,6 +290,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729155815.270550000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": false,
@@ -289,6 +312,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1726477062.311057502",
+        "memo": "test QA samy normal send",
       },
       "fee": "203410",
       "hasFailed": false,
@@ -311,6 +335,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730811531.050920029",
+        "memo": null,
       },
       "fee": "226772",
       "hasFailed": false,
@@ -332,6 +357,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1726235313.566576000",
+        "memo": "give back to poor obelix - samy",
       },
       "fee": "198870",
       "hasFailed": false,
@@ -353,6 +379,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729858464.980892000",
+        "memo": null,
       },
       "fee": "199068",
       "hasFailed": false,
@@ -375,6 +402,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "extra": {
         "associatedTokenId": "0.0.127877",
         "consensusTimestamp": "1753711721.783899000",
+        "memo": null,
       },
       "fee": "17755051",
       "hasFailed": false,
@@ -395,6 +423,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729147655.662122737",
+        "memo": null,
       },
       "fee": "191792",
       "hasFailed": false,
@@ -416,6 +445,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729687467.306035525",
+        "memo": null,
       },
       "fee": "196236",
       "hasFailed": false,
@@ -437,6 +467,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729150225.131300000",
+        "memo": null,
       },
       "fee": "193637",
       "hasFailed": false,
@@ -458,6 +489,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1732192441.542423000",
+        "memo": null,
       },
       "fee": "82857",
       "hasFailed": false,
@@ -479,6 +511,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1704213295.949352003",
+        "memo": null,
       },
       "fee": "103989",
       "hasFailed": false,
@@ -499,6 +532,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1732205762.558954000",
+        "memo": null,
       },
       "fee": "83709",
       "hasFailed": false,
@@ -520,6 +554,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1697645669.026204003",
+        "memo": "test send max",
       },
       "fee": "210184",
       "hasFailed": false,
@@ -540,6 +575,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730813149.715064983",
+        "memo": "send",
       },
       "fee": "225507",
       "hasFailed": false,
@@ -561,6 +597,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1657021403.368076000",
+        "memo": null,
       },
       "fee": "163081",
       "hasFailed": false,
@@ -582,6 +619,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729177404.980663000",
+        "memo": null,
       },
       "fee": "197305",
       "hasFailed": false,
@@ -603,6 +641,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729156701.804949000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": false,
@@ -624,6 +663,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729585926.624752000",
+        "memo": null,
       },
       "fee": "189619",
       "hasFailed": false,
@@ -645,6 +685,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1721982048.841299095",
+        "memo": null,
       },
       "fee": "148589",
       "hasFailed": false,
@@ -667,6 +708,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1748539198.038322000",
+        "memo": null,
       },
       "fee": "55505",
       "hasFailed": false,
@@ -688,6 +730,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1732202577.896639115",
+        "memo": "test nano x",
       },
       "fee": "82707",
       "hasFailed": false,
@@ -709,6 +752,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740739322.044670000",
+        "memo": null,
       },
       "fee": "54816",
       "hasFailed": false,
@@ -730,6 +774,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1756718310.549818000",
+        "memo": "TOTO",
       },
       "fee": "452531",
       "hasFailed": false,
@@ -750,6 +795,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1726235092.011928000",
+        "memo": "test qa samy",
       },
       "fee": "197924",
       "hasFailed": false,
@@ -771,6 +817,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1669565599.465640003",
+        "memo": "test",
       },
       "fee": "199161",
       "hasFailed": false,
@@ -791,6 +838,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729237802.452111000",
+        "memo": "send",
       },
       "fee": "196821",
       "hasFailed": false,
@@ -812,6 +860,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1726233233.981368000",
+        "memo": "send max develop",
       },
       "fee": "198124",
       "hasFailed": true,
@@ -832,6 +881,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729100859.761766000",
+        "memo": "testsamy",
       },
       "fee": "187371",
       "hasFailed": false,
@@ -854,6 +904,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729103620.094329000",
+        "memo": "cadeauQPM",
       },
       "fee": "187710",
       "hasFailed": false,
@@ -876,6 +927,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "extra": {
         "associatedTokenId": "0.0.456858",
         "consensusTimestamp": "1753699142.805347000",
+        "memo": null,
       },
       "fee": "17475021",
       "hasFailed": false,
@@ -897,6 +949,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "extra": {
         "associatedTokenId": "0.0.7893707",
         "consensusTimestamp": "1753690589.721137000",
+        "memo": null,
       },
       "fee": "17355085",
       "hasFailed": false,
@@ -917,6 +970,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729159845.725723000",
+        "memo": null,
       },
       "fee": "195597",
       "hasFailed": false,
@@ -938,6 +992,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1726233110.321533000",
+        "memo": "samy test!",
       },
       "fee": "197824",
       "hasFailed": false,
@@ -959,6 +1014,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729858548.245891000",
+        "memo": null,
       },
       "fee": "199068",
       "hasFailed": false,
@@ -980,6 +1036,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729150309.511412000",
+        "memo": null,
       },
       "fee": "193637",
       "hasFailed": false,
@@ -1001,6 +1058,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1701941251.224927003",
+        "memo": "test",
       },
       "fee": "148487",
       "hasFailed": false,
@@ -1028,6 +1086,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730811624.603795000",
+        "memo": null,
       },
       "fee": "225279",
       "hasFailed": false,
@@ -1049,6 +1108,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729155939.657319000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": false,
@@ -1070,6 +1130,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730813192.423784000",
+        "memo": "send",
       },
       "fee": "225507",
       "hasFailed": false,
@@ -1091,6 +1152,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730811403.115680000",
+        "memo": null,
       },
       "fee": "226772",
       "hasFailed": false,
@@ -1112,6 +1174,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729155755.397758000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": true,
@@ -1132,6 +1195,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729155815.270550000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": false,
@@ -1153,6 +1217,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730811531.050920029",
+        "memo": null,
       },
       "fee": "226772",
       "hasFailed": false,
@@ -1174,6 +1239,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729858464.980892000",
+        "memo": null,
       },
       "fee": "199068",
       "hasFailed": false,
@@ -1195,6 +1261,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729147655.662122737",
+        "memo": null,
       },
       "fee": "191792",
       "hasFailed": false,
@@ -1216,6 +1283,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729687467.306035525",
+        "memo": null,
       },
       "fee": "196236",
       "hasFailed": false,
@@ -1237,6 +1305,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729150225.131300000",
+        "memo": null,
       },
       "fee": "193637",
       "hasFailed": false,
@@ -1258,6 +1327,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1730813149.715064983",
+        "memo": "send",
       },
       "fee": "225507",
       "hasFailed": false,
@@ -1279,6 +1349,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729177404.980663000",
+        "memo": null,
       },
       "fee": "197305",
       "hasFailed": false,
@@ -1300,6 +1371,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729156701.804949000",
+        "memo": null,
       },
       "fee": "194053",
       "hasFailed": false,
@@ -1321,6 +1393,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729585926.624752000",
+        "memo": null,
       },
       "fee": "189619",
       "hasFailed": false,
@@ -1342,6 +1415,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729237802.452111000",
+        "memo": "send",
       },
       "fee": "196821",
       "hasFailed": false,
@@ -1363,18 +1437,19 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729156015.784781613",
+        "memo": "Unstake",
       },
       "fee": "414180",
       "hasFailed": false,
       "hash": "SX6QjkXKRGbFG1tWq31I0rv1Aof4r9iRXxLlxd_tO6YNuER_6CCmvW_s47FtPVhl",
-      "id": "js:2:hedera:0.0.7305122:hederaBip44-SX6QjkXKRGbFG1tWq31I0rv1Aof4r9iRXxLlxd_tO6YNuER_6CCmvW_s47FtPVhl-OUT",
+      "id": "js:2:hedera:0.0.7305122:hederaBip44-SX6QjkXKRGbFG1tWq31I0rv1Aof4r9iRXxLlxd_tO6YNuER_6CCmvW_s47FtPVhl-UPDATE_ACCOUNT",
       "recipients": [
         "0.0.25",
       ],
       "senders": [
         "0.0.7305122",
       ],
-      "type": "OUT",
+      "type": "UPDATE_ACCOUNT",
       "value": "414180",
     },
     {
@@ -1383,6 +1458,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729159845.725723000",
+        "memo": null,
       },
       "fee": "195597",
       "hasFailed": false,
@@ -1404,6 +1480,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729858548.245891000",
+        "memo": null,
       },
       "fee": "199068",
       "hasFailed": false,
@@ -1425,18 +1502,19 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729156037.761102000",
+        "memo": "Update staked node",
       },
       "fee": "415339",
       "hasFailed": false,
       "hash": "ZPCrj02WZwh_depYNheXuCLRpq6gDHfxeskEvIr-PCZzoM9WdUUSswRqRf-bZZfS",
-      "id": "js:2:hedera:0.0.7305122:hederaBip44-ZPCrj02WZwh_depYNheXuCLRpq6gDHfxeskEvIr-PCZzoM9WdUUSswRqRf-bZZfS-OUT",
+      "id": "js:2:hedera:0.0.7305122:hederaBip44-ZPCrj02WZwh_depYNheXuCLRpq6gDHfxeskEvIr-PCZzoM9WdUUSswRqRf-bZZfS-UPDATE_ACCOUNT",
       "recipients": [
         "0.0.23",
       ],
       "senders": [
         "0.0.7305122",
       ],
-      "type": "OUT",
+      "type": "UPDATE_ACCOUNT",
       "value": "415339",
     },
     {
@@ -1445,6 +1523,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1729150309.511412000",
+        "memo": null,
       },
       "fee": "193637",
       "hasFailed": false,
@@ -1468,6 +1547,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1732192441.542423000",
+        "memo": null,
       },
       "fee": "82857",
       "hasFailed": false,
@@ -1489,6 +1569,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1732193188.290747000",
+        "memo": null,
       },
       "fee": "82857",
       "hasFailed": false,
@@ -1512,6 +1593,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1732193188.290747000",
+        "memo": null,
       },
       "fee": "82857",
       "hasFailed": false,
@@ -1535,6 +1617,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740741189.513410000",
+        "memo": null,
       },
       "fee": "26836467",
       "hasFailed": false,
@@ -1555,6 +1638,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740739889.583598491",
+        "memo": null,
       },
       "fee": "54816",
       "hasFailed": false,
@@ -1576,6 +1660,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740741060.702187741",
+        "memo": null,
       },
       "fee": "526632",
       "hasFailed": false,
@@ -1596,6 +1681,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740741706.219984000",
+        "memo": null,
       },
       "fee": "1160556",
       "hasFailed": false,
@@ -1618,6 +1704,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743884119.632624000",
+        "memo": "(1/3) 📢 It's not too late to start playing TOZM - Token of Z Month! Learn more at tozm dot io.",
       },
       "fee": "67995",
       "hasFailed": false,
@@ -1647,6 +1734,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740739889.583598490",
+        "memo": null,
       },
       "fee": "25696084",
       "hasFailed": false,
@@ -1667,6 +1755,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743094572.925082000",
+        "memo": null,
       },
       "fee": "52397",
       "hasFailed": false,
@@ -1689,6 +1778,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "extra": {
         "associatedTokenId": "0.0.127877",
         "consensusTimestamp": "1740739493.554732000",
+        "memo": null,
       },
       "fee": "27194555",
       "hasFailed": false,
@@ -1709,6 +1799,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743371982.785505000",
+        "memo": "(3/3) Want more free tokens? 🔥 Check out the March 2025 Instructions 👀 on tozm dot io! 🚀",
       },
       "fee": "64500",
       "hasFailed": false,
@@ -1738,6 +1829,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743884110.485189168",
+        "memo": "(3/3) Want more free tokens? 🔥 Check out the April 2025 Instructions 👀 on tozm dot io! 🚀",
       },
       "fee": "67995",
       "hasFailed": false,
@@ -1767,6 +1859,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743371987.018009000",
+        "memo": "(2/3) To get started, simply associate with 0.0.8372908 ✅ and 0.0.8379490 ✅ before March 31st.",
       },
       "fee": "64514",
       "hasFailed": false,
@@ -1796,6 +1889,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1755785525.693277000",
+        "memo": "toto",
       },
       "fee": "424851",
       "hasFailed": false,
@@ -1816,6 +1910,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743601916.977125409",
+        "memo": null,
       },
       "fee": "602274",
       "hasFailed": false,
@@ -1836,6 +1931,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740739322.044670000",
+        "memo": null,
       },
       "fee": "54816",
       "hasFailed": false,
@@ -1857,6 +1953,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743884114.875352000",
+        "memo": "(2/3) To get started, simply associate with 0.0.8808338 ✅ and 0.0.8808584 ✅ by April 30th👍.",
       },
       "fee": "68011",
       "hasFailed": false,
@@ -1886,6 +1983,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743371991.769212000",
+        "memo": "(1/3) 📢 It's not too late to start playing TOZM - Token of Z Month! Learn more at tozm dot io.",
       },
       "fee": "64500",
       "hasFailed": false,
@@ -1915,6 +2013,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740740327.007740000",
+        "memo": null,
       },
       "fee": "1212697",
       "hasFailed": false,
@@ -1937,6 +2036,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743089390.497908000",
+        "memo": null,
       },
       "fee": "26918289",
       "hasFailed": false,
@@ -1957,6 +2057,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1743089390.497907999",
+        "memo": null,
       },
       "fee": "24935910",
       "hasFailed": false,
@@ -1977,6 +2078,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740740097.334683000",
+        "memo": null,
       },
       "fee": "54816",
       "hasFailed": false,
@@ -1998,6 +2100,7 @@ exports[`hedera currency bridge scanAccounts hedera seed 1 2`] = `
       "blockHeight": 5,
       "extra": {
         "consensusTimestamp": "1740738764.065021000",
+        "memo": "fromLeVtoLeL",
       },
       "fee": "54982",
       "hasFailed": false,

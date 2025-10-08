@@ -171,6 +171,7 @@ export const urls = {
     supportArticleLink: "https://support.ledger.com/article/4494505217565-zd",
     tokenAssociation:
       "https://support.ledger.com/article/How-to-manage-Hedera-tokens-with-Ledger-Live",
+    staking: "https://support.ledger.com/article/Staking-Hedera-HBAR-through-Ledger-Live",
   },
   celo: {
     ledgerByFigmentTC:

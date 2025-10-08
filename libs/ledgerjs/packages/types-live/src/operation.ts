@@ -58,6 +58,7 @@ export type OperationType =
   | "BURN"
   // HEDERA
   | "ASSOCIATE_TOKEN"
+  | "UPDATE_ACCOUNT"
   // CANTON
   | "PRE_APPROVAL";
 

@@ -9,7 +9,7 @@ import type {
   TransactionStatusCommon,
   TransactionStatusCommonRaw,
 } from "@ledgerhq/types-live";
-import { HEDERA_TRANSACTION_KINDS } from "../constants";
+import { HEDERA_DELEGATION_STATUS, HEDERA_TRANSACTION_MODES } from "../constants";
 
 export type NetworkInfo = {
   family: "hedera";
@@ -19,37 +19,133 @@ export type NetworkInfoRaw = {
   family: "hedera";
 };
 
-export type TokenAssociateProperties = {
-  name: typeof HEDERA_TRANSACTION_KINDS.TokenAssociate.name;
-  token: TokenCurrency;
-};
-
 export type Transaction = TransactionCommon & {
   family: "hedera";
   memo?: string | undefined;
   maxFee?: BigNumber;
-  properties?: TokenAssociateProperties;
-};
+} & (
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Send;
+        gasLimit?: BigNumber;
+        properties?: never;
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.TokenAssociate;
+        properties: {
+          token: TokenCurrency;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Delegate;
+        properties: {
+          stakingNodeId: number | null;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Undelegate;
+        properties: {
+          stakingNodeId: number | null;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Redelegate;
+        properties: {
+          stakingNodeId: number | null;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.ClaimRewards;
+        properties?: never;
+      }
+  );
 
 export type TransactionRaw = TransactionCommonRaw & {
   family: "hedera";
   memo?: string | undefined;
   maxFee?: string;
-  properties?: TokenAssociateProperties;
-};
+} & (
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Send;
+        gasLimit?: string;
+        properties?: never;
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.TokenAssociate;
+        properties: {
+          token: TokenCurrency;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Delegate;
+        properties: {
+          stakingNodeId: number | null;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Undelegate;
+        properties: {
+          stakingNodeId: number | null;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Redelegate;
+        properties: {
+          stakingNodeId: number | null;
+        };
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.ClaimRewards;
+        properties?: never;
+      }
+  );
 
 export type TransactionStatus = TransactionStatusCommon;
 
 export type TransactionStatusRaw = TransactionStatusCommonRaw;
 
+export type TransactionTokenAssociate = Extract<
+  Transaction,
+  { mode: typeof HEDERA_TRANSACTION_MODES.TokenAssociate }
+>;
+
+export type TransactionStaking = Extract<
+  Transaction,
+  {
+    mode:
+      | typeof HEDERA_TRANSACTION_MODES.Delegate
+      | typeof HEDERA_TRANSACTION_MODES.Undelegate
+      | typeof HEDERA_TRANSACTION_MODES.Redelegate
+      | typeof HEDERA_TRANSACTION_MODES.ClaimRewards;
+  }
+>;
+
+export interface HederaDelegation {
+  nodeId: number;
+  delegated: BigNumber;
+  pendingReward: BigNumber;
+}
+
+export interface HederaDelegationWithMeta extends HederaDelegation {
+  status: HEDERA_DELEGATION_STATUS;
+  validator: HederaValidator;
+}
+
+interface HederaDelegationRaw {
+  nodeId: number;
+  delegated: string;
+  pendingReward: string;
+}
+
 export interface HederaResources {
   maxAutomaticTokenAssociations: number;
   isAutoTokenAssociationEnabled: boolean;
+  delegation: HederaDelegation | null;
 }
 
 export interface HederaResourcesRaw {
   maxAutomaticTokenAssociations: number;
   isAutoTokenAssociationEnabled: boolean;
+  delegation: HederaDelegationRaw | null;
 }
 
 export type HederaAccount = Account & {
@@ -63,6 +159,38 @@ export type HederaAccountRaw = AccountRaw & {
 export type HederaOperationExtra = {
   consensusTimestamp?: string;
   transactionId?: string;
+  associatedTokenId?: string;
+  memo?: string | null;
+  targetStakingNodeId?: number | null;
+  previousStakingNodeId?: number | null;
+};
+
+export type HederaValidator = {
+  nodeId: number;
+  minStake: BigNumber;
+  maxStake: BigNumber;
+  activeStake: BigNumber;
+  activeStakePercentage: BigNumber;
+  address: string;
+  addressChecksum: string | null;
+  name: string;
+  overstaked: boolean;
+};
+
+export type HederaValidatorRaw = {
+  nodeId: number;
+  minStake: string;
+  maxStake: string;
+  activeStake: string;
+  activeStakePercentage: string;
+  address: string;
+  addressChecksum: string | null;
+  name: string;
+  overstaked: boolean;
+};
+
+export type HederaPreloadData = {
+  validators: HederaValidator[];
   associatedTokenId?: string;
 };
 

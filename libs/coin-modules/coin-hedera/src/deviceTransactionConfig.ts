@@ -1,7 +1,8 @@
 import type { AccountLike, Account } from "@ledgerhq/types-live";
-import type { Transaction, TransactionStatus } from "./types";
 import type { CommonDeviceTransactionField as DeviceTransactionField } from "@ledgerhq/coin-framework/transaction/common";
-import { isTokenAssociateTransaction } from "./logic";
+import type { Transaction, TransactionStatus } from "./types";
+import { isTokenAssociateTransaction, isStakingTransaction } from "./logic";
+import { HEDERA_TRANSACTION_MODES } from "./constants";
 
 function getDeviceTransactionConfig({
   transaction,
@@ -13,6 +14,35 @@ function getDeviceTransactionConfig({
   status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const fields: Array<DeviceTransactionField> = [];
+
+  if (isStakingTransaction(transaction)) {
+    fields.push({
+      type: "text",
+      label: "Method",
+      value:
+        transaction.mode === HEDERA_TRANSACTION_MODES.ClaimRewards
+          ? "Claim Rewards"
+          : "Update Account",
+    });
+
+    if (typeof transaction.properties?.stakingNodeId === "number") {
+      fields.push({
+        type: "text",
+        label: "Staked Node ID",
+        value: transaction.properties.stakingNodeId.toString(),
+      });
+    }
+
+    if (transaction.memo) {
+      fields.push({
+        type: "text",
+        label: "Memo",
+        value: transaction.memo,
+      });
+    }
+
+    return fields;
+  }
 
   const method = (() => {
     if (isTokenAssociateTransaction(transaction)) return "Associate Token";

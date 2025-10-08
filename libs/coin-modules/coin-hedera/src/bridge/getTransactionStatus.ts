@@ -1,27 +1,40 @@
 import BigNumber from "bignumber.js";
+import invariant from "invariant";
 import { AccountId } from "@hashgraph/sdk";
+import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
 import {
   AmountRequired,
   NotEnoughBalance,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
+  ClaimRewardsFeesWarning,
   HederaInsufficientFundsForAssociation,
   HederaRecipientTokenAssociationRequired,
   HederaRecipientTokenAssociationUnverified,
 } from "@ledgerhq/errors";
-import type { Account, AccountBridge, TokenAccount } from "@ledgerhq/types-live";
-import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
 import { getEnv } from "@ledgerhq/live-env";
-import { isTokenAssociateTransaction, isTokenAssociationRequired } from "../logic";
-import type { TokenAssociateProperties, Transaction, TransactionStatus } from "../types";
+import type { Account, AccountBridge, TokenAccount } from "@ledgerhq/types-live";
+import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_MODES } from "../constants";
+import { HederaInvalidStakingNodeIdError, HederaRedundantStakingNodeIdError } from "../errors";
+import {
+  isStakingTransaction,
+  isTokenAssociateTransaction,
+  isTokenAssociationRequired,
+} from "../logic";
+import { getCurrentHederaPreloadData } from "../preload-data";
+import type {
+  HederaAccount,
+  TransactionTokenAssociate,
+  Transaction,
+  TransactionStatus,
+} from "../types";
 import {
   calculateAmount,
   checkAccountTokenAssociationStatus,
   getCurrencyToUSDRate,
   getEstimatedFees,
 } from "./utils";
-import { HEDERA_OPERATION_TYPES } from "../constants";
 
 type Errors = Record<string, Error>;
 type Warnings = Record<string, Error>;
@@ -48,7 +61,7 @@ function validateRecipient(account: Account, recipient: string): Error | null {
 
 async function handleTokenAssociateTransaction(
   account: Account,
-  transaction: Extract<Required<Transaction>, { properties: TokenAssociateProperties }>,
+  transaction: TransactionTokenAssociate,
 ): Promise<TransactionStatus> {
   const errors: Errors = {};
   const warnings: Warnings = {};
@@ -171,6 +184,55 @@ async function handleCoinTransaction(
   };
 }
 
+async function handleStakingTransaction(account: HederaAccount, transaction: Transaction) {
+  invariant(isStakingTransaction(transaction), "invalid transaction properties");
+
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
+  const { validators } = getCurrentHederaPreloadData(account.currency);
+  const estimatedFees = await getEstimatedFees(account, HEDERA_OPERATION_TYPES.CryptoUpdate);
+  const amount = BigNumber(0);
+  const totalSpent = amount.plus(estimatedFees);
+
+  if (
+    transaction.mode === HEDERA_TRANSACTION_MODES.Delegate ||
+    transaction.mode === HEDERA_TRANSACTION_MODES.Redelegate
+  ) {
+    if (typeof transaction.properties?.stakingNodeId !== "number") {
+      errors.missingStakingNodeId = new HederaInvalidStakingNodeIdError("Validator must be set");
+    } else {
+      const isValid = validators.some(validator => {
+        return validator.nodeId === transaction.properties?.stakingNodeId;
+      });
+
+      if (!isValid) {
+        errors.stakingNodeId = new HederaInvalidStakingNodeIdError();
+      }
+    }
+
+    if (account.hederaResources?.delegation?.nodeId === transaction.properties?.stakingNodeId) {
+      errors.stakingNodeId = new HederaRedundantStakingNodeIdError();
+    }
+  }
+
+  if (transaction.mode === HEDERA_TRANSACTION_MODES.ClaimRewards) {
+    const claimRewards = account.hederaResources?.delegation?.pendingReward || new BigNumber(0);
+    const transactionFee = transaction.maxFee ?? new BigNumber(0);
+
+    if (transactionFee.gt(claimRewards)) {
+      warnings.claimRewardsFee = new ClaimRewardsFeesWarning();
+    }
+  }
+
+  return {
+    amount: new BigNumber(0),
+    estimatedFees,
+    totalSpent,
+    errors,
+    warnings,
+  };
+}
+
 export const getTransactionStatus: AccountBridge<
   Transaction,
   Account,
@@ -181,6 +243,8 @@ export const getTransactionStatus: AccountBridge<
 
   if (isTokenAssociateTransaction(transaction)) {
     return handleTokenAssociateTransaction(account, transaction);
+  } else if (isStakingTransaction(transaction)) {
+    return handleStakingTransaction(account, transaction);
   } else if (isTokenTransaction) {
     return handleTokenTransaction(account, subAccount, transaction);
   } else {

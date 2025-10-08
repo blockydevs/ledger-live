@@ -1,9 +1,18 @@
+import BigNumber from "bignumber.js";
 import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
+import { getEnv } from "@ledgerhq/live-env";
 import type { AccountBridge } from "@ledgerhq/types-live";
+import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_MODES } from "../constants";
+import { isStakingTransaction, isTokenAssociateTransaction } from "../logic";
 import type { Transaction } from "../types";
 import { calculateAmount, getEstimatedFees } from "./utils";
-import { HEDERA_OPERATION_TYPES } from "../constants";
-import { isTokenAssociateTransaction } from "../logic";
+
+const mapStakingModeToMemo = {
+  [HEDERA_TRANSACTION_MODES.ClaimRewards]: "Collect Staking Rewards",
+  [HEDERA_TRANSACTION_MODES.Delegate]: "Stake",
+  [HEDERA_TRANSACTION_MODES.Undelegate]: "Unstake",
+  [HEDERA_TRANSACTION_MODES.Redelegate]: "Restake",
+} as const;
 
 /**
  * Gather any more neccessary information for a transaction,
@@ -42,6 +51,16 @@ export const prepareTransaction: AccountBridge<Transaction>["prepareTransaction"
   transaction.maxFee = estimatedFees;
 
   transaction.amount = amount;
+
+  if (isStakingTransaction(transaction)) {
+    // claiming staking rewards is triggered by sending 1 tinybar to staking reward account
+    if (transaction.mode === HEDERA_TRANSACTION_MODES.ClaimRewards) {
+      transaction.recipient = getEnv("HEDERA_STAKING_REWARD_ACCOUNT_ID");
+      transaction.amount = new BigNumber(1);
+    }
+
+    transaction.memo = mapStakingModeToMemo[transaction.mode];
+  }
 
   return transaction;
 };

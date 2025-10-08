@@ -1,6 +1,11 @@
 import network from "@ledgerhq/live-network/network";
 import { getEnv } from "@ledgerhq/live-env";
-import type { HederaMirrorAccount, HederaMirrorToken, HederaMirrorTransaction } from "./types";
+import type {
+  HederaMirrorAccount,
+  HederaMirrorNode,
+  HederaMirrorToken,
+  HederaMirrorTransaction,
+} from "./types";
 import { HederaAddAccountError } from "../errors";
 import { LedgerAPI4xx } from "@ledgerhq/errors";
 
@@ -88,4 +93,23 @@ export async function getAccountTokens(address: string): Promise<HederaMirrorTok
   }
 
   return tokens;
+}
+
+export async function getNodes(): Promise<HederaMirrorNode[]> {
+  const nodes: HederaMirrorNode[] = [];
+  const params = new URLSearchParams({
+    order: "desc",
+    limit: "100",
+  });
+
+  let nextUrl = `/api/v1/network/nodes?${params.toString()}`;
+
+  while (nextUrl) {
+    const res = await fetch(nextUrl);
+    const newNodes = res.data.nodes as HederaMirrorNode[];
+    nodes.push(...newNodes);
+    nextUrl = res.data.links.next;
+  }
+
+  return nodes;
 }

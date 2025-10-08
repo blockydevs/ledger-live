@@ -172,6 +172,7 @@ export const OPERATION_TYPE_OUT_FAMILY = [
   "LOCK",
   "BURN",
   "ASSOCIATE_TOKEN",
+  "UPDATE_ACCOUNT",
 ];
 export const OPERATION_TYPE_STAKE_FAMILY = [
   "FREEZE",

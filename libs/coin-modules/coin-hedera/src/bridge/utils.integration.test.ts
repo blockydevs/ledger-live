@@ -25,7 +25,7 @@ import { HederaOperationExtra } from "../types";
 import { getAccount } from "../api/mirror";
 import { isValidExtra } from "../logic";
 import { getMockedMirrorToken } from "../test/fixtures/mirror.fixture";
-import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_KINDS } from "../constants";
+import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_MODES } from "../constants";
 
 jest.mock("../api/mirror");
 jest.mock("@ledgerhq/live-countervalues/api/index");
@@ -128,8 +128,8 @@ describe("utils", () => {
       const mockedTransaction = getMockedTransaction({
         useAllAmount: false,
         amount: new BigNumber(1),
+        mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
         properties: {
-          name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
           token: mockedTokenCurrency,
         },
       });
@@ -499,6 +499,8 @@ describe("utils", () => {
       mockedGetAccount.mockResolvedValueOnce({
         account: accountId,
         max_automatic_token_associations: -1,
+        staked_node_id: null,
+        pending_reward: 0,
         balance: {
           balance: 0,
           timestamp: "",
@@ -514,6 +516,8 @@ describe("utils", () => {
       mockedGetAccount.mockResolvedValueOnce({
         account: accountId,
         max_automatic_token_associations: 0,
+        staked_node_id: null,
+        pending_reward: 0,
         balance: {
           balance: 1,
           timestamp: "",
@@ -529,6 +533,8 @@ describe("utils", () => {
       mockedGetAccount.mockResolvedValueOnce({
         account: accountId,
         max_automatic_token_associations: 0,
+        staked_node_id: null,
+        pending_reward: 0,
         balance: {
           balance: 1,
           timestamp: "",

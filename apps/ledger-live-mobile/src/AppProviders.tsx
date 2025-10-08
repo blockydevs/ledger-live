@@ -9,7 +9,7 @@ import { WalletSyncProvider } from "LLM/features/WalletSync/components/WalletSyn
 import React from "react";
 import { BridgeSyncProvider } from "~/bridge/BridgeSyncContext";
 import { CountervaluesMarketcapBridgedProvider } from "~/components/CountervaluesMarketcapProvider";
-import { CountervaluesBridgedProvider } from "~/components/CountervaluesProvider";
+import { CountervaluesBridgedProvider } from "~/components/CounterValuesProvider";
 import PostOnboardingProviderWrapped from "~/logic/postOnboarding/PostOnboardingProviderWrapped";
 import NotificationsProvider from "~/screens/NotificationCenter/NotificationsProvider";
 import SnackbarContainer from "~/screens/NotificationCenter/Snackbar/SnackbarContainer";

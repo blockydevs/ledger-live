@@ -3,10 +3,9 @@ import { useSelector } from "react-redux";
 import { Trans } from "react-i18next";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
-import { Transaction } from "@ledgerhq/live-common/families/hedera/types";
+import { TransactionTokenAssociate } from "@ledgerhq/live-common/families/hedera/types";
 import { View, SafeAreaView, StyleSheet } from "react-native";
-import { findTokenByAddressInCurrency } from "@ledgerhq/live-common/currencies/index";
-import { HEDERA_TRANSACTION_KINDS } from "@ledgerhq/live-common/families/hedera/constants";
+import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
 import { getMainAccount } from "@ledgerhq/coin-framework/account/helpers";
 import { useTheme } from "@react-navigation/native";
 import invariant from "invariant";
@@ -25,6 +24,7 @@ import Alert from "~/components/Alert";
 import AssociationInsufficientFundsError from "~/families/hedera/AssociateTokenFlow/AssociationInsufficientFundsError";
 import { accountScreenSelector } from "~/reducers/accounts";
 import { urls } from "~/utils/urls";
+import { getCryptoAssetsStore } from "@ledgerhq/coin-framework/crypto-assets/index";
 
 type Props = BaseComposite<
   StackNavigatorProps<HederaAssociateTokenFlowParamList, ScreenName.HederaAssociateTokenSummary>
@@ -35,7 +35,7 @@ export default function Summary({ navigation, route }: Props) {
   const { account, parentAccount } = useSelector(accountScreenSelector(route));
 
   const { tokenAddress } = route.params;
-  const token = findTokenByAddressInCurrency(tokenAddress, "hedera");
+  const token = getCryptoAssetsStore().findTokenByAddressInCurrency(tokenAddress, "hedera");
 
   invariant(account, "hedera: account is required");
   invariant(token, `hedera: token with address ${tokenAddress} is not available`);
@@ -44,10 +44,10 @@ export default function Summary({ navigation, route }: Props) {
     const bridge = getAccountBridge(account, parentAccount);
     const transaction = bridge.createTransaction(account);
     const updatedTransaction = bridge.updateTransaction(transaction, {
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token,
-      } satisfies Transaction["properties"],
+      } satisfies TransactionTokenAssociate["properties"],
     });
 
     return {
