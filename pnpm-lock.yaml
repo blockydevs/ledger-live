@@ -30,7 +30,6 @@ overrides:
   '@ledgerhq/devices': workspace:*
   '@ledgerhq/hw-transport': workspace:*
   tslib: 2.6.2
-  '@hashgraph/sdk>bignumber.js': 9.1.2
   '@ethersproject/providers>ws': 7.5.10
   elliptic: 6.6.1
   use-latest-callback: 0.1.9
@@ -50,9 +49,6 @@ patchedDependencies:
   '@exodus/patch-broken-hermes-typed-arrays':
     hash: ecaeewznpxnxc6n3nmclgrg6na
     path: patches/@exodus__patch-broken-hermes-typed-arrays.patch
-  '@hashgraph/sdk@2.73.2':
-    hash: hufidok36ogcqxiot2ag4uzghq
-    path: patches/@hashgraph__sdk@2.73.2.patch
   '@taquito/http-utils':
     hash: aiot5euhizbymrbw2f4jjw7j2i
     path: patches/@taquito__http-utils.patch
@@ -3126,8 +3122,8 @@ importers:
   libs/coin-modules/coin-hedera:
     dependencies:
       '@hashgraph/sdk':
-        specifier: 2.73.2
-        version: 2.73.2(patch_hash=hufidok36ogcqxiot2ag4uzghq)
+        specifier: 2.74.0
+        version: 2.74.0
       '@ledgerhq/coin-framework':
         specifier: workspace:^
         version: link:../../coin-framework
@@ -3153,7 +3149,7 @@ importers:
         specifier: workspace:^
         version: link:../../ledgerjs/packages/types-live
       bignumber.js:
-        specifier: 9.1.2
+        specifier: ^9.1.2
         version: 9.1.2
       expect:
         specifier: ^27.4.6
@@ -14306,11 +14302,6 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@grpc/proto-loader@0.7.12':
-    resolution: {integrity: sha512-DCVwMxqYzpUCiDMl7hQ384FqP4T3DbNpXU8pt681l3UWCip1WUiD5JrkImUwCB9a7f2cq4CUTmi5r/xIMRPY1Q==}
-    engines: {node: '>=6'}
-    hasBin: true
-
   '@grpc/proto-loader@0.7.15':
     resolution: {integrity: sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==}
     engines: {node: '>=6'}
@@ -14329,8 +14320,8 @@ packages:
   '@hapi/topo@5.1.0':
     resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
 
-  '@hashgraph/cryptography@1.11.0':
-    resolution: {integrity: sha512-DU3k2lfsqctfOe+HCwLeLe4K575gDCLIvNvzNORq2eHdeB4Qe4I/K9eLf9lAa4ZQzoMF1/kPxP3Fr0rhlz19nw==}
+  '@hashgraph/cryptography@1.12.0':
+    resolution: {integrity: sha512-KdiH8bufBZrFsXLjYEKedULZIHkXXBVMbTNjG+URbxJAjbgw+vRqv4J/xxUjJg1WAg2TydX8MZuDqsfoUBovxQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       expo-crypto: '*'
@@ -14348,8 +14339,8 @@ packages:
       protobufjs: 7.5.4
       strip-ansi: 7.1.2
 
-  '@hashgraph/sdk@2.73.2':
-    resolution: {integrity: sha512-Zdszj4N2pyVcFDtH61etajoVcnSCv/WliBtEf9V/Cih5KqF6rK1D1B9CXAQ3K6CKVx3jTCXunwgzLNO3WgN/LA==}
+  '@hashgraph/sdk@2.74.0':
+    resolution: {integrity: sha512-W4wCtScO4FR4bzm1s336yKQj+rKlawQigP/TRO/PcIzxbHJSgwvZRyP6rfoFYOaRZZeWkg3zyl+5Mz09pVB94w==}
     engines: {node: '>=18.0.0'}
 
   '@helium/address@4.11.1':
@@ -17106,9 +17097,6 @@ packages:
 
   '@scure/base@1.1.6':
     resolution: {integrity: sha512-ok9AWwhcgYuGG3Zfhyqg+zwl+Wn5uE+dwC0NV/2qQkx4dABbb/bx96vWu8NSj+BNjjSjno+JRYRjle1jV08k3g==}
-
-  '@scure/base@1.2.5':
-    resolution: {integrity: sha512-9rE6EOVeIQzt5TSu4v+K523F8u6DhBsoZWPGKlnCshhlDhy0kJzUX4V+tr2dWmzF1GdekvThABoEQBGBQI7xZw==}
 
   '@scure/base@1.2.6':
     resolution: {integrity: sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg==}
@@ -22164,8 +22152,8 @@ packages:
   bn.js@4.11.6:
     resolution: {integrity: sha512-XWwnNNFCuuSQ0m3r3C4LE3EiORltHd9M05pq6FOlVeiophzRbMo50Sbz1ehl8K3Z+jw9+vmgnXefY1hz8X+2wA==}
 
-  bn.js@4.12.0:
-    resolution: {integrity: sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==}
+  bn.js@4.12.2:
+    resolution: {integrity: sha512-n4DSx829VRTRByMRGdjQ9iqsN0Bh4OolPsFnaZBLcbi8iXcB+kJ9s7EnRt4wILZNV3kPLHkRVfOc/HvhC3ovDw==}
 
   bn.js@5.1.1:
     resolution: {integrity: sha512-IUTD/REb78Z2eodka1QZyyEk66pciRcP6Sroka0aI3tG/iwIdYLrBD62RsubR7vqdt3WyX8p4jxeatzmRSphtA==}
@@ -38820,7 +38808,7 @@ snapshots:
       '@babel/traverse': 7.27.4
       '@babel/types': 7.27.6
       convert-source-map: 2.0.0
-      debug: 4.4.1
+      debug: 4.3.4
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -40231,7 +40219,7 @@ snapshots:
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/parser': 7.27.0
       '@babel/types': 7.27.0
-      debug: 4.4.1
+      debug: 4.3.4
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -40246,7 +40234,7 @@ snapshots:
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/parser': 7.27.0
       '@babel/types': 7.27.0
-      debug: 4.4.1(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@5.5.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -40270,7 +40258,7 @@ snapshots:
       '@babel/parser': 7.28.3
       '@babel/template': 7.27.2
       '@babel/types': 7.27.6
-      debug: 4.4.1
+      debug: 4.3.4
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -40933,7 +40921,7 @@ snapshots:
       '@cosmjs/math': 0.24.1
       '@cosmjs/utils': 0.24.1
       bip39: 3.1.0
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       elliptic: 6.6.1
       js-sha3: 0.8.0
       libsodium-wrappers: 0.7.13
@@ -40996,7 +40984,7 @@ snapshots:
 
   '@cosmjs/math@0.24.1':
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
 
   '@cosmjs/math@0.26.8':
     dependencies:
@@ -42258,7 +42246,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1
+      debug: 4.3.4
       espree: 9.6.1
       globals: 13.24.0
       ignore: 5.3.1
@@ -42391,7 +42379,7 @@ snapshots:
     dependencies:
       '@ethersproject/bytes': 5.8.0
       '@ethersproject/logger': 5.8.0
-      bn.js: 5.2.1
+      bn.js: 5.2.2
 
   '@ethersproject/bytes@5.7.0':
     dependencies:
@@ -42760,7 +42748,7 @@ snapshots:
       '@expo/plist': 0.2.2
       '@expo/sdk-runtime-versions': 1.0.0
       chalk: 4.1.2
-      debug: 4.4.1
+      debug: 4.4.3
       getenv: 1.0.0
       glob: 10.4.5
       resolve-from: 5.0.0
@@ -43460,7 +43448,7 @@ snapshots:
       '@firebase/util': 1.10.3
       '@firebase/webchannel-wrapper': 1.0.3
       '@grpc/grpc-js': 1.9.15
-      '@grpc/proto-loader': 0.7.12
+      '@grpc/proto-loader': 0.7.15
       tslib: 2.6.2
 
   '@firebase/functions-compat@0.3.19(@firebase/app-compat@0.2.50)(@firebase/app@0.11.1)':
@@ -43998,13 +43986,6 @@ snapshots:
       protobufjs: 6.11.4
       yargs: 16.2.0
 
-  '@grpc/proto-loader@0.7.12':
-    dependencies:
-      lodash.camelcase: 4.3.0
-      long: 5.2.3
-      protobufjs: 7.3.2
-      yargs: 17.7.2
-
   '@grpc/proto-loader@0.7.15':
     dependencies:
       lodash.camelcase: 4.3.0
@@ -44022,7 +44003,7 @@ snapshots:
     dependencies:
       '@hapi/hoek': 9.3.0
 
-  '@hashgraph/cryptography@1.11.0':
+  '@hashgraph/cryptography@1.12.0':
     dependencies:
       '@noble/curves': 1.8.1
       ansi-regex: 6.2.2
@@ -44053,18 +44034,18 @@ snapshots:
       protobufjs: 7.5.4
       strip-ansi: 7.1.2
 
-  '@hashgraph/sdk@2.73.2(patch_hash=hufidok36ogcqxiot2ag4uzghq)':
+  '@hashgraph/sdk@2.74.0':
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/bignumber': 5.8.0
       '@ethersproject/bytes': 5.8.0
       '@ethersproject/rlp': 5.8.0
       '@grpc/grpc-js': 1.12.6
-      '@hashgraph/cryptography': 1.11.0
+      '@hashgraph/cryptography': 1.12.0
       '@hashgraph/proto': 2.23.0(ansi-regex@6.2.2)(ansi-styles@6.2.3)(debug@4.4.1)(protobufjs@7.5.4)(strip-ansi@7.1.2)
       ansi-regex: 6.2.2
       ansi-styles: 6.2.3
-      bignumber.js: 9.1.2
+      bignumber.js: 9.1.1
       bn.js: 5.1.1
       crypto-js: 4.2.0
       debug: 4.4.1
@@ -44102,7 +44083,7 @@ snapshots:
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.2
-      debug: 4.4.1
+      debug: 4.3.4
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -44209,7 +44190,7 @@ snapshots:
     dependencies:
       '@iov/encoding': 2.1.0
       bip39: 3.1.0
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       elliptic: 6.6.1
       js-sha3: 0.8.0
       libsodium-wrappers: 0.7.13
@@ -44223,7 +44204,7 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
       bech32: 1.1.4
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       readonly-date: 1.0.0
 
   '@iov/utils@2.0.2': {}
@@ -44237,7 +44218,7 @@ snapshots:
     dependencies:
       string-width: 5.1.2
       string-width-cjs: string-width@4.2.3
-      strip-ansi: 7.1.2
+      strip-ansi: 7.1.0
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
@@ -45147,7 +45128,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.10.10
+      '@types/node': 20.12.12
       '@types/yargs': 15.0.19
       chalk: 4.1.2
 
@@ -46623,7 +46604,7 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.8.0
       '@polkadot-api/utils': 0.0.1
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
       scale-ts: 1.6.0
     optional: true
 
@@ -48824,8 +48805,6 @@ snapshots:
 
   '@scure/base@1.1.6': {}
 
-  '@scure/base@1.2.5': {}
-
   '@scure/base@1.2.6': {}
 
   '@scure/bip32@1.1.5':
@@ -48850,7 +48829,7 @@ snapshots:
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
 
   '@scure/bip39@1.1.1':
     dependencies:
@@ -48870,7 +48849,7 @@ snapshots:
   '@scure/bip39@1.6.0':
     dependencies:
       '@noble/hashes': 1.8.0
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
 
   '@sec-ant/readable-stream@0.4.1': {}
 
@@ -53394,7 +53373,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.9':
     dependencies:
-      '@types/node': 22.10.10
+      '@types/node': 20.12.12
 
   '@types/hammerjs@2.0.45': {}
 
@@ -53800,7 +53779,7 @@ snapshots:
   '@types/request@2.48.12':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 22.10.10
+      '@types/node': 20.12.12
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.5
 
@@ -54141,7 +54120,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.4.3)
       '@typescript-eslint/utils': 6.21.0(eslint@8.57.0)(typescript@5.4.3)
-      debug: 4.4.1
+      debug: 4.3.4
       eslint: 8.57.0
       ts-api-utils: 1.3.0(typescript@5.4.3)
     optionalDependencies:
@@ -54153,7 +54132,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.6.3)
       '@typescript-eslint/utils': 6.21.0(eslint@8.57.0)(typescript@5.6.3)
-      debug: 4.4.1
+      debug: 4.3.4
       eslint: 8.57.0
       ts-api-utils: 1.3.0(typescript@5.6.3)
     optionalDependencies:
@@ -54213,7 +54192,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.4.1
+      debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -54228,7 +54207,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.4.1
+      debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -54243,7 +54222,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.4.1
+      debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -54409,7 +54388,7 @@ snapshots:
     dependencies:
       '@types/node': 10.17.60
       aes-js: 3.0.0
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       elliptic: 6.6.1
       hash.js: 1.1.3
       js-sha3: 0.5.7
@@ -55766,13 +55745,13 @@ snapshots:
 
   asn1.js@4.10.1:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
 
   asn1.js@5.4.1:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
       safer-buffer: 2.1.2
@@ -56608,7 +56587,7 @@ snapshots:
 
   bn.js@4.11.6: {}
 
-  bn.js@4.12.0: {}
+  bn.js@4.12.2: {}
 
   bn.js@5.1.1: {}
 
@@ -58005,7 +57984,7 @@ snapshots:
 
   create-ecdh@4.0.4:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       elliptic: 6.6.1
 
   create-hash@1.2.0:
@@ -58891,12 +58870,6 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
-  debug@4.4.1(supports-color@5.5.0):
-    dependencies:
-      ms: 2.1.3
-    optionalDependencies:
-      supports-color: 5.5.0
-
   debug@4.4.3:
     dependencies:
       ms: 2.1.3
@@ -59272,7 +59245,7 @@ snapshots:
 
   diffie-hellman@5.0.3:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       miller-rabin: 4.0.1
       randombytes: 2.1.0
 
@@ -59666,7 +59639,7 @@ snapshots:
 
   elliptic@6.6.1:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       brorand: 1.1.0
       hash.js: 1.1.7
       hmac-drbg: 1.0.1
@@ -60740,7 +60713,7 @@ snapshots:
 
   eth-lib@0.1.29:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       elliptic: 6.6.1
       nano-json-stream-parser: 0.1.2
       servify: 0.1.12
@@ -60753,7 +60726,7 @@ snapshots:
 
   eth-lib@0.2.8:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       elliptic: 6.6.1
       xhr-request-promise: 0.1.3
 
@@ -62492,7 +62465,7 @@ snapshots:
       node-fetch: 2.7.0
       object-hash: 3.0.0
       proto3-json-serializer: 2.0.2
-      protobufjs: 7.5.4
+      protobufjs: 7.3.2
       retry-request: 7.0.2
       uuid: 9.0.1
     transitivePeerDependencies:
@@ -62983,7 +62956,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -63049,14 +63022,14 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.1
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -63751,7 +63724,7 @@ snapshots:
 
   istanbul-lib-source-maps@4.0.1:
     dependencies:
-      debug: 4.4.1
+      debug: 4.3.4
       istanbul-lib-coverage: 3.2.2
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -65988,14 +65961,14 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 22.10.10
+      '@types/node': 20.12.12
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@29.7.0(metro@0.81.5):
     dependencies:
-      '@types/node': 22.10.10
+      '@types/node': 20.12.12
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -68478,7 +68451,7 @@ snapshots:
 
   miller-rabin@4.0.1:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       brorand: 1.1.0
 
   mime-db@1.33.0: {}
@@ -71008,7 +70981,7 @@ snapshots:
 
   proto3-json-serializer@2.0.2:
     dependencies:
-      protobufjs: 7.5.4
+      protobufjs: 7.3.2
 
   protobufjs-cli@1.1.2(protobufjs@7.2.5):
     dependencies:
@@ -71114,7 +71087,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.10.10
+      '@types/node': 20.12.12
       long: 5.3.1
 
   protocols@2.0.1: {}
@@ -71127,7 +71100,7 @@ snapshots:
   proxy-agent@6.5.0:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.3.4
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       lru-cache: 7.18.3
@@ -71151,7 +71124,7 @@ snapshots:
 
   public-encrypt@4.0.3:
     dependencies:
-      bn.js: 4.12.0
+      bn.js: 4.12.2
       browserify-rsa: 4.1.0
       create-hash: 1.2.0
       parse-asn1: 5.1.7
@@ -73672,7 +73645,7 @@ snapshots:
     dependencies:
       '@kwsites/file-exists': 1.1.1
       '@kwsites/promise-deferred': 1.1.1
-      debug: 4.4.1
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -74262,7 +74235,7 @@ snapshots:
     dependencies:
       eastasianwidth: 0.2.0
       emoji-regex: 9.2.2
-      strip-ansi: 7.1.2
+      strip-ansi: 7.1.0
 
   string-width@7.2.0:
     dependencies:
@@ -78165,9 +78138,9 @@ snapshots:
 
   wrap-ansi@8.1.0:
     dependencies:
-      ansi-styles: 6.2.3
+      ansi-styles: 6.2.1
       string-width: 5.1.2
-      strip-ansi: 7.1.2
+      strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
 
