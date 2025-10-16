@@ -1,7 +1,8 @@
-import type { AccountLike, Account } from "@ledgerhq/types-live";
-import type { Transaction, TransactionStatus } from "./types";
 import type { CommonDeviceTransactionField as DeviceTransactionField } from "@ledgerhq/coin-framework/transaction/common";
+import type { AccountLike, Account } from "@ledgerhq/types-live";
+import { HEDERA_TRANSACTION_MODES } from "./constants";
 import { isTokenAssociateTransaction } from "./logic";
+import type { Transaction, TransactionStatus } from "./types";
 
 function getDeviceTransactionConfig({
   transaction,
@@ -37,6 +38,14 @@ function getDeviceTransactionConfig({
     fields.push({
       type: "fees",
       label: "Fees",
+    });
+  }
+
+  if (transaction.mode === HEDERA_TRANSACTION_MODES.Send && transaction.gasLimit) {
+    fields.push({
+      type: "text",
+      label: "Gas Limit",
+      value: transaction.gasLimit.toString(),
     });
   }
 

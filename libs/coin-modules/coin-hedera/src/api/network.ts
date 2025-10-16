@@ -7,11 +7,19 @@ import {
   AccountId,
   TransactionId,
   TokenAssociateTransaction,
+  ContractExecuteTransaction,
+  ContractFunctionParameters,
+  ContractId,
 } from "@hashgraph/sdk";
+import { findSubAccountById } from "@ledgerhq/coin-framework/account/helpers";
+import { listTokensForCryptoCurrency } from "@ledgerhq/cryptoassets/tokens";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 import type { Account, TokenAccount } from "@ledgerhq/types-live";
-import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
-import { Transaction } from "../types";
+import { DEFAULT_GAS_LIMIT, HEDERA_TRANSACTION_MODES } from "../constants";
 import { isTokenAssociateTransaction } from "../logic";
+import { getERC20TokenBalance } from "./mirror";
+import type { Transaction } from "../types";
+import type { HederaERC20TokenBalance } from "./types";
 
 export function broadcastTransaction(transaction: HederaTransaction): Promise<TransactionResponse> {
   return transaction.execute(getHederaClient());
@@ -28,7 +36,7 @@ async function buildUnsignedCoinTransaction({
   transaction: Transaction;
 }): Promise<TransferTransaction> {
   const accountId = account.freshAddress;
-  const hbarAmount = Hbar.fromTinybars(transaction.amount);
+  const hbarAmount = Hbar.fromTinybars(transaction.amount.toNumber());
 
   const tx = new TransferTransaction()
     .setNodeAccountIds(nodeAccountIds)
@@ -44,7 +52,7 @@ async function buildUnsignedCoinTransaction({
   return tx.freeze();
 }
 
-async function buildUnsignedTokenTransaction({
+async function buildUnsignedHTSTokenTransaction({
   account,
   tokenAccount,
   transaction,
@@ -62,6 +70,41 @@ async function buildUnsignedTokenTransaction({
     .setTransactionMemo(transaction.memo ?? "")
     .addTokenTransfer(tokenId, accountId, transaction.amount.negated().toNumber())
     .addTokenTransfer(tokenId, transaction.recipient, transaction.amount.toNumber());
+
+  if (transaction.maxFee) {
+    tx.setMaxTransactionFee(Hbar.fromTinybars(transaction.maxFee.toNumber()));
+  }
+
+  return tx.freeze();
+}
+
+async function buildUnsignedERC20TokenTransaction({
+  account,
+  tokenAccount,
+  transaction,
+}: {
+  account: Account;
+  tokenAccount: TokenAccount;
+  transaction: Extract<Transaction, { mode: typeof HEDERA_TRANSACTION_MODES.Send }>;
+}): Promise<ContractExecuteTransaction> {
+  const accountId = AccountId.fromString(account.freshAddress);
+  const contractId = ContractId.fromEvmAddress(0, 0, tokenAccount.token.contractAddress);
+  const recipientEvmAddress = AccountId.fromString(transaction.recipient).toSolidityAddress();
+  const gas = (transaction.gasLimit ?? DEFAULT_GAS_LIMIT).toNumber();
+
+  // create function parameters for ERC20 transfer function
+  // transfer(address to, uint256 amount) returns (bool)
+  const functionParameters = new ContractFunctionParameters()
+    .addAddress(recipientEvmAddress)
+    .addUint256(transaction.amount.toNumber());
+
+  const tx = new ContractExecuteTransaction()
+    .setNodeAccountIds(nodeAccountIds)
+    .setTransactionId(TransactionId.generate(accountId))
+    .setTransactionMemo(transaction.memo ?? "")
+    .setContractId(contractId)
+    .setGas(gas)
+    .setFunction("transfer", functionParameters);
 
   if (transaction.maxFee) {
     tx.setMaxTransactionFee(Hbar.fromTinybars(transaction.maxFee.toNumber()));
@@ -101,14 +144,19 @@ export async function buildUnsignedTransaction({
 }: {
   account: Account;
   transaction: Transaction;
-}): Promise<TransferTransaction | TokenAssociateTransaction> {
+}): Promise<TransferTransaction | TokenAssociateTransaction | ContractExecuteTransaction> {
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
-  const isTokenTransaction = isTokenAccount(subAccount);
+  const isHTSTokenTransaction =
+    transaction.mode === HEDERA_TRANSACTION_MODES.Send && subAccount?.token.tokenType === "hts";
+  const isERC20TokenTransaction =
+    transaction.mode === HEDERA_TRANSACTION_MODES.Send && subAccount?.token.tokenType === "erc20";
 
   if (isTokenAssociateTransaction(transaction)) {
     return buildTokenAssociateTransaction({ account, transaction });
-  } else if (isTokenTransaction) {
-    return buildUnsignedTokenTransaction({ account, tokenAccount: subAccount, transaction });
+  } else if (isHTSTokenTransaction) {
+    return buildUnsignedHTSTokenTransaction({ account, tokenAccount: subAccount, transaction });
+  } else if (isERC20TokenTransaction) {
+    return buildUnsignedERC20TokenTransaction({ account, tokenAccount: subAccount, transaction });
   } else {
     return buildUnsignedCoinTransaction({ account, transaction });
   }
@@ -122,4 +170,23 @@ export function getHederaClient(): Client {
   //_hederaClient.setNetwork({ mainnet: "https://hedera.coin.ledger.com" });
 
   return _hederaClient;
+}
+
+export async function getERC20Tokens(evmAccountId: string): Promise<HederaERC20TokenBalance[]> {
+  const currency = getCryptoCurrencyById("hedera");
+  const availableTokens = listTokensForCryptoCurrency(currency);
+  const availableERC20Tokens = availableTokens.filter(t => t.tokenType === "erc20");
+
+  const promises = availableERC20Tokens.map(async erc20token => {
+    const balance = await getERC20TokenBalance(evmAccountId, erc20token.contractAddress);
+
+    return {
+      balance,
+      token: erc20token,
+    };
+  });
+
+  const balances = await Promise.all(promises);
+
+  return balances;
 }

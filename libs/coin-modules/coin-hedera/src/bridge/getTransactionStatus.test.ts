@@ -5,18 +5,18 @@ import {
   AmountRequired,
   NotEnoughBalance,
 } from "@ledgerhq/errors";
+import { HEDERA_TRANSACTION_MODES } from "../constants";
 import {
-  HederaRecipientInvalidChecksum,
   HederaInsufficientFundsForAssociation,
+  HederaRecipientInvalidChecksum,
   HederaRecipientTokenAssociationRequired,
   HederaRecipientTokenAssociationUnverified,
 } from "../errors";
-import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
-import { getMockedTokenCurrency } from "../test/fixtures/currency.fixture";
-import { getMockedTransaction } from "../test/fixtures/transaction.fixture";
 import { getTransactionStatus } from "./getTransactionStatus";
+import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
+import { getMockedHTSTokenCurrency } from "../test/fixtures/currency.fixture";
+import { getMockedTransaction } from "../test/fixtures/transaction.fixture";
 import * as utils from "./utils";
-import { HEDERA_TRANSACTION_KINDS } from "../constants";
 
 describe("getTransactionStatus", () => {
   const mockedEstimatedFee = new BigNumber(1);
@@ -49,7 +49,7 @@ describe("getTransactionStatus", () => {
   test("token transfer with valid recipient and sufficient balance completes successfully", async () => {
     jest.spyOn(utils, "checkAccountTokenAssociationStatus").mockResolvedValueOnce(true);
 
-    const tokenCurrency = getMockedTokenCurrency();
+    const tokenCurrency = getMockedHTSTokenCurrency();
     const tokenAccount = getMockedTokenAccount(tokenCurrency, { balance: new BigNumber(500) });
     const account = getMockedAccount({ balance: new BigNumber(1000), subAccounts: [tokenAccount] });
     const transaction = getMockedTransaction({
@@ -66,11 +66,11 @@ describe("getTransactionStatus", () => {
   });
 
   test("token associate transaction with sufficient USD worth completes successfully", async () => {
-    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenCurrency = getMockedHTSTokenCurrency();
     const mockedAccount = getMockedAccount();
     const mockedTransaction = getMockedTransaction({
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token: mockedTokenCurrency,
       },
     });
@@ -136,11 +136,11 @@ describe("getTransactionStatus", () => {
   });
 
   test("adds error if USD balance is too low for token association", async () => {
-    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenCurrency = getMockedHTSTokenCurrency();
     const mockedAccount = getMockedAccount({ balance: new BigNumber(0) });
     const mockedTransaction = getMockedTransaction({
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token: mockedTokenCurrency,
       },
     });
@@ -155,7 +155,7 @@ describe("getTransactionStatus", () => {
   test("adds warning during token transfer if recipient has no token associated", async () => {
     jest.spyOn(utils, "checkAccountTokenAssociationStatus").mockResolvedValueOnce(false);
 
-    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenCurrency = getMockedHTSTokenCurrency();
     const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
     const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
     const mockedTransaction = getMockedTransaction({
@@ -175,7 +175,7 @@ describe("getTransactionStatus", () => {
       .spyOn(utils, "checkAccountTokenAssociationStatus")
       .mockRejectedValueOnce(new HederaRecipientTokenAssociationUnverified());
 
-    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenCurrency = getMockedHTSTokenCurrency();
     const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
     const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
     const mockedTransaction = getMockedTransaction({
@@ -191,7 +191,7 @@ describe("getTransactionStatus", () => {
   });
 
   test("adds error during token transfer with insufficient balance", async () => {
-    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenCurrency = getMockedHTSTokenCurrency();
     const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency, {
       balance: new BigNumber(0),
     });

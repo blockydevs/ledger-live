@@ -8,6 +8,7 @@ import type {
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { encodeAccountId } from "@ledgerhq/coin-framework/account";
+import type { Account, Operation } from "@ledgerhq/types-live";
 import { getAccount, getAccountsForPublicKey, getAccountTokens } from "../api/mirror";
 import {
   getSubAccounts,
@@ -15,17 +16,21 @@ import {
   applyPendingExtras,
   mergeSubAccounts,
   getSyncHash,
+  populateERC20Operations,
 } from "./utils";
-import type { HederaAccount } from "../types";
+import { getERC20Tokens } from "../api/network";
 import { getOperationsForAccount } from "../api/utils";
+import { toEVMAddress } from "../logic";
+import type { HederaAccount } from "../types";
 
 export const getAccountShape: GetAccountShape<HederaAccount> = async (
   info,
   { blacklistedTokenIds },
 ): Promise<Partial<HederaAccount>> => {
   const { currency, derivationMode, address, initialAccount } = info;
-
-  invariant(address, "an hedera address is expected");
+  invariant(address, "hedera: address is expected");
+  const evmAddress = toEVMAddress(address);
+  invariant(evmAddress, "hedera: evm address is missing");
 
   const liveAccountId = encodeAccountId({
     type: "js",
@@ -38,9 +43,10 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   // get current account balance and tokens
   // tokens are fetched with separate requests to get "created_timestamp" for each token
   // based on this, ASSOCIATE_TOKEN operations can be connected with tokens
-  const [mirrorAccount, mirrorTokens] = await Promise.all([
+  const [mirrorAccount, mirrorTokens, erc20TokenBalances] = await Promise.all([
     getAccount(address),
     getAccountTokens(address),
+    getERC20Tokens(evmAddress),
   ]);
 
   const accountBalance = new BigNumber(mirrorAccount.balance.balance);
@@ -49,26 +55,38 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   const syncHash = getSyncHash(currency, blacklistedTokenIds);
   const shouldSyncFromScratch = !initialAccount || syncHash !== initialAccount?.syncHash;
 
-  const oldOperations = initialAccount?.operations ?? [];
-  const pendingOperations = initialAccount?.pendingOperations ?? [];
+  const pendingOperations = shouldSyncFromScratch ? [] : initialAccount?.pendingOperations ?? [];
+  const oldOperations = shouldSyncFromScratch ? [] : initialAccount?.operations ?? [];
+  const oldERC20Operations = oldOperations.filter(item => item.blockHash);
+  const latestOperation = oldOperations[0];
+  const erc20LatestOperation = oldERC20Operations[0];
+  const pendingOperationHashes = new Set(pendingOperations.map(op => op.hash));
+  const erc20OperationHashes = new Set(oldERC20Operations.map(op => op.hash));
 
-  // grab latest operation's consensus timestamp for incremental sync
-  const latestOperationTimestamp =
-    !shouldSyncFromScratch && oldOperations[0]
-      ? new BigNumber(Math.floor(oldOperations[0].date.getTime() / 1000))
-      : null;
-  const latestAccountOperations = await getOperationsForAccount(
-    liveAccountId,
+  // grab latest operation timestamps for incremental sync
+  let latestOperationTimestamp: string | null = null;
+  let erc20LatestOperationTimestamp: string | null = null;
+
+  if (!shouldSyncFromScratch && latestOperation) {
+    const timestamp = Math.floor(latestOperation.date.getTime() / 1000);
+    latestOperationTimestamp = new BigNumber(timestamp).toString();
+  }
+
+  if (!shouldSyncFromScratch && erc20LatestOperation) {
+    const timestamp = Math.floor(erc20LatestOperation.date.getTime() / 1000);
+    erc20LatestOperationTimestamp = new BigNumber(timestamp).toString();
+  }
+
+  const latestAccountOperations = await getOperationsForAccount({
+    ledgerAccountId: liveAccountId,
     address,
-    latestOperationTimestamp ? latestOperationTimestamp.toString() : null,
-  );
+    latestOperationTimestamp,
+    erc20LatestOperationTimestamp,
+    erc20TokenBalances,
+    pendingOperationHashes,
+    erc20OperationHashes,
+  });
 
-  const newSubAccounts = await getSubAccounts(
-    liveAccountId,
-    latestAccountOperations.tokenOperations,
-    mirrorTokens,
-  );
-  const subAccounts = mergeSubAccounts(initialAccount, newSubAccounts);
   const newOperations = prepareOperations(
     latestAccountOperations.coinOperations,
     latestAccountOperations.tokenOperations,
@@ -79,6 +97,38 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     ? enrichedNewOperations
     : mergeOps(oldOperations, enrichedNewOperations);
 
+  // pre:
+  // - mirror node transactions won't return "IN" erc20 token operations
+  // - mirror node transactions will return "CONTRACT_CALL" (OUT) erc20 token operations made from given account address
+  // - mirror node transactions won't return "CONTRACT_CALL" (IN) erc20 token operations made from 3rd party with allowance
+  //
+  // 1. first fetch both mirror node and thirdweb transactions, both should support fetching from given timestamp. Thirdweb transaction should include their related mirror transaction
+  // 2. prepare mirror operations - apply pending, merge with old operations, etc.
+  // 3. at this point we have a list of mirror operations, without ERC20 included
+  // 4. loop over ERC20 transactions from thirdweb and build two lists: patchList and addList
+  //    - patchList should include transactions which are already present in mirror operations (we can have CONTRACT_CALL from mirror node that we can transform into "FEES")
+  //    - addList should include transactions which are missing in mirror operations (e.g. "IN" erc20 token transaction and "OUT" made by 3rd party with allowance)
+  // 5. update list of all operations (patch or add erc20 related operations)
+  // 6. update sub accounts
+  const { updatedOperations, newERC20TokenOperations } = populateERC20Operations({
+    ledgerAccountId: liveAccountId,
+    address,
+    allOperations: operations,
+    latestERC20Operations: latestAccountOperations.erc20Operations,
+  });
+
+  const newSubAccounts = await getSubAccounts({
+    ledgerAccountId: liveAccountId,
+    latestHTSTokenOperations: latestAccountOperations.tokenOperations,
+    latestERC20TokenOperations: newERC20TokenOperations,
+    mirrorTokens,
+    erc20Tokens: erc20TokenBalances,
+  });
+
+  const subAccounts = shouldSyncFromScratch
+    ? newSubAccounts
+    : mergeSubAccounts(initialAccount, newSubAccounts);
+
   return {
     id: liveAccountId,
     freshAddress: address,
@@ -86,8 +136,8 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     lastSyncDate: new Date(),
     balance: accountBalance,
     spendableBalance: accountBalance,
-    operations,
-    operationsCount: operations.length,
+    operations: updatedOperations,
+    operationsCount: updatedOperations.length,
     // NOTE: there are no "blocks" in hedera
     // Set a value just so that operations are considered confirmed according to isConfirmedOperation
     blockHeight: 10,
@@ -117,7 +167,26 @@ export const buildIterateResult: IterateResultBuilder = async ({ result: rootRes
           address: addresses[index],
           publicKey: addresses[index],
           path: freshAddressPath,
-        } as Result)
+        } satisfies Result)
       : null;
+  };
+};
+
+// it might be necessary to remove operations related with ERC20 patching:
+export const postSync = (_initial: Account, synced: Account): Account => {
+  const erc20Operations = synced.operations.filter(op => op.blockHash);
+  const erc20Hashes = new Set(erc20Operations.map(op => op.hash));
+
+  const excludeConfirmedERC20Operations = (o: Operation) => !erc20Hashes.has(o.hash);
+
+  return {
+    ...synced,
+    pendingOperations: synced.pendingOperations.filter(excludeConfirmedERC20Operations),
+    subAccounts: (synced.subAccounts ?? []).map(subAccount => {
+      return {
+        ...subAccount,
+        pendingOperations: subAccount.pendingOperations.filter(excludeConfirmedERC20Operations),
+      };
+    }),
   };
 };

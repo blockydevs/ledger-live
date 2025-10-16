@@ -1,3 +1,6 @@
+import BigNumber from "bignumber.js";
+import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+
 type FreezeStatus = "NOT_APPLICABLE" | "FROZEN" | "UNFROZEN";
 
 type KycStatus = "NOT_APPLICABLE" | "GRANTED" | "REVOKED";
@@ -17,11 +20,31 @@ export interface HederaMirrorTokenTransfer {
 export interface HederaMirrorTransaction {
   transfers: HederaMirrorCoinTransfer[];
   token_transfers: HederaMirrorTokenTransfer[];
-  charged_tx_fee: string;
+  charged_tx_fee: number;
   transaction_hash: string;
+  transaction_id: string;
   consensus_timestamp: string;
+  entity_id: string | null;
   result: string;
   name: string;
+  memo_base64?: string;
+}
+
+export interface HederaMirrorNetworkFees {
+  fees: {
+    gas: number;
+    transaction_type: "ContractCall" | "ContractCreate" | "EthereumTransaction";
+  }[];
+  timestamp: string;
+}
+
+export interface HederaMirrorContractCallResult {
+  contract_id: string;
+  block_gas_used: number;
+  gas_consumed: number;
+  gas_limit: number;
+  gas_used: number;
+  timestamp: string;
 }
 
 export interface HederaMirrorToken {
@@ -45,4 +68,17 @@ export interface HederaMirrorAccount {
       balance: number;
     }[];
   };
+}
+
+export interface HederaERC20TokenBalance {
+  token: TokenCurrency;
+  balance: BigNumber;
+}
+
+export interface HederaMirrorCallContractEstimate {
+  result: string;
+}
+
+export interface HederaMirrorCallContractBalance {
+  result: string;
 }

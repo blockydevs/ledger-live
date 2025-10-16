@@ -6,7 +6,7 @@ import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransact
 import { Transaction } from "@ledgerhq/live-common/families/hedera/types";
 import { View, SafeAreaView, StyleSheet } from "react-native";
 import { cryptoAssetsHooks } from "~/config/bridge-setup";
-import { HEDERA_TRANSACTION_KINDS } from "@ledgerhq/live-common/families/hedera/constants";
+import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
 import { getMainAccount } from "@ledgerhq/coin-framework/account/helpers";
 import { useTheme } from "@react-navigation/native";
 import invariant from "invariant";
@@ -44,8 +44,8 @@ export default function Summary({ navigation, route }: Props) {
     const bridge = getAccountBridge(account, parentAccount);
     const transaction = bridge.createTransaction(account);
     const updatedTransaction = bridge.updateTransaction(transaction, {
+      mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       properties: {
-        name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
         token,
       } satisfies Transaction["properties"],
     });

@@ -1,23 +1,12 @@
 import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
 import * as utils from "./utils";
 import { prepareTransaction } from "./prepareTransaction";
-import { Transaction } from "../types";
+import { getMockedAccount } from "../test/fixtures/account.fixture";
+import { getMockedTransaction } from "../test/fixtures/transaction.fixture";
 
 describe("prepareTransaction", () => {
-  const mockAccount = {
-    id: "hedera:0:testAccount",
-    freshAddress: "0.0.123",
-    spendableBalance: new BigNumber(1000000),
-    currency: { id: "hedera" },
-  } as Account;
-
-  const mockTx = {
-    family: "hedera",
-    amount: new BigNumber(0),
-    recipient: "",
-    useAllAmount: false,
-  } as Transaction;
+  const mockAccount = getMockedAccount();
+  const mockTx = getMockedTransaction();
 
   beforeEach(() => {
     jest.clearAllMocks();

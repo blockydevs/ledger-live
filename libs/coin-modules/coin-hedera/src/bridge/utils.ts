@@ -3,7 +3,7 @@ import murmurhash from "imurmurhash";
 import invariant from "invariant";
 import { AccountId } from "@hashgraph/sdk";
 import { InvalidAddress } from "@ledgerhq/errors";
-import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
+import type { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
 import cvsApi from "@ledgerhq/live-countervalues/api/index";
 import {
   findCryptoCurrencyById,
@@ -18,20 +18,31 @@ import {
   findSubAccountById,
   isTokenAccount,
 } from "@ledgerhq/coin-framework/account";
-import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
-import type { CryptoCurrency, Currency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { mergeOps } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { makeLRUCache, seconds } from "@ledgerhq/live-network/cache";
-import { estimateMaxSpendable } from "./estimateMaxSpendable";
-import type { HederaOperationExtra, Transaction } from "../types";
-import { getAccount } from "../api/mirror";
+import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
+import type { CryptoCurrency, Currency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { estimateContractCallGas, getAccount, getNetworkFees } from "../api/mirror";
 import { getHederaClient } from "../api/network";
-import type { HederaMirrorToken } from "../api/types";
+import type { HederaMirrorToken, HederaERC20TokenBalance } from "../api/types";
+import {
+  BASE_USD_FEE_BY_OPERATION_TYPE,
+  DEFAULT_GAS_LIMIT,
+  DEFAULT_GAS_PRICE_TINYBARS,
+  ESTIMATED_FEE_SAFETY_RATE,
+  ESTIMATED_GAS_SAFETY_RATE,
+  HEDERA_OPERATION_TYPES,
+} from "../constants";
 import { HederaRecipientInvalidChecksum } from "../errors";
-import { isTokenAssociateTransaction, isValidExtra } from "../logic";
-import { BASE_USD_FEE_BY_OPERATION_TYPE, HEDERA_OPERATION_TYPES } from "../constants";
-
-const ESTIMATED_FEE_SAFETY_RATE = 2;
+import { estimateMaxSpendable } from "./estimateMaxSpendable";
+import {
+  fromEVMAddress,
+  getMemoFromBase64,
+  isTokenAssociateTransaction,
+  isValidExtra,
+  toEVMAddress,
+} from "../logic";
+import type { HederaOperationExtra, Transaction, OperationERC20 } from "../types";
 
 // note: this is currently called frequently by getTransactionStatus; LRU cache prevents duplicated requests
 export const getCurrencyToUSDRate = makeLRUCache(
@@ -75,6 +86,52 @@ export const getEstimatedFees = async (
   // as fees are based on a currency conversion, we stay
   // on the safe side here and double the estimate for "max spendable"
   return new BigNumber("150200").multipliedBy(ESTIMATED_FEE_SAFETY_RATE); // 0.001502 ℏ (as of 2023-03-14)
+};
+
+export const getERC20EstimatedFees = async (
+  account: Account,
+  transaction: Transaction,
+): Promise<{ tinybars: BigNumber; gas: BigNumber }> => {
+  const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
+  let tinybars = new BigNumber(0);
+  let gas = new BigNumber(0);
+
+  if (!subAccount) {
+    return { tinybars, gas };
+  }
+
+  const tokenContractEvmAddress = subAccount.token.contractAddress;
+  const senderEvmAddress = toEVMAddress(account.freshAddress);
+  const recipientEvmAddress = toEVMAddress(transaction.recipient);
+
+  if (!senderEvmAddress || !recipientEvmAddress) {
+    return { tinybars, gas };
+  }
+
+  try {
+    const [networkFees, gasLimit] = await Promise.all([
+      getNetworkFees(),
+      estimateContractCallGas(
+        senderEvmAddress,
+        recipientEvmAddress,
+        tokenContractEvmAddress,
+        BigInt(transaction.amount.toString()),
+      ),
+    ]);
+
+    const contractCallFees = networkFees.fees.find(
+      fee => fee.transaction_type === HEDERA_OPERATION_TYPES.ContractCall,
+    );
+    const gasTinybarRate = new BigNumber(contractCallFees?.gas ?? DEFAULT_GAS_PRICE_TINYBARS);
+    gas = gasLimit.multipliedBy(ESTIMATED_GAS_SAFETY_RATE).integerValue(BigNumber.ROUND_CEIL);
+    tinybars = gas.multipliedBy(gasTinybarRate).integerValue(BigNumber.ROUND_CEIL);
+  } catch {
+    const gasTinybarRate = DEFAULT_GAS_PRICE_TINYBARS;
+    gas = DEFAULT_GAS_LIMIT;
+    tinybars = gas.multipliedBy(gasTinybarRate).integerValue(BigNumber.ROUND_CEIL);
+  }
+
+  return { tinybars, gas };
 };
 
 interface CalculateAmountResult {
@@ -171,41 +228,52 @@ export const getSyncHash = (
   return simpleSyncHashMemoize[stringToHash];
 };
 
-export const getSubAccounts = async (
-  accountId: string,
-  lastTokenOperations: Operation[],
-  mirrorTokens: HederaMirrorToken[],
-): Promise<TokenAccount[]> => {
+export const getSubAccounts = async ({
+  ledgerAccountId,
+  latestHTSTokenOperations,
+  latestERC20TokenOperations,
+  mirrorTokens,
+  erc20Tokens,
+}: {
+  ledgerAccountId: string;
+  latestHTSTokenOperations: Operation[];
+  latestERC20TokenOperations: Operation[];
+  mirrorTokens: HederaMirrorToken[];
+  erc20Tokens: HederaERC20TokenBalance[];
+}): Promise<TokenAccount[]> => {
   // Creating a Map of Operations by TokenCurrencies in order to know which TokenAccounts should be synced as well
-  const operationsByToken = lastTokenOperations.reduce<Map<TokenCurrency, Operation[]>>(
-    (acc, tokenOperation) => {
-      const { token } = decodeTokenAccountId(tokenOperation.accountId);
-      if (!token) return acc;
-
-      const isTokenListedInCAL = findTokenByAddressInCurrency(
-        token.contractAddress,
-        token.parentCurrency.id,
-      );
-      if (!isTokenListedInCAL) return acc;
-
-      if (!acc.has(token)) {
-        acc.set(token, []);
-      }
-
-      acc.get(token)?.push(tokenOperation);
-
-      return acc;
-    },
-    new Map<TokenCurrency, Operation[]>(),
-  );
-
+  const operationsByToken = new Map<TokenCurrency, Operation[]>();
   const subAccounts: TokenAccount[] = [];
+
+  [...latestHTSTokenOperations, ...latestERC20TokenOperations].forEach(tokenOperation => {
+    const { token } = decodeTokenAccountId(tokenOperation.accountId);
+    if (!token) return;
+
+    const isTokenListedInCAL = findTokenByAddressInCurrency(
+      token.contractAddress,
+      token.parentCurrency.id,
+    );
+    if (!isTokenListedInCAL) return;
+
+    if (!operationsByToken.has(token)) {
+      operationsByToken.set(token, []);
+    }
+
+    operationsByToken.get(token)?.push(tokenOperation);
+  });
 
   // extract token accounts from existing operations
   for (const [token, tokenOperations] of operationsByToken.entries()) {
-    const parentAccountId = accountId;
-    const rawBalance = mirrorTokens.find(t => t.token_id === token.contractAddress)?.balance;
-    const balance = rawBalance !== undefined ? new BigNumber(rawBalance) : null;
+    const parentAccountId = ledgerAccountId;
+    let balance: BigNumber | null = null;
+
+    if (token.tokenType === "erc20") {
+      const rawBalance = erc20Tokens.find(t => t.token.contractAddress === token.contractAddress);
+      balance = rawBalance ? new BigNumber(rawBalance.balance) : null;
+    } else {
+      const rawBalance = mirrorTokens.find(t => t.token_id === token.contractAddress)?.balance;
+      balance = rawBalance ? new BigNumber(rawBalance) : null;
+    }
 
     if (!balance) {
       continue;
@@ -231,7 +299,7 @@ export const getSubAccounts = async (
   // extract token accounts existing in the account's balance, but with no recorded operations yet
   // e.g. tokens added via association flow, without any subsequent activity
   for (const rawToken of mirrorTokens) {
-    const parentAccountId = accountId;
+    const parentAccountId = ledgerAccountId;
     const rawBalance = rawToken.balance;
     const balance = new BigNumber(rawBalance);
     const token = findTokenByAddressInCurrency(rawToken.token_id, "hedera");
@@ -458,7 +526,11 @@ export function patchOperationWithExtra(
 }
 
 export const checkAccountTokenAssociationStatus = makeLRUCache(
-  async (address: string, tokenId: string) => {
+  async (address: string, token: TokenCurrency) => {
+    if (token.tokenType !== "hts") {
+      return true;
+    }
+
     const [parsingError, parsingResult] = safeParseAccountId(address);
 
     if (parsingError) {
@@ -473,13 +545,13 @@ export const checkAccountTokenAssociationStatus = makeLRUCache(
       return true;
     }
 
-    const isTokenAssociated = mirrorAccount.balance.tokens.some(token => {
-      return token.token_id === tokenId;
+    const isTokenAssociated = mirrorAccount.balance.tokens.some(t => {
+      return t.token_id === token.contractAddress;
     });
 
     return isTokenAssociated;
   },
-  (accountId, tokenId) => `${accountId}-${tokenId}`,
+  (accountId, token) => `${accountId}-${token.contractAddress}`,
   seconds(30),
 );
 
@@ -516,4 +588,199 @@ export const safeParseAccountId = (
   } catch (err) {
     return [new InvalidAddress("", { currencyName }), null];
   }
+};
+
+export const populateERC20Operations = ({
+  ledgerAccountId,
+  address,
+  allOperations,
+  latestERC20Operations,
+}: {
+  ledgerAccountId: string;
+  address: string;
+  allOperations: Operation[];
+  latestERC20Operations: OperationERC20[];
+}): {
+  updatedOperations: Operation[];
+  newERC20TokenOperations: Operation[];
+} => {
+  const newERC20TokenOperations: Operation[] = [];
+
+  if (latestERC20Operations.length === 0) {
+    return {
+      updatedOperations: allOperations,
+      newERC20TokenOperations,
+    };
+  }
+
+  // create copy to avoid mutating original array
+  const updatedOperations = allOperations.map(op => ({ ...op }));
+  const evmAccountAddress = toEVMAddress(address);
+  // index existing operations by hash for quick lookup
+  const operationsByHash = updatedOperations.reduce((acc, curr) => {
+    acc.set(curr.hash, curr);
+    return acc;
+  }, new Map<string, Operation>());
+
+  // loop over latestERC20Operations and prepare lists of transactions that should be patched and added
+  // - patching happens when we have a matching CONTRACT_CALL operation without blockHash set (mirror node transaction without ERC20 details)
+  // - adding happens when we have no matching operation
+  const erc20OperationsToPatch = new Map<string, OperationERC20>();
+  const erc20OperationsToAdd = new Map<string, OperationERC20>();
+  for (const erc20Operation of latestERC20Operations) {
+    const hash = base64ToUrlSafeBase64(erc20Operation.mirrorTransaction.transaction_hash);
+    const existingOp = operationsByHash.get(hash);
+    const type =
+      erc20Operation.thirdwebTransaction.decoded.params.from === evmAccountAddress ? "OUT" : "IN";
+
+    if (!existingOp) {
+      erc20OperationsToAdd.set(hash, erc20Operation);
+      continue;
+    }
+
+    if (existingOp.type === "CONTRACT_CALL" && type === "OUT" && !existingOp.blockHash) {
+      erc20OperationsToPatch.set(hash, erc20Operation);
+      continue;
+    }
+  }
+
+  // patch existing operations with data from thirdweb
+  for (const [hash, erc20Operation] of erc20OperationsToPatch.entries()) {
+    const relatedOperation = operationsByHash.get(hash);
+    if (!relatedOperation) continue;
+
+    // we have a CONTRACT_CALL operation without blockHash set and we have a matching ERC20 operation fetched from thirdweb
+    // we can now patch the operation with extra data
+    const timestamp = new Date(
+      parseInt(erc20Operation.mirrorTransaction.consensus_timestamp.split(".")[0], 10) * 1000,
+    );
+    const fee = BigNumber(erc20Operation.mirrorTransaction.charged_tx_fee);
+    const value = BigNumber(erc20Operation.thirdwebTransaction.decoded.params.value);
+    const evmSenderAddress = erc20Operation.thirdwebTransaction.decoded.params.from;
+    const evmRecipientAddress = erc20Operation.thirdwebTransaction.decoded.params.to;
+    const senderAddress = fromEVMAddress(evmSenderAddress) ?? evmSenderAddress;
+    const recipientAddress = fromEVMAddress(evmRecipientAddress) ?? evmRecipientAddress;
+    const encodedTokenId = encodeTokenAccountId(ledgerAccountId, erc20Operation.token);
+    const type: OperationType = "OUT";
+    const blockHeight = 5;
+    const blockHash = erc20Operation.thirdwebTransaction.blockHash;
+    const commonExtra = {
+      ...(isValidExtra(relatedOperation.extra) && relatedOperation.extra),
+      consensusTimestamp: erc20Operation.contractCallResult.timestamp,
+      transactionId: erc20Operation.mirrorTransaction.transaction_id,
+      gasConsumed: erc20Operation.contractCallResult.gas_consumed,
+      gasLimit: erc20Operation.contractCallResult.gas_limit,
+      gasUsed: erc20Operation.contractCallResult.gas_used,
+    } satisfies HederaOperationExtra;
+
+    const tokenOperation = {
+      id: encodeOperationId(encodedTokenId, hash, type),
+      accountId: encodedTokenId,
+      type,
+      value,
+      recipients: [recipientAddress],
+      senders: [senderAddress],
+      hash,
+      fee,
+      date: timestamp,
+      blockHeight,
+      blockHash,
+      hasFailed: false,
+      extra: commonExtra,
+    };
+
+    relatedOperation.id = encodeOperationId(ledgerAccountId, hash, "FEES");
+    relatedOperation.type = "FEES";
+    relatedOperation.blockHash = blockHash;
+    relatedOperation.blockHeight = blockHeight;
+    relatedOperation.date = timestamp;
+    relatedOperation.recipients = [recipientAddress];
+    relatedOperation.senders = [senderAddress];
+    relatedOperation.hasFailed = false;
+    relatedOperation.value = fee;
+    relatedOperation.fee = fee;
+    relatedOperation.extra = commonExtra;
+    relatedOperation.subOperations = [tokenOperation];
+
+    newERC20TokenOperations.push(tokenOperation);
+  }
+
+  // create new operations for remaining ERC20 operations
+  for (const [hash, erc20Operation] of erc20OperationsToAdd.entries()) {
+    const timestamp = new Date(
+      parseInt(erc20Operation.mirrorTransaction.consensus_timestamp.split(".")[0], 10) * 1000,
+    );
+    const evmAddress = toEVMAddress(address);
+    const fee = BigNumber(erc20Operation.mirrorTransaction.charged_tx_fee);
+    const encodedTokenId = encodeTokenAccountId(ledgerAccountId, erc20Operation.token);
+    const type: OperationType =
+      erc20Operation.thirdwebTransaction.decoded.params.from === evmAddress ? "OUT" : "IN";
+    const value = BigNumber(erc20Operation.thirdwebTransaction.decoded.params.value);
+    const evmSenderAddress = erc20Operation.thirdwebTransaction.decoded.params.from;
+    const evmRecipientAddress = erc20Operation.thirdwebTransaction.decoded.params.to;
+    const senderAddress = fromEVMAddress(evmSenderAddress) ?? evmSenderAddress;
+    const recipientAddress = fromEVMAddress(evmRecipientAddress) ?? evmRecipientAddress;
+    const blockHeight = 5;
+    const blockHash = erc20Operation.thirdwebTransaction.blockHash;
+    const memo = getMemoFromBase64(erc20Operation.mirrorTransaction.memo_base64);
+    const commonExtra = {
+      ...(memo && { memo }),
+      consensusTimestamp: erc20Operation.contractCallResult.timestamp,
+      transactionId: erc20Operation.mirrorTransaction.transaction_id,
+      gasConsumed: erc20Operation.contractCallResult.gas_consumed,
+      gasLimit: erc20Operation.contractCallResult.gas_limit,
+      gasUsed: erc20Operation.contractCallResult.gas_used,
+    } satisfies HederaOperationExtra;
+
+    const tokenOperation = {
+      id: encodeOperationId(encodedTokenId, hash, type),
+      accountId: encodedTokenId,
+      type,
+      value,
+      recipients: [recipientAddress],
+      senders: [senderAddress],
+      hash,
+      fee,
+      date: timestamp,
+      blockHeight,
+      blockHash,
+      hasFailed: false,
+      extra: commonExtra,
+    };
+
+    // add main FEES coin operation for ERC20 send token transfer
+    let coinOperation: Operation | null = null;
+    if (type === "OUT") {
+      coinOperation = {
+        id: encodeOperationId(ledgerAccountId, hash, "FEES"),
+        accountId: ledgerAccountId,
+        type: "FEES",
+        value: fee,
+        recipients: [recipientAddress],
+        senders: [senderAddress],
+        hash,
+        fee,
+        date: timestamp,
+        blockHeight,
+        blockHash,
+        hasFailed: false,
+        extra: commonExtra,
+      };
+    } else {
+      coinOperation = makeCoinOperationForOrphanChildOperation(tokenOperation);
+    }
+
+    coinOperation.subOperations = [tokenOperation];
+    updatedOperations.push(coinOperation);
+    newERC20TokenOperations.push(tokenOperation);
+  }
+
+  // ensure operations lists are sorted correctly
+  updatedOperations.sort((a, b) => b.date.getTime() - a.date.getTime());
+  newERC20TokenOperations.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  return {
+    updatedOperations,
+    newERC20TokenOperations,
+  };
 };

@@ -6,23 +6,25 @@ import {
   RecipientRequired,
 } from "@ledgerhq/errors";
 import type { Account, AccountBridge, TokenAccount } from "@ledgerhq/types-live";
-import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account";
+import { findSubAccountById } from "@ledgerhq/coin-framework/account";
 import { getEnv } from "@ledgerhq/live-env";
+import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_MODES } from "../constants";
 import {
   HederaInsufficientFundsForAssociation,
   HederaRecipientTokenAssociationRequired,
   HederaRecipientTokenAssociationUnverified,
+  HederaRecipientEvmAddressVerificationRequired,
 } from "../errors";
 import { isTokenAssociateTransaction, isTokenAssociationRequired } from "../logic";
-import type { TokenAssociateProperties, Transaction, TransactionStatus } from "../types";
+import type { Transaction, TransactionStatus } from "../types";
 import {
   calculateAmount,
   checkAccountTokenAssociationStatus,
   getCurrencyToUSDRate,
+  getERC20EstimatedFees,
   getEstimatedFees,
   safeParseAccountId,
 } from "./utils";
-import { HEDERA_OPERATION_TYPES } from "../constants";
 
 type Errors = Record<string, Error>;
 type Warnings = Record<string, Error>;
@@ -49,7 +51,7 @@ function validateRecipient(account: Account, recipient: string): Error | null {
 
 async function handleTokenAssociateTransaction(
   account: Account,
-  transaction: Extract<Required<Transaction>, { properties: TokenAssociateProperties }>,
+  transaction: Extract<Transaction, { mode: typeof HEDERA_TRANSACTION_MODES.TokenAssociate }>,
 ): Promise<TransactionStatus> {
   const errors: Errors = {};
   const warnings: Warnings = {};
@@ -84,13 +86,14 @@ async function handleTokenAssociateTransaction(
   };
 }
 
-async function handleTokenTransaction(
+async function handleHTSTokenTransaction(
   account: Account,
   subAccount: TokenAccount,
   transaction: Transaction,
 ): Promise<TransactionStatus> {
   const errors: Errors = {};
   const warnings: Warnings = {};
+
   const [calculatedAmount, estimatedFees] = await Promise.all([
     calculateAmount({ transaction, account }),
     getEstimatedFees(account, HEDERA_OPERATION_TYPES.TokenTransfer),
@@ -106,7 +109,7 @@ async function handleTokenTransaction(
     try {
       const hasRecipientTokenAssociated = await checkAccountTokenAssociationStatus(
         transaction.recipient,
-        subAccount.token.contractAddress,
+        subAccount.token,
       );
 
       if (!hasRecipientTokenAssociated) {
@@ -138,12 +141,55 @@ async function handleTokenTransaction(
   };
 }
 
+async function handleERC20TokenTransaction(
+  account: Account,
+  subAccount: TokenAccount,
+  transaction: Transaction,
+): Promise<TransactionStatus> {
+  const errors: Errors = {};
+  const warnings: Warnings = {
+    unverifiedEvmAddress: new HederaRecipientEvmAddressVerificationRequired(),
+  };
+
+  const [calculatedAmount, estimatedFees] = await Promise.all([
+    calculateAmount({ transaction, account }),
+    getERC20EstimatedFees(account, transaction),
+  ]);
+
+  const recipientError = validateRecipient(account, transaction.recipient);
+
+  if (recipientError) {
+    errors.recipient = recipientError;
+  }
+
+  if (transaction.amount.eq(0)) {
+    errors.amount = new AmountRequired();
+  }
+
+  if (subAccount.balance.isLessThan(calculatedAmount.totalSpent)) {
+    errors.amount = new NotEnoughBalance();
+  }
+
+  if (account.balance.isLessThan(estimatedFees.tinybars)) {
+    errors.amount = new NotEnoughBalance();
+  }
+
+  return {
+    amount: calculatedAmount.amount,
+    totalSpent: calculatedAmount.totalSpent,
+    estimatedFees: estimatedFees.tinybars,
+    errors,
+    warnings,
+  };
+}
+
 async function handleCoinTransaction(
   account: Account,
   transaction: Transaction,
 ): Promise<TransactionStatus> {
   const errors: Errors = {};
   const warnings: Warnings = {};
+
   const [calculatedAmount, estimatedFees] = await Promise.all([
     calculateAmount({ transaction, account }),
     getEstimatedFees(account, HEDERA_OPERATION_TYPES.CryptoTransfer),
@@ -178,12 +224,17 @@ export const getTransactionStatus: AccountBridge<
   TransactionStatus
 >["getTransactionStatus"] = async (account, transaction) => {
   const subAccount = findSubAccountById(account, transaction?.subAccountId || "");
-  const isTokenTransaction = isTokenAccount(subAccount);
+  const isHTSTokenTransaction =
+    transaction.mode === HEDERA_TRANSACTION_MODES.Send && subAccount?.token.tokenType === "hts";
+  const isERC20TokenTransaction =
+    transaction.mode === HEDERA_TRANSACTION_MODES.Send && subAccount?.token.tokenType === "erc20";
 
   if (isTokenAssociateTransaction(transaction)) {
     return handleTokenAssociateTransaction(account, transaction);
-  } else if (isTokenTransaction) {
-    return handleTokenTransaction(account, subAccount, transaction);
+  } else if (isHTSTokenTransaction) {
+    return handleHTSTokenTransaction(account, subAccount, transaction);
+  } else if (isERC20TokenTransaction) {
+    return handleERC20TokenTransaction(account, subAccount, transaction);
   } else {
     return handleCoinTransaction(account, transaction);
   }

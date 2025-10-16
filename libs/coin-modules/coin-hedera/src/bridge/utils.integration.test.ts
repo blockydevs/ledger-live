@@ -2,14 +2,34 @@ import BigNumber from "bignumber.js";
 import { InvalidAddress } from "@ledgerhq/errors";
 import cvsApi from "@ledgerhq/live-countervalues/api/index";
 import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
+import { getAccount, getNetworkFees, estimateContractCallGas } from "../api/mirror";
+import {
+  DEFAULT_GAS_LIMIT,
+  DEFAULT_GAS_PRICE_TINYBARS,
+  ESTIMATED_FEE_SAFETY_RATE,
+  ESTIMATED_GAS_SAFETY_RATE,
+  HEDERA_OPERATION_TYPES,
+  HEDERA_TRANSACTION_MODES,
+} from "../constants";
+import { isValidExtra } from "../logic";
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
+import {
+  getMockedCurrency,
+  getMockedERC20TokenCurrency,
+  getMockedHTSTokenCurrency,
+  getTokenCurrencyFromCAL,
+} from "../test/fixtures/currency.fixture";
+import { getMockedMirrorToken } from "../test/fixtures/mirror.fixture";
+import { getMockedOperation } from "../test/fixtures/operation.fixture";
 import { getMockedTransaction } from "../test/fixtures/transaction.fixture";
+import { HederaOperationExtra } from "../types";
 import {
   applyPendingExtras,
   calculateAmount,
   checkAccountTokenAssociationStatus,
   getCurrencyToUSDRate,
   getEstimatedFees,
+  getERC20EstimatedFees,
   getSubAccounts,
   getSyncHash,
   mergeSubAccounts,
@@ -17,24 +37,17 @@ import {
   patchOperationWithExtra,
   prepareOperations,
 } from "./utils";
-import {
-  getMockedCurrency,
-  getMockedTokenCurrency,
-  getTokenCurrencyFromCAL,
-} from "../test/fixtures/currency.fixture";
-import { getMockedOperation } from "../test/fixtures/operation.fixture";
-import { HederaOperationExtra } from "../types";
-import { getAccount } from "../api/mirror";
 import { HederaRecipientInvalidChecksum } from "../errors";
-import { isValidExtra } from "../logic";
-import { getMockedMirrorToken } from "../test/fixtures/mirror.fixture";
-import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_KINDS } from "../constants";
 
 jest.mock("../api/mirror");
 jest.mock("@ledgerhq/live-countervalues/api/index");
 
 const mockedFetchLatest = cvsApi.fetchLatest as jest.MockedFunction<typeof cvsApi.fetchLatest>;
 const mockedGetAccount = getAccount as jest.MockedFunction<typeof getAccount>;
+const mockedGetNetworkFees = getNetworkFees as jest.MockedFunction<typeof getNetworkFees>;
+const mockedEstimateContractCallGas = estimateContractCallGas as jest.MockedFunction<
+  typeof estimateContractCallGas
+>;
 
 describe("utils", () => {
   describe("calculateAmount", () => {
@@ -84,7 +97,7 @@ describe("utils", () => {
     });
 
     test("token transfer, useAllAmount = true", async () => {
-      const mockedTokenCurrency = getMockedTokenCurrency();
+      const mockedTokenCurrency = getMockedHTSTokenCurrency();
       const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
       const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
       const mockedTransaction = getMockedTransaction({
@@ -104,7 +117,7 @@ describe("utils", () => {
     });
 
     test("token transfer, useAllAmount = false", async () => {
-      const mockedTokenCurrency = getMockedTokenCurrency();
+      const mockedTokenCurrency = getMockedHTSTokenCurrency();
       const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
       const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
       const mockedTransaction = getMockedTransaction({
@@ -125,14 +138,14 @@ describe("utils", () => {
     });
 
     test("token associate operation uses TokenAssociate fee", async () => {
-      const mockedTokenCurrency = getMockedTokenCurrency();
+      const mockedTokenCurrency = getMockedHTSTokenCurrency();
       const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
       const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
       const mockedTransaction = getMockedTransaction({
         useAllAmount: false,
         amount: new BigNumber(1),
+        mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
         properties: {
-          name: HEDERA_TRANSACTION_KINDS.TokenAssociate.name,
           token: mockedTokenCurrency,
         },
       });
@@ -169,7 +182,7 @@ describe("utils", () => {
       const expectedFee = new BigNumber(baseFeeTinybar)
         .div(usdRate)
         .integerValue(BigNumber.ROUND_CEIL)
-        .multipliedBy(2); // safety rate
+        .multipliedBy(ESTIMATED_FEE_SAFETY_RATE);
 
       expect(result.toFixed()).toBe(expectedFee.toFixed());
     });
@@ -185,7 +198,7 @@ describe("utils", () => {
       const expectedFee = new BigNumber(baseFeeTinybar)
         .div(usdRate)
         .integerValue(BigNumber.ROUND_CEIL)
-        .multipliedBy(2);
+        .multipliedBy(ESTIMATED_FEE_SAFETY_RATE);
 
       expect(result.toFixed()).toBe(expectedFee.toFixed());
     });
@@ -201,7 +214,7 @@ describe("utils", () => {
       const expectedFee = new BigNumber(baseFeeTinybar)
         .div(usdRate)
         .integerValue(BigNumber.ROUND_CEIL)
-        .multipliedBy(2);
+        .multipliedBy(ESTIMATED_FEE_SAFETY_RATE);
 
       expect(result.toFixed()).toBe(expectedFee.toFixed());
     });
@@ -212,7 +225,7 @@ describe("utils", () => {
 
       const result = await getEstimatedFees(mockedAccount, HEDERA_OPERATION_TYPES.CryptoTransfer);
 
-      const expected = new BigNumber("150200").multipliedBy(2);
+      const expected = new BigNumber("150200").multipliedBy(ESTIMATED_FEE_SAFETY_RATE);
       expect(result.toFixed()).toBe(expected.toFixed());
     });
 
@@ -221,8 +234,65 @@ describe("utils", () => {
 
       const result = await getEstimatedFees(mockedAccount, HEDERA_OPERATION_TYPES.CryptoTransfer);
 
-      const expected = new BigNumber("150200").multipliedBy(2);
+      const expected = new BigNumber("150200").multipliedBy(ESTIMATED_FEE_SAFETY_RATE);
       expect(result.toFixed()).toBe(expected.toFixed());
+    });
+  });
+
+  describe("getERC20EstimatedFees", () => {
+    const mockedTokenCurrency = getMockedERC20TokenCurrency();
+    const tokenAccount = getMockedTokenAccount(mockedTokenCurrency);
+    const mockedAccount = getMockedAccount({ subAccounts: [tokenAccount] });
+    const mockedTransaction = getMockedTransaction({
+      subAccountId: tokenAccount.id,
+      amount: new BigNumber(123),
+      recipient: "0.0.9999",
+    });
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test("returns estimated fee based on gas estimation and network fees rate", async () => {
+      // 1 gas = 10 tinybars
+      const gasTinybarRate = 10;
+      const gasLimit = new BigNumber(50_000);
+      mockedGetNetworkFees.mockResolvedValueOnce({
+        fees: [{ gas: gasTinybarRate, transaction_type: "ContractCall" }],
+        timestamp: "",
+      });
+      mockedEstimateContractCallGas.mockResolvedValueOnce(gasLimit);
+
+      const result = await getERC20EstimatedFees(mockedAccount, mockedTransaction);
+      const expectedGas = gasLimit
+        .multipliedBy(ESTIMATED_GAS_SAFETY_RATE)
+        .integerValue(BigNumber.ROUND_CEIL);
+      const expectedTinybars = expectedGas.multipliedBy(gasTinybarRate);
+
+      expect(result.gas.toNumber()).toBe(expectedGas.toNumber());
+      expect(result.tinybars.toNumber()).toBe(expectedTinybars.toNumber());
+    });
+
+    test("falls back to default estimate on network fees failure", async () => {
+      mockedGetNetworkFees.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await getERC20EstimatedFees(mockedAccount, mockedTransaction);
+      const expectedGas = DEFAULT_GAS_LIMIT;
+      const expectedTinybars = expectedGas.multipliedBy(DEFAULT_GAS_PRICE_TINYBARS);
+
+      expect(result.gas.toNumber()).toBe(expectedGas.toNumber());
+      expect(result.tinybars.toNumber()).toBe(expectedTinybars.toNumber());
+    });
+
+    test("falls back to default estimate on gas estimation failure", async () => {
+      mockedEstimateContractCallGas.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await getERC20EstimatedFees(mockedAccount, mockedTransaction);
+      const expectedGas = DEFAULT_GAS_LIMIT;
+      const expectedTinybars = expectedGas.multipliedBy(DEFAULT_GAS_PRICE_TINYBARS);
+
+      expect(result.gas.toNumber()).toBe(expectedGas.toNumber());
+      expect(result.tinybars.toNumber()).toBe(expectedTinybars.toNumber());
     });
   });
 
@@ -265,11 +335,13 @@ describe("utils", () => {
         accountId: encodeTokenAccountId(mockedAccount.id, secondTokenCurrencyFromCAL),
       });
 
-      const result = await getSubAccounts(
-        mockedAccount.id,
-        [mockedOperation1, mockedOperation2],
-        [mockedMirrorToken1, mockedMirrorToken2],
-      );
+      const result = await getSubAccounts({
+        ledgerAccountId: mockedAccount.id,
+        latestHTSTokenOperations: [mockedOperation1, mockedOperation2],
+        latestERC20TokenOperations: [],
+        mirrorTokens: [mockedMirrorToken1, mockedMirrorToken2],
+        erc20Tokens: [],
+      });
       const uniqueSubAccountIds = new Set(result.map(sa => sa.id));
 
       expect(result).toHaveLength(2);
@@ -283,13 +355,19 @@ describe("utils", () => {
     });
 
     test("ignores operation if token is not listed in CAL", async () => {
-      const mockedTokenCurrency = getMockedTokenCurrency();
+      const mockedTokenCurrency = getMockedHTSTokenCurrency();
       const mockedAccount = getMockedAccount();
       const mockedOperation = getMockedOperation({
         accountId: encodeTokenAccountId(mockedAccount.id, mockedTokenCurrency),
       });
 
-      const result = await getSubAccounts(mockedAccount.id, [mockedOperation], []);
+      const result = await getSubAccounts({
+        ledgerAccountId: mockedAccount.id,
+        latestHTSTokenOperations: [mockedOperation],
+        latestERC20TokenOperations: [],
+        mirrorTokens: [],
+        erc20Tokens: [],
+      });
 
       expect(result).toHaveLength(0);
     });
@@ -302,7 +380,13 @@ describe("utils", () => {
         balance: 42,
       });
 
-      const result = await getSubAccounts(mockedAccount.id, [], [mockedMirrorToken]);
+      const result = await getSubAccounts({
+        ledgerAccountId: mockedAccount.id,
+        latestHTSTokenOperations: [],
+        latestERC20TokenOperations: [],
+        mirrorTokens: [mockedMirrorToken],
+        erc20Tokens: [],
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0].token).toEqual(tokenCurrencyFromCAL);
@@ -383,8 +467,8 @@ describe("utils", () => {
 
   describe("mergeSubAccounts", () => {
     test("returns newSubAccounts if no initial account exists", () => {
-      const mockedTokenCurrency1 = getMockedTokenCurrency({ id: "token1" });
-      const mockedTokenCurrency2 = getMockedTokenCurrency({ id: "token2" });
+      const mockedTokenCurrency1 = getMockedHTSTokenCurrency({ id: "token1" });
+      const mockedTokenCurrency2 = getMockedHTSTokenCurrency({ id: "token2" });
       const mockedTokenAccount1 = getMockedTokenAccount(mockedTokenCurrency1, { id: "ta1" });
       const mockedTokenAccount2 = getMockedTokenAccount(mockedTokenCurrency2, { id: "ta2" });
       const initialAccount = undefined;
@@ -396,7 +480,7 @@ describe("utils", () => {
     });
 
     test("merges operations and updates only changed fields", () => {
-      const mockedTokenCurrency = getMockedTokenCurrency();
+      const mockedTokenCurrency = getMockedHTSTokenCurrency();
       const existingOperation = getMockedOperation({ id: "op1" });
       const newOperation = getMockedOperation({ id: "op2" });
       const newPendingOperation = getMockedOperation({ id: "op3" });
@@ -428,8 +512,8 @@ describe("utils", () => {
     });
 
     test("adds new sub accounts that are not present in initial account", () => {
-      const existingToken = getMockedTokenCurrency({ id: "token1" });
-      const newToken = getMockedTokenCurrency({ id: "token2" });
+      const existingToken = getMockedHTSTokenCurrency({ id: "token1" });
+      const newToken = getMockedHTSTokenCurrency({ id: "token2" });
       const existingTokenAccount = getMockedTokenAccount(existingToken, { id: "ta1" });
       const newTokenAccount = getMockedTokenAccount(newToken, { id: "ta2" });
       const mockedAccount = getMockedAccount({ subAccounts: [existingTokenAccount] });
@@ -490,12 +574,16 @@ describe("utils", () => {
 
   describe("checkAccountTokenAssociationStatus", () => {
     const accountId = "0.0.1234";
-    const tokenId = "0.0.5678";
+    const htsToken = getMockedHTSTokenCurrency({ contractAddress: "0.0.1234", tokenType: "hts" });
+    const erc20Token = getMockedHTSTokenCurrency({
+      contractAddress: "0.0.4321",
+      tokenType: "erc20",
+    });
 
     beforeEach(() => {
       jest.clearAllMocks();
       // reset LRU cache to make sure all tests receive correct mocks from mockedGetAccount
-      checkAccountTokenAssociationStatus.clear(`${accountId}-${tokenId}`);
+      checkAccountTokenAssociationStatus.clear(`${accountId}-${htsToken.contractAddress}`);
     });
 
     test("returns true if max_automatic_token_associations === -1", async () => {
@@ -509,7 +597,7 @@ describe("utils", () => {
         },
       });
 
-      const result = await checkAccountTokenAssociationStatus(accountId, tokenId);
+      const result = await checkAccountTokenAssociationStatus(accountId, htsToken);
       expect(result).toBe(true);
     });
 
@@ -520,11 +608,11 @@ describe("utils", () => {
         balance: {
           balance: 1,
           timestamp: "",
-          tokens: [{ token_id: tokenId, balance: 1 }],
+          tokens: [{ token_id: htsToken.contractAddress, balance: 1 }],
         },
       });
 
-      const result = await checkAccountTokenAssociationStatus(accountId, tokenId);
+      const result = await checkAccountTokenAssociationStatus(accountId, htsToken);
       expect(result).toBe(true);
     });
 
@@ -539,8 +627,14 @@ describe("utils", () => {
         },
       });
 
-      const result = await checkAccountTokenAssociationStatus(accountId, tokenId);
+      const result = await checkAccountTokenAssociationStatus(accountId, htsToken);
       expect(result).toBe(false);
+    });
+
+    test("returns true for erc20 tokens", async () => {
+      const result = await checkAccountTokenAssociationStatus(accountId, erc20Token);
+      expect(mockedGetAccount).not.toHaveBeenCalled();
+      expect(result).toBe(true);
     });
 
     test("supports addresses with checksum", async () => {
@@ -556,7 +650,7 @@ describe("utils", () => {
         },
       });
 
-      await checkAccountTokenAssociationStatus(addressWithChecksum, tokenId);
+      await checkAccountTokenAssociationStatus(addressWithChecksum, htsToken);
       expect(mockedGetAccount).toHaveBeenCalledWith("0.0.9124531");
     });
   });

@@ -8,6 +8,7 @@ import jettonTokens from "../data/ton-jetton";
 import { tokens as sepoliaTokens } from "../data/evm/11155111";
 import stellarTokens from "../data/stellar";
 import hederaTokens from "../data/hedera";
+import hederaERC20Tokens from "../data/hedera-erc20";
 import vechainTokens from "../data/vip180";
 import esdttokens from "../data/esdt";
 import asatokens from "../data/asa";
@@ -38,6 +39,7 @@ import {
   convertAptCoinTokens,
   convertAptFaTokens,
   convertHederaTokens,
+  convertHederaERC20Tokens,
 } from "./legacy-utils";
 
 // Export the legacy token data for use by initializeLegacyTokens in legacy-utils.ts
@@ -46,6 +48,7 @@ export {
   sepoliaTokens,
   polygonTokens,
   hederaTokens,
+  hederaERC20Tokens,
   bnbTokens,
   trc10tokens,
   trc20tokens,
@@ -77,6 +80,7 @@ export function initializeLegacyTokens(
   addTokens(polygonTokens.map(convertERC20));
   // Hedera tokens
   addTokens(hederaTokens.map(convertHederaTokens));
+  addTokens(hederaERC20Tokens.map(convertHederaERC20Tokens));
   // Binance Smart Chain tokens
   addTokens(bnbTokens.map(convertERC20));
   // Tron tokens

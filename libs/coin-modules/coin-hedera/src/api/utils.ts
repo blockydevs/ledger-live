@@ -4,9 +4,20 @@ import type { Operation, OperationType } from "@ledgerhq/types-live";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
 import { encodeTokenAccountId } from "@ledgerhq/coin-framework/account";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
-import type { HederaMirrorTokenTransfer, HederaMirrorCoinTransfer } from "./types";
-import { getAccountTransactions } from "./mirror";
 import { base64ToUrlSafeBase64 } from "../bridge/utils";
+import { getMemoFromBase64 } from "../logic";
+import {
+  getAccountTransactions,
+  getMirrorTransactionForContractCallResult,
+  getContractCallResult,
+} from "./mirror";
+import { getAccountERC20Transactions } from "./thirdweb-mirror";
+import type {
+  HederaMirrorTokenTransfer,
+  HederaMirrorCoinTransfer,
+  HederaERC20TokenBalance,
+} from "./types";
+import type { HederaOperationExtra, OperationERC20 } from "../types";
 
 function isValidRecipient(accountId: AccountId, recipients: string[]): boolean {
   if (accountId.shard.eq(0) && accountId.realm.eq(0)) {
@@ -62,17 +73,47 @@ export function parseTransfers(
   };
 }
 
-export async function getOperationsForAccount(
-  ledgerAccountId: string,
-  address: string,
-  latestOperationTimestamp: string | null,
-): Promise<{
+const customOperationTypeByTxName: Record<string, OperationType> = {
+  TOKENASSOCIATE: "ASSOCIATE_TOKEN",
+  CONTRACTCALL: "CONTRACT_CALL",
+};
+
+export async function getOperationsForAccount({
+  ledgerAccountId,
+  address,
+  latestOperationTimestamp,
+  erc20LatestOperationTimestamp,
+  erc20TokenBalances,
+  pendingOperationHashes,
+  erc20OperationHashes,
+}: {
+  ledgerAccountId: string;
+  address: string;
+  latestOperationTimestamp: string | null;
+  erc20LatestOperationTimestamp: string | null;
+  erc20TokenBalances: HederaERC20TokenBalance[];
+  pendingOperationHashes: Set<string>;
+  erc20OperationHashes: Set<string>;
+}): Promise<{
   coinOperations: Operation[];
   tokenOperations: Operation[];
+  erc20Operations: OperationERC20[];
 }> {
-  const mirrorTransactions = await getAccountTransactions(address, latestOperationTimestamp);
+  const erc20Operations: OperationERC20[] = [];
   const coinOperations: Operation[] = [];
   const tokenOperations: Operation[] = [];
+  const erc20TokenAddresses = erc20TokenBalances.map(token => token.token.contractAddress);
+  const blockHeight = 5;
+  const blockHash = null;
+
+  const [mirrorTransactions, thirdwebTransactions] = await Promise.all([
+    getAccountTransactions(address, latestOperationTimestamp),
+    getAccountERC20Transactions({
+      address,
+      tokens: erc20TokenAddresses,
+      since: erc20LatestOperationTimestamp,
+    }),
+  ]);
 
   for (const rawTx of mirrorTransactions) {
     const timestamp = new Date(parseInt(rawTx.consensus_timestamp.split(".")[0], 10) * 1000);
@@ -81,6 +122,12 @@ export async function getOperationsForAccount(
     const tokenTransfers = rawTx.token_transfers ?? [];
     const transfers = rawTx.transfers ?? [];
     const hasFailed = rawTx.result !== "SUCCESS";
+    const memo = getMemoFromBase64(rawTx.memo_base64);
+    const commonExtra = {
+      ...(memo && { memo }),
+      consensusTimestamp: rawTx.consensus_timestamp,
+      transactionId: rawTx.transaction_id,
+    } satisfies HederaOperationExtra;
 
     if (tokenTransfers.length > 0) {
       const tokenId = rawTx.token_transfers[0].token_id;
@@ -102,10 +149,10 @@ export async function getOperationsForAccount(
           hash,
           fee,
           date: timestamp,
-          blockHeight: 5,
-          blockHash: null,
+          blockHeight,
+          blockHash,
           hasFailed,
-          extra: { consensusTimestamp: rawTx.consensus_timestamp },
+          extra: commonExtra,
         });
       }
 
@@ -119,14 +166,22 @@ export async function getOperationsForAccount(
         hash,
         fee,
         date: timestamp,
-        blockHeight: 5,
-        blockHash: null,
+        blockHeight,
+        blockHash,
         hasFailed,
-        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+        extra: commonExtra,
       });
     } else if (transfers.length > 0) {
       const { type, value, senders, recipients } = parseTransfers(rawTx.transfers, address);
-      const operationType = rawTx.name === "TOKENASSOCIATE" ? "ASSOCIATE_TOKEN" : type;
+      const operationType = customOperationTypeByTxName[rawTx.name] ?? type;
+
+      // skip adding mirror node CONTRACT_CALL transaction if we:
+      // - already have matching ERC20 operation, this may happen because `timestamp` (used for incremental sync) does not have nanoseconds precision
+      // - already have pending operation with the same hash (we don't want to override FEES with CONTRACT_CALL)
+      const hashAlreadyExists = erc20OperationHashes.has(hash) || pendingOperationHashes.has(hash);
+      if (operationType === "CONTRACT_CALL" && hashAlreadyExists) {
+        continue;
+      }
 
       coinOperations.push({
         id: encodeOperationId(ledgerAccountId, hash, operationType),
@@ -138,13 +193,35 @@ export async function getOperationsForAccount(
         hash,
         fee,
         date: timestamp,
-        blockHeight: 5,
-        blockHash: null,
+        blockHeight,
+        blockHash,
         hasFailed,
-        extra: { consensusTimestamp: rawTx.consensus_timestamp },
+        extra: commonExtra,
       });
     }
   }
 
-  return { coinOperations, tokenOperations };
+  // build a list of erc20 transactions with related mirror transaction
+  for (const thirdwebTransaction of thirdwebTransactions) {
+    const tokenId = thirdwebTransaction.address;
+    const token = findTokenByAddressInCurrency(tokenId, "hedera");
+
+    if (!token) continue;
+
+    const hash = thirdwebTransaction.transactionHash;
+    const contractCallResult = await getContractCallResult(hash);
+    const mirrorTransaction = await getMirrorTransactionForContractCallResult(
+      contractCallResult.timestamp,
+      contractCallResult.contract_id,
+    );
+
+    if (!mirrorTransaction) continue;
+
+    erc20Operations.push({ thirdwebTransaction, mirrorTransaction, contractCallResult, token });
+  }
+
+  coinOperations.sort((a, b) => b.date.getTime() - a.date.getTime());
+  tokenOperations.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  return { coinOperations, tokenOperations, erc20Operations };
 }

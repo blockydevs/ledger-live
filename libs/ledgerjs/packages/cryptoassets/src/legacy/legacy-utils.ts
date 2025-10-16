@@ -25,6 +25,7 @@ import type { SPLToken } from "../data/spl";
 import type { AptosToken as AptosCoinToken } from "../data/apt_coin";
 import type { AptosToken as AptosFAToken } from "../data/apt_fungible_asset";
 import type { SuiToken } from "../data/sui";
+import { HederaERC20Token } from "../data/hedera-erc20";
 
 // Export types for compatibility
 export interface TokensListOptions {
@@ -320,6 +321,38 @@ export function convertHederaTokens([
     contractAddress: tokenId,
     parentCurrency: getCryptoCurrencyById(network),
     tokenType: "hts",
+    name,
+    ticker,
+    delisted,
+    disableCountervalue: false,
+    units: [
+      {
+        name,
+        code: ticker,
+        magnitude: decimals,
+      },
+    ],
+  };
+}
+
+/**
+ * @deprecated
+ */
+export function convertHederaERC20Tokens([
+  id,
+  address,
+  name,
+  ticker,
+  network,
+  decimals,
+  delisted,
+]: HederaERC20Token): TokenCurrency {
+  return {
+    type: "TokenCurrency",
+    id,
+    contractAddress: address,
+    parentCurrency: getCryptoCurrencyById(network),
+    tokenType: "erc20",
     name,
     ticker,
     delisted,

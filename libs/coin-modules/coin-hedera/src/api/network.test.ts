@@ -1,19 +1,17 @@
 import BigNumber from "bignumber.js";
 import { TransferTransaction } from "@hashgraph/sdk";
-import type { Account } from "@ledgerhq/types-live";
 import { buildUnsignedTransaction } from "./network";
 import { Transaction } from "../types";
 import invariant from "invariant";
+import { HEDERA_TRANSACTION_MODES } from "../constants";
+import { getMockedAccount } from "../test/fixtures/account.fixture";
 
 describe("buildUnsignedTransaction", () => {
-  const mockAccount = {
-    freshAddress: "0.0.123",
-    id: "hedera:0:0.0.123",
-    balance: new BigNumber(1000),
-  } as Account;
+  const mockAccount = getMockedAccount();
 
   test("builds basic transaction without maxFee", async () => {
     const transaction: Transaction = {
+      mode: HEDERA_TRANSACTION_MODES.Send,
       family: "hedera",
       amount: new BigNumber(100),
       recipient: "0.0.456",
@@ -28,7 +26,7 @@ describe("buildUnsignedTransaction", () => {
     expect(result.isFrozen()).toBe(true);
     expect(result.hbarTransfers.size).toBe(2);
 
-    const senderTransfer = result.hbarTransfers.get("0.0.123");
+    const senderTransfer = result.hbarTransfers.get(mockAccount.freshAddress);
     const recipientTransfer = result.hbarTransfers.get("0.0.456");
 
     expect(senderTransfer?.toTinybars().toNumber()).toBe(-100);
@@ -37,6 +35,7 @@ describe("buildUnsignedTransaction", () => {
 
   test("sets max transaction fee when provided", async () => {
     const transaction: Transaction = {
+      mode: HEDERA_TRANSACTION_MODES.Send,
       family: "hedera",
       amount: new BigNumber(100),
       recipient: "0.0.456",

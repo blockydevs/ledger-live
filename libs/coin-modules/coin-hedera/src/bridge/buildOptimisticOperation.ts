@@ -1,11 +1,11 @@
 import invariant from "invariant";
 import type { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
 import { encodeOperationId } from "@ledgerhq/coin-framework/operation";
-import { findSubAccountById, isTokenAccount } from "@ledgerhq/coin-framework/account/helpers";
-import type { HederaOperationExtra, Transaction } from "../types";
-import { getEstimatedFees, safeParseAccountId } from "./utils";
+import { findSubAccountById } from "@ledgerhq/coin-framework/account/helpers";
+import { HEDERA_OPERATION_TYPES, HEDERA_TRANSACTION_MODES } from "../constants";
 import { isTokenAssociateTransaction } from "../logic";
-import { HEDERA_OPERATION_TYPES } from "../constants";
+import type { HederaOperationExtra, Transaction } from "../types";
+import { getERC20EstimatedFees, getEstimatedFees, safeParseAccountId } from "./utils";
 
 const buildOptimisticTokenAssociateOperation = async ({
   account,
@@ -57,6 +57,7 @@ const buildOptimisticCoinOperation = async ({
   const type: OperationType = transactionType ?? "OUT";
   const [_, recipientAddress] = safeParseAccountId(transaction.recipient);
   const recipientWithoutChecksum = recipientAddress?.accountId ?? transaction.recipient;
+  const memo = transaction.memo;
 
   const operation: Operation = {
     id: encodeOperationId(account.id, "", type),
@@ -70,13 +71,15 @@ const buildOptimisticCoinOperation = async ({
     recipients: [recipientWithoutChecksum],
     accountId: account.id,
     date: new Date(),
-    extra: {},
+    extra: {
+      ...(memo && { memo }),
+    } satisfies HederaOperationExtra,
   };
 
   return operation;
 };
 
-const buildOptimisticTokenOperation = async ({
+const buildOptimisticHTSTokenOperation = async ({
   account,
   tokenAccount,
   transaction,
@@ -90,12 +93,12 @@ const buildOptimisticTokenOperation = async ({
   const type: OperationType = "OUT";
   const [_, recipientAddress] = safeParseAccountId(transaction.recipient);
   const recipientWithoutChecksum = recipientAddress?.accountId ?? transaction.recipient;
+  const memo = transaction.memo;
 
   const coinOperation = await buildOptimisticCoinOperation({
     account,
     transaction: {
       ...transaction,
-      recipient: tokenAccount.token.contractAddress,
       amount: estimatedFee,
     },
     transactionType: "FEES",
@@ -116,7 +119,57 @@ const buildOptimisticTokenOperation = async ({
         recipients: [recipientWithoutChecksum],
         accountId: tokenAccount.id,
         date: new Date(),
-        extra: {},
+        extra: {
+          ...(memo && { memo }),
+        } satisfies HederaOperationExtra,
+      },
+    ],
+  };
+
+  return operation;
+};
+
+const buildOptimisticERC20TokenOperation = async ({
+  account,
+  tokenAccount,
+  transaction,
+}: {
+  account: Account;
+  tokenAccount: TokenAccount;
+  transaction: Transaction;
+}): Promise<Operation> => {
+  const estimatedFees = await getERC20EstimatedFees(account, transaction);
+  const value = transaction.amount;
+  const type: OperationType = "OUT";
+  const memo = transaction.memo;
+
+  const coinOperation = await buildOptimisticCoinOperation({
+    account,
+    transaction: {
+      ...transaction,
+      amount: estimatedFees.tinybars,
+    },
+    transactionType: "FEES",
+  });
+
+  const operation: Operation = {
+    ...coinOperation,
+    subOperations: [
+      {
+        id: encodeOperationId(tokenAccount.id, "", type),
+        hash: "",
+        type,
+        value,
+        fee: estimatedFees.tinybars,
+        blockHash: null,
+        blockHeight: null,
+        senders: [account.freshAddress.toString()],
+        recipients: [transaction.recipient],
+        accountId: tokenAccount.id,
+        date: new Date(),
+        extra: {
+          ...(memo && { memo }),
+        } satisfies HederaOperationExtra,
       },
     ],
   };
@@ -132,12 +185,17 @@ export const buildOptimisticOperation = async ({
   transaction: Transaction;
 }): Promise<Operation> => {
   const subAccount = findSubAccountById(account, transaction.subAccountId || "");
-  const isTokenTransaction = isTokenAccount(subAccount);
+  const isHTSTokenTransaction =
+    transaction.mode === HEDERA_TRANSACTION_MODES.Send && subAccount?.token.tokenType === "hts";
+  const isERC20TokenTransaction =
+    transaction.mode === HEDERA_TRANSACTION_MODES.Send && subAccount?.token.tokenType === "erc20";
 
   if (isTokenAssociateTransaction(transaction)) {
     return buildOptimisticTokenAssociateOperation({ account, transaction });
-  } else if (isTokenTransaction) {
-    return buildOptimisticTokenOperation({ account, tokenAccount: subAccount, transaction });
+  } else if (isHTSTokenTransaction) {
+    return buildOptimisticHTSTokenOperation({ account, tokenAccount: subAccount, transaction });
+  } else if (isERC20TokenTransaction) {
+    return buildOptimisticERC20TokenOperation({ account, tokenAccount: subAccount, transaction });
   } else {
     return buildOptimisticCoinOperation({ account, transaction });
   }

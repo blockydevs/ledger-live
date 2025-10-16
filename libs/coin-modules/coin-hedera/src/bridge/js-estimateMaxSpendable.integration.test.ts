@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { createBridges } from ".";
 import { getEstimatedFees } from "./utils";
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
-import { getMockedTokenCurrency } from "../test/fixtures/currency.fixture";
+import { getMockedHTSTokenCurrency } from "../test/fixtures/currency.fixture";
 import { HEDERA_OPERATION_TYPES } from "../constants";
 
 describe("js-estimateMaxSpendable", () => {
@@ -40,7 +40,7 @@ describe("js-estimateMaxSpendable", () => {
   });
 
   test("estimateMaxSpendable returns token balance for token account", async () => {
-    const mockedTokenCurrency = getMockedTokenCurrency();
+    const mockedTokenCurrency = getMockedHTSTokenCurrency();
     const mockedTokenAccount = getMockedTokenAccount(mockedTokenCurrency);
     const mockedAccount = getMockedAccount({ subAccounts: [mockedTokenAccount] });
 

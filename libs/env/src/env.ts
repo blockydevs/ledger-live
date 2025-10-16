@@ -247,6 +247,16 @@ const envDefinitions = {
     parser: floatParser,
     desc: "Minimum USD value an account must hold to perform a token association",
   },
+  API_HEDERA_THIRDWEB_URL: {
+    def: "https://api.thirdweb.com",
+    parser: stringParser,
+    desc: "Thirdweb API for Hedera",
+  },
+  API_HEDERA_THIRDWEB_KEY: {
+    def: "3806c84ce61f5fc2549e5e694dcf0046",
+    parser: stringParser,
+    desc: "Thirdweb API key for Hedera",
+  },
   API_HEDERA_MIRROR: {
     def: "https://hedera.coin.ledger.com",
     parser: stringParser,

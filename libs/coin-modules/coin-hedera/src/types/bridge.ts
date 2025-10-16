@@ -9,7 +9,9 @@ import type {
   TransactionStatusCommon,
   TransactionStatusCommonRaw,
 } from "@ledgerhq/types-live";
-import { HEDERA_TRANSACTION_KINDS } from "../constants";
+import type { HederaThirdwebTransaction } from "../api/thirdweb-types";
+import type { HederaMirrorContractCallResult, HederaMirrorTransaction } from "../api/types";
+import { HEDERA_TRANSACTION_MODES } from "../constants";
 
 export type NetworkInfo = {
   family: "hedera";
@@ -19,24 +21,41 @@ export type NetworkInfoRaw = {
   family: "hedera";
 };
 
-export type TokenAssociateProperties = {
-  name: typeof HEDERA_TRANSACTION_KINDS.TokenAssociate.name;
-  token: TokenCurrency;
-};
-
 export type Transaction = TransactionCommon & {
   family: "hedera";
   memo?: string | undefined;
   maxFee?: BigNumber;
-  properties?: TokenAssociateProperties;
-};
+} & (
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Send;
+        gasLimit?: BigNumber;
+        properties?: never;
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.TokenAssociate;
+        properties: {
+          token: TokenCurrency;
+        };
+      }
+  );
 
 export type TransactionRaw = TransactionCommonRaw & {
   family: "hedera";
   memo?: string | undefined;
   maxFee?: string;
-  properties?: TokenAssociateProperties;
-};
+} & (
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.Send;
+        gasLimit?: string;
+        properties?: never;
+      }
+    | {
+        mode: typeof HEDERA_TRANSACTION_MODES.TokenAssociate;
+        properties: {
+          token: TokenCurrency;
+        };
+      }
+  );
 
 export type TransactionStatus = TransactionStatusCommon;
 
@@ -64,6 +83,17 @@ export type HederaOperationExtra = {
   consensusTimestamp?: string;
   transactionId?: string;
   associatedTokenId?: string;
+  gasConsumed?: number;
+  gasLimit?: number;
+  gasUsed?: number;
+  memo?: string | null;
 };
 
 export type HederaOperation = Operation<HederaOperationExtra>;
+
+export interface OperationERC20 {
+  thirdwebTransaction: HederaThirdwebTransaction;
+  mirrorTransaction: HederaMirrorTransaction;
+  contractCallResult: HederaMirrorContractCallResult;
+  token: TokenCurrency;
+}
