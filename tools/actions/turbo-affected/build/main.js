@@ -18977,6 +18977,7 @@ var package_default = {
     "coin:icon": "pnpm --filter coin-icon",
     "coin:icp": "pnpm --filter coin-internet_computer",
     "coin:stellar": "pnpm --filter coin-stellar",
+    "coin:aleo": "pnpm --filter coin-aleo",
     "coin:tezos": "pnpm --filter coin-tezos",
     "coin:tron": "pnpm --filter coin-tron",
     "coin:vechain": "pnpm --filter coin-vechain",

@@ -13,6 +13,8 @@ const EVM_RAND_ADDRESS = "0x123000000000000000000000000000000000dEaD";
  * DO NOT USE AS RECIPIENT OR SIGN TRANSACTIONS INTO THEM
  */
 const abandonSeedAddresses: Partial<Record<CryptoCurrency["id"], string>> = {
+  // FIXME: proper dead address?
+  aleo: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   algorand: "PSHLIWQKDEETIIBQEOTLGCT5IF7BTTOKCUULONOGVGF2HYDT2IHW3H4CCI",
   // https://snowtrace.io/address/0x000000000000000000000000000000000000dead/tokens
   avalanche_c_chain: EVM_DEAD_ADDRESS,

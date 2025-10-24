@@ -79,6 +79,7 @@
     "src/exchange/swap/webApp/index.ts",
     "src/explorer.ts",
     "src/explorers.ts",
+    "src/families/aleo/types.ts",
     "src/families/algorand/logic.ts",
     "src/families/algorand/tokens.ts",
     "src/families/algorand/types.ts",

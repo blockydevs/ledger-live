@@ -78,6 +78,7 @@
     "coin": "pnpm --filter coin-framework",
     "coin:coverage": "pnpm turbo coverage --filter=\"@ledgerhq/coin-*\" --concurrency=2",
     "coin:coverage:clean": "rm -rf coverage libs/coin-modules/**/coverage libs/coin-framework/coverage",
+    "coin:aleo": "pnpm --filter coin-aleo",
     "coin:algorand": "pnpm --filter coin-algorand",
     "coin:aptos": "pnpm --filter coin-aptos",
     "coin:bitcoin": "pnpm --filter coin-bitcoin",

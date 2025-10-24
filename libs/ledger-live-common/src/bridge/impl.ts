@@ -27,6 +27,7 @@ import { getCryptoAssetsStore, setCryptoAssetsStore } from "./crypto-assets";
 const alpacaized = {
   xrp: true,
   stellar: true,
+  aleo: true,
   tezos: true,
 };
 

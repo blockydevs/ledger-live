@@ -83,6 +83,7 @@ export class Currency {
   static readonly XLM = new Currency("Stellar", "XLM", "stellar", AppInfos.STELLAR, [
     Network.STELLAR,
   ]);
+  static readonly ALEO = new Currency("Aleo", "ALEO", "aleo", AppInfos.ALEO, [Network.ALEO]);
   static readonly BCH = new Currency("Bitcoin Cash", "BCH", "bitcoin_cash", AppInfos.BITCOIN_CASH, [
     Network.BITCOIN_CASH,
   ]);

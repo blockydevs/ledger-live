@@ -167,6 +167,7 @@ export type ModeColors = {
   "crypto-omg-network": string;
   "crypto-near": string;
   "crypto-stellar": string;
+  "crypto-aleo": string;
   "crypto-nano": string;
   "crypto-nimiq": string;
   "crypto-multiverse-x": string;
@@ -356,6 +357,7 @@ export const light: ModeColors = {
   "crypto-omg-network": "#000000",
   "crypto-near": "#1c1d1f",
   "crypto-stellar": "#000000",
+  "crypto-aleo": "#000000",
   "crypto-nano": "#5d8eb2",
   "crypto-nimiq": "#f8b425",
   "crypto-multiverse-x": "#23f7dd",
@@ -545,6 +547,7 @@ export const dark: ModeColors = {
   "crypto-omg-network": "#000000",
   "crypto-near": "#1c1d1f",
   "crypto-stellar": "#000000",
+  "crypto-aleo": "#000000",
   "crypto-nano": "#5d8eb2",
   "crypto-nimiq": "#f8b425",
   "crypto-multiverse-x": "#23f7dd",
@@ -737,6 +740,7 @@ export const tailwindColors = {
   "crypto-omg-network": "var(--crypto-omg-network)",
   "crypto-near": "var(--crypto-near)",
   "crypto-stellar": "var(--crypto-stellar)",
+  "crypto-aleo": "var(--crypto-aleo)",
   "crypto-nano": "var(--crypto-nano)",
   "crypto-nimiq": "var(--crypto-nimiq)",
   "crypto-multiverse-x": "var(--crypto-multiverse-x)",
@@ -932,6 +936,7 @@ export const primitiveColors = {
   "light-crypto-colors-pivx": "#5c4c7c",
   "light-crypto-colors-polkadot": "#e6007a",
   "light-crypto-colors-stellar": "#000000",
+  "light-crypto-colors-aleo": "#000000",
   "light-crypto-colors-tether-usdt": "#00a478",
   "light-crypto-colors-tezos": "#2c7df7",
   "light-crypto-colors-tkx": "#fd6a1f",
@@ -1127,6 +1132,7 @@ export const primitiveColors = {
   "dark-crypto-colors-polygon": "#8247e5",
   "dark-crypto-colors-sats": "#ff8b00",
   "dark-crypto-colors-stellar": "#000000",
+  "dark-crypto-colors-aleo": "#000000",
   "dark-crypto-colors-sol": "#9945ff",
   "dark-crypto-colors-tether-usdt": "#00a478",
   "dark-crypto-colors-tezos": "#2c7df7",

@@ -25,6 +25,7 @@ const targets = [
 
 // Coins using coin-framework
 const familiesWPackage = [
+  "aleo",
   "algorand",
   "aptos",
   "bitcoin",
@@ -57,6 +58,7 @@ const familiesWPackage = [
 const alpacaized = {
   xrp: true,
   stellar: true,
+  aleo: true,
   tezos: true,
 };
 

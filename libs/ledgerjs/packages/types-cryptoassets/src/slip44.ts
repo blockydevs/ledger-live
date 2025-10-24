@@ -1,5 +1,6 @@
 // As defined here: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 export enum CoinType {
+  ALEO = 683,
   AE = 457,
   AION = 425,
   AKA = 200625,

@@ -1,4 +1,5 @@
 export enum Network {
+  ALEO = "Aleo Network",
   CELO = "Celo",
   INJECTIVE = "Injective",
   BITCOIN = "Bitcoin",

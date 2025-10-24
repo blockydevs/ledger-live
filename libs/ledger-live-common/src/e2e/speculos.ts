@@ -346,6 +346,14 @@ export const specs: Specs = {
     },
     dependency: "",
   },
+  Aleo: {
+    currency: getCryptoCurrencyById("aleo"),
+    appQuery: {
+      model: getSpeculosModel(),
+      appName: "Aleo",
+    },
+    dependency: "",
+  },
 };
 
 export async function startSpeculos(

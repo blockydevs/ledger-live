@@ -125,6 +125,10 @@
   "dependencies": {
     "@blooo/hw-app-acre": "^1.1.1",
     "@cardano-foundation/ledgerjs-hw-app-cardano": "^7.1.2",
+    "@dfinity/agent": "^0.21.0",
+    "@dfinity/candid": "^0.21.0",
+    "@dfinity/principal": "^0.15.6",
+    "@ledgerhq/coin-aleo": "workspace:^",
     "@ledgerhq/coin-algorand": "workspace:^",
     "@ledgerhq/coin-aptos": "workspace:^",
     "@ledgerhq/coin-bitcoin": "workspace:^",
@@ -159,6 +163,7 @@
     "@ledgerhq/device-management-kit": "0.9.1",
     "@ledgerhq/devices": "workspace:*",
     "@ledgerhq/errors": "workspace:^",
+    "@ledgerhq/hw-app-aleo": "workspace:^",
     "@ledgerhq/hw-app-algorand": "workspace:^",
     "@ledgerhq/hw-app-aptos": "workspace:^",
     "@ledgerhq/hw-app-btc": "workspace:^",

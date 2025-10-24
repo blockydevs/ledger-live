@@ -26,6 +26,7 @@ setDeviceMode("polling");
 setWalletAPIVersion(WALLET_API_VERSION);
 
 setSupportedCurrencies([
+  "aleo",
   "avalanche_c_chain",
   "axelar",
   "stargaze",

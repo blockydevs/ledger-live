@@ -4,6 +4,7 @@ import { WALLET_API_VERSION } from "@ledgerhq/live-common/wallet-api/constants";
 
 setWalletAPIVersion(WALLET_API_VERSION);
 setSupportedCurrencies([
+  "aleo",
   "axelar",
   "stargaze",
   "secret_network",

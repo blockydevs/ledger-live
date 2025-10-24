@@ -79,4 +79,5 @@ setSupportedCurrencies([
   "westend",
   "assethub_westend",
   "assethub_polkadot",
+  "aleo",
 ]);

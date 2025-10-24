@@ -393,6 +393,15 @@ export const expectedCurrencyList = [
   },
   {
     type: "CryptoCurrency",
+    id: "aleo",
+    ticker: "ALEO",
+    name: "Aleo network",
+    family: "aleo",
+    color: "#000000",
+    decimals: 7,
+  },
+  {
+    type: "CryptoCurrency",
     id: "dogecoin",
     ticker: "DOGE",
     name: "Dogecoin",

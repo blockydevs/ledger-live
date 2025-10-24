@@ -1,0 +1,5 @@
+{
+  "ignoreUnresolved": [],
+  "ignoreUnused": ["@ledgerhq/hw-transport", "jest-sonar"],
+  "ignoreUnimported": ["src/Aleo.ts"]
+}

@@ -13,6 +13,7 @@ export const minAppVersion = {
   Aeternity: "0.4.3",
   Aion: "1.0.2",
   Akroma: "1.4.0",
+  Aleo: "3.2.2",
   Algorand: "1.2.9",
   Ardor: "1.0.1",
   Ark: "2.1.0",
