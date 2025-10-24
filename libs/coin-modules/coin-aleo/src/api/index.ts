@@ -6,6 +6,9 @@ import {
   Page,
   Stake,
   Reward,
+  Validator,
+  CraftedTransaction,
+  Balance,
 } from "@ledgerhq/coin-framework/api/index";
 import coinConfig, { type AleoConfig } from "../config";
 import {
@@ -18,16 +21,26 @@ import {
   lastBlock,
   listOperations,
 } from "../logic";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/lib/currencies";
 
-export function createApi(config: AleoConfig): Api {
+export function createApi(config: AleoConfig, currencyId: string): Api {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
+  const currency = getCryptoCurrencyById(currencyId);
 
   return {
     broadcast,
     combine,
     craftTransaction,
+    craftRawTransaction: (
+      _transaction: string,
+      _sender: string,
+      _publicKey: string,
+      _sequence: number,
+    ): Promise<CraftedTransaction> => {
+      throw new Error("craftRawTransaction is not supported");
+    },
     estimateFees,
-    getBalance,
+    getBalance: (address: string): Promise<Balance[]> => getBalance(currency, address),
     lastBlock,
     listOperations,
     getBlock(_height): Promise<Block> {
@@ -41,6 +54,9 @@ export function createApi(config: AleoConfig): Api {
     },
     getRewards(_address: string, _cursor?: Cursor): Promise<Page<Reward>> {
       throw new Error("getRewards is not supported");
+    },
+    getValidators(_cursor?: Cursor): Promise<Page<Validator>> {
+      throw new Error("getValidators is not supported");
     },
     validateIntent,
     getSequence: async (_address: string) => {
