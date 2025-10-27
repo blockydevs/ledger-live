@@ -90,6 +90,7 @@
   },
   "dependencies": {
     "@ledgerhq/coin-framework": "workspace:^",
+    "@ledgerhq/evm-tools": "workspace:^",
     "@ledgerhq/cryptoassets": "workspace:^",
     "@ledgerhq/devices": "workspace:*",
     "@ledgerhq/errors": "workspace:^",
@@ -99,6 +100,8 @@
     "@ledgerhq/types-live": "workspace:^",
     "@provablehq/sdk": "^0.9.9",
     "bignumber.js": "^9.1.2",
+    "eip55": "2.1.1",
+    "ethers": "6.15.0",
     "expect": "^27.4.6",
     "invariant": "^2.2.2",
     "lodash": "^4.17.21",
@@ -106,6 +109,7 @@
   },
   "devDependencies": {
     "@ledgerhq/disable-network-setup": "workspace:^",
+    "@ledgerhq/hw-app-eth": "workspace:^",
     "@types/invariant": "^2.2.2",
     "@types/jest": "^29.5.10",
     "@types/lodash": "^4.14.191",

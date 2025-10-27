@@ -58,7 +58,7 @@ const familiesWPackage = [
 const alpacaized = {
   xrp: true,
   stellar: true,
-  aleo: true,
+  // aleo: true,
   tezos: true,
 };
 

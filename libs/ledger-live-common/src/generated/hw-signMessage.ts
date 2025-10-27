@@ -1,3 +1,4 @@
+import { messageSigner as aleo } from "../families/aleo/setup";
 import { messageSigner as bitcoin } from "../families/bitcoin/setup";
 import { messageSigner as casper } from "../families/casper/setup";
 import { messageSigner as evm } from "../families/evm/setup";
@@ -7,6 +8,7 @@ import { messageSigner as solana } from "../families/solana/setup";
 import { messageSigner as ton } from "../families/ton/setup";
 
 export default {
+  aleo,
   bitcoin,
   casper,
   evm,
