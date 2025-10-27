@@ -9,17 +9,23 @@ import {
   GetAssetsDataParams,
   PageParam,
 } from "./types";
+import { injectAleoMockData } from "./aleo.mock";
 
+// FIXME: remove injectAleoMockData
 function transformAssetsResponse(
   response: RawApiResponse,
   meta?: FetchBaseQueryMeta,
 ): AssetsDataWithPagination {
-  const enrichedCryptoOrTokenCurrencies = convertApiAssets(response.cryptoOrTokenCurrencies);
+  const responseWithMocks = injectAleoMockData(response);
+  const enrichedCryptoOrTokenCurrencies = convertApiAssets(
+    responseWithMocks.cryptoOrTokenCurrencies,
+  );
+  console.log("injected aleo mock data", { response, responseWithMocks });
 
   const nextCursor = meta?.response?.headers.get("x-ledger-next") || undefined;
 
   return {
-    ...response,
+    ...responseWithMocks,
     cryptoOrTokenCurrencies: enrichedCryptoOrTokenCurrencies,
     pagination: {
       nextCursor,

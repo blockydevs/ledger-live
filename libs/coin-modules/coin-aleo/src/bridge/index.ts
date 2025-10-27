@@ -14,9 +14,9 @@ import type {
 import getAddressWrapper from "@ledgerhq/coin-framework/bridge/getAddressWrapper";
 // import type { CryptoAssetsStoreGetter } from "@ledgerhq/types-live";
 import type { Observable } from "rxjs";
-import type { Transaction as EvmTransaction } from "../types/index";
+import type { Transaction as AleoTransaction } from "../types/index";
 // import aleoCoinConfig, { type AleoConfig } from "../config";
-import type { EvmSigner } from "../types/signer";
+import type { AleoSigner } from "../types/signer";
 import resolver from "../hw-getAddress";
 // import { setCryptoAssetsStoreGetter } from "../cryptoAssetsStore";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
@@ -29,7 +29,7 @@ import { getAccountShape, sync } from "./synchronization";
 // import nftResolvers from "./nftResolvers";
 // import { broadcast } from "./broadcast";
 
-export function buildCurrencyBridge(signerContext: SignerContext<EvmSigner>): CurrencyBridge {
+export function buildCurrencyBridge(signerContext: SignerContext<AleoSigner>): CurrencyBridge {
   const getAddress = resolver(signerContext);
 
   const scanAccounts = makeScanAccounts({
@@ -50,8 +50,8 @@ export function buildCurrencyBridge(signerContext: SignerContext<EvmSigner>): Cu
 }
 
 export function buildAccountBridge(
-  signerContext: SignerContext<EvmSigner>,
-): AccountBridge<EvmTransaction> {
+  signerContext: SignerContext<AleoSigner>,
+): AccountBridge<AleoTransaction> {
   const getAddress = resolver(signerContext);
 
   const receive = makeAccountBridgeReceive(getAddressWrapper(getAddress));
@@ -69,7 +69,7 @@ export function buildAccountBridge(
     createTransaction: () => {
       throw new Error("not implemented");
     },
-    updateTransaction: updateTransaction<EvmTransaction>,
+    updateTransaction: updateTransaction<AleoTransaction>,
     prepareTransaction: () => {
       throw new Error("not implemented");
     },
@@ -91,10 +91,10 @@ export function buildAccountBridge(
 }
 
 export function createBridges(
-  signerContext: SignerContext<EvmSigner>,
+  signerContext: SignerContext<AleoSigner>,
   // coinConfig: AleoConfig,
   // cryptoAssetsStoreGetter: CryptoAssetsStoreGetter,
-): Bridge<EvmTransaction> {
+): Bridge<AleoTransaction> {
   // setCoinConfig(coinConfig);
   // aleoCoinConfig.setCoinConfig(() => ({ ...coinConfig, status: { type: "active" } }));
   // setCryptoAssetsStoreGetter(cryptoAssetsStoreGetter);

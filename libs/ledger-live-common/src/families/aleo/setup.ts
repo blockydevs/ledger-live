@@ -6,20 +6,21 @@ import aleoResolver from "@ledgerhq/coin-aleo/signer/index";
 // import type { TransactionStatus, Transaction } from "@ledgerhq/coin-aleo/types/index";
 import type { Bridge } from "@ledgerhq/types-live";
 // import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
-import { EvmSigner, Transaction as EvmTransaction } from "@ledgerhq/coin-aleo/types/index";
+import { AleoSigner, Transaction as AleoTransaction } from "@ledgerhq/coin-aleo/types/index";
 import Transport from "@ledgerhq/hw-transport";
 import { CreateSigner, createResolver, executeWithSigner } from "../../bridge/setup";
 import { Resolver } from "../../hw/getAddress/types";
 // import { getCurrencyConfiguration } from "../../config";
 // import { EvmConfigInfo } from "@ledgerhq/coin-evm/lib/config";
-import { LegacySignerEth } from "@ledgerhq/live-signer-evm";
+// import { LegacySignerEth } from "@ledgerhq/live-signer-evm";
 
 // const createSigner: CreateSigner<Aleo> = (transport: Transport) => {
 //   return new Aleo(transport);
 // };
 
-const createSigner: CreateSigner<EvmSigner> = (transport: Transport) => {
-  return new LegacySignerEth(transport);
+const createSigner: CreateSigner<AleoSigner> = (_transport: Transport) => {
+  throw new Error("AleoSigner not implemented yet");
+  // return new LegacySignerEth(transport);
 };
 
 // const bridge: Bridge<Transaction, Account, TransactionStatus> = createBridges(
@@ -30,7 +31,7 @@ const createSigner: CreateSigner<EvmSigner> = (transport: Transport) => {
 //   return { info: getCurrencyConfiguration<EvmConfigInfo>(currency) };
 // };
 
-const bridge: Bridge<EvmTransaction> = createBridges(
+const bridge: Bridge<AleoTransaction> = createBridges(
   executeWithSigner(createSigner),
   // getCurrencyConfig,
   // getCryptoAssetsStore,

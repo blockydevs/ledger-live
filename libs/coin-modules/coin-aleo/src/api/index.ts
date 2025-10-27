@@ -21,7 +21,7 @@ import {
   lastBlock,
   listOperations,
 } from "../logic";
-import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/lib/currencies";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 
 export function createApi(config: AleoConfig, currencyId: string): Api {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
