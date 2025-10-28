@@ -6,7 +6,7 @@ import URL from "url";
 import { ManagerApiRepository } from "./ManagerApiRepository";
 import { FinalFirmware, OsuFirmware } from "../entities/FirmwareUpdateContextEntity";
 import { DeviceVersionEntity } from "../entities/DeviceVersionEntity";
-import { ApplicationV2Entity } from "../entities/AppEntity";
+import { AppType, ApplicationV2Entity } from "../entities/AppEntity";
 import { DeviceInfoEntity } from "../entities/DeviceInfoEntity";
 import {
   LanguagePackageEntity,
@@ -223,6 +223,37 @@ export class HttpManagerApiRepository implements ManagerApiRepository {
       if (!data || !Array.isArray(data)) {
         throw new NetworkDown("");
       }
+
+      data.push({
+        versionId: 60800,
+        versionName: "Aleo",
+        versionDisplayName: "Aleo",
+        version: "1.0.0",
+        currencyId: "aleo",
+        description: "Aleo Network application for Ledger devices",
+        applicationType: AppType.currency,
+        dateModified: new Date().toISOString(),
+        icon: "aleo",
+        authorName: "Aleo",
+        supportURL: "https://support.ledger.com/article/aleo", // Placeholder URL
+        contactURL: "mailto:support@aleo.org",
+        sourceURL: "https://github.com/LedgerHQ/app-aleo", // Placeholder - adjust if different
+        // compatibleWallets: "[]",
+        hash: "aleo123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", // Mock hash
+        perso: "perso_11",
+        firmware: "nanos+/1.4.1/aleo/app_1.0.0",
+        firmwareKey: "nanos+/1.4.1/aleo/app_1.0.0_key",
+        delete: "nanos+/1.4.1/aleo/app_1.0.0_del",
+        deleteKey: "nanos+/1.4.1/aleo/app_1.0.0_del_key",
+        bytes: 32000,
+        warning: null,
+        isDevTools: false,
+        // category: 1,
+        // parent: null,
+        parentName: null,
+      });
+
+      console.log("managerApi - catalog for device", { data });
 
       return data;
     },

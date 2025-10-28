@@ -21,6 +21,7 @@ import resolver from "../hw-getAddress";
 // import { setCryptoAssetsStoreGetter } from "../cryptoAssetsStore";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import { getAccountShape, sync } from "./synchronization";
+// import { AleoConfig } from "../config";
 // import { getAccountShape, postSync, sync } from "./synchronization";
 // import { prepareTransaction } from "./prepareTransaction";
 // import { createTransaction } from "./createTransaction";
@@ -98,6 +99,8 @@ export function createBridges(
   // setCoinConfig(coinConfig);
   // aleoCoinConfig.setCoinConfig(() => ({ ...coinConfig, status: { type: "active" } }));
   // setCryptoAssetsStoreGetter(cryptoAssetsStoreGetter);
+
+  console.log("createBridges called for Aleo");
 
   return {
     currencyBridge: buildCurrencyBridge(signerContext),
