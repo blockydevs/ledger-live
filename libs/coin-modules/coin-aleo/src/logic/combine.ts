@@ -3,5 +3,5 @@ export function combine(
   _signature: string,
   _publicKey: string | undefined,
 ): string {
-  throw new Error("TODO: not implemented");
+  throw new Error("TODO: not implemented combine");
 }

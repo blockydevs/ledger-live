@@ -4,6 +4,7 @@ import { Observable } from "rxjs";
 export interface AleoSigner {
   getPublicKey(path: string, display?: boolean): Promise<Buffer>;
   signTransaction(path: string, transaction: Buffer): Promise<Buffer>;
+  getAddress: (path: string, display?: boolean) => Promise<Buffer>;
 }
 
 // MOCKED VALUES

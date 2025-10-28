@@ -8,5 +8,5 @@ export const validateIntent = async (
   _transactionIntent: TransactionIntent,
   _customFees?: FeeEstimation,
 ): Promise<TransactionValidation> => {
-  throw new Error("TODO: not implemented");
+  throw new Error("TODO: not implemented validateIntent");
 };

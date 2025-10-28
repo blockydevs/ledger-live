@@ -6145,6 +6145,9 @@ importers:
       '@ledgerhq/hw-transport':
         specifier: workspace:*
         version: link:../hw-transport
+      bip32-path:
+        specifier: ^0.4.2
+        version: 0.4.2
     devDependencies:
       '@ledgerhq/hw-transport-mocker':
         specifier: workspace:^
@@ -39261,7 +39264,7 @@ snapshots:
 
   '@babel/parser@7.24.1':
     dependencies:
-      '@babel/types': 7.27.6
+      '@babel/types': 7.28.4
 
   '@babel/parser@7.27.0':
     dependencies:

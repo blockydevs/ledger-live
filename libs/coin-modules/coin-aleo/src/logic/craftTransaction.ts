@@ -4,5 +4,5 @@ export async function craftTransaction(
   _account: unknown,
   _transaction: unknown,
 ): Promise<CraftedTransaction> {
-  throw new Error("TODO: not implemented");
+  throw new Error("TODO: not implemented craftTransaction");
 }

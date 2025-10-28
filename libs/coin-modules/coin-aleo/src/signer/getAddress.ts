@@ -4,9 +4,18 @@ import { SignerContext } from "@ledgerhq/coin-framework/signer";
 import { AleoSigner } from "../types";
 
 // TODO:
-const getAddress = (_signerContext: SignerContext<AleoSigner>): GetAddressFn => {
-  return async (_deviceId: string, _options: GetAddressOptions) => {
-    throw new Error("TODO: not implemented");
+const getAddress = (signerContext: SignerContext<AleoSigner>): GetAddressFn => {
+  return async (deviceId: string, { path }: GetAddressOptions) => {
+    const publicKey = await signerContext(deviceId, signer => signer.getPublicKey(path));
+    // const address = await signerContext(deviceId, signer => signer.getAddress(path));
+    // Log the public key for debugging purposes
+    // console.log(address.toString(), publicKey.toString(), path);
+    return {
+      path,
+      publicKey: publicKey.toString(),
+      address: publicKey.toString(),
+      // publicKey: publicKey.toString(),
+    };
   };
 };
 
