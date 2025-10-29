@@ -1,8 +1,16 @@
-import { emptyHistoryCache, encodeAccountId } from "@ledgerhq/coin-framework/account/index";
+import {
+  emptyHistoryCache,
+  encodeAccountId,
+  encodeTokenAccountId,
+} from "@ledgerhq/coin-framework/account/index";
 import { GetAccountShape, makeSync } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import BigNumber from "bignumber.js";
+import { apiClient } from "../network/api";
+import { formatCurrency } from "../utils/formatCurrency";
+import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets/lib/tokens";
+import { encodeOperationId } from "@ledgerhq/coin-framework/lib/operation";
 
 /**
  * Main synchronization process
@@ -22,11 +30,56 @@ export const getAccountShape: GetAccountShape<Account> = async infos => {
     derivationMode,
   });
 
+  const publicAccountBalance = await apiClient.getPublicAccountBalance(address);
+  const balance = formatCurrency(publicAccountBalance);
+
+  const transactions = await apiClient.getAccountTransactions({ address, fetchAllPages: false });
+
+  console.log(transactions);
+
+  if (transactions.transactions[0]) {
+    const transaction = transactions.transactions[0];
+    // const token = findTokenByAddressInCurrency("aleo", currency.id);
+    // console.log(token);
+    //   console.log(token);
+    // const encodedTokenId = token
+    //   ? encodeTokenAccountId(address, token)
+    //   : transaction.transaction_id;
+    const singleTransaction: Operation = {
+      // id: encodeOperationId(encodedTokenId, transaction.transaction_id, "OUT"),
+      id: transaction.transaction_id,
+      hash: transaction.transaction_id,
+      type: "OUT",
+      value: new BigNumber(0),
+      fee: new BigNumber(0),
+      senders: [transaction.sender_address],
+      recipients: transaction.recipient_address.length > 0 ? [transaction.recipient_address] : [],
+      blockHeight: undefined,
+      blockHash: undefined,
+      accountId: "",
+      date: new Date(parseInt(transaction.block_timestamp) * 1000),
+      extra: undefined,
+    };
+    return {
+      type: "Account",
+      id: accountId,
+      syncHash: "",
+      balance,
+      spendableBalance: new BigNumber(0),
+      blockHeight: 0,
+      operations: [singleTransaction],
+      operationsCount: 1,
+      subAccounts: [],
+      nfts: [],
+      lastSyncDate: new Date(),
+    } as Partial<Account>;
+  }
+
   return {
     type: "Account",
     id: accountId,
     syncHash: "",
-    balance: new BigNumber(0),
+    balance,
     spendableBalance: new BigNumber(0),
     blockHeight: 0,
     operations: [],

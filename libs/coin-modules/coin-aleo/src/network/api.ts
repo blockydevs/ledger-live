@@ -1,77 +1,85 @@
-// import network from "@ledgerhq/live-network";
-// import type { LiveNetworkResponse } from "@ledgerhq/live-network/network";
+import network from "@ledgerhq/live-network";
+import type { LiveNetworkResponse } from "@ledgerhq/live-network/network";
+import { AleoMirrorTransaction, AleoMirrorTransactionsResponse } from "../types/mirror";
+import { LedgerAPI4xx } from "@ledgerhq/errors";
+import { AleoAddAccountError } from "../errors";
 // // import { getEnv } from "@ledgerhq/live-env";
 // // import { LedgerAPI4xx } from "@ledgerhq/errors";
 
-// const fetch = <Result>(path: string) => {
-//   return network<Result>({
-//     method: "GET",
-//     url: `https://api.explorer.provable.com/v2/mainnet${path}`,
-//   });
-// };
+const BALANCE_API_URL =
+  "https://explorer-backend-api-mainnet.prd.infra.provable.com/v1/mainnet/program/credits.aleo/mapping/account";
 
-// async function getAccountTransactions({
-//   address,
-//   pagingToken,
-//   limit = 100,
-//   order = "desc",
-//   fetchAllPages,
-// }: {
-//   address: string;
-//   pagingToken: string | null;
-//   limit?: number | undefined;
-//   order?: "asc" | "desc" | undefined;
-//   fetchAllPages: boolean;
-// }): Promise<{ transactions: HederaMirrorTransaction[]; nextCursor: string | null }> {
-//   const transactions: HederaMirrorTransaction[] = [];
-//   const params = new URLSearchParams({
-//     "account.id": address,
-//     limit: limit.toString(),
-//     order,
-//   });
+const fetch = <Result>(path: string) => {
+  return network<Result>({
+    method: "GET",
+    url: `https://api.explorer.provable.com/v2/mainnet${path}`,
+  });
+};
 
-//   // keeps old behavior when all pages are fetched
-//   const getTimestampDirection = () => {
-//     if (fetchAllPages) return "gt";
-//     return order === "asc" ? "gt" : "lt";
-//   };
+async function getPublicAccountBalance(address: string): Promise<string> {
+  try {
+    const res = await network<string>({
+      method: "GET",
+      url: `${BALANCE_API_URL}/${address}`,
+    });
+    const account = res.data;
 
-//   if (pagingToken) {
-//     params.append("timestamp", `${getTimestampDirection()}:${pagingToken}`);
-//   }
+    return account;
+  } catch (error) {
+    if (error instanceof LedgerAPI4xx && "status" in error && error.status === 404) {
+      throw new AleoAddAccountError();
+    }
 
-//   let nextCursor: string | null = null;
-//   let nextUrl: string | null = `/api/v1/transactions?${params.toString()}`;
+    throw error;
+  }
+}
 
-//   // WARNING: don't break the loop when `transactions` array is empty but `links.next` is present
-//   // the mirror node API enforces a 60-day max time range per query, even if `timestamp` param is set
-//   // see: https://hedera.com/blog/changes-to-the-hedera-operated-mirror-node
-//   while (nextUrl) {
-//     const res: LiveNetworkResponse<HederaMirrorTransactionsResponse> = await fetch(nextUrl);
-//     const newTransactions = res.data.transactions;
-//     transactions.push(...newTransactions);
-//     nextUrl = res.data.links.next;
+async function getAccountTransactions({
+  address,
+  limit = 50,
+  offset = 0,
+  fetchAllPages,
+}: {
+  address: string;
+  limit?: number | undefined;
+  offset?: number | undefined;
+  fetchAllPages: boolean;
+}): Promise<{ transactions: AleoMirrorTransaction[]; nextOffset: string | null }> {
+  const transactions: AleoMirrorTransaction[] = [];
+  const params = new URLSearchParams({
+    limit: limit.toString(),
+    offset: offset.toString(),
+  });
 
-//     // stop fetching if pagination mode is used and we reached the limit
-//     if (!fetchAllPages && transactions.length >= limit) {
-//       break;
-//     }
-//   }
+  const nextOffset: number | null = null;
+  const nextUrl: string | null = `/transactions/address/${address}?${params.toString()}`;
 
-//   // ensure we don't exceed the limit in pagination mode
-//   if (!fetchAllPages && transactions.length > limit) {
-//     transactions.splice(limit);
-//   }
+  while (nextUrl) {
+    const res: LiveNetworkResponse<AleoMirrorTransactionsResponse> = await fetch(nextUrl);
+    const newTransactions = res.data.transactions;
+    transactions.push(...newTransactions);
+    // nextOffset = res.data.pagination.offset + res.data.pagination.limit;
 
-//   // set the next cursor only if we have more transactions to fetch
-//   if (!fetchAllPages && nextUrl) {
-//     const lastTx = transactions.at(-1);
-//     nextCursor = lastTx?.consensus_timestamp ?? null;
-//   }
+    // stop fetching if pagination mode is used and we reached the limit
+    if (!fetchAllPages && transactions.length >= limit) {
+      break;
+    }
+  }
 
-//   return { transactions, nextCursor };
-// }
+  // ensure we don't exceed the limit in pagination mode
+  //   if (!fetchAllPages && transactions.length > limit) {
+  //     transactions.splice(limit);
+  //   }
 
-// export const apiClient = {
-//   getAccountTransactions,
-// };
+  //   // set the next offset only if we have more transactions to fetch
+  //   if (!fetchAllPages && nextUrl) {
+  //     nextOffset = lastTx?.consensus_timestamp ?? null;
+  //   }
+
+  return { transactions, nextOffset };
+}
+
+export const apiClient = {
+  getPublicAccountBalance,
+  getAccountTransactions,
+};

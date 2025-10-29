@@ -1,4 +1,5 @@
 import type {
+  Operation,
   TransactionCommon,
   TransactionCommonRaw,
   TransactionStatusCommon,
@@ -16,3 +17,14 @@ export type TransactionRaw = TransactionCommonRaw & {
 export type TransactionStatus = TransactionStatusCommon;
 
 export type TransactionStatusRaw = TransactionStatusCommonRaw;
+
+// FIXME: refactor to more proper types
+export type AleoOperationExtra = {
+  consensusTimestamp?: string;
+  transactionId?: string;
+  associatedTokenId?: string;
+  pagingToken?: string;
+  memo?: string | null;
+};
+
+export type AleoOperation = Operation<AleoOperationExtra>;
