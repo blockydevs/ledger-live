@@ -20,6 +20,7 @@ import type { CardanoNativeToken } from "../data/cardanoNative";
 import type { TonJettonToken } from "../data/ton-jetton";
 import type { StellarToken } from "../data/stellar";
 import type { HederaToken } from "../data/hedera";
+import type { HederaERC20Token } from "../data/hedera-erc20";
 import type { Vip180Token } from "../data/vip180";
 import type { SPLToken } from "../data/spl";
 import type { AptosToken as AptosCoinToken } from "../data/apt_coin";
@@ -325,6 +326,38 @@ export function convertHederaTokens([
     contractAddress: tokenId,
     parentCurrency: getCryptoCurrencyById(network),
     tokenType: id.includes("/erc20/") ? "erc20" : "hts",
+    name,
+    ticker,
+    delisted,
+    disableCountervalue: false,
+    units: [
+      {
+        name,
+        code: ticker,
+        magnitude: decimals,
+      },
+    ],
+  };
+}
+
+/**
+ * @deprecated
+ */
+export function convertHederaERC20Tokens([
+  id,
+  address,
+  name,
+  ticker,
+  network,
+  decimals,
+  delisted,
+]: HederaERC20Token): TokenCurrency {
+  return {
+    type: "TokenCurrency",
+    id,
+    contractAddress: address,
+    parentCurrency: getCryptoCurrencyById(network),
+    tokenType: "erc20",
     name,
     ticker,
     delisted,

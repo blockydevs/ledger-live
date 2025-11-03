@@ -16,3 +16,9 @@ export const HederaRecipientTokenAssociationUnverified = createCustomErrorClass(
 export const HederaRecipientEvmAddressVerificationRequired = createCustomErrorClass(
   "HederaRecipientEvmAddressVerificationRequired",
 );
+export const HederaRedundantStakingNodeIdError = createCustomErrorClass(
+  "HederaRedundantStakingNodeIdError",
+);
+export const HederaInvalidStakingNodeIdError = createCustomErrorClass(
+  "HederaInvalidStakingNodeIdError",
+);

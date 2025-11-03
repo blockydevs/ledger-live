@@ -107,6 +107,49 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   const operations = shouldSyncFromScratch
     ? enrichedNewOperations
     : mergeOps(oldOperations, enrichedNewOperations);
+  const delegation =
+    typeof mirrorAccount.staked_node_id === "number"
+      ? {
+          nodeId: mirrorAccount.staked_node_id,
+          delegated: accountBalance,
+          pendingReward: new BigNumber(mirrorAccount.pending_reward),
+        }
+      : null;
+
+  // how ERC20 operations are handled:
+  // - mirror node doesn't include "IN" erc20 token transactions
+  // - mirror node returns "CONTRACT_CALL" (OUT) erc20 token transactions made from given account address
+  // - mirror node doesn't return "CONTRACT_CALL" (OUT) erc20 token transactions made from 3rd party with allowance
+  //
+  // 1. mirror node transactions are already transformed into operations at this point + we have raw erc20 transactions fetched from thirdweb
+  // 2. related mirror node transaction must be fetched for each erc20 transaction (to get fee and consensus timestamp)
+  // 3. CONTRACTCALL operations must be removed if existing operations already include erc20 operation with the same tx.hash
+  // 4. ERC20 transactions must be classified into two groups: patchList and addList
+  //    - patchList: transactions which are already present in mirror operations (we can have CONTRACT_CALL from mirror node that we can transform into "FEES")
+  //    - addList should include transactions which are missing in mirror operations (e.g. "IN" erc20 token transaction and "OUT" made by 3rd party with allowance)
+  // 5. list of all operations must be updated based on prepared `patchList` and `addList`
+  // 6. sub accounts must get erc20 tokens and erc20 operations in addition to hts tokens and hts operations
+  // 7. postSync must remove pending operations that are already confirmed as erc20 operations
+  const { updatedOperations, newERC20TokenOperations } = await integrateERC20Operations({
+    ledgerAccountId: liveAccountId,
+    address,
+    allOperations: operations,
+    latestERC20Transactions: erc20Transactions,
+    pendingOperationHashes,
+    erc20OperationHashes,
+  });
+
+  const newSubAccounts = await getSubAccounts({
+    ledgerAccountId: liveAccountId,
+    latestHTSTokenOperations: latestAccountOperations.tokenOperations,
+    latestERC20TokenOperations: newERC20TokenOperations,
+    mirrorTokens,
+    erc20Tokens: erc20TokenBalances,
+  });
+
+  const subAccounts = shouldSyncFromScratch
+    ? newSubAccounts
+    : mergeSubAccounts(initialAccount, newSubAccounts);
 
   // how ERC20 operations are handled:
   // - mirror node doesn't include "IN" erc20 token transactions
@@ -159,6 +202,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     hederaResources: {
       maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
       isAutoTokenAssociationEnabled: mirrorAccount.max_automatic_token_associations === -1,
+      delegation,
     },
   };
 };

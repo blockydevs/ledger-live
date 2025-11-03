@@ -1,19 +1,22 @@
 import BigNumber from "bignumber.js";
 import { createHash } from "crypto";
-import { Transaction, TransactionId } from "@hashgraph/sdk";
+import { Transaction as SDKTransaction, TransactionId } from "@hashgraph/sdk";
 import type { AssetInfo } from "@ledgerhq/coin-framework/api/types";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 import { InvalidAddress } from "@ledgerhq/errors";
+import { getEnv, setEnv } from "@ledgerhq/live-env";
 import { HEDERA_TRANSACTION_MODES, SYNTHETIC_BLOCK_WINDOW_SECONDS } from "../constants";
 import { HederaRecipientInvalidChecksum } from "../errors";
 import { apiClient } from "../network/api";
 import { rpcClient } from "../network/rpc";
+import * as preloadData from "../preload-data";
 import { getMockedOperation } from "../test/fixtures/operation.fixture";
 import {
   getMockedERC20TokenCurrency,
   getMockedHTSTokenCurrency,
 } from "../test/fixtures/currency.fixture";
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
+import type { HederaAccount, HederaPreloadData, HederaValidator, Transaction } from "../types";
 import {
   serializeSignature,
   deserializeSignature,
@@ -33,13 +36,31 @@ import {
   fromEVMAddress,
   toEVMAddress,
   formatTransactionId,
+  getValidatorFromAccount,
+  sortValidators,
+  extractCompanyFromNodeDescription,
+  isStakingTransaction,
+  filterValidatorBySearchTerm,
+  getDelegationStatus,
+  getDefaultValidator,
+  getChecksum,
 } from "./utils";
 
 jest.mock("../network/api");
 
 describe("logic utils", () => {
+  let oldStakingLedgerNodeIdEnv: number;
+
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    setEnv("HEDERA_STAKING_LEDGER_NODE_ID", oldStakingLedgerNodeIdEnv);
+  });
+
+  beforeAll(() => {
+    oldStakingLedgerNodeIdEnv = getEnv("HEDERA_STAKING_LEDGER_NODE_ID");
   });
 
   afterAll(() => {
@@ -64,7 +85,7 @@ describe("logic utils", () => {
 
   describe("transaction serialization", () => {
     beforeEach(() => {
-      jest.spyOn(Transaction, "fromBytes");
+      jest.spyOn(SDKTransaction, "fromBytes");
     });
 
     afterEach(() => {
@@ -74,7 +95,7 @@ describe("logic utils", () => {
     it("should serialize a transaction to hex", () => {
       const mockTransaction = {
         toBytes: jest.fn().mockReturnValue(Buffer.from([10, 20, 30, 40, 50])),
-      } as unknown as Transaction;
+      } as unknown as SDKTransaction;
 
       const serialized = serializeTransaction(mockTransaction);
 
@@ -84,14 +105,14 @@ describe("logic utils", () => {
 
     it("should deserialize a hex string to a Transaction", () => {
       const mockTransaction = { id: "mock-transaction-id" };
-      (Transaction.fromBytes as jest.Mock).mockReturnValue(mockTransaction);
+      (SDKTransaction.fromBytes as jest.Mock).mockReturnValue(mockTransaction);
 
       const hexTransaction = "0a141e2832";
       const deserialized = deserializeTransaction(hexTransaction);
 
       const hexTransactionBuffer = Buffer.from([10, 20, 30, 40, 50]);
-      expect(Transaction.fromBytes).toHaveBeenCalledTimes(1);
-      expect(Transaction.fromBytes).toHaveBeenCalledWith(hexTransactionBuffer);
+      expect(SDKTransaction.fromBytes).toHaveBeenCalledTimes(1);
+      expect(SDKTransaction.fromBytes).toHaveBeenCalledWith(hexTransactionBuffer);
       expect(deserialized).toBe(mockTransaction);
     });
   });
@@ -245,6 +266,7 @@ describe("logic utils", () => {
         hederaResources: {
           maxAutomaticTokenAssociations: -1,
           isAutoTokenAssociationEnabled: true,
+          delegation: null,
         },
       });
 
@@ -389,6 +411,22 @@ describe("logic utils", () => {
     });
   });
 
+  describe("getChecksum", () => {
+    it("should return correct checksum for valid account ID", () => {
+      const accountId = "0.0.9124531-xrxlv";
+      const checksum = getChecksum(accountId);
+
+      expect(checksum).toBe("xrxlv");
+    });
+
+    it("should return null for invalid account ID", () => {
+      const accountId = "invalid-account-id";
+      const checksum = getChecksum(accountId);
+
+      expect(checksum).toBeNull();
+    });
+  });
+
   describe("safeParseAccountId", () => {
     it("returns account id and no checksum for valid address without checksum", () => {
       const [error, result] = safeParseAccountId("0.0.9124531");
@@ -515,6 +553,170 @@ describe("logic utils", () => {
       expect(fromEVMAddress("")).toBeNull();
       expect(fromEVMAddress("1234567890")).toBeNull();
       expect(fromEVMAddress(undefined as unknown as string)).toBeNull();
+    });
+  });
+
+  describe("isStakingTransaction", () => {
+    it("returns correct value based on tx.mode", () => {
+      const stakingDelegateTx = { mode: HEDERA_TRANSACTION_MODES.Delegate } as Transaction;
+      const stakingUndelegateTx = { mode: HEDERA_TRANSACTION_MODES.Undelegate } as Transaction;
+      const stakingRedelegateTx = { mode: HEDERA_TRANSACTION_MODES.Redelegate } as Transaction;
+      const stakingClaimRewardsTx = { mode: HEDERA_TRANSACTION_MODES.ClaimRewards } as Transaction;
+      const transferTx = { recipient: "", amount: new BigNumber(1) } as Transaction;
+      const emptyTx = {} as Transaction;
+
+      expect(isStakingTransaction(stakingDelegateTx)).toBe(true);
+      expect(isStakingTransaction(stakingUndelegateTx)).toBe(true);
+      expect(isStakingTransaction(stakingRedelegateTx)).toBe(true);
+      expect(isStakingTransaction(stakingClaimRewardsTx)).toBe(true);
+      expect(isStakingTransaction(transferTx)).toBe(false);
+      expect(isStakingTransaction(emptyTx)).toBe(false);
+    });
+  });
+
+  describe("extractCompanyFromNodeDescription", () => {
+    it("extracts company name from description", () => {
+      expect(extractCompanyFromNodeDescription("Hosted by Ledger | Paris, France")).toBe("Ledger");
+      expect(extractCompanyFromNodeDescription("Hosted by LG | Seoul, South Korea")).toBe("LG");
+      expect(extractCompanyFromNodeDescription("TestCompany | something else")).toBe("TestCompany");
+      expect(extractCompanyFromNodeDescription("NoSeparator ")).toBe("NoSeparator");
+    });
+  });
+
+  describe("sortValidators", () => {
+    it("sorts validators by active stake ASC, Ledger node first if set", () => {
+      setEnv("HEDERA_STAKING_LEDGER_NODE_ID", 2);
+
+      const validators = [
+        { nodeId: 3, activeStake: new BigNumber(1000) },
+        { nodeId: 2, activeStake: new BigNumber(2000) },
+        { nodeId: 1, activeStake: new BigNumber(3000) },
+      ] as HederaValidator[];
+
+      const sorted = sortValidators(validators);
+      expect(sorted[0].nodeId).toBe(2);
+      expect(sorted[1].nodeId).toBe(3);
+      expect(sorted[2].nodeId).toBe(1);
+    });
+  });
+
+  describe("getValidatorFromAccount", () => {
+    const mockValidator = { nodeId: 1 };
+    const mockPreload = { validators: [mockValidator] } as HederaPreloadData;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      jest.spyOn(preloadData, "getCurrentHederaPreloadData").mockReturnValueOnce(mockPreload);
+    });
+
+    it("returns validator matching delegation nodeId", () => {
+      const mockAccount = {
+        currency: "hedera",
+        hederaResources: { delegation: { nodeId: 1 } },
+      } as unknown as HederaAccount;
+
+      expect(getValidatorFromAccount(mockAccount)).toEqual(mockValidator);
+    });
+
+    it("returns null if no delegation", () => {
+      const mockAccount = {
+        currency: "hedera",
+        hederaResources: {},
+      } as unknown as HederaAccount;
+
+      expect(getValidatorFromAccount(mockAccount)).toBeNull();
+    });
+  });
+
+  describe("getDefaultValidator", () => {
+    const mockValidators = [
+      { nodeId: 1, activeStake: new BigNumber(2000) },
+      { nodeId: 2, activeStake: new BigNumber(1000) },
+      { nodeId: 3, activeStake: new BigNumber(10000) },
+    ] as HederaValidator[];
+
+    it("returns Ledger validator if present", () => {
+      setEnv("HEDERA_STAKING_LEDGER_NODE_ID", 2);
+      expect(getDefaultValidator(mockValidators)?.nodeId).toBe(2);
+    });
+
+    it("returns validator with lowest activeStake if no Ledger node", () => {
+      expect(getDefaultValidator(mockValidators)?.nodeId).toBe(2);
+    });
+
+    it("returns null if validators empty", () => {
+      expect(getDefaultValidator([])).toBeNull();
+    });
+  });
+
+  describe("getDelegationStatus", () => {
+    const mockValidator = { overstaked: false } as HederaValidator;
+    const mockOverstakedValidator = { overstaked: true } as HederaValidator;
+
+    it("returns inactive if validator is null", () => {
+      expect(getDelegationStatus(null)).toBe("inactive");
+    });
+
+    it("returns overstaked if validator.overstaked is true", () => {
+      expect(getDelegationStatus(mockOverstakedValidator)).toBe("overstaked");
+    });
+
+    it("returns active otherwise", () => {
+      expect(getDelegationStatus(mockValidator)).toBe("active");
+    });
+  });
+
+  describe("filterValidatorBySearchTerm", () => {
+    const mockValidator: HederaValidator = {
+      nodeId: 123,
+      name: "Validator Test",
+      address: "0.0.456",
+      addressChecksum: "abcde",
+      minStake: new BigNumber(0),
+      maxStake: new BigNumber(0),
+      activeStake: new BigNumber(0),
+      activeStakePercentage: new BigNumber(0),
+      overstaked: false,
+    };
+
+    it("should match by nodeId", () => {
+      expect(filterValidatorBySearchTerm(mockValidator, "123")).toBe(true);
+    });
+
+    it("should match by name with case insensitivity", () => {
+      expect(filterValidatorBySearchTerm(mockValidator, "validator")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "VALIDATOR")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "test")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "unknown")).toBe(false);
+    });
+
+    it("should match by address", () => {
+      expect(filterValidatorBySearchTerm(mockValidator, "0.0.456")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "456")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "789")).toBe(false);
+    });
+
+    it("should match by address with checksum", () => {
+      expect(filterValidatorBySearchTerm(mockValidator, "0.0.456-abcde")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "abcde")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "ABC")).toBe(true);
+    });
+
+    it("should handle validator without checksum", () => {
+      const validatorWithoutChecksum = { ...mockValidator, addressChecksum: null };
+      expect(filterValidatorBySearchTerm(validatorWithoutChecksum, "0.0.456")).toBe(true);
+      expect(filterValidatorBySearchTerm(validatorWithoutChecksum, "abcde")).toBe(false);
+    });
+
+    it("should handle empty search term", () => {
+      expect(filterValidatorBySearchTerm(mockValidator, "")).toBe(true);
+    });
+
+    it("should handle partial matches", () => {
+      expect(filterValidatorBySearchTerm(mockValidator, "valid")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "0.0")).toBe(true);
+      expect(filterValidatorBySearchTerm(mockValidator, "12")).toBe(true);
     });
   });
 });

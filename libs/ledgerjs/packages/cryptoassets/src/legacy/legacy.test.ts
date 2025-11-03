@@ -18,6 +18,7 @@ import {
   addTokens,
   listTokensLegacy,
   listTokensForCryptoCurrencyLegacy,
+  convertHederaERC20Tokens,
 } from "./legacy-utils";
 import { initializeLegacyTokens } from "./legacy-data";
 import { getEnv } from "@ledgerhq/live-env";
@@ -43,6 +44,7 @@ import type { CardanoNativeToken } from "../data/cardanoNative";
 import type { TonJettonToken } from "../data/ton-jetton";
 import type { StellarToken } from "../data/stellar";
 import type { HederaToken } from "../data/hedera";
+import type { HederaERC20Token } from "../data/hedera-erc20";
 import type { SuiToken } from "../data/sui";
 import type { AptosToken } from "../data/apt_coin";
 import type { SPLToken } from "../data/spl";
@@ -184,8 +186,8 @@ describe("Legacy Utils", () => {
       expect(result.tokenType).toBe("sui");
     });
 
-    it("should convert Hedera token", () => {
-      const hederaToken: HederaToken = [
+    it("should convert Hedera HTS token", () => {
+      const htsToken: HederaToken = [
         "hedera/hts/test",
         "0.0.123",
         "Test Token",
@@ -194,9 +196,24 @@ describe("Legacy Utils", () => {
         8,
         false,
       ];
-      const result = convertHederaTokens(hederaToken);
+      const result = convertHederaTokens(htsToken);
       expect(result.type).toBe("TokenCurrency");
       expect(result.tokenType).toBe("hts");
+    });
+
+    it("should convert Hedera ERC20 token", () => {
+      const erc20Token: HederaERC20Token = [
+        "hedera/erc20/test",
+        "0x1234",
+        "Test Token",
+        "TEST",
+        "hedera",
+        8,
+        false,
+      ];
+      const result = convertHederaERC20Tokens(erc20Token);
+      expect(result.type).toBe("TokenCurrency");
+      expect(result.tokenType).toBe("erc20");
     });
 
     it("should convert Cardano native token", () => {

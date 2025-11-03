@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import {
   AccountId,
+  AccountUpdateTransaction,
   ContractExecuteTransaction,
   ContractFunctionParameters,
   ContractId,
@@ -53,6 +54,14 @@ interface BuilderERC20TokenTransferTransaction extends BuilderCommonTransactionF
 interface BuilderTokenAssociateTransaction extends BuilderCommonTransactionFields {
   type: HEDERA_TRANSACTION_MODES.TokenAssociate;
   tokenId: string;
+}
+
+interface BuilderUpdateAccountTransaction extends BuilderCommonTransactionFields {
+  type:
+    | HEDERA_TRANSACTION_MODES.Delegate
+    | HEDERA_TRANSACTION_MODES.Undelegate
+    | HEDERA_TRANSACTION_MODES.Redelegate;
+  stakingNodeId: number | null | undefined;
 }
 
 async function buildUnsignedCoinTransaction({
@@ -159,6 +168,36 @@ async function buildTokenAssociateTransaction({
   return tx.freeze();
 }
 
+async function buildUnsignedUpdateAccountTransaction({
+  account,
+  transaction,
+}: {
+  account: BuilderOperator;
+  transaction: BuilderUpdateAccountTransaction;
+}): Promise<AccountUpdateTransaction> {
+  const accountId = account.accountId;
+
+  const tx = new AccountUpdateTransaction()
+    .setNodeAccountIds([new AccountId(3)])
+    .setTransactionId(TransactionId.generate(accountId))
+    .setTransactionMemo(transaction.memo ?? "")
+    .setAccountId(accountId);
+
+  if (transaction.maxFee) {
+    tx.setMaxTransactionFee(Hbar.fromTinybars(transaction.maxFee.toNumber()));
+  }
+
+  if (typeof transaction.stakingNodeId === "number") {
+    tx.setStakedNodeId(transaction.stakingNodeId);
+  }
+
+  if (transaction.stakingNodeId === null) {
+    tx.clearStakedNodeId();
+  }
+
+  return tx.freeze();
+}
+
 export async function craftTransaction(
   txIntent: TransactionIntent<HederaMemo, HederaTxData>,
   customFees?: FeeEstimation,
@@ -203,7 +242,7 @@ export async function craftTransaction(
 
     const amount = new BigNumber(txIntent.amount.toString());
     const gasLimit =
-      "data" in txIntent && txIntent.data.gasLimit
+      "data" in txIntent && txIntent.data.type === "erc20"
         ? new BigNumber(txIntent.data.gasLimit.toString())
         : DEFAULT_GAS_LIMIT;
 
@@ -219,7 +258,26 @@ export async function craftTransaction(
         gasLimit,
       },
     });
-  } else {
+  } else if (
+    txIntent.type === HEDERA_TRANSACTION_MODES.Redelegate ||
+    txIntent.type === HEDERA_TRANSACTION_MODES.Undelegate ||
+    txIntent.type === HEDERA_TRANSACTION_MODES.Delegate
+  ) {
+    tx = await buildUnsignedUpdateAccountTransaction({
+      account,
+      transaction: {
+        type: txIntent.type,
+        memo: txIntent.memo.value,
+        maxFee: customFees ? new BigNumber(customFees.value.toString()) : undefined,
+        stakingNodeId:
+          "data" in txIntent && txIntent.data.type === "staking"
+            ? txIntent.data.stakingNodeId
+            : undefined,
+      },
+    });
+  }
+  // HEDERA_TRANSACTION_MODES.ClaimRewards is just a coin transfer that triggers staking rewards claim
+  else {
     const amount = new BigNumber(txIntent.amount.toString());
 
     tx = await buildUnsignedCoinTransaction({

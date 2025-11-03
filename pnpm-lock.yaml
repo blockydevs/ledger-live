@@ -3183,6 +3183,9 @@ importers:
       '@ledgerhq/live-network':
         specifier: workspace:^
         version: link:../../live-network
+      '@ledgerhq/logs':
+        specifier: workspace:^
+        version: link:../../ledgerjs/packages/logs
       '@ledgerhq/types-live':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/types-live
@@ -71216,8 +71219,8 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.10.10
-      long: 5.2.3
+      '@types/node': 20.12.12
+      long: 5.3.1
 
   protocols@2.0.1: {}
 

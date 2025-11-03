@@ -233,7 +233,6 @@ describe("bridge utils", () => {
     });
 
     it("returns sub account for erc20 token with no operations yet", async () => {
-      const tokenCurrencyFromCAL = getTokenCurrencyFromCALByType("erc20");
       const mockedAccount = getMockedAccount();
 
       const result = await getSubAccounts({
@@ -254,8 +253,6 @@ describe("bridge utils", () => {
       ]);
     });
   });
-
-  describe("integrateERC20Operations", () => {
     const address = "0.0.12345";
     const evmAddress = toEVMAddress(address);
     const ledgerAccountId = `js:2:hedera:${address}:`;
