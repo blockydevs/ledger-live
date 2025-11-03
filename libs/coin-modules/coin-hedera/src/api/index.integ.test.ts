@@ -3,6 +3,7 @@ import {
   AccountId,
   Hbar,
   HbarUnit,
+  Long,
   TokenAssociateTransaction,
   TransferTransaction,
 } from "@hashgraph/sdk";
@@ -76,10 +77,8 @@ describe("createApi", () => {
       const senderTransfer = tokenTransfers?.get(MAINNET_TEST_ACCOUNTS.withoutTokens.accountId);
       const recipientTransfer = tokenTransfers?.get(MAINNET_TEST_ACCOUNTS.withTokens.accountId);
 
-      // .toString() is used because tokenTransfers values are Long objects
-      // this is internal dependency of @hashgraph/sdk, re-exported in newer version
-      expect(senderTransfer?.toString()).toEqual("-1");
-      expect(recipientTransfer?.toString()).toEqual("1");
+      expect(senderTransfer).toEqual(Long.fromNumber(-1));
+      expect(recipientTransfer).toEqual(Long.fromNumber(1));
       expect(tokenTransfers).not.toBeNull();
       expect(rawTx.transactionMemo).toBe("token transfer");
     });
@@ -111,7 +110,7 @@ describe("createApi", () => {
         AccountId.fromString(MAINNET_TEST_ACCOUNTS.withoutTokens.accountId),
       );
       // .toString() is used because sdk.TokenId.fromString() sets `_checksum` to undefined,
-      // but tokenIds elements from TokenAssociateTransaction.fromBytes have it set to null
+      // where tokenIds elements from TokenAssociateTransaction.fromBytes have it set to null
       expect(rawTx.tokenIds?.[0]?.toString()).toEqual("0.0.5022567");
       expect(rawTx.transactionMemo).toBe("token association");
     });
@@ -142,11 +141,11 @@ describe("createApi", () => {
       );
 
       const rawTx = TransferTransaction.fromBytes(Buffer.from(hex, "hex"));
+      const expectedMaxFee = Hbar.from(customFees.value.toString(), HbarUnit.Tinybar);
 
       expect(rawTx).toBeInstanceOf(TransferTransaction);
       invariant(rawTx instanceof TransferTransaction, "TransferTransaction type guard");
-
-      expect(rawTx.maxTransactionFee).toEqual(Hbar.from(customFees.value, HbarUnit.Tinybar));
+      expect(rawTx.maxTransactionFee).toEqual(expectedMaxFee);
     });
   });
 
