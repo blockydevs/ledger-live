@@ -6,9 +6,6 @@ import { AleoAddAccountError } from "../errors";
 // // import { getEnv } from "@ledgerhq/live-env";
 // // import { LedgerAPI4xx } from "@ledgerhq/errors";
 
-const BALANCE_API_URL =
-  "https://explorer-backend-api-mainnet.prd.infra.provable.com/v1/mainnet/program/credits.aleo/mapping/account";
-
 const fetch = <Result>(path: string) => {
   return network<Result>({
     method: "GET",
@@ -18,13 +15,8 @@ const fetch = <Result>(path: string) => {
 
 async function getPublicAccountBalance(address: string): Promise<string> {
   try {
-    const res = await network<string>({
-      method: "GET",
-      url: `${BALANCE_API_URL}/${address}`,
-    });
-    const account = res.data;
-
-    return account;
+    const res = await fetch<string>(`/programs/program/credits.aleo/mapping/account/${address}`);
+    return res.data;
   } catch (error) {
     if (error instanceof LedgerAPI4xx && "status" in error && error.status === 404) {
       throw new AleoAddAccountError();

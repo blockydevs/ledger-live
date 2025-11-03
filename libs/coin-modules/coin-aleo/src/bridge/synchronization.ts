@@ -1,7 +1,7 @@
 import {
   emptyHistoryCache,
   encodeAccountId,
-  encodeTokenAccountId,
+  // encodeTokenAccountId,
 } from "@ledgerhq/coin-framework/account/index";
 import { GetAccountShape, makeSync } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
@@ -9,8 +9,8 @@ import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import BigNumber from "bignumber.js";
 import { apiClient } from "../network/api";
 import { formatCurrency } from "../utils/formatCurrency";
-import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets/lib/tokens";
-import { encodeOperationId } from "@ledgerhq/coin-framework/lib/operation";
+// import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets/lib/tokens";
+// import { encodeOperationId } from "@ledgerhq/coin-framework/lib/operation";
 
 /**
  * Main synchronization process
@@ -69,8 +69,6 @@ export const getAccountShape: GetAccountShape<Account> = async infos => {
       blockHeight: 0,
       operations: [singleTransaction],
       operationsCount: 1,
-      subAccounts: [],
-      nfts: [],
       lastSyncDate: new Date(),
     } as Partial<Account>;
   }
@@ -84,8 +82,6 @@ export const getAccountShape: GetAccountShape<Account> = async infos => {
     blockHeight: 0,
     operations: [],
     operationsCount: 0,
-    subAccounts: [],
-    nfts: [],
     lastSyncDate: new Date(),
   } as Partial<Account>;
 };
@@ -132,7 +128,6 @@ export const postSync = (initial: Account, synced: Account): Account => {
   return {
     ...synced,
     pendingOperations: [],
-    subAccounts: [],
   };
 };
 

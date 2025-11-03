@@ -16,7 +16,7 @@ export function parseTransfer(
   // FIXME: sender address as ID ?
   // const accountId = transfer.sender_address;
 
-  if (transfer.sender_address === address) {
+  if (transfer.sender_address === address || transfer.recipient_address === "") {
     value = amount.abs();
     type = amount.isNegative() ? "OUT" : "IN";
   }

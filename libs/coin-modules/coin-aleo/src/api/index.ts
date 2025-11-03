@@ -9,6 +9,7 @@ import {
   Validator,
   CraftedTransaction,
   Balance,
+  Operation,
 } from "@ledgerhq/coin-framework/api/index";
 import coinConfig, { type AleoConfig } from "../config";
 import {
@@ -19,9 +20,10 @@ import {
   getBalance,
   validateIntent,
   lastBlock,
-  listOperations,
+  listOperations as logicListOperations,
 } from "../logic";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
+import { getOperationValue } from "../logic/utils";
 
 export function createApi(config: AleoConfig, currencyId: string): Api {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
@@ -42,7 +44,63 @@ export function createApi(config: AleoConfig, currencyId: string): Api {
     estimateFees,
     getBalance: (address: string): Promise<Balance[]> => getBalance(currency, address),
     lastBlock,
-    listOperations,
+    listOperations: async (address, pagination) => {
+      // const mirrorTokens = await apiClient.getAccountTokens(address);
+      const latestAccountOperations = await logicListOperations({
+        currency,
+        address,
+        pagination,
+        // mirrorTokens,
+        fetchAllPages: false,
+        skipFeesForTokenOperations: true,
+        useEncodedHash: false,
+        useSyntheticBlocks: true,
+      });
+
+      const liveOperations = latestAccountOperations.coinOperations;
+
+      const sortedLiveOperations = [...liveOperations].sort((a, b) => {
+        const aTime = a.date.getTime();
+        const bTime = b.date.getTime();
+        return pagination.order === "desc" ? bTime - aTime : aTime - bTime;
+      });
+
+      const alpacaOperations = sortedLiveOperations.map(liveOp => {
+        const asset = liveOp.contract
+          ? {
+              type: liveOp.standard ?? "token",
+              assetReference: liveOp.contract,
+              assetOwner: address,
+            }
+          : { type: "native" };
+
+        return {
+          id: liveOp.id,
+          type: liveOp.type,
+          senders: liveOp.senders,
+          recipients: liveOp.recipients,
+          value: getOperationValue({ asset, operation: liveOp }),
+          asset,
+          details: {
+            ...liveOp.extra,
+            ledgerOpType: liveOp.type,
+            status: liveOp.hasFailed ? "failed" : "success",
+            ...(asset.type !== "native" && { assetAmount: liveOp.value.toFixed(0) }),
+          },
+          tx: {
+            hash: liveOp.hash,
+            fees: BigInt(liveOp.fee.toFixed(0)),
+            date: liveOp.date,
+            block: {
+              height: liveOp.blockHeight ?? 10,
+            },
+          },
+        } satisfies Operation;
+      });
+
+      // FIXME: nextCursor
+      return [alpacaOperations, ""];
+    },
     getBlock(_height): Promise<Block> {
       throw new Error("getBlock is not supported");
     },
