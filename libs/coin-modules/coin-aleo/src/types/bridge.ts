@@ -12,10 +12,12 @@ import { AleoJWT, AleoRecordScannerStatusResponse } from "./api";
 
 export type Transaction = TransactionCommon & {
   family: "aleo";
+  fees: BigNumber;
 };
 
 export type TransactionRaw = TransactionCommonRaw & {
   family: "aleo";
+  fees: string;
 };
 
 export type TransactionStatus = TransactionStatusCommon;

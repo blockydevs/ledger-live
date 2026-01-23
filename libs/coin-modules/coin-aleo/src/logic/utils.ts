@@ -6,7 +6,7 @@ import { decodeOperationId, encodeOperationId } from "@ledgerhq/coin-framework/o
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Account, OperationType } from "@ledgerhq/types-live";
 import type { AleoPublicTransaction } from "../types/api";
-import type { AleoNetworkType, AleoOperation } from "../types";
+import type { AleoNetworkType, AleoOperation, Transaction } from "../types";
 import { apiClient } from "../network/api";
 import { PROGRAM_ID } from "../constants";
 
@@ -113,3 +113,26 @@ export const generateUniqueUsername = (address: string): string => {
   const hash = createHash("sha256").update(combined).digest("hex");
   return hash;
 };
+
+export function calculateAmount({
+  account,
+  transaction,
+  estimatedFees,
+}: {
+  account: Account;
+  transaction: Transaction;
+  estimatedFees: BigNumber;
+}) {
+  let amount = transaction.amount;
+
+  if (transaction.useAllAmount) {
+    amount = BigNumber.max(0, account.balance.minus(estimatedFees));
+  }
+
+  const totalSpent = amount.plus(estimatedFees);
+
+  return {
+    amount,
+    totalSpent,
+  };
+}
