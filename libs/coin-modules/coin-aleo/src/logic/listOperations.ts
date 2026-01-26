@@ -2,7 +2,7 @@ import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Pagination } from "@ledgerhq/coin-framework/api/types";
 import type { AleoOperation } from "../types/bridge";
 import { fetchAccountTransactionsFromHeight } from "../network/utils";
-import { parseOperation } from "./utils";
+import { parseOperation } from "../network/utils";
 
 export async function listOperations({
   currency,

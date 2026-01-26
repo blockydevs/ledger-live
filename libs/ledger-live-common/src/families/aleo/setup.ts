@@ -14,10 +14,10 @@ import type {
   Transaction as AleoTransaction,
 } from "@ledgerhq/coin-aleo/types/index";
 import type Transport from "@ledgerhq/hw-transport";
+import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Bridge } from "@ledgerhq/types-live";
 import { createResolver, executeWithSigner, type CreateSigner } from "../../bridge/setup";
 import { getCurrencyConfiguration } from "../../config";
-import { getCryptoCurrencyById } from "../../currencies";
 import { createViewKeyResolver } from "./hw/getViewKey/resolver";
 
 type TransportWithDmk = Transport &
@@ -32,8 +32,9 @@ const createSigner: CreateSigner<AleoSigner> = (transport: TransportWithDmk) => 
   return new DmkSignerAleo(transport.dmk, transport.sessionId);
 };
 
-const getCurrencyConfig = () => {
-  return getCurrencyConfiguration<AleoCoinConfig>(getCryptoCurrencyById("aleo"));
+const getCurrencyConfig = (currency?: CryptoCurrency) => {
+  invariant(currency, "aleo: currency is required in getCurrencyConfig");
+  return getCurrencyConfiguration<AleoCoinConfig>(currency);
 };
 
 const bridge: Bridge<AleoTransaction, AleoAccount> = createBridges(

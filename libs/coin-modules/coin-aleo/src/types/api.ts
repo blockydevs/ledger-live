@@ -35,6 +35,56 @@ export interface AleoPublicTransactions {
   };
 }
 
+export interface DelegatedProvingResponse {
+  transaction: {
+    type: string;
+    id: string;
+    execution: {
+      transitions: {
+        id: string;
+        program: string;
+        function: string;
+        inputs: {
+          type: string;
+          id: string;
+          value: string;
+        }[];
+        outputs: {
+          type: string;
+          id: string;
+          value: string;
+        }[];
+        tpk: string;
+        tcm: string;
+        scm: string;
+      }[];
+      global_state_root: string;
+      proof: string;
+      fee: {
+        transition: {
+          id: string;
+          program: string;
+          function: string;
+          inputs: {
+            type: string;
+            id: string;
+            value: string;
+          }[];
+          outputs: {
+            type: string;
+            id: string;
+            value: string;
+          }[];
+          tpk: string;
+          tcm: string;
+          scm: string;
+        };
+      };
+      broadcast_result: string;
+    };
+  };
+}
+
 interface AleoTransition {
   id: string;
   scm: string;

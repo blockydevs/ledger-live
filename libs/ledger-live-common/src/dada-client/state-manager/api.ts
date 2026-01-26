@@ -9,22 +9,17 @@ import {
   GetAssetsDataParams,
   PageParam,
 } from "./types";
-import { injectAleoMockData } from "./aleo.mock";
 
 function transformAssetsResponse(
   response: RawApiResponse,
   meta?: FetchBaseQueryMeta,
 ): AssetsDataWithPagination {
-  const patchedResponse = meta?.request.url.includes("currencyIds")
-    ? response
-    : injectAleoMockData(response);
-
-  const enrichedCryptoOrTokenCurrencies = convertApiAssets(patchedResponse.cryptoOrTokenCurrencies);
+  const enrichedCryptoOrTokenCurrencies = convertApiAssets(response.cryptoOrTokenCurrencies);
 
   const nextCursor = meta?.response?.headers.get("x-ledger-next") || undefined;
 
   return {
-    ...patchedResponse,
+    ...response,
     cryptoOrTokenCurrencies: enrichedCryptoOrTokenCurrencies,
     pagination: {
       nextCursor,

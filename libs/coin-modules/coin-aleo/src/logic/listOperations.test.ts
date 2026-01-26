@@ -1,12 +1,10 @@
-import { fetchAccountTransactionsFromHeight } from "../network/utils";
+import { fetchAccountTransactionsFromHeight, parseOperation } from "../network/utils";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getMockedTransaction } from "../test/fixtures/api.fixture";
 import { getMockedOperation } from "../test/fixtures/operation.fixture";
-import { parseOperation } from "./utils";
 import { listOperations } from "./listOperations";
 
 jest.mock("../network/utils");
-jest.mock("./utils");
 
 const mockParseOperation = parseOperation as jest.MockedFunction<typeof parseOperation>;
 const mockFetchAccountTransactionsFromHeight =

@@ -1,7 +1,5 @@
 import network from "@ledgerhq/live-network";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
-import type { LiveNetworkResponse } from "@ledgerhq/live-network/network";
-import aleoConfig from "../config";
 
 import {
   AleoAccountJWTResponse,
@@ -12,17 +10,18 @@ import {
   AleoRecordScannerStatusResponse,
   AleoRegisterAccountResponse,
   AleoRegisterForRecordsResponse,
+  DelegatedProvingResponse,
 } from "../types/api";
 import { PROGRAM_ID } from "../constants";
-
-const getNodeUrl = (currency: CryptoCurrency): string => {
-  return aleoConfig.getCoinConfig(currency).nodeUrl;
-};
+import { PrepareRequestBody } from "../types/sdk";
+import { getNetworkConfig } from "../logic/utils";
 
 async function getLatestBlock(currency: CryptoCurrency): Promise<AleoLatestBlockResponse> {
+  const { nodeUrl } = getNetworkConfig(currency);
+
   const res = await network<AleoLatestBlockResponse>({
     method: "GET",
-    url: `${getNodeUrl(currency)}/blocks/latest`,
+    url: `${nodeUrl}/blocks/latest`,
   });
 
   return res.data;
@@ -32,9 +31,11 @@ async function getAccountBalance(
   currency: CryptoCurrency,
   address: string,
 ): Promise<string | null> {
+  const { nodeUrl } = getNetworkConfig(currency);
+
   const res = await network<string | null>({
     method: "GET",
-    url: `${getNodeUrl(currency)}/programs/program/${PROGRAM_ID.CREDITS}/mapping/account/${address}`,
+    url: `${nodeUrl}/programs/program/${PROGRAM_ID.CREDITS}/mapping/account/${address}`,
   });
 
   return res.data;
@@ -44,9 +45,11 @@ async function getTransactionById(
   currency: CryptoCurrency,
   transactionId: string,
 ): Promise<AleoPublicTransactionDetails> {
+  const { nodeUrl } = getNetworkConfig(currency);
+
   const res = await network<AleoPublicTransactionDetails>({
     method: "GET",
-    url: `${getNodeUrl(currency)}/transactions/${transactionId}`,
+    url: `${nodeUrl}/transactions/${transactionId}`,
   });
 
   return res.data;
@@ -67,6 +70,7 @@ async function getAccountPublicTransactions({
   order?: "asc" | "desc";
   direction?: "prev" | "next";
 }): Promise<AleoPublicTransactions> {
+  const { nodeUrl } = getNetworkConfig(currency);
   const params = new URLSearchParams({
     limit: limit.toString(),
     sort: order,
@@ -74,9 +78,40 @@ async function getAccountPublicTransactions({
     ...(cursor && { cursor_block_number: cursor }),
   });
 
-  const res: LiveNetworkResponse<AleoPublicTransactions> = await network({
+  const res = await network<AleoPublicTransactions>({
     method: "GET",
-    url: `${getNodeUrl(currency)}/transactions/address/${address}?${params.toString()}`,
+    url: `${nodeUrl}/transactions/address/${address}?${params.toString()}`,
+  });
+
+  return res.data;
+}
+
+// FIXME: url based on config
+async function submitDelegatedProvingRequest({
+  currency,
+  authorization,
+  feeAuthorization,
+  broadcast,
+  jwt,
+}: {
+  currency: CryptoCurrency;
+  authorization: PrepareRequestBody;
+  feeAuthorization: PrepareRequestBody;
+  broadcast: boolean;
+  jwt: string;
+}): Promise<DelegatedProvingResponse> {
+  const { networkType } = getNetworkConfig(currency);
+  const res = await network<DelegatedProvingResponse>({
+    method: "POST",
+    url: `https://api.provable.com/prove/${networkType}/prove`,
+    headers: {
+      authorization: jwt,
+    },
+    data: {
+      authorization,
+      fee_authorization: feeAuthorization,
+      broadcast,
+    },
   });
 
   return res.data;
@@ -161,4 +196,5 @@ export const apiClient = {
   registerNewAccount,
   getRecordScannerStatus,
   registerForScanningAccountRecords,
+  submitDelegatedProvingRequest,
 };

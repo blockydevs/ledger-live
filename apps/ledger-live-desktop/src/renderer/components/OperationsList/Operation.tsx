@@ -72,7 +72,7 @@ function OperationComponent({
   const isConfirmed = isConfirmedOperation(operation, mainAccount, confirmationsNb);
 
   const cryptoCurrency = currency.type === "CryptoCurrency" ? currency : currency.parentCurrency;
-  const specific = getLLDCoinFamily(cryptoCurrency.id);
+  const specific = getLLDCoinFamily(cryptoCurrency.family);
   const CustomMetadataCell = specific ? specific.CustomMetadataCell : null;
 
   return (

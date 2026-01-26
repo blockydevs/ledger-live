@@ -181,11 +181,7 @@ describe("accessProvableApi", () => {
         existingProvableApi,
       );
 
-      expect(mockGetAccountJWT).toHaveBeenCalledWith(
-        mockCurrency,
-        mockApiKey + "1",
-        mockConsumerId,
-      );
+      expect(mockGetAccountJWT).toHaveBeenCalledWith(mockCurrency, mockApiKey, mockConsumerId);
       expect(result?.jwt).toEqual(mockJWT);
     });
 
@@ -235,11 +231,7 @@ describe("accessProvableApi", () => {
         existingProvableApi,
       );
 
-      expect(mockGetAccountJWT).toHaveBeenCalledWith(
-        mockCurrency,
-        mockApiKey + "1",
-        mockConsumerId,
-      );
+      expect(mockGetAccountJWT).toHaveBeenCalledWith(mockCurrency, mockApiKey, mockConsumerId);
       expect(result?.jwt).toEqual(mockJWT);
     });
 

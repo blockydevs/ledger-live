@@ -96,7 +96,7 @@ const ModularDrawerAddAccountFlowManager = ({
 
   const dispatch = useDispatch();
 
-  const specific = getLLDCoinFamily(cryptoCurrency.id);
+  const specific = getLLDCoinFamily(cryptoCurrency.family);
   const CustomModularDrawerAddAccountFlowManager = specific?.ModularDrawerAddAccountFlowManager;
 
   if (CustomModularDrawerAddAccountFlowManager) {
