@@ -119,9 +119,9 @@ async function registerForScanningAccountRecords(
 ): Promise<AleoRegisterForRecordsResponse> {
   const res = await network<AleoRegisterForRecordsResponse>({
     method: "POST",
-    url: `${getNodeUrl(currency)}/scanner/mainnet/register`,
+    url: `https://api.provable.com/scanner/mainnet/register`,
     headers: {
-      Authorization: `Bearer ${jwt}`,
+      Authorization: jwt,
     },
     data: { view_key: viewKey, start },
   });
@@ -197,16 +197,17 @@ async function getAccountOwnedRecords(
 
 export const getRecordScannerStatus = async (
   currency: CryptoCurrency,
-  jwtToken: string,
+  accessToken: string,
   uuid: string,
 ): Promise<AleoRecordScannerStatusResponse> => {
   const res = await network<AleoRecordScannerStatusResponse>({
     method: "POST",
-    url: `${getNodeUrl(currency)}/scanner/mainnet/status`,
+    url: "https://api.provable.com/scanner/mainnet/status",
     headers: {
-      Authorization: `Bearer ${jwtToken}`,
+      Authorization: accessToken,
+      "Content-Type": "application/json",
     },
-    data: { uuid },
+    data: `"${uuid.toString()}"`,
   });
 
   return res.data;
