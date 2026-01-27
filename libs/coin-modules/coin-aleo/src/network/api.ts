@@ -2,10 +2,16 @@ import network from "@ledgerhq/live-network";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { LiveNetworkResponse } from "@ledgerhq/live-network/network";
 import aleoConfig from "../config";
-import type {
+
+import {
+  AleoAccountJWTResponse,
   AleoLatestBlockResponse,
+  AleoPrivateTransaction,
   AleoPublicTransactionDetails,
   AleoPublicTransactions,
+  AleoRecordScannerStatusResponse,
+  AleoRegisterAccountResponse,
+  AleoRegisterForRecordsResponse,
 } from "../types/api";
 import { PROGRAM_ID } from "../constants";
 
@@ -76,9 +82,145 @@ async function getAccountPublicTransactions({
   return res.data;
 }
 
+async function registerNewAccount(
+  currency: CryptoCurrency,
+  username: string,
+): Promise<AleoRegisterAccountResponse> {
+  const res = await network<AleoRegisterAccountResponse>({
+    method: "POST",
+    url: `https://api.provable.com/consumers`,
+    data: { username },
+  });
+
+  return res.data;
+}
+
+async function getAccountJWT(
+  currency: CryptoCurrency,
+  apiKey: string,
+  consumerId: string,
+): Promise<LiveNetworkResponse<AleoAccountJWTResponse>> {
+  const res = await network<AleoAccountJWTResponse>({
+    method: "POST",
+    url: `https://api.provable.com/jwts/${consumerId}`,
+    headers: {
+      "X-Provable-API-Key": apiKey,
+    },
+  });
+
+  return res;
+}
+
+async function registerForScanningAccountRecords(
+  currency: CryptoCurrency,
+  jwt: string,
+  viewKey: string,
+  start: number = 0,
+): Promise<AleoRegisterForRecordsResponse> {
+  const res = await network<AleoRegisterForRecordsResponse>({
+    method: "POST",
+    url: `${getNodeUrl(currency)}/scanner/mainnet/register`,
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+    },
+    data: { view_key: viewKey, start },
+  });
+
+  return res.data;
+}
+
+async function decryptCiphertext<T>(ciphertext: string, viewKey: string): Promise<T> {
+  const res = await network<T>({
+    method: "POST",
+    url: "https://aleo-backend.api.live.ledger.com/network/mainnet/decrypt",
+    data: { ciphertext, view_key: viewKey },
+  });
+
+  return res.data;
+}
+
+async function getAccountOwnedRecords(
+  currency: CryptoCurrency,
+  jwtToken: string,
+  uuid: string,
+  apiKey: string,
+): Promise<AleoPrivateTransaction[]> {
+  const data = {
+    decrypt: true,
+    filter: {
+      block_height: true,
+      checksum: true,
+      commitment: true,
+      record_ciphertext: true,
+      function_name: true,
+      nonce: true,
+      output_index: true,
+      owner: true,
+      program_name: true,
+      record_name: true,
+      transaction_id: true,
+      transition_id: true,
+      transaction_index: true,
+      transition_index: true,
+    },
+    response_filter: {
+      block_height: true,
+      checksum: true,
+      commitment: true,
+      record_ciphertext: true,
+      function_name: true,
+      nonce: true,
+      output_index: true,
+      owner: true,
+      program_name: true,
+      record_name: true,
+      transaction_id: true,
+      transition_id: true,
+      transaction_index: true,
+      transition_index: true,
+    },
+    unspent: false,
+    uuid,
+  };
+  const res = await network<AleoPrivateTransaction[]>({
+    method: "POST",
+    url: `${getNodeUrl(currency)}/scanner/testnet/records/owned`,
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+      "X-Provable-API-Key": apiKey,
+    },
+    data,
+  });
+
+  return res.data;
+}
+
+export const getRecordScannerStatus = async (
+  currency: CryptoCurrency,
+  jwtToken: string,
+  uuid: string,
+): Promise<AleoRecordScannerStatusResponse> => {
+  const res = await network<AleoRecordScannerStatusResponse>({
+    method: "POST",
+    url: `${getNodeUrl(currency)}/scanner/mainnet/status`,
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    data: { uuid },
+  });
+
+  return res.data;
+};
+
 export const apiClient = {
   getLatestBlock,
   getAccountBalance,
   getTransactionById,
   getAccountPublicTransactions,
+  getAccountJWT,
+  registerNewAccount,
+  getRecordScannerStatus,
+  registerForScanningAccountRecords,
+  decryptCiphertext,
+  getAccountOwnedRecords,
 };

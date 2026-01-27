@@ -69,3 +69,57 @@ export interface AleoPublicTransactionDetails {
   block_timestamp: string;
   status: string;
 }
+
+export interface AleoPrivateTransaction {
+  block_height: number;
+  block_timestamp: null;
+  commitment: string;
+  function_name: string;
+  output_index: number;
+  owner: string;
+  program_name: string;
+  record_ciphertext: string;
+  record_name: string;
+  sender: string | null;
+  spent: string | null;
+  tag: string | null;
+  transaction_id: string;
+  transition_id: string;
+  transaction_index: number;
+  transition_index: number;
+  status: string;
+}
+
+export interface AleoRegisterAccountResponse {
+  consumer: { id: string };
+  created_at: number;
+  id: string;
+  key: string;
+}
+
+export interface AleoAccountJWTResponse {
+  exp: number;
+}
+
+export interface AleoJWT {
+  token: string;
+  exp: number;
+}
+
+export interface AleoRegisterForRecordsResponse {
+  uuid: string;
+}
+
+export interface AleoDecryptedTransactionValueResponse {
+  owner: string;
+  data: {
+    microcredits: string;
+  };
+  nonce: string;
+  version: number;
+}
+
+export interface AleoRecordScannerStatusResponse {
+  synced: boolean;
+  percentage: number;
+}
