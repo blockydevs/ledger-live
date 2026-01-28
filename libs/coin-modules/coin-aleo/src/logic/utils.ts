@@ -5,7 +5,7 @@ import { decodeOperationId, encodeOperationId } from "@ledgerhq/coin-framework/o
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Account, OperationType } from "@ledgerhq/types-live";
 import type { AleoPublicTransaction } from "../types/api";
-import type { AleoOperation } from "../types";
+import type { AleoNetworkType, AleoOperation } from "../types";
 import { apiClient } from "../network/api";
 import { PROGRAM_ID } from "../constants";
 
@@ -39,6 +39,8 @@ export async function parseOperation({
     blockHash = result.block_hash;
   }
 
+  const networkType = determineNetworkType(rawTx.function_id, type);
+
   return {
     id: encodeOperationId(ledgerAccountId, rawTx.transaction_id, type),
     recipients: [rawTx.recipient_address],
@@ -54,6 +56,7 @@ export async function parseOperation({
     date: timestamp,
     extra: {
       functionId: rawTx.function_id,
+      networkType,
     },
   };
 }
@@ -80,3 +83,25 @@ export function patchAccountWithViewKey(account: Account, viewKey: string): Acco
     }),
   };
 }
+
+export const determineNetworkType = (
+  functionId: string,
+  operationType: OperationType,
+): AleoNetworkType => {
+  if (functionId === "transfer_private") return "private";
+  if (functionId === "transfer_public") return "public";
+  if (operationType === "IN") {
+    if (functionId.endsWith("to_private")) {
+      return "private";
+    } else if (functionId.endsWith("to_public")) {
+      return "public";
+    }
+  } else if (operationType === "OUT") {
+    if (functionId.startsWith("transfer_private")) {
+      return "private";
+    } else if (functionId.startsWith("transfer_public")) {
+      return "public";
+    }
+  }
+  return undefined;
+};

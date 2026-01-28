@@ -5,7 +5,12 @@ import { getMockedTransaction, getMockedTransactionDetails } from "../test/fixtu
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getMockedAccount } from "../test/fixtures/account.fixture";
 import { getMockedOperation } from "../test/fixtures/operation.fixture";
-import { parseMicrocredits, parseOperation, patchAccountWithViewKey } from "./utils";
+import {
+  parseMicrocredits,
+  parseOperation,
+  patchAccountWithViewKey,
+  determineNetworkType,
+} from "./utils";
 
 jest.mock("../network/api");
 
@@ -236,6 +241,46 @@ describe("logic utils", () => {
         fee: new BigNumber(5000),
         blockHash: mockTxDetails.block_hash,
       });
+    });
+  });
+
+  describe("determineNetworkType", () => {
+    it("should return private for transfer_private regardless of operation type", () => {
+      expect(determineNetworkType("transfer_private", "IN")).toBe("private");
+      expect(determineNetworkType("transfer_private", "OUT")).toBe("private");
+      expect(determineNetworkType("transfer_private", "NONE")).toBe("private");
+    });
+
+    it("should return public for transfer_public regardless of operation type", () => {
+      expect(determineNetworkType("transfer_public", "IN")).toBe("public");
+      expect(determineNetworkType("transfer_public", "OUT")).toBe("public");
+      expect(determineNetworkType("transfer_public", "NONE")).toBe("public");
+    });
+
+    it("should return private for IN operations ending with to_private", () => {
+      expect(determineNetworkType("transfer_public_to_private", "IN")).toBe("private");
+    });
+
+    it("should return public for IN operations ending with to_public", () => {
+      expect(determineNetworkType("transfer_private_to_public", "IN")).toBe("public");
+    });
+
+    it("should return private for OUT operations starting with transfer_private", () => {
+      expect(determineNetworkType("transfer_private_to_public", "OUT")).toBe("private");
+    });
+
+    it("should return public for OUT operations starting with transfer_public", () => {
+      expect(determineNetworkType("transfer_public_to_private", "OUT")).toBe("public");
+    });
+
+    it("should return undefined for unrecognized function ids", () => {
+      expect(determineNetworkType("unknown_function", "IN")).toBeUndefined();
+      expect(determineNetworkType("unknown_function", "OUT")).toBeUndefined();
+    });
+
+    it("should return undefined for NONE operations with cross-balance transfers", () => {
+      expect(determineNetworkType("transfer_public_to_private", "NONE")).toBeUndefined();
+      expect(determineNetworkType("transfer_private_to_public", "NONE")).toBeUndefined();
     });
   });
 
