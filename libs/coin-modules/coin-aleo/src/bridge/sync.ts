@@ -14,19 +14,16 @@ export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
   const { initialAccount, address, derivationMode, currency } = infos;
 
   let viewKey: string | undefined;
+  let provableApi: AleoAccount["aleoResources"]["provableApi"] | null = null;
 
   if (initialAccount) {
     viewKey = decodeAccountId(initialAccount.id).customData;
     invariant(viewKey, `aleo: viewKey is missing in initialAccount ${initialAccount.id}`);
+
+    if (viewKey) {
+      provableApi = await accessProvableApi(currency, viewKey, initialAccount);
+    }
   }
-
-  const { apiKey, consumerId, jwt, uuid, scannerStatus } = await accessProvableApi(
-    currency,
-    viewKey,
-    initialAccount,
-  );
-
-  console.log(apiKey, consumerId, jwt, uuid, scannerStatus);
 
   const [latestBlock, balances] = await Promise.all([
     lastBlock(currency),
@@ -85,12 +82,7 @@ export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
     aleoResources: {
       transparentBalance,
       privateBalance,
-      provableApi: {
-        apiKey,
-        consumerId,
-        jwt,
-        uuid,
-      },
+      provableApi,
     },
   };
 };

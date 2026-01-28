@@ -39,7 +39,7 @@ export async function parseOperation({
     blockHash = result.block_hash;
   }
 
-  const networkType = determineNetworkType(rawTx.function_id, type);
+  const transactionType = determineTransactionType(rawTx.function_id, type);
 
   return {
     id: encodeOperationId(ledgerAccountId, rawTx.transaction_id, type),
@@ -56,7 +56,7 @@ export async function parseOperation({
     date: timestamp,
     extra: {
       functionId: rawTx.function_id,
-      networkType,
+      transactionType,
     },
   };
 }
@@ -84,7 +84,7 @@ export function patchAccountWithViewKey(account: Account, viewKey: string): Acco
   };
 }
 
-export const determineNetworkType = (
+export const determineTransactionType = (
   functionId: string,
   operationType: OperationType,
 ): AleoNetworkType => {

@@ -33,13 +33,13 @@ export interface ProvableApi {
 export interface AleoResources {
   transparentBalance: BigNumber;
   privateBalance: BigNumber | null;
-  provableApi: ProvableApi;
+  provableApi: ProvableApi | null;
 }
 
 export interface AleoResourcesRaw {
   transparentBalance: string;
   privateBalance: string | null;
-  provableApi: string;
+  provableApi: string | null;
 }
 
 export type AleoAccount = Account & {
@@ -54,7 +54,7 @@ export type AleoNetworkType = "public" | "private" | undefined;
 
 export type AleoOperationExtra = {
   functionId?: string;
-  networkType?: AleoNetworkType;
+  transactionType?: AleoNetworkType;
 };
 
 export type AleoOperation = Operation<AleoOperationExtra>;

@@ -5,8 +5,8 @@ import aleoConfig from "../config";
 
 import {
   AleoAccountJWTResponse,
+  AleoJWT,
   AleoLatestBlockResponse,
-  AleoPrivateTransaction,
   AleoPublicTransactionDetails,
   AleoPublicTransactions,
   AleoRecordScannerStatusResponse,
@@ -99,7 +99,7 @@ async function getAccountJWT(
   currency: CryptoCurrency,
   apiKey: string,
   consumerId: string,
-): Promise<LiveNetworkResponse<AleoAccountJWTResponse>> {
+): Promise<AleoJWT> {
   const res = await network<AleoAccountJWTResponse>({
     method: "POST",
     url: `https://api.provable.com/jwts/${consumerId}`,
@@ -108,7 +108,12 @@ async function getAccountJWT(
     },
   });
 
-  return res;
+  const data = {
+    token: res.headers?.["authorization"] ?? "",
+    exp: res.data.exp,
+  };
+
+  return data;
 }
 
 async function registerForScanningAccountRecords(
@@ -124,72 +129,6 @@ async function registerForScanningAccountRecords(
       Authorization: jwt,
     },
     data: { view_key: viewKey, start },
-  });
-
-  return res.data;
-}
-
-async function decryptCiphertext<T>(ciphertext: string, viewKey: string): Promise<T> {
-  const res = await network<T>({
-    method: "POST",
-    url: "https://aleo-backend.api.live.ledger.com/network/mainnet/decrypt",
-    data: { ciphertext, view_key: viewKey },
-  });
-
-  return res.data;
-}
-
-async function getAccountOwnedRecords(
-  currency: CryptoCurrency,
-  jwtToken: string,
-  uuid: string,
-  apiKey: string,
-): Promise<AleoPrivateTransaction[]> {
-  const data = {
-    decrypt: true,
-    filter: {
-      block_height: true,
-      checksum: true,
-      commitment: true,
-      record_ciphertext: true,
-      function_name: true,
-      nonce: true,
-      output_index: true,
-      owner: true,
-      program_name: true,
-      record_name: true,
-      transaction_id: true,
-      transition_id: true,
-      transaction_index: true,
-      transition_index: true,
-    },
-    response_filter: {
-      block_height: true,
-      checksum: true,
-      commitment: true,
-      record_ciphertext: true,
-      function_name: true,
-      nonce: true,
-      output_index: true,
-      owner: true,
-      program_name: true,
-      record_name: true,
-      transaction_id: true,
-      transition_id: true,
-      transaction_index: true,
-      transition_index: true,
-    },
-    unspent: false,
-    uuid,
-  };
-  const res = await network<AleoPrivateTransaction[]>({
-    method: "POST",
-    url: `${getNodeUrl(currency)}/scanner/testnet/records/owned`,
-    headers: {
-      Authorization: `Bearer ${jwtToken}`,
-      "X-Provable-API-Key": apiKey,
-    },
-    data,
   });
 
   return res.data;
@@ -222,6 +161,4 @@ export const apiClient = {
   registerNewAccount,
   getRecordScannerStatus,
   registerForScanningAccountRecords,
-  decryptCiphertext,
-  getAccountOwnedRecords,
 };

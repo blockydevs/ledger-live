@@ -6,4 +6,3 @@ export { getBalance } from "./getBalance";
 export { lastBlock } from "./lastBlock";
 export { listOperations } from "./listOperations";
 export { validateIntent } from "./validateIntent";
-export { getAccountJWT } from "./getAccountJWT";

@@ -25,6 +25,7 @@ describe("sync.ts", () => {
     aleoResources: {
       transparentBalance: new BigNumber(500000),
       privateBalance: null,
+      provableApi: null,
     },
   };
 
@@ -96,7 +97,7 @@ describe("sync.ts", () => {
 
       expect(result.balance).toEqual(new BigNumber(0));
       expect(result.spendableBalance).toEqual(new BigNumber(0));
-      expect(result.aleoResources.transparentBalance).toEqual(new BigNumber(0));
+      expect(result.aleoResources?.transparentBalance).toEqual(new BigNumber(0));
     });
 
     it("should update balance when it changes", async () => {

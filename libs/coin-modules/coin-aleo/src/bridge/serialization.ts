@@ -6,7 +6,7 @@ export function toAleoResourcesRaw(resources: AleoResources): AleoResourcesRaw {
   return {
     transparentBalance: resources.transparentBalance.toString(),
     privateBalance: resources.privateBalance?.toString() ?? null,
-    provableApi: JSON.stringify(resources.provableApi),
+    provableApi: resources.provableApi ? JSON.stringify(resources.provableApi) : null,
   };
 }
 
@@ -14,7 +14,7 @@ export function fromAleoResourcesRaw(rawResources: AleoResourcesRaw): AleoResour
   return {
     transparentBalance: new BigNumber(rawResources.transparentBalance),
     privateBalance: rawResources.privateBalance ? new BigNumber(rawResources.privateBalance) : null,
-    provableApi: JSON.parse(rawResources.provableApi),
+    provableApi: rawResources.provableApi ? JSON.parse(rawResources.provableApi) : null,
   };
 }
 
