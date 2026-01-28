@@ -7,7 +7,7 @@ import {
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
 import { decodeAccountId, encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
 import { getBalance, lastBlock, listOperations } from "../logic";
-import { authorize } from "../logic/authorize";
+import { accessProvableApi } from "../logic/accessProvableApi";
 import type { AleoAccount } from "../types";
 
 export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
@@ -20,9 +20,13 @@ export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
     invariant(viewKey, `aleo: viewKey is missing in initialAccount ${initialAccount.id}`);
   }
 
-  const { apiKey, consumerId, jwt, uuid } = await authorize(currency, viewKey, initialAccount);
+  const { apiKey, consumerId, jwt, uuid, scannerStatus } = await accessProvableApi(
+    currency,
+    viewKey,
+    initialAccount,
+  );
 
-  console.log(apiKey, consumerId, jwt, uuid);
+  console.log(apiKey, consumerId, jwt, uuid, scannerStatus);
 
   const [latestBlock, balances] = await Promise.all([
     lastBlock(currency),
