@@ -50,8 +50,11 @@ export type AleoAccountRaw = AccountRaw & {
   aleoResources: AleoResourcesRaw;
 };
 
+export type AleoNetworkType = "public" | "private" | undefined;
+
 export type AleoOperationExtra = {
   functionId?: string;
+  networkType?: AleoNetworkType;
 };
 
 export type AleoOperation = Operation<AleoOperationExtra>;
