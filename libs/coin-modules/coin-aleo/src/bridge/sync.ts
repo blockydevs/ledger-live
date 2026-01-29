@@ -8,20 +8,25 @@ import {
 import { decodeAccountId, encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
 import { getBalance, lastBlock, listOperations } from "../logic";
 import { accessProvableApi } from "../logic/accessProvableApi";
-import type { AleoAccount } from "../types";
+import type { AleoAccount, ProvableApi } from "../types";
 
 export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
   const { initialAccount, address, derivationMode, currency } = infos;
 
   let viewKey: string | undefined;
-  let provableApi: AleoAccount["aleoResources"]["provableApi"] | null = null;
+  let provableApi: ProvableApi | null = null;
 
   if (initialAccount) {
     viewKey = decodeAccountId(initialAccount.id).customData;
     invariant(viewKey, `aleo: viewKey is missing in initialAccount ${initialAccount.id}`);
 
     if (viewKey) {
-      provableApi = await accessProvableApi(currency, viewKey, initialAccount);
+      provableApi = await accessProvableApi(
+        currency,
+        viewKey,
+        address,
+        initialAccount.aleoResources.provableApi,
+      );
     }
   }
 
@@ -83,6 +88,9 @@ export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
       transparentBalance,
       privateBalance,
       provableApi,
+      lastPrivateSyncDate: provableApi?.scannerStatus?.synced
+        ? new Date()
+        : initialAccount?.aleoResources.lastPrivateSyncDate || null,
     },
   };
 };

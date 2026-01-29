@@ -105,3 +105,7 @@ export const determineTransactionType = (
   }
   return undefined;
 };
+
+export const generateUniqueUsername = (address: string): string => {
+  return `${new Date().getTime().toString()}_${address}`;
+};

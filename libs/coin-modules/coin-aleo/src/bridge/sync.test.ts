@@ -26,6 +26,7 @@ describe("sync.ts", () => {
       transparentBalance: new BigNumber(500000),
       privateBalance: null,
       provableApi: null,
+      lastPrivateSyncDate: null,
     },
   };
 

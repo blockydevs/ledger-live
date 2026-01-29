@@ -33,12 +33,14 @@ export interface ProvableApi {
 export interface AleoResources {
   transparentBalance: BigNumber;
   privateBalance: BigNumber | null;
+  lastPrivateSyncDate: Date | null;
   provableApi: ProvableApi | null;
 }
 
 export interface AleoResourcesRaw {
   transparentBalance: string;
   privateBalance: string | null;
+  lastPrivateSyncDate: string | null;
   provableApi: string | null;
 }
 
