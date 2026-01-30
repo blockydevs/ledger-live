@@ -276,6 +276,7 @@ describe("network utils", () => {
         .mockResolvedValueOnce({
           address: mockAddress,
           transactions: [tx1, tx2],
+          next_cursor: { block_number: 150, transition_id: "" },
         })
         .mockResolvedValueOnce({
           address: mockAddress,
@@ -301,7 +302,7 @@ describe("network utils", () => {
     });
 
     it("returns empty array and null cursor when no transactions are found", async () => {
-      mockGetAccountPublicTransactions.mockResolvedValueOnce({
+      mockGetAccountPublicTransactions.mockResolvedValue({
         address: mockAddress,
         transactions: [],
       });
@@ -348,7 +349,7 @@ describe("network utils", () => {
       const tx1 = getMockedTransaction({ transaction_id: "tx1", block_number: 10 });
       const tx2 = getMockedTransaction({ transaction_id: "tx2", block_number: 20 });
 
-      mockGetAccountPublicTransactions.mockResolvedValueOnce({
+      mockGetAccountPublicTransactions.mockResolvedValue({
         address: mockAddress,
         transactions: [tx1, tx2],
       });

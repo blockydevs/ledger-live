@@ -2,16 +2,19 @@ import BigNumber from "bignumber.js";
 import { encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
 import { SyncConfig } from "@ledgerhq/types-live";
 import { getBalance, lastBlock, listOperations } from "../logic";
+import { accessProvableApi } from "../logic/accessProvableApi";
 import { getMockedAccount } from "../test/fixtures/account.fixture";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getMockedOperation } from "../test/fixtures/operation.fixture";
 import { getAccountShape } from "./sync";
 
 jest.mock("../logic");
+jest.mock("../logic/accessProvableApi");
 
 const mockGetBalance = getBalance as jest.MockedFunction<typeof getBalance>;
 const mockLastBlock = lastBlock as jest.MockedFunction<typeof lastBlock>;
 const mockListOperations = listOperations as jest.MockedFunction<typeof listOperations>;
+const mockAccessProvableApi = accessProvableApi as jest.MockedFunction<typeof accessProvableApi>;
 
 describe("sync.ts", () => {
   const mockCurrency = getMockedCurrency();
@@ -41,6 +44,7 @@ describe("sync.ts", () => {
         value: BigInt(mockAccount.balance.toString()),
       },
     ]);
+    mockAccessProvableApi.mockResolvedValue(null);
   });
 
   describe("getAccountShape", () => {
