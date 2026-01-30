@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { decodeAccountId, encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
@@ -107,5 +108,8 @@ export const determineTransactionType = (
 };
 
 export const generateUniqueUsername = (address: string): string => {
-  return `${new Date().getTime().toString()}_${address}`;
+  const timestamp = new Date().getTime().toString();
+  const combined = `${timestamp}_${address}`;
+  const hash = createHash("sha256").update(combined).digest("hex");
+  return hash;
 };
