@@ -10,6 +10,7 @@ import {
   parseOperation,
   patchAccountWithViewKey,
   determineTransactionType,
+  generateUniqueUsername,
 } from "./utils";
 
 jest.mock("../network/api");
@@ -331,6 +332,39 @@ describe("logic utils", () => {
           accountId: `js:2:aleo:aleo1test::${mockViewKey}`,
         }),
       ]);
+    });
+  });
+
+  describe("generateUniqueUsername", () => {
+    it("should generate username with timestamp and address", () => {
+      const mockAddress = "aleo1test123";
+      const beforeTimestamp = new Date().getTime();
+
+      const result = generateUniqueUsername(mockAddress);
+
+      const afterTimestamp = new Date().getTime();
+
+      expect(result).toContain(mockAddress);
+      expect(result).toMatch(/^\d+_aleo1test123$/);
+
+      const [timestamp] = result.split("_");
+      const parsedTimestamp = parseInt(timestamp, 10);
+
+      expect(parsedTimestamp).toBeGreaterThanOrEqual(beforeTimestamp);
+      expect(parsedTimestamp).toBeLessThanOrEqual(afterTimestamp);
+    });
+
+    it("should handle different addresses", () => {
+      const address1 = "aleo1address1";
+      const address2 = "aleo1address2";
+
+      const result1 = generateUniqueUsername(address1);
+      const result2 = generateUniqueUsername(address2);
+
+      expect(result1).toContain(address1);
+      expect(result2).toContain(address2);
+      expect(result1).not.toContain(address2);
+      expect(result2).not.toContain(address1);
     });
   });
 });
