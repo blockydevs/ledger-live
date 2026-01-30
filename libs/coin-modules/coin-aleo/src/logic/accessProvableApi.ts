@@ -32,6 +32,8 @@ import { generateUniqueUsername } from "./utils";
  * and allow the user to re-initialize access from scratch.
  */
 
+const JWT_EXPIRY_BUFFER_SECONDS = 5 * 60; // 5 minutes safe buffer
+
 export async function accessProvableApi(
   currency: CryptoCurrency,
   viewKey: string,
@@ -55,7 +57,7 @@ export async function accessProvableApi(
   }
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  if (!jwt || currentTimestamp >= jwt.exp - 5 * 60) {
+  if (!jwt || currentTimestamp >= jwt.exp - JWT_EXPIRY_BUFFER_SECONDS) {
     try {
       jwt = await apiClient.getAccountJWT(currency, apiKey + "1", consumerId);
     } catch (error) {
