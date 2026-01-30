@@ -28,6 +28,7 @@ describe("sync.ts", () => {
     aleoResources: {
       transparentBalance: new BigNumber(500000),
       privateBalance: null,
+      privateBalanceRecords: null,
       provableApi: null,
       lastPrivateSyncDate: null,
     },

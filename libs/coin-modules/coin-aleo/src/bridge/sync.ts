@@ -8,7 +8,8 @@ import {
 import { decodeAccountId, encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
 import { getBalance, lastBlock, listOperations } from "../logic";
 import { accessProvableApi } from "../logic/accessProvableApi";
-import type { AleoAccount, ProvableApi } from "../types";
+import type { AleoAccount, AleoResources, ProvableApi } from "../types";
+import { getPrivateBalance } from "../logic/getPrivateBalance";
 
 export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
   const { initialAccount, address, derivationMode, currency } = infos;
@@ -48,8 +49,22 @@ export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
 
   const nativeBalance = balances.find(b => b.asset.type === "native")?.value ?? BigInt(0);
   const transparentBalance = new BigNumber(nativeBalance.toString());
-  const privateBalance = null;
-  const spendableBalance = transparentBalance.plus(privateBalance ?? 0);
+  const spendableBalance = transparentBalance;
+  const { jwt, uuid, apiKey } = provableApi ?? {};
+  let privateBalance: AleoResources["privateBalance"] = null;
+  let privateBalanceRecords: AleoResources["privateBalanceRecords"] = null;
+
+  if (provableApi !== null && jwt && uuid && apiKey && viewKey) {
+    const { records, balance } = await getPrivateBalance({
+      jwtToken: jwt.token,
+      uuid,
+      apiKey,
+      viewKey,
+    });
+
+    privateBalance = balance;
+    privateBalanceRecords = records;
+  }
 
   const shouldSyncFromScratch = !initialAccount;
   const oldOperations = shouldSyncFromScratch ? [] : initialAccount?.operations ?? [];
@@ -86,6 +101,7 @@ export const getAccountShape: GetAccountShape<AleoAccount> = async infos => {
     lastSyncDate: new Date(),
     aleoResources: {
       transparentBalance,
+      privateBalanceRecords,
       privateBalance,
       provableApi,
       lastPrivateSyncDate: provableApi?.scannerStatus?.synced

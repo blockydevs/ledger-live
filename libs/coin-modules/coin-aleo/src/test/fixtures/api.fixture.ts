@@ -1,5 +1,9 @@
 import { PROGRAM_ID } from "../../constants";
-import type { AleoPublicTransaction, AleoPublicTransactionDetails } from "../../types/api";
+import type {
+  AleoPrivateTransaction,
+  AleoPublicTransaction,
+  AleoPublicTransactionDetails,
+} from "../../types/api";
 
 export const getMockedTransaction = (
   overrides?: Partial<AleoPublicTransaction>,
@@ -51,4 +55,24 @@ export const getMockedTransactionDetails = (
   block_timestamp: "1709079312",
   status: "accepted",
   ...overrides,
+});
+
+export const createMockRecord = (ciphertext: string): AleoPrivateTransaction => ({
+  block_height: 100,
+  block_timestamp: null,
+  commitment: "commitment_" + ciphertext,
+  function_name: "transfer_private",
+  output_index: 0,
+  owner: "mock_owner_address",
+  program_name: "credits.aleo",
+  record_ciphertext: ciphertext,
+  record_name: "credits",
+  sender: null,
+  spent: null,
+  tag: null,
+  transaction_id: "tx_" + ciphertext,
+  transition_id: "transition_" + ciphertext,
+  transaction_index: 0,
+  transition_index: 0,
+  status: "confirmed",
 });

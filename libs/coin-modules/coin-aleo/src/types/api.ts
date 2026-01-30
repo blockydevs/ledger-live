@@ -72,7 +72,7 @@ export interface AleoPublicTransactionDetails {
 
 export interface AleoPrivateTransaction {
   block_height: number;
-  block_timestamp: null;
+  block_timestamp: number;
   commitment: string;
   function_name: string;
   output_index: number;
@@ -80,14 +80,13 @@ export interface AleoPrivateTransaction {
   program_name: string;
   record_ciphertext: string;
   record_name: string;
-  sender: string | null;
-  spent: string | null;
-  tag: string | null;
+  sender: string;
+  spent: boolean;
+  tag: string;
   transaction_id: string;
   transition_id: string;
   transaction_index: number;
   transition_index: number;
-  status: string;
 }
 
 export interface AleoRegisterAccountResponse {
@@ -110,7 +109,7 @@ export interface AleoRegisterForRecordsResponse {
   uuid: string;
 }
 
-export interface AleoDecryptedTransactionValueResponse {
+export interface AleoDecryptedRecordResponse {
   owner: string;
   data: {
     microcredits: string;

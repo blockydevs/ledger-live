@@ -7,6 +7,7 @@ import {
   AleoAccountJWTResponse,
   AleoJWT,
   AleoLatestBlockResponse,
+  AleoPrivateTransaction,
   AleoPublicTransactionDetails,
   AleoPublicTransactions,
   AleoRecordScannerStatusResponse,
@@ -135,7 +136,6 @@ async function registerForScanningAccountRecords(
 }
 
 export const getRecordScannerStatus = async (
-  currency: CryptoCurrency,
   accessToken: string,
   uuid: string,
 ): Promise<AleoRecordScannerStatusResponse> => {
@@ -152,6 +152,33 @@ export const getRecordScannerStatus = async (
   return res.data;
 };
 
+async function getAccountOwnedRecords({
+  jwtToken,
+  apiKey,
+  uuid,
+  unspent,
+}: {
+  jwtToken: string;
+  apiKey: string;
+  uuid: string;
+  unspent?: boolean;
+}): Promise<AleoPrivateTransaction[]> {
+  const res = await network<AleoPrivateTransaction[]>({
+    method: "POST",
+    url: "https://api.provable.com/scanner/mainnet/records/owned",
+    headers: {
+      Authorization: jwtToken,
+      "X-Provable-API-Key": apiKey,
+    },
+    data: {
+      ...(unspent !== undefined && { unspent }),
+      uuid,
+    },
+  });
+
+  return res.data;
+}
+
 export const apiClient = {
   getLatestBlock,
   getAccountBalance,
@@ -161,4 +188,5 @@ export const apiClient = {
   registerNewAccount,
   getRecordScannerStatus,
   registerForScanningAccountRecords,
+  getAccountOwnedRecords,
 };

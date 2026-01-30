@@ -78,7 +78,8 @@ export async function accessProvableApi(
     uuid = accountUuid;
   }
 
-  const status = await apiClient.getRecordScannerStatus(currency, jwt.token, uuid);
+  const status = await apiClient.getRecordScannerStatus(jwt.token, uuid);
+
   if (status) {
     synced = status.synced;
     percentage = status.percentage;

@@ -5,22 +5,28 @@ import type { AleoAccount, AleoAccountRaw, AleoResources, AleoResourcesRaw } fro
 export function toAleoResourcesRaw(resources: AleoResources): AleoResourcesRaw {
   return {
     transparentBalance: resources.transparentBalance.toString(),
-    privateBalance: resources.privateBalance?.toString() ?? null,
     lastPrivateSyncDate: resources.lastPrivateSyncDate
       ? resources.lastPrivateSyncDate.toISOString()
       : null,
     provableApi: resources.provableApi ? JSON.stringify(resources.provableApi) : null,
+    privateBalanceRecords: resources.privateBalanceRecords
+      ? JSON.stringify(resources.privateBalanceRecords)
+      : null,
+    privateBalance: resources.privateBalance?.toString() ?? null,
   };
 }
 
 export function fromAleoResourcesRaw(rawResources: AleoResourcesRaw): AleoResources {
   return {
     transparentBalance: new BigNumber(rawResources.transparentBalance),
-    privateBalance: rawResources.privateBalance ? new BigNumber(rawResources.privateBalance) : null,
     lastPrivateSyncDate: rawResources.lastPrivateSyncDate
       ? new Date(rawResources.lastPrivateSyncDate)
       : null,
     provableApi: rawResources.provableApi ? JSON.parse(rawResources.provableApi) : null,
+    privateBalanceRecords: rawResources.privateBalanceRecords
+      ? JSON.parse(rawResources.privateBalanceRecords)
+      : null,
+    privateBalance: rawResources.privateBalance ? new BigNumber(rawResources.privateBalance) : null,
   };
 }
 

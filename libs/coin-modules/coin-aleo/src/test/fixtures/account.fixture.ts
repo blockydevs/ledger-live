@@ -9,16 +9,18 @@ const defaultMockAccountId =
 
 export const mockAleoResources: AleoResources = {
   transparentBalance: new BigNumber(0),
-  privateBalance: null,
   provableApi: null,
   lastPrivateSyncDate: null,
+  privateBalanceRecords: null,
+  privateBalance: null,
 };
 
 export const mockAleoResourcesRaw: AleoResourcesRaw = {
   transparentBalance: "0",
-  privateBalance: null,
   provableApi: null,
   lastPrivateSyncDate: null,
+  privateBalanceRecords: null,
+  privateBalance: null,
 };
 
 export const getMockedAccount = (overrides?: Partial<AleoAccount>): AleoAccount => {
