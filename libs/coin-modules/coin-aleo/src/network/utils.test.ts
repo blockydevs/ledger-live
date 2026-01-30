@@ -12,10 +12,14 @@ const mockGetAccountPublicTransactions =
 
 describe("network utils", () => {
   const mockCurrency = getMockedCurrency();
+  const mockAddress = "addr";
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetAccountPublicTransactions.mockResolvedValue({ transactions: [], next_cursor: null });
+    mockGetAccountPublicTransactions.mockResolvedValue({
+      address: mockAddress,
+      transactions: [],
+    });
   });
 
   describe("fetchAccountTransactionsFromHeight", () => {
@@ -24,13 +28,13 @@ describe("network utils", () => {
       const tx2 = getMockedTransaction({ transaction_id: "tx2", block_number: 11 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [tx1, tx2],
-        next_cursor: null,
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 0,
         limit: 1,
@@ -50,17 +54,19 @@ describe("network utils", () => {
 
       mockGetAccountPublicTransactions
         .mockResolvedValueOnce({
+          address: mockAddress,
           transactions: [tx1, tx2],
-          next_cursor: { block_number: 11 },
+          next_cursor: { block_number: 11, transition_id: "" },
         })
         .mockResolvedValueOnce({
+          address: mockAddress,
           transactions: [tx3, tx4],
-          next_cursor: { block_number: 13 },
+          next_cursor: { block_number: 13, transition_id: "" },
         });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 0,
         limit: 3,
@@ -81,13 +87,13 @@ describe("network utils", () => {
       const tx1 = getMockedTransaction({ transaction_id: "tx1", block_number: 10 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [tx1],
-        next_cursor: null,
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 0,
         limit: 10,
@@ -104,13 +110,13 @@ describe("network utils", () => {
       const txAbove2 = getMockedTransaction({ transaction_id: "above2", block_number: 200 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [txBelow, txAbove1, txAbove2],
-        next_cursor: null,
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 100,
         limit: 50,
@@ -130,13 +136,14 @@ describe("network utils", () => {
       const txBelow = getMockedTransaction({ transaction_id: "below", block_number: 90 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [txAbove1, txAbove2, txBelow],
-        next_cursor: { block_number: 90 },
+        next_cursor: { block_number: 90, transition_id: "" },
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 100,
         limit: 50,
@@ -158,13 +165,14 @@ describe("network utils", () => {
       );
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [...txsAbove, txBelow],
-        next_cursor: { block_number: 50 },
+        next_cursor: { block_number: 50, transition_id: "" },
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 100,
         limit: 5,
@@ -181,17 +189,18 @@ describe("network utils", () => {
 
       mockGetAccountPublicTransactions
         .mockResolvedValueOnce({
+          address: mockAddress,
           transactions: [txA],
-          next_cursor: { block_number: 20 },
+          next_cursor: { block_number: 20, transition_id: "" },
         })
         .mockResolvedValueOnce({
+          address: mockAddress,
           transactions: [txB],
-          next_cursor: null,
         });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: true,
         minBlockHeight: 0,
         limit: 50,
@@ -212,13 +221,14 @@ describe("network utils", () => {
       const txBelow = getMockedTransaction({ transaction_id: "below", block_number: 95 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [txAbove1, txAbove2, txBelow],
-        next_cursor: { block_number: 95 },
+        next_cursor: { block_number: 95, transition_id: "" },
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: true,
         minBlockHeight: 100,
         limit: 50,
@@ -239,13 +249,13 @@ describe("network utils", () => {
       );
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: txs,
-        next_cursor: null,
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: true,
         minBlockHeight: 0,
         limit: 10,
@@ -264,17 +274,17 @@ describe("network utils", () => {
 
       mockGetAccountPublicTransactions
         .mockResolvedValueOnce({
+          address: mockAddress,
           transactions: [tx1, tx2],
-          next_cursor: { block_number: tx2.block_number },
         })
         .mockResolvedValueOnce({
+          address: mockAddress,
           transactions: [tx3, tx4],
-          next_cursor: null,
         });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: true,
         minBlockHeight: 100,
         limit: 50,
@@ -292,13 +302,13 @@ describe("network utils", () => {
 
     it("returns empty array and null cursor when no transactions are found", async () => {
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [],
-        next_cursor: null,
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: true,
         minBlockHeight: 0,
         limit: 50,
@@ -313,13 +323,13 @@ describe("network utils", () => {
       const tx = getMockedTransaction({ transaction_id: "tx1", block_number: 500 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [tx],
-        next_cursor: null,
       });
 
       await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 0,
         cursor: "400",
@@ -339,13 +349,13 @@ describe("network utils", () => {
       const tx2 = getMockedTransaction({ transaction_id: "tx2", block_number: 20 });
 
       mockGetAccountPublicTransactions.mockResolvedValueOnce({
+        address: mockAddress,
         transactions: [tx1, tx2],
-        next_cursor: null,
       });
 
       const res = await fetchAccountTransactionsFromHeight({
         currency: mockCurrency,
-        address: "addr",
+        address: mockAddress,
         fetchAllPages: false,
         minBlockHeight: 100,
         limit: 50,

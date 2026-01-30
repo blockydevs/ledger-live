@@ -1,6 +1,7 @@
 import network from "@ledgerhq/live-network";
 import aleoConfig from "../config";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
+import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { PROGRAM_ID } from "../constants";
 import { apiClient } from "./api";
 
@@ -14,12 +15,13 @@ const mockGetCoinConfig = aleoConfig.getCoinConfig as jest.MockedFunction<
 
 describe("apiClient", () => {
   const mockCurrency = getMockedCurrency();
+  const mockConfig = getMockedConfig();
   const mockNodeUrl = "https://api.provable.com/v2/testnet";
   const mockAddress = "aleo14pfq40wgltv8wrhsxqe5tlme4pkp448rfejfvqhd4yj0qycs7c9s2xkcwv";
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCoinConfig.mockReturnValue({ nodeUrl: mockNodeUrl });
+    mockGetCoinConfig.mockReturnValue(mockConfig);
   });
 
   describe("getLatestBlock", () => {
@@ -35,7 +37,7 @@ describe("apiClient", () => {
         },
       };
 
-      mockNetwork.mockResolvedValue({ data: mockBlock });
+      mockNetwork.mockResolvedValue({ data: mockBlock, status: 200 });
 
       const result = await apiClient.getLatestBlock(mockCurrency);
       const requestUrl = mockNetwork.mock.calls[0][0].url;
@@ -58,7 +60,7 @@ describe("apiClient", () => {
   describe("getAccountBalance", () => {
     it("should fetch account balance successfully", async () => {
       const mockBalance = "1000000u64";
-      mockNetwork.mockResolvedValue({ data: mockBalance });
+      mockNetwork.mockResolvedValue({ data: mockBalance, status: 200 });
 
       const result = await apiClient.getAccountBalance(mockCurrency, mockAddress);
       const requestUrl = mockNetwork.mock.calls[0][0].url;
@@ -74,7 +76,7 @@ describe("apiClient", () => {
 
     it("should handle zero balance", async () => {
       const mockBalance = "0u64";
-      mockNetwork.mockResolvedValue({ data: mockBalance });
+      mockNetwork.mockResolvedValue({ data: mockBalance, status: 200 });
 
       const result = await apiClient.getAccountBalance(mockCurrency, mockAddress);
 
@@ -83,7 +85,7 @@ describe("apiClient", () => {
 
     it("should handle large balance values", async () => {
       const mockBalance = "999999999999999999u64";
-      mockNetwork.mockResolvedValue({ data: mockBalance });
+      mockNetwork.mockResolvedValue({ data: mockBalance, status: 200 });
 
       const result = await apiClient.getAccountBalance(mockCurrency, mockAddress);
 
@@ -112,7 +114,7 @@ describe("apiClient", () => {
         transitions: [],
       };
 
-      mockNetwork.mockResolvedValue({ data: mockTransactionDetails });
+      mockNetwork.mockResolvedValue({ data: mockTransactionDetails, status: 200 });
 
       const result = await apiClient.getTransactionById(mockCurrency, mockTransactionId);
       const requestUrl = mockNetwork.mock.calls[0][0].url;
@@ -142,15 +144,13 @@ describe("apiClient", () => {
     it("should fetch transactions with default parameters", async () => {
       mockNetwork.mockResolvedValue({
         data: { transactions: [mockTx1, mockTx2], next_cursor: null },
+        status: 200,
       });
 
       const params = {
         cursor: mockTx1.block_number.toString(),
         currency: mockCurrency,
         address: mockAddress,
-        limit: undefined,
-        order: undefined,
-        direction: undefined,
         minHeight: 0,
       } as const;
 
@@ -172,6 +172,7 @@ describe("apiClient", () => {
       const cursor = mockTx1.block_number.toString();
       mockNetwork.mockResolvedValue({
         data: { transactions: [mockTx2], next_cursor: null },
+        status: 200,
       });
 
       await apiClient.getAccountPublicTransactions({
@@ -179,8 +180,6 @@ describe("apiClient", () => {
         address: mockAddress,
         cursor,
         limit: 2,
-        direction: undefined,
-        order: undefined,
       });
 
       const requestUrl = mockNetwork.mock.calls[0][0].url;
@@ -191,14 +190,13 @@ describe("apiClient", () => {
     it("should apply custom order parameter", async () => {
       mockNetwork.mockResolvedValue({
         data: { transactions: [mockTx1], next_cursor: null },
+        status: 200,
       });
 
       await apiClient.getAccountPublicTransactions({
         currency: mockCurrency,
         address: mockAddress,
-        cursor: undefined,
         limit: 2,
-        direction: undefined,
         order: "desc",
       });
 
@@ -215,9 +213,6 @@ describe("apiClient", () => {
           currency: mockCurrency,
           address: mockAddress,
           limit: 2,
-          cursor: undefined,
-          direction: undefined,
-          order: undefined,
         }),
       ).rejects.toThrow("Network error");
     });
