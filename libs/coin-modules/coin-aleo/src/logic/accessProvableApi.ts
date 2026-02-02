@@ -59,7 +59,7 @@ export async function accessProvableApi(
   const currentTimestamp = Math.floor(Date.now() / 1000);
   if (!jwt || currentTimestamp >= jwt.exp - JWT_EXPIRY_BUFFER_SECONDS) {
     try {
-      jwt = await apiClient.getAccountJWT(currency, apiKey + "1", consumerId);
+      jwt = await apiClient.getAccountJWT(currency, apiKey, consumerId);
     } catch (error) {
       // If unauthorized, likely due to revoked API key - return null to reset Provable API access
       if (error instanceof Error && error.message.includes("Unauthorized")) {
