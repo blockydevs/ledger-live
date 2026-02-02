@@ -100,6 +100,7 @@
     "@ledgerhq/live-network": "workspace:^",
     "@ledgerhq/types-cryptoassets": "workspace:^",
     "@ledgerhq/types-live": "workspace:^",
+    "bech32": "^1.1.3",
     "bignumber.js": "^9.1.2",
     "invariant": "^2.2.2",
     "lodash": "^4.17.21",
