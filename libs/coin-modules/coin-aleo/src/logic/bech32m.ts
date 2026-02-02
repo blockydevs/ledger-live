@@ -1,3 +1,5 @@
+// copied from ledger-live/libs/coin-modules/coin-bitcoin/src/bech32m.ts
+
 // Ported from https://github.com/bitcoinjs/bech32/tree/605655d6b37a782345549cd1388db688a96ad56f
 // until we can use bech32 2.0.0
 // We can't directly use bech32 2.0.0 because many of our dependencies are still using bech32 ^1.1.3
