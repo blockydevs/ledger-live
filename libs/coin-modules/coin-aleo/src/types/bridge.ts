@@ -8,11 +8,13 @@ import type {
   TransactionStatusCommon,
   TransactionStatusCommonRaw,
 } from "@ledgerhq/types-live";
+import { TRANSACTION_TYPE } from "../constants";
 import { AleoJWT, AleoRecordScannerStatusResponse } from "./api";
 
 export type Transaction = TransactionCommon & {
   family: "aleo";
   fees: BigNumber;
+  type: TRANSACTION_TYPE;
 };
 
 export type TransactionRaw = TransactionCommonRaw & {
