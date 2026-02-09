@@ -13,7 +13,6 @@ import BalanceSelector from "~/renderer/families/aleo/shared/BalanceSelector";
 import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
 import { TRANSACTION_TYPE } from "@ledgerhq/live-common/families/aleo/constants";
 import RecipientField from "~/renderer/modals/Send/fields/RecipientField";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/impl";
 
 const StepRecipient = ({
   t,
@@ -42,7 +41,6 @@ const StepRecipient = ({
   if (!status || !account) return null;
   if (transaction?.family !== "aleo") return null;
   const mainAccount = getMainAccount(account, parentAccount) as AleoAccount;
-  const bridge = getAccountBridge(mainAccount);
 
   console.log("steprecipient tx status", status);
 
@@ -77,6 +75,16 @@ const StepRecipient = ({
           filter={accountFilter}
         />
       </Box>
+
+      <Box flow={1}>
+        <Label>{t("SelectBalanceField.label")}</Label>
+        <BalanceSelector
+          mainAccount={mainAccount}
+          transaction={transaction}
+          onChangeTransaction={onChangeTransaction}
+        />
+      </Box>
+
       {!isSelfTransfer && (
         <RecipientField
           status={status}
@@ -89,27 +97,6 @@ const StepRecipient = ({
           resetInitValue={onResetMaybeRecipient}
         />
       )}
-      <BalanceSelector
-        mainAccount={mainAccount}
-        transaction={transaction}
-        onChange={(value: "public" | "private") => {
-          let newTransactionType: TRANSACTION_TYPE;
-
-          if (isSelfTransfer) {
-            newTransactionType =
-              value === "public"
-                ? TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE
-                : TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC;
-          } else {
-            newTransactionType =
-              value === "public"
-                ? TRANSACTION_TYPE.TRANSFER_PUBLIC
-                : TRANSACTION_TYPE.TRANSFER_PRIVATE;
-          }
-
-          onChangeTransaction(bridge.updateTransaction(transaction, { type: newTransactionType }));
-        }}
-      />
     </Box>
   );
 };
