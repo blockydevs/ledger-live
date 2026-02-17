@@ -8007,6 +8007,12 @@
       "privateBalanceTooltip": "Balance that is hidden from the public",
       "selfTransferButtonLabel": "Public <> Private"
     },
+    "privateRecords": {
+      "state": {
+        "showBalance": "Show balance",
+        "lastSync": "Last sync {{days}} ago"
+      }
+    },
     "operations": {
       "type": {
         "public": "Public",
