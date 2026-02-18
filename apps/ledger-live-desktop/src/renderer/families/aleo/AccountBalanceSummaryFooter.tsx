@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Trans } from "react-i18next";
 import styled from "styled-components";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
@@ -18,6 +18,7 @@ import Spinner from "~/renderer/components/Spinner";
 import { useSelector } from "LLD/hooks/redux";
 // import { openModal } from "~/renderer/actions/modals";
 import { BigNumber } from "bignumber.js";
+import { getAccountBridge } from "@ledgerhq/live-common/bridge/impl";
 
 type AleoSyncState = "disabled" | "running" | "paused" | "complete" | "outdated";
 
@@ -38,7 +39,7 @@ const ActionButton = ({
           onClick={updateSyncState}
           buttonTestId="show-private-balance-button"
         >
-          <Text>{t("aleo.privateRecords.state.showBalance")}</Text>
+          <Text>{t("aleo.privateRecords.state.syncBalance")}</Text>
         </ButtonV3>
       );
     case "paused":
@@ -71,82 +72,23 @@ const ActionButton = ({
   }
 };
 
-const getSafeProgress = (account: AleoAccount | TokenAccount): number => {
-  if (
-    account.type === "Account" &&
-    "aleoResources" in account &&
-    account.aleoResources?.provableApi?.scannerStatus?.percentage !== null &&
-    account.aleoResources?.provableApi?.scannerStatus?.percentage !== undefined
-  ) {
-    return account.aleoResources.provableApi.scannerStatus.percentage;
-  }
-
-  return 0;
-};
-
 interface Props {
   account: AleoAccount | TokenAccount;
 }
 
 const AccountBalanceSummaryFooter: React.FC<Props> = ({ account }) => {
   const [syncState, setSyncState] = useState<AleoSyncState>("disabled");
-  const [progress, setProgress] = useState<number>(() => getSafeProgress(account));
+  const aleoAccount = account.type === "Account" ? (account as AleoAccount) : null;
+  const [progress, setProgress] = useState<number>(
+    () => aleoAccount?.aleoResources?.provableApi?.scannerStatus?.percentage ?? 0,
+  );
   const [privateBalance, setPrivateBalance] = useState<BigNumber>(
-    account.aleoResources?.privateBalance ?? BigNumber(0),
+    aleoAccount?.aleoResources?.privateBalance ?? BigNumber(0),
   );
   const discreet = useDiscreetMode();
   const locale = useSelector(localeSelector);
   const unit = useAccountUnit(account);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    let isMounted = true;
-
-    async function fetchProgressAndBalance() {
-      // You may need to get these from props/context or adjust as needed
-      const { currency, aleoResources } = account as AleoAccount;
-      const jwt = aleoResources?.jwt;
-      const uuid = aleoResources?.uuid;
-      const apiClient = aleoResources?.apiClient;
-
-      if (!currency || !jwt?.token || !uuid || !apiClient) return;
-
-      if (progress < 100) {
-        interval = setInterval(async () => {
-          try {
-            const status = await apiClient.getRecordScannerStatus(currency, jwt.token, uuid);
-            if (status && isMounted) {
-              setProgress(status.percentage ?? 0);
-            }
-          } catch (e) {
-            // handle error if needed
-          }
-        }, 3000);
-      } else {
-        try {
-          if (apiClient.getPrivateBalance) {
-            const privateBalanceResult = await apiClient.getPrivateBalance(
-              currency,
-              jwt.token,
-              uuid,
-            );
-            if (privateBalanceResult && isMounted) {
-              setPrivateBalance(privateBalanceResult.balance);
-            }
-          }
-        } catch (e) {
-          // handle error if needed
-        }
-      }
-    }
-
-    fetchProgressAndBalance();
-
-    return () => {
-      isMounted = false;
-      if (interval) clearInterval(interval);
-    };
-  }, [progress, account]);
+  const bridge = getAccountBridge(account);
 
   const formatConfig = {
     alwaysShowSign: false,
@@ -156,8 +98,7 @@ const AccountBalanceSummaryFooter: React.FC<Props> = ({ account }) => {
   };
 
   const spendableBalance = account.spendableBalance;
-  const transparentBalance = account.aleoResources?.transparentBalance ?? BigNumber(0);
-  const privateBalance = account.aleoResources?.privateBalance ?? BigNumber(0);
+  const transparentBalance = aleoAccount?.aleoResources?.transparentBalance ?? BigNumber(0);
 
   const formattedAvailableBalance = formatCurrencyUnit(unit, spendableBalance, formatConfig);
   const formattedTransparentBalance = formatCurrencyUnit(unit, transparentBalance, formatConfig);
@@ -170,6 +111,15 @@ const AccountBalanceSummaryFooter: React.FC<Props> = ({ account }) => {
       case "disabled":
         // Run block processing task
         setSyncState("running");
+        if (aleoAccount && bridge.privateSync) {
+          bridge.privateSync(aleoAccount).then(result => {
+            console.log({ result });
+            if (result.status === "success") {
+              setPrivateBalance(result.data.balance);
+              setSyncState("disabled");
+            }
+          });
+        }
         break;
       case "running":
         // Pause block processing task

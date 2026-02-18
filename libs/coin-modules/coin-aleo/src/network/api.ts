@@ -171,6 +171,13 @@ async function getAccountJWT(
   apiKey: string,
   consumerId: string,
 ): Promise<AleoJWT> {
+  console.log({
+    method: "POST",
+    url: `https://api.provable.com/jwts/${consumerId}`,
+    headers: {
+      "X-Provable-API-Key": apiKey,
+    },
+  });
   const res = await network<AleoAccountJWTResponse>({
     method: "POST",
     url: `https://api.provable.com/jwts/${consumerId}`,

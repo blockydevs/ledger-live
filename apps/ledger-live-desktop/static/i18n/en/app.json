@@ -8009,7 +8009,7 @@
     },
     "privateRecords": {
       "state": {
-        "showBalance": "Show balance",
+        "syncBalance": "Show balance",
         "lastSync": "Last sync {{days}} ago"
       }
     },

@@ -37,7 +37,7 @@ export async function listPrivateOperations({
       viewKey,
       address,
       ledgerAccountId,
-    });
+    }).catch(() => null); // ignore parsing errors for individual transactions
 
     if (parsedOperation) privateOperations.push(parsedOperation);
   });

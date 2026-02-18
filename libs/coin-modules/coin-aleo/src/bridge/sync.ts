@@ -1,11 +1,10 @@
 import BigNumber from "bignumber.js";
-import invariant from "invariant";
 import {
   type GetAccountShape,
   makeSync,
   mergeOps,
 } from "@ledgerhq/coin-framework/bridge/jsHelpers";
-import { decodeAccountId, encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
+import { encodeAccountId } from "@ledgerhq/coin-framework/account/accountId";
 import { getBalance, lastBlock, listOperations } from "../logic";
 import { accessProvableApi } from "../logic/accessProvableApi";
 import { getPrivateBalance } from "../logic/getPrivateBalance";

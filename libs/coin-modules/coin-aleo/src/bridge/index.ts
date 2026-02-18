@@ -27,6 +27,7 @@ import { prepareTransaction } from "./prepareTransaction";
 import { assignToAccountRaw, assignFromAccountRaw } from "./serialization";
 import { getAccountShape, sync } from "./sync";
 import { buildSignOperation } from "./signOperation";
+import { privateSync } from "./privateSync";
 
 export function buildCurrencyBridge(signerContext: SignerContext<AleoSigner>): CurrencyBridge {
   const getAddress = resolver(signerContext);
@@ -50,6 +51,7 @@ export function buildAccountBridge(
   const receive = makeAccountBridgeReceive(getAddressWrapper(getAddress));
   const signOperation = buildSignOperation(signerContext);
 
+  // @ts-expect-error
   return {
     createTransaction,
     updateTransaction: updateTransaction<AleoTransaction>,
@@ -58,6 +60,7 @@ export function buildAccountBridge(
     assignToAccountRaw,
     assignFromAccountRaw,
     sync,
+    privateSync,
     receive,
     signOperation,
     signRawOperation: (): Observable<SignOperationEvent> => {

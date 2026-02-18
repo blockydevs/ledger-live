@@ -190,6 +190,7 @@ interface SendReceiveAccountBridge<
   // NOTE: because of a dependency to React at the moment, if prepareTransaction doesn't modify the transaction
   // it must return the unmodified input transaction object (reference stability)
   prepareTransaction(account: A, transaction: T): Promise<T>;
+  privateSync?: (account: A) => Promise<T>;
   // calculate derived state of the Transaction, useful to display summary / errors / warnings. tells if the transaction is ready.
   getTransactionStatus(account: A, transaction: T): Promise<U>;
   // heuristic that provides the estimated max amount that can be set to a send.
