@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import styled from "styled-components";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
-import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
+import type {
+  AleoAccount,
+  AleoRecordScannerStatusResponse,
+} from "@ledgerhq/live-common/families/aleo/types";
 import type { TokenAccount } from "@ledgerhq/types-live";
 import { localeSelector } from "~/renderer/reducers/settings";
 import Discreet, { useDiscreetMode } from "~/renderer/components/Discreet";
@@ -16,9 +19,16 @@ import { t, TFunction } from "i18next";
 import { Pause, Refresh } from "@ledgerhq/lumen-ui-react/symbols";
 import Spinner from "~/renderer/components/Spinner";
 import { useSelector } from "LLD/hooks/redux";
-// import { openModal } from "~/renderer/actions/modals";
 import { BigNumber } from "bignumber.js";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/impl";
+import { switchMap } from "rxjs/internal/operators/switchMap";
+import { timer } from "rxjs/internal/observable/timer";
+import { take } from "rxjs/internal/operators/take";
+import { filter } from "rxjs/internal/operators/filter";
+import { blacklistedTokenIdsSelector } from "~/renderer/reducers/settings";
+import { from } from "rxjs/internal/observable/from";
+import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
+import network from "@ledgerhq/live-network/lib-es/network";
 
 type AleoSyncState = "disabled" | "running" | "paused" | "complete" | "outdated";
 
@@ -76,35 +86,67 @@ interface Props {
   account: AleoAccount | TokenAccount;
 }
 
+const privateSync$ = (account: AleoAccount, blacklistedTokenIds: string[]) => {
+  const provableApi = account?.aleoResources?.provableApi;
+
+  if (!provableApi || !provableApi.jwt || !provableApi.apiKey || !provableApi.uuid) {
+    return { status: "error", data: "Missing provableApi credentials" };
+  }
+
+  const { jwt, uuid } = provableApi;
+  const bridge = getAccountBridge(account);
+
+  return timer(0, 3000).pipe(
+    switchMap(() => from(bridge.getRecordScannerStatus(account.currency, jwt.token, uuid))),
+    filter(resp => resp?.synced === true),
+    take(1),
+    switchMap(() =>
+      from(
+        bridge.sync(account, {
+          paginationConfig: {},
+          blacklistedTokenIds,
+        }),
+      ),
+    ),
+  );
+};
+
 const AccountBalanceSummaryFooter: React.FC<Props> = ({ account }) => {
   const [syncState, setSyncState] = useState<AleoSyncState>("disabled");
   const aleoAccount = account.type === "Account" ? (account as AleoAccount) : null;
   const [progress, setProgress] = useState<number>(
     () => aleoAccount?.aleoResources?.provableApi?.scannerStatus?.percentage ?? 0,
   );
-  const [privateBalance, setPrivateBalance] = useState<BigNumber>(
-    aleoAccount?.aleoResources?.privateBalance ?? BigNumber(0),
-  );
   const discreet = useDiscreetMode();
   const locale = useSelector(localeSelector);
   const unit = useAccountUnit(account);
+  const blacklistedTokenIds = useSelector(blacklistedTokenIdsSelector);
   const bridge = getAccountBridge(account);
 
-  const formatConfig = {
-    alwaysShowSign: false,
-    showCode: true,
-    discreet,
-    locale,
-  };
+  const formatConfig = useMemo(
+    () => ({
+      alwaysShowSign: false,
+      showCode: true,
+      discreet,
+      locale,
+    }),
+    [discreet, locale],
+  );
+
+  const formattedPrivateBalance = useMemo(() => {
+    const privateBalance = aleoAccount?.aleoResources?.privateBalance ?? BigNumber(0);
+    const balanceValue = privateBalance
+      ? formatCurrencyUnit(unit, privateBalance, formatConfig)
+      : "***";
+
+    return balanceValue;
+  }, [aleoAccount?.aleoResources?.privateBalance, unit, formatConfig]);
 
   const spendableBalance = account.spendableBalance;
   const transparentBalance = aleoAccount?.aleoResources?.transparentBalance ?? BigNumber(0);
 
   const formattedAvailableBalance = formatCurrencyUnit(unit, spendableBalance, formatConfig);
   const formattedTransparentBalance = formatCurrencyUnit(unit, transparentBalance, formatConfig);
-  const formattedPrivateBalance = privateBalance
-    ? formatCurrencyUnit(unit, privateBalance, formatConfig)
-    : "***";
 
   const updateSyncState = () => {
     switch (syncState) {
@@ -115,7 +157,7 @@ const AccountBalanceSummaryFooter: React.FC<Props> = ({ account }) => {
           bridge.privateSync(aleoAccount).then(result => {
             console.log({ result });
             if (result.status === "success") {
-              setPrivateBalance(result.data.balance);
+              // setPrivateBalance(result.data.balance);
               setSyncState("disabled");
             }
           });

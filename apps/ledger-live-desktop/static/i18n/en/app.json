@@ -8010,7 +8010,7 @@
     "privateRecords": {
       "state": {
         "syncBalance": "Sync balance",
-        "lastSync": "Last sync {{days}} ago"
+        "lastSync": "last sync date: {{date}}"
       }
     },
     "operations": {

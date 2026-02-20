@@ -27,7 +27,6 @@ import { prepareTransaction } from "./prepareTransaction";
 import { assignToAccountRaw, assignFromAccountRaw } from "./serialization";
 import { getAccountShape, sync } from "./sync";
 import { buildSignOperation } from "./signOperation";
-import { privateSync } from "./privateSync";
 
 export function buildCurrencyBridge(signerContext: SignerContext<AleoSigner>): CurrencyBridge {
   const getAddress = resolver(signerContext);
@@ -59,8 +58,44 @@ export function buildAccountBridge(
     getTransactionStatus,
     assignToAccountRaw,
     assignFromAccountRaw,
+    getRecordScannerStatus: async (
+      currency: CryptoCurrency,
+      accessToken: string,
+      uuid: string,
+    ): Promise<AleoRecordScannerStatusResponse> => {
+      const { nodeUrl, networkType } = getNetworkConfig(currency);
+
+      const res = await network<AleoRecordScannerStatusResponse>({
+        method: "POST",
+        url: `${nodeUrl}/scanner/${networkType}/status`,
+        headers: {
+          Authorization: accessToken,
+          "Content-Type": "application/json",
+        },
+        data: `"${uuid.toString()}"`,
+      });
+
+      // FIXME: remove, this simulates progress over the minute
+      const MOCK_DURATION_MS = 60 * 1000;
+
+      if (!MOCK_SCAN_START_TIMES.has(uuid)) {
+        MOCK_SCAN_START_TIMES.set(uuid, Date.now());
+      }
+
+      const startTime = MOCK_SCAN_START_TIMES.get(uuid)!;
+      const elapsed = Date.now() - startTime;
+      const percentage = Math.min(100, Math.floor((elapsed / MOCK_DURATION_MS) * 100));
+      const synced = percentage === 100;
+
+      console.log("Mock scan progress for uuid", uuid, { percentage, synced });
+
+      if (synced) {
+        MOCK_SCAN_START_TIMES.delete(uuid);
+      }
+
+      return { percentage, synced };
+    },
     sync,
-    privateSync,
     receive,
     signOperation,
     signRawOperation: (): Observable<SignOperationEvent> => {
