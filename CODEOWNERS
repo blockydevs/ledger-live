@@ -443,8 +443,7 @@ tools/actions/composites/merge-e2e-detox-timings/                           @led
 **/jest.config*                                       @ledgerhq/platform
 **/knip.json                                          @ledgerhq/platform
 
-# CI — Turborepo & Nx
-/turbo.json                                           @ledgerhq/platform @ledgerhq/wallet-ci
+# CI — Nx
 /nx.json                                              @ledgerhq/platform @ledgerhq/wallet-ci
 
 # Platform — Agent files
