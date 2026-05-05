@@ -40,8 +40,8 @@ catalogs:
       specifier: 1.15.1
       version: 1.15.1
     '@ledgerhq/device-signer-kit-hyperliquid':
-      specifier: 1.0.2
-      version: 1.0.2
+      specifier: 1.1.0
+      version: 1.1.0
     '@ledgerhq/device-signer-kit-solana':
       specifier: 1.8.0
       version: 1.8.0
@@ -11391,7 +11391,7 @@ importers:
         version: 1.5.0(rxjs@7.8.2)
       '@ledgerhq/device-signer-kit-hyperliquid':
         specifier: 'catalog:'
-        version: 1.0.2(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))
+        version: 1.1.0(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../ledgerjs/packages/devices
@@ -17225,10 +17225,10 @@ packages:
       '@ledgerhq/context-module': 1.17.1
       '@ledgerhq/device-management-kit': ^1.4.1
 
-  '@ledgerhq/device-signer-kit-hyperliquid@1.0.2':
-    resolution: {integrity: sha512-vOHQRrMsUj4XMI4LC+WcerH0yyIiWw2kPHK0yN847FccKaB5x9+wiz2zWgcqk7fKHqYFr1S5GqXjmaiRWiAcwA==}
+  '@ledgerhq/device-signer-kit-hyperliquid@1.1.0':
+    resolution: {integrity: sha512-e1dlDG6SYnfVFNZnNts9SYWyXBw243tFV0GQeFlfvKBc9Z3+jY9wboLecYmgZtgZlLDIBpisehLkACL0+ug4Xg==}
     peerDependencies:
-      '@ledgerhq/device-management-kit': ^1.2.0
+      '@ledgerhq/device-management-kit': ^1.5.0
 
   '@ledgerhq/device-signer-kit-solana@1.8.0':
     resolution: {integrity: sha512-oe0GfnHMBQHcP8FrkCEWI0lA2skuVQCl2sMIrtwsHSRxocmLftgbyzUZlcyDZ5+7GOJAHJmi347Xt4p7oQWftw==}
@@ -23858,7 +23858,7 @@ packages:
     resolution: {integrity: sha512-/FQM1EDkTsf63Ub2C6O7GuYFDsSXUwsaZDurV0np41ocwq0jthUAYCmhBX9f+KwlaCgIuWyr/4WlUQUBfKfZog==}
     engines: {node: '>=6'}
     peerDependencies:
-      rxjs: ^5.5.10
+      rxjs: '*'
       zenObservable: '*'
     peerDependenciesMeta:
       rxjs:
@@ -45502,7 +45502,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@ledgerhq/device-signer-kit-hyperliquid@1.0.2(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))':
+  '@ledgerhq/device-signer-kit-hyperliquid@1.1.0(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))':
     dependencies:
       '@ledgerhq/context-module': 1.17.1(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))
       '@ledgerhq/device-management-kit': 1.5.0(rxjs@7.8.2)
