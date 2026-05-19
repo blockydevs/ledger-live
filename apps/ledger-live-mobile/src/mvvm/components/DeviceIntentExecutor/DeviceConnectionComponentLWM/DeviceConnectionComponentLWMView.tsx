@@ -8,6 +8,7 @@ import { DiscoveryErrorState } from "./components/DiscoveryErrorState";
 import { ConnectingState } from "./components/ConnectingState";
 import { ConnectedState } from "./components/ConnectedState";
 import { ConnectionErrorState } from "./components/ConnectionErrorState";
+import { UnknownErrorState } from "./components/UnknownErrorState";
 import type { DeviceConnectionComponentLWMViewModel } from "./useDeviceConnectionComponentLWMViewModel";
 
 function assertNever(value: never): never {
@@ -49,6 +50,9 @@ export function DeviceConnectionComponentLWMView({
 
     case ConnectDeviceUIStateTypes.Connected:
       return <ConnectedState />;
+
+    case ConnectDeviceUIStateTypes.UnknownError:
+      return <UnknownErrorState />;
 
     default:
       return assertNever(state);
