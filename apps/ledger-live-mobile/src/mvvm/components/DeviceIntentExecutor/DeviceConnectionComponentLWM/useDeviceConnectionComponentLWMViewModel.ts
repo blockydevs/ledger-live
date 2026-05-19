@@ -3,6 +3,7 @@ import { Linking, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { DeviceConnectionResult } from "@ledgerhq/device-intent";
+import { log } from "@ledgerhq/logs";
 import { useFeature, useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
 import {
   connectDeviceUseCase,
@@ -21,9 +22,10 @@ import { urls } from "~/utils/urls";
 import { dmkToLedgerDeviceIdMap } from "@ledgerhq/live-dmk-shared";
 import type { AppPlatform } from "@ledgerhq/live-common/platform/types";
 
+const LOG_TYPE = "DeviceConnectionComponentLWM";
+
 type UseDeviceConnectionComponentLWMViewModelParams = {
   onConnected: (connectionResult: DeviceConnectionResult) => void;
-  onError: (error: unknown) => void;
 };
 
 export type DeviceConnectionComponentLWMViewModel = {
@@ -35,7 +37,6 @@ export type DeviceConnectionComponentLWMViewModel = {
 
 export function useDeviceConnectionComponentLWMViewModel({
   onConnected,
-  onError,
 }: UseDeviceConnectionComponentLWMViewModelParams): DeviceConnectionComponentLWMViewModel {
   const platform = Platform.OS === "ios" ? "ios" : "android";
   const navigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
@@ -47,6 +48,20 @@ export function useDeviceConnectionComponentLWMViewModel({
   const [state, setState] = useState<ConnectDeviceUIState>({
     type: ConnectDeviceUIStateTypes.Loading,
   });
+  // DMK unavailability is checked synchronously during render so the throw
+  // reaches the nearest React ErrorBoundary (throws inside useEffect do not).
+  if (!dmk) {
+    log(LOG_TYPE, "DMK unavailable");
+    throw new Error("Device Management Kit is not available");
+  }
+  // The defensive rxjs `error` fallback arrives asynchronously inside the
+  // effect; capture it in state and throw on the next render so it can also
+  // be caught by an ErrorBoundary. Handled connection failures arrive as
+  // ConnectDeviceUIState values and are NOT routed through here.
+  const [rxjsFatalError, setRxjsFatalError] = useState<unknown>(null);
+  if (rxjsFatalError !== null) {
+    throw rxjsFatalError;
+  }
 
   const onConnectLedgerDevice = useCallback(() => {
     const params = undefined;
@@ -115,22 +130,20 @@ export function useDeviceConnectionComponentLWMViewModel({
   );
 
   useEffect(() => {
-    if (!dmk) {
-      onError(new Error("Device Management Kit is not available"));
-      return;
-    }
-
     const subscription = connectDeviceUseCase({
       knownDevices,
       dmk,
       onConnected: wrappedOnConnected,
     }).subscribe({
       next: setState,
-      error: onError,
+      error: (error: unknown) => {
+        log(LOG_TYPE, "connectDeviceUseCase emitted an unhandled error", { error });
+        setRxjsFatalError(error);
+      },
     });
 
     return () => subscription.unsubscribe();
-  }, [dmk, knownDevices, onError, wrappedOnConnected]);
+  }, [dmk, knownDevices, wrappedOnConnected]);
 
   return {
     state,
