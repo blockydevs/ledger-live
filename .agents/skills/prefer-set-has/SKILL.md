@@ -1,10 +1,11 @@
 ---
-description: Prefer Set.has() over Array.includes() for constant allowlists/blocklists
-globs: "**/*.{ts,tsx}"
-alwaysApply: false
+name: prefer-set-has
+description: |
+  Prefer Set.has() over Array.includes() for constant allowlists/blocklists.
+  Read this when reviewing or writing membership checks in TypeScript files.
 ---
 
-# Prefer Set .has() over Array .includes()
+# Prefer Set.has() over Array.includes()
 
 When checking membership in a **constant list** of known values (allowlists, blocklists, enum-like sets), use a `Set` with `.has()` instead of an array with `.includes()`.
 
