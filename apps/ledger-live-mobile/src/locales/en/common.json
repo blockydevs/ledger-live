@@ -8612,6 +8612,22 @@
       }
     }
   },
+  "analyticsConsent": {
+    "title": "Help us improve Ledger",
+    "subTitle": "With your consent, we’ll collect usage data to improve features and fix bugs. We won’t track your assets or portfolio details.",
+    "setPreferencesCTA": "Set preferences",
+    "refuseCTA": "Refuse all",
+    "acceptCTA": "Accept all",
+    "privacyPolicy": "You can revoke your consent anytime in settings.",
+    "privacyPolicyCTA": "Privacy policy",
+    "setPreferences": {
+      "title": "Set preferences",
+      "performance": "App performance",
+      "performanceDesc": "Enable Ledger to collect app usage to enhance the experience",
+      "experience": "Personalized experience",
+      "experienceDesc": "Enable Ledger to collect app usage to provide personalized content"
+    }
+  },
   "analyticsOptIn": {
     "variantA": {
       "main": {
