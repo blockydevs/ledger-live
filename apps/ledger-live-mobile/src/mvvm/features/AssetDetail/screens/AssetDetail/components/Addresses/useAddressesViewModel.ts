@@ -113,20 +113,17 @@ export function useAddressesViewModel(
         chain: account.currency.id,
         page: "Asset Detail",
       });
-      if (balanceAccount.type === "TokenAccount") {
-        navigation.navigate(NavigatorName.Accounts, {
-          screen: ScreenName.Account,
-          params: {
-            currencyId: account.currency.id,
-            parentId: account.id,
-            accountId: balanceAccount.id,
-          },
-        });
-        return;
-      }
+      const params =
+        balanceAccount.type === "TokenAccount"
+          ? {
+              currencyId: account.currency.id,
+              parentId: account.id,
+              accountId: balanceAccount.id,
+            }
+          : { accountId: account.id };
       navigation.navigate(NavigatorName.Accounts, {
         screen: ScreenName.Account,
-        params: { accountId: account.id },
+        params,
       });
     },
     [navigation, currency],
