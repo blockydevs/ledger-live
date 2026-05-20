@@ -4,7 +4,9 @@ import {
   Button,
   Pressable,
   Subheader,
+  SubheaderCount,
   SubheaderRow,
+  SubheaderShowMore,
   SubheaderTitle,
   Text,
 } from "@ledgerhq/lumen-ui-rnative";
@@ -17,6 +19,7 @@ import { SectionSkeleton } from "../SectionSkeleton";
 
 type Props = Readonly<{
   displayedAccounts: readonly AddressAccountData[];
+  addressesCount: number;
   hasMore: boolean;
   hasData: boolean;
   onAddAccount: () => void;
@@ -27,6 +30,7 @@ type Props = Readonly<{
 
 export function AddressesView({
   displayedAccounts,
+  addressesCount,
   hasMore,
   hasData,
   onAddAccount,
@@ -46,7 +50,23 @@ export function AddressesView({
     <Box testID={ASSET_DETAIL_TEST_IDS.addresses}>
       <Subheader>
         <SubheaderRow lx={{ marginBottom: "s12" }}>
-          <SubheaderTitle>{t("assetDetail.addresses.title")}</SubheaderTitle>
+          <Pressable
+            lx={{ flexDirection: "row", alignItems: "center", flexShrink: 1 }}
+            onPress={onSeeAll}
+            disabled={!hasMore}
+            accessibilityRole={hasMore ? "button" : undefined}
+            testID={ASSET_DETAIL_TEST_IDS.addressesHeader}
+          >
+            <SubheaderTitle lx={hasMore ? { marginRight: "s4" } : undefined}>
+              {t("assetDetail.addresses.title")}
+            </SubheaderTitle>
+            {hasMore && (
+              <>
+                <SubheaderCount value={addressesCount} />
+                <SubheaderShowMore />
+              </>
+            )}
+          </Pressable>
           <Box lx={{ flex: 1 }} />
           <Pressable
             lx={{ flexDirection: "row", alignItems: "center", gap: "s8" }}
