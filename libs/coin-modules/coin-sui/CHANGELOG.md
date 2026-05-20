@@ -1,5 +1,11 @@
 # @ledgerhq/coin-sui
 
+## 0.34.0-next.1
+
+### Minor Changes
+
+- [#17646](https://github.com/LedgerHQ/ledger-live/pull/17646) [`4e37300`](https://github.com/LedgerHQ/ledger-live/commit/4e373002bdfef0109376be395b5131940dc85792) Thanks [@amaslakov](https://github.com/amaslakov)! - fix(coin-sui): forward stakedSuiId and useAllAmount in getFeesForTransaction to fix undelegate modal crash (TypeError reading 'Object')
+
 ## 0.34.0-next.0
 
 ### Minor Changes

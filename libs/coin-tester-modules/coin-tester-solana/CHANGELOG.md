@@ -1,5 +1,12 @@
 # @ledgerhq/coin-tester-solana
 
+## 1.19.0-next.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@34.72.0-next.3
+
 ## 1.19.0-next.2
 
 ### Patch Changes
