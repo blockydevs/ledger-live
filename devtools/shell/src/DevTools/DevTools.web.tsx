@@ -41,7 +41,6 @@ function DevToolsView({
                 categories={categories}
                 recentToolIds={recentToolIds}
                 onSelect={onSelectTool}
-                data-testid="devtools-empty"
               />
             )}
           </main>
