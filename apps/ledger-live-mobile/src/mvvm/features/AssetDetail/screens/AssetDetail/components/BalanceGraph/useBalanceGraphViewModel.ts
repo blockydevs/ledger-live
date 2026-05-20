@@ -14,15 +14,30 @@ import { useOpenReceiveDrawer } from "LLM/features/Receive";
 import { RANGE_TO_PRICE_CHANGE_KEY, type RangeKey } from "../../utils/rangeMapping";
 import { useAssetMarketData } from "../../hooks/useAssetMarketData";
 
-export function useBalanceGraphViewModel(
-  currency?: AssetDetailCurrencyProps,
-  hideReceive?: boolean,
-) {
+type Params = {
+  currency?: AssetDetailCurrencyProps;
+  marketApiId?: string;
+  knownLedgerIds?: readonly string[];
+  knownMarketId?: string;
+  hideReceive?: boolean;
+};
+
+export function useBalanceGraphViewModel({
+  currency,
+  marketApiId,
+  knownLedgerIds,
+  knownMarketId,
+  hideReceive,
+}: Params) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterValueUnit = counterValueCurrency.units[0];
-  const { marketCurrency, isLoading } = useAssetMarketData(currency);
+  const { marketCurrency, isLoading } = useAssetMarketData({
+    marketApiId,
+    knownLedgerIds,
+    knownMarketId,
+  });
 
   const [range, setRange] = useState<RangeKey>("24h");
 

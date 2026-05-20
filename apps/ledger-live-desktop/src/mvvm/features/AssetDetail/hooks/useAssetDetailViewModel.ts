@@ -9,7 +9,10 @@ import { useSelector } from "LLD/hooks/redux";
 import { useDistribution } from "~/renderer/actions/general";
 import { counterValueCurrencySelector } from "~/renderer/reducers/settings";
 import { decodeRouteParam } from "../utils/decodeRouteParam";
-import { resolveDistributionItem } from "@ledgerhq/asset-aggregation/assetDistribution/index";
+import {
+  resolveAssetMarketInputs,
+  resolveDistributionItem,
+} from "@ledgerhq/asset-aggregation/assetDistribution/index";
 import { type AssetDetailViewModel } from "../types";
 
 export function useAssetDetailViewModel(): AssetDetailViewModel {
@@ -26,15 +29,15 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
     [routeAssetId, decodedAssetId, marketState, distribution],
   );
 
-  const marketApiId =
-    distributionItem?.marketId ??
-    distributionItem?.slug ??
-    distributionItem?.currency.id ??
-    decodedAssetId;
-  const knownLedgerIds = useMemo<readonly string[] | undefined>(() => {
-    if (distributionItem) return [distributionItem.currency.id];
-    return marketState?.ledgerIds;
-  }, [distributionItem, marketState]);
+  const { marketApiId, knownLedgerIds } = useMemo(
+    () =>
+      resolveAssetMarketInputs({
+        distributionItem,
+        marketState,
+        fallbackId: decodedAssetId,
+      }),
+    [distributionItem, marketState, decodedAssetId],
+  );
 
   const { marketCurrencyData, marketId, ledgerCurrencyFromDada, isLoading } = useAssetMarketData({
     marketApiId,

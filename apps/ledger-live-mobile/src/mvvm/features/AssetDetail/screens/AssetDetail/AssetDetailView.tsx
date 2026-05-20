@@ -23,6 +23,9 @@ import type { AssetCoinOptionsViewModel } from "./components/CoinOptions/useAsse
 type Props = Readonly<{
   currency: AssetDetailCurrencyProps;
   distributionItem: DistributionItem | undefined;
+  marketApiId?: string;
+  knownLedgerIds?: readonly string[];
+  knownMarketId?: string;
   source?: string;
   isRefreshing: boolean;
   onRefresh: () => void;
@@ -36,6 +39,9 @@ type Props = Readonly<{
 export function AssetDetailView({
   currency,
   distributionItem,
+  marketApiId,
+  knownLedgerIds,
+  knownMarketId,
   source,
   isRefreshing,
   onRefresh,
@@ -61,7 +67,13 @@ export function AssetDetailView({
       >
         <Box lx={contentStyle}>
           <HiddenAssetBanner show={coinOptions.isHidden} onShowAsset={coinOptions.onShowAsset} />
-          <BalanceGraph currency={currency} hideReceive={hideReceiveInBalanceGraph} />
+          <BalanceGraph
+            currency={currency}
+            marketApiId={marketApiId}
+            knownLedgerIds={knownLedgerIds}
+            knownMarketId={knownMarketId}
+            hideReceive={hideReceiveInBalanceGraph}
+          />
           <BalanceDetails
             currency={currency}
             distributionItem={distributionItem}
@@ -72,7 +84,12 @@ export function AssetDetailView({
             distributionItem={distributionItem}
             isLoading={isLoading}
           />
-          <MarketData currency={currency} />
+          <MarketData
+            currency={currency}
+            marketApiId={marketApiId}
+            knownLedgerIds={knownLedgerIds}
+            knownMarketId={knownMarketId}
+          />
           <Transactions
             currency={currency}
             distributionItem={distributionItem}

@@ -5,10 +5,25 @@ import { BalanceGraphView } from "./BalanceGraphView";
 
 type Props = Readonly<{
   currency?: AssetDetailCurrencyProps;
+  marketApiId?: string;
+  knownLedgerIds?: readonly string[];
+  knownMarketId?: string;
   hideReceive?: boolean;
 }>;
 
-export function BalanceGraph({ currency, hideReceive }: Props) {
-  const viewModel = useBalanceGraphViewModel(currency, hideReceive);
+export function BalanceGraph({
+  currency,
+  marketApiId,
+  knownLedgerIds,
+  knownMarketId,
+  hideReceive,
+}: Props) {
+  const viewModel = useBalanceGraphViewModel({
+    currency,
+    marketApiId,
+    knownLedgerIds,
+    knownMarketId,
+    hideReceive,
+  });
   return <BalanceGraphView {...viewModel} />;
 }
