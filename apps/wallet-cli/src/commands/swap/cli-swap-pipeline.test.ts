@@ -78,6 +78,7 @@ mock.module("@ledgerhq/live-common/exchange/swap/transactionStrategies", () => (
 
 mock.module("@ledgerhq/hw-app-exchange", () => ({
   decodeSwapPayload: async () => ({ amountToWallet: "1000000000000000000" }),
+  getExchangeErrorMessage: () => ({ errorName: undefined, errorMessage: undefined }),
 }));
 
 const setBroadcastTransactionMock = mock(async () => {});
@@ -180,15 +181,19 @@ describe("runFullSwapPipeline session lifecycle", () => {
     expect(result.operationHash).toBeUndefined();
     expect(retrieveSwapPayloadMock).toHaveBeenCalledTimes(1);
     expect(setBroadcastTransactionMock).toHaveBeenCalledTimes(1);
-    expect(setBroadcastTransactionMock).toHaveBeenCalledWith({
-      provider: "changelly",
-      result: { operation: "", swapId: "swap-id" },
-      sourceCurrencyId: "ethereum",
-      targetCurrencyId: "ethereum",
-      fromAccountAddress: "0xfrom",
-      toAccountAddress: "0xto",
-      fromAmount: "1",
-    });
+    expect(setBroadcastTransactionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "changelly",
+        result: { operation: "", swapId: "swap-id" },
+        sourceCurrencyId: "ethereum",
+        targetCurrencyId: "ethereum",
+        hardwareWalletType: DeviceModelId.nanoX,
+        swapType: "float",
+        fromAccountAddress: "0xfrom",
+        toAccountAddress: "0xto",
+        fromAmount: "1",
+      }),
+    );
     expect(postSwapCancelledMock).not.toHaveBeenCalled();
   });
 
@@ -264,10 +269,21 @@ describe("runFullSwapPipeline session lifecycle", () => {
 
     expect(setBroadcastTransactionMock).not.toHaveBeenCalled();
     expect(postSwapCancelledMock).toHaveBeenCalledTimes(1);
-    expect(postSwapCancelledMock).toHaveBeenCalledWith({
-      provider: "changelly",
-      swapId: "swap-id",
-      errorMessage: "user rejected signing",
-    });
+    expect(postSwapCancelledMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "changelly",
+        swapId: "swap-id",
+        swapStep: "INIT",
+        statusCode: "Error",
+        errorMessage: "user rejected signing",
+        sourceCurrencyId: "ethereum",
+        targetCurrencyId: "ethereum",
+        hardwareWalletType: DeviceModelId.nanoX,
+        swapType: "float",
+        fromAccountAddress: "0xfrom",
+        toAccountAddress: "0xto",
+        fromAmount: "1",
+      }),
+    );
   });
 });

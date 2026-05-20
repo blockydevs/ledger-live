@@ -28,6 +28,11 @@ import type {
   SwapPayloadResponse,
 } from "@ledgerhq/live-common/exchange/swap/types";
 import { CommandOutput } from "../../output";
+import {
+  CompleteExchangeError,
+  getErrorDetails,
+  getSwapStepFromError,
+} from "@ledgerhq/live-common/exchange/error";
 
 const EXCHANGE_SWAP: ExchangeTypes.Swap = 0x00;
 const RATE_FIXED: RateTypes = 0x00;
@@ -289,12 +294,21 @@ export async function runFullSwapPipeline(
   const toAccountAddress = toParentAccount
     ? toParentAccount.freshAddress
     : (toAccount as Account).freshAddress;
+  const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
+  const swapType = quoteId != null && quoteId !== "" ? ("fixed" as const) : ("float" as const);
 
   let swapId: string | undefined;
+  let transaction: Transaction | undefined;
+  let hardwareWalletType: Device["modelId"] | undefined;
 
   try {
     return await withLedgerManagerAppSession(EXCHANGE_APP_NAME, async () => {
-      const { transactionId } = await startExchangeContext(out, provider, getDeviceModelId);
+      const { transactionId, deviceInfo } = await startExchangeContext(
+        out,
+        provider,
+        getDeviceModelId,
+      );
+      hardwareWalletType = deviceInfo.modelId;
 
       out.swapExecuteProgress("[2/5] Requesting swap payload from Ledger swap API…");
       const payload = await retrieveSwapPayload({
@@ -321,7 +335,6 @@ export async function runFullSwapPipeline(
         extraTransactionParameters: payload.extraTransactionParameters,
       });
 
-      const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
       if (strategyTx.family !== mainFromAccount.currency.family) {
         throw new Error(
           `Account and transaction must be from the same family. Account family: ${mainFromAccount.currency.family}, Transaction family: ${strategyTx.family}`,
@@ -360,7 +373,7 @@ export async function runFullSwapPipeline(
         toCurrency,
       };
 
-      const finalTx = await completeExchangeTransaction(out, {
+      transaction = await completeExchangeTransaction(out, {
         provider,
         binaryPayload: payload.binaryPayload,
         signature: payload.signature,
@@ -373,7 +386,7 @@ export async function runFullSwapPipeline(
         out,
         fromAccount,
         fromParentAccount,
-        finalTx,
+        transaction,
         getBridge,
       );
 
@@ -383,6 +396,8 @@ export async function runFullSwapPipeline(
           result: { operation: operationHash ?? "", swapId },
           sourceCurrencyId: fromCurrency.id,
           targetCurrencyId: toCurrency.id,
+          hardwareWalletType,
+          swapType,
           fromAccountAddress,
           toAccountAddress,
           fromAmount: amount,
@@ -399,11 +414,33 @@ export async function runFullSwapPipeline(
       };
     });
   } catch (error) {
+    const {
+      name: rawErrorName,
+      message: rawErrorMessage,
+      cause: rawErrorCause,
+    } = getErrorDetails(error);
+    const causeSuffix = rawErrorCause ? `, ${JSON.stringify(rawErrorCause)}` : "";
+    const errorMessageWithCause = rawErrorMessage + causeSuffix;
+
+    const completeExchangeError =
+      error instanceof CompleteExchangeError
+        ? error
+        : new CompleteExchangeError("INIT", rawErrorName, errorMessageWithCause);
+
     if (swapId) {
       await postSwapCancelled({
         provider,
         swapId,
-        errorMessage: error instanceof Error ? error.message : String(error),
+        swapStep: getSwapStepFromError(completeExchangeError),
+        statusCode: completeExchangeError.title || completeExchangeError.name,
+        errorMessage: completeExchangeError.message || errorMessageWithCause,
+        sourceCurrencyId: fromCurrency.id,
+        targetCurrencyId: toCurrency.id,
+        hardwareWalletType,
+        swapType,
+        fromAccountAddress,
+        toAccountAddress,
+        fromAmount: amount,
       });
     }
     throw error;
