@@ -1,5 +1,5 @@
 ---
-"ledger-live-mobile": patch
+"live-mobile": patch
 ---
 
 adding mobile changeset
