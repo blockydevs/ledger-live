@@ -74,7 +74,7 @@ platform-specific components.
 Not yet integrated — coming soon. The wrapper will mirror the LWM one
 (planned as `DeviceIntentExecutorLWD`) and inject desktop-specific platform
 components for the connection, initialisation, and error screens. The
-shared core (`DeviceIntentExecutor`, state machine, intent definitions, initialization logic via ensureAppStateReadyUseCase) is
+shared core (`DeviceIntentExecutor`, state machine, intent definitions, initialization logic via `ensureAppReadyUseCase`) is
 already platform-agnostic, so the wiring is the only missing piece.
 
 ### CLI
@@ -269,7 +269,7 @@ function MyFlowScreen({ enabled, onDone }: Props) {
   );
 
   return (
-    <LwmDeviceIntentExecutor
+    <DeviceIntentExecutorLWM
       enabled={enabled}
       deviceConnectionParams={{ acceptedDeviceModelIds: [] }}
       deviceInitializationInput={{
@@ -324,7 +324,7 @@ LWM consumers should prefer the scoped name.
 
 [ensure-app-ready-uc]: ../../libs/ledger-live-common/src/device/use-cases/ensureAppReady/ensureAppReadyUseCase.ts
 [build-input]: ../../libs/ledger-live-common/src/device/use-cases/ensureAppReady/buildEnsureAppReadyInput.ts
-[build-input-lwm]: ../../apps/ledger-live-mobile/src/mvvm/components/DeviceIntentExecutor/buildDeviceInitializationInput.ts
+[build-input-lwm]: ../../apps/ledger-live-mobile/src/mvvm/components/DeviceIntentExecutor/DeviceContextInitializerComponentLWM/utils/buildDeviceInitializationInput.ts
 
 #### Example: Sign Transaction flow
 
@@ -341,6 +341,7 @@ import {
   type InitializationInput,
 } from "LLM/components/DeviceIntentExecutor";
 import type { AppRequest } from "@ledgerhq/live-common/hw/actions/app";
+import { FlowName } from "@ledgerhq/live-common/device-action/utils";
 
 function SignTransactionStep({
   enabled,
@@ -371,7 +372,7 @@ function SignTransactionStep({
 
   useEffect(() => {
     let cancelled = false;
-    buildDeviceInitializationInput({ appRequest, flow: "send" }).then(input => {
+    buildDeviceInitializationInput({ appRequest, flow: FlowName.send }).then(input => {
       if (!cancelled) setDeviceInitializationInput(input);
     });
     return () => {
@@ -391,7 +392,7 @@ function SignTransactionStep({
   if (!deviceInitializationInput) return null;
 
   return (
-    <LwmDeviceIntentExecutor
+    <DeviceIntentExecutorLWM
       enabled={enabled}
       deviceConnectionParams={{ acceptedDeviceModelIds: [] }}
       deviceInitializationInput={deviceInitializationInput}
@@ -794,7 +795,7 @@ function SwapFlowScreen({ enabled, quote, onClose }) {
   if (state.type === "done") return <SuccessScreen txHash={state.signedTxHash} />;
   if (state.type === "error") return <ErrorScreen error={state.error} />;
 
-  return <LwmDeviceIntentExecutor {...executorProps} />;
+  return <DeviceIntentExecutorLWM {...executorProps} />;
 }
 ```
 
