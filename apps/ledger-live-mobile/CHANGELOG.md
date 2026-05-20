@@ -1,5 +1,11 @@
 # live-mobile
 
+## 4.5.0-next.4
+
+### Minor Changes
+
+- [#17665](https://github.com/LedgerHQ/ledger-live/pull/17665) [`ac78a69`](https://github.com/LedgerHQ/ledger-live/commit/ac78a698288f6e993df40d59a13ef7098196715c) Thanks [@desirendr](https://github.com/desirendr)! - adding mobile changeset
+
 ## 4.5.0-next.3
 
 ### Minor Changes
