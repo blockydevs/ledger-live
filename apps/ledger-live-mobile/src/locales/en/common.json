@@ -9036,6 +9036,10 @@
     "fallbackBanner": {
       "title": "Swap and Buy are not supported for this asset."
     },
+    "hiddenAssetBanner": {
+      "title": "This asset is hidden from your portfolio.",
+      "showAsset": "Show asset"
+    },
     "balanceDetails": {
       "totalBalance": "Total balance",
       "transfer": "Transfer",
