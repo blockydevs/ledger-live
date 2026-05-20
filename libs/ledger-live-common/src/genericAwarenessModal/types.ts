@@ -14,7 +14,8 @@ export type GenericAwarenessModalLocation = "generic_awareness_modal";
 
 export const GenericAwarenessModalInputIndexSchema = z
   .string()
-  .transform(value => Number.parseInt(value, 10) || 0);
+  .regex(/^\d+$/)
+  .transform(value => Number.parseInt(value, 10));
 
 export const GenericAwarenessModalCarouselSlideSchema = z.object({
   title: z.string().catch(""),
