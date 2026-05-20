@@ -4430,6 +4430,53 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
       },
     ],
   },
+  arc: {
+    type: "CryptoCurrency",
+    id: "arc",
+    coinType: CoinType.ETH,
+    name: "Arc",
+    managerAppName: "Ethereum",
+    ticker: "USDC",
+    deviceTicker: "USDC",
+    scheme: "arc",
+    color: "#1A2B5F",
+    family: "evm",
+    units: ethereumUnits("USDC", "USDC"),
+    ethereumLikeInfo: {
+      chainId: 5042,
+    },
+    explorerViews: [
+      {
+        tx: "https://explorer.arc.io/tx/$hash",
+        address: "https://explorer.arc.io/address/$address",
+        token: "https://explorer.arc.io/token/$contractAddress?a=$address",
+      },
+    ],
+  },
+  arc_testnet: {
+    type: "CryptoCurrency",
+    id: "arc_testnet",
+    coinType: CoinType.ETH,
+    name: "Arc Testnet",
+    managerAppName: "Ethereum",
+    ticker: "USDC",
+    deviceTicker: "USDC",
+    scheme: "arc_testnet",
+    color: "#6B7280",
+    family: "evm",
+    units: ethereumUnits("USDC", "USDC"),
+    disableCountervalue: true,
+    ethereumLikeInfo: {
+      chainId: 5042002,
+    },
+    explorerViews: [
+      {
+        tx: "https://testnet.arcscan.app/tx/$hash",
+        address: "https://testnet.arcscan.app/address/$address",
+        token: "https://testnet.arcscan.app/token/$contractAddress?a=$address",
+      },
+    ],
+  },
   polygon_zk_evm: {
     type: "CryptoCurrency",
     id: "polygon_zk_evm",

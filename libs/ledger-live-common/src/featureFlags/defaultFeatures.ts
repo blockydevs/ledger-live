@@ -123,6 +123,8 @@ export const CURRENCY_DEFAULT_FEATURES = {
   currencyAdi: DEFAULT_FEATURE,
   currencyUnichain: DEFAULT_FEATURE,
   currencyUnichainSepolia: DEFAULT_FEATURE,
+  currencyArc: { enabled: true },
+  currencyArcTestnet: { enabled: true },
 };
 
 /**

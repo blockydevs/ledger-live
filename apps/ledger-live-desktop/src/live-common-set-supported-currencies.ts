@@ -99,6 +99,8 @@ setSupportedCurrencies([
   "sei_evm",
   "berachain",
   "hyperevm",
+  "arc",
+  "arc_testnet",
   "canton_network",
   "canton_network_devnet",
   "canton_network_testnet",
