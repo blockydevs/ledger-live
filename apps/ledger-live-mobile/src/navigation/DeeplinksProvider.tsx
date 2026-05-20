@@ -350,6 +350,8 @@ export const DeeplinksProvider = ({
   const userAcceptedTerms = useGeneralTermsAccepted();
   const buySellUiFlag = useFeature("buySellUi");
   const llmAccountListUI = useFeature("llmAccountListUI");
+  const genericAwarenessModalFlag = useFeature("lwmGenericAwarenessModal");
+
   const {
     shouldDisplayMarketBanner,
     shouldDisplayWallet40MainNav,
@@ -862,8 +864,7 @@ export const DeeplinksProvider = ({
 
           if (hostname === "generic-awareness-modal") {
             return handleGenericAwarenessModalDeeplink({
-              // TODO: replace with feature flag value when the flag is available.
-              isGenericAwarenessModalEnabled: true,
+              isGenericAwarenessModalEnabled: genericAwarenessModalFlag?.enabled ?? false,
               hasCompletedOnboarding,
               searchParams,
               dispatch,
@@ -931,6 +932,7 @@ export const DeeplinksProvider = ({
     liveAppProviderInitialized,
     manifests,
     web3hubFlag?.enabled,
+    genericAwarenessModalFlag?.enabled,
     isProductTourEligible,
   ]);
   const [isReady, setIsReady] = React.useState(false);
