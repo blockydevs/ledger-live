@@ -1,5 +1,11 @@
 # live-mobile
 
+## 4.5.0-next.3
+
+### Minor Changes
+
+- [#17632](https://github.com/LedgerHQ/ledger-live/pull/17632) [`9a2a0c8`](https://github.com/LedgerHQ/ledger-live/commit/9a2a0c8432679e8726a3e3b0b85e4c2e9de3b5d9) Thanks [@LucasWerey](https://github.com/LucasWerey)! - Fix Android crash on clear cache flow. Dispatching `wipeCountervalues` inside `useCleanCache` caused every mounted `CounterValue` consumer to re-render against the wiped state in a separate React commit from the subsequent `reboot()`; under Fabric this produced an `IllegalStateException: The specified child already has a parent`. Wipe is now dispatched from the reboot middleware in the same synchronous tick as the reboot action so React batches both updates and the `RebootProvider` key change unmounts the subtree before any countervalue consumer re-renders.
+
 ## 4.5.0-next.2
 
 ### Minor Changes
