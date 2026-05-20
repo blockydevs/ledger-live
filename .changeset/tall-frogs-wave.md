@@ -2,4 +2,4 @@
 "ledger-live-mobile": patch
 ---
 
-Minor housekeeping
+adding mobile changeset
