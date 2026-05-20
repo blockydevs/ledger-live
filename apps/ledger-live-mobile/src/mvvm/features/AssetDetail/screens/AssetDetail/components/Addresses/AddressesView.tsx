@@ -21,6 +21,7 @@ type Props = Readonly<{
   hasData: boolean;
   onAddAccount: () => void;
   onSeeAll: () => void;
+  onAccountPress: (data: AddressAccountData) => void;
   isLoading: boolean;
 }>;
 
@@ -30,6 +31,7 @@ export function AddressesView({
   hasData,
   onAddAccount,
   onSeeAll,
+  onAccountPress,
   isLoading,
 }: Props) {
   const { t } = useTranslation();
@@ -60,7 +62,7 @@ export function AddressesView({
       </Subheader>
       <Box lx={{ gap: "s8" }}>
         {displayedAccounts.map(data => (
-          <AddressAccountItem key={data.id} data={data} />
+          <AddressAccountItem key={data.id} data={data} onPress={onAccountPress} />
         ))}
       </Box>
       {hasMore && (
