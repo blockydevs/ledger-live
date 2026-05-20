@@ -70,6 +70,15 @@ function withBtcAccounts(count: number, operationsSize = 0) {
   );
 }
 
+function withBlacklistedTokens(tokenIds: string[]) {
+  return {
+    overrideInitialState: (state: State): State => ({
+      ...state,
+      settings: { ...state.settings, blacklistedTokenIds: tokenIds },
+    }),
+  };
+}
+
 describe("AssetDetail screen layout", () => {
   beforeEach(() => {
     mockIsCurrencyAvailable.mockReturnValue(false);
@@ -267,6 +276,40 @@ describe("AssetDetail screen layout", () => {
       expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.swapButton)).toBeVisible();
       expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.receiveButton)).toBeVisible();
       expect(screen.queryByTestId(ASSET_DETAIL_TEST_IDS.footerReceiveButton)).toBeNull();
+    });
+  });
+
+  describe("hidden asset banner", () => {
+    it("does not render the banner when the asset is not hidden", () => {
+      render(<AssetDetailTestNavigator />);
+
+      expect(screen.queryByTestId(ASSET_DETAIL_TEST_IDS.hiddenAssetBanner)).toBeNull();
+    });
+
+    it("renders the banner when the asset is blacklisted", () => {
+      render(<AssetDetailTestNavigator />, withBlacklistedTokens(["bitcoin"]));
+
+      expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.hiddenAssetBanner)).toBeVisible();
+      expect(screen.getByText("This asset is hidden from your portfolio.")).toBeVisible();
+      expect(screen.getByText("Show asset")).toBeVisible();
+      expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.hiddenAssetBannerShowAsset)).toBeVisible();
+    });
+
+    it("hides the banner and unhides the asset when Show asset is pressed", async () => {
+      const { user, store } = render(
+        <AssetDetailTestNavigator />,
+        withBlacklistedTokens(["bitcoin"]),
+      );
+
+      const showAssetButton = await screen.findByTestId(
+        ASSET_DETAIL_TEST_IDS.hiddenAssetBannerShowAsset,
+      );
+      await user.press(showAssetButton);
+
+      await waitFor(() =>
+        expect(screen.queryByTestId(ASSET_DETAIL_TEST_IDS.hiddenAssetBanner)).toBeNull(),
+      );
+      expect(store.getState().settings.blacklistedTokenIds).not.toContain("bitcoin");
     });
   });
 });
