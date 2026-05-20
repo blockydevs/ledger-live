@@ -390,10 +390,10 @@ export async function runFullSwapPipeline(
         getBridge,
       );
 
-      if (swapId) {
+      if (swapId && operationHash) {
         await setBroadcastTransaction({
           provider,
-          result: { operation: operationHash ?? "", swapId },
+          result: { operation: operationHash, swapId },
           sourceCurrencyId: fromCurrency.id,
           targetCurrencyId: toCurrency.id,
           hardwareWalletType,
