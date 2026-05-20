@@ -80,6 +80,17 @@ mock.module("@ledgerhq/hw-app-exchange", () => ({
   decodeSwapPayload: async () => ({ amountToWallet: "1000000000000000000" }),
 }));
 
+const setBroadcastTransactionMock = mock(async () => {});
+const postSwapCancelledMock = mock(async () => null);
+
+mock.module("@ledgerhq/live-common/exchange/swap/setBroadcastTransaction", () => ({
+  setBroadcastTransaction: setBroadcastTransactionMock,
+}));
+
+mock.module("@ledgerhq/live-common/exchange/swap/postSwapState", () => ({
+  postSwapCancelled: postSwapCancelledMock,
+}));
+
 const { runFullSwapPipeline } = await import("./cli-swap-pipeline");
 
 function makeAccount(id: string): Account {
@@ -147,6 +158,8 @@ describe("runFullSwapPipeline session lifecycle", () => {
     events.length = 0;
     updatedTransactionAmount = new BigNumber("1000000000000000000");
     retrieveSwapPayloadMock.mockClear();
+    setBroadcastTransactionMock.mockClear();
+    postSwapCancelledMock.mockClear();
   });
 
   it("opens a single Exchange app session for the entire start→complete flow", async () => {
@@ -166,6 +179,17 @@ describe("runFullSwapPipeline session lifecycle", () => {
     expect(result.transactionId).toBe("tx-id-123");
     expect(result.operationHash).toBeUndefined();
     expect(retrieveSwapPayloadMock).toHaveBeenCalledTimes(1);
+    expect(setBroadcastTransactionMock).toHaveBeenCalledTimes(1);
+    expect(setBroadcastTransactionMock).toHaveBeenCalledWith({
+      provider: "changelly",
+      result: { operation: "", swapId: "swap-id" },
+      sourceCurrencyId: "ethereum",
+      targetCurrencyId: "ethereum",
+      fromAccountAddress: "0xfrom",
+      toAccountAddress: "0xto",
+      fromAmount: "1",
+    });
+    expect(postSwapCancelledMock).not.toHaveBeenCalled();
   });
 
   it("omits magnitudeAwareRate when the prepared transaction amount is zero", async () => {
@@ -207,5 +231,43 @@ describe("runFullSwapPipeline session lifecycle", () => {
     ).rejects.toBe(apiError);
 
     expect(events).toEqual(["session:open", "startExchange", "session:close"]);
+    expect(setBroadcastTransactionMock).not.toHaveBeenCalled();
+    expect(postSwapCancelledMock).not.toHaveBeenCalled();
+  });
+
+  it("reports swap cancelled when the pipeline fails after swapId is known", async () => {
+    const signError = new Error("user rejected signing");
+    const getAccountBridgeWithSignFailure = (): ReturnType<typeof getLiveAccountBridge> => {
+      const bridge = getAccountBridge();
+      return {
+        ...bridge,
+        signOperation: () =>
+          new Observable(observer => {
+            observer.error(signError);
+          }),
+      } as unknown as ReturnType<typeof getLiveAccountBridge>;
+    };
+
+    await expect(
+      runFullSwapPipeline({
+        out: makeOutput(),
+        provider: "changelly",
+        amount: "1",
+        amountInAtomicUnit: new BigNumber("1000000000000000000"),
+        feeStrategy: "medium",
+        fromAccount: makeAccount("from"),
+        toAccount: makeAccount("to"),
+        getAccountBridge: getAccountBridgeWithSignFailure,
+        getDeviceModelId,
+      }),
+    ).rejects.toBe(signError);
+
+    expect(setBroadcastTransactionMock).not.toHaveBeenCalled();
+    expect(postSwapCancelledMock).toHaveBeenCalledTimes(1);
+    expect(postSwapCancelledMock).toHaveBeenCalledWith({
+      provider: "changelly",
+      swapId: "swap-id",
+      errorMessage: "user rejected signing",
+    });
   });
 });

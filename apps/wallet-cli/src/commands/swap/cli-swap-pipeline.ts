@@ -12,6 +12,8 @@ import completeExchange from "@ledgerhq/live-common/exchange/platform/completeEx
 import type { CompleteExchangeRequestEvent } from "@ledgerhq/live-common/exchange/platform/types";
 import startExchange from "@ledgerhq/live-common/exchange/platform/startExchange";
 import { retrieveSwapPayload } from "@ledgerhq/live-common/exchange/swap/api/v5/actions";
+import { postSwapCancelled } from "@ledgerhq/live-common/exchange/swap/postSwapState";
+import { setBroadcastTransaction } from "@ledgerhq/live-common/exchange/swap/setBroadcastTransaction";
 import { transactionStrategy } from "@ledgerhq/live-common/exchange/swap/transactionStrategies";
 import type { Transaction } from "@ledgerhq/live-common/coin-modules/transaction-types";
 import type { ExchangeRequestEvent } from "@ledgerhq/live-common/hw/actions/startExchange";
@@ -288,97 +290,122 @@ export async function runFullSwapPipeline(
     ? toParentAccount.freshAddress
     : (toAccount as Account).freshAddress;
 
-  return withLedgerManagerAppSession(EXCHANGE_APP_NAME, async () => {
-    const { transactionId } = await startExchangeContext(out, provider, getDeviceModelId);
+  let swapId: string | undefined;
 
-    out.swapExecuteProgress("[2/5] Requesting swap payload from Ledger swap API…");
-    const payload = await retrieveSwapPayload({
-      provider,
-      deviceTransactionId: transactionId,
-      fromAccountAddress,
-      toAccountAddress,
-      fromAccountCurrency: fromCurrency.id,
-      toAccountCurrency: toCurrency.id,
-      amount,
-      amountInAtomicUnit,
-      ...(quoteId != null && quoteId !== "" ? { quoteId } : {}),
-    });
-    out.swapExecuteProgress(
-      `[2/5] Swap API returned swapId=${payload.swapId ?? "(none)"}, payin address received.`,
-    );
+  try {
+    return await withLedgerManagerAppSession(EXCHANGE_APP_NAME, async () => {
+      const { transactionId } = await startExchangeContext(out, provider, getDeviceModelId);
 
-    const strategyTx = buildStrategyTransaction({
-      payinAddress: payload.payinAddress,
-      fromAmountAtomic: amountInAtomicUnit,
-      fromCurrency,
-      payinExtraId: payload.payinExtraId,
-      extraTransactionParameters: payload.extraTransactionParameters,
-    });
-
-    const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
-    if (strategyTx.family !== mainFromAccount.currency.family) {
-      throw new Error(
-        `Account and transaction must be from the same family. Account family: ${mainFromAccount.currency.family}, Transaction family: ${strategyTx.family}`,
+      out.swapExecuteProgress("[2/5] Requesting swap payload from Ledger swap API…");
+      const payload = await retrieveSwapPayload({
+        provider,
+        deviceTransactionId: transactionId,
+        fromAccountAddress,
+        toAccountAddress,
+        fromAccountCurrency: fromCurrency.id,
+        toAccountCurrency: toCurrency.id,
+        amount,
+        amountInAtomicUnit,
+        ...(quoteId != null && quoteId !== "" ? { quoteId } : {}),
+      });
+      out.swapExecuteProgress(
+        `[2/5] Swap API returned swapId=${payload.swapId ?? "(none)"}, payin address received.`,
       );
-    }
+      swapId = payload.swapId;
 
-    const accountBridge = await getBridge(fromAccount, fromParentAccount);
-    const subAccountId =
-      fromParentAccount && fromParentAccount.id !== fromAccount.id ? fromAccount.id : undefined;
-    const bridgeTx = accountBridge.createTransaction(fromAccount);
-    const tx = accountBridge.updateTransaction(
-      { ...bridgeTx, recipient: strategyTx.recipient },
-      {
-        ...strategyTx,
-        feesStrategy: feeStrategy.toLowerCase(),
-        subAccountId,
-      },
-    );
+      const strategyTx = buildStrategyTransaction({
+        payinAddress: payload.payinAddress,
+        fromAmountAtomic: amountInAtomicUnit,
+        fromCurrency,
+        payinExtraId: payload.payinExtraId,
+        extraTransactionParameters: payload.extraTransactionParameters,
+      });
 
-    const decodePayload = await decodeSwapPayload(payload.binaryPayload);
-    const amountExpectedTo = new BigNumber(decodePayload.amountToWallet.toString());
-    const magnitudeAwareRate =
-      tx.amount && new BigNumber(tx.amount).gt(0)
-        ? amountExpectedTo.dividedBy(tx.amount)
-        : undefined;
-    tx.amount = new BigNumber(tx.amount);
+      const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
+      if (strategyTx.family !== mainFromAccount.currency.family) {
+        throw new Error(
+          `Account and transaction must be from the same family. Account family: ${mainFromAccount.currency.family}, Transaction family: ${strategyTx.family}`,
+        );
+      }
 
-    const rateType = quoteId != null && quoteId !== "" ? RATE_FIXED : RATE_FLOATING;
+      const accountBridge = await getBridge(fromAccount, fromParentAccount);
+      const subAccountId =
+        fromParentAccount && fromParentAccount.id !== fromAccount.id ? fromAccount.id : undefined;
+      const bridgeTx = accountBridge.createTransaction(fromAccount);
+      const tx = accountBridge.updateTransaction(
+        { ...bridgeTx, recipient: strategyTx.recipient },
+        {
+          ...strategyTx,
+          feesStrategy: feeStrategy.toLowerCase(),
+          subAccountId,
+        },
+      );
 
-    const exchange = {
-      fromAccount,
-      fromParentAccount,
-      toAccount,
-      toParentAccount,
-      fromCurrency,
-      toCurrency,
-    };
+      const decodePayload = await decodeSwapPayload(payload.binaryPayload);
+      const amountExpectedTo = new BigNumber(decodePayload.amountToWallet.toString());
+      const magnitudeAwareRate =
+        tx.amount && new BigNumber(tx.amount).gt(0)
+          ? amountExpectedTo.dividedBy(tx.amount)
+          : undefined;
+      tx.amount = new BigNumber(tx.amount);
 
-    const finalTx = await completeExchangeTransaction(out, {
-      provider,
-      binaryPayload: payload.binaryPayload,
-      signature: payload.signature,
-      rateType,
-      transaction: tx,
-      exchange,
-      getDeviceModelId,
+      const rateType = quoteId != null && quoteId !== "" ? RATE_FIXED : RATE_FLOATING;
+
+      const exchange = {
+        fromAccount,
+        fromParentAccount,
+        toAccount,
+        toParentAccount,
+        fromCurrency,
+        toCurrency,
+      };
+
+      const finalTx = await completeExchangeTransaction(out, {
+        provider,
+        binaryPayload: payload.binaryPayload,
+        signature: payload.signature,
+        rateType,
+        transaction: tx,
+        exchange,
+        getDeviceModelId,
+      });
+      const { operationHash } = await signAndBroadcast(
+        out,
+        fromAccount,
+        fromParentAccount,
+        finalTx,
+        getBridge,
+      );
+
+      if (swapId) {
+        await setBroadcastTransaction({
+          provider,
+          result: { operation: operationHash ?? "", swapId },
+          sourceCurrencyId: fromCurrency.id,
+          targetCurrencyId: toCurrency.id,
+          fromAccountAddress,
+          toAccountAddress,
+          fromAmount: amount,
+        });
+      }
+
+      return {
+        transactionId,
+        payload,
+        operationHash,
+        swapId: payload.swapId,
+        amountExpectedTo: amountExpectedTo.toFixed(),
+        ...(magnitudeAwareRate != null ? { magnitudeAwareRate: magnitudeAwareRate.toFixed() } : {}),
+      };
     });
-
-    const { operationHash } = await signAndBroadcast(
-      out,
-      fromAccount,
-      fromParentAccount,
-      finalTx,
-      getBridge,
-    );
-
-    return {
-      transactionId,
-      payload,
-      operationHash,
-      swapId: payload.swapId,
-      amountExpectedTo: amountExpectedTo.toFixed(),
-      ...(magnitudeAwareRate != null ? { magnitudeAwareRate: magnitudeAwareRate.toFixed() } : {}),
-    };
-  });
+  } catch (error) {
+    if (swapId) {
+      await postSwapCancelled({
+        provider,
+        swapId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+    }
+    throw error;
+  }
 }
