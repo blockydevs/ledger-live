@@ -1,17 +1,16 @@
 import React from "react";
 import {
-  Box,
   Card,
   CardContent,
   CardContentDescription,
   CardContentTitle,
   CardHeader,
   CardLeading,
+  IconButton,
 } from "@ledgerhq/lumen-ui-rnative";
-import { Plus } from "@ledgerhq/lumen-ui-rnative/symbols";
+import { ChevronRight } from "@ledgerhq/lumen-ui-rnative/symbols";
 import { useTranslation } from "~/context/Locale";
 import { ASSET_DETAIL_TEST_IDS } from "LLM/features/AssetDetail/testIds";
-import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
 
 type Props = Readonly<{
   label: string;
@@ -23,6 +22,7 @@ export function EarnBannerView({ label, onPress }: Props) {
 
   return (
     <Card
+      type="info"
       onPress={onPress}
       testID={ASSET_DETAIL_TEST_IDS.earnBanner}
       accessibilityLabel={t("assetDetail.balanceDetails.earnBannerAction")}
@@ -36,18 +36,14 @@ export function EarnBannerView({ label, onPress }: Props) {
             </CardContentDescription>
           </CardContent>
         </CardLeading>
-        <Box lx={IconWrapper}>
-          <Plus size={20} color="base" />
-        </Box>
+        <IconButton
+          appearance="transparent"
+          size="sm"
+          icon={ChevronRight}
+          accessibilityLabel={t("assetDetail.balanceDetails.earnBannerAction")}
+          onPress={onPress}
+        />
       </CardHeader>
     </Card>
   );
 }
-
-const IconWrapper: LumenViewStyle = {
-  borderRadius: "full",
-  backgroundColor: "mutedTransparent",
-  justifyContent: "center",
-  alignItems: "center",
-  padding: "s10",
-};
