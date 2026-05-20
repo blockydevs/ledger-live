@@ -57,6 +57,7 @@ import { setupRecentAddressesStore } from "./recentAddresses";
 import { startAnalytics } from "./analytics/segment";
 import { initIdentities } from "~/renderer/helpers/identities";
 import { setAllOverrides, setBannerVisible } from "@shared/feature-flags";
+import { initHistory } from "~/renderer/reducers/history";
 
 const rootNode = document.getElementById("react-root");
 
@@ -173,7 +174,6 @@ async function init() {
     deepLinkUrl = url;
   });
   const initialSettings = (await getKey("app", "settings")) || {};
-  startAnalytics(store);
 
   liveBlindSigningReporter.setConsentSource(() => trackingEnabledSelector(store.getState()));
 
@@ -188,6 +188,7 @@ async function init() {
   }
 
   fetchSettings(settingsToLoad)(store.dispatch);
+  startAnalytics(store);
   const state = store.getState();
   const language = languageSelector(state);
 
@@ -248,6 +249,11 @@ async function init() {
     ) {
       store.dispatch(setBannerVisible(initialSettings["featureFlagsButtonVisible"]));
     }
+  }
+
+  const historyState = await getKey("app", "history");
+  if (historyState) {
+    store.dispatch(initHistory(historyState));
   }
 
   const initialCountervalues = await getKey("app", "countervalues");

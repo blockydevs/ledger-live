@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { View, StyleSheet, Animated, TextStyle, StyleProp } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Trans, useTranslation } from "~/context/Locale";
 import invariant from "invariant";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { getAccountCurrency, shortAddressPreview } from "@ledgerhq/live-common/account/index";
 import { getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
-import type { Transaction as TezosTransaction } from "@ledgerhq/live-common/families/tezos/types";
+import type { Transaction as TezosTransaction, TezosOperationMode } from "@ledgerhq/live-common/families/tezos/types";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import {
   useDelegation,
@@ -37,7 +37,7 @@ import { useAccountScreen } from "LLM/hooks/useAccountScreen";
 import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 import { NotEnoughBalanceToDelegate } from "@ledgerhq/errors";
 import NotEnoughFundFeesAlert from "~/families/shared/StakingErrors/NotEnoughFundFeesAlert";
-import Config from "react-native-config";
+import { useChangeValidatorRotateAnim } from "../../shared/useChangeValidatorRotateAnim";
 import TranslatedError from "~/components/TranslatedError";
 import SupportLinkError from "~/components/SupportLinkError";
 
@@ -110,14 +110,18 @@ export default function DelegationSummary({ navigation, route }: Props) {
   const { t } = useTranslation();
   const [defaultBaker] = useBakers(whitelist);
 
+  invariant(account, "account must be defined");
+
+  const bridge = useAccountBridge<TezosTransaction>(account, parentAccount);
+
   const { transaction, setTransaction, status, bridgePending, bridgeError } = useBridgeTransaction(
+    bridge,
     () => ({
       account,
       parentAccount,
     }),
   );
 
-  invariant(account, "account must be defined");
   invariant(transaction, "transaction must be defined");
   invariant(transaction.family === "tezos", "transaction tezos");
 
@@ -128,10 +132,10 @@ export default function DelegationSummary({ navigation, route }: Props) {
 
     // make sure the mode is in sync (an account changes can reset it)
     const patch: {
-      mode: string;
+      mode: TezosOperationMode;
       recipient?: string;
     } = {
-      mode: route.params?.mode ?? "delegate",
+      mode: (route.params?.mode ?? "delegate") as TezosOperationMode,
     };
 
     // make sure that in delegate mode, a transaction recipient is set (random pick)
@@ -142,54 +146,21 @@ export default function DelegationSummary({ navigation, route }: Props) {
     // when changes, we set again
     if (patch.mode !== transaction.mode || patch.recipient) {
       setTransaction(
-        getAccountBridge(account, parentAccount).updateTransaction(transaction, patch),
+        bridge.updateTransaction(transaction, patch),
       );
     }
-  }, [account, defaultBaker, navigation, parentAccount, setTransaction, transaction, route.params]);
+  }, [account, bridge, defaultBaker, navigation, setTransaction, transaction, route.params]);
 
-  const [rotateAnim] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!Config.DETOX) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(rotateAnim, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: -1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1000),
-        ]),
-      ).start();
-    }
-    return () => {
-      rotateAnim.setValue(0);
-    };
-  }, [rotateAnim]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-
-    outputRange: ["0deg", "30deg"],
-  });
+  const { rotate, resetRotation } = useChangeValidatorRotateAnim();
 
   const onChangeDelegator = useCallback(() => {
-    rotateAnim.setValue(0);
+    resetRotation();
     navigation.navigate(ScreenName.DelegationSelectValidator, {
       ...route.params,
       transaction: transaction as TezosTransaction,
       status,
     });
-  }, [rotateAnim, navigation, route.params, transaction, status]);
+  }, [resetRotation, navigation, route.params, transaction, status]);
 
   const delegation = useDelegation(account);
   const stakingPositions = useStakingPositions(account);

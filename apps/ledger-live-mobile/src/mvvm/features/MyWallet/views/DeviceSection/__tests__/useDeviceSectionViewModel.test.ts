@@ -7,6 +7,7 @@ import { act, renderHook } from "@tests/test-renderer";
 import { ScreenName } from "~/const";
 import { track } from "~/analytics";
 import { urls } from "~/utils/urls";
+import { MY_WALLET_TRACKING_PAGE_NAME } from "../../../constants";
 import { useDeviceSectionViewModel, type DeviceSectionDevice } from "../useDeviceSectionViewModel";
 import type { State } from "~/reducers/types";
 
@@ -18,6 +19,8 @@ jest.mock("@react-navigation/native", () => ({
 }));
 
 jest.mock("@ledgerhq/live-dmk-mobile", () => ({
+  rnBleTransportIdentifier: "react-native-ble",
+  rnHidTransportIdentifier: "react-native-hid",
   findMatchingNewDevice: jest.fn(() => null),
   useBleDevicesScanning: jest.fn(() => ({ scannedDevices: [] })),
 }));
@@ -38,6 +41,17 @@ const withKnownDevice = (state: State): State => ({
   ble: {
     ...state.ble,
     knownDevices: [{ id: "device-1", name: "Flex Pro", modelId: DeviceModelId.europa }],
+  },
+  knownDevices: {
+    ...state.knownDevices,
+    knownDevices: [
+      {
+        id: "device-1",
+        name: "Flex Pro",
+        deviceModelId: DeviceModelId.europa,
+        transport: "react-native-ble",
+      },
+    ],
   },
 });
 
@@ -97,7 +111,7 @@ describe("useDeviceSectionViewModel", () => {
       expect(mockNavigate).toHaveBeenCalledWith(ScreenName.BleDevicePairingFlow);
       expect(track).toHaveBeenCalledWith("button_clicked", {
         button: "Add",
-        page: ScreenName.MyWallet,
+        page: MY_WALLET_TRACKING_PAGE_NAME,
       });
     });
   });
@@ -111,7 +125,7 @@ describe("useDeviceSectionViewModel", () => {
       expect(Linking.openURL).toHaveBeenCalledWith(urls.exploreLedgerDevices);
       expect(track).toHaveBeenCalledWith("button_clicked", {
         button: "ExploreDevices",
-        page: ScreenName.MyWallet,
+        page: MY_WALLET_TRACKING_PAGE_NAME,
       });
     });
   });
@@ -132,7 +146,7 @@ describe("useDeviceSectionViewModel", () => {
       });
       expect(track).toHaveBeenCalledWith("button_clicked", {
         button: "Device",
-        page: ScreenName.MyWallet,
+        page: MY_WALLET_TRACKING_PAGE_NAME,
         deviceModelId: DeviceModelId.europa,
       });
     });
@@ -217,6 +231,7 @@ describe("useDeviceSectionViewModel", () => {
       expect(result.current.isRemoveDrawerOpen).toBe(false);
       expect(result.current.deviceToRemove).toBeNull();
       expect(store.getState().ble.knownDevices).toEqual([]);
+      expect(store.getState().knownDevices.knownDevices).toEqual([]);
     });
 
     it("should do nothing when no device is selected", async () => {

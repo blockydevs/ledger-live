@@ -308,6 +308,7 @@
     "exchange" : "Satın Al / Sat",
     "swap" : "Takas et",
     "perps" : "Perpetuals",
+    "borrow" : "Borç al",
     "home" : "Ana Sayfa",
     "refer" : "Arkadaşına Öner",
     "lend" : "Borç ver",
@@ -785,6 +786,9 @@
         }
       }
     }
+  },
+  "borrow" : {
+    "pageHeader" : "Borç al"
   },
   "exchange" : {
     "pageHeader" : "Satın al / Sat",
@@ -1331,6 +1335,37 @@
     }
   },
   "postOnboarding" : {
+    "widget" : {
+      "title" : "Şimdi, cüzdan kurulumunu tamamlayın",
+      "subtitle" : "Cüzdanınıza fon aktararak başlayın."
+    },
+    "dialog" : {
+      "title" : "Şimdi, cüzdan kurulumunu tamamlayın",
+      "titleCompleted" : "İşte bu kadar!",
+      "primaryLabel" : "Anladım",
+      "actionCompletedLabel" : "Tamam",
+      "actions" : {
+        "deviceOnboarded" : {
+          "title" : "Ledger cihazınızı kurun"
+        },
+        "assetsTransfer" : {
+          "title" : "Kripto Ekle",
+          "description" : "Cüzdanınızı fonlamak için kripto satın alın veya transfer alın"
+        },
+        "syncAccounts" : {
+          "title" : "Cüzdanınızı senkronize edin",
+          "description" : "Kripto hesaplarınızı senkronize tutun"
+        },
+        "customImage" : {
+          "title" : "Kilit ekranını kişiselleştirin",
+          "description" : "En sevdiğiniz dijital sanat eserini veya fotoğrafı cihazınızın kilitli ekranında görüntüleyin."
+        },
+        "recover" : {
+          "title" : "Yedeklemenizi güvenceye alın",
+          "description" : "Ledger Recover’ı etkinleştirme işlemini tamamlayın"
+        }
+      }
+    },
     "postOnboardingScreen" : {
       "title" : "Sırada ne mi var?",
       "titleCompleted" : "Her şey hazır!\nŞimdi portföyünüzü keşfetmeye başlayabilirsiniz.",
@@ -2313,7 +2348,8 @@
         "banner" : "Maksimum harcanabilir tutar",
         "fees" : "Ücretler hakkında daha fazla bilgi edinin",
         "standard" : "Standart",
-        "advanced" : "Gelişmiş"
+        "advanced" : "Gelişmiş",
+        "feeCurrency" : "Ücret para birimi"
       },
       "summary" : {
         "title" : "Özet"
@@ -3903,7 +3939,7 @@
           "title" : "Transfer Kancası (Transfer Hook)",
           "transferHookAddress" : "Mevcut Transfer Kancası programı: {{address}}",
           "transferHookNotSetup" : "Mevcut Transfer Kancası programı belirlenmemiş.",
-          "description" : "Transfer Kancası (Transfer Hook), token çıkartanlara kullanıcılarla token'ların nasıl etkileşim kuracağını belirleme olanağını sunar. Token çıkartanlar normal bir transfer yerine, Transfer Kancası uzantısıyla kullanılacak özel bir mantığı bir programa ekleyebilir."
+          "description" : "Transfer Kancası (Transfer Hook), token ihraççılara kullanıcılarla token'ların nasıl etkileşim kuracağını belirleme olanağını sunar. Token çıkartanlar normal bir transfer yerine, Transfer Kancası uzantısıyla kullanılacak özel bir mantığı bir programa ekleyebilir."
         },
         "transferFee" : {
           "title" : "Transfer Ücreti",
@@ -4187,6 +4223,95 @@
         "eigenlayer_points" : "Eigenlayer puanları",
         "validator" : "Doğrulayıcı ödülleri"
       }
+    },
+    "evmStaking" : {
+      "delegation" : {
+        "emptyState" : {
+          "description" : "Varlıklarınızla yetki devrederek {{currencyTicker}} ödülleri kazanabilirsiniz.",
+          "delegation" : "Ödüller kazanın"
+        },
+        "claimRewards" : "Ödüllerinizi alın",
+        "header" : "Yetki Devirleri",
+        "noRewards" : "Ödül yok",
+        "delegate" : "Ekle",
+        "undelegate" : "Yetki devrini iptal et",
+        "redelegate" : "Yetki devret",
+        "redelegateDisabledTooltip" : "Yetkiyi yeniden devretmek için <0>{{days}}</0> gün beklemelisiniz",
+        "redelegateMaxDisabledTooltip" : "Bir seferde en fazla <0>7</0> doğrulayıcıya yeniden yetki devredebilirsiniz.",
+        "undelegateDisabledTooltip" : "Bir seferde en fazla <0>7</0> doğrulayıcının yetkisini iptal edebilirsiniz.",
+        "reward" : "Ödüllerinizi alın",
+        "activeTooltip" : "Yetkisi devredilen tutar ödül üretiyor",
+        "inactiveTooltip" : "Yetki devri iptal edilen tutarlar üzerinden ödül kazanamazsınız",
+        "minSafeWarning" : "Yetersiz fon miktarı",
+        "commission" : "Komisyon",
+        "totalStake" : "Toplam stake",
+        "flow" : {
+          "title" : "Yetki Devret",
+          "steps" : {
+            "starter" : {
+              "description" : "{{currencyTicker}} varlıklarınızla bir doğrulayıcıya yetki devrederek ödüller kazanabilirsiniz.",
+              "bullet" : ["Yetki devrinde kullanılan varlıklar size ait olmaya devam eder.", "Ledger cihazınızı kullanarak yetki devredin.", "Varlıklar, yetki devri iptal edildikten sonra mevcut olacak"],
+              "warning" : {
+                "description" : "Doğrulayıcınızı dikkatle seçin: Doğrulayıcının yanlış kararlar vermesi halinde yetki devrinde kullandığınız varlıkların bir kısmını geri dönülemez bir şekilde kaybedebilirsiniz."
+              }
+            },
+            "amount" : {
+              "title" : "Miktar"
+            },
+            "validator" : {
+              "title" : "Doğrulayıcılar",
+              "noResults" : "Aramanızla eşleşen doğrulayıcı yok."
+            },
+            "connectDevice" : {
+              "title" : "Cihaz"
+            },
+            "confirmation" : {
+              "title" : "Onaylayın",
+              "success" : {
+                "title" : "Varlıklarınızla yetki devretmeyi tamamladınız",
+                "text" : "İşlem blok zinciri tarafından onaylandığında hesap bakiyeniz güncellenecek",
+                "cta" : "Ayrıntıları gör"
+              },
+              "broadcastError" : "İşleminiz başarısız olmuş olabilir. Lütfen biraz bekleyin ve tekrar denemeden önce işlem geçmişini kontrol edin."
+            }
+          }
+        }
+      },
+      "redelegation" : {
+        "header" : "Yetki yeniden devri"
+      },
+      "undelegation" : {
+        "header" : "Yetki Devri İptalleri",
+        "headerTooltip" : "{{numberOfDays}} günlük zaman kilidinden sonra kullanılabilir",
+        "inactiveTooltip" : "Yetki devri iptal edilen tutarlar üzerinden ödül kazanamazsınız.",
+        "flow" : {
+          "title" : "Stak etmeyi durdur",
+          "steps" : {
+            "amount" : {
+              "title" : "Miktar",
+              "subtitle" : "Yetki devrini iptal etme işleminin sonuçlanması <0>{{numberOfDays}} gün</0> sürer.",
+              "warningWithTimelock" : "Ödüller otomatik olarak alınacak. Yetki devri iptal edilen tutar <0>{{numberOfDays}} günlük zaman kilidinden sonra kullanılabilir</0> bakiyeye geri döner.",
+              "warningInstant" : "Ödüller otomatik olarak alınacak. Yetki devri iptal edilen tutar bakiyenizde anında kullanılabilir hale gelir.",
+              "fields" : {
+                "validator" : "Doğrulayıcı",
+                "amount" : "Yetki devri sonlandırılan tutar"
+              }
+            },
+            "connectDevice" : {
+              "title" : "Cihaz"
+            },
+            "confirmation" : {
+              "title" : "Onaylayın",
+              "success" : {
+                "title" : "Varlıklarınızdaki yetki devrini başarıyla iptal ettiniz.",
+                "description" : "<0>{{validator}}</0> hesabına devredilen <0>{{amount}}</0> tutarındaki yetkilendirme iptal edildi",
+                "cta" : "Ayrıntıları gör"
+              },
+              "broadcastError" : "İşleminiz başarısız olmuş olabilir. Lütfen biraz bekleyin ve tekrar denemeden önce işlem geçmişini kontrol edin."
+            }
+          }
+        }
+      }
     }
   },
   "graph" : {
@@ -4441,6 +4566,8 @@
     "delegated" : "Yetki devredildi",
     "completionDate" : "Tamamlanma tarihi",
     "rewards" : "Ödüller",
+    "sourceValidator" : "Kaynak Doğrulayıcı",
+    "destinationValidator" : "Hedef Doğrulayıcı",
     "duration" : "Süre",
     "durationJustStarted" : "Yeni başladı",
     "durationDays" : "{{count}} gün",
@@ -4570,7 +4697,7 @@
       "walletSyncDesc" : "Ledger Wallet kripto hesaplarınızı farklı telefonlarda ve bilgisayarlarda senkronize edin.",
       "walletSyncDescription" : "Farklı bilgisayarlar arasında geçiş yaparken veya bir telefon kullanırken portföyünüzün güncel kalmasını sağlayın",
       "mevProtection" : "MEV Koruması",
-      "mevProtectionDesc" : "Ethereum'da daha güvenilir işlemler için MEV Korumasını etkinleştirin.",
+      "mevProtectionDesc" : "Daha güvenilir işlemler için MEV Korumasını etkinleştirin.",
       "mevProtectionLearnMore" : "Gizlilik bildirimi"
     },
     "developer" : {
@@ -4608,24 +4735,7 @@
       },
       "analyticsConsentOptInQa" : {
         "rowTitle" : "Analitik katılım onayı (QA)",
-        "rowDesc" : "Kaydedilen gizlilik onayı sürümünü ve onay tarihini inceleyin; portföy analitiği onay modal'ı için güncel olmayan durumları simüle edin.",
-        "title" : "Analitik katılım onayı — Kalite Güvencesi",
-        "readSection" : "Mevcut ayarlar (salt okunur)",
-        "storedPrivacyVersion" : "Kaydedilmiş gizlilik politikası sürümü: {{version}}",
-        "currentPrivacyVersion" : "Uygulamanın mevcut gizlilik politikası sürümü: {{version}}",
-        "consentDate" : "Onay tarihi (ham): {{value}}",
-        "inlineOutdatePrivacyVersion" : "Eski sürüm",
-        "inlineRemoveConsentDate" : "Tarihi kaldır",
-        "actionResetForConsentFresh" : "Onay sürecini baştan başlatmak için sıfırla (onay verilerini temizle, analitik ve kişiselleştirmeyi devre dışı bırak)",
-        "modalPreviewSection" : "Portföy (ana sayfa) ekranında beklenen açılır pencere",
-        "modalPreviewNoModalUserOk" : "Modal yok. Gizlilik politikası versiyonu ve onay tarihi geçerli: yenilenmesi veya yeniden onaylanması gereken bir durum yok.",
-        "modalPreviewNoModalFeatureOff" : "Modal yok. Analitik izni özellik bayrağı kapalı.",
-        "modalPreviewNoModalOnboarding" : "Modal yok. Kurulum henüz tamamlanmadı.",
-        "modalPreviewFresh" : "İlk onay modal'ı (yeni onay durumu). Onayın yenilenmesi gerekiyor (eksik veya geçersiz onay tarihi) ve Analitik Paylaşımı kapalı — örn. kaydedilmiş gizlilik onayı yok / analitikler devre dışıyken onay tarihi bulunmuyor.",
-        "modalPreviewReconfirm" : "Yeniden onay modal'ı. Onayın yenilenmesi gerekiyor ve Analitik Paylaşımı açık: kullanıcı ilk kullanım metni yerine yeniden onaylama / devam-et-veya-durdur akışıyla karşılaşır.",
-        "modalPreviewPrivacy" : "Gizlilik güncellemesi modal'ı. Kaydedilen gizlilik politikası sürümü güncel değil (uygulamadakinden düşük) ve onay yenileme durumu engelleyici (blocking) değil: kullanıcı ilk olarak gizlilik politikası güncelleme adımını görür.",
-        "modalPreviewGoToHome" : "Modal'ın görünmesi gereken durumda olup olmadığını kontrol etmek için portföy ana sayfasını açın.",
-        "note" : "Tarihi Kaldırma işlemi, onayı null değerine çeker. Sürümü Eskitme işlemi, kaydedilen gizlilik politikası versiyonunu uygulamanın mevcut versiyonunun altına düşürür. Sıfırlama işlemi, onay üstverilerini (metadata) temizler ve sıfırdan onay modal'ını yeniden tetiklemek için analitiği ve kişiselleştirmeyi kapatır. live-common içindeki CONSENT_RENEWAL_INTERVAL_MS değeri null olduğu sürece, zamana dayalı yenileme kapalı kalır."
+        "rowDesc" : "Kaydedilen gizlilik onayı sürümünü ve onay tarihini inceleyin; portföy analitiği onay modal'ı için güncel olmayan durumları simüle edin."
       },
       "brazeTools" : {
         "title" : "Braze Araçları",
@@ -4754,6 +4864,17 @@
         "openDrawer" : "Çekmeceyi Aç",
         "debugDialog" : "Diyaloğu Ayıkla",
         "debugDuplicates" : "Yinelemeleri Ayıkla"
+      },
+      "featuresAndFlowsDevTool" : {
+        "title" : "Özellikler ve Akışlar",
+        "description" : "Özelliklerle ilgili akışlar için geliştirici araçları.",
+        "productTour" : {
+          "title" : "Ürün Tanıtımı",
+          "label" : "Ürün Tanıtımı",
+          "completed" : "Ürün tanıtımı tamamlandı olarak işaretlendi.",
+          "notCompleted" : "Ürün tanıtımı henüz tamamlanmadı.",
+          "open" : "Aç"
+        }
       },
       "walletFeaturesDevTool" : {
         "title" : "Wallet Özellikleri Geliştirme Aracı",
@@ -6252,6 +6373,9 @@
     "CeloAllFundsWarning" : {
       "title" : "Gelecekteki işlem ücretleri için yeterli bakiyenizin kaldığından emin olun"
     },
+    "CeloGroupNotVotable" : {
+      "title" : "Bu doğrulayıcı grubu oy alamaz. Dolu olabilir veya artık uygun olmayabilir."
+    },
     "ClaimRewardsFeesWarning" : {
       "title" : "Ödül miktarı, ödülü almak için gereken tahmini ağ ücretlerinden daha az",
       "description" : ""
@@ -7089,6 +7213,9 @@
       "title" : "Oturumun süresi doldu",
       "description" : "Concordium ID Uygulaması oturumu artık geçerli değil. Lütfen tekrar eşleyin."
     },
+    "ConcordiumAddressVerificationFailedError" : {
+      "title" : "Adres doğrulama başarısız"
+    },
     "StacksMemoTooLong" : {
       "title" : "Memo çok fazla uzun"
     },
@@ -7289,6 +7416,9 @@
     "AleoFeeRecordInsufficientBalance" : {
       "title" : "Ağ ücretini karşılayabilecek gizli kayıt bulunmuyor.",
       "description" : "Transfer tutarı için farklı bir kayıt seçin veya bakiyenize ekleme yapın."
+    },
+    "AleoApiConfigurationResetError" : {
+      "title" : "Tarayıcı yapılandırması sıfırlandı, lütfen hesabınızı tekrar eşitleyin."
     },
     "BackupAppDataError" : {
       "title" : "Uygulama verileri yedeklenirken hata oluştu"
@@ -7823,7 +7953,7 @@
       },
       "personalizedExperience" : {
         "title" : "Kişiselleştirilmiş deneyim",
-        "description" : "Kişiselleştirilmiş içerikler sunmamız için Ledger'ın uygulama kullanım verilerini toplamasına izin verin"
+        "description" : "Kişiselleştirilmiş içerik sunmamız için Ledger'ın uygulama kullanım verilerini toplamasına izin verin"
       },
       "ctaConfirm" : "Onayla"
     },
@@ -8207,8 +8337,14 @@
     "noBalanceTitle" : "Cüzdanınıza fon aktararak başlayın.",
     "perpsEntry" : {
       "title" : "Perpetuals",
-      "description" : "Kaldıraçlı alım satım yapın",
+      "description" : "Kaldıraçlı işlem yapın",
       "cta" : "Keşfet"
+    },
+    "borrowEntry" : {
+      "title" : "Borçlar",
+      "cardTitle" : "Stabil coin ile borç alın",
+      "cardDescription" : "Likidite elinizin altında",
+      "cta" : "Keşfedin"
     },
     "noDeviceTitle" : "Güvenli kripto cüzdanınız"
   },
@@ -8275,7 +8411,10 @@
       },
       "editName" : "Adını düzenle",
       "emptyState" : "Henüz kripto adresi yok",
-      "emptySearchState" : "Aramanızla eşleşen hesap yok"
+      "emptySearchState" : "Aramanızla eşleşen hesap yok",
+      "assetCount_zero" : "{{count}} varlık",
+      "assetCount_one" : "{{count}} varlık",
+      "assetCount_other" : "{{count}} varlık"
     },
     "editName" : {
       "title" : "Adres adını düzenleyin",
@@ -8484,9 +8623,10 @@
         "proofGenerationWarning" : "Aleo işlemi kanıt oluşturulmasını gerektirir. Bu biraz zaman alabilir."
       },
       "mandatoryPrivateSync" : {
-        "title" : "Özel bakiyeniz senkronize ediliyor (%{{percentage}}).",
+        "title" : "Gizli bakiyeniz senkronize ediliyor (%{{percentage}}).",
         "desc" : "Lütfen bekleyin",
-        "error" : "Özel bakiye senkronizasyonu başarısız oldu. Lütfen daha sonra tekrar deneyin."
+        "errorTitle" : "Gizli bakiye senkronizasyonu başarısız oldu.",
+        "errorDesc" : "Bir şeyler yanlış gitti, lütfen tekrar deneyin."
       }
     }
   },
@@ -8514,6 +8654,17 @@
     "cta" : {
       "continue" : "Devam",
       "explore" : "Yeni portföyünüzü keşfedin"
+    }
+  },
+  "productTour" : {
+    "cta" : {
+      "continue" : "Devam",
+      "done" : "Tamam",
+      "fundYourWallet" : "Cüzdanınıza fon aktarın",
+      "discoverSwap" : "Takası keşfedin",
+      "growYourRewards" : "Ödüllerinizi artırın",
+      "spendYourCrypto" : "Kriptonuzla alışveriş yapın",
+      "everythingAtAGlance" : "Tek bir bakışta her şeyi görün"
     }
   },
   "history" : {
@@ -8552,5 +8703,26 @@
       "errorDescription" : "İşlem geçmişinizi dışa aktarırken bir hata oluştu. Lütfen tekrar deneyin.",
       "tryAgain" : "Tekrar deneyin"
     }
+  },
+  "myWallet" : {
+    "title" : "Cüzdanım",
+    "avatar" : {
+      "label" : "Avatar",
+      "labelWithNotifications_one" : "Avatar, {{count}} okunmamış bildirim",
+      "labelWithNotifications_other" : "Avatar, {{count}} okunmamış bildirim"
+    },
+    "actionsList" : {
+      "help" : "Yardım",
+      "recover" : "[L] Recover",
+      "refer" : "Referans"
+    },
+    "myLedger" : {
+      "title" : "My Ledger",
+      "description" : "Ledger cihazınızı yönetin"
+    },
+    "explore" : "Tüm Ledger cihazlarını keşfedin"
+  },
+  "assetDetails" : {
+    "totalBalance" : "Toplam bakiye"
   }
 }

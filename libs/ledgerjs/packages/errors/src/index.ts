@@ -221,6 +221,12 @@ export const ConcordiumPairingExpiredError = createCustomErrorClass(
 export const ConcordiumSessionExpiredError = createCustomErrorClass(
   "ConcordiumSessionExpiredError",
 );
+export const ConcordiumTrustedMetadataServiceError = createCustomErrorClass(
+  "ConcordiumTrustedMetadataServiceError",
+);
+export const ConcordiumAddressVerificationFailedError = createCustomErrorClass(
+  "ConcordiumAddressVerificationFailedError",
+);
 
 // Language
 export const LanguageNotFound = createCustomErrorClass("LanguageNotFound");
@@ -292,6 +298,7 @@ export const StatusCodes = {
   ACCESS_CONDITION_NOT_FULFILLED: 0x9804,
   ALGORITHM_NOT_SUPPORTED: 0x9484,
   CLA_NOT_SUPPORTED: 0x6e00,
+  CLA_NOT_SUPPORTED_BOOTLOADER: 0x6e01,
   CODE_BLOCKED: 0x9840,
   CODE_NOT_INITIALIZED: 0x9802,
   COMMAND_INCOMPATIBLE_FILE_STRUCTURE: 0x6981,

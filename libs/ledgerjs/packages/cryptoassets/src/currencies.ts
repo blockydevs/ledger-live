@@ -939,7 +939,7 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
     type: "CryptoCurrency",
     id: "concordium_testnet",
     managerAppName: "Concordium",
-    coinType: CoinType.CONCORDIUM,
+    coinType: 1, // SLIP-44 generic testnet (BIP-44)
     name: "Concordium (Testnet)",
     ticker: "CCD",
     scheme: "concordium_testnet",
@@ -3953,29 +3953,6 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
     ],
     tokenTypes: ["erc20"],
   },
-  sonic_blaze: {
-    type: "CryptoCurrency",
-    id: "sonic_blaze",
-    isTestnetFor: "sonic",
-    coinType: CoinType.ETH,
-    name: "Sonic Blaze",
-    managerAppName: "Sonic",
-    ticker: "S",
-    scheme: "sonic_blaze",
-    color: "#FFFFFF",
-    family: "evm",
-    units: ethereumUnits("S", "S"),
-    ethereumLikeInfo: {
-      chainId: 57054,
-    },
-    explorerViews: [
-      {
-        tx: "https://testnet.sonicscan.org/tx/$hash",
-        address: "https://testnet.sonicscan.org/address/$address",
-        token: "https://testnet.sonicscan.org/token/$contractAddress?a=$address",
-      },
-    ],
-  },
   arbitrum: {
     type: "CryptoCurrency",
     id: "arbitrum",
@@ -4032,7 +4009,7 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
         magnitude: 18,
       },
     ],
-    explorerViews: [blockscoutExplorerView("https://cronos.org/explorer")],
+    explorerViews: [blockscoutExplorerView("https://explorer.cronos.org")],
   },
   core: {
     type: "CryptoCurrency",

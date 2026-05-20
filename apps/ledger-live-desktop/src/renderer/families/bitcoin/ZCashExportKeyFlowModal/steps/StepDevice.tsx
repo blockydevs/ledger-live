@@ -1,10 +1,11 @@
 import React, { useMemo, useCallback, useEffect, useState } from "react";
 import invariant from "invariant";
-import { firstValueFrom } from "rxjs";
 import { Trans } from "react-i18next";
+import type { BitcoinAccount } from "@ledgerhq/coin-bitcoin/types";
+import type { BitcoinAccountBridge } from "@ledgerhq/coin-bitcoin/bridge/js";
 import { getMainAccount } from "@ledgerhq/live-common/account/helpers";
 import { Device } from "@ledgerhq/live-common/hw/actions/types";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { DisconnectedDevice } from "@ledgerhq/errors";
 import DeviceAction from "~/renderer/components/DeviceAction";
 import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
@@ -53,25 +54,24 @@ const StepExport = (props: StepProps) => {
   const mainAccount = account ? getMainAccount(account) : null;
   invariant(account && mainAccount, "No account given");
 
+  const bridge = useAccountBridge(mainAccount) as unknown as BitcoinAccountBridge;
   const requestUfvkFromDevice = useCallback(async () => {
     try {
       if (!device) {
         throw new DisconnectedDevice();
       }
-      await firstValueFrom(
-        getAccountBridge(mainAccount).receive(mainAccount, {
+      const { viewKey } = await bridge
+        .getFullViewingKey(mainAccount as BitcoinAccount, {
           deviceId: device.deviceId,
-          verify: true,
-        }),
-      ).finally(() => setUfvkRequestSent(true));
-      onUfvkChanged(
-        "TODO: Once we have the GET_UFVK method on the device, we can pass the UFVK string here",
-      );
+          path: mainAccount.freshAddressPath,
+        })
+        .finally(() => setUfvkRequestSent(true));
+      onUfvkChanged(viewKey);
       transitionTo("confirmation");
     } catch (error) {
       onUfvkChanged("", error as Error);
     }
-  }, [device, mainAccount, transitionTo, onUfvkChanged]);
+  }, [bridge, device, mainAccount, transitionTo, onUfvkChanged]);
 
   useEffect(() => {
     if (!ufvk && !ufvkExportError && !ufvkRequestSent) {

@@ -522,7 +522,7 @@ export const DEFAULT_FEATURES: Features = {
   ptxEarnUi: {
     enabled: false,
     params: {
-      value: "v1",
+      value: "v2",
     },
   },
 
@@ -741,6 +741,7 @@ export const DEFAULT_FEATURES: Features = {
   },
   ldmkSolanaSigner: DEFAULT_FEATURE,
   ldmkCosmosSigner: DEFAULT_FEATURE,
+  suiGraphqlTransport: DEFAULT_FEATURE,
   ldmkConnectApp: DEFAULT_FEATURE,
   lldNetworkBasedAddAccount: DEFAULT_FEATURE,
   llmDatadog: {
@@ -799,6 +800,7 @@ export const DEFAULT_FEATURES: Features = {
     ...DEFAULT_FEATURE,
     params: {
       families: [],
+      excludedCurrencyIds: [],
     },
   },
   zcashShielded: DEFAULT_FEATURE,
@@ -814,6 +816,7 @@ export const DEFAULT_FEATURES: Features = {
     },
   }),
   lwdGenericAwarenessModal: DEFAULT_FEATURE,
+  lwmAnalyticsConsentOnboarding: DEFAULT_FEATURE,
   lwmGenericAwarenessModal: DEFAULT_FEATURE,
   lwmProductTour: DEFAULT_FEATURE,
   lwmWallet40: {
@@ -833,6 +836,7 @@ export const DEFAULT_FEATURES: Features = {
       operationsList: true,
       aggregatedAssets: true,
       myWallet: true,
+      pnl: true,
     },
   },
   lwdWallet40: {
@@ -852,6 +856,7 @@ export const DEFAULT_FEATURES: Features = {
       brazePlacement: true,
       aggregatedAssets: true,
       myWallet: true,
+      pnl: true,
       finishOnboardingWidget: false,
     },
   },
@@ -872,6 +877,7 @@ export const DEFAULT_FEATURES: Features = {
       ],
     },
   },
+  concordiumVerifyAddress: DEFAULT_FEATURE,
   lldHideSmallValueTokenOperations: {
     ...DEFAULT_FEATURE,
     enabled: true,
@@ -883,6 +889,8 @@ export const DEFAULT_FEATURES: Features = {
     enabled: false,
     params: { variantId: "control" },
   },
+  lldTezosStaking: DEFAULT_FEATURE,
+  llmTezosStaking: DEFAULT_FEATURE,
 };
 
 // Firebase SDK treat JSON values as strings

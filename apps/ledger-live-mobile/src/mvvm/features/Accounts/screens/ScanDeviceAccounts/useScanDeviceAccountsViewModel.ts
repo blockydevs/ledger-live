@@ -3,11 +3,11 @@ import { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { concat, from, Subscription } from "rxjs";
 import { ignoreElements } from "rxjs/operators";
 import { useDispatch } from "~/context/hooks";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { useAccountBridgeOrNull } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import uniq from "lodash/uniq";
 import type { Account } from "@ledgerhq/types-live";
 import type { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { getCurrencyBridge } from "@ledgerhq/live-common/bridge/index";
+import { useCurrencyBridge } from "@ledgerhq/live-common/bridge/useCurrencyBridge";
 import { isCryptoCurrency, isTokenCurrency } from "@ledgerhq/live-common/currencies/index";
 import logger from "~/logger";
 import { NavigatorName, ScreenName } from "~/const";
@@ -77,9 +77,9 @@ export default function useScanDeviceAccountsViewModel({
     () => (newAccountSchemes && newAccountSchemes.length > 0 ? newAccountSchemes[0] : undefined),
     [newAccountSchemes],
   );
+  const cryptoCurrency = isTokenCurrency(currency) ? currency.parentCurrency : currency;
+  const currencyBridge = useCurrencyBridge(cryptoCurrency);
   const startSubscription = useCallback(() => {
-    const cryptoCurrency = isTokenCurrency(currency) ? currency.parentCurrency : currency;
-    const bridge = getCurrencyBridge(cryptoCurrency);
     const syncConfig = {
       paginationConfig: {
         operations: 0,
@@ -89,7 +89,7 @@ export default function useScanDeviceAccountsViewModel({
     // will be set to false if an existing account is found
     scanSubscription.current = concat(
       from(prepareCurrency(cryptoCurrency)).pipe(ignoreElements()),
-      bridge.scanAccounts({
+      currencyBridge.scanAccounts({
         currency: cryptoCurrency,
         deviceId,
         syncConfig,
@@ -104,7 +104,7 @@ export default function useScanDeviceAccountsViewModel({
         setError(error);
       },
     });
-  }, [blacklistedTokenIds, currency, deviceId]);
+  }, [blacklistedTokenIds, cryptoCurrency, currencyBridge, deviceId]);
 
   const restartSubscription = useCallback(() => {
     setScanning(true);
@@ -341,30 +341,38 @@ export default function useScanDeviceAccountsViewModel({
     return () => stopSubscription(false);
   }, [startSubscription, stopSubscription]);
 
+  const latestScannedAccountBridge = useAccountBridgeOrNull(latestScannedAccount ?? null);
+
   useEffect(() => {
-    if (latestScannedAccount) {
-      const hasAlreadyBeenScanned = scannedAccounts.some(a => latestScannedAccount.id === a.id);
-      const hasAlreadyBeenImported = existingAccounts.some(a => latestScannedAccount.id === a.id);
-      const isNewAccount = isAccountEmpty(latestScannedAccount);
+    if (!latestScannedAccount || !latestScannedAccountBridge) return;
+    const hasAlreadyBeenScanned = scannedAccounts.some(a => latestScannedAccount.id === a.id);
+    const hasAlreadyBeenImported = existingAccounts.some(a => latestScannedAccount.id === a.id);
+    const isNewAccount = latestScannedAccountBridge.isAccountEmpty(latestScannedAccount);
 
-      if (!isNewAccount && !hasAlreadyBeenImported) {
-        setOnlyNewAccounts(false);
-      }
-
-      if (!hasAlreadyBeenScanned) {
-        setScannedAccounts([...scannedAccounts, latestScannedAccount]);
-        setSelectedIds(
-          onlyNewAccounts
-            ? hasAlreadyBeenImported || selectedIds.length > 0
-              ? selectedIds
-              : [latestScannedAccount.id]
-            : !hasAlreadyBeenImported && !isNewAccount
-              ? uniq([...selectedIds, latestScannedAccount.id])
-              : selectedIds,
-        );
-      }
+    if (!isNewAccount && !hasAlreadyBeenImported) {
+      setOnlyNewAccounts(false);
     }
-  }, [existingAccounts, latestScannedAccount, onlyNewAccounts, scannedAccounts, selectedIds]);
+
+    if (!hasAlreadyBeenScanned) {
+      setScannedAccounts([...scannedAccounts, latestScannedAccount]);
+      setSelectedIds(
+        onlyNewAccounts
+          ? hasAlreadyBeenImported || selectedIds.length > 0
+            ? selectedIds
+            : [latestScannedAccount.id]
+          : !hasAlreadyBeenImported && !isNewAccount
+            ? uniq([...selectedIds, latestScannedAccount.id])
+            : selectedIds,
+      );
+    }
+  }, [
+    existingAccounts,
+    latestScannedAccount,
+    latestScannedAccountBridge,
+    onlyNewAccounts,
+    scannedAccounts,
+    selectedIds,
+  ]);
 
   useEffect(() => {
     const hasScannedAccounts = scannedAccounts.length > 0 || !!latestScannedAccount;

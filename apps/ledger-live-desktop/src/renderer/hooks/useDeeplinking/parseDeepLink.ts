@@ -7,6 +7,7 @@ import {
   AddAccountRoute,
   BuyRoute,
   EarnRoute,
+  BorrowRoute,
   ManagerRoute,
   SwapRoute,
   BridgeRoute,
@@ -24,6 +25,7 @@ import {
   RecoverRestoreFlowRoute,
   PostOnboardingRoute,
   LedgerSyncRoute,
+  ProductTourRoute,
   DefaultRoute,
 } from "./types";
 
@@ -139,6 +141,15 @@ export function createRoute(parsed: ParsedDeeplink): DeeplinkRoute {
       return route;
     }
 
+    case "borrow": {
+      const route: BorrowRoute = {
+        type: "borrow",
+        path,
+        search,
+      };
+      return route;
+    }
+
     case "myledger": {
       const route: ManagerRoute = {
         type: "myledger",
@@ -151,6 +162,7 @@ export function createRoute(parsed: ParsedDeeplink): DeeplinkRoute {
       const route: SwapRoute = {
         type: "swap",
         amountFrom: query.amountFrom,
+        fromAccountId: query.fromAccountId,
         fromToken: query.fromToken,
         toToken: query.toToken,
         affiliate: query.affiliate,
@@ -286,6 +298,13 @@ export function createRoute(parsed: ParsedDeeplink): DeeplinkRoute {
     case "ledgersync": {
       const route: LedgerSyncRoute = {
         type: "ledgersync",
+      };
+      return route;
+    }
+
+    case "product-tour": {
+      const route: ProductTourRoute = {
+        type: "product-tour",
       };
       return route;
     }

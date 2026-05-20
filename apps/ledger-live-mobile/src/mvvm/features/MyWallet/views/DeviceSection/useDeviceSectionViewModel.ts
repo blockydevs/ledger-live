@@ -10,11 +10,13 @@ import type { Result } from "@ledgerhq/live-common/hw/actions/manager";
 import { findMatchingNewDevice, useBleDevicesScanning } from "@ledgerhq/live-dmk-mobile";
 import { useDispatch, useSelector } from "~/context/hooks";
 import { bleDevicesSelector } from "~/reducers/ble";
-import { removeKnownDevice } from "~/actions/ble";
+import { removeKnownBleDevice } from "~/actions/ble";
+import { removeKnownDevice } from "~/reducers/knownDevices";
 import { NavigatorName, ScreenName } from "~/const";
 import { urls } from "~/utils/urls";
 import { track } from "~/analytics";
 import { useLocalizedUrl } from "LLM/hooks/useLocalizedUrls";
+import { MY_WALLET_TRACKING_PAGE_NAME } from "../../constants";
 import { useManagerDeviceAction } from "~/hooks/deviceActions";
 
 export interface DeviceSectionDevice {
@@ -69,21 +71,21 @@ export const useDeviceSectionViewModel = (): DeviceSectionViewModel => {
   const hasDevices = devices.length > 0;
 
   const onAddDevice = useCallback(() => {
-    track("button_clicked", { button: "Add", page: ScreenName.MyWallet });
+    track("button_clicked", { button: "Add", page: MY_WALLET_TRACKING_PAGE_NAME });
     navigation.navigate(ScreenName.BleDevicePairingFlow);
   }, [navigation]);
 
   const exploreDevicesUrl = useLocalizedUrl(urls.exploreLedgerDevices);
 
   const onExploreDevices = useCallback(() => {
-    track("button_clicked", { button: "ExploreDevices", page: ScreenName.MyWallet });
+    track("button_clicked", { button: "ExploreDevices", page: MY_WALLET_TRACKING_PAGE_NAME });
     Linking.openURL(exploreDevicesUrl);
   }, [exploreDevicesUrl]);
 
   const onDevicePress = useCallback((device: DeviceSectionDevice) => {
     track("button_clicked", {
       button: "Device",
-      page: ScreenName.MyWallet,
+      page: MY_WALLET_TRACKING_PAGE_NAME,
       deviceModelId: device.modelId,
     });
     setSelectedDevice({
@@ -119,6 +121,7 @@ export const useDeviceSectionViewModel = (): DeviceSectionViewModel => {
   const onRemoveDevice = useCallback(async () => {
     if (!deviceToRemove) return;
     dispatch(removeKnownDevice(deviceToRemove.id));
+    dispatch(removeKnownBleDevice(deviceToRemove.id));
     setIsRemoveDrawerOpen(false);
     try {
       await disconnect(deviceToRemove.id);

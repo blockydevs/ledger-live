@@ -59,10 +59,16 @@ export function useWebView(
     setCurrentAccountHistDb,
     inputs,
     customHandlers,
+    onWalletApiTransactionBroadcast,
     manifestDomainCheckEnabled,
   }: Pick<
     WebviewProps,
-    "manifest" | "inputs" | "customHandlers" | "currentAccountHistDb" | "setCurrentAccountHistDb"
+    | "manifest"
+    | "inputs"
+    | "customHandlers"
+    | "currentAccountHistDb"
+    | "setCurrentAccountHistDb"
+    | "onWalletApiTransactionBroadcast"
   > & {
     manifestDomainCheckEnabled?: boolean;
   },
@@ -106,6 +112,7 @@ export function useWebView(
 
   const uiHook = useUiHook({
     manifest,
+    onTransactionBroadcast: onWalletApiTransactionBroadcast,
   });
 
   const trackingEnabled = useSelector(trackingEnabledSelector);
@@ -284,7 +291,7 @@ export function useWebviewState(
 ) {
   const webviewRef = useRef<WebView>(null);
   const { manifest, inputs, manifestDomainCheckEnabled } = params;
-  const [initialURL] = useState(() => getInitialURL(inputs, manifest));
+  const initialURL = useMemo(() => getInitialURL(inputs, manifest), [manifest, inputs]);
   const [state, setState] = useState<WebviewState>(initialWebviewState);
 
   // Mirror desktop's originWhitelist logic: when the flag is on, validate the initial URL
@@ -462,9 +469,10 @@ export function useWebviewState(
 
 export interface Props {
   manifest: LiveAppManifest;
+  onTransactionBroadcast?: () => void;
 }
 
-function useUiHook({ manifest }: Props): UiHook {
+function useUiHook({ manifest, onTransactionBroadcast }: Props): UiHook {
   const navigation = useNavigation();
   const [device, setDevice] = useState<Device>();
   const { createDrawerConfiguration } = useDrawerConfiguration();
@@ -600,7 +608,9 @@ function useUiHook({ manifest }: Props): UiHook {
           onError,
         });
       },
-      "transaction.broadcast": () => {},
+      "transaction.broadcast": () => {
+        onTransactionBroadcast?.();
+      },
       "device.transport": ({ appName, onSuccess, onCancel }) => {
         navigation.navigate(ScreenName.DeviceConnect, {
           appName,
@@ -671,7 +681,15 @@ function useUiHook({ manifest }: Props): UiHook {
         });
       },
     }),
-    [openModularDrawer, source, flow, navigation, device, createDrawerConfiguration],
+    [
+      openModularDrawer,
+      source,
+      flow,
+      navigation,
+      device,
+      createDrawerConfiguration,
+      onTransactionBroadcast,
+    ],
   );
 }
 

@@ -1,22 +1,22 @@
 import {
   ArrowDown,
   ArrowUp,
-  Clock,
   Close,
   Invoice,
   Link,
   Mailbox,
   PenEdit,
   Snow,
-  Star,
+  StarFill,
   Unlink,
 } from "@ledgerhq/lumen-ui-rnative/symbols";
+import { Spinner } from "@ledgerhq/lumen-ui-rnative";
 import { getTransactionalDotConfig } from "../getTransactionalDotConfig";
 
 describe("getTransactionalDotConfig", () => {
-  it("returns clock with muted appearance when optimistic", () => {
+  it("returns spinner with muted appearance when pending", () => {
     const config = getTransactionalDotConfig("OUT", true);
-    expect(config).toEqual({ icon: Clock, appearance: "muted" });
+    expect(config).toEqual({ icon: Spinner, appearance: "muted" });
   });
 
   it.each([
@@ -25,12 +25,12 @@ describe("getTransactionalDotConfig", () => {
     ["OUT", ArrowUp, "muted"],
     ["NFT_OUT", ArrowUp, "muted"],
     ["FEES", Invoice, "muted"],
-    ["REWARD", Star, "success"],
-    ["WITHDRAW", Star, "success"],
-    ["WITHDRAW_EXPIRE_UNFREEZE", Star, "success"],
-    ["REWARD_PAYOUT", Star, "success"],
-    ["WITHDRAW_UNBONDED", Star, "success"],
-    ["WITHDRAW_UNSTAKED", Star, "success"],
+    ["REWARD", StarFill, "success"],
+    ["WITHDRAW", StarFill, "success"],
+    ["WITHDRAW_EXPIRE_UNFREEZE", StarFill, "success"],
+    ["REWARD_PAYOUT", StarFill, "success"],
+    ["WITHDRAW_UNBONDED", StarFill, "success"],
+    ["WITHDRAW_UNSTAKED", StarFill, "success"],
     ["DELEGATE", Link, "muted"],
     ["REDELEGATE", Link, "muted"],
     ["BOND", Link, "muted"],

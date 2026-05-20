@@ -308,6 +308,7 @@
     "exchange" : "Kaufen & Verkaufen",
     "swap" : "Swappen",
     "perps" : "Perpetuals",
+    "borrow" : "Ausleihen",
     "home" : "Startseite",
     "refer" : "Freunde werben",
     "lend" : "Leihen",
@@ -785,6 +786,9 @@
         }
       }
     }
+  },
+  "borrow" : {
+    "pageHeader" : "Ausleihen"
   },
   "exchange" : {
     "pageHeader" : "Kaufen oder verkaufen",
@@ -1331,6 +1335,37 @@
     }
   },
   "postOnboarding" : {
+    "widget" : {
+      "title" : "Schließe nun die Wallet-Einrichtung ab",
+      "subtitle" : "Beginne mit Einzahlungen in deine Wallet."
+    },
+    "dialog" : {
+      "title" : "Schließe nun die Wallet-Einrichtung ab",
+      "titleCompleted" : "Alles eingerichtet!",
+      "primaryLabel" : "Verstanden",
+      "actionCompletedLabel" : "Fertig",
+      "actions" : {
+        "deviceOnboarded" : {
+          "title" : "Dein Ledger-Gerät einrichten"
+        },
+        "assetsTransfer" : {
+          "title" : "Krypto hinzufügen",
+          "description" : "Empfange oder kaufe Krypto für deine Wallet"
+        },
+        "syncAccounts" : {
+          "title" : "Wallet synchronisieren",
+          "description" : "Halte deine Kryptokonten synchronisiert"
+        },
+        "customImage" : {
+          "title" : "Sperrbildschirm anpassen",
+          "description" : "Zeige dein digitales Lieblingskunstwerk oder -foto als Sperrbildschirm deines Geräts an."
+        },
+        "recover" : {
+          "title" : "Schutz deines Backups vervollständigen",
+          "description" : "Aktivierung von Ledger Recover vornehmen"
+        }
+      }
+    },
     "postOnboardingScreen" : {
       "title" : "Wie geht es weiter?",
       "titleCompleted" : "Alles eingerichtet! \nLerne jetzt dein Portfolio kennen.",
@@ -2313,7 +2348,8 @@
         "banner" : "Maximaler Auszahlungsbetrag ist",
         "fees" : "Weitere Informationen zu Gebühren",
         "standard" : "Standart",
-        "advanced" : "Advanced"
+        "advanced" : "Advanced",
+        "feeCurrency" : "Gebührenwährung"
       },
       "summary" : {
         "title" : "Zusammenfassung"
@@ -4187,6 +4223,95 @@
         "eigenlayer_points" : "Eigenlayer-Punkte",
         "validator" : "Validatorbelohnungen"
       }
+    },
+    "evmStaking" : {
+      "delegation" : {
+        "emptyState" : {
+          "description" : "Du kannst {{currencyTicker}}-Prämien erhalten, indem du deine Assets delegierst.",
+          "delegation" : "Prämien verdienen"
+        },
+        "claimRewards" : "Prämien beanspruchen",
+        "header" : "Delegierung(en)",
+        "noRewards" : "Keine Prämien verfügbar",
+        "delegate" : "Hinzufügen",
+        "undelegate" : "Delegierung aufheben",
+        "redelegate" : "Erneut delegieren",
+        "redelegateDisabledTooltip" : "Du kannst für <0>{{days}}</0> wieder redelegieren.",
+        "redelegateMaxDisabledTooltip" : "Du kannst nicht mehr als <0>7</0> Validatoren auf einmal redelegieren",
+        "undelegateDisabledTooltip" : "Du kannst die Delegierung nicht für mehr als <0>7</0> Validatoren gleichzeitig aufheben",
+        "reward" : "Prämien beanspruchen",
+        "activeTooltip" : "Delegierte Beträge generieren Prämien",
+        "inactiveTooltip" : "Nicht-delegierte Beträge generieren keine Prämien",
+        "minSafeWarning" : "Zu niedriges Guthaben",
+        "commission" : "Provision",
+        "totalStake" : "Stake-Gesamtsumme",
+        "flow" : {
+          "title" : "Delegieren",
+          "steps" : {
+            "starter" : {
+              "description" : "Du kannst Prämien verdienen, indem du deine {{currencyTicker}}-Assets an einen Validator delegierst.",
+              "bullet" : ["Du behältst das Eigentum an delegierten Assets", "Delegiere mit deinem Ledger-Gerät", "Vermögenswerte sind nach nach Aufhebung der Delegierung verfügbar"],
+              "warning" : {
+                "description" : "Wähle deinen Validator mit Bedacht: Ein Teil deiner delegierten Assets kann unwiderruflich verloren gehen, wenn sich der Validator nicht angemessen verhält."
+              }
+            },
+            "amount" : {
+              "title" : "Betrag"
+            },
+            "validator" : {
+              "title" : "Validatoren",
+              "noResults" : "Es wurden keine Validatoren gefunden, die deiner Suche entsprechen."
+            },
+            "connectDevice" : {
+              "title" : "Gerät"
+            },
+            "confirmation" : {
+              "title" : "Bestätigung",
+              "success" : {
+                "title" : "Du hast deine Assets erfolgreich delegiert",
+                "text" : "Dein Guthaben wird aktualisiert, sobald die Transaktion durch das Blockchain-Netzwerk bestätigt wurde.",
+                "cta" : "Details anzeigen"
+              },
+              "broadcastError" : "Deine Transaktion ist möglicherweise fehlgeschlagen. Bitte warte einen Moment und prüfe vor einem erneuten Versuch zunächst den Transaktionsverlauf."
+            }
+          }
+        }
+      },
+      "redelegation" : {
+        "header" : "Redelegierung(en)"
+      },
+      "undelegation" : {
+        "header" : "Aufgehobene Delegierung(en)",
+        "headerTooltip" : "Verfügbar nach der {{numberOfDays}}-tägigen Sperrzeit",
+        "inactiveTooltip" : "Beträge mit aufgehobener Delegierung generieren keine Prämien.",
+        "flow" : {
+          "title" : "Staking beenden",
+          "steps" : {
+            "amount" : {
+              "title" : "Betrag",
+              "subtitle" : "Der Prozess der Aufhebung der Delegierung dauert <0>{{numberOfDays}} Tage</0> bis zum Abschluss.",
+              "warningWithTimelock" : "Rewards werden automatisch eingefordert. Der nicht übertragene Betrag ist nach der <0>{{numberOfDays}}-Tage Zeitsperre</0> wieder im verfügbaren Guthaben.",
+              "warningInstant" : "Rewards werden automatisch eingefordert. Der nicht delegierte Betrag ist sofort in deinem Guthaben verfügbar.",
+              "fields" : {
+                "validator" : "Validator",
+                "amount" : "Nicht zu delegierender Betrag"
+              }
+            },
+            "connectDevice" : {
+              "title" : "Gerät"
+            },
+            "confirmation" : {
+              "title" : "Bestätigung",
+              "success" : {
+                "title" : "Du hast die Delegierung deiner Assets erfolgreich aufgehoben.",
+                "description" : "Die Delegierung von <0>{{amount}}</0> wurde von <0>{{validator}}</0> aufgehoben",
+                "cta" : "Details anzeigen"
+              },
+              "broadcastError" : "Deine Transaktion ist möglicherweise fehlgeschlagen. Bitte warte einen Moment und prüfe vor einem erneuten Versuch zunächst den Transaktionsverlauf."
+            }
+          }
+        }
+      }
     }
   },
   "graph" : {
@@ -4441,6 +4566,8 @@
     "delegated" : "Delegiert",
     "completionDate" : "Datum der Fertigstellung",
     "rewards" : "Prämien",
+    "sourceValidator" : "Quell-Validator",
+    "destinationValidator" : "Ziel-Validator",
     "duration" : "Dauer",
     "durationJustStarted" : "Gerade begonnen",
     "durationDays" : "{{count}} Tag",
@@ -4570,7 +4697,7 @@
       "walletSyncDesc" : "Synchronisiere deine Ledger Wallet-Kryptokonten auf verschiedenen Smartphones und Computern.",
       "walletSyncDescription" : "Halte dein Portfolio auf dem neuesten Stand, wenn du den Computer wechselst oder ein Handy nutzt",
       "mevProtection" : "MEV-Schutz",
-      "mevProtectionDesc" : "Aktiviere den MEV-Schutz, um die Zuverlässigkeit von Ethereum-Transaktionen zu verbessern.",
+      "mevProtectionDesc" : "Aktiviere den MEV-Schutz, um Transaktionen zuverlässiger zu machen.",
       "mevProtectionLearnMore" : "Datenschutzerklärung"
     },
     "developer" : {
@@ -4608,24 +4735,7 @@
       },
       "analyticsConsentOptInQa" : {
         "rowTitle" : "Opt-in-Zustimmung für Analysen (QA)",
-        "rowDesc" : "Überprüfe die gespeicherte Version der Datenschutzeinwilligung und das Zustimmungsdatum; simuliere veraltete Zustände für das Zustimmungsfenster der Portfolioanalyse.",
-        "title" : "Opt-in-Einwilligung für Analysen – QA",
-        "readSection" : "Aktuelle Einstellungen (schreibgeschützt)",
-        "storedPrivacyVersion" : "Gespeicherte Version der Datenschutzrichtlinie: {{version}}",
-        "currentPrivacyVersion" : "Aktuelle Version der Datenschutzrichtlinie der App: {{version}}",
-        "consentDate" : "Datum der Einwilligung (roh): {{value}}",
-        "inlineOutdatePrivacyVersion" : "Veraltete Version",
-        "inlineRemoveConsentDate" : "Datum entfernen",
-        "actionResetForConsentFresh" : "Zurücksetzen für neue Einwilligung (Einwilligungsdaten löschen, Analyse und Personalisierung deaktivieren)",
-        "modalPreviewSection" : "Erwartetes Modal für Portfolio (Startseite)",
-        "modalPreviewNoModalUserOk" : "Kein Modalfenster. Die Version der Datenschutzrichtlinie und das Datum der Zustimmung sind in Ordnung: nichts zu erneuern oder erneut zu bestätigen.",
-        "modalPreviewNoModalFeatureOff" : "Kein Modal. Das Analyse-Opt-in-Feature Flag ist deaktiviert.",
-        "modalPreviewNoModalOnboarding" : "Kein Modal. Das Onboarding ist noch nicht vollständig.",
-        "modalPreviewFresh" : "Erstmaliges Einwilligungsmodal (Consent Fresh). Die Erneuerung der Einwilligung ist erforderlich (fehlendes oder ungültiges Einwilligungsdatum) und die Freigabeanalyse ist deaktiviert, z. B. keine gespeicherte Datenschutzbestätigung/kein Zustimmungsdatum bei deaktivierter Analyse.",
-        "modalPreviewReconfirm" : "Bestätige das Zustimmungsfenster noch einmal. Die Erneuerung der Einwilligung ist erforderlich und „Analysen teilen“ ist aktiviert — der Nutzer erhält den Ablauf „Erneut bestätigen/Weiter oder Stoppen“ anstelle des ersten Textes.",
-        "modalPreviewPrivacy" : "Datenschutz-Update-Fenster. Die gespeicherte Version der Datenschutzrichtlinie ist veraltet (niedriger als die der App), und die Erneuerung der Zustimmung wird nicht blockiert – der Benutzer sieht zuerst den Schritt zur Aktualisierung der Datenschutzrichtlinie.",
-        "modalPreviewGoToHome" : "Öffne die Portfolio-Startseite, um das Dialogfenster zu sehen, wenn es angezeigt werden soll.",
-        "note" : "Entferne die Datum-Zustimmung auf null. Die veraltete Version senkt die Version der gespeicherten Datenschutzrichtlinie unter die aktuelle Version der App. „Reset“ (Zurücksetzen) löscht die Metadaten der Zustimmung und deaktiviert Analysen und Personalisierung, um das frische Zustimmungsmodal anzuzeigen. Die zeitbasierte Erneuerung bleibt deaktiviert, solange CONSENT_RENEWAL_INTERVAL_MS in live-common null ist."
+        "rowDesc" : "Überprüfe die gespeicherte Version der Datenschutzeinwilligung und das Zustimmungsdatum; simuliere veraltete Zustände für das Zustimmungsfenster der Portfolioanalyse."
       },
       "brazeTools" : {
         "title" : "Braze-Tools",
@@ -4754,6 +4864,17 @@
         "openDrawer" : "Drawer öffnen",
         "debugDialog" : "Debug-Dialog",
         "debugDuplicates" : "Duplikate debuggen"
+      },
+      "featuresAndFlowsDevTool" : {
+        "title" : "Funktionen und Abläufe",
+        "description" : "Entwicklerwerkzeuge für funktionsbezogene Abläufe.",
+        "productTour" : {
+          "title" : "Produkttour",
+          "label" : "Produkttour",
+          "completed" : "Die Produkttour ist als abgeschlossen markiert.",
+          "notCompleted" : "Die Produkt-Tour ist noch nicht vollständig.",
+          "open" : "Öffnen"
+        }
       },
       "walletFeaturesDevTool" : {
         "title" : "Entwicklungstool für Wallet-Funktionen",
@@ -6252,6 +6373,9 @@
     "CeloAllFundsWarning" : {
       "title" : "Vergewissere dich, dass ausreichend Guthaben für künftige Transaktionsgebühren verbleibt"
     },
+    "CeloGroupNotVotable" : {
+      "title" : "Diese Validatorgruppe kann keine Stimmen empfangen. Sie kann voll oder nicht mehr berechtigt sein."
+    },
     "ClaimRewardsFeesWarning" : {
       "title" : "Die Prämien sind kleiner als die geschätzten Gebühren, die anfallen, um diese zu beanspruchen",
       "description" : ""
@@ -7089,6 +7213,9 @@
       "title" : "Sitzung abgelaufen",
       "description" : "Die Concordium ID App-Sitzung ist nicht mehr aktiv. Bitte kopple erneut."
     },
+    "ConcordiumAddressVerificationFailedError" : {
+      "title" : "Adressverifizierung fehlgeschlagen"
+    },
     "StacksMemoTooLong" : {
       "title" : "Memo ist zu lang"
     },
@@ -7289,6 +7416,9 @@
     "AleoFeeRecordInsufficientBalance" : {
       "title" : "Keine private Aufzeichnung kann die Netzwerkgebühr decken.",
       "description" : "Wähle einen anderen Eintrag für den Überweisungsbetrag oder lade deinen Kontostand mit zusätzlichen Assets auf."
+    },
+    "AleoApiConfigurationResetError" : {
+      "title" : "Die Scannerkonfiguration wurde zurückgesetzt. Bitte synchronisiere dein Konto erneut."
     },
     "BackupAppDataError" : {
       "title" : "Fehler beim Erstellen der Sicherheitskopie der App-Daten"
@@ -8210,6 +8340,12 @@
       "description" : "Traden mit Hebelwirkung",
       "cta" : "Neues entdecken"
     },
+    "borrowEntry" : {
+      "title" : "Darlehen",
+      "cardTitle" : "Stablecoin leihen",
+      "cardDescription" : "Liquidität freisetzen",
+      "cta" : "Entdecken"
+    },
     "noDeviceTitle" : "Deine sichere Krypto-Wallet"
   },
   "marketBanner" : {
@@ -8275,7 +8411,10 @@
       },
       "editName" : "Name bearbeiten",
       "emptyState" : "Noch keine Krypto-Adresse",
-      "emptySearchState" : "Es wurden keine Konten gefunden, die deiner Suche entsprechen"
+      "emptySearchState" : "Es wurden keine Konten gefunden, die deiner Suche entsprechen",
+      "assetCount_zero" : "{{count}} Assets",
+      "assetCount_one" : "{{count}} Assets",
+      "assetCount_other" : "{{count}} Assets"
     },
     "editName" : {
       "title" : "Adressnamen bearbeiten",
@@ -8486,7 +8625,8 @@
       "mandatoryPrivateSync" : {
         "title" : "Synchronisierung deines privaten Guthabens ({{percentage}}%)",
         "desc" : "Bitte warten",
-        "error" : "Private Synchronisierung fehlgeschlagen. Versuche es bitte später noch einmal."
+        "errorTitle" : "Private Synchronisierung fehlgeschlagen.",
+        "errorDesc" : "Etwas ist schiefgelaufen, bitte versuche es noch einmal."
       }
     }
   },
@@ -8514,6 +8654,17 @@
     "cta" : {
       "continue" : "Weiter",
       "explore" : "Mein neues Portfolio entdecken"
+    }
+  },
+  "productTour" : {
+    "cta" : {
+      "continue" : "Weiter",
+      "done" : "Fertig",
+      "fundYourWallet" : "Lade deine Wallet auf",
+      "discoverSwap" : "Entdecke Swapping",
+      "growYourRewards" : "Vermehre deine Rewards",
+      "spendYourCrypto" : "Kryptos ausgeben",
+      "everythingAtAGlance" : "Alles auf einen Blick"
     }
   },
   "history" : {
@@ -8552,5 +8703,26 @@
       "errorDescription" : "Beim Exportieren deines Transaktionsverlaufs ist ein Fehler aufgetreten. Bitte versuche es noch einmal.",
       "tryAgain" : "Wiederholen"
     }
+  },
+  "myWallet" : {
+    "title" : "Meine Wallet",
+    "avatar" : {
+      "label" : "Avatar",
+      "labelWithNotifications_one" : "Avatar: {{count}} ungesehene Benachrichtigungen",
+      "labelWithNotifications_other" : "Avatar, {{count}} ungesehene Benachrichtigungen"
+    },
+    "actionsList" : {
+      "help" : "Hilfe",
+      "recover" : "[L] Recover",
+      "refer" : "Empfehlung"
+    },
+    "myLedger" : {
+      "title" : "My Ledger",
+      "description" : "Verwalte dein Ledger-Gerät"
+    },
+    "explore" : "Alle Ledger-Geräte entdecken"
+  },
+  "assetDetails" : {
+    "totalBalance" : "Gesamtsaldo"
   }
 }

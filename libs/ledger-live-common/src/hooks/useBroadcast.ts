@@ -17,6 +17,7 @@ type CommonLogEvent = {
   appVersion: string;
   source?: TransactionSource;
   currencyId: string;
+  family: string;
   tokenId?: string;
 };
 
@@ -24,7 +25,7 @@ type ErrorLogEvent = { status: "failure"; error: Error; txPayload: string } & Co
 
 type SuccessLogEvent = { status: "success" } & CommonLogEvent;
 
-type LogEvent = SuccessLogEvent | ErrorLogEvent;
+export type LogEvent = SuccessLogEvent | ErrorLogEvent;
 
 export type SignTransactionArgs = {
   account?: AccountLike | null;
@@ -63,6 +64,7 @@ export const useBroadcast = ({
         appVersion: getEnv("LEDGER_CLIENT_VERSION"),
         source: broadcastConfig?.source,
         currencyId: mainAccount.currency.id,
+        family: mainAccount.currency.family,
         ...(account.type === "TokenAccount" ? { tokenId: account.token.id } : {}),
       };
 
@@ -75,7 +77,7 @@ export const useBroadcast = ({
           });
           log(
             "transaction-summary",
-            `✔️ broadcasted! optimistic operation: ${formatOperation(mainAccount)(operation)}`,
+            `✔️ broadcasted! optimistic operation: ${(await formatOperation(mainAccount))(operation)}`,
           );
           if (logger) {
             logger({

@@ -41,9 +41,10 @@ export class BridgeAdapter {
       let sub: Subscription | null = null;
       let torn = false;
       BridgeAdapter.cache.prepareCurrency(currency).then(
-        () => {
+        async () => {
           if (torn) return;
-          sub = getCurrencyBridge(currency)
+          const currencyBridge = await getCurrencyBridge(currency);
+          sub = currencyBridge
             .scanAccounts({ currency, deviceId, syncConfig: BridgeAdapter.SYNC_CONFIG })
             .pipe(
               filter((e): e is { type: "discovered"; account: Account } => e.type === "discovered"),
@@ -130,9 +131,7 @@ export class BridgeAdapter {
     options: SendOptions,
   ): Observable<SendEvent> {
     return new Observable(subscriber => {
-      this.executeSend(descriptor, intent, options, subscriber).catch(err =>
-        subscriber.error(err),
-      );
+      this.executeSend(descriptor, intent, options, subscriber).catch(err => subscriber.error(err));
     });
   }
 

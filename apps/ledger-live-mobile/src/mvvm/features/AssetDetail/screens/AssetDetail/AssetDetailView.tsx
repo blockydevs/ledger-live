@@ -1,59 +1,94 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { RefreshControl, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Box } from "@ledgerhq/lumen-ui-rnative";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
-import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
+import type { DistributionItem } from "@ledgerhq/types-live";
 import { TrackScreen } from "~/analytics";
+import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
+import { TransferDrawer } from "LLM/features/QuickActions";
 import { ASSET_DETAIL_TEST_IDS } from "../../testIds";
-import { SectionPlaceholder } from "./components/SectionPlaceholder";
 import { BalanceGraph } from "./components/BalanceGraph";
+import { BalanceDetails } from "./components/BalanceDetails";
+import { Addresses } from "./components/Addresses";
+import { Transactions } from "./components/Transactions";
 import { Footer } from "./components/Footer";
-import { CTAS_HEIGHT, SECTION_HEIGHT, PLACEHOLDER_COLORS } from "./utils/constants";
+import { FallbackBanner } from "./components/FallbackBanner";
+import { MarketData } from "./components/MarketData";
+import { CTAS_HEIGHT } from "./utils/constants";
+import { AssetCoinOptionsSheetView } from "./components/CoinOptions/AssetCoinOptionsSheetView";
+import type { AssetCoinOptionsViewModel } from "./components/CoinOptions/useAssetCoinOptionsViewModel";
 
 type Props = Readonly<{
-  currency: CryptoCurrency | undefined;
+  currency: AssetDetailCurrencyProps;
+  distributionItem: DistributionItem | undefined;
   source?: string;
   isRefreshing: boolean;
   onRefresh: () => void;
+  hasFooter: boolean;
+  hideReceiveInBalanceGraph: boolean;
+  showFallbackBanner: boolean;
+  coinOptions: AssetCoinOptionsViewModel;
+  isLoading: boolean;
 }>;
 
-export function AssetDetailView({ currency, source, isRefreshing, onRefresh }: Props) {
+export function AssetDetailView({
+  currency,
+  distributionItem,
+  source,
+  isRefreshing,
+  onRefresh,
+  hasFooter,
+  hideReceiveInBalanceGraph,
+  showFallbackBanner,
+  coinOptions,
+  isLoading,
+}: Props) {
   const { bottom } = useSafeAreaInsets();
+  const scrollPaddingBottom = useMemo(
+    () => (hasFooter ? CTAS_HEIGHT + bottom : bottom),
+    [hasFooter, bottom],
+  );
 
   return (
     <Box testID={ASSET_DETAIL_TEST_IDS.screen} lx={screenStyle}>
       <TrackScreen category="Asset" currency={currency?.name} source={source} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: CTAS_HEIGHT + bottom }}
+        contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       >
         <Box lx={contentStyle}>
-          <BalanceGraph currency={currency} />
-          <SectionPlaceholder
-            testID={ASSET_DETAIL_TEST_IDS.balanceDetails}
-            backgroundColor={PLACEHOLDER_COLORS.balanceDetails}
-            height={SECTION_HEIGHT}
+          <BalanceGraph currency={currency} hideReceive={hideReceiveInBalanceGraph} />
+          <BalanceDetails
+            currency={currency}
+            distributionItem={distributionItem}
+            isLoading={isLoading}
           />
-          <SectionPlaceholder
-            testID={ASSET_DETAIL_TEST_IDS.addresses}
-            backgroundColor={PLACEHOLDER_COLORS.addresses}
-            height={SECTION_HEIGHT}
+          <Addresses
+            currency={currency}
+            distributionItem={distributionItem}
+            isLoading={isLoading}
           />
-          <SectionPlaceholder
-            testID={ASSET_DETAIL_TEST_IDS.marketStats}
-            backgroundColor={PLACEHOLDER_COLORS.marketStats}
-            height={SECTION_HEIGHT}
+          <MarketData currency={currency} />
+          <Transactions
+            currency={currency}
+            distributionItem={distributionItem}
+            isLoading={isLoading}
           />
-          <SectionPlaceholder
-            testID={ASSET_DETAIL_TEST_IDS.transactions}
-            backgroundColor={PLACEHOLDER_COLORS.transactions}
-            height={SECTION_HEIGHT}
-          />
+          <FallbackBanner show={showFallbackBanner} />
         </Box>
       </ScrollView>
-      <Footer />
+      <Footer currency={currency} />
+      <TransferDrawer />
+      <AssetCoinOptionsSheetView
+        isOpen={coinOptions.isCoinOptionsSheetOpen}
+        onClose={coinOptions.closeCoinOptions}
+        isHidden={coinOptions.isHidden}
+        isStarred={coinOptions.isStarred}
+        onToggleFavourite={coinOptions.onToggleFavourite}
+        onToggleHideFromPortfolio={coinOptions.onToggleHideFromPortfolio}
+      />
     </Box>
   );
 }
@@ -64,5 +99,5 @@ const screenStyle: LumenViewStyle = {
 
 const contentStyle: LumenViewStyle = {
   padding: "s16",
-  gap: "s24",
+  gap: "s32",
 };

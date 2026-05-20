@@ -1,60 +1,66 @@
-import React, { useCallback } from "react";
-import { useNavigate } from "react-router";
-import CryptoCurrencyIcon from "~/renderer/components/CryptoCurrencyIcon";
-import { AssetDetailSection } from "./components/AssetDetailSection";
-import { AssetHeader } from "./components/AssetHeader/AssetHeader";
-import { useAssetDetailSections } from "./hooks/useAssetDetailSections";
-import type { AssetDetailViewModel } from "./hooks/useAssetDetailViewModel";
+import React from "react";
+import { CryptoIcon } from "@ledgerhq/crypto-icons";
+import { getValidCryptoIconSize } from "~/renderer/utils/cryptoIconSize";
+import { AssetHeader } from "./components/AssetHeader";
+import { ActionBar } from "./components/ActionBar";
+import { MarketPriceSection } from "./components/MarketPriceSection";
+import { MarketDataSection } from "./components/MarketDataSection";
+import { PortfolioSection } from "./components/PortfolioSection/PortfolioSection";
+import { StakingSection } from "./components/StakingSection";
+import { TransactionsSection } from "./components/TransactionsSection";
+import type { AssetDetailReady } from "./types";
+import { PnLSection } from "./components/PnL";
 
-export function AssetDetailView({ distributionItem }: Readonly<AssetDetailViewModel>) {
-  const navigate = useNavigate();
-  const onBack = useCallback(() => {
-    navigate(-1);
-  }, [navigate]);
+type AssetDetailViewProps = Readonly<{
+  viewModel: AssetDetailReady;
+}>;
 
-  const { topSections, sections, notFoundContent } = useAssetDetailSections(distributionItem);
+export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
+  const { distributionItem, marketData, displayName, displayTicker, ledgerId, ledgerCurrency } =
+    viewModel;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-32">
-      {distributionItem ? (
-        <AssetHeader
-          assetLabel={distributionItem.currency.name}
-          icon={<CryptoCurrencyIcon currency={distributionItem.currency} size={24} />}
-          onBack={onBack}
-        />
-      ) : null}
+    <div className="flex w-full shrink-0 flex-col gap-24 pb-32">
+      <AssetHeader
+        assetLabel={displayName}
+        icon={
+          ledgerId && (
+            <CryptoIcon
+              ledgerId={ledgerId}
+              ticker={displayTicker}
+              size={getValidCryptoIconSize(24)}
+            />
+          )
+        }
+        distributionItem={distributionItem}
+        marketData={marketData}
+        ledgerCurrency={ledgerCurrency}
+      />
 
-      <section className="grid grid-cols-2 gap-24">
-        {topSections.map(section => (
-          <AssetDetailSection
-            key={section.id}
-            title={section.title}
-            actionLabel={section.actionLabel}
-            actionHref={section.actionHref}
-            tooltipContent={section.tooltipContent}
-          >
-            {section.content}
-          </AssetDetailSection>
-        ))}
-      </section>
+      <MarketPriceSection
+        distributionItem={distributionItem}
+        ledgerId={ledgerId}
+        marketData={marketData}
+      />
 
-      {sections.map(section => (
-        <AssetDetailSection
-          key={section.id}
-          title={section.title}
-          actionLabel={section.actionLabel}
-          actionHref={section.actionHref}
-          tooltipContent={section.tooltipContent}
-        >
-          {section.content}
-        </AssetDetailSection>
-      ))}
+      <ActionBar
+        distributionItem={distributionItem}
+        ledgerCurrency={ledgerCurrency}
+        marketCurrencyData={marketData.marketCurrencyData}
+        tickerHint={displayTicker}
+      />
 
-      {distributionItem ? null : (
-        <section className="rounded-16 border border-dashed border-neutral-c70/30 p-16 text-body text-neutral-c70">
-          {notFoundContent}
-        </section>
-      )}
+      <div className="flex flex-col gap-32">
+        {distributionItem && <PortfolioSection distributionItem={distributionItem} />}
+
+        {distributionItem && <PnLSection distributionItem={distributionItem} />}
+
+        {distributionItem && <StakingSection distributionItem={distributionItem} />}
+
+        {marketData.marketCurrencyData && <MarketDataSection marketData={marketData} />}
+
+        {distributionItem && <TransactionsSection distributionItem={distributionItem} />}
+      </div>
     </div>
   );
 }

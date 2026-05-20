@@ -31,5 +31,10 @@ export const getWallet40Attributes = (
     operationsList: wallet40FeatureFlag?.params?.operationsList ?? false,
     myWallet: wallet40FeatureFlag?.params?.myWallet ?? false,
     aggregatedAssets: wallet40FeatureFlag?.params?.aggregatedAssets ?? false,
+    pnl: wallet40FeatureFlag?.params?.pnl ?? false,
+    finishOnboardingWidget:
+      wallet40FeatureFlag?.params?.finishOnboardingWidget ??
+      wallet40FeatureFlag?.params?.onboardingWidget ??
+      false,
   };
 };

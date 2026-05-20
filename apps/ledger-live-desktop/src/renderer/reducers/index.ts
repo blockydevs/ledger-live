@@ -4,6 +4,7 @@ import accounts, { AccountsState } from "./accounts";
 import application, { ApplicationState } from "./application";
 import devices, { DevicesState } from "./devices";
 import dynamicContent, { DynamicContentState } from "./dynamicContent";
+import history, { HistoryState } from "./history";
 import modals, { ModalsState } from "./modals";
 import UI, { UIState } from "./UI";
 import settings, { SettingsState } from "./settings";
@@ -26,6 +27,7 @@ import type { PayloadAction, UnknownAction } from "@reduxjs/toolkit";
 import dialogs, { DialogsState } from "./dialogs";
 import ptxInfoDialog, { PtxInfoDialogState } from "./ptxInfoDialog";
 import actionDialog, { ActionDialogState } from "./actionDialog";
+import liveAppModal, { LiveAppModalState } from "./liveAppModal";
 import syncRefresh, { SyncRefreshState } from "./syncRefresh";
 import shieldedSyncSubscriptions, {
   ShieldedSyncSubscriptionsState,
@@ -33,6 +35,7 @@ import shieldedSyncSubscriptions, {
 import countervaluesExtraTracking, {
   CountervaluesExtraTrackingState,
 } from "./countervaluesExtraTracking";
+import { recoverStateReducer, RecoverStateSliceState } from "./recoverState";
 
 export type State = LLDRTKApiState & {
   accounts: AccountsState;
@@ -41,6 +44,7 @@ export type State = LLDRTKApiState & {
   devices: DevicesState;
   dynamicContent: DynamicContentState;
   featureFlags: FeatureFlagsState;
+  history: HistoryState;
   identities: IdentitiesState;
   market: MarketState;
   modals: ModalsState;
@@ -56,9 +60,11 @@ export type State = LLDRTKApiState & {
   dialogs: DialogsState;
   ptxInfoDialog: PtxInfoDialogState;
   actionDialog: ActionDialogState;
+  liveAppModal: LiveAppModalState;
   syncRefresh: SyncRefreshState;
   shieldedSyncSubscriptions: ShieldedSyncSubscriptionsState;
   countervaluesExtraTracking: CountervaluesExtraTrackingState;
+  recoverState: RecoverStateSliceState;
 };
 
 const appReducer = combineReducers({
@@ -68,6 +74,7 @@ const appReducer = combineReducers({
   devices,
   dynamicContent,
   featureFlags,
+  history,
   identities: identitiesSlice.reducer,
   modals,
   modularDialog,
@@ -83,9 +90,11 @@ const appReducer = combineReducers({
   dialogs,
   ptxInfoDialog,
   actionDialog,
+  liveAppModal,
   syncRefresh,
   shieldedSyncSubscriptions,
   countervaluesExtraTracking,
+  recoverState: recoverStateReducer,
   ...lldRTKApiReducers,
   ...(getEnv("PLAYWRIGHT_RUN") && { lastAction: (_: unknown, action: PayloadAction) => action }),
 });

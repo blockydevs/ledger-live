@@ -31,6 +31,28 @@ function inferTags(projectRoot, packageName) {
 
   if (projectRoot.startsWith("features/")) {
     tags.add("scope:features");
+    if (projectRoot.startsWith("features/platform/")) {
+      tags.add("type:feature-platform");
+    } else if (projectRoot.startsWith("features/flow/")) {
+      tags.add("type:feature-flow");
+    }
+  }
+
+  if (projectRoot.startsWith("domain/")) {
+    tags.add("scope:domain");
+    if (projectRoot.startsWith("domain/entity/")) {
+      tags.add("type:domain-entity");
+    } else if (projectRoot.startsWith("domain/api/")) {
+      tags.add("type:domain-api");
+    }
+  }
+
+  if (projectRoot.startsWith("shared/")) {
+    tags.add("scope:shared");
+  }
+
+  if (projectRoot.startsWith("devtools/")) {
+    tags.add("scope:devtools");
   }
 
   if (projectRoot.startsWith("e2e/")) {
@@ -39,14 +61,6 @@ function inferTags(projectRoot, packageName) {
 
   if (projectRoot.startsWith("tools/")) {
     tags.add("scope:tools");
-  }
-
-  if (projectRoot.startsWith("shared/")) {
-    tags.add("scope:shared");
-  }
-
-  if (projectRoot.startsWith("domain/")) {
-    tags.add("scope:domain");
   }
 
   if (!(projectRoot === "apps" || projectRoot.startsWith("apps/"))) {

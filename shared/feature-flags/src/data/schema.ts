@@ -25,8 +25,6 @@ export type PartialFeatures = { [K in FeatureId]?: Features[K] };
 export interface FeatureFlagsState {
   /** User-set local overrides that take priority over remote and env values during resolution. */
   overrides: PartialFeatures;
-  /** Raw remote values. Used internally to re-resolve correctly. */
-  remote: PartialFeatures;
   /** Final computed value for every flag after applying the resolution chain (override > env > remote > default). */
   resolved: Features;
   /** Whether the developer feature flags banner/button is visible in the UI. */
@@ -34,12 +32,20 @@ export interface FeatureFlagsState {
 }
 
 const FlagRegistrySchema = z.object(flagRegistry);
-const OverrideValueSchema = FeatureSchema.extend({ params: z.unknown().optional() });
+export const OverrideValueSchema = FeatureSchema.extend({ params: z.unknown().optional() });
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export const FeatureFlagsStateSchema = z.object({
   overrides: z.record(z.string(), OverrideValueSchema.optional()).default({}),
-  remote: z.record(z.string(), OverrideValueSchema.optional()).default({}),
   resolved: FlagRegistrySchema,
   bannerVisible: z.boolean(),
 }) as z.ZodType<FeatureFlagsState>;
+
+export const ResolutionConfigSchema = z.object({
+  platform: z.enum(["desktop", "ios", "android"]).optional(),
+  appVersion: z.string().optional(),
+  appLanguage: z.string().optional(),
+  envFlags: z.record(z.string(), OverrideValueSchema.optional()).optional(),
+});
+
+export type ResolutionConfig = z.infer<typeof ResolutionConfigSchema>;

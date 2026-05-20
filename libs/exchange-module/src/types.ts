@@ -122,7 +122,6 @@ export type QuotesInput = {
   receiveAddress: string;
   sendCurrencyId: string;
   receiveCurrencyId: string;
-  counterValueCurrency: string;
   networkFeesCurrencyId?: string;
   slippage?: number;
   uniswapOrderType?: UniswapOrderType;
@@ -261,6 +260,13 @@ export type QuoteEstimatedNetworkFee = {
   currencyId: string;
 };
 
+/**
+ * Extra network fee for a pre-swap ERC-20 approval transaction (EVM only).
+ * Shaped identically to {@link QuoteEstimatedNetworkFee}. Absent when no
+ * approval is required.
+ */
+export type QuoteApprovalNetworkFee = QuoteEstimatedNetworkFee;
+
 export type QuoteDetails = {
   type: TradeMethod;
   sendAmount: number;
@@ -276,6 +282,24 @@ export type QuoteDetails = {
   tags?: QuoteTags;
   permitData?: QuotePermitData;
   estimatedNetworkFee?: QuoteEstimatedNetworkFee;
+  approvalNetworkFee?: QuoteApprovalNetworkFee;
+};
+
+export type FormattedNumber = {
+  numberValue: string;
+  withPrefix: string;
+  withSuffix: string;
+};
+
+export type FormattedQuoteValues = {
+  sendAmount: FormattedNumber;
+  sendAmountCountervalue: FormattedNumber;
+  receiveAmount: FormattedNumber;
+  receiveAmountCountervalue: FormattedNumber;
+  networkFee: FormattedNumber;
+  networkFeeCountervalue: FormattedNumber;
+  rate: FormattedNumber;
+  slippage: FormattedNumber;
 };
 
 export type Quote = {
@@ -286,6 +310,12 @@ export type Quote = {
   quoteDetails: QuoteDetails;
   warning: QuoteWarning | null;
   error: QuoteError | null;
+  /**
+   * Optional wallet-formatted display strings. Additive field:
+   * producers that cannot format (no locale / counter-value fiat context)
+   * omit it, and consumers must handle `undefined`.
+   */
+  formatted?: FormattedQuoteValues;
 };
 
 /** Error rows returned next to quotes (swap API error objects). */

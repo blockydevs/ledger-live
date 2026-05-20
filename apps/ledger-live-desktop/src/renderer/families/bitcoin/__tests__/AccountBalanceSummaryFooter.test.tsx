@@ -1,5 +1,6 @@
 import React from "react";
-import { DEFAULT_ZCASH_PRIVATE_INFO } from "@ledgerhq/zcash-shielded/constants";
+import { Observable } from "rxjs";
+import { DEFAULT_ZCASH_PRIVATE_INFO } from "@ledgerhq/coin-bitcoin/chain-adapters/zcash/constants";
 import { render, screen, waitFor, withFlagOverrides } from "tests/testSetup";
 import AccountBalanceSummaryFooter from "../AccountBalanceSummaryFooter";
 import { createFixtureAccount } from "@ledgerhq/coin-bitcoin/fixtures/common.fixtures";
@@ -20,17 +21,16 @@ jest.mock("../ZCashExportKeyFlowModal/sync", () => ({
 const mockedGetAccountBridge = jest.mocked(getAccountBridge);
 const mockedSyncStateUpdater = jest.mocked(syncStateUpdater);
 
-// Patch Date.prototype.toLocaleString with explicit typing to avoid "this" implicit any error.
-const origDate = global.Date.prototype.toLocaleString;
-jest.spyOn(global.Date.prototype, "toLocaleString").mockImplementation(function (this: Date) {
-  return origDate.call(this, "en-GB");
-});
+const origToLocaleString = global.Date.prototype.toLocaleString;
 
 describe("Bitcoin Account Balance Summary Footer", () => {
   const account = createFixtureAccount();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(global.Date.prototype, "toLocaleString").mockImplementation(function (this: Date) {
+      return origToLocaleString.call(this, "en-GB");
+    });
   });
 
   it("should render a private balance field", async () => {
@@ -206,17 +206,13 @@ describe("Bitcoin Account Balance Summary Footer", () => {
     });
 
     const updater = jest.fn();
-    const subscription = { unsubscribe: jest.fn() };
-    const syncMock = jest.fn(() => ({
-      subscribe: (observer: {
-        next: (updater: (account: unknown) => unknown) => void;
-        complete: () => void;
-      }) => {
-        observer.next(updater);
-        observer.complete();
-        return subscription;
-      },
-    }));
+    const syncMock = jest.fn(
+      () =>
+        new Observable<(account: unknown) => unknown>(subscriber => {
+          subscriber.next(updater);
+          subscriber.complete();
+        }),
+    );
     mockedGetAccountBridge.mockReturnValue({
       sync: syncMock,
     } as unknown as ReturnType<typeof getAccountBridge>);
@@ -242,14 +238,19 @@ describe("Bitcoin Account Balance Summary Footer", () => {
     expect(mockedGetAccountBridge).toHaveBeenCalledWith(
       expect.objectContaining({ id: account.id }),
     );
-    expect(syncMock).toHaveBeenCalledWith(expect.objectContaining({ id: account.id }), {
-      paginationConfig: {},
-      syncType: SYNC_TYPE_SHIELDED,
-    });
     expect(store.getState().shieldedSyncSubscriptions).toEqual([
-      { accountId: account.id, subscription },
+      {
+        accountId: account.id,
+        subscription: expect.objectContaining({ unsubscribe: expect.any(Function) }),
+      },
     ]);
-    expect(logSpy).toHaveBeenCalledWith(`Zcash shielded sync completed on account ${account.id}`);
+    await waitFor(() => {
+      expect(syncMock).toHaveBeenCalledWith(expect.objectContaining({ id: account.id }), {
+        paginationConfig: {},
+        syncType: SYNC_TYPE_SHIELDED,
+      });
+      expect(logSpy).toHaveBeenCalledWith(`Zcash shielded sync completed on account ${account.id}`);
+    });
   });
 
   it("should stop shielded sync and remove subscription when clicking stop sync button", async () => {

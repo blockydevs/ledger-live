@@ -7,9 +7,12 @@ export default class EarnDashboardPage {
   amountAvailableAssetsText = "Amount available to earn";
   amountAvailableToEarnBalanceCard = "Amount available to earn-balance-card";
   assetsTitleId = "assets-title-text";
+  earnMainContainerCssSelector = "body#root";
+  earnMainContainerWebElement = getWebElementByCssSelector(this.earnMainContainerCssSelector);
   getAssetsPlaceholderHero = "get-assets-placeholder-hero";
   rewardsPotentialBalanceCard = "Rewards you could earn-balance-card";
   rewardsPotentialText = "Rewards you could earn";
+  iceColdStartEarnCta = "ice-cold-start-earn-cta";
   stakeCryptoAssetsButton = "stake-crypto-assets-button";
   stakingProviderModalTitle = "staking-provider-modal-title";
   tableEarnMoreSelector =
@@ -118,7 +121,10 @@ export default class EarnDashboardPage {
     });
     await detoxExpect(assetTitleElement).toExist();
     await detoxExpect(assetTitleElement).toHaveText(this.assetsTitleText(false));
-    const rowsContent = await getWebElementsText(this.tableEarnMoreSelector);
+    const rowsContent = await getWebElementsText(
+      this.earnMainContainerWebElement,
+      this.tableEarnMoreSelector,
+    );
     const normalizedText = normalizeText(rowsContent.join(" "));
     jestExpect(normalizedText).toContain(`${account.accountName} ${account.currency.ticker}`);
     const earnButton = getWebElementByCssSelector(this.earnButtonSelector(account.currency.ticker));
@@ -134,7 +140,10 @@ export default class EarnDashboardPage {
     await detoxExpect(assetTitleElement).toExist();
     await detoxExpect(assetTitleElement).toHaveText(this.assetsTitleText(true));
 
-    const rowsContent = await getWebElementsText(this.tableRewardsEarnedSelector);
+    const rowsContent = await getWebElementsText(
+      this.earnMainContainerWebElement,
+      this.tableRewardsEarnedSelector,
+    );
     jestExpect(normalizeText(rowsContent.join(" "))).toContain(
       `${account.accountName} ${account.currency.ticker}`,
     );
@@ -156,6 +165,14 @@ export default class EarnDashboardPage {
     const earnButton = getWebElementByTestId(this.stakeCryptoAssetsButton, {
       testIdAttribute: "data-test-id",
     });
+    await scrollToWebElement(earnButton);
+    await tapWebElementByElement(earnButton);
+    await app.stake.verifyChooseAssetPage();
+  }
+
+  @Step("Tap ice cold start earn CTA")
+  async tapIceColdStartEarnCta() {
+    const earnButton = getWebElementByTestId(this.iceColdStartEarnCta);
     await scrollToWebElement(earnButton);
     await tapWebElementByElement(earnButton);
     await app.stake.verifyChooseAssetPage();

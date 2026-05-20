@@ -39,7 +39,6 @@ const moduleNameMapper = {
   ".*\\.lottie$": "<rootDir>/fileMock.js",
   ...pathsToModuleNameMapper(compilerOptions.paths),
   "~/(.*)": "<rootDir>/src/$1",
-  "^@features/(.*)$": "<rootDir>/../../features/$1/src",
   "^@ledgerhq/(lumen-ui-react|lumen-design-core)$": "<rootDir>/node_modules/@ledgerhq/$1",
   "\\.(jpg|ico|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga|lottie)$":
     "<rootDir>/fileMock.js",
@@ -66,6 +65,8 @@ const transformIncludePatterns = [
 
 const commonConfig = {
   testEnvironment: "jsdom",
+  clearMocks: true,
+  restoreMocks: true,
   globals: {
     __DEV__: false,
     __APP_VERSION__: "2.0.0",
@@ -106,6 +107,8 @@ const commonConfig = {
 };
 
 module.exports = {
+  /** CI sets `JEST_MAX_WORKERS` (e.g. `100%`); local default leaves laptops headroom. */
+  maxWorkers: process.env.JEST_MAX_WORKERS || "50%",
   workerIdleMemoryLimit: "1GB",
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
@@ -118,6 +121,7 @@ module.exports = {
   coverageReporters: ["json", ["lcov", { projectRoot: "../" }], "json-summary"],
   reporters: [
     "default",
+    ...(process.env.CI ? ["github-actions"] : []),
     ["jest-sonar", { outputName: "sonar-executionTests-report.xml", reportedFilePath: "absolute" }],
   ],
   silent: false,

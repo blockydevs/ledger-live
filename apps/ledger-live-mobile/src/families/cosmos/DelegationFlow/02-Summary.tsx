@@ -1,17 +1,21 @@
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { formatCurrencyUnit, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import { getMaxDelegationAvailable } from "@ledgerhq/live-common/families/cosmos/logic";
 import { useLedgerFirstShuffledValidatorsCosmosFamily } from "@ledgerhq/live-common/families/cosmos/react";
-import { CosmosAccount, CosmosValidatorItem } from "@ledgerhq/live-common/families/cosmos/types";
+import {
+  CosmosAccount,
+  CosmosValidatorItem,
+  Transaction as CosmosTransaction,
+} from "@ledgerhq/live-common/families/cosmos/types";
 import cosmosBase from "@ledgerhq/coin-cosmos/chain/cosmosBase";
 import { AccountLike } from "@ledgerhq/types-live";
 import { Text, Icons } from "@ledgerhq/native-ui";
 import { useTheme } from "@react-navigation/native";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useMemo } from "react";
 import { Trans } from "~/context/Locale";
 import { Animated, SafeAreaView, StyleSheet, View, TextStyle, StyleProp } from "react-native";
 import { TrackScreen } from "~/analytics";
@@ -26,7 +30,7 @@ import DelegatingContainer from "../../tezos/DelegatingContainer";
 import ValidatorImage from "../shared/ValidatorImage";
 import { StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import { CosmosDelegationFlowParamList } from "./types";
-import Config from "react-native-config";
+import { useChangeValidatorRotateAnim } from "../../shared/useChangeValidatorRotateAnim";
 import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 import TranslatedError from "~/components/TranslatedError";
 import { AddressesSanctionedError } from "@ledgerhq/ledger-wallet-framework/sanction/errors";
@@ -48,7 +52,7 @@ export default function DelegationSummary({ navigation, route }: Props) {
 
   const mainAccount = getMainAccount(account, parentAccount);
   const validators = useLedgerFirstShuffledValidatorsCosmosFamily(mainAccount.currency.id);
-  const bridge = getAccountBridge(account, undefined);
+  const bridge = useAccountBridge<CosmosTransaction>(account, undefined);
 
   const chosenValidator = useMemo(() => {
     if (validator !== undefined) {
@@ -61,7 +65,7 @@ export default function DelegationSummary({ navigation, route }: Props) {
   }, [validators, validator, mainAccount.currency.id]);
 
   const { transaction, updateTransaction, setTransaction, status, bridgePending, bridgeError } =
-    useBridgeTransaction(() => {
+    useBridgeTransaction(bridge, () => {
       const tx = route.params.transaction;
 
       if (!tx) {
@@ -107,48 +111,15 @@ export default function DelegationSummary({ navigation, route }: Props) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [route.params, updateTransaction, setTransaction, chosenValidator]);
 
-  const [rotateAnim] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!Config.DETOX) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(rotateAnim, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: -1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1000),
-        ]),
-      ).start();
-    }
-    return () => {
-      rotateAnim.setValue(0);
-    };
-  }, [rotateAnim]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-
-    outputRange: ["0deg", "30deg"],
-  });
+  const { rotate, resetRotation } = useChangeValidatorRotateAnim();
 
   const onChangeDelegator = useCallback(() => {
-    rotateAnim.setValue(0);
+    resetRotation();
     navigation.navigate(ScreenName.CosmosDelegationValidatorSelect, {
       ...route.params,
       transaction,
     });
-  }, [rotateAnim, navigation, transaction, route.params]);
+  }, [resetRotation, navigation, transaction, route.params]);
 
   const currency = getAccountCurrency(account);
   const color = getCurrencyColor(currency);

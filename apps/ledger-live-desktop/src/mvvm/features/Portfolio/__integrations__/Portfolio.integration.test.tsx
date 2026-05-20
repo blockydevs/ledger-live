@@ -71,8 +71,16 @@ jest.mock("@ledgerhq/live-common/exchange/swap/hooks/index", () => ({
   }),
 }));
 
-const mockUsePortfolioThrottled = jest.spyOn(portfolioReact, "usePortfolioThrottled");
-const mockUseCountervaluesPolling = jest.spyOn(countervaluesReact, "useCountervaluesPolling");
+// Spies are created per-test in `beforeEach` so the global `restoreMocks: true`
+// from jest config can restore them between tests cleanly.
+let mockUsePortfolioThrottled: jest.SpyInstance<
+  ReturnType<typeof portfolioReact.usePortfolioThrottled>,
+  Parameters<typeof portfolioReact.usePortfolioThrottled>
+>;
+let mockUseCountervaluesPolling: jest.SpyInstance<
+  ReturnType<typeof countervaluesReact.useCountervaluesPolling>,
+  Parameters<typeof countervaluesReact.useCountervaluesPolling>
+>;
 
 const defaultPollingMock = {
   pending: false,
@@ -136,6 +144,7 @@ describe("PortfolioView", () => {
     shouldDisplayQuickActionCtas: true,
     shouldDisplayAssetSection: true,
     shouldDisplayOperationsList: true,
+    shouldDisplayBorrowSection: false,
     shouldDisplayBrazePlacement: false,
     isClearCacheBannerVisible: false,
     filterOperations: () => true,
@@ -145,6 +154,8 @@ describe("PortfolioView", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUsePortfolioThrottled = jest.spyOn(portfolioReact, "usePortfolioThrottled");
+    mockUseCountervaluesPolling = jest.spyOn(countervaluesReact, "useCountervaluesPolling");
     mockUsePortfolioThrottled.mockReturnValue(defaultPortfolioMock);
     mockUseCountervaluesPolling.mockReturnValue(defaultPollingMock);
     mockedUseNavigate.mockReturnValue(mockNavigate);
@@ -609,6 +620,10 @@ const walletV4TourFlagOverrides = withFlagOverrides({
 describe("Portfolio (Wallet V4 Tour)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUsePortfolioThrottled = jest.spyOn(portfolioReact, "usePortfolioThrottled");
+    mockUseCountervaluesPolling = jest.spyOn(countervaluesReact, "useCountervaluesPolling");
+    mockUsePortfolioThrottled.mockReturnValue(defaultPortfolioMock);
+    mockUseCountervaluesPolling.mockReturnValue(defaultPollingMock);
   });
 
   afterEach(() => {
@@ -616,7 +631,7 @@ describe("Portfolio (Wallet V4 Tour)", () => {
   });
 
   it("shows Wallet V4 Tour dialog when tour enabled and not seen", async () => {
-    render(<PortfolioPage />, {
+    const { user } = render(<PortfolioPage />, {
       initialState: {
         settings: {
           ...AFTER_ONBOARDING_STATE,
@@ -632,6 +647,18 @@ describe("Portfolio (Wallet V4 Tour)", () => {
     expect(track).toHaveBeenCalledWith("product_tour_card", {
       page: "Product Tour WV4",
       card: 1,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(track).toHaveBeenCalledWith("product_tour_card", {
+      page: "Product Tour WV4",
+      card: 2,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(track).toHaveBeenCalledWith("product_tour_card", {
+      page: "Product Tour WV4",
+      card: 3,
     });
   });
 

@@ -1,16 +1,19 @@
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { formatCurrencyUnit, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import { useValidatorGroups } from "@ledgerhq/live-common/families/celo/react";
-import { CeloValidatorGroup } from "@ledgerhq/live-common/families/celo/types";
+import {
+  CeloValidatorGroup,
+  Transaction as CeloTransaction,
+} from "@ledgerhq/live-common/families/celo/types";
 import { defaultValidatorGroupAddress } from "@ledgerhq/live-common/families/celo/logic";
 import { AccountLike } from "@ledgerhq/types-live";
 import { Text, Icons } from "@ledgerhq/native-ui";
 import { useTheme } from "@react-navigation/native";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { Trans } from "~/context/Locale";
 import { Animated, SafeAreaView, StyleSheet, View } from "react-native";
 import { TrackScreen } from "~/analytics";
@@ -33,6 +36,7 @@ import LText from "~/components/LText";
 import TranslatedError from "~/components/TranslatedError";
 import SupportLinkError from "~/components/SupportLinkError";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
+import { useChangeValidatorRotateAnim } from "../../shared/useChangeValidatorRotateAnim";
 
 type Props = StackNavigatorProps<CeloVoteFlowParamList, ScreenName.CeloVoteSummary>;
 
@@ -45,7 +49,7 @@ export default function VoteSummary({ navigation, route }: Props) {
 
   const validators = useValidatorGroups();
   const mainAccount = getMainAccount(account, parentAccount);
-  const bridge = getAccountBridge(account, undefined);
+  const bridge = useAccountBridge<CeloTransaction>(account, undefined);
 
   const chosenValidator = useMemo(() => {
     if (validator !== undefined) {
@@ -56,7 +60,7 @@ export default function VoteSummary({ navigation, route }: Props) {
   }, [validators, validator]);
 
   const { transaction, updateTransaction, setTransaction, status, bridgePending, bridgeError } =
-    useBridgeTransaction(() => {
+    useBridgeTransaction(bridge, () => {
       const tx = route.params.transaction;
 
       if (!tx) {
@@ -67,7 +71,7 @@ export default function VoteSummary({ navigation, route }: Props) {
           transaction: bridge.updateTransaction(t, {
             mode: "vote",
             recipient: validators[0]?.address ?? defaultValidatorGroupAddress(),
-            amount: route.params.amount ?? 0,
+            amount: route.params.amount ?? new BigNumber(0),
           }),
         };
       }
@@ -88,47 +92,15 @@ export default function VoteSummary({ navigation, route }: Props) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [route.params.amount, updateTransaction, bridge, setTransaction, chosenValidator]);
 
-  const [rotateAnim] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: -1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1000),
-      ]),
-    ).start();
-    return () => {
-      rotateAnim.setValue(0);
-    };
-  }, [rotateAnim]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    // $FlowFixMe
-    outputRange: ["0deg", "30deg"],
-  });
+  const { rotate, resetRotation } = useChangeValidatorRotateAnim();
 
   const onChangeDelegator = useCallback(() => {
-    rotateAnim.setValue(0);
+    resetRotation();
     navigation.navigate(ScreenName.CeloVoteValidatorSelect, {
       ...route.params,
       transaction,
     });
-  }, [rotateAnim, navigation, transaction, route.params]);
+  }, [resetRotation, navigation, transaction, route.params]);
 
   const currency = getAccountCurrency(account);
   const color = getCurrencyColor(currency);
@@ -317,7 +289,7 @@ function SummaryWords({
         <Words>
           <Trans i18nKey="delegation.to" />
         </Words>
-        <Touchable onPress={onChangeValidator} touchableTestID="celo-vote-validator">
+        <Touchable onPress={onChangeValidator} touchableTestID="celo-delegation-summary-validator">
           <Selectable name={validator?.name ?? validator?.address ?? "-"} />
         </Touchable>
       </Line>

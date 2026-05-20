@@ -3,12 +3,13 @@ import { View } from "react-native";
 import { Trans } from "~/context/Locale";
 import { useTheme } from "@react-navigation/native";
 import { handleTransactionStatus } from "@ledgerhq/live-common/families/multiversx/helpers";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import {
   getMainAccount,
   getAccountCurrency,
 } from "@ledgerhq/ledger-wallet-framework/account/helpers";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import { Transaction as MultiversXTransaction } from "@ledgerhq/live-common/families/multiversx/types";
 
 import Button from "~/components/Button";
 import LText from "~/components/LText";
@@ -34,22 +35,24 @@ const WithdrawFunds = (props: WithdrawFundsPropsType) => {
 
   const mainAccount = getMainAccount(account, undefined);
   const currency = getAccountCurrency(mainAccount);
-  const bridge = getAccountBridge(account);
   const unit = useAccountUnit(mainAccount);
   const name = validator.identity.name || validator.contract;
+  const bridge = useAccountBridge<MultiversXTransaction>(account);
 
   /*
    * Instantiate a new transaction with the given arguments.
    */
 
-  const { transaction, status } = useBridgeTransaction(() => ({
-    account,
-    transaction: bridge.updateTransaction(bridge.createTransaction(mainAccount), {
-      mode: "withdraw",
-      recipient: validator.contract,
-      amount,
-    }),
-  }));
+  const { transaction, status } = useBridgeTransaction(bridge, () => {
+    return {
+      account,
+      transaction: bridge.updateTransaction(bridge.createTransaction(mainAccount), {
+        mode: "withdraw",
+        recipient: validator.contract,
+        amount,
+      }),
+    };
+  });
 
   /*
    * Callback called when navigating to the next screen of the current flow.

@@ -5,7 +5,7 @@ import { Trans } from "~/context/Locale";
 import { getMainAccount } from "@ledgerhq/live-common/account/helpers";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import type {
   AlgorandAccount,
   AlgorandTransaction,
@@ -37,11 +37,11 @@ export default function DelegationStarted({ navigation, route }: Props) {
   const { locale } = useSettings();
   invariant(account, "Account required");
   const mainAccount = getMainAccount(account, undefined) as AlgorandAccount;
-  const bridge = getAccountBridge(mainAccount, undefined);
   invariant(mainAccount && mainAccount.algorandResources, "algorand Account required");
   const { rewards } = mainAccount.algorandResources;
   const unit = useAccountUnit(mainAccount);
-  const { transaction, status } = useBridgeTransaction(() => {
+  const bridge = useAccountBridge<AlgorandTransaction>(mainAccount, undefined);
+  const { transaction, status } = useBridgeTransaction(bridge, () => {
     const t = bridge.createTransaction(mainAccount);
     return {
       account,

@@ -1,8 +1,13 @@
 import React from "react";
-import type { Account, AccountLike } from "@ledgerhq/types-live";
+import type {
+  Account,
+  AccountLike,
+  ResolvedAccountBridge,
+  TransactionCommon,
+} from "@ledgerhq/types-live";
 import { IconsLegacy } from "@ledgerhq/native-ui";
 import { Trans } from "~/context/Locale";
-import { isAccountEmpty, isTokenAccount } from "@ledgerhq/live-common/account/index";
+import { isTokenAccount } from "@ledgerhq/live-common/account/index";
 import { ParamListBase, RouteProp } from "@react-navigation/native";
 import { ActionButtonEvent, NavigationParamsType } from "~/components/FabActions";
 import { NavigatorName, ScreenName } from "~/const";
@@ -12,16 +17,28 @@ import { getStakeLabelLocaleBased } from "~/helpers/getStakeLabelLocaleBased";
 import { WalletState } from "@ledgerhq/live-wallet/store";
 import { StakingDrawerNavigationProps } from "~/components/Stake/types";
 import { accountToWalletAPIAccount } from "@ledgerhq/live-common/wallet-api/converters";
+import { canDelegate } from "@ledgerhq/live-common/families/evm/staking/logic";
+import { isStakingAccount } from "@ledgerhq/live-common/families/evm/staking/types";
 
 const ethMagnitude = getCryptoCurrencyById("ethereum").units[0].magnitude ?? 18;
 
 const ETH_LIMIT = BigNumber(32).times(BigNumber(10).pow(ethMagnitude));
+const SEI_EVM_CURRENCY_ID = "sei_evm";
 
-type Props = {
+type EvmNativeStakingFeature = {
+  enabled?: boolean;
+  params?: {
+    supportedCurrencyIds?: string[];
+  };
+};
+
+type Props<T extends TransactionCommon> = {
   account: AccountLike;
   parentAccount: Account;
   parentRoute: RouteProp<ParamListBase, ScreenName>;
   walletState: WalletState;
+  evmNativeStakingFeature?: EvmNativeStakingFeature | null;
+  bridge: ResolvedAccountBridge<T>;
 };
 
 type AccountTypeGetterProps = {
@@ -45,15 +62,18 @@ const getAccountType = (account: AccountLike): AccountTypeGetterProps => {
   return { isEthAccount, isPOLAccount, isBscAccount, isAvaxAccount, isStakekit };
 };
 
-function getNavigatorParams({
+function getNavigatorParams<T extends TransactionCommon>({
   parentRoute,
   account,
   parentAccount,
   walletState,
-}: Props): NavigationParamsType {
+  evmNativeStakingFeature,
+  bridge,
+}: Props<T>): NavigationParamsType {
   const { isPOLAccount, isBscAccount, isAvaxAccount, isStakekit } = getAccountType(account);
+  const isSeiEvmNativeStaking = getIsSeiEvmNativeStakingEnabled(account, evmNativeStakingFeature);
 
-  if (isAccountEmpty(account)) {
+  if (bridge.isAccountEmpty(account)) {
     return [
       NavigatorName.NoFundsFlow,
       {
@@ -61,6 +81,18 @@ function getNavigatorParams({
         params: {
           account,
           parentAccount,
+        },
+      },
+    ];
+  }
+
+  if (isSeiEvmNativeStaking) {
+    return [
+      NavigatorName.EvmDelegationFlow,
+      {
+        screen: ScreenName.EvmDelegationValidator,
+        params: {
+          source: parentRoute,
         },
       },
     ];
@@ -128,23 +160,36 @@ function getNavigatorParams({
   }
 }
 
-const getMainActions = ({
+const getMainActions = <T extends TransactionCommon>({
   account,
   parentAccount,
   parentRoute,
   walletState,
-}: Props): ActionButtonEvent[] => {
+  evmNativeStakingFeature,
+  bridge,
+}: Props<T>): ActionButtonEvent[] => {
   const { isPOLAccount, isBscAccount, isAvaxAccount, isStakekit, isEthAccount } =
     getAccountType(account);
+  const isSeiEvmNativeStaking = getIsSeiEvmNativeStakingEnabled(account, evmNativeStakingFeature);
 
-  if (isEthAccount || isStakekit) {
-    const label = getStakeLabelLocaleBased();
+  if (isEthAccount || isStakekit || isSeiEvmNativeStaking) {
+    const hasDelegations =
+      account.type === "Account" &&
+      isStakingAccount(account) &&
+      account.stakingResources.delegations.length > 0;
+    const label = isSeiEvmNativeStaking
+      ? hasDelegations
+        ? "account.delegation.addDelegation"
+        : "account.delegation.info.cta"
+      : getStakeLabelLocaleBased();
 
     const navigationParams = getNavigatorParams({
       account,
       parentAccount,
       parentRoute,
       walletState,
+      evmNativeStakingFeature,
+      bridge,
     });
 
     const getCurrentCurrency = () => {
@@ -183,3 +228,17 @@ const getMainActions = ({
 export default {
   getMainActions,
 };
+
+function getIsSeiEvmNativeStakingEnabled(
+  account: AccountLike,
+  feature?: EvmNativeStakingFeature | null,
+): boolean {
+  return (
+    account.type === "Account" &&
+    account.currency.id === SEI_EVM_CURRENCY_ID &&
+    feature?.enabled === true &&
+    feature.params?.supportedCurrencyIds?.includes(SEI_EVM_CURRENCY_ID) === true &&
+    isStakingAccount(account) &&
+    canDelegate(account)
+  );
+}

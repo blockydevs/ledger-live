@@ -1,6 +1,6 @@
 {
   "name": "@ledgerhq/native-ui",
-  "version": "0.61.0",
+  "version": "0.62.0",
   "description": "Ledger Live - Mobile UI",
   "repository": {
     "type": "git",
@@ -77,7 +77,7 @@
     "storybook-generate": "sb-rn-get-stories"
   },
   "dependencies": {
-    "@ledgerhq/crypto-icons": "2.0.1",
+    "@ledgerhq/crypto-icons": "catalog:",
     "@ledgerhq/icons-ui": "workspace:^",
     "@ledgerhq/ui-shared": "workspace:^",
     "color": "^4.0.0",

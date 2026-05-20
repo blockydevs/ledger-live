@@ -167,21 +167,6 @@ const evmConfig: CurrencyLiveConfigDefinition = {
       showNfts: false,
     },
   },
-  config_currency_sonic_blaze: {
-    type: "object",
-    default: {
-      status: "active",
-      node: {
-        type: "external",
-        uri: "https://sonic-blaze.coin.ledger.com",
-      },
-      explorer: {
-        type: "etherscan",
-        uri: "https://proxyetherscan.api.live.ledger.com/v2/api/57054",
-      },
-      showNfts: false,
-    },
-  },
   config_currency_ethereum_classic: {
     type: "object",
     default: {
@@ -403,11 +388,10 @@ const evmConfig: CurrencyLiveConfigDefinition = {
       },
       node: {
         type: "external",
-        uri: "https://evm.cronos.org",
+        uri: "https://cronos.coin.ledger.com",
       },
       explorer: {
-        type: "blockscout",
-        uri: "https://cronos.org/explorer/api",
+        type: "none",
       },
       showNfts: false,
     },
@@ -456,7 +440,7 @@ const evmConfig: CurrencyLiveConfigDefinition = {
       },
       node: {
         type: "external",
-        uri: "https://flare-api.flare.network/ext/bc/C/rpc",
+        uri: "https://flare.coin.ledger.com/ext/bc/C/rpc",
       },
       explorer: {
         type: "blockscout",
@@ -846,7 +830,7 @@ const evmConfig: CurrencyLiveConfigDefinition = {
       },
       node: {
         type: "external",
-        uri: "https://public-en-cypress.klaytn.net",
+        uri: "https://kaia.coin.ledger.com",
       },
       explorer: {
         type: "klaytnfinder",
@@ -986,7 +970,7 @@ const evmConfig: CurrencyLiveConfigDefinition = {
         type: "active",
         features: [{ id: "blockchain_txs", status: "active" }],
       },
-      node: { type: "external", uri: "https://rpc.public.zkevm-test.net" },
+      node: { type: "external", uri: "https://polygon-zkevm-cardona.coin.ledger.com" },
       explorer: {
         type: "etherscan",
         uri: "https://proxyetherscan.api.live.ledger.com/v2/api/1442",

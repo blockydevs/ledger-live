@@ -11,10 +11,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Trans, useTranslation } from "~/context/Locale";
 import invariant from "invariant";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { CompositeScreenProps, useTheme } from "@react-navigation/native";
 import { GraphTabs, Text, IconsLegacy } from "@ledgerhq/native-ui";
-import { Transaction } from "@ledgerhq/live-common/families/tron/types";
+import { Transaction, TronResource } from "@ledgerhq/live-common/families/tron/types";
 import { ScreenName } from "~/const";
 import { TrackScreen } from "~/analytics";
 import LText from "~/components/LText";
@@ -63,7 +63,7 @@ export default function FreezeAmount({ navigation, route }: NavigatorProps) {
 
   invariant(account && account.type === "Account", "account is required");
 
-  const bridge = getAccountBridge(account, undefined);
+  const bridge = useAccountBridge<Transaction>(account, undefined);
 
   const defaultUnit = useAccountUnit(account);
   const { spendableBalance } = account;
@@ -73,6 +73,7 @@ export default function FreezeAmount({ navigation, route }: NavigatorProps) {
   const [infoModalOpen, setInfoModalOpen] = useState<boolean>();
 
   const { transaction, setTransaction, status, bridgePending, bridgeError } = useBridgeTransaction(
+    bridge,
     () => {
       const t = bridge.createTransaction(account);
 
@@ -85,7 +86,7 @@ export default function FreezeAmount({ navigation, route }: NavigatorProps) {
     },
   );
 
-  const options = useMemo(
+  const options = useMemo<Array<{ value: TronResource; label: string }>>(
     () => [
       {
         value: "BANDWIDTH",
@@ -107,7 +108,7 @@ export default function FreezeAmount({ navigation, route }: NavigatorProps) {
 
   const onChange = useCallback(
     (amount: BigNumber, keepRatio?: boolean) => {
-      if (!amount.isNaN()) {
+      if (!amount.isNaN() && transaction) {
         if (!keepRatio) selectRatio(undefined);
         setTransaction(
           bridge.updateTransaction(transaction, {
@@ -166,6 +167,7 @@ export default function FreezeAmount({ navigation, route }: NavigatorProps) {
 
   const onChangeResource = useCallback(
     (optionIndex: number) => {
+      if (!transaction) return;
       setTransaction(
         bridge.updateTransaction(transaction, {
           resource: options[optionIndex].value,

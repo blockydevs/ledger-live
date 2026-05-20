@@ -10,6 +10,7 @@ import { State } from ".";
 import { purgeExpiredAnonymousUserNotifications } from "../actions/settings";
 import reducer, {
   lastSeenDeviceSelector,
+  languageSelector,
   localeSelector,
   INITIAL_STATE as SETTINGS_INITIAL_STATE,
   SettingsState,
@@ -116,11 +117,99 @@ describe("lastSeenDeviceSelector", () => {
     };
     expect(localeSelector(state)).toEqual("en-US");
   });
+
+  it("should fall back to the language when the locale is unknown to regions.json", () => {
+    const state = {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      ...({} as State),
+      settings: {
+        ...SETTINGS_INITIAL_STATE,
+        language: "en" as const,
+        locale: "xx-YY",
+      },
+    };
+    expect(localeSelector(state)).toEqual("en");
+  });
+});
+
+describe("languageSelector", () => {
+  const buildState = (settings: Partial<SettingsState>): State => ({
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    ...({} as State),
+    settings: {
+      ...SETTINGS_INITIAL_STATE,
+      ...settings,
+    },
+  });
+
+  it.each([
+    { case: "supported language", language: "fr", expected: "fr" },
+    {
+      case: "unsupported language",
+      language: "xx",
+      expected: SETTINGS_INITIAL_STATE.language,
+    },
+    {
+      case: "missing language",
+      language: undefined,
+      expected: SETTINGS_INITIAL_STATE.language,
+    },
+  ])("should resolve to $expected for $case", ({ language, expected }) => {
+    expect(
+      languageSelector(
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        buildState({ language: language as SettingsState["language"] }),
+      ),
+    ).toBe(expected);
+  });
+
+  it("should return a stable primitive across calls (no new reference allocated)", () => {
+    const state = buildState({ language: "fr" });
+    expect(languageSelector(state)).toBe(languageSelector(state));
+  });
 });
 
 describe("INITIAL_STATE defaults", () => {
   it("should default theme to dark", () => {
     expect(SETTINGS_INITIAL_STATE.theme).toBe("dark");
+  });
+
+  it("should default analytics consent flags to false", () => {
+    expect(SETTINGS_INITIAL_STATE.shareAnalytics).toBe(false);
+    expect(SETTINGS_INITIAL_STATE.sharePersonalizedRecommandations).toBe(false);
+  });
+});
+
+describe("FETCH_SETTINGS preserves persisted analytics consent", () => {
+  it("should keep persisted shareAnalytics=true (returning opted-in users not regressed)", () => {
+    const initialState = SETTINGS_INITIAL_STATE;
+    const action = {
+      type: "FETCH_SETTINGS" as const,
+      payload: {
+        shareAnalytics: true,
+        sharePersonalizedRecommandations: true,
+      } as Partial<SettingsState>,
+    };
+    const newState = reducer(initialState, action);
+
+    expect(newState.shareAnalytics).toBe(true);
+    expect(newState.sharePersonalizedRecommandations).toBe(true);
+    expect(newState.loaded).toBe(true);
+  });
+
+  it("should keep persisted shareAnalytics=false for returning opted-out users", () => {
+    const initialState = SETTINGS_INITIAL_STATE;
+    const action = {
+      type: "FETCH_SETTINGS" as const,
+      payload: {
+        shareAnalytics: false,
+        sharePersonalizedRecommandations: false,
+      } as Partial<SettingsState>,
+    };
+    const newState = reducer(initialState, action);
+
+    expect(newState.shareAnalytics).toBe(false);
+    expect(newState.sharePersonalizedRecommandations).toBe(false);
   });
 });
 

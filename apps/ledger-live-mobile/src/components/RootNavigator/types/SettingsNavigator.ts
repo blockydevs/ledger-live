@@ -35,6 +35,12 @@ export type SettingsNavigatorStackParamList = {
   [ScreenName.DebugPerformance]: undefined;
   [ScreenName.DebugDebugging]: undefined;
   [ScreenName.DebugDeviceIntentExecutor]: undefined;
+  [ScreenName.DebugDeviceIntentExecutorContent]: undefined;
+  [ScreenName.DebugDeviceIntentExecutorInfoState]: undefined;
+  [ScreenName.DebugDeviceIntentExecutorConnectDevice]: undefined;
+  [ScreenName.DebugDeviceIntentExecutorInitialization]: undefined;
+  [ScreenName.DebugDeviceIntentExecutorInitializerStates]: undefined;
+  [ScreenName.DebugDeviceIntentExecutorOrchestration]: undefined;
   [ScreenName.DebugConfiguration]: undefined;
   [ScreenName.DebugFeatures]:
     | {
@@ -64,6 +70,7 @@ export type SettingsNavigatorStackParamList = {
   [ScreenName.DebugLogs]: undefined;
   [ScreenName.DebugLottie]: undefined;
   [ScreenName.DebugLumen]: undefined;
+  [ScreenName.DebugLumenVisualization]: undefined;
   [ScreenName.DebugWallet40]: undefined;
   [ScreenName.DebugPlayground]: undefined;
   [ScreenName.DebugBluetoothAndLocationServices]: undefined;

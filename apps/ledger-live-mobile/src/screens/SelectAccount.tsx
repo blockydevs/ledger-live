@@ -7,10 +7,10 @@ import {
 } from "@ledgerhq/live-common/account/helpers";
 import { Flex } from "@ledgerhq/native-ui";
 import {
-  isAccountEmpty,
   getAccountSpendableBalance,
   getMainAccount,
 } from "@ledgerhq/live-common/account/index";
+import { useAccountBridgeMany } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { NotEnoughBalance } from "@ledgerhq/errors";
 import { ScreenName, NavigatorName } from "~/const";
 import { accountsSelector } from "~/reducers/accounts";
@@ -20,7 +20,7 @@ import GenericErrorBottomModal from "~/components/GenericErrorBottomModal";
 import { SendFundsNavigatorStackParamList } from "~/components/RootNavigator/types/SendFundsNavigator";
 import { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import SafeAreaView from "~/components/SafeAreaView";
-import { AccountLike } from "@ledgerhq/types-live";
+import type { Account, AccountLike } from "@ledgerhq/types-live";
 import { withDiscreetMode } from "~/context/DiscreetModeContext";
 import { useNewSendFlowFeature } from "LLM/features/Send/hooks/useNewSendFlowFeature";
 
@@ -64,11 +64,17 @@ function ReceiveFunds({ navigation, route }: Props) {
     }
     return flattenAccounts(accounts);
   }, [accounts, selectedCurrency]);
+  const mainAccounts = enhancedAccounts.filter((a): a is Account => a.type === "Account");
+  const bridges = useAccountBridgeMany(mainAccounts);
+  const bridgeById = new Map(mainAccounts.map((a, i) => [a.id, bridges[i]]));
   const allAccounts = notEmptyAccounts
-    ? enhancedAccounts.filter(account => !isAccountEmpty(account))
+    ? enhancedAccounts.filter(
+        a => !bridgeById.get(a.type === "Account" ? a.id : a.parentId)?.isAccountEmpty(a),
+      )
     : enhancedAccounts;
 
-  const { isEnabledForFamily, getFamilyFromAccount } = useNewSendFlowFeature();
+  const { isEnabledForFamily, getFamilyFromAccount, getCurrencyIdFromAccount } =
+    useNewSendFlowFeature();
 
   const handleSelectAccount = useCallback(
     (account: AccountLike) => {
@@ -81,7 +87,8 @@ function ReceiveFunds({ navigation, route }: Props) {
         if (next === ScreenName.SendSelectRecipient) {
           const parentAccount = getParentAccount(account, accounts);
           const accountFamily = getFamilyFromAccount(account, parentAccount);
-          const shouldUseNewFlow = isEnabledForFamily(accountFamily);
+          const accountCurrencyId = getCurrencyIdFromAccount(account, parentAccount);
+          const shouldUseNewFlow = isEnabledForFamily(accountFamily, accountCurrencyId);
 
           if (shouldUseNewFlow) {
             const mainAccount = getMainAccount(account, parentAccount);
@@ -121,6 +128,7 @@ function ReceiveFunds({ navigation, route }: Props) {
       route.params,
       isEnabledForFamily,
       getFamilyFromAccount,
+      getCurrencyIdFromAccount,
     ],
   );
 

@@ -892,6 +892,9 @@
     "RecommendUndelegation": {
       "title": "Please undelegate the account before emptying it"
     },
+    "MustDelegateBeforeStaking": {
+      "title": "Please delegate your account before staking"
+    },
     "RecommendSubAccountsToEmpty": {
       "title": "Please empty all subaccounts first"
     },
@@ -1677,6 +1680,33 @@
     "headerTitle": "Purchase successful",
     "title": "Thanks for trusting Ledger",
     "desc": "Your order is being processed. \nPlease check your email for your order’s confirmation."
+  },
+  "productTour": {
+    "swap": {
+      "cta": "Discover Swap",
+      "title": "Swap without switching apps",
+      "subTitle": "Enjoy limitless trading on thousands of assets via our trusted swap partners."
+    },
+    "stake": {
+      "cta": "Discover Earn",
+      "title": "Enjoy rewards on your crypto",
+      "subTitle": "Put your crypto to work via Earn."
+    },
+    "card": {
+      "cta": "Get a card",
+      "title": "Spend crypto in real life",
+      "subTitle": "Pay with your crypto card and earn cashback, online or in-store"
+    },
+    "portfolio": {
+      "cta": "View your portfolio",
+      "title": "Stay ahead of the market",
+      "subTitle": "Keep track of your assets, rewards, and market trends easily."
+    },
+    "fund": {
+      "cta": "Fund your wallet",
+      "title": "Start by funding your wallet",
+      "subTitle": "Fund your Ledger Wallet your way — transfer, buy, or convert cash to stablecoins."
+    }
   },
   "discover": {
     "title": "Discover",
@@ -2819,15 +2849,8 @@
       }
     },
     "recoverBanner": {
-      "subscribeDone": {
-        "title": "Reminder: Finish subscribing to Ledger Recover"
-      },
-      "verifyIdentity": {
-        "title": "Access to your wallet is not backed up yet"
-      },
-      "connectDevice": {
-        "title": "Access to your wallet is not backed up yet"
-      }
+      "title": "Finish securing your backup",
+      "description": "Complete activating Ledger Recover"
     },
     "refreshStatus": {
       "refreshing": "Refreshing...",
@@ -4800,6 +4823,191 @@
     },
     "chooseAccountToFund": "Choose an account to add funds"
   },
+  "deviceIntentExecutor": {
+    "genericStates": {
+      "retryableDeviceLocked": {
+        "title": "Device is locked",
+        "description": "Unlock your device to continue."
+      },
+      "unlockDevice": {
+        "title": "Unlock your {{productName}}"
+      },
+      "continueOnDevice": {
+        "title": "Continue on your {{productName}}",
+        "description": "Follow the instructions displayed on your Secure Screen"
+      }
+    },
+    "errors": {
+      "connectionError": {
+        "title": "Device disconnected",
+        "description": "Your Ledger is no longer connected. Make sure it's powered on and within Bluetooth range or plugged in."
+      },
+      "intentError": {
+        "title": "Unknown error",
+        "description": "An error occurred. Please try again or contact Ledger support if the issue persists."
+      },
+      "invalidOperation": {
+        "title": "Invalid state",
+        "description": "An error occurred. Please try again or contact Ledger support if the issue persists."
+      }
+    },
+    "initialization": {
+      "loading": {
+        "title": "Loading"
+      },
+      "installingApp": {
+        "title": "Installing app"
+      },
+      "outdatedAppWarning": {
+        "title": "App version outdated",
+        "description": "An important update is available for the {{appName}} application on your device. Please go to My Ledger to update it."
+      },
+      "retryable": {
+        "userRefused": {
+          "title": "Operation rejected on device"
+        },
+        "deviceBusy": {
+          "title": "Action pending on your Ledger device",
+          "description": "Complete it and then select Retry."
+        }
+      },
+      "blocking": {
+        "deviceNotOnboarded": {
+          "title": "Your Ledger is not ready to use yet",
+          "description": "You need to set up your {{productName}} first. We will guide you through the device setup process"
+        },
+        "unsupportedFirmwareVersion": {
+          "title": "Ledger OS update required"
+        },
+        "unsupportedApplication": {
+          "title": "Unsupported feature",
+          "description": "The app required for this operation is not currently available on your Ledger device. Please contact Ledger support for details."
+        },
+        "unsupportedFeature": {
+          "title": "Unsupported feature",
+          "description": "The app required for this operation is not currently available on your Ledger device. Please contact Ledger support for details."
+        },
+        "wrongDeviceForAccount": {
+          "title": "Wrong Secret Recovery Phrase",
+          "description": "This Ledger isn’t set up with the recovery phrase linked to the selected account. Check that you're using the correct device."
+        },
+        "deviceOutOfStorageSpace": {
+          "title": "Not enough device memory",
+          "description": "Your device doesn’t have enough memory. Please uninstall apps and try again."
+        }
+      },
+      "cta": {
+        "openMyLedger": "Open My Ledger",
+        "goToMyLedger": "Go to My Ledger",
+        "setupDevice": "Set up device",
+        "updateLedgerOs": "Update Ledger OS",
+        "cancelOperation": "Cancel operation",
+        "contactLedgerSupport": "Contact Ledger support"
+      }
+    },
+    "connectDevice": {
+      "common": {
+        "available": "Available",
+        "close": "Close",
+        "ledgerDevice": "Ledger device",
+        "notConnected": "Not connected",
+        "tryAgain": "Try again"
+      },
+      "states": {
+        "connecting": {
+          "title": "Loading"
+        },
+        "connectionError": {
+          "errors": {
+            "blePairingRefused": {
+              "title": "Pairing was refused",
+              "description": "Pairing was refused"
+            },
+            "blePairingPeerRemovedPairing": {
+              "title": "Pairing was removed",
+              "description": "Pairing was removed"
+            },
+            "unknown": {
+              "title": "Unable to connect",
+              "description": "Unknown error"
+            }
+          }
+        },
+        "discovering": {
+          "title": "Select a device"
+        },
+        "discoveryError": {
+          "continueWithUsb": "I want to continue with USB",
+          "errors": {
+            "bluetoothPermissionDeniedPromptable": {
+              "title": "Bluetooth permission needed",
+              "description": "Please enable Bluetooth permission to use Bluetooth"
+            },
+            "bluetoothPermissionDeniedManualSettings": {
+              "title": "Bluetooth permission needed",
+              "description": "Please enable Bluetooth permission in your phone settings to use Bluetooth"
+            },
+            "bluetoothPermissionUnauthorizedManualSettings": {
+              "title": "Bluetooth permission needed",
+              "description": "Please enable Bluetooth permission in your phone settings to use Bluetooth"
+            },
+            "bluetoothDisabledPromptable": {
+              "title": "Bluetooth settings disabled",
+              "description": "Please enable Bluetooth settings to use Bluetooth"
+            },
+            "bluetoothDisabledManualAction": {
+              "title": "Bluetooth settings disabled",
+              "description": "Please enable Bluetooth settings in your phone settings to use Bluetooth"
+            },
+            "bluetoothStateUnknownCheckOnly": {
+              "title": "Bluetooth is not ready",
+              "description": "Please check your Bluetooth settings to use Bluetooth"
+            },
+            "bluetoothUnsupported": {
+              "title": "Bluetooth is not supported",
+              "description": "Bluetooth is not supported. Please check your Bluetooth settings."
+            },
+            "locationPermissionDeniedPromptable": {
+              "title": "Location permission needed",
+              "description": "Please enable Location permission to use Bluetooth"
+            },
+            "locationPermissionDeniedManualSettings": {
+              "title": "Location permission needed",
+              "description": "Please enable Location permission in your phone settings to use Bluetooth"
+            },
+            "locationDisabledPromptable": {
+              "title": "Location settings disabled",
+              "description": "Please enable Location settings to use Bluetooth"
+            },
+            "locationDisabledManualAction": {
+              "title": "Location settings disabled",
+              "description": "Please enable Location settings in your phone settings to use Bluetooth"
+            },
+            "locationServicePermissionMissing": {
+              "title": "Location permission needed",
+              "description": "Please enable Location permission to use Bluetooth"
+            },
+            "unknown": {
+              "title": "Unable to discover devices",
+              "description": "Unable to discover devices."
+            }
+          }
+        },
+        "loading": {
+          "title": "Loading"
+        },
+        "noKnownDevice": {
+          "title": "Ledger device required",
+          "description": "To continue, set up or connect your signer.",
+          "connectLedgerDevice": "Connect Ledger device",
+          "noLedgerDevice": "I don't have a Ledger device"
+        },
+        "waitingForSelectedDevice": {
+          "title": "Power on and unlock your {{productName}}"
+        }
+      }
+    }
+  },
   "DeviceAction": {
     "stayInTheAppPlz": "Stay in the Ledger Wallet app and keep your Ledger nearby.",
     "allowAppPermission": "Open the {{wording}} app on your device",
@@ -4822,7 +5030,7 @@
     "useAnotherDevice": "Use another device",
     "deviceNotOnboarded": {
       "title": "Your Ledger is not ready to use yet",
-      "description": "You need to setup {{deviceName}} first. We will guide you through the device setup process"
+      "description": "You need to set up {{deviceName}} first. We will guide you through the device setup process"
     },
     "deviceInBootloader": {
       "title": "Device in Bootloader mode.",
@@ -5482,7 +5690,11 @@
     "undelegation": {
       "undelegate": "Undelegate",
       "undelegationMessage": "By un-delegating you will not receive any rewards for current and upcoming epochs",
-      "verificationSuccessTitle": "You have successfully undelegated your assets"
+      "verificationSuccessTitle": "You have successfully undelegated your assets",
+      "dRepDelegationSelfTransactionDrawer": {
+        "title": "Prepare Undelegation",
+        "description": "To close your staking account and reclaim your ADA deposit:\n\nCardano’s governance now requires you to define your voting status before you can undelegate.\n\nThis step involves a send transaction to your own Ledger address that simply serves to register your choice to abstain from voting. It will cost only the standard network fee and your ADA stays in your wallet.\n\nOnce this preference is recorded, you will be able to undelegate as usual."
+      }
     },
     "delegation": {
       "pool": "Pool",
@@ -6253,6 +6465,208 @@
     },
     "delegation": {
       "addCustomValidator": "+ Add custom validator"
+    }
+  },
+  "evm": {
+    "info": {
+      "available": {
+        "title": "{{currencyTicker}} available",
+        "description": "This amount is disposable."
+      },
+      "delegated": {
+        "title": "Delegated assets",
+        "description": "Delegated assets are used for {{currencyName}} voting. This is your total number of votes."
+      },
+      "undelegating": {
+        "title": "Undelegating",
+        "description": "Undelegated assets are in a timelock of {{numberOfDays}} days, before being available."
+      },
+      "delegationUnavailable": {
+        "title": "Delegation unavailable",
+        "description": "Not enough available balance in your account to start a new delegation."
+      }
+    },
+    "delegation": {
+      "delegationEarn": "You can earn {{ticker}} rewards by delegating your assets.",
+      "info": "How Delegation works",
+      "claimRewards": "Claim rewards",
+      "claimAvailableRewards": "Claim {{amount}}",
+      "commission": "Commission",
+      "header": "Delegation(s)",
+      "Amount": "Amount",
+      "noRewards": "No rewards available",
+      "delegate": "Delegate",
+      "undelegate": "Undelegate",
+      "redelegate": "Redelegate",
+      "reward": "Claim rewards",
+      "totalStake": "Total Stake",
+      "stepperHeader": {
+        "starter": "Earn rewards",
+        "validator": "Delegate assets",
+        "amountSubTitle": "Amount to delegate",
+        "summary": "Summary",
+        "verification": "Verification",
+        "selectDevice": "Select device",
+        "connectDevice": "Connect device",
+        "stepRange": "Step {{currentStep}} of {{totalSteps}}"
+      },
+      "flow": {
+        "steps": {
+          "starter": {
+            "description": "Delegate your {{ticker}} to earn rewards securely, keeping control of your assets.",
+            "steps": {
+              "0": "Delegated assets remain yours.",
+              "1": "You will have to wait {{numberOfDays}} days for the undelegation to complete.",
+              "2": "Delegate securely with your Ledger device."
+            },
+            "warning": {
+              "description": "Choose your validator wisely: Part of your delegated assets may be irrevocably lost if the validator does not behave appropriately."
+            },
+            "cta": "Continue"
+          },
+          "validator": {
+            "validators": "Validators",
+            "myDelegations": "My delegations",
+            "cta": "Continue",
+            "estYield": "Est. yield: {{amount}}",
+            "totalAvailable": "Total available: <0>{{amount}}</0>",
+            "allAssetsUsed": "All assets used",
+            "noResultsFound": "No validator found for <0>{{search}}</0>",
+            "currentAmount": "(+ <0>{{amount}}</0>)"
+          },
+          "amount": {
+            "assetsRemaining": "Assets remaining: <0>{{amount}}</0>",
+            "allAssetsUsed": "All assets used",
+            "minAmount": "Minimum amount: <0>{{min}}</0>",
+            "incorrectAmount": "Maximum amount: <0>{{max}}</0>",
+            "cta": "Continue"
+          },
+          "verification": {
+            "success": {
+              "title": "You have successfully delegated your assets",
+              "text": "Your account balance will be updated once the network confirms the transaction.",
+              "cta": "View details"
+            },
+            "pending": {
+              "title": "Broadcasting transaction..."
+            },
+            "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+          }
+        }
+      },
+      "drawer": {
+        "status": "Status",
+        "rewards": "Rewards",
+        "active": "Active",
+        "inactive": "Inactive",
+        "completionDate": "Completion date",
+        "redelegatedFrom": "Redelegated from"
+      }
+    },
+    "redelegation": {
+      "estYield": "est. yield",
+      "stepperHeader": {
+        "validator": "Choose new validator",
+        "amountSubTitle": "Amount to redelegate",
+        "amountTitle": "{{from}} → {{to}}",
+        "summary": "Summary",
+        "selectDevice": "Select device",
+        "connectDevice": "Connect device",
+        "stepRange": "Step {{currentStep}} of {{totalSteps}}"
+      },
+      "flow": {
+        "steps": {
+          "validator": {
+            "validators": "Validators",
+            "myDelegations": "My delegations",
+            "cta": "Continue",
+            "estYield": "Est. yield: {{amount}}",
+            "totalAvailable": "Total available: <0>{{amount}}</0>",
+            "allAssetsUsed": "All assets used",
+            "noResultsFound": "No validator found for <0>{{search}}</0>"
+          },
+          "amount": {
+            "newRedelegatedBalance": "New total for <0>{{name}}</0> after operation: <0>{{amount}}</0>",
+            "allAssetsUsed": "All assets used"
+          },
+          "verification": {
+            "success": {
+              "title": "You have successfully redelegated your assets",
+              "text": "Your account balance will be updated when the network confirms the transaction.",
+              "cta": "View details"
+            },
+            "pending": {
+              "title": "Broadcasting transaction..."
+            },
+            "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+          }
+        }
+      }
+    },
+    "undelegation": {
+      "stepperHeader": {
+        "amountSubTitle": "Amount to undelegate",
+        "summary": "Summary",
+        "selectDevice": "Select device",
+        "connectDevice": "Connect device",
+        "stepRange": "Step {{currentStep}} of {{totalSteps}}"
+      },
+      "flow": {
+        "steps": {
+          "amount": {
+            "allAssetsUsed": "All assets undelegated"
+          },
+          "verification": {
+            "success": {
+              "title": "You have successfully undelegated your assets",
+              "text": "Your account balance will be updated when the network confirms the transaction.",
+              "cta": "View details"
+            },
+            "pending": {
+              "title": "Broadcasting transaction..."
+            },
+            "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+          }
+        }
+      }
+    },
+    "claimRewards": {
+      "stepperHeader": {
+        "validator": "Select reward to collect",
+        "method": "Claim rewards",
+        "summary": "Summary",
+        "selectDevice": "Select device",
+        "connectDevice": "Connect device",
+        "stepRange": "Step {{currentStep}} of {{totalSteps}}"
+      },
+      "flow": {
+        "steps": {
+          "method": {
+            "youEarned": "You earned",
+            "byDelegationAssetsTo": "by delegating assets to",
+            "claimReward": "Cash in",
+            "claimRewardCompound": "Compound",
+            "claimRewardInfo": "They will be claimed now and added to your available balance.",
+            "claimRewardCompoundInfo": "They will be claimed now and automatically delegated to the same validator.",
+            "compoundOrCashIn": "Compound or Cash in?",
+            "claimRewardTooltip": "Rewards will be added to the available balance",
+            "claimRewardCompoundTooltip": "Rewards will be added to the delegated amount",
+            "cta": "Continue"
+          },
+          "verification": {
+            "success": {
+              "title": "You have successfully claimed your rewards. They were added to your available balance.",
+              "titleCompound": "Your rewards were delegated to the same validator.",
+              "text": "Your account balance will be updated when the network confirms the transaction.",
+              "cta": "View details"
+            },
+            "pending": {
+              "title": "Broadcasting transaction..."
+            },
+            "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+          }
+        }
+      }
     }
   },
   "tron": {
@@ -7233,6 +7647,11 @@
         "redelegate": "You will have to wait {{numberOfDays}} days for undelegated assets to return to the available balance.",
         "undelegate": "You will have to wait {{numberOfDays}} days for undelegated assets to return to the available balance."
       },
+      "evm": {
+        "claimReward": "If the selected validator has pending rewards, they will automatically be claimed.",
+        "redelegate": "You will have to wait {{numberOfDays}} days for undelegated assets to return to the available balance.",
+        "undelegate": "You will have to wait {{numberOfDays}} days for undelegated assets to return to the available balance."
+      },
       "lending": "Verify the operation details on your device before sending it."
     },
     "amount": "Amount",
@@ -7570,6 +7989,34 @@
       "title": "Transaction history"
     }
   },
+  "pnl": {
+    "unrealisedReturn": {
+      "title": "Unrealised return"
+    },
+    "costBasis": {
+      "title": "Cost basis",
+      "drawer": {
+        "title": "Cost basis",
+        "body": "The total amount you paid to acquire your current holdings, including fees."
+      }
+    },
+    "drawer": {
+      "title": "Profit and loss",
+      "description": "Your portfolio performance broken down into realised and unrealised returns.",
+      "totalReturn": {
+        "title": "Total return",
+        "definition": "Realised and unrealised returns combined, reflecting your overall position."
+      },
+      "unrealisedReturn": {
+        "title": "Unrealised return",
+        "definition": "Estimated gain or loss on your current holdings."
+      },
+      "realisedReturn": {
+        "title": "Realised return",
+        "definition": "Profit or loss confirmed from previous sales or outgoing transfers."
+      }
+    }
+  },
   "hedera": {
     "name": "hedera",
     "createHederaAccountHelp": {
@@ -7840,11 +8287,6 @@
       "viewWallet": "Explore my portfolio",
       "deviceStepComplete": "Complete"
     },
-    "entryPointCard": {
-      "title": "What's next for your {{productName}}?",
-      "description": "Secure your assets and go further.",
-      "buttonLabel": "See what's next"
-    },
     "drawer": {
       "title": "Next, finish wallet setup",
       "titleCompleted": "You’re all set!",
@@ -8042,6 +8484,24 @@
         "daily": "Daily rewards",
         "eigenlayer_points": "Eigenlayer points",
         "validator": "Validator rewards"
+      },
+      "info": {
+        "available": {
+          "title": "{{currencyTicker}} available",
+          "description": "This amount is disposable."
+        },
+        "delegated": {
+          "title": "Delegated assets",
+          "description": "Delegated assets are used for {{currencyName}} voting. This is your total number of votes."
+        },
+        "undelegating": {
+          "title": "Undelegating",
+          "description": "Undelegated assets are in a timelock of {{numberOfDays}} days, before being available."
+        },
+        "delegationUnavailable": {
+          "title": "Delegation unavailable",
+          "description": "Not enough available balance in your account to start a new delegation."
+        }
       }
     },
     "noFundsModal": {
@@ -8066,6 +8526,13 @@
     "getFundsModal": {
       "text": "Get {{coin}} to stake",
       "description": "Buy, swap or receive crypto directly to your Ledger using Ledger Wallet."
+    },
+    "default": {
+      "info": {
+        "undelegating": {
+          "description": "This is the amount currently leaving staking. It will appear in your available balance once the withdrawal has finished."
+        }
+      }
     }
   },
   "analyticsOptIn": {
@@ -8457,6 +8924,59 @@
         "1y": "1 year"
       },
       "chartPlaceholder": "Graphic"
+    },
+    "addresses": {
+      "title": "Addresses",
+      "addAccount": "Add",
+      "seeAll": "See all",
+      "empty": "No addresses yet. Tap Add to get started."
+    },
+    "marketStats": {
+      "title": "Market stats",
+      "marketCap": "Market cap",
+      "marketRank": "Market rank",
+      "circulatingSupply": "Circulating supply",
+      "circulatingSupplyTooltip": "The number of coins currently available for trading and circulating in the market.",
+      "maxSupply": "Max supply",
+      "maxSupplyTooltip": "The maximum number of coins that will ever exist for this cryptocurrency.",
+      "tradingVolume": "24h trading volume",
+      "error": "Unable to load market stats"
+    },
+    "pricePerformance": {
+      "title": "Price performance",
+      "allTimeHigh": "All-time high",
+      "allTimeLow": "All-time low",
+      "yearsAgo": "{{count}}y ago",
+      "monthsAgo": "{{count}}m ago",
+      "daysAgo": "{{count}}d ago",
+      "hoursAgo": "{{count}}h ago",
+      "minutesAgo": "{{count}}min ago",
+      "justNow": "just now",
+      "error": "Unable to load price performance"
+    },
+    "transactions": {
+      "title": "Transactions"
+    },
+    "fallbackBanner": {
+      "title": "Swap and Buy are not supported for this asset."
+    },
+    "balanceDetails": {
+      "totalBalance": "Total balance",
+      "transfer": "Transfer",
+      "availableBalance": "Available balance",
+      "earnDeposit": "Earn deposit",
+      "earnBanner": "Earn up to {{apy}}% {{type}}",
+      "earnBannerGeneric": "Earn with this asset",
+      "earnBannerSubtitle": "Hold and earn with this asset",
+      "earnBannerAction": "Go to Earn",
+      "availableBalanceTooltip": "Funds available for immediate use, excluding staked or delegated amounts."
+    },
+    "coinOptions": {
+      "openMenuA11yLabel": "Coin options",
+      "addFavourite": "Add to favourites",
+      "removeFavourite": "Remove from favourites",
+      "hideFromPortfolio": "Hide from portfolio",
+      "showInPortfolio": "Show in portfolio"
     }
   },
   "assetSelection": {
@@ -8676,6 +9196,36 @@
       "lockedBalanceTooltip": "Your funds are locked in offers you've sent to others. You can cancel these offers any time, or wait for the recipient to accept or reject.",
       "withdrawableBalance": "Withdrawable",
       "withdrawableBalanceTooltip": "Funds you can reclaim from offers you sent that have expired. Withdraw to move these back to your available balance."
+    },
+    "disclaimer": {
+      "title": "Setup Canton Network",
+      "intro": "Canton has unique properties that require your awareness before continuing:",
+      "bullets": {
+        "utxo": {
+          "title": "UTXO-based balance",
+          "body": "Balance exists as individual coin contracts, capped at 100 per transfer. Idle contracts lose value over time and expire if fees exceed their balance."
+        },
+        "offers": {
+          "title": "Offer-based transfers",
+          "body": "Nothing settles automatically. Sent transfers can be withdrawn; received transfers need manual accept or reject. Manage offers from your Canton dashboard."
+        },
+        "dualValidator": {
+          "title": "Dual-validator security",
+          "body": "Transactions require co-signing from both Ledger and Klin. Neither can act on your behalf alone."
+        },
+        "tokenLiability": {
+          "title": "Standard token liability ⚠️",
+          "body": "Token recovery in a failure scenario is the token issuer's responsibility, not Ledger's."
+        }
+      },
+      "agreeLabel": "I agree to <1>Canton Network Terms and Ledger’s liability exclusion</1>",
+      "cancel": "Cancel",
+      "agree": "Agree",
+      "terms": {
+        "title": "Canton Network Terms",
+        "sectionTitle": "Standard Token Liability & Recovery",
+        "body": "Ledger only supports standard tokens issued through the Digital Asset (DA) Registry. Ledger is not the issuer of these tokens and holds no liability for their value, management, or underlying smart contracts.\n\nIn the event of a Ledger service disruption or \"disaster recovery\" failure, Ledger cannot recover your assets. You must contact the specific Token Issuer (Asset Admin) directly to initiate recovery via their \"Asset Freeze\" or \"Registry Recovery\" protocols. Your recourse lies solely with the Token Issuer under their existing Service Level Agreements (SLAs). By proceeding, you acknowledge that Ledger and its affiliates are excluded from all liability arising from the loss, recovery, or inability to recover these tokens."
+      }
     },
     "onboard": {
       "account": "Account",

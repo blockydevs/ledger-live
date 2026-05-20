@@ -6,8 +6,9 @@ import type {
   CosmosMappedDelegation,
   CosmosValidatorItem,
   Transaction,
+  Transaction as CosmosTransaction,
 } from "@ledgerhq/live-common/families/cosmos/types";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { getMainAccount } from "@ledgerhq/live-common/account/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useCosmosFamilyMappedDelegations } from "@ledgerhq/live-common/families/cosmos/react";
@@ -30,10 +31,10 @@ function ClaimRewardsSelectValidator({ navigation, route }: Props) {
   const { account } = useAccountScreen(route);
   invariant(account, "account required");
   const mainAccount = getMainAccount(account, undefined) as CosmosAccount;
-  const bridge = getAccountBridge(account, undefined);
+  const bridge = useAccountBridge<CosmosTransaction>(account, undefined);
   const { cosmosResources } = mainAccount;
   invariant(cosmosResources, "cosmosResources required");
-  const transaction = useBridgeTransaction(() => {
+  const transaction = useBridgeTransaction(bridge, () => {
     const t = bridge.createTransaction(mainAccount);
     return {
       account,
@@ -52,7 +53,7 @@ function ClaimRewardsSelectValidator({ navigation, route }: Props) {
         validators: [
           {
             address: validator.validatorAddress,
-            amount: value,
+            amount: value ?? new BigNumber(0),
           },
         ],
       });

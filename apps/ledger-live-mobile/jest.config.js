@@ -50,10 +50,14 @@ const transformIncludePatterns = [
   "@mysten",
   "@scure",
   "@noble",
+  "d3-.*",
+  "internmap",
 ];
 
 /** @type {import('@swc/jest').JestConfigWithTsJest} */
 module.exports = {
+  /** CI sets `JEST_MAX_WORKERS` (e.g. `100%`); local default leaves laptops headroom. */
+  maxWorkers: process.env.JEST_MAX_WORKERS || "50%",
   verbose: true,
   preset: "react-native",
   workerIdleMemoryLimit: "1GB",
@@ -103,12 +107,12 @@ module.exports = {
   coverageReporters: ["json", ["lcov", { projectRoot: "../" }], "json-summary"],
   reporters: [
     "default",
+    ...(process.env.CI ? ["github-actions"] : []),
     ["jest-sonar", { outputName: "sonar-executionTests-report.xml", reportedFilePath: "absolute" }],
   ],
   resolver: "<rootDir>/scripts/resolver.js",
   moduleNameMapper: {
     ...pathsToModuleNameMapper(compilerOptions.paths),
-    "^@features/(.*)$": "<rootDir>/../../features/$1/src",
     "^@ledgerhq/lumen-ui-rnative$":
       "<rootDir>/node_modules/@ledgerhq/lumen-ui-rnative/src/index.ts",
     "^@ledgerhq/lumen-design-core$": "<rootDir>/node_modules/@ledgerhq/lumen-design-core",

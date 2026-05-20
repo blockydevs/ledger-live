@@ -4,6 +4,7 @@ import { accountsHandler, accountHandler } from "./handlers/accounts.handler";
 import { addAccountHandler } from "./handlers/addAccount.handler";
 import { buyHandler } from "./handlers/buy.handler";
 import { earnHandler } from "./handlers/earn.handler";
+import { borrowHandler } from "./handlers/borrow.handler";
 import { managerHandler } from "./handlers/manager.handler";
 import { swapHandler } from "./handlers/swap.handler";
 import { bridgeHandler } from "./handlers/bridge.handler";
@@ -15,6 +16,7 @@ import { recoverHandler, recoverRestoreFlowHandler } from "./handlers/recover.ha
 import { perpsHandler } from "./handlers/perps.handler";
 import { postOnboardingHandler } from "./handlers/postOnboarding.handler";
 import { ledgerSyncHandler } from "./handlers/ledgerSync.handler";
+import { productTourHandler } from "./handlers/productTour.handler";
 import { defaultHandler } from "./handlers/default.handler";
 
 export const deeplinkRegistry: DeeplinkHandlerRegistry = {
@@ -23,6 +25,7 @@ export const deeplinkRegistry: DeeplinkHandlerRegistry = {
   "add-account": addAccountHandler,
   buy: buyHandler,
   earn: earnHandler,
+  borrow: borrowHandler,
   myledger: managerHandler,
   swap: swapHandler,
   bridge: bridgeHandler,
@@ -40,6 +43,7 @@ export const deeplinkRegistry: DeeplinkHandlerRegistry = {
   "recover-restore-flow": recoverRestoreFlowHandler,
   "post-onboarding": postOnboardingHandler,
   ledgersync: ledgerSyncHandler,
+  "product-tour": productTourHandler,
   default: defaultHandler,
 };
 

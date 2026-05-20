@@ -222,6 +222,16 @@ const envDefinitions = {
     def: "https://sui.coin.ledger.com",
     desc: "reverse proxy url for sui node",
   },
+  API_SUI_GRAPHQL_PROXY: {
+    parser: stringParser,
+    def: "https://sui.coin.ledger.com/graphql",
+    desc: "reverse proxy url for sui graphql",
+  },
+  API_SUI_TESTNET_GRAPHQL_PROXY: {
+    parser: stringParser,
+    def: "https://graphql.testnet.sui.io/graphql",
+    desc: "GraphQL endpoint url for sui testnet",
+  },
   SUI_ENABLE_TOKENS: {
     parser: boolParser,
     def: true,
@@ -288,7 +298,7 @@ const envDefinitions = {
     desc: "Thorest API for VeChain",
   },
   ALEO_MAINNET_NODE_ENDPOINT: {
-    def: "https://aleo.coin.ledger-test.com",
+    def: "https://aleo.coin.ledger.com",
     parser: stringParser,
     desc: "Aleo mainnet node URL",
   },
@@ -298,7 +308,7 @@ const envDefinitions = {
     desc: "Aleo mainnet SDK URL",
   },
   ALEO_TESTNET_NODE_ENDPOINT: {
-    def: "https://aleo.coin.ledger-test.com",
+    def: "https://aleo.coin.ledger.com",
     parser: stringParser,
     desc: "Aleo testnet node URL",
   },
@@ -1029,7 +1039,7 @@ const envDefinitions = {
     desc: "Enable logs for drawers",
   },
   LW_ICONS_AVATARS_CDN_BASE_URL: {
-    def: "https://lw-icons.ledger.com/icons/cdn/Avatars/v1/64x64",
+    def: "https://lw-icons.ledger.com/cdn/Avatars/v1/192x192",
     parser: stringParser,
     desc: "Base URL for Ledger Wallet icons CDN",
   },

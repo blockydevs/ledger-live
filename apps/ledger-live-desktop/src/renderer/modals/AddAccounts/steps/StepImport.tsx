@@ -3,14 +3,14 @@ import { useDispatch } from "LLD/hooks/redux";
 import styled from "styled-components";
 import { Trans } from "react-i18next";
 import { concat, from, Subscription } from "rxjs";
-import { ignoreElements, filter, map, retry } from "rxjs/operators";
+import { ignoreElements, filter, map, retry, concatMap } from "rxjs/operators";
 import { Account } from "@ledgerhq/types-live";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
 import { isCantonAccount } from "@ledgerhq/coin-canton/bridge/serialization";
 import { isConcordiumAccount } from "@ledgerhq/coin-concordium/bridge/serialization";
 import { openModal } from "~/renderer/actions/modals";
 import { DeviceShouldStayInApp, UnresponsiveDeviceError } from "@ledgerhq/errors";
-import { getCurrencyBridge } from "@ledgerhq/live-common/bridge/index";
+import { getAccountBridge, getCurrencyBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridgeMany } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import uniq from "lodash/uniq";
 import { urls } from "~/config/urls";
 import logger from "~/renderer/logger";
@@ -32,6 +32,7 @@ import { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { getLLDCoinFamily } from "~/renderer/families";
 import { groupAddAccounts } from "@ledgerhq/live-wallet/addAccounts";
 import { getDefaultAccountName } from "@ledgerhq/live-wallet/accountName";
+import { classifyChecked } from "./stepImportSelection";
 
 type Props = AccountListProps & {
   defaultSelected: boolean;
@@ -119,14 +120,14 @@ class StepImport extends PureComponent<
     }
   };
 
-  startScanAccountsDevice() {
+  async startScanAccountsDevice() {
     this.unsub();
     try {
       const { currency, device, setScanStatus, setScannedAccounts, blacklistedTokenIds } =
         this.props;
       if (!currency || !device) throw new UnresponsiveDeviceError();
       const mainCurrency = currency.type === "TokenCurrency" ? currency.parentCurrency : currency;
-      const bridge = getCurrencyBridge(mainCurrency);
+      const bridge = await getCurrencyBridge(mainCurrency);
 
       // will be set to false if an existing account is found
       let onlyNewAccounts = true;
@@ -148,13 +149,16 @@ class StepImport extends PureComponent<
           filter(e => e.type === "discovered"),
           map(e => e.account),
           retry(2), //needs to retry to output proper error message
+          concatMap(async account => {
+            const accountBridge = await getAccountBridge(account);
+            return { account, isNewAccount: accountBridge.isAccountEmpty(account) };
+          }),
         )
         .subscribe({
-          next: account => {
+          next: ({ account, isNewAccount }) => {
             const { scannedAccounts, checkedAccountsIds, existingAccounts } = this.props;
             const hasAlreadyBeenScanned = !!scannedAccounts.find(a => account.id === a.id);
             const hasAlreadyBeenImported = !!existingAccounts.find(a => account.id === a.id);
-            const isNewAccount = isAccountEmpty(account);
             if (!isNewAccount && !hasAlreadyBeenImported) {
               onlyNewAccounts = false;
             }
@@ -387,14 +391,11 @@ export const StepImportFooter = ({
   editedNames,
 }: StepProps) => {
   const dispatch = useDispatch();
-  const willCreateAccount = checkedAccountsIds.some(id => {
-    const account = scannedAccounts.find(a => a.id === id);
-    return account && isAccountEmpty(account);
-  });
-  const willAddAccounts = checkedAccountsIds.some(id => {
-    const account = scannedAccounts.find(a => a.id === id);
-    return account && !isAccountEmpty(account);
-  });
+  const checkedAccounts = checkedAccountsIds
+    .map(id => scannedAccounts.find(a => a.id === id))
+    .filter((a): a is Account => !!a);
+  const checkedBridges = useAccountBridgeMany(checkedAccounts);
+  const { willCreateAccount, willAddAccounts } = classifyChecked(checkedAccounts, checkedBridges);
   const count = checkedAccountsIds.length;
   const willClose = !willCreateAccount && !willAddAccounts;
 
@@ -421,6 +422,7 @@ export const StepImportFooter = ({
   const goCantonOnboard = () => {
     onCloseModal();
     const mainCurrency = currency?.type === "TokenCurrency" ? currency.parentCurrency : currency;
+    if (!mainCurrency) return;
     dispatch(
       openModal("MODAL_CANTON_ONBOARD_ACCOUNT", {
         currency: mainCurrency,
@@ -435,6 +437,7 @@ export const StepImportFooter = ({
   const goConcordiumOnboard = () => {
     onCloseModal();
     const mainCurrency = currency?.type === "TokenCurrency" ? currency.parentCurrency : currency;
+    if (!mainCurrency) return;
     dispatch(
       openModal("MODAL_CONCORDIUM_ONBOARD_ACCOUNT", {
         currency: mainCurrency,

@@ -1,5 +1,5 @@
 import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Observable, concat, find, from, ignoreElements, mergeMap, tap } from "rxjs";
+import { Observable, concat, defer, find, from, ignoreElements, mergeMap, tap } from "rxjs";
 import { Button } from "@ledgerhq/lumen-ui-react";
 import { MemberCredentials, Trustchain } from "@ledgerhq/ledger-key-ring-protocol/types";
 import { useTrustchainSDK } from "../context";
@@ -24,7 +24,7 @@ import walletsync, {
 } from "@ledgerhq/live-wallet/walletsync/index";
 import { getAccountBridge, getCurrencyBridge } from "@ledgerhq/live-common/bridge/index";
 import { getAccountCurrency } from "@ledgerhq/ledger-wallet-framework/account/helpers";
-import { Account, BridgeCacheSystem } from "@ledgerhq/types-live";
+import { Account, BridgeCacheSystem, ScanAccountEvent } from "@ledgerhq/types-live";
 import { makeBridgeCacheSystem } from "@ledgerhq/live-common/bridge/cache";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
@@ -32,7 +32,6 @@ import connectApp from "@ledgerhq/live-common/hw/connectApp";
 import { formatCurrencyUnit } from "@ledgerhq/coin-module-framework/currencies/formatCurrencyUnit";
 import { listSupportedCurrencies } from "@ledgerhq/ledger-wallet-framework/currencies/support";
 import { getCurrencyColor } from "@ledgerhq/live-common/currencies/color";
-import { getValidCryptoIconSize } from "@ledgerhq/live-common/helpers/cryptoIconSize";
 import { CryptoIcon } from "@ledgerhq/crypto-icons";
 import { Loading } from "./Loading";
 import { TrustchainEjected } from "@ledgerhq/ledger-key-ring-protocol/errors";
@@ -311,21 +310,24 @@ function HeadlessAddAccounts({
       if (!currencyId) return;
       setDisabled(true);
       const currency = getCryptoCurrencyById(String(currencyId));
-      const currencyBridge = getCurrencyBridge(currency);
       const sub = appForCurrency(deviceId, currency, () =>
-        concat(
-          from(bridgeCache.prepareCurrency(currency)).pipe(ignoreElements()),
-          currencyBridge.scanAccounts({
-            currency,
-            deviceId,
-            syncConfig: {
-              paginationConfig: {},
-              blacklistedTokenIds: [],
-            },
-          }),
+        defer(() => Promise.resolve(getCurrencyBridge(currency))).pipe(
+          mergeMap(currencyBridge =>
+            concat(
+              from(bridgeCache.prepareCurrency(currency)).pipe(ignoreElements()),
+              currencyBridge.scanAccounts({
+                currency,
+                deviceId,
+                syncConfig: {
+                  paginationConfig: {},
+                  blacklistedTokenIds: [],
+                },
+              }),
+            ),
+          ),
         ),
       ).subscribe({
-        next: event => {
+        next: (event: ScanAccountEvent) => {
           if (event.type === "discovered") {
             addAccounts([event.account]);
           }
@@ -386,7 +388,7 @@ function AccountRow({
   const ledgerId = currency.id;
   const ticker = currency.ticker;
   const network = currency.type === "TokenCurrency" ? currency.parentCurrency.id : undefined;
-  const validSize = getValidCryptoIconSize(20);
+  const validSize = 20;
 
   return (
     <li className="flex items-center px-16 py-6 border-b border-base">
@@ -409,7 +411,12 @@ function AccountRow({
       <span className="flex-1" />
       <code className="body-4 pr-10 text-muted">{account.freshAddressPath}</code>
       <span>
-        <Button size="sm" appearance="transparent" type="button" onClick={() => removeAccount(account.id)}>
+        <Button
+          size="sm"
+          appearance="transparent"
+          type="button"
+          onClick={() => removeAccount(account.id)}
+        >
           Remove
         </Button>
       </span>

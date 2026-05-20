@@ -174,6 +174,14 @@ describe("useConfirmationViewModel", () => {
       root.render(<HookProbe onResult={vm => (latestVM = vm)} />);
     });
 
+    expect(trackPage).toHaveBeenCalledWith("Modal send - action rejected", null, {
+      flow: "send",
+      blockchain: "",
+      currency: "",
+      currency_id: "",
+      newSendFlow: true,
+    });
+
     expect(latestVM?.status).toBe("IDLE");
   });
 
@@ -205,6 +213,9 @@ describe("useConfirmationViewModel", () => {
       page: "step confirmation",
       flow: "send",
       blockchain: "",
+      currency: "",
+      currency_id: "",
+      newSendFlow: true,
     });
     expect(setDrawer).toHaveBeenCalledWith(OperationDetails, {
       operationId: "child1",
@@ -317,9 +328,12 @@ describe("useConfirmationViewModel", () => {
     });
     latestVM?.onClose();
 
-    expect(trackPage).toHaveBeenCalledWith("Modal send - step confirmation", null, {
+    expect(trackPage).toHaveBeenCalledWith("Modal send - transaction sent", null, {
       flow: "send",
       blockchain: "",
+      currency: "",
+      currency_id: "",
+      newSendFlow: true,
     });
     expect(close).toHaveBeenCalled();
   });

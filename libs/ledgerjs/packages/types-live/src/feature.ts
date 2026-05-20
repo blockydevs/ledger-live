@@ -265,6 +265,7 @@ export type Features = CurrencyFeatures & {
   llNftEntryPoint: Feature_LlNftEntryPoint;
   ldmkSolanaSigner: DefaultFeature;
   ldmkCosmosSigner: DefaultFeature;
+  suiGraphqlTransport: DefaultFeature;
   ldmkConnectApp: DefaultFeature;
   lldNetworkBasedAddAccount: DefaultFeature;
   llmDatadog: {
@@ -319,13 +320,17 @@ export type Features = CurrencyFeatures & {
   llmOnboardingEnableSync: Feature_OnboardingEnableSync;
   lldOnboardingEnableSync: Feature_OnboardingEnableSync;
   lwdGenericAwarenessModal: DefaultFeature;
+  lwmAnalyticsConsentOnboarding: DefaultFeature;
   lwmGenericAwarenessModal: DefaultFeature;
   lwmProductTour: DefaultFeature;
   lwmWallet40: Feature_LwmWallet40;
   lwdWallet40: Feature_LwdWallet40;
   addressPoisoningOperationsFilter: Feature_AddressPoisoningOperationsFilter;
+  concordiumVerifyAddress: DefaultFeature;
   lldHideSmallValueTokenOperations: Feature_LldHideSmallValueTokenOperations;
   llmTransferButtonCopyVariant: Feature_LlmTransferButtonCopyVariant;
+  lldTezosStaking: DefaultFeature;
+  llmTezosStaking: DefaultFeature;
 };
 
 /**
@@ -452,6 +457,10 @@ export type Feature_BrazePushNotifications = Feature<{
       timer: number;
     };
     add_favorite_coin: {
+      enabled: boolean;
+      timer: number;
+    };
+    dapp_complete: {
       enabled: boolean;
       timer: number;
     };
@@ -758,6 +767,7 @@ export type Feature_Noah = Feature<{
 
 export type Feature_NewSendFlow = Feature<{
   families?: string[];
+  excludedCurrencyIds?: string[];
 }>;
 
 export type Feature_AddressPoisoningOperationsFilter = Feature<{
@@ -864,10 +874,12 @@ type Feature_Wallet40_Params = {
   operationsList: boolean;
   aggregatedAssets: boolean;
   myWallet: boolean;
+  pnl: boolean;
   // Specifics
   brazePlacement?: boolean;
   newReceiveDialog?: boolean;
   finishOnboardingWidget?: boolean;
+  onboardingWidget?: boolean;
 };
 
 export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params & { onboardingWidget: boolean }>;

@@ -1,5 +1,217 @@
 # @ledgerhq/wallet-cli
 
+## 1.0.1
+
+### Patch Changes
+
+- Refresh README documentation for the stable v1 release and add agent guidance for wallet-cli command usage.
+
+## 1.0.0
+
+### Major Changes
+
+- Promote wallet-cli to its first stable `1.0.0` release.
+- Add npm binary publishing support for the wallet-cli wrapper and platform packages.
+- Add swap quote and execute flows, including session management, `from`/`to` execution inputs, provider filtering, Changelly mapping to `changelly_v2`, token-to-token swaps, and supported currency data in quotes.
+- `account discover` no longer exposes the raw V1 descriptor. Human output shows the session label in bold as the primary identifier; JSON output replaces descriptor strings with `{ label, freshAddress }` objects.
+- Reject raw account descriptors as CLI arguments, require session labels from `account discover`, and reject extended private keys in descriptor parsing.
+- Add token support for supported currencies.
+- Add status and genuine check commands.
+- Update wallet-cli for the `alpaca` to `coin-service` rename.
+- Rename `AlpacaApi` references to `CoinModuleApi`.
+- Await async operation serialization bridge calls.
+- Update the wallet-cli skill file with swap coverage.
+- Fix wallet CLI USB interruption and DMK teardown handling.
+
+### Patch Changes
+
+- Fix swap execution to keep the Exchange app session open across the full pipeline.
+- Harden swap execute flags and zero-amount rate output.
+- Fix `--no-verify` and other `--no-<flag>` negations being silently ignored.
+- Route human stderr messages through the shared writer for consistent capture.
+- Remove provider fee and network fee fields from swap CLI quotes.
+- Remove dry-run mode from swap execute.
+- Bundle `THIRD_PARTY_NOTICES.md` to satisfy upstream attribution.
+- Ship the Apache-2.0 `LICENSE` file in wrapper and platform tarballs.
+
+## 0.3.0
+
+### Minor Changes
+
+- [#16756](https://github.com/LedgerHQ/ledger-live/pull/16756) [`c36f57c`](https://github.com/LedgerHQ/ledger-live/commit/c36f57cc1b0ab17d2234beb5ab971cc3aa0babd0) Thanks [@Justkant](https://github.com/Justkant)! - Fix Windows WebUSB reconnect handling in wallet-cli
+
+- [#16435](https://github.com/LedgerHQ/ledger-live/pull/16435) [`7d06007`](https://github.com/LedgerHQ/ledger-live/commit/7d06007c5ac3ba52551f7d602eb1dcd24759cb41) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix `send --dry-run` and `--rbf` boolean flag parsing; add `--data` option for EVM calldata
+
+- [#16886](https://github.com/LedgerHQ/ledger-live/pull/16886) [`ce53342`](https://github.com/LedgerHQ/ledger-live/commit/ce53342114bded3d66f1b5668f03d4dcd81d8bce) Thanks [@Justkant](https://github.com/Justkant)! - Fix Windows WebUSB discovery when devices are connected after wallet-cli startup
+
+- [#16881](https://github.com/LedgerHQ/ledger-live/pull/16881) [`c28ab41`](https://github.com/LedgerHQ/ledger-live/commit/c28ab4147ab73fec30bb9bb63df6d8d84f894410) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix Solana token send (e.g. USDC) crashing with "Resolution provided without a deviceModelId"
+
+- [#16683](https://github.com/LedgerHQ/ledger-live/pull/16683) [`72ae5ec`](https://github.com/LedgerHQ/ledger-live/commit/72ae5ec62aa2457e99b2cb11444b8d7aeb1fc3b6) Thanks [@Justkant](https://github.com/Justkant)! - Improve wallet-cli device state handling and output consistency
+
+- [#16906](https://github.com/LedgerHQ/ledger-live/pull/16906) [`da54ba3`](https://github.com/LedgerHQ/ledger-live/commit/da54ba3c89c7d83a49286d784b1abc27ba1bf32b) Thanks [@lpaquet-ledger](https://github.com/lpaquet-ledger)! - fix getQuote types
+
+- [#16598](https://github.com/LedgerHQ/ledger-live/pull/16598) [`509e3fc`](https://github.com/LedgerHQ/ledger-live/commit/509e3fc04ccb3ecf9279c68c6c8d008b9473db21) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Add session layer: `account discover` now persists found accounts to `~/.local/state/ledger-wallet-cli/session.yaml`. All `--account` flags accept session labels (e.g. `ethereum-1`) in addition to full descriptors. New `session view` and `session reset` commands.
+
+### Patch Changes
+
+- Updated dependencies [[`5ddf2f0`](https://github.com/LedgerHQ/ledger-live/commit/5ddf2f01fed8d74275aeeb292a7c5ec3e346af04), [`ec88011`](https://github.com/LedgerHQ/ledger-live/commit/ec88011f8ac95632d218e1a78ecfe93f7a4f20ab), [`53182fc`](https://github.com/LedgerHQ/ledger-live/commit/53182fc7a44263443775420afee4a12f29369870), [`ee83c6b`](https://github.com/LedgerHQ/ledger-live/commit/ee83c6bc4e0a449a7db517987a857c54b6b9c53c), [`ed0dc8a`](https://github.com/LedgerHQ/ledger-live/commit/ed0dc8abc2c8f5054e655c4e12efe6fb433fbaca), [`7b63096`](https://github.com/LedgerHQ/ledger-live/commit/7b630968f16eeb18f04d499441a23e5587e59137), [`2def56d`](https://github.com/LedgerHQ/ledger-live/commit/2def56d641c0d08f5b1c57d35b068c114faf7c24), [`4ddd97a`](https://github.com/LedgerHQ/ledger-live/commit/4ddd97a99bab5b581ad5ccfd36eb420ec4ee6352), [`7fafa10`](https://github.com/LedgerHQ/ledger-live/commit/7fafa10d8af581f4433a60ea908980a726d3a777), [`ac26c8b`](https://github.com/LedgerHQ/ledger-live/commit/ac26c8bffa9b5cc9f28bed5ce3d44e32982d655c), [`177494c`](https://github.com/LedgerHQ/ledger-live/commit/177494c5020375e49eaea26cead9cbbd14cd63be), [`fb79639`](https://github.com/LedgerHQ/ledger-live/commit/fb79639eb81258bae4830ed6ffe375ae625054ad), [`05b5ea0`](https://github.com/LedgerHQ/ledger-live/commit/05b5ea0579f0325c669805711b298f2eb0bd6434), [`e9886ec`](https://github.com/LedgerHQ/ledger-live/commit/e9886ec8f6a5835a745b4e3c25920cae4f1bb11f), [`054a8e8`](https://github.com/LedgerHQ/ledger-live/commit/054a8e8c7d4e1be511232a53a015d0bcc111e62e), [`aa867e1`](https://github.com/LedgerHQ/ledger-live/commit/aa867e1f5191569c13daf0261572ee0e976f58f2), [`78557fd`](https://github.com/LedgerHQ/ledger-live/commit/78557fdbee0b7c7702fc20d8a89ac62525c9aef7), [`0d11df6`](https://github.com/LedgerHQ/ledger-live/commit/0d11df6ef8dc781171071824ad1c39e3beed7730), [`5457ea4`](https://github.com/LedgerHQ/ledger-live/commit/5457ea4d13f10341403fdfec2d1fbef64cc14682), [`b866ea6`](https://github.com/LedgerHQ/ledger-live/commit/b866ea67bcbd408a33dbc9233ef55298e2a8ef25), [`add6026`](https://github.com/LedgerHQ/ledger-live/commit/add60262f879ec9288802a687f31fcc476b81ff9), [`263f6f5`](https://github.com/LedgerHQ/ledger-live/commit/263f6f5d4a5586adfff0e8a9c89de7e0276430d5), [`321a0e2`](https://github.com/LedgerHQ/ledger-live/commit/321a0e2ce948fac11f7bdf0e106eb0af57168caa), [`8bf2ba7`](https://github.com/LedgerHQ/ledger-live/commit/8bf2ba7039d42a8c50394e3ac10685be79698f91), [`7915844`](https://github.com/LedgerHQ/ledger-live/commit/7915844a237bfa98db947c42c8c0085a40840dd7), [`46b7bc6`](https://github.com/LedgerHQ/ledger-live/commit/46b7bc6c78f316c75feabb7172665b1c1a6b87e7), [`bc99a32`](https://github.com/LedgerHQ/ledger-live/commit/bc99a32703ac5b4a30de79c2eebac0f1936a7f83), [`5690acc`](https://github.com/LedgerHQ/ledger-live/commit/5690accdbdfd6939eb4e91f6b0b93e351cb33e5c), [`82a3565`](https://github.com/LedgerHQ/ledger-live/commit/82a35656fe999624004b7f166339433d024f1619), [`d308b1a`](https://github.com/LedgerHQ/ledger-live/commit/d308b1a6b9c629839f051cf367a527f4232120c7), [`8e645a0`](https://github.com/LedgerHQ/ledger-live/commit/8e645a06e3e5037812e920d462d51ae615bd6ae7), [`ab344cb`](https://github.com/LedgerHQ/ledger-live/commit/ab344cb9b820fd96fd36c04077cbbb34b7d765d5), [`a0106e4`](https://github.com/LedgerHQ/ledger-live/commit/a0106e4302776fccc0381125d4e5be4fee0e409b), [`8ddc772`](https://github.com/LedgerHQ/ledger-live/commit/8ddc772661cdfb9e89df3e7954532658dddf35ca), [`561b86b`](https://github.com/LedgerHQ/ledger-live/commit/561b86be1f972908ae950e362912519e3904917d), [`d0e4008`](https://github.com/LedgerHQ/ledger-live/commit/d0e40084a958eddb422954f37b8bbf406910d3c6), [`21e69fe`](https://github.com/LedgerHQ/ledger-live/commit/21e69fea49cffc0b1204903e539a64b83e4b28f0), [`e4f79db`](https://github.com/LedgerHQ/ledger-live/commit/e4f79dbd58b47a02f2cc8229f9fe2866f3c8dbec), [`4135055`](https://github.com/LedgerHQ/ledger-live/commit/4135055cd19e68b064f27454c536fcc5b047ffbb), [`537b277`](https://github.com/LedgerHQ/ledger-live/commit/537b277c998887dd762887f1102e50f9791c6152), [`8097fbc`](https://github.com/LedgerHQ/ledger-live/commit/8097fbc6d8bc422c42f74d92877bb5bed300a2e2), [`a22ac3e`](https://github.com/LedgerHQ/ledger-live/commit/a22ac3e225f7de60a6bc1906922a60080d1a8dcb), [`c323402`](https://github.com/LedgerHQ/ledger-live/commit/c3234025d77a1acefdbf57c7774f0d12bf34f63f), [`4daea73`](https://github.com/LedgerHQ/ledger-live/commit/4daea739d928bbd0c3c3c575ad97e30907acaeb5), [`9f50129`](https://github.com/LedgerHQ/ledger-live/commit/9f50129d6b4d7769524fcb6cd4f86bd0597418d6), [`772a16e`](https://github.com/LedgerHQ/ledger-live/commit/772a16eb188ac03fb9c3c509282ea58b7a840831), [`e6dc658`](https://github.com/LedgerHQ/ledger-live/commit/e6dc658b83ebd2102e19a1fead021443457c05d9), [`7f80800`](https://github.com/LedgerHQ/ledger-live/commit/7f80800b3949541e54a6000cfe9398844e23ccff), [`ef08282`](https://github.com/LedgerHQ/ledger-live/commit/ef08282513f27162b3ebc411315b29f6bd1a367d), [`05c7997`](https://github.com/LedgerHQ/ledger-live/commit/05c7997780ff8aa30ab7c16eb1e8a59563b44482), [`3fee08f`](https://github.com/LedgerHQ/ledger-live/commit/3fee08faa998082e23de114574920d0c6d1ea84d), [`02d837c`](https://github.com/LedgerHQ/ledger-live/commit/02d837c6cbb4387e3957eee11cc8b4512a70fe97), [`2d5ee2b`](https://github.com/LedgerHQ/ledger-live/commit/2d5ee2bc8380e1ec8e30f2818d234527b0f2b006), [`fb4d165`](https://github.com/LedgerHQ/ledger-live/commit/fb4d1656be8dc8e933e55600970a2e991fbaeebb), [`df992ba`](https://github.com/LedgerHQ/ledger-live/commit/df992ba149c629f70290506045e11944821874a5), [`b8800ee`](https://github.com/LedgerHQ/ledger-live/commit/b8800ee391b24bd878a2a5e8b86008b9f3142786), [`73bfe05`](https://github.com/LedgerHQ/ledger-live/commit/73bfe055ec23e0d630f2da9f4dbc9731b6fe5190)]:
+  - @ledgerhq/live-common@34.71.0
+  - @ledgerhq/types-live@6.107.0
+  - @ledgerhq/coin-evm@3.6.0
+  - @ledgerhq/coin-bitcoin@0.40.0
+  - @ledgerhq/ledger-wallet-framework@1.4.0
+  - @ledgerhq/coin-solana@0.52.0
+  - @ledgerhq/live-env@2.34.0
+  - @ledgerhq/errors@6.35.0
+  - @ledgerhq/live-dmk-shared@0.23.0
+  - @shared/schema-primitives@0.2.0
+  - @ledgerhq/cryptoassets@13.47.0
+  - @ledgerhq/live-wallet@0.25.3
+  - @ledgerhq/hw-transport@6.35.2
+
+## 0.3.0-next.1
+
+### Patch Changes
+
+- Updated dependencies [[`e6dc658`](https://github.com/LedgerHQ/ledger-live/commit/e6dc658b83ebd2102e19a1fead021443457c05d9)]:
+  - @ledgerhq/cryptoassets@13.47.0-next.1
+  - @ledgerhq/ledger-wallet-framework@1.4.0-next.1
+  - @ledgerhq/live-common@34.71.0-next.1
+  - @ledgerhq/coin-bitcoin@0.40.0-next.1
+  - @ledgerhq/coin-evm@3.6.0-next.1
+  - @ledgerhq/coin-solana@0.52.0-next.1
+  - @ledgerhq/live-wallet@0.25.3-next.1
+
+## 0.3.0-next.0
+
+### Minor Changes
+
+- [#16756](https://github.com/LedgerHQ/ledger-live/pull/16756) [`c36f57c`](https://github.com/LedgerHQ/ledger-live/commit/c36f57cc1b0ab17d2234beb5ab971cc3aa0babd0) Thanks [@Justkant](https://github.com/Justkant)! - Fix Windows WebUSB reconnect handling in wallet-cli
+
+- [#16435](https://github.com/LedgerHQ/ledger-live/pull/16435) [`7d06007`](https://github.com/LedgerHQ/ledger-live/commit/7d06007c5ac3ba52551f7d602eb1dcd24759cb41) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix `send --dry-run` and `--rbf` boolean flag parsing; add `--data` option for EVM calldata
+
+- [#16886](https://github.com/LedgerHQ/ledger-live/pull/16886) [`ce53342`](https://github.com/LedgerHQ/ledger-live/commit/ce53342114bded3d66f1b5668f03d4dcd81d8bce) Thanks [@Justkant](https://github.com/Justkant)! - Fix Windows WebUSB discovery when devices are connected after wallet-cli startup
+
+- [#16881](https://github.com/LedgerHQ/ledger-live/pull/16881) [`c28ab41`](https://github.com/LedgerHQ/ledger-live/commit/c28ab4147ab73fec30bb9bb63df6d8d84f894410) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix Solana token send (e.g. USDC) crashing with "Resolution provided without a deviceModelId"
+
+- [#16683](https://github.com/LedgerHQ/ledger-live/pull/16683) [`72ae5ec`](https://github.com/LedgerHQ/ledger-live/commit/72ae5ec62aa2457e99b2cb11444b8d7aeb1fc3b6) Thanks [@Justkant](https://github.com/Justkant)! - Improve wallet-cli device state handling and output consistency
+
+- [#16906](https://github.com/LedgerHQ/ledger-live/pull/16906) [`da54ba3`](https://github.com/LedgerHQ/ledger-live/commit/da54ba3c89c7d83a49286d784b1abc27ba1bf32b) Thanks [@lpaquet-ledger](https://github.com/lpaquet-ledger)! - fix getQuote types
+
+- [#16598](https://github.com/LedgerHQ/ledger-live/pull/16598) [`509e3fc`](https://github.com/LedgerHQ/ledger-live/commit/509e3fc04ccb3ecf9279c68c6c8d008b9473db21) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Add session layer: `account discover` now persists found accounts to `~/.local/state/ledger-wallet-cli/session.yaml`. All `--account` flags accept session labels (e.g. `ethereum-1`) in addition to full descriptors. New `session view` and `session reset` commands.
+
+### Patch Changes
+
+- Updated dependencies [[`5ddf2f0`](https://github.com/LedgerHQ/ledger-live/commit/5ddf2f01fed8d74275aeeb292a7c5ec3e346af04), [`ec88011`](https://github.com/LedgerHQ/ledger-live/commit/ec88011f8ac95632d218e1a78ecfe93f7a4f20ab), [`53182fc`](https://github.com/LedgerHQ/ledger-live/commit/53182fc7a44263443775420afee4a12f29369870), [`ee83c6b`](https://github.com/LedgerHQ/ledger-live/commit/ee83c6bc4e0a449a7db517987a857c54b6b9c53c), [`ed0dc8a`](https://github.com/LedgerHQ/ledger-live/commit/ed0dc8abc2c8f5054e655c4e12efe6fb433fbaca), [`7b63096`](https://github.com/LedgerHQ/ledger-live/commit/7b630968f16eeb18f04d499441a23e5587e59137), [`2def56d`](https://github.com/LedgerHQ/ledger-live/commit/2def56d641c0d08f5b1c57d35b068c114faf7c24), [`4ddd97a`](https://github.com/LedgerHQ/ledger-live/commit/4ddd97a99bab5b581ad5ccfd36eb420ec4ee6352), [`7fafa10`](https://github.com/LedgerHQ/ledger-live/commit/7fafa10d8af581f4433a60ea908980a726d3a777), [`ac26c8b`](https://github.com/LedgerHQ/ledger-live/commit/ac26c8bffa9b5cc9f28bed5ce3d44e32982d655c), [`177494c`](https://github.com/LedgerHQ/ledger-live/commit/177494c5020375e49eaea26cead9cbbd14cd63be), [`fb79639`](https://github.com/LedgerHQ/ledger-live/commit/fb79639eb81258bae4830ed6ffe375ae625054ad), [`05b5ea0`](https://github.com/LedgerHQ/ledger-live/commit/05b5ea0579f0325c669805711b298f2eb0bd6434), [`e9886ec`](https://github.com/LedgerHQ/ledger-live/commit/e9886ec8f6a5835a745b4e3c25920cae4f1bb11f), [`054a8e8`](https://github.com/LedgerHQ/ledger-live/commit/054a8e8c7d4e1be511232a53a015d0bcc111e62e), [`aa867e1`](https://github.com/LedgerHQ/ledger-live/commit/aa867e1f5191569c13daf0261572ee0e976f58f2), [`78557fd`](https://github.com/LedgerHQ/ledger-live/commit/78557fdbee0b7c7702fc20d8a89ac62525c9aef7), [`0d11df6`](https://github.com/LedgerHQ/ledger-live/commit/0d11df6ef8dc781171071824ad1c39e3beed7730), [`5457ea4`](https://github.com/LedgerHQ/ledger-live/commit/5457ea4d13f10341403fdfec2d1fbef64cc14682), [`b866ea6`](https://github.com/LedgerHQ/ledger-live/commit/b866ea67bcbd408a33dbc9233ef55298e2a8ef25), [`add6026`](https://github.com/LedgerHQ/ledger-live/commit/add60262f879ec9288802a687f31fcc476b81ff9), [`263f6f5`](https://github.com/LedgerHQ/ledger-live/commit/263f6f5d4a5586adfff0e8a9c89de7e0276430d5), [`321a0e2`](https://github.com/LedgerHQ/ledger-live/commit/321a0e2ce948fac11f7bdf0e106eb0af57168caa), [`8bf2ba7`](https://github.com/LedgerHQ/ledger-live/commit/8bf2ba7039d42a8c50394e3ac10685be79698f91), [`7915844`](https://github.com/LedgerHQ/ledger-live/commit/7915844a237bfa98db947c42c8c0085a40840dd7), [`46b7bc6`](https://github.com/LedgerHQ/ledger-live/commit/46b7bc6c78f316c75feabb7172665b1c1a6b87e7), [`bc99a32`](https://github.com/LedgerHQ/ledger-live/commit/bc99a32703ac5b4a30de79c2eebac0f1936a7f83), [`5690acc`](https://github.com/LedgerHQ/ledger-live/commit/5690accdbdfd6939eb4e91f6b0b93e351cb33e5c), [`82a3565`](https://github.com/LedgerHQ/ledger-live/commit/82a35656fe999624004b7f166339433d024f1619), [`d308b1a`](https://github.com/LedgerHQ/ledger-live/commit/d308b1a6b9c629839f051cf367a527f4232120c7), [`8e645a0`](https://github.com/LedgerHQ/ledger-live/commit/8e645a06e3e5037812e920d462d51ae615bd6ae7), [`ab344cb`](https://github.com/LedgerHQ/ledger-live/commit/ab344cb9b820fd96fd36c04077cbbb34b7d765d5), [`a0106e4`](https://github.com/LedgerHQ/ledger-live/commit/a0106e4302776fccc0381125d4e5be4fee0e409b), [`8ddc772`](https://github.com/LedgerHQ/ledger-live/commit/8ddc772661cdfb9e89df3e7954532658dddf35ca), [`561b86b`](https://github.com/LedgerHQ/ledger-live/commit/561b86be1f972908ae950e362912519e3904917d), [`d0e4008`](https://github.com/LedgerHQ/ledger-live/commit/d0e40084a958eddb422954f37b8bbf406910d3c6), [`21e69fe`](https://github.com/LedgerHQ/ledger-live/commit/21e69fea49cffc0b1204903e539a64b83e4b28f0), [`e4f79db`](https://github.com/LedgerHQ/ledger-live/commit/e4f79dbd58b47a02f2cc8229f9fe2866f3c8dbec), [`4135055`](https://github.com/LedgerHQ/ledger-live/commit/4135055cd19e68b064f27454c536fcc5b047ffbb), [`537b277`](https://github.com/LedgerHQ/ledger-live/commit/537b277c998887dd762887f1102e50f9791c6152), [`8097fbc`](https://github.com/LedgerHQ/ledger-live/commit/8097fbc6d8bc422c42f74d92877bb5bed300a2e2), [`a22ac3e`](https://github.com/LedgerHQ/ledger-live/commit/a22ac3e225f7de60a6bc1906922a60080d1a8dcb), [`c323402`](https://github.com/LedgerHQ/ledger-live/commit/c3234025d77a1acefdbf57c7774f0d12bf34f63f), [`4daea73`](https://github.com/LedgerHQ/ledger-live/commit/4daea739d928bbd0c3c3c575ad97e30907acaeb5), [`9f50129`](https://github.com/LedgerHQ/ledger-live/commit/9f50129d6b4d7769524fcb6cd4f86bd0597418d6), [`772a16e`](https://github.com/LedgerHQ/ledger-live/commit/772a16eb188ac03fb9c3c509282ea58b7a840831), [`7f80800`](https://github.com/LedgerHQ/ledger-live/commit/7f80800b3949541e54a6000cfe9398844e23ccff), [`ef08282`](https://github.com/LedgerHQ/ledger-live/commit/ef08282513f27162b3ebc411315b29f6bd1a367d), [`05c7997`](https://github.com/LedgerHQ/ledger-live/commit/05c7997780ff8aa30ab7c16eb1e8a59563b44482), [`3fee08f`](https://github.com/LedgerHQ/ledger-live/commit/3fee08faa998082e23de114574920d0c6d1ea84d), [`02d837c`](https://github.com/LedgerHQ/ledger-live/commit/02d837c6cbb4387e3957eee11cc8b4512a70fe97), [`2d5ee2b`](https://github.com/LedgerHQ/ledger-live/commit/2d5ee2bc8380e1ec8e30f2818d234527b0f2b006), [`fb4d165`](https://github.com/LedgerHQ/ledger-live/commit/fb4d1656be8dc8e933e55600970a2e991fbaeebb), [`df992ba`](https://github.com/LedgerHQ/ledger-live/commit/df992ba149c629f70290506045e11944821874a5), [`b8800ee`](https://github.com/LedgerHQ/ledger-live/commit/b8800ee391b24bd878a2a5e8b86008b9f3142786), [`73bfe05`](https://github.com/LedgerHQ/ledger-live/commit/73bfe055ec23e0d630f2da9f4dbc9731b6fe5190)]:
+  - @ledgerhq/live-common@34.71.0-next.0
+  - @ledgerhq/types-live@6.107.0-next.0
+  - @ledgerhq/coin-evm@3.6.0-next.0
+  - @ledgerhq/coin-bitcoin@0.40.0-next.0
+  - @ledgerhq/ledger-wallet-framework@1.4.0-next.0
+  - @ledgerhq/coin-solana@0.52.0-next.0
+  - @ledgerhq/live-env@2.34.0-next.0
+  - @ledgerhq/errors@6.35.0-next.0
+  - @ledgerhq/live-dmk-shared@0.23.0-next.0
+  - @shared/schema-primitives@0.2.0-next.0
+  - @ledgerhq/cryptoassets@13.47.0-next.0
+  - @ledgerhq/live-wallet@0.25.3-next.0
+  - @ledgerhq/hw-transport@6.35.2-next.0
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`202cc42`](https://github.com/LedgerHQ/ledger-live/commit/202cc423b09662b5b25012b84124aecd4dc7245d)]:
+  - @ledgerhq/errors@6.34.1
+  - @ledgerhq/live-common@34.70.1
+  - @ledgerhq/coin-bitcoin@0.39.1
+  - @ledgerhq/coin-evm@3.5.1
+  - @ledgerhq/coin-solana@0.51.2
+  - @ledgerhq/ledger-wallet-framework@1.3.2
+  - @ledgerhq/cryptoassets@13.46.2
+  - @ledgerhq/hw-transport@6.35.2
+  - @ledgerhq/live-wallet@0.25.3
+  - @ledgerhq/live-dmk-shared@0.22.3
+
+## 0.2.1-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies [[`202cc42`](https://github.com/LedgerHQ/ledger-live/commit/202cc423b09662b5b25012b84124aecd4dc7245d)]:
+  - @ledgerhq/errors@6.34.1-hotfix.0
+  - @ledgerhq/live-common@34.70.1-hotfix.0
+  - @ledgerhq/coin-bitcoin@0.39.1-hotfix.0
+  - @ledgerhq/coin-evm@3.5.1-hotfix.0
+  - @ledgerhq/coin-solana@0.51.2-hotfix.0
+  - @ledgerhq/ledger-wallet-framework@1.3.2-hotfix.0
+  - @ledgerhq/cryptoassets@13.46.2-hotfix.0
+  - @ledgerhq/hw-transport@6.35.2-hotfix.0
+  - @ledgerhq/live-wallet@0.25.3-hotfix.0
+  - @ledgerhq/live-dmk-shared@0.22.3-hotfix.0
+
+## 0.2.0
+
+### Minor Changes
+
+- [#16470](https://github.com/LedgerHQ/ledger-live/pull/16470) [`e671ee0`](https://github.com/LedgerHQ/ledger-live/commit/e671ee0781983bbddfc3dffbbf386e680d3888ac) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Remove direct runtime imports of `@ledgerhq/coin-*` packages from shared live-common code (`account/helpers`, `operation`, `bridge/generic-alpaca/validateAddress`); all coin-specific behaviour is now deferred via the `coinModuleLoaders` registry. wallet-cli no longer needs the tronweb proto polyfill as a side effect.
+
+- [#16507](https://github.com/LedgerHQ/ledger-live/pull/16507) [`070336d`](https://github.com/LedgerHQ/ledger-live/commit/070336d7156850df82ab16ca3d09d6afd6398c91) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix bare boolean flags (`--dry-run`, `--rbf`, `--verify`) being silently ignored. Previously `--dry-run` without an explicit value routed the send command to the full sign-and-broadcast path; now it correctly activates the dry-run path. Root cause: missing `argumentKind: "flag"` on all boolean options.
+
+- [#16428](https://github.com/LedgerHQ/ledger-live/pull/16428) [`20a622b`](https://github.com/LedgerHQ/ledger-live/commit/20a622b84b69ceffda6451fced071d759424532d) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix JSON mode error output: route error envelopes to stdout (not stderr) so they are captured reliably on all platforms, use correct `{ ok: false, error: { command, message } }` envelope shape, and ensure invalid descriptor errors are caught by the error boundary
+
+- [#16386](https://github.com/LedgerHQ/ledger-live/pull/16386) [`542fa64`](https://github.com/LedgerHQ/ledger-live/commit/542fa64145d67864c080459577577dcfeb2cf5d4) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Add optional `data` (0x-prefixed hex calldata) field to `EvmTransactionIntentSchema`, enabling arbitrary EVM contract interactions. The bridge adapter propagates it to the live-common EVM transaction's `data: Buffer` field.
+
+- [#16392](https://github.com/LedgerHQ/ledger-live/pull/16392) [`e39bb03`](https://github.com/LedgerHQ/ledger-live/commit/e39bb0304c12cd32389e005e1ce02254f86b72ee) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Add `account fresh-address` command: resolves the fresh receive address from a V1 descriptor without requiring a device. For address-based chains (EVM, Solana) the address is extracted directly — no sync. For UTXO chains (Bitcoin) the bridge sync finds the next unused address.
+
+- [#16416](https://github.com/LedgerHQ/ledger-live/pull/16416) [`24915a2`](https://github.com/LedgerHQ/ledger-live/commit/24915a29c6b1bb4c8b0b435dabf889443721cc33) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Refactor: shared option definitions and unified CommandOutput abstraction across all commands
+
+### Patch Changes
+
+- Updated dependencies [[`292828a`](https://github.com/LedgerHQ/ledger-live/commit/292828a9797e39f6524f84a0f1064381013e2c77), [`c764fc7`](https://github.com/LedgerHQ/ledger-live/commit/c764fc74b2a0d28a6cd1ec1892968b5eb9845b14), [`e671ee0`](https://github.com/LedgerHQ/ledger-live/commit/e671ee0781983bbddfc3dffbbf386e680d3888ac), [`12eb67a`](https://github.com/LedgerHQ/ledger-live/commit/12eb67ae64f08b589c2009c977895a557d1c156f), [`fbff5f4`](https://github.com/LedgerHQ/ledger-live/commit/fbff5f407027cb2b24834fea53ef21a3ef93bf95), [`b7cdf0e`](https://github.com/LedgerHQ/ledger-live/commit/b7cdf0e7c6faca170af3bfed9042165c74517ae4), [`317c479`](https://github.com/LedgerHQ/ledger-live/commit/317c479353be58645e9581175081619d76a9b5c3), [`2374fcf`](https://github.com/LedgerHQ/ledger-live/commit/2374fcf74a240431baab4f2c73bbb1c913a0f7d5), [`b661cd9`](https://github.com/LedgerHQ/ledger-live/commit/b661cd965e9634840e2ebafb2fbbd1b1328ce98f), [`c51170a`](https://github.com/LedgerHQ/ledger-live/commit/c51170a8d615d5eb3b10b0572d4960e0d36ebc6b), [`8ade8bd`](https://github.com/LedgerHQ/ledger-live/commit/8ade8bdfb0826dc1dbea50a3aa4682cab52ee7b6), [`3e00c6c`](https://github.com/LedgerHQ/ledger-live/commit/3e00c6c2c70497cdb41ae939e97c57bb0911e46c), [`178bda8`](https://github.com/LedgerHQ/ledger-live/commit/178bda8455ef6aca48eaa00ccc0c37adf582d86f), [`093017c`](https://github.com/LedgerHQ/ledger-live/commit/093017c2743cc634dfe328f5d28c35df1eae6429), [`025b4ae`](https://github.com/LedgerHQ/ledger-live/commit/025b4aececb5752ec6a0b4e29562716597308a54), [`e377079`](https://github.com/LedgerHQ/ledger-live/commit/e3770793670b73d4409bd5be2081ca922e8679ac), [`e23ca29`](https://github.com/LedgerHQ/ledger-live/commit/e23ca29bb4fd553ff7612d1ea4d9f0e70f7fe0c7), [`45e134c`](https://github.com/LedgerHQ/ledger-live/commit/45e134c63f204444a5997109f4807447f51469ee), [`c619afb`](https://github.com/LedgerHQ/ledger-live/commit/c619afb939fb32c6c669fc700493fce8f2bde49d), [`9099298`](https://github.com/LedgerHQ/ledger-live/commit/9099298c0fed96aea636b4c31f5d36d7d1f57f85), [`1e47a25`](https://github.com/LedgerHQ/ledger-live/commit/1e47a25b02490fef7896d31c41c8609765939f97), [`5c4efa6`](https://github.com/LedgerHQ/ledger-live/commit/5c4efa6c748a7fab0e14bd8b8c975e71ed77756a), [`4afb1f9`](https://github.com/LedgerHQ/ledger-live/commit/4afb1f982d535c6fc8166281ff4fa1ed03569265), [`8dbf2f3`](https://github.com/LedgerHQ/ledger-live/commit/8dbf2f3808af7a5f1ffe279fc99d0b64350779ef)]:
+  - @ledgerhq/live-common@34.70.0
+  - @ledgerhq/coin-evm@3.5.0
+  - @ledgerhq/types-live@6.106.0
+  - @ledgerhq/coin-bitcoin@0.39.0
+  - @ledgerhq/coin-solana@0.51.1
+  - @ledgerhq/ledger-wallet-framework@1.3.1
+  - @ledgerhq/cryptoassets@13.46.1
+  - @ledgerhq/live-wallet@0.25.2
+
+## 0.2.0-next.1
+
+### Patch Changes
+
+- Updated dependencies [[`3e00c6c`](https://github.com/LedgerHQ/ledger-live/commit/3e00c6c2c70497cdb41ae939e97c57bb0911e46c)]:
+  - @ledgerhq/live-common@34.70.0-next.1
+
+## 0.2.0-next.0
+
+### Minor Changes
+
+- [#16470](https://github.com/LedgerHQ/ledger-live/pull/16470) [`e671ee0`](https://github.com/LedgerHQ/ledger-live/commit/e671ee0781983bbddfc3dffbbf386e680d3888ac) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Remove direct runtime imports of `@ledgerhq/coin-*` packages from shared live-common code (`account/helpers`, `operation`, `bridge/generic-alpaca/validateAddress`); all coin-specific behaviour is now deferred via the `coinModuleLoaders` registry. wallet-cli no longer needs the tronweb proto polyfill as a side effect.
+
+- [#16507](https://github.com/LedgerHQ/ledger-live/pull/16507) [`070336d`](https://github.com/LedgerHQ/ledger-live/commit/070336d7156850df82ab16ca3d09d6afd6398c91) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix bare boolean flags (`--dry-run`, `--rbf`, `--verify`) being silently ignored. Previously `--dry-run` without an explicit value routed the send command to the full sign-and-broadcast path; now it correctly activates the dry-run path. Root cause: missing `argumentKind: "flag"` on all boolean options.
+
+- [#16428](https://github.com/LedgerHQ/ledger-live/pull/16428) [`20a622b`](https://github.com/LedgerHQ/ledger-live/commit/20a622b84b69ceffda6451fced071d759424532d) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Fix JSON mode error output: route error envelopes to stdout (not stderr) so they are captured reliably on all platforms, use correct `{ ok: false, error: { command, message } }` envelope shape, and ensure invalid descriptor errors are caught by the error boundary
+
+- [#16386](https://github.com/LedgerHQ/ledger-live/pull/16386) [`542fa64`](https://github.com/LedgerHQ/ledger-live/commit/542fa64145d67864c080459577577dcfeb2cf5d4) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Add optional `data` (0x-prefixed hex calldata) field to `EvmTransactionIntentSchema`, enabling arbitrary EVM contract interactions. The bridge adapter propagates it to the live-common EVM transaction's `data: Buffer` field.
+
+- [#16392](https://github.com/LedgerHQ/ledger-live/pull/16392) [`e39bb03`](https://github.com/LedgerHQ/ledger-live/commit/e39bb0304c12cd32389e005e1ce02254f86b72ee) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Add `account fresh-address` command: resolves the fresh receive address from a V1 descriptor without requiring a device. For address-based chains (EVM, Solana) the address is extracted directly — no sync. For UTXO chains (Bitcoin) the bridge sync finds the next unused address.
+
+- [#16416](https://github.com/LedgerHQ/ledger-live/pull/16416) [`24915a2`](https://github.com/LedgerHQ/ledger-live/commit/24915a29c6b1bb4c8b0b435dabf889443721cc33) Thanks [@gre-ledger](https://github.com/gre-ledger)! - Refactor: shared option definitions and unified CommandOutput abstraction across all commands
+
+### Patch Changes
+
+- Updated dependencies [[`292828a`](https://github.com/LedgerHQ/ledger-live/commit/292828a9797e39f6524f84a0f1064381013e2c77), [`c764fc7`](https://github.com/LedgerHQ/ledger-live/commit/c764fc74b2a0d28a6cd1ec1892968b5eb9845b14), [`e671ee0`](https://github.com/LedgerHQ/ledger-live/commit/e671ee0781983bbddfc3dffbbf386e680d3888ac), [`12eb67a`](https://github.com/LedgerHQ/ledger-live/commit/12eb67ae64f08b589c2009c977895a557d1c156f), [`fbff5f4`](https://github.com/LedgerHQ/ledger-live/commit/fbff5f407027cb2b24834fea53ef21a3ef93bf95), [`b7cdf0e`](https://github.com/LedgerHQ/ledger-live/commit/b7cdf0e7c6faca170af3bfed9042165c74517ae4), [`317c479`](https://github.com/LedgerHQ/ledger-live/commit/317c479353be58645e9581175081619d76a9b5c3), [`2374fcf`](https://github.com/LedgerHQ/ledger-live/commit/2374fcf74a240431baab4f2c73bbb1c913a0f7d5), [`b661cd9`](https://github.com/LedgerHQ/ledger-live/commit/b661cd965e9634840e2ebafb2fbbd1b1328ce98f), [`c51170a`](https://github.com/LedgerHQ/ledger-live/commit/c51170a8d615d5eb3b10b0572d4960e0d36ebc6b), [`8ade8bd`](https://github.com/LedgerHQ/ledger-live/commit/8ade8bdfb0826dc1dbea50a3aa4682cab52ee7b6), [`178bda8`](https://github.com/LedgerHQ/ledger-live/commit/178bda8455ef6aca48eaa00ccc0c37adf582d86f), [`093017c`](https://github.com/LedgerHQ/ledger-live/commit/093017c2743cc634dfe328f5d28c35df1eae6429), [`025b4ae`](https://github.com/LedgerHQ/ledger-live/commit/025b4aececb5752ec6a0b4e29562716597308a54), [`e377079`](https://github.com/LedgerHQ/ledger-live/commit/e3770793670b73d4409bd5be2081ca922e8679ac), [`e23ca29`](https://github.com/LedgerHQ/ledger-live/commit/e23ca29bb4fd553ff7612d1ea4d9f0e70f7fe0c7), [`45e134c`](https://github.com/LedgerHQ/ledger-live/commit/45e134c63f204444a5997109f4807447f51469ee), [`c619afb`](https://github.com/LedgerHQ/ledger-live/commit/c619afb939fb32c6c669fc700493fce8f2bde49d), [`9099298`](https://github.com/LedgerHQ/ledger-live/commit/9099298c0fed96aea636b4c31f5d36d7d1f57f85), [`1e47a25`](https://github.com/LedgerHQ/ledger-live/commit/1e47a25b02490fef7896d31c41c8609765939f97), [`5c4efa6`](https://github.com/LedgerHQ/ledger-live/commit/5c4efa6c748a7fab0e14bd8b8c975e71ed77756a), [`4afb1f9`](https://github.com/LedgerHQ/ledger-live/commit/4afb1f982d535c6fc8166281ff4fa1ed03569265), [`8dbf2f3`](https://github.com/LedgerHQ/ledger-live/commit/8dbf2f3808af7a5f1ffe279fc99d0b64350779ef)]:
+  - @ledgerhq/live-common@34.70.0-next.0
+  - @ledgerhq/coin-evm@3.5.0-next.0
+  - @ledgerhq/types-live@6.106.0-next.0
+  - @ledgerhq/coin-bitcoin@0.39.0-next.0
+  - @ledgerhq/coin-solana@0.51.1-next.0
+  - @ledgerhq/ledger-wallet-framework@1.3.1-next.0
+  - @ledgerhq/cryptoassets@13.46.1-next.0
+  - @ledgerhq/live-wallet@0.25.2-next.0
+
 ## 0.1.1
 
 ### Patch Changes

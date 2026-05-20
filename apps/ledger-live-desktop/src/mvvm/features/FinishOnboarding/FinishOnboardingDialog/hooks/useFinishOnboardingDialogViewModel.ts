@@ -1,12 +1,16 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
-import { hidePostOnboardingWalletEntryPoint } from "@ledgerhq/live-common/postOnboarding/actions";
+import {
+  hidePostOnboardingWalletEntryPoint,
+  postOnboardingSetFinished,
+} from "@ledgerhq/live-common/postOnboarding/actions";
 import { usePostOnboardingHubState } from "@ledgerhq/live-common/postOnboarding/hooks/index";
 import { trustchainSelector } from "@ledgerhq/ledger-key-ring-protocol/store";
 import { type StartActionArgs } from "@ledgerhq/types-live";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { accountsSelector } from "~/renderer/reducers/accounts";
+import { setHasRedirectedToPostOnboarding } from "~/renderer/actions/settings";
 import { track } from "~/renderer/analytics/segment";
 import {
   closeFinishPostOnboarding,
@@ -56,8 +60,31 @@ export default function useFinishOnboardingDialogViewModel(): FinishOnboardingDi
   const isLedgerSyncActive = Boolean(useSelector(trustchainSelector)?.rootId);
   const accounts = useSelector(accountsSelector);
 
-  const { allActionsCompleted, completedActionsAmount, actionList, totalActionsAmount } =
-    usePostOnboardingFinishProgress(actionsState);
+  const {
+    allActionsCompleted,
+    completedActionsAmount,
+    actionList,
+    totalActionsAmount,
+    completionById,
+  } = usePostOnboardingFinishProgress(actionsState);
+
+  const hasActions = actionList.length > 0;
+  useEffect(() => {
+    if (!allActionsCompleted || !hasActions) return;
+    track("Post-onboarding widget completed", {
+      deviceModelId,
+      flow: "post-onboarding",
+    });
+    dispatch(closeFinishPostOnboarding());
+    dispatch(hidePostOnboardingWalletEntryPoint());
+    dispatch(postOnboardingSetFinished());
+  }, [allActionsCompleted, hasActions, deviceModelId, dispatch]);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      dispatch(setHasRedirectedToPostOnboarding(true));
+    }
+  }, [dispatch, isDialogOpen]);
 
   const onGotIt = useCallback(() => {
     track("button_clicked2", {
@@ -86,6 +113,7 @@ export default function useFinishOnboardingDialogViewModel(): FinishOnboardingDi
           ...item,
           completed:
             item.completed ||
+            !!completionById[item.id] ||
             !!item.getIsAlreadyCompletedByState?.({
               isLedgerSyncActive,
               accounts,
@@ -114,6 +142,7 @@ export default function useFinishOnboardingDialogViewModel(): FinishOnboardingDi
       t,
       isLedgerSyncActive,
       totalActionsAmount,
+      completionById,
     ],
   );
 }

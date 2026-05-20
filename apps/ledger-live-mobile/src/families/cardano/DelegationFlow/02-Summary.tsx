@@ -5,8 +5,8 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "rea
 import { Trans, useTranslation } from "~/context/Locale";
 import { Animated, SafeAreaView, StyleSheet, View } from "react-native";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { formatCurrencyUnit, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import {
   LEDGER_POOL_IDS,
@@ -19,6 +19,7 @@ import type {
   CardanoDelegation,
   TransactionStatus,
   Transaction,
+  Transaction as CardanoTransaction,
 } from "@ledgerhq/live-common/families/cardano/types";
 import { Box, Text, Icons } from "@ledgerhq/native-ui";
 import { AccountLike } from "@ledgerhq/types-live";
@@ -42,9 +43,9 @@ import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 import GenericErrorBottomModal from "~/components/GenericErrorBottomModal";
 import RetryButton from "~/components/RetryButton";
 import CancelButton from "~/components/CancelButton";
-import Config from "react-native-config";
 import SupportLinkError from "~/components/SupportLinkError";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
+import { useChangeValidatorRotateAnim } from "../../shared/useChangeValidatorRotateAnim";
 
 type Props = StackNavigatorProps<
   CardanoDelegationFlowParamList,
@@ -59,7 +60,7 @@ export default function DelegationSummary({ navigation, route }: Props) {
 
   const { cardanoResources } = account as CardanoAccount;
   const currentDelegation = cardanoResources.delegation;
-  const bridge = getAccountBridge(account, undefined);
+  const bridge = useAccountBridge<CardanoTransaction>(account, undefined);
 
   const [isFetchingPoolDetails, setIsFetchingPoolDetails] = useState(false);
   const [ledgerPools, setLedgerPools] = useState<Array<StakePool>>([]);
@@ -97,7 +98,7 @@ export default function DelegationSummary({ navigation, route }: Props) {
   tx = bridge.updateTransaction(tx, { mode: "delegate" });
 
   const { transaction, updateTransaction, setTransaction, status, bridgePending, bridgeError } =
-    useBridgeTransaction(() => {
+    useBridgeTransaction(bridge, () => {
       if (chosenPool) {
         tx = bridge.updateTransaction(tx, { poolId: chosenPool.poolId });
       }
@@ -116,9 +117,8 @@ export default function DelegationSummary({ navigation, route }: Props) {
   const onBridgeErrorRetry = useCallback(() => {
     setBridgeErr(null);
     if (!transaction) return;
-    const bridge = getAccountBridge(account, parentAccount);
     setTransaction(bridge.updateTransaction(transaction, {}));
-  }, [setTransaction, account, parentAccount, transaction]);
+  }, [setTransaction, bridge, transaction]);
 
   invariant(transaction, "transaction must be defined");
   invariant(transaction.family === "cardano", "transaction cardano");
@@ -364,40 +364,7 @@ function SummaryWords({
   const unit = useAccountUnit(account);
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [rotateAnim] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    if (!Config.DETOX) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(rotateAnim, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: -1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1000),
-        ]),
-      ).start();
-    }
-    return () => {
-      rotateAnim.setValue(0);
-    };
-  }, [rotateAnim]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "30deg"],
-  });
+  const { rotate } = useChangeValidatorRotateAnim();
 
   const formatConfig = {
     disableRounding: true,

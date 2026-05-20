@@ -21,8 +21,6 @@ import { init } from "../e2e/bridge/client";
 import logger from "./logger";
 import { BridgeSyncProvider } from "~/bridge/BridgeSyncContext";
 import {
-  hasSeenAnalyticsOptInPromptSelector,
-  hasCompletedOnboardingSelector,
   trackingEnabledSelector,
   reportErrorsEnabledSelector,
   isOnboardingFlowSelector,
@@ -58,9 +56,7 @@ import { DeeplinksProvider } from "~/navigation/DeeplinksProvider";
 import StyleProvider from "./StyleProvider";
 
 import {
-  setAnalytics,
   setOsTheme,
-  setPersonalizedRecommendations,
   setIsOnboardingFlow,
   setIsPostOnboardingFlow,
 } from "~/actions/settings";
@@ -103,6 +99,7 @@ import { ConfigureDBSaveEffects } from "./components/DBSave";
 import HookDevTools from "./devTools/useDevTools";
 import { setSolanaLdmkEnabled } from "@ledgerhq/live-common/families/solana/setup";
 import { setCosmosLdmkEnabled } from "@ledgerhq/live-common/families/cosmos/setup";
+import { setSuiGraphqlEnabled } from "@ledgerhq/live-common/families/sui/setup";
 import useCheckAccountWithFunds from "./logic/postOnboarding/useCheckAccountWithFunds";
 logStartupEvent("After js imports");
 
@@ -126,11 +123,8 @@ const styles = StyleSheet.create({
 function App() {
   logStartupEvent("App render");
   const accounts = useSelector(accountsSelector);
-  const analyticsFF = useFeature("llmAnalyticsOptInPrompt");
   const datadogFF = useFeature("llmDatadog");
   const providerNumber = useEnv("FORCE_PROVIDER");
-  const hasSeenAnalyticsOptInPrompt = useSelector(hasSeenAnalyticsOptInPromptSelector);
-  const hasCompletedOnboarding = useSelector(hasCompletedOnboardingSelector);
   const isOnboardingFlow = useSelector(isOnboardingFlowSelector);
   const isPostOnboardingFlow = useSelector(isPostOnboardingFlowSelector);
   const initiatedIsOnboardingFlow = useRef<boolean>(isOnboardingFlow);
@@ -142,6 +136,7 @@ function App() {
   const datadogId = useSelector(datadogIdSelector);
   const ldmkSolanaSignerFeatureFlag = useFeature("ldmkSolanaSigner");
   const ldmkCosmosSignerFeatureFlag = useFeature("ldmkCosmosSigner");
+  const suiGraphqlTransportFeatureFlag = useFeature("suiGraphqlTransport");
   const datadogAutoInstrumentation: AutoInstrumentationConfiguration = useMemo(
     () => ({
       trackErrors: datadogFF?.params?.trackErrors ?? false,
@@ -173,6 +168,10 @@ function App() {
   }, [ldmkCosmosSignerFeatureFlag]);
 
   useEffect(() => {
+    setSuiGraphqlEnabled(suiGraphqlTransportFeatureFlag?.enabled === true);
+  }, [suiGraphqlTransportFeatureFlag]);
+
+  useEffect(() => {
     if (providerNumber) {
       dmk?.setProvider(providerNumber);
     }
@@ -181,23 +180,6 @@ function App() {
   }, [dmk, providerNumber]);
 
   useEffect(() => registerTransports(), []);
-
-  useEffect(() => {
-    if (
-      !analyticsFF?.enabled ||
-      (hasCompletedOnboarding && !analyticsFF?.params?.entryPoints?.includes?.("Portfolio")) ||
-      hasSeenAnalyticsOptInPrompt
-    )
-      return;
-    dispatch(setAnalytics(false));
-    dispatch(setPersonalizedRecommendations(false));
-  }, [
-    analyticsFF?.enabled,
-    analyticsFF?.params?.entryPoints,
-    dispatch,
-    hasSeenAnalyticsOptInPrompt,
-    hasCompletedOnboarding,
-  ]);
 
   useEffect(() => {
     /*
@@ -354,7 +336,7 @@ export default class Root extends Component {
     logStartupEvent("Root render");
     return (
       <LedgerStoreProvider onInitFinished={this.onInitFinished} store={store}>
-        {({ ready, initialCountervalues, currencyInitialized, importAccounts }) =>
+        {({ ready, initialCountervalues, currencyInitialized }) =>
           ready ? (
             <RebootProvider>
               <SetEnvsFromSettings />
@@ -375,10 +357,7 @@ export default class Root extends Component {
                             <NavBarColorHandler />
                             <AuthPass>
                               <GestureHandlerRootView style={styles.root}>
-                                <WaitForAppReady
-                                  currencyInitialized={currencyInitialized}
-                                  importAccounts={importAccounts}
-                                >
+                                <WaitForAppReady currencyInitialized={currencyInitialized}>
                                   <AppProviders initialCountervalues={initialCountervalues}>
                                     <AppGeoBlocker>
                                       <AppVersionBlocker>

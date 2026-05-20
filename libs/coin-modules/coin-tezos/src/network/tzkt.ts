@@ -81,6 +81,31 @@ const api = {
     });
     return data;
   },
+
+  /**
+   * Returns the total `actualAmount` (mutez) summed over the account's `finalizable`
+   * unstake requests — the portion of `unstakedBalance` whose unlock cycle has been
+   * reached and that can be reclaimed via `finalize_unstake`. The complementary
+   * `unstakedBalance - finalizable` portion is still in the deactivation delay window.
+   *
+   * TzKT's account endpoint does not expose this split, so we sum from
+   * `/v1/staking/unstake_requests`. https://api.tzkt.io/#operation/Staking_GetUnstakeRequests
+   *
+   * `limit=1000` covers any realistic number of concurrent finalizable requests for
+   * a single staker — we do not paginate.
+   */
+  async getUnstakeRequestsFinalizable(address: string): Promise<bigint> {
+    const { data } = await network<number[]>({
+      url: `${getExplorerUrl()}/v1/staking/unstake_requests`,
+      params: {
+        "staker.eq": address,
+        status: "finalizable",
+        "select.values": "actualAmount",
+        limit: 1000,
+      },
+    });
+    return data.reduce<bigint>((sum, n) => sum + BigInt(n), 0n);
+  },
   // https://api.tzkt.io/#operation/Accounts_GetOperations
   async getAccountOperations(
     address: string,
@@ -105,6 +130,27 @@ const api = {
       url: `${getExplorerUrl()}/v1/blocks/${level}`,
     });
     return data;
+  },
+
+  /**
+   * Resolves block hashes for the given levels in a single request.
+   * Uses `/v1/blocks?level.in=...&select.values=level,hash`, which TzKT honours
+   * (unlike `/v1/blocks/{level}?select=...`, where `select` is ignored). Used
+   * for cheap backfill of `block.hash` on operations whose level is known but
+   * whose response omits the block field (e.g. `/accounts/{addr}/operations`
+   * for staking ops). Levels that don't resolve are absent from the result map.
+   */
+  async getBlockHashesByLevels(levels: readonly number[]): Promise<Map<number, string>> {
+    if (levels.length === 0) return new Map();
+    const { data } = await network<[number, string][]>({
+      url: `${getExplorerUrl()}/v1/blocks`,
+      params: {
+        "level.in": levels.join(","),
+        "select.values": "level,hash",
+        limit: levels.length,
+      },
+    });
+    return new Map(data);
   },
 
   /**
@@ -171,19 +217,11 @@ const api = {
    * https://api.tzkt.io/#operation/Tokens_GetTokenTransfers
    */
   async getTokenTransfers(
-    level: number,
-    cursor?: number,
     apiQueryParams: Record<string, unknown> = {},
   ): Promise<APITokenTransfer[]> {
-    // Same rationale as getBlockTransactionsPage: explicit ascending sort keeps the
-    // offset.cr cursor advancing forward regardless of the API's default ordering.;
-    const params: Record<string, unknown> = {
-      "level.gte": level,
-      limit: BLOCK_PAGE_SIZE,
-      "sort.asc": "id",
+    const params = {
       ...clearUndefined(apiQueryParams),
     };
-    if (cursor !== undefined) params["offset.cr"] = cursor;
     const { data } = await network<APITokenTransfer[]>({
       url: `${getExplorerUrl()}/v1/tokens/transfers`,
       params,
@@ -224,19 +262,29 @@ const api = {
   /**
    * Fetches FA2 token transfers (tokenId = 0 only) for a given account.
    * This is limited to `token.standard=fa2` and `token.tokenId=0` on the TzKT API.
+   * Translates `query.sort` to TzKT's `sort.asc=id` / `sort.desc=id`.
+   * The lower-level `getTokenTransfers` helper is a generic pass-through and does not pin the sort.
    * https://api.tzkt.io/#operation/Tokens_GetTokenTransfers
    */
   async getAccountTokenTransfers(
     address: string,
     query: TokenTransfersGetOptions,
   ): Promise<(APITokenTransfer & { hash: string; block: string })[]> {
+    const sortKey = query.sort === "Descending" ? "sort.desc" : "sort.asc";
     const params: Record<string, unknown> = {
       "anyof.from.to": address,
       "token.tokenId": "0",
       "token.standard": "fa2",
+      [sortKey]: "id",
+      limit: query.limit,
+      "level.ge": query["level.ge"],
+      "level.lt": query["level.lt"],
+      "level.gt": query["level.gt"],
+      "id.lt": query["id.lt"],
+      "id.gt": query["id.gt"],
     };
 
-    const data = await api.getTokenTransfers(query["level.ge"] as number, query["lastId"], params);
+    const data = await api.getTokenTransfers(clearUndefined(params));
 
     const transactionIds = data
       .map(t => t.transactionId)

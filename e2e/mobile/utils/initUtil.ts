@@ -332,8 +332,9 @@ export class InitializationManager {
           assetSection: false,
           onboardingWidget: isWallet40,
           operationsList: false,
-          aggregatedAssets: isWallet40,
+          aggregatedAssets: false,
           myWallet: isWallet40,
+          pnl: false,
         },
       },
       llmModularDrawer: {

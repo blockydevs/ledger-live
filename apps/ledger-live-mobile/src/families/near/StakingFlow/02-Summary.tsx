@@ -1,9 +1,9 @@
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { formatCurrencyUnit, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import { useLedgerFirstShuffledValidatorsNear } from "@ledgerhq/live-common/families/near/react";
-import { NearValidatorItem, NearAccount } from "@ledgerhq/live-common/families/near/types";
+import { NearValidatorItem, NearAccount, Transaction as NearTransaction } from "@ledgerhq/live-common/families/near/types";
 import { FIGMENT_NEAR_VALIDATOR_ADDRESS } from "@ledgerhq/live-common/families/near/constants";
 import { getMaxAmount } from "@ledgerhq/live-common/families/near/logic";
 import { AccountLike } from "@ledgerhq/types-live";
@@ -11,7 +11,7 @@ import { Text, Icons } from "@ledgerhq/native-ui";
 import { useTheme } from "@react-navigation/native";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useMemo } from "react";
 import { Trans } from "~/context/Locale";
 import { Animated, SafeAreaView, StyleSheet, View, TextStyle, StyleProp } from "react-native";
 import { TrackScreen } from "~/analytics";
@@ -30,8 +30,8 @@ import { getFirstStatusError, hasStatusError } from "../../helpers";
 import type { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import type { NearStakingFlowParamList } from "./types";
 import { useAccountUnit } from "LLM/hooks/useAccountUnit";
-import Config from "react-native-config";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
+import { useChangeValidatorRotateAnim } from "../../shared/useChangeValidatorRotateAnim";
 
 type Props = BaseComposite<
   StackNavigatorProps<NearStakingFlowParamList, ScreenName.NearStakingValidator>
@@ -46,7 +46,7 @@ export default function StakingSummary({ navigation, route }: Props) {
 
   const validators = useLedgerFirstShuffledValidatorsNear("");
   const mainAccount = getMainAccount(account, parentAccount);
-  const bridge = getAccountBridge(account, undefined);
+  const bridge = useAccountBridge<NearTransaction>(account, undefined);
 
   const chosenValidator = useMemo(() => {
     if (validator !== undefined) {
@@ -57,6 +57,7 @@ export default function StakingSummary({ navigation, route }: Props) {
   }, [validators, validator]);
 
   const { transaction, setTransaction, status, bridgePending, bridgeError } = useBridgeTransaction(
+    bridge,
     () => {
       const tx = route.params.transaction;
 
@@ -89,47 +90,15 @@ export default function StakingSummary({ navigation, route }: Props) {
     }
   }, [bridge, setTransaction, chosenValidator, transaction]);
 
-  const [rotateAnim] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!Config.DETOX) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(rotateAnim, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: -1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1000),
-        ]),
-      ).start();
-    }
-    return () => {
-      rotateAnim.setValue(0);
-    };
-  }, [rotateAnim]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "30deg"],
-  });
+  const { rotate, resetRotation } = useChangeValidatorRotateAnim();
 
   const onChangeValidator = useCallback(() => {
-    rotateAnim.setValue(0);
+    resetRotation();
     navigation.navigate(ScreenName.NearStakingValidatorSelect, {
       ...route.params,
       transaction,
     });
-  }, [rotateAnim, navigation, transaction, route.params]);
+  }, [resetRotation, navigation, transaction, route.params]);
 
   const currency = getAccountCurrency(account);
   const color = getCurrencyColor(currency);

@@ -30,6 +30,7 @@ export type TryRedirectToPostOnboardingOrRecoverFn = () => boolean;
 export interface DeeplinkHandlerContext {
   dispatch: AppDispatch;
   accounts: Account[];
+  hasCompletedOnboarding: boolean;
   navigate: NavigateFn;
   openAddAccountFlow: OpenAddAccountFlowFn;
   openAssetFlow: OpenAssetFlowFn;
@@ -45,6 +46,8 @@ export interface DeeplinkHandlerContext {
   accountsPath: string;
   /** Default Ledger Recover app id (from feature flag) for recover deeplink when no path is given */
   recoverAppId?: string;
+  /** `lwdProductTour` — Product Tour dialog is only mounted on Portfolio when enabled; avoid opening dialog Redux state when false. */
+  isProductTourEnabled: boolean;
 }
 
 export interface ParsedDeeplink {
@@ -101,6 +104,12 @@ export interface EarnRoute {
   search: string;
 }
 
+export interface BorrowRoute {
+  type: "borrow";
+  path: string;
+  search: string;
+}
+
 export interface ManagerRoute {
   type: "myledger";
   installApp?: string;
@@ -109,6 +118,7 @@ export interface ManagerRoute {
 export interface SwapRoute {
   type: "swap";
   amountFrom?: string;
+  fromAccountId?: string;
   fromToken: string;
   toToken: string;
   affiliate?: string;
@@ -201,6 +211,10 @@ export interface LedgerSyncRoute {
   type: "ledgersync";
 }
 
+export interface ProductTourRoute {
+  type: "product-tour";
+}
+
 export interface DefaultRoute {
   type: "default";
 }
@@ -211,6 +225,7 @@ export type DeeplinkRoute =
   | AddAccountRoute
   | BuyRoute
   | EarnRoute
+  | BorrowRoute
   | ManagerRoute
   | SwapRoute
   | BridgeRoute
@@ -228,6 +243,7 @@ export type DeeplinkRoute =
   | PerpsRoute
   | PostOnboardingRoute
   | LedgerSyncRoute
+  | ProductTourRoute
   | DefaultRoute;
 
 export type RouteByType<T extends DeeplinkRoute["type"]> = Extract<DeeplinkRoute, { type: T }>;

@@ -4,7 +4,6 @@ import { getMinimumSwapAmount } from "@ledgerhq/live-common/e2e/swap";
 import { Account } from "@ledgerhq/live-common/e2e/enum/Account";
 import { retryUntilTimeout } from "../../utils/retry";
 import { floatNumberRegex } from "@ledgerhq/live-common/e2e/data/regexes";
-import { sanitizeError } from "@ledgerhq/live-common/e2e/index";
 
 export default class SwapLiveAppPage {
   fromSelector = "from-account-coin-selector";
@@ -16,7 +15,7 @@ export default class SwapLiveAppPage {
   quotesButtonDisabled = "mobile-get-quotes-button-disabled";
   numberOfQuotes = "number-of-quotes";
   quotesCountDown = "quotes-countdown";
-  quoteCardProviderName = "compact-quote-card-provider-";
+  quoteCardProviderNameSelector = "[data-testid^='compact-quote-card-provider-']";
   executeSwapButton = "execute-button";
   executeSwapButtonStepApproval = "execute-swap-button-step-approval";
   deviceActionErrorDescriptionId = "error-description-deviceAction";
@@ -24,10 +23,23 @@ export default class SwapLiveAppPage {
   showDetailslink = "show-details-link";
   quotesContainerErrorIcon = "quotes-container-error-icon";
   insufficientFundsBuyButton = "insufficient-funds-buy-button";
+  incompatibilityBannerPartnerId = "incompatibility-banner-partner";
+  swapMainContainerCssSelector = "main";
+  swapMainContainerWebElement = getWebElementByCssSelector(this.swapMainContainerCssSelector);
   swapMaxToggle = "from-account-max-toggle";
   switchButton = "to-account-switch-accounts";
+  lnsUnsupportedBannerPattern =
+    /Ledger Nano S[\s\S]*(not supported|unsupported|does not support|not compatible)/i;
   specificQuoteCardProviderName = (provider: string) =>
     `compact-quote-card-provider-name-${provider}`;
+  baseProviderCssSelector = (provider: string) =>
+    `[data-testid^="quote-container-${Provider.getNameByUiName(provider)}"]`;
+  providerExecuteButtonCss = (provider: string) =>
+    `${this.baseProviderCssSelector(provider)} [data-testid="${this.executeSwapButton}"]`;
+  providerQuoteContainerSelector = (provider: string) =>
+    `${this.baseProviderCssSelector(provider)}[data-testid$="-fixed"], ${this.baseProviderCssSelector(provider)}[data-testid$="-float"]`;
+  incompatibilityBannerPartnerSelector = (provider: string) =>
+    `${this.baseProviderCssSelector(provider)} [data-testid="${this.incompatibilityBannerPartnerId}"]`;
 
   @Step("Expect swap live app page")
   async expectSwapLiveApp() {
@@ -35,6 +47,13 @@ export default class SwapLiveAppPage {
     await detoxExpect(getWebElementByTestId(this.fromSelector)).toExist();
     await detoxExpect(getWebElementByTestId(this.toSelector)).toExist();
     await detoxExpect(getWebElementByTestId(this.quotesButtonDisabled)).toExist();
+  }
+
+  @Step("Expect swap live app form")
+  async expectSwapLiveAppForm() {
+    await waitWebElementByTestId(this.fromSelector);
+    await detoxExpect(getWebElementByTestId(this.fromSelector)).toExist();
+    await detoxExpect(getWebElementByTestId(this.toSelector)).toExist();
   }
 
   @Step("Check if the from currency is already selected")
@@ -54,7 +73,7 @@ export default class SwapLiveAppPage {
     await tapWebElementByTestId(this.fromSelector);
   }
 
-  @Step("Verify currency is selected $0")
+  @Step("Verify currency is selected")
   async verifyCurrencyIsSelected(ticker: string, isFromCurrency: boolean) {
     const selector = isFromCurrency ? this.fromSelector : this.toSelector;
     const actualText = await getWebElementText(selector);
@@ -135,8 +154,16 @@ export default class SwapLiveAppPage {
   }
 
   @Step("Tap execute swap button")
-  async tapExecuteSwap() {
-    await tapWebElementByTestId(this.executeSwapButton);
+  async tapExecuteSwap(provider: string) {
+    const button = getWebElementByCssSelector(this.providerExecuteButtonCss(provider), 0);
+    await waitWebElement(button);
+    await tapWebElementByElement(button);
+  }
+
+  @Step("Expect execute swap button on step approval")
+  async expectExecuteSwapOnStepApproval() {
+    await waitWebElementByTestId(this.executeSwapButtonStepApproval, { timeout: 20000 });
+    await detoxExpect(getWebElementByTestId(this.executeSwapButtonStepApproval)).toExist();
   }
 
   @Step("Tap execute swap button on step approval")
@@ -158,10 +185,22 @@ export default class SwapLiveAppPage {
   async getProviderList() {
     await detoxExpect(getWebElementByTestId(this.numberOfQuotes)).toExist();
     await detoxExpect(getWebElementByTestId(this.quotesCountDown)).toExist();
-    const numberOfQuotesText: string = await getWebElementText(this.numberOfQuotes);
-    const providerList = await getWebElementsText(`[data-testid^='${this.quoteCardProviderName}']`);
-    jestExpect(numberOfQuotesText).toMatch(new RegExp(`${providerList.length} quotes? found`));
-    return providerList;
+
+    return await retryUntilTimeout(async () => {
+      const numberOfQuotesText = await getWebElementText(this.numberOfQuotes);
+      const providerList = await getWebElementsText(
+        this.swapMainContainerWebElement,
+        this.quoteCardProviderNameSelector,
+      );
+
+      if (!numberOfQuotesText.match(new RegExp(`^${providerList.length} quotes? found$`))) {
+        throw new Error(
+          `Quote count mismatch: UI shows "${numberOfQuotesText}" but found ${providerList.length} cards`,
+        );
+      }
+
+      return providerList;
+    }, 30000);
   }
 
   @Step("Check error message: $0")
@@ -210,53 +249,62 @@ export default class SwapLiveAppPage {
 
   @Step("Check exchange button has provider name: $0")
   async checkExchangeButtonHasProviderName(provider: string): Promise<string> {
-    await waitWebElementByTestId(this.executeSwapButton);
-    const actualButtonText = await getWebElementText(this.executeSwapButton);
+    const selector = this.providerExecuteButtonCss(provider);
+    const button = getWebElementByCssSelector(selector);
+    await waitWebElement(button);
+    const actualButtonText =
+      (await getWebElementsText(this.swapMainContainerWebElement, selector))[0] ?? "";
     jestExpect(actualButtonText).toMatch(new RegExp(`^(Swap|Continue) with ${provider}$`, "i"));
     return actualButtonText;
   }
 
   @Step('Check "Best Offer" corresponds to the best quote')
-  async checkBestOffer() {
-    const quoteContainers = await this.getAllSwapProviders();
-    try {
-      const quotes = await this.extractQuotesAndFees(quoteContainers);
-      const bestOffer = quotes.reduce<{ rate: number; fees: number; quote: string } | null>(
+  async checkBestOffer(providerList: string[]) {
+    await retryUntilTimeout(async () => {
+      const quotes = [];
+      for (const provider of providerList) {
+        quotes.push(await this.getProviderQuote(provider));
+      }
+      const bestOffer = quotes.reduce<{ provider: string; rate: number; fees: number } | null>(
         (max, current) =>
           current && (!max || current.rate - current.fees > max.rate - max.fees) ? current : max,
         null,
       );
-      jestExpect(bestOffer?.quote).toContain("Best Offer");
-    } catch (error) {
-      console.error("Error checking Best offer:", sanitizeError(error));
-    }
+
+      jestExpect(bestOffer?.provider).toBe(providerList[0]);
+    });
   }
 
-  @Step("Get all swap providers available")
-  async getAllSwapProviders() {
-    return await getWebElementsText(
-      '[data-testid^="quote-container-"][data-testid$="-fixed"], [data-testid^="quote-container-"][data-testid$="-float"]',
-    );
-  }
+  async getProviderQuote(provider: string) {
+    const quoteText =
+      (
+        await getWebElementsText(
+          this.swapMainContainerWebElement,
+          this.providerQuoteContainerSelector(provider),
+        )
+      )[0] ?? "";
+    const networkFeesIndex = quoteText.search(/Network Fees/i);
+    const feesMatch =
+      networkFeesIndex >= 0 ? /\$\s*(\d[\d,.]*)/.exec(quoteText.slice(networkFeesIndex)) : null;
+    const usdAmountRegex = /\$\s*(\d[\d,.]*)/g;
+    const usdAmounts = [];
+    let usdAmountMatch: RegExpExecArray | null;
 
-  @Step("Extract quotes and fees")
-  async extractQuotesAndFees(quoteContainers: string[]) {
-    const quotePattern = /\$(\d+\.\d+)[\s\S]*?Network Fees[\s\S]*?\$(\d+\.\d+)/;
-
-    const quotes = quoteContainers
-      .map(q => {
-        const match = q.match(quotePattern);
-        if (match) {
-          return { rate: parseFloat(match[1]), fees: parseFloat(match[2]), quote: q };
-        }
-        return undefined;
-      })
-      .filter(Boolean) as Array<{ rate: number; fees: number; quote: string }>;
-
-    if (quotes.length === 0) {
-      throw new Error("No quotes found");
+    while ((usdAmountMatch = usdAmountRegex.exec(quoteText)) !== null) {
+      usdAmounts.push(usdAmountMatch[1]);
     }
-    return quotes;
+
+    if (!feesMatch || usdAmounts.length === 0) {
+      throw new Error(`No parsable quote found for provider ${provider}`);
+    }
+
+    const parseAmount = (amount: string) => Number.parseFloat(amount.replace(/,/g, ""));
+
+    return {
+      provider,
+      fees: parseAmount(feesMatch[1]),
+      rate: parseAmount(usdAmounts[usdAmounts.length - 1]),
+    };
   }
 
   @Step("Verify swap amount error message match: $0")
@@ -310,6 +358,19 @@ export default class SwapLiveAppPage {
     jestExpect(amountToSend).toEqual(amount);
   }
 
+  @Step("Check currency to swap from contains $0")
+  async checkAssetFromContains(expectedAssetText: string) {
+    const fromAccount: string = await getWebElementText(this.fromSelector);
+    jestExpect(fromAccount).toContain(expectedAssetText);
+  }
+
+  @Step("Check currency to swap from matches account $0")
+  async checkAssetFromMatchesAccount(account: Account) {
+    const selectedAccountText: string = await getWebElementText(this.fromSelector);
+    jestExpect(selectedAccountText).toContain(account.currency.ticker);
+    jestExpect(selectedAccountText).toContain(account.accountName);
+  }
+
   @Step("Check currency to swap to is $0 with amount $1")
   async checkAssetTo(currency: string, amount: string) {
     const assetTo: string = await getWebElementText(this.toSelector);
@@ -320,6 +381,36 @@ export default class SwapLiveAppPage {
     }
     const amountToReceive = await app.swapLiveApp.getAmountToReceive();
     jestExpect(amountToReceive).toEqual(amount);
+  }
+
+  @Step("Check currency to swap to contains $0")
+  async checkAssetToContains(expectedAssetText: string) {
+    const assetTo: string = await getWebElementText(this.toSelector);
+    if (expectedAssetText === "") {
+      jestExpect(assetTo).toContain("Choose asset");
+    } else {
+      jestExpect(assetTo).toContain(expectedAssetText);
+    }
+  }
+
+  @Step("Check currency to swap to matches account $0")
+  async checkAssetToMatchesAccount(account: Account) {
+    const selectedAccountText: string = await getWebElementText(this.toSelector);
+    const expectedAccountName = account.parentAccount?.accountName ?? account.accountName;
+
+    jestExpect(selectedAccountText).toContain(account.currency.ticker);
+    jestExpect(selectedAccountText).toContain(expectedAccountName);
+  }
+
+  @Step("Check Ledger Nano S not supported banner for $0")
+  async checkLnsNotSupportedBanner(provider: string) {
+    await retryUntilTimeout(async () => {
+      const bannerText = await getWebElementsText(
+        this.swapMainContainerWebElement,
+        this.incompatibilityBannerPartnerSelector(provider),
+      );
+      jestExpect(bannerText.join(" ")).toMatch(this.lnsUnsupportedBannerPattern);
+    }, 20000);
   }
 
   @Step("Select specific provider $0")
@@ -336,10 +427,10 @@ export default class SwapLiveAppPage {
 
   @Step("Go to $0 live app")
   async goToProviderLiveApp(provider: string) {
-    const continueButton = getWebElementByTestId(this.executeSwapButton);
-    await detoxExpect(continueButton).toExist();
+    const button = getWebElementByCssSelector(this.providerExecuteButtonCss(provider));
+    await detoxExpect(button).toExist();
     const actualButtonText = await app.swapLiveApp.checkExchangeButtonHasProviderName(provider);
-    await app.swapLiveApp.tapExecuteSwap();
+    await app.swapLiveApp.tapExecuteSwap(provider);
     if (provider === "1inch" && actualButtonText.includes("Swap with")) {
       await app.swapLiveApp.tapExecuteSwapOnStepApproval();
       const summaryContinueButton = app.send.summaryContinueButton();

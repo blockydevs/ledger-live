@@ -1,5 +1,5 @@
 import { from } from "rxjs";
-import { map, concatMap } from "rxjs/operators";
+import { concatMap } from "rxjs/operators";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { toOperationRaw } from "@ledgerhq/live-common/account/index";
 import { scan, scanCommonOpts } from "../../scan";
@@ -16,14 +16,18 @@ export default {
         inferSignedOperations(account, opts).pipe(
           concatMap(signedOperation =>
             from(
-              getAccountBridge(account).broadcast({
-                account,
-                signedOperation,
-              }),
+              Promise.resolve()
+                .then(() => getAccountBridge(account))
+                .then(bridge =>
+                  bridge.broadcast({
+                    account,
+                    signedOperation,
+                  }),
+                ),
             ),
           ),
         ),
       ),
-      map(obj => JSON.stringify(toOperationRaw(obj))),
+      concatMap(async obj => JSON.stringify(await toOperationRaw(obj))),
     ),
 };

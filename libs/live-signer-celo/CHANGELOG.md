@@ -1,5 +1,70 @@
 # @ledgerhq/live-signer-celo
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [[`f7df0c0`](https://github.com/LedgerHQ/ledger-live/commit/f7df0c0b946d5ad010ea8c5d17f6af65de57608f)]:
+  - @ledgerhq/coin-celo@2.2.0
+  - @ledgerhq/hw-app-eth@7.8.2
+  - @ledgerhq/hw-app-celo@7.0.2
+  - @ledgerhq/hw-transport@6.35.2
+
+## 1.0.2-next.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/coin-celo@2.2.0-next.1
+
+## 1.0.2-next.0
+
+### Patch Changes
+
+- Updated dependencies [[`f7df0c0`](https://github.com/LedgerHQ/ledger-live/commit/f7df0c0b946d5ad010ea8c5d17f6af65de57608f)]:
+  - @ledgerhq/coin-celo@2.2.0-next.0
+  - @ledgerhq/hw-app-eth@7.8.2-next.0
+  - @ledgerhq/hw-app-celo@7.0.2-next.0
+  - @ledgerhq/hw-transport@6.35.2-next.0
+
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/coin-celo@2.1.1
+  - @ledgerhq/hw-app-celo@7.0.2
+  - @ledgerhq/hw-app-eth@7.8.2
+  - @ledgerhq/hw-transport@6.35.2
+
+## 1.0.2-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/coin-celo@2.1.1-hotfix.0
+  - @ledgerhq/hw-app-celo@7.0.2-hotfix.0
+  - @ledgerhq/hw-app-eth@7.8.2-hotfix.0
+  - @ledgerhq/hw-transport@6.35.2-hotfix.0
+
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [[`45e134c`](https://github.com/LedgerHQ/ledger-live/commit/45e134c63f204444a5997109f4807447f51469ee), [`c6a5082`](https://github.com/LedgerHQ/ledger-live/commit/c6a50820f81f5d74101039720c96a8e221819513)]:
+  - @ledgerhq/coin-celo@2.1.0
+  - @ledgerhq/hw-app-eth@7.8.1
+  - @ledgerhq/hw-app-celo@7.0.1
+
+## 1.0.1-next.0
+
+### Patch Changes
+
+- Updated dependencies [[`45e134c`](https://github.com/LedgerHQ/ledger-live/commit/45e134c63f204444a5997109f4807447f51469ee), [`c6a5082`](https://github.com/LedgerHQ/ledger-live/commit/c6a50820f81f5d74101039720c96a8e221819513)]:
+  - @ledgerhq/coin-celo@2.1.0-next.0
+  - @ledgerhq/hw-app-eth@7.8.1-next.0
+  - @ledgerhq/hw-app-celo@7.0.1-next.0
+
 ## 1.0.0
 
 ### Major Changes

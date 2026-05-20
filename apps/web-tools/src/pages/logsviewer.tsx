@@ -1,5 +1,6 @@
 import React, { Fragment, Component, useMemo, useState } from "react";
 import { ObjectInspector } from "react-inspector";
+// @ts-expect-error react-table v6 types don't export a module
 import ReactTable from "react-table";
 import styled from "styled-components";
 import "react-table/react-table.css";
@@ -103,6 +104,12 @@ const HeaderRow = styled.div`
   }
 `;
 
+const dmkLoggerTags = ["live-dmk-logger", "DMK"]; // "live-dmk-logger" is kept for backward compatibility
+
+function isDmkLog(log: Log): boolean {
+  return dmkLoggerTags.some(tag => log.type.startsWith(tag));
+}
+
 const Header = ({
   logs,
   logsMeta,
@@ -184,14 +191,10 @@ const Header = ({
       logs
         .slice(0)
         .reverse()
-        .filter(
-          l =>
-            l.type === "apdu" ||
-            (l.type === "live-dmk-logger" && l.message.startsWith("[exchange]")),
-        )
+        .filter(l => l.type === "apdu" || (isDmkLog(l) && l.message.startsWith("[exchange]")))
         // filter out live-dmk-tracer logs that are not APDUs
         .map(l => {
-          if (l.type === "live-dmk-logger") {
+          if (isDmkLog(l)) {
             l.message = l.message.replace(/^\[exchange\] /, ""); // remove `[exchange] ` prefix
           }
           return l;
@@ -558,7 +561,6 @@ class Logs extends Component<{
 }> {
   render() {
     const { logs } = this.props;
-    // @ts-expect-error FIXME
     return <ReactTable defaultPageSize={logs.length} filterable data={logs} columns={columns} />;
   }
 }

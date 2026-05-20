@@ -1,13 +1,11 @@
 import React, { useCallback, memo } from "react";
-import { TableRow, TableCell, TableCellContent } from "@ledgerhq/lumen-ui-react";
+import { DotIndicator, TableRow, TableCell, TableCellContent } from "@ledgerhq/lumen-ui-react";
 import { useTranslation } from "react-i18next";
 import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/walletFeaturesConfig/index";
-import { CryptoIcon } from "@ledgerhq/crypto-icons";
-import { getValidCryptoIconSize } from "~/renderer/utils/cryptoIconSize";
-import CryptoCurrencyIcon from "~/renderer/components/CryptoCurrencyIcon";
+import TransactionalIcon from "LLD/components/TransactionalIcon";
 import { SquaredCryptoIcon } from "LLD/components/SquaredCryptoIcon";
-import FormattedVal from "~/renderer/components/FormattedVal";
-import CounterValue from "~/renderer/components/CounterValue";
+import { BalanceCell } from "LLD/components/Cells/BalanceCell";
+import { CounterValueCell } from "LLD/components/Cells/CounterValueCell";
 import { getAddressDirection } from "../utils/getOperationCounterpartyAddress";
 import { OperationCounterpartyLabel } from "./OperationCounterpartyLabel";
 import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
@@ -23,7 +21,7 @@ function OperationRow({ row, onRowClick }: OperationRowProps) {
   const { shouldDisplayAggregatedAssets } = useWalletFeaturesConfig("desktop");
   const handleClick = useCallback(() => onRowClick(row), [onRowClick, row]);
   const item = row.original;
-  const { operation, currency, amount, address, type } = item;
+  const { operation, currency, amount, address, type, isUnread } = item;
 
   const typeLabel = operation.hasFailed
     ? t("operationDetails.failed")
@@ -31,8 +29,6 @@ function OperationRow({ row, onRowClick }: OperationRowProps) {
 
   const direction = getAddressDirection(type);
   const addressPrefix = address ? t(`history.address.${direction}`) : undefined;
-
-  const unit = currency.units[0];
 
   const cryptoCurrency: CryptoCurrency | TokenCurrency | undefined =
     currency.type === "FiatCurrency" ? undefined : currency;
@@ -47,17 +43,29 @@ function OperationRow({ row, onRowClick }: OperationRowProps) {
       <TableCell data-testid="history-operation-type">
         <TableCellContent
           leadingContent={
-            shouldDisplayAggregatedAssets && cryptoCurrency ? (
-              <CryptoIcon
-                ledgerId={cryptoCurrency.id}
-                ticker={cryptoCurrency.ticker}
-                size={getValidCryptoIconSize(32)}
+            cryptoCurrency ? (
+              <TransactionalIcon
+                operationType={operation.type}
+                isPending={item.isPending}
+                hasFailed={operation.hasFailed}
+                currency={cryptoCurrency}
+                mediaSize={40}
+                network={
+                  !shouldDisplayAggregatedAssets && isToken
+                    ? cryptoCurrency.parentCurrency.id
+                    : undefined
+                }
               />
-            ) : (
-              <CryptoCurrencyIcon currency={currency} size={32} />
-            )
+            ) : undefined
           }
-          title={typeLabel}
+          title={
+            <div className="inline-flex items-center gap-12">
+              {typeLabel}
+              {isUnread && (
+                <DotIndicator appearance="red" size="xs" data-testid="unread-indicator" />
+              )}
+            </div>
+          }
         />
       </TableCell>
       <TableCell align="end" data-testid="history-operation-address">
@@ -79,23 +87,20 @@ function OperationRow({ row, onRowClick }: OperationRowProps) {
         />
       </TableCell>
       <TableCell align="end" data-testid="history-operation-amount">
-        <FormattedVal
-          val={amount}
-          unit={unit}
-          showCode
-          fontSize={4}
+        <BalanceCell
+          currency={currency}
+          balance={amount}
           alwaysShowSign
-          color={amount.isNegative() ? "neutral.c80" : undefined}
+          className={amount.isNegative() ? "text-base" : "text-success"}
         />
       </TableCell>
       <TableCell align="end" data-testid="history-operation-value">
-        <CounterValue
-          color="neutral.c80"
-          fontSize={3}
-          alwaysShowSign
-          date={operation.date}
+        <CounterValueCell
           currency={currency}
-          value={amount}
+          balance={amount}
+          date={operation.date}
+          alwaysShowSign
+          className="text-base"
         />
       </TableCell>
     </TableRow>

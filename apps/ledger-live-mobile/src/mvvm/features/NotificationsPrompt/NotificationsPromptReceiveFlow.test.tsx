@@ -2,7 +2,13 @@ import React from "react";
 import { View } from "react-native";
 import { ABTestingVariants } from "@ledgerhq/types-live";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { render, screen, waitFor, withFlagOverrides, act } from "@tests/test-renderer";
+import {
+  renderWithReactQuery,
+  screen,
+  waitFor,
+  withFlagOverrides,
+  act,
+} from "@tests/test-renderer";
 import storage from "LLM/storage";
 import ReceiveFundsNavigator from "~/components/RootNavigator/ReceiveFundsNavigator";
 import { NavigatorName, ScreenName } from "~/const";
@@ -10,6 +16,7 @@ import { BTC_ACCOUNT } from "@ledgerhq/live-common/modularDrawer/__mocks__/accou
 import GlobalDrawers from "~/GlobalDrawers";
 import { track } from "~/analytics";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
+import { createNotificationsPromptFeatureFlags } from "./testUtils";
 
 type AuthorizationStatusType = (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus];
 
@@ -38,52 +45,7 @@ jest.mock("@react-native-firebase/messaging", () => {
   };
 });
 
-const featureFlagsForReceivePrompt = {
-  brazePushNotifications: {
-    enabled: true,
-    params: {
-      action_events: {
-        complete_onboarding: {
-          enabled: true,
-          timer: 0,
-        },
-        add_favorite_coin: {
-          enabled: true,
-          timer: 0,
-        },
-        send: {
-          enabled: true,
-          timer: 0,
-        },
-        receive: {
-          enabled: true,
-          timer: 0,
-        },
-        buy: {
-          enabled: true,
-          timer: 0,
-        },
-        swap: {
-          enabled: true,
-          timer: 0,
-        },
-        stake: {
-          enabled: true,
-          timer: 0,
-        },
-      },
-      reprompt_schedule: [{ months: 0, days: 7, hours: 0, minutes: 0, seconds: 0 }],
-      inactivity_enabled: false,
-      inactivity_reprompt: { months: 6, days: 0, hours: 0, minutes: 0, seconds: 0 },
-    },
-  },
-  lwmNewWordingOptInNotificationsDrawer: {
-    enabled: true,
-    params: {
-      variant: ABTestingVariants.variantB,
-    },
-  },
-};
+const featureFlagsForReceivePrompt = createNotificationsPromptFeatureFlags();
 
 describe("NotificationsPrompt receive flow", () => {
   beforeAll(() => {
@@ -148,7 +110,7 @@ describe("NotificationsPrompt receive flow", () => {
   }
 
   it("should prompt the notifications drawer when leaving the receive flow", async () => {
-    const { user } = render(<ReceiveFlowTestApp />, {
+    const { user } = renderWithReactQuery(<ReceiveFlowTestApp />, {
       navigationInitialState: receiveFlowNavigationState,
       overrideInitialState: withFlagOverrides(featureFlagsForReceivePrompt, state => ({
         ...state,
@@ -181,7 +143,7 @@ describe("NotificationsPrompt receive flow", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/allow notifications/i)).toBeVisible();
+      expect(screen.getByText(/maybe later/i)).toBeVisible();
     });
     expect(track).toHaveBeenCalledWith("attempt_to_trigger_push_notification_drawer_after_action", {
       action: "receive",
@@ -191,6 +153,16 @@ describe("NotificationsPrompt receive flow", () => {
       dismissedCount: 0,
       skipReason: undefined,
     });
-    expect(screen.getByText(/maybe later/i)).toBeVisible();
+    const allowNotificationsButton = screen.getByText(/allow notifications/i);
+    expect(allowNotificationsButton).toBeVisible();
+    await user.press(allowNotificationsButton);
+    expect(track).toHaveBeenCalledWith("button_clicked", {
+      button: "allow notifications",
+      page: "Drawer push notification opt-in",
+      source: "receive",
+      repromptDelay: null,
+      dismissedCount: 0,
+      variant: ABTestingVariants.variantB,
+    });
   });
 });

@@ -5,11 +5,11 @@ import type { SolanaSigner } from "@ledgerhq/coin-solana/signer";
 import resolver from "@ledgerhq/coin-solana/hw-getAddress";
 import {
   solanaGetAddress,
-  SolanaSigner as AlpacaSolanaSigner,
-} from "@ledgerhq/live-common/bridge/generic-alpaca/families/solana/signer";
-import { getAlpacaCurrencyBridge } from "@ledgerhq/live-common/bridge/generic-alpaca/currencyBridge";
-import { getAlpacaAccountBridge } from "@ledgerhq/live-common/bridge/generic-alpaca/accountBridge";
-import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-alpaca/types";
+  SolanaSigner as CoinFrameworkSolanaSigner,
+} from "@ledgerhq/live-common/bridge/generic-coin-framework/families/solana/signer";
+import { getCoinFrameworkCurrencyBridge } from "@ledgerhq/live-common/bridge/generic-coin-framework/currencyBridge";
+import { getCoinFrameworkAccountBridge } from "@ledgerhq/live-common/bridge/generic-coin-framework/accountBridge";
+import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
 import { registerCoinModules } from "@ledgerhq/live-common/coin-modules/registry";
 import { coinModuleLoaders } from "@ledgerhq/live-common/coin-modules/loaders";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
@@ -147,18 +147,18 @@ export async function getBridges(
     };
   }
 
-  const alpacaSignerContext: SignerContext<AlpacaSolanaSigner> = (_, fn) => fn(signers.alpaca);
-  const alpacaGetAddress = solanaGetAddress(alpacaSignerContext);
+  const coinframeworkSignerContext: SignerContext<CoinFrameworkSolanaSigner> = (_, fn) => fn(signers.coinframework);
+  const coinframeworkGetAddress = solanaGetAddress(coinframeworkSignerContext);
 
   return {
-    currencyBridge: getAlpacaCurrencyBridge("solana", "local", {
-      context: alpacaSignerContext,
-      getAddress: alpacaGetAddress,
+    currencyBridge: await getCoinFrameworkCurrencyBridge("solana", "local", {
+      context: coinframeworkSignerContext,
+      getAddress: coinframeworkGetAddress,
     }),
-    accountBridge: getAlpacaAccountBridge("solana", "local", {
-      context: alpacaSignerContext,
-      getAddress: alpacaGetAddress,
+    accountBridge: await getCoinFrameworkAccountBridge("solana", "local", {
+      context: coinframeworkSignerContext,
+      getAddress: coinframeworkGetAddress,
     }),
-    getAddress: alpacaGetAddress,
+    getAddress: coinframeworkGetAddress,
   };
 }

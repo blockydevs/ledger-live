@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { getStuckAccountAndOperation } from "@ledgerhq/live-common/operation";
+import { useAccountBridgeOrNull } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { Trans } from "react-i18next";
 import { getMainAccount } from "@ledgerhq/live-common/account/index";
 import TrackPage from "~/renderer/analytics/TrackPage";
@@ -59,11 +59,12 @@ export const DefaultStepRecipient = ({
   const forceAutoFocusOnMemoField = useSelector(forceAutoFocusOnMemoFieldSelector);
   const lldMemoTag = useFeature("lldMemoTag");
   const { isEnabledForFamily } = useNewSendFlowFeature();
+  const bridge = useAccountBridgeOrNull(account ?? null, parentAccount);
 
   const accountFilter = useMemo(
     () => (acc: Account) => {
       const family = acc.currency.family;
-      return !isEnabledForFamily(family);
+      return !isEnabledForFamily(family, acc.currency.id);
     },
     [isEnabledForFamily],
   );
@@ -74,7 +75,7 @@ export const DefaultStepRecipient = ({
   const extensions = getTokenExtensions(account);
 
   // check if there is a stuck transaction. If so, display a warning panel with "speed up or cancel" button
-  const stuckAccountAndOperation = getStuckAccountAndOperation(account, parentAccount);
+  const stuckAccountAndOperation = bridge?.getStuckAccountAndOperation(account, parentAccount);
 
   return (
     <Box flow={4}>

@@ -1,16 +1,5 @@
-import {
-  clearAccount as commonClearAccount,
-  isAccountEmpty as commonIsAccountEmpty,
-  getMainAccount,
-} from "@ledgerhq/ledger-wallet-framework/account";
-import type { Account, AccountLike } from "@ledgerhq/types-live";
 import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { getCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
-import {
-  loadClearAccountForFamily,
-  loadGetVotesCountForFamily,
-  loadIsAccountEmptyForFamily,
-} from "../coin-modules/registry";
 
 // TODO: remove this export and prefer import from root file.
 export {
@@ -29,30 +18,6 @@ export {
   listSubAccounts,
   shortAddressPreview,
 } from "@ledgerhq/ledger-wallet-framework/account/index";
-
-export const isAccountEmpty = (a: AccountLike): boolean => {
-  if (a.type === "Account") {
-    const fn = loadIsAccountEmptyForFamily(a.currency.family);
-    if (fn) return fn(a);
-  }
-  return commonIsAccountEmpty(a);
-};
-
-// clear account to a bare minimal version that can be restored via sync
-// will preserve the balance to avoid user panic
-export function clearAccount<T extends AccountLike>(account: T): T {
-  return commonClearAccount(account, (account: Account) => {
-    loadClearAccountForFamily(account.currency.family)?.(account);
-  });
-}
-
-export const getVotesCount = (
-  account: AccountLike,
-  parentAccount?: Account | null | undefined,
-): number => {
-  const mainAccount = getMainAccount(account, parentAccount);
-  return loadGetVotesCountForFamily(mainAccount.currency.family)?.(mainAccount) ?? 0;
-};
 
 /**
  * Load blacklisted tokens and organize them into sections by parent currency

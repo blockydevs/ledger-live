@@ -2,10 +2,10 @@ import React from "react";
 import TrackPage from "~/renderer/analytics/TrackPage";
 import HistoryPageHeader from "./components/HistoryPageHeader";
 import { HistoryList } from "./screens/HistoryList";
-import type { HistoryViewModel } from "./useHistoryViewModel";
+import type { HistoryViewModel } from "./hooks/useHistoryViewModel";
 
 export function HistoryView({
-  navigateToDashboard,
+  navigateBack,
   table,
   parentRef,
   rowVirtualizer,
@@ -22,7 +22,7 @@ export function HistoryView({
         operationsCount={operationsCount}
         has_pending_operations={hasPendingOperations ? true : false}
       />
-      <HistoryPageHeader onBack={navigateToDashboard} onExportClick={onExportClick} />
+      <HistoryPageHeader onBack={navigateBack} onExportClick={onExportClick} />
       <HistoryList
         table={table}
         parentRef={parentRef}

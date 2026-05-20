@@ -8,6 +8,8 @@ import { WALLET_API_VERSION } from "@ledgerhq/live-common/wallet-api/constants";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { setEnv } from "@ledgerhq/live-env";
 import { registerWalletCliDmkTransport } from "./device/register-dmk-transport";
+import pkg from "../package.json" with { type: "json" };
+import type { CryptoCurrencyId } from "@ledgerhq/types-cryptoassets";
 
 /**
  * Ensure USER_ID is set so DMK firmware distribution salt is stable for this CLI.
@@ -15,6 +17,13 @@ import { registerWalletCliDmkTransport } from "./device/register-dmk-transport";
 if (!process.env.USER_ID) {
   process.env.USER_ID = "wallet-cli";
 }
+
+const ledgerClientVersion = `wallet-cli/${pkg.version}`;
+setEnv("LEDGER_CLIENT_VERSION", ledgerClientVersion);
+process.env.LEDGER_CLIENT_VERSION = ledgerClientVersion;
+// Bun can resolve ESM imports to lib-es/ and require() calls to lib/, creating
+// separate live-env singletons. Keep both aligned for lazy CJS coin modules.
+require("@ledgerhq/live-env").setEnv("LEDGER_CLIENT_VERSION", ledgerClientVersion);
 
 /**
  * Wallet-cli-specific coin-module loaders (bitcoin, evm, solana only).
@@ -48,7 +57,7 @@ const walletCliLoaders: CoinModuleLoader[] = [
       require("@ledgerhq/live-common/families/evm/platformAdapter").default,
     loadValidateAddress: () => require("@ledgerhq/coin-evm/logic/validateAddress").validateAddress,
     loadSigner: () =>
-      require("@ledgerhq/live-common/bridge/generic-alpaca/families/evm/signer").default,
+      require("@ledgerhq/live-common/bridge/generic-coin-framework/families/evm/signer").default,
   },
   {
     family: "solana",
@@ -67,24 +76,28 @@ const walletCliLoaders: CoinModuleLoader[] = [
     loadWalletApiAdapter: () =>
       require("@ledgerhq/live-common/families/solana/walletApiAdapter").default,
     loadSigner: () =>
-      require("@ledgerhq/live-common/bridge/generic-alpaca/families/solana/signer").default,
+      require("@ledgerhq/live-common/bridge/generic-coin-framework/families/solana/signer").default,
   },
+];
+
+export const WALLET_CLI_SUPPORTED_CRYPTO_CURRENCY_IDS: readonly CryptoCurrencyId[] = [
+  "bitcoin",
+  "ethereum",
+  "solana",
 ];
 
 setWalletAPIVersion(WALLET_API_VERSION);
 registerCoinModules(walletCliLoaders);
-setSupportedCurrencies(["bitcoin", "ethereum", "solana"]);
-// Set config on the ESM singleton (used by alpacaized families like EVM whose
+setSupportedCurrencies([...WALLET_CLI_SUPPORTED_CRYPTO_CURRENCY_IDS]);
+// Set config on the ESM singleton (used by coin-framework families like EVM whose
 // bridge code is reached through ESM imports).
 LiveConfig.setConfig(walletCliConfig);
 // Also set on the CJS singleton — Bun's bundler resolves ESM imports to lib-es/
 // and require() to lib/, creating separate LiveConfig.instance singletons.
-// Non-alpacaized families (solana, bitcoin) load their bridge via require() in
+// Non-coin-framework families (solana, bitcoin) load their bridge via require() in
 // the lazy loaders above, so they read from the CJS instance.
 require("@ledgerhq/live-config/LiveConfig").LiveConfig.setConfig(walletCliConfig);
 // TODO: wallet-cli should own its Redux store setup (createRtkCryptoAssetsStore + RTK middleware)
 // instead of relying on setupCalClientStore from @ledgerhq/cryptoassets/cal-client (test-helpers).
 setupCalClientStore();
 registerWalletCliDmkTransport();
-
-setEnv("LEDGER_CLIENT_VERSION", "wallet-cli/0.1.0");

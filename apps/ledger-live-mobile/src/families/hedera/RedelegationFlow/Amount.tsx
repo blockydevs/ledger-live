@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@react-navigation/native";
 import { Text } from "@ledgerhq/native-ui";
 import type { AccountBridge } from "@ledgerhq/types-live";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/impl";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
 import type { Transaction } from "@ledgerhq/live-common/families/hedera/types";
@@ -36,8 +36,8 @@ function RedelegationAmount({ navigation, route }: Props) {
   invariant(account.type === "Account", "account type must be Account");
 
   const unit = useAccountUnit(account);
-  const bridge: AccountBridge<Transaction> = getAccountBridge(account);
-  const { transaction, status, bridgePending, bridgeError } = useBridgeTransaction(() => {
+  const bridge: AccountBridge<Transaction> = useAccountBridge(account);
+  const { transaction, status, bridgePending, bridgeError } = useBridgeTransaction(bridge, () => {
     const t = bridge.createTransaction(account);
 
     const transaction = bridge.updateTransaction(t, {

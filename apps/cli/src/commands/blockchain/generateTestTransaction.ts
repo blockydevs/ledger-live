@@ -50,7 +50,7 @@ export type GenerateTestTransactionJobOpts = InferTransactionsOpts & ScanCommonO
 
 export default {
   description: "Generate a test for transaction (live-common dataset)",
-  args: [...scanCommonOpts, ...inferTransactionsOpts],
+  args: inferTransactionsOpts.then(opts => [...scanCommonOpts, ...opts]),
   job: (opts: GenerateTestTransactionJobOpts) =>
     scan(opts).pipe(
       switchMap(account =>
@@ -60,40 +60,43 @@ export default {
               (acc, [t]) =>
                 concat(
                   acc,
-                  from(
-                    defer(() => {
-                      const apdus: string[] = [];
-                      const unsubscribe = listen(log => {
-                        if (log.type === "apdu" && log.message) {
-                          apdus.push(log.message);
-                        }
-                      });
-                      const bridge = getAccountBridge(account);
-                      return bridge
-                        .signOperation({
-                          account,
-                          transaction: t,
-                          deviceId: opts.device || "",
-                        })
-                        .pipe(
-                          filter(e => e.type === "signed"),
-                          map(e => {
-                            // FIXME: will always be true because of filter above
-                            // but ts can't infer the right type for SignOperationEvent
-                            if (e.type === "signed") {
-                              return e.signedOperation;
-                            }
-                          }),
-                          concatMap(signedOperation =>
-                            from(
-                              bridge
-                                .getTransactionStatus(account, t)
-                                .then(s => [signedOperation, s]),
+                  defer(() => {
+                    const apdus: string[] = [];
+                    const unsubscribe = listen(log => {
+                      if (log.type === "apdu" && log.message) {
+                        apdus.push(log.message);
+                      }
+                    });
+                    return defer(() => Promise.resolve(getAccountBridge(account))).pipe(
+                      mergeMap(bridge =>
+                        bridge
+                          .signOperation({
+                            account,
+                            transaction: t,
+                            deviceId: opts.device || "",
+                          })
+                          .pipe(
+                            filter(e => e.type === "signed"),
+                            map(e => {
+                              // FIXME: will always be true because of filter above
+                              // but ts can't infer the right type for SignOperationEvent
+                              if (e.type === "signed") {
+                                return e.signedOperation;
+                              }
+                            }),
+                            concatMap(signedOperation =>
+                              from(
+                                bridge
+                                  .getTransactionStatus(account, t)
+                                  .then(s => [signedOperation, s]),
+                              ),
                             ),
-                          ),
-                          mergeMap(async ([signedOperation, status]) => {
-                            unsubscribe();
-                            return `
+                            mergeMap(async ([signedOperation, status]) => {
+                              unsubscribe();
+                              const signedOpRaw = await toSignedOperationRaw(
+                                signedOperation as SignedOperation,
+                              );
+                              return `
 {
   name: "NO_NAME",
   transaction: fromTransactionRaw(${JSON.stringify(await toTransactionRaw(t))}),
@@ -102,19 +105,18 @@ export default {
     ${toTransactionStatusJS(status)}
   ),
   // WARNING: DO NOT commit this test publicly unless you're ok with possibility tx could leak out. (do self txs)
-  testSignedOperation: (expect, signedOperation) => {
-    expect(toSignedOperationRaw(signedOperation)).toMatchObject(${JSON.stringify(
-      toSignedOperationRaw(signedOperation as SignedOperation),
-    )})
+  testSignedOperation: async (expect, signedOperation) => {
+    expect(await toSignedOperationRaw(signedOperation)).toMatchObject(${JSON.stringify(signedOpRaw)})
   },
   apdus: \`
 ${apdus.map(a => "  " + a).join("\n")}
   \`
 }`;
-                          }),
-                        );
-                    }),
-                  ),
+                            }),
+                          ),
+                      ),
+                    );
+                  }),
                 ),
               EMPTY as Observable<any>,
             ),

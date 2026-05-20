@@ -309,11 +309,12 @@ describe("tzkt network API", () => {
   // -------------------------------------------------------------------------
 
   describe("api.getTokenTransfers", () => {
-    it("fetches without cursor and strips undefined extra args", async () => {
+    it("passes through params and strips undefined extra args", async () => {
       const transfers: APITokenTransfer[] = [makeTokenItem(1)];
       mockedNetwork.mockReturnValue(networkResponse(transfers) as ReturnType<typeof network>);
 
-      const result = await api.getTokenTransfers(200, undefined, {
+      const result = await api.getTokenTransfers({
+        "level.gte": 200,
         unused: undefined,
         select: "id",
       });
@@ -322,8 +323,6 @@ describe("tzkt network API", () => {
       const params = (mockedNetwork.mock.calls[0][0] as { params: Record<string, unknown> }).params;
       expect(params).toMatchObject({
         "level.gte": 200,
-        limit: 1000,
-        "sort.asc": "id",
         select: "id",
       });
       expect(params).not.toHaveProperty("unused");
@@ -333,15 +332,6 @@ describe("tzkt network API", () => {
         }),
       );
     });
-
-    it("includes offset.cr when cursor is set", async () => {
-      mockedNetwork.mockReturnValue(networkResponse([]) as ReturnType<typeof network>);
-
-      await api.getTokenTransfers(1, 55);
-
-      const params = (mockedNetwork.mock.calls[0][0] as { params: Record<string, unknown> }).params;
-      expect(params["offset.cr"]).toBe(55);
-    });
   });
 
   // -------------------------------------------------------------------------
@@ -350,12 +340,18 @@ describe("tzkt network API", () => {
 
   describe("api.getAccountTokenTransfers", () => {
     it("returns empty hash when no numeric transaction ids are present", async () => {
-      const spyToken = spyOnApi("getTokenTransfers").mockResolvedValue([
-        makeTokenWithTxId(1, undefined),
-        makeTokenWithTxId(2, undefined),
-      ]);
       const spyTx = spyOnApi("getOperationsTransactions");
       const spyOrig = spyOnApi("getOperationsOrigination");
+
+      mockedNetwork.mockImplementation(async (config: { url: string }) => {
+        if (config.url.includes("/v1/tokens/transfers")) {
+          return networkResponse([
+            makeTokenWithTxId(1, undefined),
+            makeTokenWithTxId(2, undefined),
+          ]) as ReturnType<typeof network>;
+        }
+        throw new Error(`unexpected url: ${config.url}`);
+      });
 
       const result = await api.getAccountTokenTransfers("tz1x", {
         "level.ge": 10,
@@ -364,67 +360,85 @@ describe("tzkt network API", () => {
       expect(spyTx).not.toHaveBeenCalled();
       expect(spyOrig).not.toHaveBeenCalled();
       expect(result).toEqual([]);
-      expect(spyToken).toHaveBeenCalledWith(
-        10,
-        undefined,
-        expect.objectContaining({
-          "anyof.from.to": "tz1x",
-          "token.tokenId": "0",
-          "token.standard": "fa2",
-        }),
-      );
+      const firstCall = mockedNetwork.mock.calls[0]?.[0] as {
+        url: string;
+        params?: Record<string, unknown>;
+      };
+      expect(firstCall.params).toMatchObject({
+        "level.ge": 10,
+        "sort.asc": "id",
+        "anyof.from.to": "tz1x",
+        "token.tokenId": "0",
+        "token.standard": "fa2",
+      });
     });
 
     it("joins operation hashes and uses empty string when no match", async () => {
-      spyOnApi("getTokenTransfers").mockResolvedValue([
-        makeTokenWithTxId(1, 100),
-        makeTokenWithTxId(2, 200),
-      ]);
-      spyOnApi("getOperationsTransactions").mockResolvedValue([
-        { id: 100, hash: "h100", block: "BLK100" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-      ]);
+      const spyTx = spyOnApi("getOperationsTransactions");
       const spyOrig = spyOnApi("getOperationsOrigination");
+      mockedNetwork.mockImplementation(async (config: { url: string }) => {
+        if (config.url.includes("/v1/tokens/transfers")) {
+          return networkResponse([
+            makeTokenWithTxId(1, 100),
+            makeTokenWithTxId(2, 200),
+          ]) as ReturnType<typeof network>;
+        }
+        if (config.url.includes("/v1/operations/transactions")) {
+          return networkResponse([
+            { id: 100, hash: "h100", block: "BLK100" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+          ]) as ReturnType<typeof network>;
+        }
+        throw new Error(`unexpected url: ${config.url}`);
+      });
 
       const result = await api.getAccountTokenTransfers("tz1y", {
         "level.ge": 0,
-        lastId: 7,
       });
 
       expect(result).toEqual([
         expect.objectContaining({ id: 1, hash: "h100", block: "BLK100" }),
         expect.objectContaining({ id: 2, hash: "", block: "" }),
       ]);
-      expect(api.getOperationsTransactions).toHaveBeenCalledWith(0, undefined, {
+      expect(spyTx).toHaveBeenCalledWith(0, undefined, {
         "id.in": "100,200",
       });
       expect(spyOrig).not.toHaveBeenCalled();
     });
 
     it("attaches parent hash and block from originations when only originationIds are present", async () => {
-      jest
-        .spyOn(api, "getTokenTransfers")
-        .mockResolvedValue([makeTokenWithOrigId(1, 100), makeTokenWithOrigId(2, 200)]);
-      const spyTx = jest.spyOn(api, "getOperationsTransactions");
-      jest.spyOn(api, "getOperationsOrigination").mockResolvedValue([
-        { id: 100, hash: "h100", block: "BLK100" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-        { id: 200, hash: "h200", block: "BLK200" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-      ]);
+      const spyTx = spyOnApi("getOperationsTransactions");
+      const spyOrig = spyOnApi("getOperationsOrigination");
+      mockedNetwork.mockImplementation(async (config: { url: string }) => {
+        if (config.url.includes("/v1/tokens/transfers")) {
+          return networkResponse([
+            makeTokenWithOrigId(1, 100),
+            makeTokenWithOrigId(2, 200),
+          ]) as ReturnType<typeof network>;
+        }
+        if (config.url.includes("/v1/operations/originations")) {
+          return networkResponse([
+            { id: 100, hash: "h100", block: "BLK100" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+            { id: 200, hash: "h200", block: "BLK200" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+          ]) as ReturnType<typeof network>;
+        }
+        throw new Error(`unexpected url: ${config.url}`);
+      });
 
       const result = await api.getAccountTokenTransfers("tz1o", {
         "level.ge": 0,
       });
 
       expect(spyTx).not.toHaveBeenCalled();
-      expect(api.getOperationsOrigination).toHaveBeenCalledWith(0, undefined, {
+      expect(spyOrig).toHaveBeenCalledWith(0, undefined, {
         "id.in": "100,200",
       });
       expect(result).toEqual([
@@ -434,30 +448,42 @@ describe("tzkt network API", () => {
     });
 
     it("joins both transactions and originations when both ids are present", async () => {
-      jest
-        .spyOn(api, "getTokenTransfers")
-        .mockResolvedValue([makeTokenWithTxId(1, 100), makeTokenWithOrigId(2, 500)]);
-      jest.spyOn(api, "getOperationsTransactions").mockResolvedValue([
-        { id: 100, hash: "hTx", block: "BLK_TX" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-      ]);
-      jest.spyOn(api, "getOperationsOrigination").mockResolvedValue([
-        { id: 500, hash: "hOrig", block: "BLK_ORIG" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-      ]);
+      const spyTx = spyOnApi("getOperationsTransactions");
+      const spyOrig = spyOnApi("getOperationsOrigination");
+      mockedNetwork.mockImplementation(async (config: { url: string }) => {
+        if (config.url.includes("/v1/tokens/transfers")) {
+          return networkResponse([
+            makeTokenWithTxId(1, 100),
+            makeTokenWithOrigId(2, 500),
+          ]) as ReturnType<typeof network>;
+        }
+        if (config.url.includes("/v1/operations/transactions")) {
+          return networkResponse([
+            { id: 100, hash: "hTx", block: "BLK_TX" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+          ]) as ReturnType<typeof network>;
+        }
+        if (config.url.includes("/v1/operations/originations")) {
+          return networkResponse([
+            { id: 500, hash: "hOrig", block: "BLK_ORIG" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+          ]) as ReturnType<typeof network>;
+        }
+        throw new Error(`unexpected url: ${config.url}`);
+      });
 
       const result = await api.getAccountTokenTransfers("tz1mix", {
         "level.ge": 0,
       });
 
-      expect(api.getOperationsTransactions).toHaveBeenCalledWith(0, undefined, {
+      expect(spyTx).toHaveBeenCalledWith(0, undefined, {
         "id.in": "100",
       });
-      expect(api.getOperationsOrigination).toHaveBeenCalledWith(0, undefined, {
+      expect(spyOrig).toHaveBeenCalledWith(0, undefined, {
         "id.in": "500",
       });
       expect(result).toEqual([
@@ -467,27 +493,32 @@ describe("tzkt network API", () => {
     });
 
     it("keeps partial hash/block from the parent transaction without dropping transfers", async () => {
-      jest
-        .spyOn(api, "getTokenTransfers")
-        .mockResolvedValue([
-          makeTokenWithTxId(1, 100),
-          makeTokenWithTxId(2, 200),
-          makeTokenWithTxId(3, 300),
-        ]);
-      jest.spyOn(api, "getOperationsTransactions").mockResolvedValue([
-        { id: 100, hash: "h100", block: "" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-        { id: 200, hash: "", block: "BLK200" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-        { id: 300, hash: "h300", block: "BLK300" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-      ]);
+      mockedNetwork.mockImplementation(async (config: { url: string }) => {
+        if (config.url.includes("/v1/tokens/transfers")) {
+          return networkResponse([
+            makeTokenWithTxId(1, 100),
+            makeTokenWithTxId(2, 200),
+            makeTokenWithTxId(3, 300),
+          ]) as ReturnType<typeof network>;
+        }
+        if (config.url.includes("/v1/operations/transactions")) {
+          return networkResponse([
+            { id: 100, hash: "h100", block: "" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+            { id: 200, hash: "", block: "BLK200" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+            { id: 300, hash: "h300", block: "BLK300" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+          ]) as ReturnType<typeof network>;
+        }
+        throw new Error(`unexpected url: ${config.url}`);
+      });
       const spyOrig = jest.spyOn(api, "getOperationsOrigination");
 
       const result = await api.getAccountTokenTransfers("tz1z", {
@@ -503,28 +534,33 @@ describe("tzkt network API", () => {
     });
 
     it("keeps partial hash/block from the parent origination without dropping transfers", async () => {
-      jest
-        .spyOn(api, "getTokenTransfers")
-        .mockResolvedValue([
-          makeTokenWithOrigId(1, 100),
-          makeTokenWithOrigId(2, 200),
-          makeTokenWithOrigId(3, 300),
-        ]);
+      mockedNetwork.mockImplementation(async (config: { url: string }) => {
+        if (config.url.includes("/v1/tokens/transfers")) {
+          return networkResponse([
+            makeTokenWithOrigId(1, 100),
+            makeTokenWithOrigId(2, 200),
+            makeTokenWithOrigId(3, 300),
+          ]) as ReturnType<typeof network>;
+        }
+        if (config.url.includes("/v1/operations/originations")) {
+          return networkResponse([
+            { id: 100, hash: "h100", block: "" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+            { id: 200, hash: "", block: "BLK200" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+            { id: 300, hash: "h300", block: "BLK300" } as APITransactionType & {
+              hash: string;
+              block: string;
+            },
+          ]) as ReturnType<typeof network>;
+        }
+        throw new Error(`unexpected url: ${config.url}`);
+      });
       const spyTx = jest.spyOn(api, "getOperationsTransactions");
-      jest.spyOn(api, "getOperationsOrigination").mockResolvedValue([
-        { id: 100, hash: "h100", block: "" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-        { id: 200, hash: "", block: "BLK200" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-        { id: 300, hash: "h300", block: "BLK300" } as APITransactionType & {
-          hash: string;
-          block: string;
-        },
-      ]);
 
       const result = await api.getAccountTokenTransfers("tz1origZ", {
         "level.ge": 0,
@@ -536,6 +572,76 @@ describe("tzkt network API", () => {
         expect.objectContaining({ id: 3, hash: "h300", block: "BLK300" }),
       ]);
       expect(spyTx).not.toHaveBeenCalled();
+    });
+
+    it("uses sort.desc=id when sort is Descending and forwards level.lt / level.gt", async () => {
+      mockedNetwork.mockReturnValue(networkResponse([]) as ReturnType<typeof network>);
+
+      await api.getAccountTokenTransfers("tz1sort", {
+        sort: "Descending",
+        "level.ge": 1,
+        "level.lt": 9_000_000,
+        limit: 50,
+      });
+
+      const params = (mockedNetwork.mock.calls[0][0] as { params: Record<string, unknown> }).params;
+      expect(params).toMatchObject({
+        "sort.desc": "id",
+        "level.ge": 1,
+        "level.lt": 9_000_000,
+        limit: 50,
+      });
+      expect(params).not.toHaveProperty("sort.asc");
+    });
+
+    it("forwards level.gt for ascending continuation windows", async () => {
+      mockedNetwork.mockReturnValue(networkResponse([]) as ReturnType<typeof network>);
+
+      await api.getAccountTokenTransfers("tz1asc", {
+        sort: "Ascending",
+        "level.ge": 100,
+        "level.gt": 500,
+      });
+
+      const params = (mockedNetwork.mock.calls[0][0] as { params: Record<string, unknown> }).params;
+      expect(params).toMatchObject({
+        "sort.asc": "id",
+        "level.ge": 100,
+        "level.gt": 500,
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // api.getUnstakeRequestsFinalizable
+  // -------------------------------------------------------------------------
+
+  describe("api.getUnstakeRequestsFinalizable", () => {
+    it("queries finalizable unstake requests and sums actualAmount", async () => {
+      mockedNetwork.mockReturnValue(networkResponse([100, 250, 7]) as ReturnType<typeof network>);
+
+      const result = await api.getUnstakeRequestsFinalizable("tz1abc");
+
+      expect(result).toEqual(357n);
+      expect(mockedNetwork).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining("/v1/staking/unstake_requests"),
+          params: {
+            "staker.eq": "tz1abc",
+            status: "finalizable",
+            "select.values": "actualAmount",
+            limit: 1000,
+          },
+        }),
+      );
+    });
+
+    it("returns 0n when no finalizable requests exist", async () => {
+      mockedNetwork.mockReturnValue(networkResponse([]) as ReturnType<typeof network>);
+
+      const result = await api.getUnstakeRequestsFinalizable("tz1empty");
+
+      expect(result).toEqual(0n);
     });
   });
 
@@ -666,6 +772,55 @@ describe("tzkt network API", () => {
           url: expect.stringContaining("/v1/blocks/999"),
         }),
       );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // api.getBlockHashesByLevels
+  // -------------------------------------------------------------------------
+
+  describe("api.getBlockHashesByLevels", () => {
+    it("returns an empty map without calling the network when given no levels", async () => {
+      const result = await api.getBlockHashesByLevels([]);
+
+      expect(result).toEqual(new Map());
+      expect(mockedNetwork).not.toHaveBeenCalled();
+    });
+
+    it("batches all levels in one request and returns a level→hash map", async () => {
+      mockedNetwork.mockReturnValue(
+        networkResponse([
+          [1234, "BL-hash-1234"],
+          [1235, "BL-hash-1235"],
+        ]) as ReturnType<typeof network>,
+      );
+
+      const result = await api.getBlockHashesByLevels([1234, 1235]);
+
+      expect(result).toEqual(
+        new Map([
+          [1234, "BL-hash-1234"],
+          [1235, "BL-hash-1235"],
+        ]),
+      );
+      expect(mockedNetwork).toHaveBeenCalledTimes(1);
+      expect(mockedNetwork).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringMatching(/\/v1\/blocks$/),
+          params: { "level.in": "1234,1235", "select.values": "level,hash", limit: 2 },
+        }),
+      );
+    });
+
+    it("omits levels that the API did not return", async () => {
+      mockedNetwork.mockReturnValue(
+        networkResponse([[1234, "BL-hash-1234"]]) as ReturnType<typeof network>,
+      );
+
+      const result = await api.getBlockHashesByLevels([1234, 9999]);
+
+      expect(result).toEqual(new Map([[1234, "BL-hash-1234"]]));
+      expect(result.has(9999)).toBe(false);
     });
   });
 
