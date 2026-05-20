@@ -1,9 +1,13 @@
-import { DevTools } from "@devtools/shell";
+import { DevTools, type DevToolsConfig } from "@devtools/shell";
+import { useFeatureFlagsToolProps } from "../hooks/useFeatureFlagsToolProps";
 
 export default function DevToolsPage() {
+  const featureFlagsProps = useFeatureFlagsToolProps();
+  const config: DevToolsConfig = [{ id: "feature-flags", config: featureFlagsProps }];
+
   return (
     <div style={{ height: "100vh" }}>
-      <DevTools />
+      <DevTools config={config} />
     </div>
   );
 }

@@ -13,9 +13,11 @@
     "build": "rsbuild build",
     "preview": "rsbuild preview",
     "test": "jest",
-    "typecheck": "tsc --noEmit --customConditions node"
+    "typecheck": "tsc --noEmit --customConditions node",
+    "coverage": "jest --coverage"
   },
   "dependencies": {
+    "@devtools/feature-flags": "workspace:*",
     "@devtools/shell": "workspace:*",
     "@reduxjs/toolkit": "catalog:",
     "@shared/feature-flags": "workspace:*",
