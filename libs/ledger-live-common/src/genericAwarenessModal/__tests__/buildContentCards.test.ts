@@ -3,14 +3,14 @@ import {
   GenericAwarenessModalLayout,
   type GenericAwarenessModalBrazeCard,
   type GenericAwarenessModalInputExtras,
-} from "./types";
+} from "../types";
 import {
   buildGenericAwarenessModalContentCards,
   getValidGenericAwarenessModalCards,
   groupByCampaignId,
   hasUniqueLayout,
   processGenericAwarenessModalBrazeCards,
-} from "./buildContentCards";
+} from "../buildContentCards";
 
 const makeCard = (
   id: string,

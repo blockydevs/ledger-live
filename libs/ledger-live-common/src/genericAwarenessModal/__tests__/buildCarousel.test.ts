@@ -1,9 +1,9 @@
-import { buildCarousel } from "./buildCarousel";
+import { buildCarousel } from "../buildCarousel";
 import {
   GenericAwarenessModalLayout,
   type GenericAwarenessModalBrazeCard,
   type GenericAwarenessModalInputExtras,
-} from "./types";
+} from "../types";
 
 const makeCard = (
   id: string,
@@ -69,7 +69,8 @@ describe("buildCarousel", () => {
 
     const carousel = buildCarousel("campaign-1", [cardWithoutSlideFields]);
 
-    expect(carousel.data).toEqual([
+    expect(carousel).toBeDefined();
+    expect(carousel!.data).toEqual([
       {
         title: "",
         subtitle: "",
@@ -101,7 +102,8 @@ describe("buildCarousel", () => {
 
     const carousel = buildCarousel("campaign-1", [missingIndexCard, wrongLayoutCard, validCard]);
 
-    expect(carousel.data).toEqual([
+    expect(carousel).toBeDefined();
+    expect(carousel!.data).toEqual([
       {
         title: "Valid",
         subtitle: "",

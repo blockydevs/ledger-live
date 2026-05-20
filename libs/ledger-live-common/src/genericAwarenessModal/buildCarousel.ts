@@ -22,14 +22,18 @@ const parseCarouselInput = (
 export const buildCarousel = (
   campaignId: string,
   cards: GenericAwarenessModalBrazeCard[],
-): GenericAwarenessModalCarousel => ({
-  layout: GenericAwarenessModalLayout.Carousel,
-  id: campaignId,
-  data: cards
+): GenericAwarenessModalCarousel | undefined => {
+  const data = cards
     .flatMap(card => {
       const input = parseCarouselInput(card);
       return input ? [input] : [];
     })
     .sort((a, b) => a.index - b.index)
-    .map(buildCarouselSlide),
-});
+    .map(buildCarouselSlide);
+
+  if (!data || data.length === 0) {
+    return undefined;
+  }
+
+  return { layout: GenericAwarenessModalLayout.Carousel, id: campaignId, data };
+};

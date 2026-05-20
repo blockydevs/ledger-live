@@ -1,10 +1,10 @@
-import { buildFeatureIntro } from "./buildFeatureIntro";
+import { buildFeatureIntro } from "../buildFeatureIntro";
 import {
   FeatureIntroRole,
   GenericAwarenessModalLayout,
   type GenericAwarenessModalBrazeCard,
   type GenericAwarenessModalInputExtras,
-} from "./types";
+} from "../types";
 
 const makeCard = (
   id: string,

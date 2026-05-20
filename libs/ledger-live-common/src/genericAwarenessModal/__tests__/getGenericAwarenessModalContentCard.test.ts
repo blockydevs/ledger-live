@@ -1,5 +1,5 @@
-import { getGenericAwarenessModalContentCard } from "./getGenericAwarenessModalContentCard";
-import { GenericAwarenessModalContentCard, GenericAwarenessModalLayout } from "./types";
+import { getGenericAwarenessModalContentCard } from "../getGenericAwarenessModalContentCard";
+import { GenericAwarenessModalContentCard, GenericAwarenessModalLayout } from "../types";
 
 const contentCards: GenericAwarenessModalContentCard[] = [
   {
