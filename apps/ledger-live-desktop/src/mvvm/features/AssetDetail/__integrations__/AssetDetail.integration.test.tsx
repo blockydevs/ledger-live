@@ -96,7 +96,11 @@ const setLocation = (state: unknown = null, pathname = "/asset/bitcoin") =>
   useLocation.mockReturnValue({ state, pathname, search: "", hash: "" });
 
 const expectHeader = () => expect(screen.getByTestId(TEST_ID.HEADER)).toBeVisible();
-const expectAssetName = (name: string) => expect(screen.getByText(name)).toBeVisible();
+const expectAssetTicker = (ticker: string) => {
+  const header = screen.getByTestId(TEST_ID.HEADER);
+  expect(header).toBeVisible();
+  expect(within(header).getByText(ticker)).toBeVisible();
+};
 const expectMarketView = () => {
   expect(screen.getByTestId(TEST_ID.MARKET_PRICE_SECTION)).toBeVisible();
   expect(screen.getByTestId(TEST_ID.MARKET_DATA_SECTION)).toBeVisible();
@@ -131,7 +135,7 @@ const expectNotFound = () => expect(screen.getByText(LABEL.NOT_FOUND)).toBeVisib
 type OwnedAsset = {
   label: string;
   routeId: string;
-  displayName: string;
+  ticker: string;
   marketResponse: unknown[];
   buildDistribution: () => { bySlug: Record<string, DistributionItem>; list: DistributionItem[] };
 };
@@ -140,7 +144,7 @@ const OWNED_ASSETS: OwnedAsset[] = [
   {
     label: "BTC",
     routeId: "bitcoin",
-    displayName: "Bitcoin",
+    ticker: "BTC",
     marketResponse: MarketMockedResponse.bitcoinDetail,
     buildDistribution: () => {
       const account = genAccount("asset-detail-btc-account", { currency: btc });
@@ -151,7 +155,7 @@ const OWNED_ASSETS: OwnedAsset[] = [
   {
     label: "USDC",
     routeId: "ethereum/erc20/usd__coin",
-    displayName: "USD Coin",
+    ticker: "USDC",
     marketResponse: MarketMockedResponse.usdcDetail,
     buildDistribution: () => {
       const account = genAccount("asset-detail-usdc-account", { currency: btc });
@@ -167,7 +171,7 @@ const OWNED_ASSETS: OwnedAsset[] = [
 type DiscoveryAsset = {
   label: string;
   routeId: string;
-  displayName: string;
+  ticker: string;
   marketResponse: unknown[];
 };
 
@@ -175,13 +179,13 @@ const DISCOVERY_ASSETS: DiscoveryAsset[] = [
   {
     label: "BTC",
     routeId: "bitcoin",
-    displayName: "Bitcoin",
+    ticker: "BTC",
     marketResponse: MarketMockedResponse.bitcoinDetail,
   },
   {
     label: "USDC",
     routeId: "usd-coin",
-    displayName: "USDC",
+    ticker: "USDC",
     marketResponse: MarketMockedResponse.usdcDetail,
   },
 ];
@@ -190,13 +194,13 @@ const LOCATION_STATE_FALLBACK = [
   {
     label: "BTC",
     routeId: "bitcoin",
-    displayName: "Bitcoin",
+    ticker: "BTC",
     state: { id: "bitcoin", ledgerIds: ["bitcoin"], name: "Bitcoin", ticker: "BTC", price: 50000 },
   },
   {
     label: "USDC",
     routeId: "usd-coin",
-    displayName: "USDC",
+    ticker: "USDC",
     state: {
       id: "usd-coin",
       ledgerIds: ["ethereum/erc20/usd__coin"],
@@ -244,7 +248,7 @@ describe("AssetDetail integration", () => {
   describe("owned mode (with account)", () => {
     it.each(OWNED_ASSETS)(
       "$label - shows balance, addresses and market sections",
-      async ({ routeId, displayName, marketResponse, buildDistribution }) => {
+      async ({ routeId, ticker, marketResponse, buildDistribution }) => {
         mockMarket.withData(marketResponse);
         setupRoute(routeId, buildDistribution());
 
@@ -252,7 +256,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expectHeader();
-          expectAssetName(displayName);
+          expectAssetTicker(ticker);
           expectOwnedView();
           expectMarketView();
         });
@@ -346,16 +350,18 @@ describe("AssetDetail integration", () => {
           expect(screen.getByTestId(TEST_ID.ADDRESS_LIST)).toBeVisible();
         });
 
-        expect(screen.getAllByTestId(/asset-detail-address-row-/)).toHaveLength(MAX_ADDRESSES_PREVIEW);
+        expect(screen.getAllByTestId(/asset-detail-address-row-/)).toHaveLength(
+          MAX_ADDRESSES_PREVIEW,
+        );
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
         await user.click(screen.getByTestId(TEST_ID.ADDRESSES_SEE_ALL));
 
         const dialog = await screen.findByRole("dialog");
         expect(within(dialog).getByRole("heading", { name: "Addresses" })).toBeVisible();
-        expect(within(dialog).getAllByText(/all your addresses holding btc\./i).length).toBeGreaterThan(
-          0,
-        );
+        expect(
+          within(dialog).getAllByText(/all your addresses holding btc\./i).length,
+        ).toBeGreaterThan(0);
         expect(within(dialog).getAllByTestId(/asset-detail-address-row-/)).toHaveLength(
           MAX_ADDRESSES_PREVIEW + 1,
         );
@@ -378,7 +384,9 @@ describe("AssetDetail integration", () => {
         });
 
         expect(screen.queryByTestId(TEST_ID.ADDRESSES_SEE_ALL)).not.toBeInTheDocument();
-        expect(screen.getAllByTestId(/asset-detail-address-row-/)).toHaveLength(MAX_ADDRESSES_PREVIEW);
+        expect(screen.getAllByTestId(/asset-detail-address-row-/)).toHaveLength(
+          MAX_ADDRESSES_PREVIEW,
+        );
       });
     });
 
@@ -471,7 +479,7 @@ describe("AssetDetail integration", () => {
 
     it.each(OWNED_ASSETS)(
       "$label - falls back to Market API when DADA fails",
-      async ({ routeId, displayName, marketResponse, buildDistribution }) => {
+      async ({ routeId, ticker, marketResponse, buildDistribution }) => {
         mockMarket.withData(marketResponse);
         mockDada.fail();
         setupRoute(routeId, buildDistribution());
@@ -480,7 +488,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expectHeader();
-          expectAssetName(displayName);
+          expectAssetTicker(ticker);
           expectOwnedView();
           expectMarketView();
         });
@@ -490,7 +498,7 @@ describe("AssetDetail integration", () => {
 
     it.each(OWNED_ASSETS)(
       "$label - falls back to DADA when Market API fails",
-      async ({ routeId, displayName, buildDistribution }) => {
+      async ({ routeId, ticker, buildDistribution }) => {
         mockMarket.fail();
         setupRoute(routeId, buildDistribution());
 
@@ -498,7 +506,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expectHeader();
-          expectAssetName(displayName);
+          expectAssetTicker(ticker);
           expectOwnedView();
           expect(screen.getByRole("heading", { name: LABEL.MARKET_STATS })).toBeVisible();
         });
@@ -509,7 +517,7 @@ describe("AssetDetail integration", () => {
   describe("discovery mode (no account)", () => {
     it.each(DISCOVERY_ASSETS)(
       "$label - shows header and market sections without owned view",
-      async ({ routeId, displayName, marketResponse }) => {
+      async ({ routeId, ticker, marketResponse }) => {
         mockMarket.withData(marketResponse);
         setupRoute(routeId, { list: [] });
 
@@ -517,7 +525,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expectHeader();
-          expectAssetName(displayName);
+          expectAssetTicker(ticker);
           expectMarketView();
         });
         await waitForMarketPriceSectionShowsQuote();
@@ -527,7 +535,7 @@ describe("AssetDetail integration", () => {
 
     it.each(DISCOVERY_ASSETS)(
       "$label - falls back to Market API when DADA fails",
-      async ({ routeId, displayName, marketResponse }) => {
+      async ({ routeId, ticker, marketResponse }) => {
         mockMarket.withData(marketResponse);
         mockDada.fail();
         setupRoute(routeId, { list: [] });
@@ -536,7 +544,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expectHeader();
-          expectAssetName(displayName);
+          expectAssetTicker(ticker);
           expectMarketView();
         });
         await waitForMarketPriceSectionShowsQuote();
@@ -545,7 +553,7 @@ describe("AssetDetail integration", () => {
 
     it.each(LOCATION_STATE_FALLBACK)(
       "$label - falls back to location state when Market is empty",
-      async ({ routeId, displayName, state }) => {
+      async ({ routeId, ticker, state }) => {
         mockMarket.empty();
         setLocation(state, `/asset/${routeId}`);
         setupRoute(routeId, { list: [] });
@@ -554,7 +562,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expectHeader();
-          expectAssetName(displayName);
+          expectAssetTicker(ticker);
         });
       },
     );
@@ -757,7 +765,7 @@ describe("AssetDetail integration", () => {
 
       await waitFor(() => {
         expectHeader();
-        expectAssetName("Bitcoin Test");
+        expectAssetTicker("TBTC");
         expect(screen.getByText(LABEL.TOTAL_BALANCE)).toBeVisible();
       });
     });
@@ -851,7 +859,7 @@ describe("AssetDetail integration", () => {
 
       await waitFor(() => {
         expectHeader();
-        expectAssetName("Bitcoin Test");
+        expectAssetTicker("TBTC");
         expect(screen.getByText(LABEL.TOTAL_BALANCE)).toBeVisible();
       });
     });
