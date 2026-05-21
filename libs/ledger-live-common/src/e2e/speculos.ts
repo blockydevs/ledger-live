@@ -450,13 +450,21 @@ export async function startSpeculos(
   const appCandidate = findLatestAppCandidate(appCandidates, appQuery);
   const { model } = appQuery;
   const { dependencies } = spec;
-  const newAppQuery = dependencies?.map(dep => {
-    return findLatestAppCandidate(appCandidates, {
-      model,
-      appName: dep.name,
-      firmware: appCandidate?.firmware,
-    });
-  });
+  const newAppQuery = await Promise.all(
+    dependencies?.map(async dep => {
+      const catalogVersion = await getAppVersionFromCatalog(dep.name, nanoAppCatalogPath);
+      if (catalogVersion) {
+        dep.appVersion = catalogVersion;
+      }
+
+      return findLatestAppCandidate(appCandidates, {
+        model,
+        appName: dep.name,
+        appVersion: dep.appVersion,
+        firmware: appCandidate?.firmware,
+      });
+    }) ?? [],
+  );
   const appVersionMap = new Map(newAppQuery?.map(app => [app?.appName, app?.appVersion]));
   dependencies?.forEach(dependency => {
     dependency.appVersion = appVersionMap.get(dependency.name) || "1.0.0";

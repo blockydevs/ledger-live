@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 const liveCommonVersion = "34.64.0"; // live-common version isn't really necessary here, so we can hardcode it
+const nanoAppProviderId = 1;
 
 export function getSpeculosModel(): DeviceModelId {
   const speculosDevice = process.env.SPECULOS_DEVICE;
@@ -54,7 +55,7 @@ export async function getNanoAppCatalog(
   const repository = new HttpManagerApiRepository(getEnv("MANAGER_API_BASE"), liveCommonVersion);
   const targetId = getDeviceTargetId(device);
   return await repository.catalogForDevice({
-    provider: 1,
+    provider: nanoAppProviderId,
     targetId: targetId,
     firmwareVersion: deviceFirmware,
   });
@@ -72,12 +73,11 @@ export async function getDeviceFirmwareVersion(device: DeviceModelId): Promise<s
   const cached = firmwareVersionCache.get(device);
   if (cached) return cached;
 
-  const providerId = 1;
   const repository = new HttpManagerApiRepository(getEnv("MANAGER_API_BASE"), liveCommonVersion);
 
   const deviceVersion = await repository.getDeviceVersion({
     targetId: getDeviceTargetId(device),
-    providerId,
+    providerId: nanoAppProviderId,
   });
 
   const firmwareIds = deviceVersion.se_firmware_final_versions;
@@ -89,7 +89,7 @@ export async function getDeviceFirmwareVersion(device: DeviceModelId): Promise<s
 
   // Only firmwares matching providerId
   const providerFirmwares = firmwares.filter(
-    fw => Array.isArray(fw.providers) && fw.providers.includes(providerId),
+    fw => Array.isArray(fw.providers) && fw.providers.includes(nanoAppProviderId),
   );
 
   if (providerFirmwares.length === 0) {
@@ -111,9 +111,14 @@ export async function getDeviceFirmwareVersion(device: DeviceModelId): Promise<s
 
 export async function createNanoAppJsonFile(nanoAppFilePath: string): Promise<void> {
   const jsonFilePath = path.resolve(process.cwd(), nanoAppFilePath);
+  const providerFilePath = `${jsonFilePath}.provider`;
 
   try {
-    if (fs.existsSync(jsonFilePath)) {
+    if (
+      fs.existsSync(jsonFilePath) &&
+      fs.existsSync(providerFilePath) &&
+      fs.readFileSync(providerFilePath, "utf8") === String(nanoAppProviderId)
+    ) {
       return; // File already exists
     }
 
@@ -124,12 +129,16 @@ export async function createNanoAppJsonFile(nanoAppFilePath: string): Promise<vo
     const appCatalog = await getNanoAppCatalog(device, firmware);
 
     const tmpPath = `${jsonFilePath}.${process.pid}.tmp`;
+    const providerTmpPath = `${providerFilePath}.${process.pid}.tmp`;
     fs.writeFileSync(tmpPath, JSON.stringify(appCatalog, null, 2), "utf8");
+    fs.writeFileSync(providerTmpPath, String(nanoAppProviderId), "utf8");
     try {
       fs.renameSync(tmpPath, jsonFilePath);
+      fs.renameSync(providerTmpPath, providerFilePath);
     } catch {
       try {
         fs.unlinkSync(tmpPath);
+        fs.unlinkSync(providerTmpPath);
       } catch {
         // ignore
       }
