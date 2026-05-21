@@ -1093,16 +1093,12 @@ export const exportUfvk = withDeviceController(
   ({ getButtonsController }) =>
     async (account: Account) => {
       const buttons = getButtonsController();
-      const { receiveVerifyLabel, receiveConfirmLabel } = getDeviceLabels(
-        account.currency.speculosApp,
-      );
-      await waitFor(receiveVerifyLabel);
 
       if (isTouchDevice()) {
-        await pressUntilTextFound(receiveConfirmLabel);
+        await pressUntilTextFound(DeviceLabels.CONFIRM);
         await pressAndRelease(DeviceLabels.CONFIRM);
       } else {
-        await pressUntilTextFound(receiveConfirmLabel);
+        await pressUntilTextFound(DeviceLabels.CONFIRM);
         await buttons.both();
       }
     },
