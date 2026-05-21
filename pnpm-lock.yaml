@@ -2490,12 +2490,12 @@ importers:
       '@codemirror/view':
         specifier: ^6.39.5
         version: 6.39.5
-      '@devtools/feature-flags':
-        specifier: workspace:*
-        version: link:../../devtools/feature-flags
       '@devtools/shell':
         specifier: workspace:*
         version: link:../../devtools/shell
+      '@features/platform-feature-flags':
+        specifier: workspace:*
+        version: link:../../features/platform/feature-flags
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
         version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
@@ -20890,6 +20890,7 @@ packages:
   '@snyk/github-codeowners@1.1.0':
     resolution: {integrity: sha512-lGFf08pbkEac0NYgVf4hdANpAgApRjNByLXB+WBip3qj1iendOIyAwP2GKkKbQMNVy2r1xxDf0ssfWscoiC+Vw==}
     engines: {node: '>=8.10'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     hasBin: true
 
   '@socket.io/component-emitter@3.1.2':
@@ -21656,7 +21657,7 @@ packages:
       metro-react-native-babel-preset: '*'
       react: 19.0.0
       react-dom: 19.0.0
-      webpack: ^5.89.0
+      webpack: '*'
     peerDependenciesMeta:
       '@react-native/babel-preset':
         optional: true
@@ -33230,6 +33231,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode-terminal@0.11.0:

@@ -1,15 +1,20 @@
 import { useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setOverride, setAllOverrides } from "@shared/feature-flags";
+import {
+  setOverride,
+  setAllOverrides,
+  featureFlagsOverridesSelector,
+} from "@shared/feature-flags";
 import type { Feature, FeatureId } from "@shared/feature-flags";
-import type { FeatureFlagsToolProps } from "@devtools/feature-flags";
-import type { RootState } from "../store";
+import type { DevToolsConfig } from "@devtools/shell";
+import { useFeatureFlags } from "@features/platform-feature-flags";
+
+type FeatureFlagsToolProps = Extract<DevToolsConfig[number], { id: "feature-flags" }>["config"];
 
 export function useFeatureFlagsToolProps(): FeatureFlagsToolProps {
   const dispatch = useDispatch();
-  const overrides = useSelector((s: RootState) => s.featureFlags.overrides);
-  const resolved = useSelector((s: RootState) => s.featureFlags.resolved);
-  const remote = useSelector((s: RootState) => s.featureFlags.remote);
+  const overrides = useSelector(featureFlagsOverridesSelector);
+  const resolved = useFeatureFlags();
 
   const handleSetOverride = useCallback(
     (key: FeatureId, value: Feature | undefined) => dispatch(setOverride({ key, value })),
@@ -27,11 +32,10 @@ export function useFeatureFlagsToolProps(): FeatureFlagsToolProps {
     () => ({
       overrides,
       resolved,
-      remote,
       setOverride: handleSetOverride,
       clearOverride: handleClearOverride,
       clearAllOverrides: handleClearAllOverrides,
     }),
-    [overrides, resolved, remote, handleSetOverride, handleClearOverride, handleClearAllOverrides],
+    [overrides, resolved, handleSetOverride, handleClearOverride, handleClearAllOverrides],
   );
 }
