@@ -82,6 +82,7 @@ mock.module("@ledgerhq/hw-app-exchange", () => ({
 }));
 
 const setBroadcastTransactionMock = mock(async () => {});
+const postSwapAcceptedMock = mock(async () => null);
 const postSwapCancelledMock = mock(async () => null);
 
 mock.module("@ledgerhq/live-common/exchange/swap/setBroadcastTransaction", () => ({
@@ -89,6 +90,7 @@ mock.module("@ledgerhq/live-common/exchange/swap/setBroadcastTransaction", () =>
 }));
 
 mock.module("@ledgerhq/live-common/exchange/swap/postSwapState", () => ({
+  postSwapAccepted: postSwapAcceptedMock,
   postSwapCancelled: postSwapCancelledMock,
 }));
 
