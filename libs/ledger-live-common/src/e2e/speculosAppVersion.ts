@@ -9,6 +9,8 @@ import * as path from "path";
 const liveCommonVersion = "34.64.0"; // live-common version isn't really necessary here, so we can hardcode it
 const nanoAppProviderId = 1;
 
+type CatalogApp = { versionDisplayName: string; version: string };
+
 export function getSpeculosModel(): DeviceModelId {
   const speculosDevice = process.env.SPECULOS_DEVICE;
   switch (speculosDevice) {
@@ -111,14 +113,9 @@ export async function getDeviceFirmwareVersion(device: DeviceModelId): Promise<s
 
 export async function createNanoAppJsonFile(nanoAppFilePath: string): Promise<void> {
   const jsonFilePath = path.resolve(process.cwd(), nanoAppFilePath);
-  const providerFilePath = `${jsonFilePath}.provider`;
 
   try {
-    if (
-      fs.existsSync(jsonFilePath) &&
-      fs.existsSync(providerFilePath) &&
-      fs.readFileSync(providerFilePath, "utf8") === String(nanoAppProviderId)
-    ) {
+    if (fs.existsSync(jsonFilePath)) {
       return; // File already exists
     }
 
@@ -129,16 +126,12 @@ export async function createNanoAppJsonFile(nanoAppFilePath: string): Promise<vo
     const appCatalog = await getNanoAppCatalog(device, firmware);
 
     const tmpPath = `${jsonFilePath}.${process.pid}.tmp`;
-    const providerTmpPath = `${providerFilePath}.${process.pid}.tmp`;
     fs.writeFileSync(tmpPath, JSON.stringify(appCatalog, null, 2), "utf8");
-    fs.writeFileSync(providerTmpPath, String(nanoAppProviderId), "utf8");
     try {
       fs.renameSync(tmpPath, jsonFilePath);
-      fs.renameSync(providerTmpPath, providerFilePath);
     } catch {
       try {
         fs.unlinkSync(tmpPath);
-        fs.unlinkSync(providerTmpPath);
       } catch {
         // ignore
       }
@@ -148,10 +141,9 @@ export async function createNanoAppJsonFile(nanoAppFilePath: string): Promise<vo
   }
 }
 
-export async function getAppVersionFromCatalog(
-  currency: string,
+export async function getNanoAppCatalogVersionMap(
   nanoAppFilePath: string,
-): Promise<string | undefined> {
+): Promise<Map<string, string>> {
   const jsonFilePath = path.resolve(process.cwd(), nanoAppFilePath);
 
   try {
@@ -159,16 +151,27 @@ export async function getAppVersionFromCatalog(
 
     if (!fs.existsSync(jsonFilePath)) {
       console.error(`Catalog file not found: ${jsonFilePath}`);
-      return;
+      return new Map();
     }
 
-    type CatalogApp = { versionDisplayName: string; version: string };
     const raw = fs.readFileSync(jsonFilePath, "utf8");
     const catalog: CatalogApp[] = JSON.parse(raw);
 
-    const app = catalog.find(entry => entry.versionDisplayName === currency);
+    return new Map(catalog.map(entry => [entry.versionDisplayName, entry.version]));
+  } catch (error) {
+    console.error("Unable to get app versions from catalog:", error);
+  }
 
-    return app?.version ?? "";
+  return new Map();
+}
+
+export async function getAppVersionFromCatalog(
+  currency: string,
+  nanoAppFilePath: string,
+): Promise<string | undefined> {
+  try {
+    const catalogVersions = await getNanoAppCatalogVersionMap(nanoAppFilePath);
+    return catalogVersions.get(currency) ?? "";
   } catch (error) {
     console.error(`Unable to get app version for ${currency} from catalog:`, error);
   }
