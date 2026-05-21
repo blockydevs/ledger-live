@@ -142,7 +142,8 @@ describe("AssetDetail screen layout", () => {
     render(<AssetDetailTestNavigator />, withBtcAccounts(2));
 
     await waitFor(() => expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.addresses)).toBeVisible());
-    expect(screen.getByText("Addresses")).toBeVisible();
+    const section = screen.getByTestId(ASSET_DETAIL_TEST_IDS.addresses);
+    expect(within(section).getByText("Addresses")).toBeVisible();
     expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.addAccount)).toBeVisible();
     expect(screen.getByText("Add")).toBeVisible();
   });
