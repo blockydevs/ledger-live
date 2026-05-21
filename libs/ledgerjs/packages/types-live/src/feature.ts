@@ -137,7 +137,6 @@ export type CurrencyFeatures = {
   currencyXion: DefaultFeature;
   currencyZenrock: DefaultFeature;
   currencySonic: DefaultFeature;
-  currencySonicBlaze: DefaultFeature;
   currencySui: DefaultFeature;
   currencySuiTestnet: DefaultFeature;
   currencyMina: DefaultFeature;
@@ -320,11 +319,14 @@ export type Features = CurrencyFeatures & {
   llmOnboardingEnableSync: Feature_OnboardingEnableSync;
   lldOnboardingEnableSync: Feature_OnboardingEnableSync;
   lwdGenericAwarenessModal: DefaultFeature;
+  lwmAnalyticsConsentOnboarding: DefaultFeature;
   lwmGenericAwarenessModal: DefaultFeature;
+  lwmNotificationsOptIn: DefaultFeature;
   lwmProductTour: DefaultFeature;
   lwmWallet40: Feature_LwmWallet40;
   lwdWallet40: Feature_LwdWallet40;
   addressPoisoningOperationsFilter: Feature_AddressPoisoningOperationsFilter;
+  concordiumIdAppLinks: Feature_ConcordiumIdAppLinks;
   concordiumVerifyAddress: DefaultFeature;
   lldHideSmallValueTokenOperations: Feature_LldHideSmallValueTokenOperations;
   llmTransferButtonCopyVariant: Feature_LlmTransferButtonCopyVariant;
@@ -570,6 +572,11 @@ export type Feature_DeviceInitialApps = Feature<{
 export type Feature_BuyDeviceFromLive = Feature<{
   debug: boolean;
   url: string | null;
+}>;
+
+export type Feature_ConcordiumIdAppLinks = Feature<{
+  appStore: string;
+  playStore: string;
 }>;
 
 export type Feature_Discover = Feature<{

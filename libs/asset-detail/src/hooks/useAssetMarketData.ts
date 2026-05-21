@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useGetCurrencyDataQuery } from "@ledgerhq/live-common/market/state-manager/api";
 import { format } from "@ledgerhq/live-common/market/utils/currencyFormatter";
+import { applyUsdRateToMarket } from "@ledgerhq/live-common/market/utils/applyUsdRateToMarket";
 import type {
   MarketCurrencyData,
   MarketItemResponse,
@@ -8,24 +9,26 @@ import type {
 import { REFETCH_TIME_ONE_MINUTE, BASIC_REFETCH } from "@ledgerhq/live-common/market/utils/timers";
 import { assetsDataApi } from "@ledgerhq/live-common/dada-client/state-manager/api";
 import { selectCurrency } from "@ledgerhq/live-common/dada-client/utils/currencySelection";
+import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
 import type { AssetMarketDataInput, AssetMarketDataResult } from "../types";
 
 export function useAssetMarketData({
-  marketApiCurrencyId,
+  marketApiId,
   knownLedgerIds,
   counterCurrency,
   product,
   version,
   isStaging = false,
+  knownMarketId,
 }: AssetMarketDataInput): AssetMarketDataResult {
   const {
     data: marketFromHook,
     isLoading: isLoadingMarket,
     isError: isErrorMarket,
   } = useGetCurrencyDataQuery(
-    { id: marketApiCurrencyId ?? "", counterCurrency },
+    { id: marketApiId ?? "", counterCurrency },
     {
-      skip: !marketApiCurrencyId,
+      skip: !marketApiId,
       pollingInterval: REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH,
     },
   );
@@ -53,10 +56,19 @@ export function useAssetMarketData({
     ? assetData?.markets[effectiveLedgerIds[0]]
     : undefined;
 
+  const { status: rateStatus, rate } = useUsdToFiatRate(counterCurrency);
+
   const marketCurrencyData = useMemo<MarketCurrencyData | undefined>(() => {
-    if (dadaMarket) return format(dadaMarket as MarketItemResponse);
+    if (dadaMarket) {
+      const formattedDadaMarket = format(dadaMarket as MarketItemResponse);
+      if (rateStatus === "ready" && rate != null) {
+        return applyUsdRateToMarket(formattedDadaMarket, rate);
+      }
+      // Return USD-formatted data while rate is loading/errored, instead of falling back to undefined
+      return formattedDadaMarket;
+    }
     return marketFromHook;
-  }, [dadaMarket, marketFromHook]);
+  }, [dadaMarket, marketFromHook, rateStatus, rate]);
 
   const ledgerCurrencyFromDada = useMemo(
     () => (assetData ? selectCurrency(assetData) : undefined),
@@ -65,8 +77,9 @@ export function useAssetMarketData({
 
   return {
     marketCurrencyData,
+    marketId: marketFromHook?.id ?? knownMarketId,
     ledgerCurrencyFromDada,
-    isLoading: isLoadingMarket || isLoadingDada,
-    isError: isErrorMarket || isErrorDada,
+    isLoading: isLoadingMarket || isLoadingDada || (!!dadaMarket && rateStatus === "loading"),
+    isError: isErrorMarket || isErrorDada || (!!dadaMarket && rateStatus === "error"),
   };
 }
