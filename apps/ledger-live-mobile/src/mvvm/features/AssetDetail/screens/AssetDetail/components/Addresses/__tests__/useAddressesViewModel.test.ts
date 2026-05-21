@@ -162,6 +162,26 @@ describe("useAddressesViewModel", () => {
       });
     });
 
+    describe("addressesCount", () => {
+      it("returns the total number of accounts (not capped by the preview)", () => {
+        const { btcAccounts, distributionItem } = buildBtcSetup(8);
+        const { result } = renderHook(
+          () => useAddressesViewModel(mockBtcCryptoCurrency, distributionItem),
+          withRawAccounts(btcAccounts),
+        );
+
+        expect(result.current.addressesCount).toBe(8);
+        expect(result.current.displayedAccounts).toHaveLength(5);
+      });
+
+      it("is 0 when distributionItem is undefined", () => {
+        const { result } = renderHook(() =>
+          useAddressesViewModel(mockBtcCryptoCurrency, undefined),
+        );
+        expect(result.current.addressesCount).toBe(0);
+      });
+    });
+
     describe("hasMore", () => {
       it("is false when there are fewer than 5 accounts", () => {
         const { btcAccounts, distributionItem } = buildBtcSetup(4);
