@@ -265,6 +265,7 @@ export type Features = CurrencyFeatures & {
   llNftEntryPoint: Feature_LlNftEntryPoint;
   ldmkSolanaSigner: DefaultFeature;
   ldmkCosmosSigner: DefaultFeature;
+  suiGraphqlTransport: DefaultFeature;
   ldmkConnectApp: DefaultFeature;
   lldNetworkBasedAddAccount: DefaultFeature;
   llmDatadog: {
@@ -455,6 +456,10 @@ export type Feature_BrazePushNotifications = Feature<{
       timer: number;
     };
     add_favorite_coin: {
+      enabled: boolean;
+      timer: number;
+    };
+    dapp_complete: {
       enabled: boolean;
       timer: number;
     };
@@ -868,10 +873,12 @@ type Feature_Wallet40_Params = {
   operationsList: boolean;
   aggregatedAssets: boolean;
   myWallet: boolean;
+  pnl: boolean;
   // Specifics
   brazePlacement?: boolean;
   newReceiveDialog?: boolean;
   finishOnboardingWidget?: boolean;
+  onboardingWidget?: boolean;
 };
 
 export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params & { onboardingWidget: boolean }>;
