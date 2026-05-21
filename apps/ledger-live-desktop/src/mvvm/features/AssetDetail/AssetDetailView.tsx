@@ -3,6 +3,7 @@ import { CryptoIcon } from "@ledgerhq/crypto-icons";
 import { getValidCryptoIconSize } from "~/renderer/utils/cryptoIconSize";
 import { AssetHeader } from "./components/AssetHeader";
 import { ActionBar } from "./components/ActionBar";
+import { HiddenBanner } from "./components/HiddenBanner";
 import { MarketPriceSection } from "./components/MarketPriceSection";
 import { MarketDataSection } from "./components/MarketDataSection";
 import { PortfolioSection } from "./components/PortfolioSection/PortfolioSection";
@@ -36,6 +37,8 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
         marketData={marketData}
         ledgerCurrency={ledgerCurrency}
       />
+
+      {ledgerCurrency && <HiddenBanner currency={ledgerCurrency} />}
 
       <MarketPriceSection
         distributionItem={distributionItem}

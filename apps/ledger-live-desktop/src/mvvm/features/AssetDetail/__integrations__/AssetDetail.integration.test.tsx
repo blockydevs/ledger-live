@@ -49,6 +49,8 @@ const TEST_ID = {
   EARN_BANNER: "asset-detail-earn-banner",
   AVAILABLE_BALANCE: "asset-detail-available-balance",
   EARN_DEPOSIT: "asset-detail-earn-deposit",
+  HIDDEN_BANNER: "asset-detail-hidden-banner",
+  HIDDEN_BANNER_SHOW_ASSET: "asset-detail-hidden-banner-show-asset",
 } as const;
 
 const mockGetCanStakeCurrency = jest.fn().mockReturnValue(false);
@@ -398,6 +400,21 @@ describe("AssetDetail integration", () => {
       expect(screen.getByRole("menuitem", { name: /hide from portfolio/i })).toBeVisible();
     });
 
+    it("offers Hide from portfolio for an owned coin (BTC) now that the action is no longer token-only", async () => {
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+      const { user } = renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.HEADER_OPTIONS)).toBeVisible();
+      });
+
+      await user.click(screen.getByTestId(TEST_ID.HEADER_OPTIONS));
+
+      expect(screen.getByRole("menuitem", { name: /hide from portfolio/i })).toBeVisible();
+    });
+
     it("USDC - enables the favorite action and stores the coingecko id when toggled", async () => {
       mockMarket.withData(MarketMockedResponse.usdcDetail);
       const account = genAccount("asset-detail-usdc-star-account", { currency: btc });
@@ -450,6 +467,47 @@ describe("AssetDetail integration", () => {
       await user.click(screen.getByTestId(TEST_ID.HEADER_OPTIONS));
 
       expect(screen.getByRole("menuitem", { name: /show in portfolio/i })).toBeVisible();
+    });
+
+    it("renders the hidden banner when the asset is blacklisted and unhides it from the banner action", async () => {
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+      const { user, store } = renderWithMockedCounterValuesProvider(<AssetDetail />, {
+        initialState: {
+          settings: {
+            ...AFTER_ONBOARDING_STATE,
+            blacklistedTokenIds: ["bitcoin"],
+          },
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.HIDDEN_BANNER)).toBeVisible();
+      });
+
+      expect(screen.getByText("This asset is hidden from your portfolio.")).toBeVisible();
+
+      await user.click(screen.getByTestId(TEST_ID.HIDDEN_BANNER_SHOW_ASSET));
+
+      await waitFor(() => {
+        expect(store.getState().settings.blacklistedTokenIds).not.toContain("bitcoin");
+      });
+
+      expect(screen.queryByTestId(TEST_ID.HIDDEN_BANNER)).not.toBeInTheDocument();
+    });
+
+    it("does not render the hidden banner when the asset is not blacklisted", async () => {
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+      renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+      await waitFor(() => {
+        expectHeader();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.HIDDEN_BANNER)).not.toBeInTheDocument();
     });
 
     it.each(OWNED_ASSETS)(
