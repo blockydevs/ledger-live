@@ -4361,7 +4361,7 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
     id: "sei_evm",
     coinType: CoinType.ETH,
     name: "SEI Network (EVM)",
-    managerAppName: "Ethereum",
+    managerAppName: "Sei",
     ticker: "SEI",
     scheme: "sei",
     color: "#89395b",
