@@ -1020,6 +1020,9 @@ importers:
       '@ledgerhq/live-countervalues-react':
         specifier: workspace:^
         version: link:../../libs/live-countervalues-react
+      '@ledgerhq/live-currency-format':
+        specifier: workspace:^
+        version: link:../../libs/live-currency-format
       '@ledgerhq/live-dmk-desktop':
         specifier: workspace:^
         version: link:../../libs/live-dmk-desktop
@@ -1688,6 +1691,9 @@ importers:
       '@ledgerhq/live-countervalues-react':
         specifier: workspace:^
         version: link:../../libs/live-countervalues-react
+      '@ledgerhq/live-currency-format':
+        specifier: workspace:^
+        version: link:../../libs/live-currency-format
       '@ledgerhq/live-dmk-mobile':
         specifier: workspace:^
         version: link:../../libs/live-dmk-mobile
@@ -21575,7 +21581,7 @@ packages:
       metro-react-native-babel-preset: '*'
       react: 19.0.0
       react-dom: 19.0.0
-      webpack: ^5.89.0
+      webpack: '*'
     peerDependenciesMeta:
       '@react-native/babel-preset':
         optional: true
