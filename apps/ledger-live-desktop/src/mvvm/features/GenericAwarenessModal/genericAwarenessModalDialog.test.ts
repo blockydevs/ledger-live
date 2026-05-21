@@ -1,62 +1,97 @@
+import { setDismissedContentCards } from "~/renderer/actions/settings";
 import { closeDialog, openDialog } from "~/renderer/reducers/dialogs";
-import { setGenericAwarenessModalCampaignId } from "~/renderer/reducers/genericAwarenessModalDialogSlice";
+import {
+  selectGenericAwarenessModalCampaignId,
+  setGenericAwarenessModalCampaignId,
+  setGenericAwarenessModalContentCards,
+} from "~/renderer/reducers/genericAwarenessModalSlice";
+import type { State } from "~/renderer/reducers";
 import type { AppDispatch } from "~/state-manager/configureStore";
+import { CAROUSEL_CAMPAIGN_ID, carouselCampaignCard } from "./__tests__/fixtures";
+import {
+  createGenericAwarenessModalTestState,
+  initialGenericAwarenessModalState,
+} from "./__tests__/testHelpers";
 import {
   closeGenericAwarenessModalDialog,
   openGenericAwarenessModalDialog,
-  resolveGenericAwarenessModalContentVariant,
-  selectGenericAwarenessModalCampaignId,
   selectIsGenericAwarenessModalOpen,
 } from "./genericAwarenessModalDialog";
 
-function collectThunkDispatches(thunkFn: (dispatch: AppDispatch) => void) {
+const collectThunkDispatches = (
+  runThunk: (dispatch: AppDispatch, getState: () => State) => void,
+  getState: () => State = () => createGenericAwarenessModalTestState(),
+) => {
   const dispatched: unknown[] = [];
-  const fakeDispatch = ((action: unknown) => {
+  const dispatch = ((action: unknown) => {
     dispatched.push(action);
   }) as AppDispatch;
-  thunkFn(fakeDispatch);
+  runThunk(dispatch, getState);
   return dispatched;
-}
-
-describe("resolveGenericAwarenessModalContentVariant", () => {
-  it("should return carousel for even numeric campaign ids", () => {
-    expect(resolveGenericAwarenessModalContentVariant("0")).toBe("carousel");
-    expect(resolveGenericAwarenessModalContentVariant("2")).toBe("carousel");
-  });
-
-  it("should return feature intro for odd numeric campaign ids", () => {
-    expect(resolveGenericAwarenessModalContentVariant("1")).toBe("featureIntro");
-    expect(resolveGenericAwarenessModalContentVariant("3")).toBe("featureIntro");
-  });
-
-  it("should return feature intro when campaign id is missing or not numeric", () => {
-    expect(resolveGenericAwarenessModalContentVariant(undefined)).toBe("featureIntro");
-    expect(resolveGenericAwarenessModalContentVariant("welcome")).toBe("featureIntro");
-  });
-});
+};
 
 describe("genericAwarenessModalDialog", () => {
-  it("open thunk stores campaign id and opens dialog", () => {
-    const actions = collectThunkDispatches(
-      openGenericAwarenessModalDialog({ campaignId: "campaign-a" }),
-    );
+  it("should store campaign id without opening dialog when no matching content card exists", () => {
+    const actions = collectThunkDispatches((dispatch, getState) => {
+      openGenericAwarenessModalDialog({ campaignId: "campaign-a" })(dispatch, getState);
+    });
 
-    expect(actions[0]).toEqual(setGenericAwarenessModalCampaignId("campaign-a"));
+    expect(actions).toEqual([setGenericAwarenessModalCampaignId("campaign-a")]);
+  });
+
+  it("should store campaign id and open dialog when a matching content card exists", () => {
+    const actions = collectThunkDispatches(dispatch => {
+      openGenericAwarenessModalDialog({ campaignId: CAROUSEL_CAMPAIGN_ID })(dispatch, () =>
+        createGenericAwarenessModalTestState({
+          genericAwarenessModal: {
+            contentCards: [carouselCampaignCard],
+            campaignId: undefined,
+          },
+        }),
+      );
+    });
+
+    expect(actions[0]).toEqual(setGenericAwarenessModalCampaignId(CAROUSEL_CAMPAIGN_ID));
     expect(actions[1]).toEqual(openDialog("GENERIC_AWARENESS_MODAL"));
   });
 
-  it("open thunk without campaign id clears stored campaign id", () => {
-    const actions = collectThunkDispatches(openGenericAwarenessModalDialog());
+  it("should clear campaign id without opening dialog when no content cards are in the store", () => {
+    const actions = collectThunkDispatches((dispatch, getState) => {
+      openGenericAwarenessModalDialog()(dispatch, getState);
+    });
 
-    expect(actions[0]).toEqual(setGenericAwarenessModalCampaignId(undefined));
-    expect(actions[1]).toEqual(openDialog("GENERIC_AWARENESS_MODAL"));
+    expect(actions).toEqual([setGenericAwarenessModalCampaignId(undefined)]);
   });
 
-  it("close thunk closes dialog and clears campaign id", () => {
-    const actions = collectThunkDispatches(closeGenericAwarenessModalDialog());
+  it("should close dialog and clear campaign id when close thunk runs without a content card", () => {
+    const actions = collectThunkDispatches(dispatch => {
+      closeGenericAwarenessModalDialog()(dispatch, createGenericAwarenessModalTestState);
+    });
 
     expect(actions[0]).toEqual(closeDialog("GENERIC_AWARENESS_MODAL"));
     expect(actions[1]).toEqual(setGenericAwarenessModalCampaignId(undefined));
+  });
+
+  it("should dismiss content card id and filter the slice when close thunk runs with a content card", () => {
+    const actions = collectThunkDispatches(dispatch => {
+      closeGenericAwarenessModalDialog()(dispatch, () =>
+        createGenericAwarenessModalTestState({
+          genericAwarenessModal: {
+            contentCards: [carouselCampaignCard],
+            campaignId: CAROUSEL_CAMPAIGN_ID,
+          },
+          dialogs: { GENERIC_AWARENESS_MODAL: true },
+        }),
+      );
+    });
+
+    const dismissAction = actions[0] as ReturnType<typeof setDismissedContentCards>;
+    expect(dismissAction.type).toBe("SET_DISMISSED_CONTENT_CARDS");
+    expect(dismissAction.payload.id).toBe(CAROUSEL_CAMPAIGN_ID);
+    expect(typeof dismissAction.payload.timestamp).toBe("number");
+    expect(actions[1]).toEqual(setGenericAwarenessModalContentCards([]));
+    expect(actions[2]).toEqual(closeDialog("GENERIC_AWARENESS_MODAL"));
+    expect(actions[3]).toEqual(setGenericAwarenessModalCampaignId(undefined));
   });
 
   it("should return false from selector when dialog is absent", () => {
@@ -79,11 +114,16 @@ describe("genericAwarenessModalDialog", () => {
     ).toBe(false);
   });
 
-  it("selectGenericAwarenessModalCampaignId reads slice state", () => {
+  it("should read campaign id from genericAwarenessModal slice state", () => {
     expect(
-      selectGenericAwarenessModalCampaignId({
-        genericAwarenessModalDialog: { campaignId: "welcome-v2" },
-      }),
+      selectGenericAwarenessModalCampaignId(
+        createGenericAwarenessModalTestState({
+          genericAwarenessModal: {
+            ...initialGenericAwarenessModalState,
+            campaignId: "welcome-v2",
+          },
+        }),
+      ),
     ).toBe("welcome-v2");
   });
 });

@@ -1,47 +1,60 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
+import type { GenericAwarenessModalContentCard } from "@ledgerhq/live-common/genericAwarenessModal";
+import type { State } from "~/renderer/reducers";
+import { openDialog } from "~/renderer/reducers/dialogs";
+import {
+  selectGenericAwarenessModalCampaignId,
+  selectGenericAwarenessModalContentCardByCampaignId,
+} from "~/renderer/reducers/genericAwarenessModalSlice";
 import {
   closeGenericAwarenessModalDialog,
-  resolveGenericAwarenessModalContentVariant,
-  selectGenericAwarenessModalCampaignId,
   selectIsGenericAwarenessModalOpen,
-  type GenericAwarenessModalContentVariant,
 } from "../genericAwarenessModalDialog";
+
+const GENERIC_AWARENESS_MODAL_DIALOG_ID = "GENERIC_AWARENESS_MODAL" as const;
 
 export interface GenericAwarenessModalViewProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Parsed from `ledgerwallet://generic-awareness-modal?id=…` when opened via deeplink */
-  campaignId: string | undefined;
-  /** Locked while the dialog closes so clearing campaignId does not swap body content */
-  contentVariant: GenericAwarenessModalContentVariant;
+  contentCard: GenericAwarenessModalContentCard | undefined;
 }
 
 const useGenericAwarenessModalViewModel = (): GenericAwarenessModalViewProps => {
   const dispatch = useDispatch();
   const isOpen = useSelector(selectIsGenericAwarenessModalOpen);
   const campaignId = useSelector(selectGenericAwarenessModalCampaignId);
-  const lockedContentVariantRef = useRef<GenericAwarenessModalContentVariant>("featureIntro");
+  const contentCard = useSelector((state: State) =>
+    selectGenericAwarenessModalContentCardByCampaignId(state)(campaignId),
+  );
+  const lockedContentCardRef = useRef<GenericAwarenessModalContentCard | undefined>(undefined);
 
   useEffect(() => {
-    if (isOpen) {
-      lockedContentVariantRef.current = resolveGenericAwarenessModalContentVariant(campaignId);
+    if (isOpen && contentCard) {
+      lockedContentCardRef.current = contentCard;
     }
-  }, [isOpen, campaignId]);
+  }, [isOpen, campaignId, contentCard]);
 
-  const contentVariant = isOpen
-    ? resolveGenericAwarenessModalContentVariant(campaignId)
-    : lockedContentVariantRef.current;
+  // Deeplink may set campaignId before Braze content cards are in the store.
+  useEffect(() => {
+    if (isOpen || campaignId === undefined || !contentCard) {
+      return;
+    }
+    dispatch(openDialog(GENERIC_AWARENESS_MODAL_DIALOG_ID));
+  }, [campaignId, contentCard, dispatch, isOpen]);
 
   const onClose = useCallback(() => {
     dispatch(closeGenericAwarenessModalDialog());
   }, [dispatch]);
 
+  const displayedContentCard = isOpen
+    ? (contentCard ?? lockedContentCardRef.current)
+    : lockedContentCardRef.current;
+
   return {
     isOpen,
     onClose,
-    campaignId,
-    contentVariant,
+    contentCard: displayedContentCard,
   };
 };
 
