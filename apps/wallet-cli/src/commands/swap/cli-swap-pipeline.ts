@@ -298,7 +298,6 @@ export async function runFullSwapPipeline(
   const swapType = quoteId != null && quoteId !== "" ? ("fixed" as const) : ("float" as const);
 
   let swapId: string | undefined;
-  let transaction: Transaction | undefined;
   let hardwareWalletType: Device["modelId"] | undefined;
 
   try {
@@ -373,7 +372,7 @@ export async function runFullSwapPipeline(
         toCurrency,
       };
 
-      transaction = await completeExchangeTransaction(out, {
+      const transaction = await completeExchangeTransaction(out, {
         provider,
         binaryPayload: payload.binaryPayload,
         signature: payload.signature,
@@ -391,7 +390,7 @@ export async function runFullSwapPipeline(
       );
 
       if (swapId && operationHash) {
-        await setBroadcastTransaction({
+        setBroadcastTransaction({
           provider,
           result: { operation: operationHash, swapId },
           sourceCurrencyId: fromCurrency.id,
