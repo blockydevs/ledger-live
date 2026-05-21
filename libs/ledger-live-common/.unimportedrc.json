@@ -93,6 +93,7 @@
     "src/families/algorand/logic.ts",
     "src/families/algorand/tokens.ts",
     "src/families/algorand/types.ts",
+    "src/families/bitcoin/bridge/api.ts",
     "src/families/bitcoin/descriptor.ts",
     "src/families/bitcoin/logic.ts",
     "src/families/bitcoin/react.ts",
