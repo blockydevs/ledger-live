@@ -145,8 +145,7 @@ function getAccountBridge(): ReturnType<typeof getLiveAccountBridge> {
         observer.next({ type: "signed", signedOperation: mockSignedOperation });
         observer.complete();
       }),
-    // Pipeline always calls broadcast; no on-chain hash in this unit test.
-    broadcast: async () => ({ hash: undefined }) as unknown as Operation,
+    broadcast: async () => ({ hash: "tx-hash-123" }) as unknown as Operation,
   } as unknown as ReturnType<typeof getLiveAccountBridge>;
 }
 
@@ -178,13 +177,13 @@ describe("runFullSwapPipeline session lifecycle", () => {
 
     expect(events).toEqual(["session:open", "startExchange", "completeExchange", "session:close"]);
     expect(result.transactionId).toBe("tx-id-123");
-    expect(result.operationHash).toBeUndefined();
+    expect(result.operationHash).toBe("tx-hash-123");
     expect(retrieveSwapPayloadMock).toHaveBeenCalledTimes(1);
     expect(setBroadcastTransactionMock).toHaveBeenCalledTimes(1);
     expect(setBroadcastTransactionMock).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "changelly",
-        result: { operation: "", swapId: "swap-id" },
+        result: { operation: "tx-hash-123", swapId: "swap-id" },
         sourceCurrencyId: "ethereum",
         targetCurrencyId: "ethereum",
         hardwareWalletType: DeviceModelId.nanoX,
