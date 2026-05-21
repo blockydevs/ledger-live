@@ -17,13 +17,12 @@ type AssetDetailViewProps = Readonly<{
 }>;
 
 export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
-  const { distributionItem, marketData, displayName, displayTicker, ledgerId, ledgerCurrency } =
-    viewModel;
+  const { distributionItem, marketData, displayTicker, ledgerId, ledgerCurrency } = viewModel;
 
   return (
     <div className="flex w-full shrink-0 flex-col gap-24 pb-32">
       <AssetHeader
-        assetLabel={displayName}
+        assetTicker={displayTicker}
         icon={
           ledgerId && (
             <CryptoIcon
