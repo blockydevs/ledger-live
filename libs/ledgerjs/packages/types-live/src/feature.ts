@@ -137,7 +137,6 @@ export type CurrencyFeatures = {
   currencyXion: DefaultFeature;
   currencyZenrock: DefaultFeature;
   currencySonic: DefaultFeature;
-  currencySonicBlaze: DefaultFeature;
   currencySui: DefaultFeature;
   currencySuiTestnet: DefaultFeature;
   currencyMina: DefaultFeature;
