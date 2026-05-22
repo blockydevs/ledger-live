@@ -19,7 +19,7 @@ export function TotalBalanceView({
 }: TotalBalanceViewProps) {
   return (
     <div className="flex flex-col gap-8" data-testid="asset-detail-total-balance">
-      <p className="body-2-semi-bold text-muted">{totalBalanceLabel}</p>
+      <p className="body-3 text-muted">{totalBalanceLabel}</p>
 
       <div className="flex min-w-0 flex-wrap items-baseline gap-4">
         <AmountDisplay
