@@ -3,11 +3,27 @@ import React, { useEffect, useMemo } from "react";
 import { BorrowLiveAppView } from ".";
 import { useBorrowLiveAppViewModel } from "LLM/features/Borrow/screens/BorrowLiveApp/useBorrowLiveAppViewModel";
 
+export type BorrowSwapNavigationParams = {
+  fromCurrencyId?: string;
+  toCurrencyId?: string;
+  fromTokenId?: string;
+  toTokenId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  amountFrom?: string;
+  affiliate?: string;
+};
+
+type BorrowNavigateRequestParams = {
+  action?: string;
+} & BorrowSwapNavigationParams;
+
 type BorrowLiveAppWrapperProps = Readonly<{
   action?: "go-back";
   onNativeGoBack?: () => void;
   onActionHandled?: () => void;
   onWalletApiGoBack?: () => void;
+  onWalletApiGoToSwap?: (params: BorrowSwapNavigationParams) => void;
 }>;
 
 export function BorrowLiveAppWrapper({
@@ -15,6 +31,7 @@ export function BorrowLiveAppWrapper({
   onNativeGoBack,
   onActionHandled,
   onWalletApiGoBack,
+  onWalletApiGoToSwap,
 }: BorrowLiveAppWrapperProps) {
   const { manifest, error, isLoading, webviewRef, webviewState, onWebviewStateChange, webviewInputs } =
     useBorrowLiveAppViewModel();
@@ -22,18 +39,42 @@ export function BorrowLiveAppWrapper({
 
   const customHandlers = useMemo<WalletAPICustomHandlers>(
     () => ({
-      "custom.borrow.navigate": async (request: { params?: { action?: string } }) => {
+      "custom.navigate": async (request: { params?: BorrowNavigateRequestParams }) => {
         const requestAction = request.params?.action;
 
-        if (requestAction !== "go-back") {
-          throw new Error("Unknown borrow navigation action");
+        if (requestAction === "go-back") {
+          onWalletApiGoBack?.();
+          return { success: true };
         }
 
-        onWalletApiGoBack?.();
-        return { success: true };
+        if (requestAction === "go-to-swap") {
+          const {
+            fromCurrencyId,
+            toCurrencyId,
+            fromTokenId,
+            toTokenId,
+            fromAccountId,
+            toAccountId,
+            amountFrom,
+            affiliate,
+          } = request.params ?? {};
+          onWalletApiGoToSwap?.({
+            fromCurrencyId,
+            toCurrencyId,
+            fromTokenId,
+            toTokenId,
+            fromAccountId,
+            toAccountId,
+            amountFrom,
+            affiliate,
+          });
+          return { success: true };
+        }
+
+        throw new Error("Unknown borrow navigation action");
       },
     }),
-    [onWalletApiGoBack],
+    [onWalletApiGoBack, onWalletApiGoToSwap],
   );
 
   useEffect(() => {

@@ -13,6 +13,21 @@ import type { BorrowWebviewInputs } from "../BorrowApp/useBorrowAppViewModel";
 import { useDeeplinkCustomHandlers } from "~/renderer/components/WebPlatformPlayer/CustomHandlers";
 import { WalletAPICustomHandlers } from "@ledgerhq/live-common/wallet-api/types";
 
+export type BorrowSwapNavigationParams = {
+  fromCurrencyId?: string;
+  toCurrencyId?: string;
+  fromTokenId?: string;
+  toTokenId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  amountFrom?: string;
+  affiliate?: string;
+};
+
+type BorrowNavigateRequestParams = {
+  action?: string;
+} & BorrowSwapNavigationParams;
+
 export type BorrowWebProps = {
   manifest: LiveAppManifest;
   inputs: BorrowWebviewInputs;
@@ -20,6 +35,8 @@ export type BorrowWebProps = {
   webviewState: WebviewState;
   onStateChange: WebviewProps["onStateChange"];
   enablePlatformDevTools: boolean;
+  onWalletApiGoBack?: () => void;
+  onWalletApiGoToSwap?: (params: BorrowSwapNavigationParams) => void;
   Loader?: WebviewLoader;
 };
 
@@ -30,12 +47,50 @@ export const BorrowWebView = ({
   webviewState,
   onStateChange,
   enablePlatformDevTools,
+  onWalletApiGoBack,
+  onWalletApiGoToSwap,
   Loader = BorrowLoader,
 }: BorrowWebProps) => {
   const customDeeplinkHandlers = useDeeplinkCustomHandlers();
   const customHandlers = useMemo<WalletAPICustomHandlers>(
-    () => ({ ...customDeeplinkHandlers }),
-    [customDeeplinkHandlers],
+    () => ({
+      ...customDeeplinkHandlers,
+      "custom.navigate": async (request: { params?: BorrowNavigateRequestParams }) => {
+        const requestAction = request.params?.action;
+
+        if (requestAction === "go-back") {
+          onWalletApiGoBack?.();
+          return { success: true };
+        }
+
+        if (requestAction === "go-to-swap") {
+          const {
+            fromCurrencyId,
+            toCurrencyId,
+            fromTokenId,
+            toTokenId,
+            fromAccountId,
+            toAccountId,
+            amountFrom,
+            affiliate,
+          } = request.params ?? {};
+          onWalletApiGoToSwap?.({
+            fromCurrencyId,
+            toCurrencyId,
+            fromTokenId,
+            toTokenId,
+            fromAccountId,
+            toAccountId,
+            amountFrom,
+            affiliate,
+          });
+          return { success: true };
+        }
+
+        throw new Error("Unknown borrow navigation action");
+      },
+    }),
+    [customDeeplinkHandlers, onWalletApiGoBack, onWalletApiGoToSwap],
   );
 
   return (
