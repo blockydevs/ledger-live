@@ -26,7 +26,7 @@ import {
 } from "@devtools/shell";
 ```
 
-- `<DevTools config={DevToolsConfig} colorScheme? />` — root component (web). The native build is exported from `index.native.ts`.
+- `<DevTools config={DevToolsConfig} />` — root component (web). The native build is exported from `index.native.ts`.
 - `DevToolsProvider` — context provider that maps `id → config` for the rendered tools.
 - `useToolProps(id)` — returns the unknown-typed config the host passed for `id`, or `undefined`.
 - `DevToolsConfig` is re-exported from `@devtools/registry` for convenience.

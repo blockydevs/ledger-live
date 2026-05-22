@@ -1,5 +1,4 @@
-import { ThemeProvider, Box, Text } from "@ledgerhq/lumen-ui-rnative";
-import { ledgerLiveThemes } from "@ledgerhq/lumen-design-core";
+import { Box, Text } from "@ledgerhq/lumen-ui-rnative";
 import { ScrollView, TextInput, Pressable } from "react-native";
 import { Suspense, lazy, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -218,11 +217,9 @@ const DevToolsShell = ({ config }: { config: DevToolsConfig }) => {
 };
 
 export const DevTools = ({ config = [], fallback }: DevToolsProps) => (
-  <ThemeProvider themes={ledgerLiveThemes}>
-    <DevToolsProvider value={config}>
-      <Suspense fallback={fallback ?? <Loading />}>
-        <DevToolsShell config={config} />
-      </Suspense>
-    </DevToolsProvider>
-  </ThemeProvider>
+  <DevToolsProvider value={config}>
+    <Suspense fallback={fallback ?? <Loading />}>
+      <DevToolsShell config={config} />
+    </Suspense>
+  </DevToolsProvider>
 );

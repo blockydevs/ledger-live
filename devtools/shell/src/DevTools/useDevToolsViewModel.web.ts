@@ -4,15 +4,11 @@ import { useDevToolsStorage } from "../hooks/useDevToolsStorage.web";
 import type { Category, Tool, ToolId } from "@devtools/registry";
 import { filterToolsByPlatform } from "../utils/toolsUtils";
 
-type ColorScheme = "light" | "dark" | "system";
-
 interface DevToolsInput {
   tools: Tool[];
-  colorScheme?: ColorScheme;
 }
 
 export interface DevToolsViewProps {
-  colorScheme: ColorScheme;
   categories: Array<{ category: Category; tools: Tool[] }>;
   activeTool: Tool | null;
   recentToolIds: ToolId[];
@@ -20,17 +16,13 @@ export interface DevToolsViewProps {
   onClearTool: () => void;
 }
 
-export function useDevToolsViewModel({
-  tools,
-  colorScheme = "system",
-}: DevToolsInput): DevToolsViewProps {
+export function useDevToolsViewModel({ tools }: DevToolsInput): DevToolsViewProps {
   const webTools = useMemo(() => filterToolsByPlatform(tools, "web"), [tools]);
   const { activeTool, setActiveToolId, clearActiveTool, categories } =
     useDevToolsNavigation(webTools);
   const { recentToolIds } = useDevToolsStorage(activeTool?.id, setActiveToolId);
 
   return {
-    colorScheme,
     categories,
     activeTool,
     recentToolIds,
