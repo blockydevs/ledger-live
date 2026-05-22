@@ -27,7 +27,7 @@ import { ContentCardLocation, ContentCardsType, BrazeContentCard } from "./types
 import { dismissedContentCardsSelector } from "~/reducers/settings";
 import { getOldCampaignIds } from "@ledgerhq/live-common/braze/anonymousUsers";
 import { clearDismissedContentCards } from "~/actions/settings";
-import { setGenericAwarenessModalContentCards } from "~/reducers/genericAwarenessModal";
+import { appendGenericAwarenessModalContentCards } from "~/reducers/genericAwarenessModal";
 
 export const useDynamicContentLogic = () => {
   const dispatch = useDispatch();
@@ -88,7 +88,7 @@ export const useDynamicContentLogic = () => {
     dispatch(setDynamicContentAssetsCards(assetCards));
     dispatch(setDynamicContentNotificationCards(notificationCards));
     dispatch(setDynamicContentLandingPageStickyCtaCards(landingPageStickyCtaCards));
-    dispatch(setGenericAwarenessModalContentCards(genericAwarenessModalContentCards));
+    dispatch(appendGenericAwarenessModalContentCards(genericAwarenessModalContentCards));
     dispatch(setIsDynamicContentLoading(false));
   }, [dismissedContentCardsIds, dispatch]);
 
