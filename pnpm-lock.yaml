@@ -2490,6 +2490,9 @@ importers:
       '@devtools/shell':
         specifier: workspace:*
         version: link:../../devtools/shell
+      '@features/platform-feature-flags':
+        specifier: workspace:*
+        version: link:../../features/platform/feature-flags
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
         version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
@@ -2805,7 +2808,30 @@ importers:
         specifier: 'catalog:'
         version: 6.0.2
 
+  devtools/registry:
+    dependencies:
+      '@devtools/feature-flags':
+        specifier: workspace:*
+        version: link:../feature-flags
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.0.14
+      react:
+        specifier: 19.0.0
+        version: 19.0.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
   devtools/shell:
+    dependencies:
+      '@devtools/registry':
+        specifier: workspace:*
+        version: link:../registry
     devDependencies:
       '@babel/plugin-transform-export-namespace-from':
         specifier: 7.27.1
@@ -20448,6 +20474,7 @@ packages:
   '@snyk/github-codeowners@1.1.0':
     resolution: {integrity: sha512-lGFf08pbkEac0NYgVf4hdANpAgApRjNByLXB+WBip3qj1iendOIyAwP2GKkKbQMNVy2r1xxDf0ssfWscoiC+Vw==}
     engines: {node: '>=8.10'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     hasBin: true
 
   '@socket.io/component-emitter@3.1.2':
@@ -32785,6 +32812,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode-terminal@0.11.0:
