@@ -1,7 +1,7 @@
 ---
-"@ledgerhq/types-live": patch
-"@ledgerhq/live-common": patch
-"@shared/feature-flags": patch
+"@ledgerhq/types-live": minor
+"@ledgerhq/live-common": minor
+"@shared/feature-flags": minor
 ---
 
 chore: remove sonic blaze feature flags

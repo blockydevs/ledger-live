@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/coin-bitcoin": patch
-"@ledgerhq/live-common": patch
+"@ledgerhq/coin-bitcoin": minor
+"@ledgerhq/live-common": minor
 ---
 
 fix ZCash send transaction broken after DMK support

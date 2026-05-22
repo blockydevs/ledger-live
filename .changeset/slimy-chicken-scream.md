@@ -1,5 +1,5 @@
 ---
-"@ledgerhq/coin-tezos": patch
+"@ledgerhq/coin-tezos": minor
 ---
 
 Fall back to requestedAmount (or 0) when parsing failed staking operations from TzKT. Failed stake ops return only requestedAmount and no amount field;

@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/coin-cosmos": patch
-"@ledgerhq/live-common": patch
+"@ledgerhq/coin-cosmos": minor
+"@ledgerhq/live-common": minor
 ---
 
 chore: align default config with Firebase
