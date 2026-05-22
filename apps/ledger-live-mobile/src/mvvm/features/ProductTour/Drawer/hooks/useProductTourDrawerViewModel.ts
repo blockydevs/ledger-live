@@ -87,7 +87,7 @@ export const useProductTourDrawerViewModel = (): ProductTourDrawerViewModel => {
           }
           break;
         case "stake":
-          navigation.navigate(NavigatorName.Earn);
+          navigation.navigate(NavigatorName.Main, { screen: NavigatorName.Earn });
           break;
         case "card":
           navigation.navigate(NavigatorName.Card);
