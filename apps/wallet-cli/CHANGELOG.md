@@ -1,5 +1,11 @@
 # @ledgerhq/wallet-cli
 
+## 1.1.0-next.0
+
+### Minor Changes
+
+- [#17664](https://github.com/LedgerHQ/ledger-live/pull/17664) [`8056a28`](https://github.com/LedgerHQ/ledger-live/commit/8056a28b60e14ec6764343131364e2e82c54b188) Thanks [@lpaquet-ledger](https://github.com/lpaquet-ledger)! - add /accepted and /cancelled to swap cli
+
 ## 1.0.1
 
 ### Patch Changes
