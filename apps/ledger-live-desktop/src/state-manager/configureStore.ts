@@ -6,6 +6,7 @@ import { applyLldRTKApiMiddlewares } from "~/renderer/reducers/rtkQueryApi";
 import { createIdentitiesSyncMiddleware } from "@ledgerhq/client-ids/store";
 import { trackingEnabledSelector } from "~/renderer/reducers/settings";
 import { createFeatureFlagsMiddleware } from "@shared/feature-flags";
+import { fetchRemoteFlags } from "~/firebase/remoteConfig";
 type Props = {
   state?: State;
   dbMiddleware?: Middleware;
@@ -32,6 +33,7 @@ const customCreateStore = ({ state, dbMiddleware, analyticsMiddleware }: Props) 
         .concat(
           createFeatureFlagsMiddleware({
             resolutionConfig: { platform: "desktop", appVersion: __APP_VERSION__ },
+            fetchRemoteFlags,
           }),
         ),
     devTools: __DEV__,

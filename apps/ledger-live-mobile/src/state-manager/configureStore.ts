@@ -14,6 +14,7 @@ import { createIdentitiesSyncMiddleware } from "@ledgerhq/client-ids/store";
 import { State } from "~/reducers/types";
 import { trackingEnabledSelector } from "~/reducers/settings";
 import { createFeatureFlagsMiddleware } from "@shared/feature-flags";
+import { fetchRemoteFlags } from "~/firebase/remoteConfig";
 
 export const store = configureStore({
   reducer: reducers,
@@ -35,6 +36,7 @@ export const store = configureStore({
             platform: Platform.OS === "ios" ? "ios" : "android",
             appVersion: VersionNumber.appVersion ?? undefined,
           },
+          fetchRemoteFlags,
         }),
       ),
 
