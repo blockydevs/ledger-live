@@ -8,7 +8,6 @@ import { addBugLink, addTmsLink } from "tests/utils/allureUtils";
 import { getDescription } from "tests/utils/customJsonReporter";
 import { getFamilyByCurrencyId } from "@ledgerhq/live-common/currencies/helpers";
 import { getModularSelector } from "tests/utils/modularSelectorUtils";
-import { isWallet40Enabled, LWD_WALLET_40_FF_DISABLED } from "tests/utils/featureFlagUtils";
 import { liveDataCommand } from "@ledgerhq/live-common/e2e/cliCommandsUtils";
 
 function setupEnv(disableBroadcast?: boolean) {
@@ -437,7 +436,6 @@ test.describe("Staking flow from different entry point - legacy", () => {
     teamOwner: Team.EARN,
     userdata: "skip-onboarding-with-last-seen-device",
     speculosApp: delegateAccount.account.currency.speculosApp,
-    featureFlags: LWD_WALLET_40_FF_DISABLED,
     cliCommands: [liveDataCommand(delegateAccount.account)],
   });
 
@@ -516,13 +514,7 @@ test.describe("Staking flow from different entry point", () => {
     },
     async ({ app }) => {
       await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
-
-      if (await isWallet40Enabled(app.getPage())) {
-        await app.marketBanner.clickExploreMarketHeader();
-      } else {
-        await app.layout.goToMarket();
-      }
-
+      await app.layout.goToMarket();
       await app.market.search(delegateAccount.account.currency.ticker);
       await app.market.stakeButtonClick(delegateAccount.account.currency.ticker);
 
