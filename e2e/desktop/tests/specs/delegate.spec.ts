@@ -430,59 +430,6 @@ for (const validator of validators) {
   });
 }
 
-test.describe("Staking flow from different entry point - legacy", () => {
-  const delegateAccount = new Delegate(Account.ATOM_1, "0.001", "Ledger by Chorus One");
-  test.use({
-    teamOwner: Team.EARN,
-    userdata: "skip-onboarding-with-last-seen-device",
-    speculosApp: delegateAccount.account.currency.speculosApp,
-    cliCommands: [liveDataCommand(delegateAccount.account)],
-  });
-
-  const family = getFamilyByCurrencyId(delegateAccount.account.currency.id);
-
-  test(
-    "Staking flow from portfolio entry point",
-    {
-      tag: [
-        "@NanoSP",
-        "@LNS",
-        "@NanoX",
-        "@Stax",
-        "@Flex",
-        "@NanoGen5",
-        `@${delegateAccount.account.currency.id}`,
-        ...(family ? [`@family-${family}`] : []),
-      ],
-      annotation: {
-        type: "TMS",
-        description: "B2CQA-2769, B2CQA-3281, B2CQA-3289",
-      },
-    },
-    async ({ app }) => {
-      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
-
-      await app.layout.goToPortfolio();
-      await app.portfolio.startStakeFlow();
-
-      const selector = await getModularSelector(app, "ASSET");
-      if (selector) {
-        await selector.validateItems();
-        await selector.selectAsset(delegateAccount.account.currency);
-        await selector.selectNetwork(delegateAccount.account.currency);
-        await selector.selectAccountByName(delegateAccount.account);
-      } else {
-        await app.portfolio.expectChooseAssetToBeVisible();
-        await app.assetDrawer.selectAsset(delegateAccount.account.currency);
-        await app.assetDrawer.selectAccountByIndex(delegateAccount.account);
-      }
-
-      await app.delegate.verifyFirstProviderName(delegateAccount.provider);
-      await app.delegate.continue();
-    },
-  );
-});
-
 test.describe("Staking flow from different entry point", () => {
   const delegateAccount = new Delegate(Account.ATOM_1, "0.001", "Ledger by Chorus One");
   test.use({
