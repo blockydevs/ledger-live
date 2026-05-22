@@ -1,5 +1,6 @@
 import { render, screen, userEvent } from "jest/render.native";
 import { DevTools } from "./DevTools.native";
+import { mockDevToolsConfig } from "jest/test-utils";
 
 jest.mock("@devtools/registry", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -16,7 +17,7 @@ jest.mock("@devtools/registry", () => {
   };
 });
 
-const config = [{ id: "test-tool", config: { value: "x" } }] as never;
+const config = mockDevToolsConfig([{ id: "test-tool", config: { value: "x" } }]);
 
 describe("DevTools (native)", () => {
   it("renders the shell", () => {
