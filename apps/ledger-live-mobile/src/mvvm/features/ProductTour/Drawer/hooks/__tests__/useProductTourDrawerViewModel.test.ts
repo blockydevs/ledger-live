@@ -218,22 +218,29 @@ describe("useProductTourDrawerViewModel", () => {
   });
 
   describe("onPrimaryAction", () => {
-    it.each([
-      ["stake", NavigatorName.Earn],
-      ["card", NavigatorName.Card],
-    ] as const)(
-      'should navigate to the correct navigator and close drawer for "%s" action',
-      (action, navigator) => {
-        const { result } = renderHook(() => useProductTourDrawerViewModel(), {
-          overrideInitialState: withFeatureEnabled,
-        });
+    it('should navigate to Earn via Main navigator and close drawer for "stake" action', () => {
+      const { result } = renderHook(() => useProductTourDrawerViewModel(), {
+        overrideInitialState: withFeatureEnabled,
+      });
 
-        act(() => result.current.onPrimaryAction(action));
+      act(() => result.current.onPrimaryAction("stake"));
 
-        expect(result.current.isDrawerOpen).toBe(false);
-        expect(mockNavigate).toHaveBeenCalledWith(navigator);
-      },
-    );
+      expect(result.current.isDrawerOpen).toBe(false);
+      expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.Main, {
+        screen: NavigatorName.Earn,
+      });
+    });
+
+    it('should navigate to the correct navigator and close drawer for "card" action', () => {
+      const { result } = renderHook(() => useProductTourDrawerViewModel(), {
+        overrideInitialState: withFeatureEnabled,
+      });
+
+      act(() => result.current.onPrimaryAction("card"));
+
+      expect(result.current.isDrawerOpen).toBe(false);
+      expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.Card);
+    });
 
     it('should navigate to Swap via Main navigator when Wallet40 main nav is enabled for "swap" action', () => {
       mockUseWalletFeaturesConfig.mockReturnValue({
