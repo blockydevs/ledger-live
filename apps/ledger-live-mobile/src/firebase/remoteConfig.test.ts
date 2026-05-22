@@ -1,3 +1,7 @@
+// Use the real module under test, overriding the default mock that other tests
+// in this app rely on via `__tests__/jest-setup.js`.
+jest.unmock("~/firebase/remoteConfig");
+
 const mockSetConfigSettings = jest.fn();
 const mockSetDefaults = jest.fn();
 const mockFetchAndActivate = jest.fn();
