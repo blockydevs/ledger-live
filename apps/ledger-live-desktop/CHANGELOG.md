@@ -1,5 +1,11 @@
 # ledger-live-desktop
 
+## 4.6.0-next.1
+
+### Minor Changes
+
+- [#17735](https://github.com/LedgerHQ/ledger-live/pull/17735) [`58bb48f`](https://github.com/LedgerHQ/ledger-live/commit/58bb48fcef3abb3ed11fec871898bb42f1039a09) Thanks [@mcayuelas-ledger](https://github.com/mcayuelas-ledger)! - Fix half-light / half-dark rendering on the Wallet 4.0 Portfolio when toggling theme via the floating ThemeConsole. The ProductTour dialog's hardcoded `<ThemeProvider colorScheme="dark">` wrapper was applying the `dark` class on `<html>` globally and racing with the root ThemeProvider. The dialog is now scoped via a local `dark` class on `DialogContent` so it stays dark without polluting the global theme.
+
 ## 4.6.0-next.0
 
 ### Minor Changes
