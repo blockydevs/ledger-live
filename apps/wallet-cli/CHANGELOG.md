@@ -1,5 +1,13 @@
 # @ledgerhq/wallet-cli
 
+## 1.0.2
+
+### Patch Changes
+
+- add /accepted and /cancelled to swap cli
+
+- Emit a plain greppable `hash: <txHash>` line to stdout on broadcast (human output) so scripts can capture the transaction hash without parsing ANSI-styled status lines.
+
 ## 1.0.1
 
 ### Patch Changes
