@@ -191,7 +191,7 @@ export function useBraze() {
         .map(card => mapAsNotificationContentCard(card as ClassicCard))
         .sort(compareCards);
 
-      const genericAwarenessModalBrazeCards = filterByPage(
+      const genericAwarenessModalBrazeCardsFromBraze = filterByPage(
         filteredDesktopCards,
         LocationContentCard.GenericAwarenessModal,
       )
@@ -209,7 +209,7 @@ export function useBraze() {
         }));
 
       const genericAwarenessModalContentCards = filterDismissedGenericAwarenessModalContentCards(
-        processGenericAwarenessModalBrazeCards(genericAwarenessModalBrazeCards),
+        processGenericAwarenessModalBrazeCards(genericAwarenessModalBrazeCardsFromBraze),
         dismissedCardIds,
       );
 

@@ -8,6 +8,7 @@ jest.mock("../hooks/useGenericAwarenessModalCarouselViewModel", () => ({
   default: jest.fn(() => ({
     slides: [],
     onSlidePrimaryClick: jest.fn(),
+    onClose: jest.fn(),
   })),
 }));
 

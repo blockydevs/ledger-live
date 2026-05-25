@@ -46,6 +46,7 @@ function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselCo
 export type CarouselContentProps = {
   slides: GenericAwarenessModalCarouselSlide[];
   onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 };
 
 function CarouselContentProgress() {
@@ -60,21 +61,23 @@ function CarouselContentProgress() {
 function CarouselContentFooter({
   slides,
   onSlidePrimaryClick,
+  onClose,
 }: Readonly<{
   slides: GenericAwarenessModalCarouselSlide[];
   onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 }>) {
-  const { currentIndex, totalSlides, goToNext, goToSlide } = useSlidesContext();
+  const { currentIndex, totalSlides, goToNext } = useSlidesContext();
   const isLastSlide = currentIndex === totalSlides - 1;
   const currentSlide = slides[currentIndex];
 
   const handleContinue = useCallback(() => {
     if (isLastSlide) {
-      goToSlide(0);
+      onClose();
     } else {
       goToNext();
     }
-  }, [isLastSlide, goToNext, goToSlide]);
+  }, [goToNext, isLastSlide, onClose]);
 
   const handlePrimary = useCallback(() => {
     if (currentSlide) {
@@ -100,7 +103,7 @@ function CarouselContentFooter({
         onClick={handleContinue}
         data-testid="generic-awareness-modal-continue-button"
       >
-        {isLastSlide ? "Go to first slide" : "Continue"}
+        {isLastSlide ? "Close" : "Continue"}
       </Button>
     </div>
   );
@@ -109,6 +112,7 @@ function CarouselContentFooter({
 export default function CarouselContent({
   slides,
   onSlidePrimaryClick,
+  onClose,
 }: Readonly<CarouselContentProps>) {
   return (
     <Slides initialSlideIndex={0}>
@@ -123,7 +127,11 @@ export default function CarouselContent({
         <CarouselContentProgress />
       </Slides.ProgressIndicator>
       <Slides.Footer>
-        <CarouselContentFooter slides={slides} onSlidePrimaryClick={onSlidePrimaryClick} />
+        <CarouselContentFooter
+          slides={slides}
+          onSlidePrimaryClick={onSlidePrimaryClick}
+          onClose={onClose}
+        />
       </Slides.Footer>
     </Slides>
   );
