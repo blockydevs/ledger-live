@@ -34,6 +34,8 @@ export type StartSyncJobArgs = {
   viewingKey: string;
   startBlockHeight: number;
   maxBatchSize: number;
+  /** Hex-encoded nullifiers of unspent notes from previous syncs. Enables spent detection across incremental sync boundaries. */
+  knownNullifiers?: string[];
 };
 
 /**
@@ -98,7 +100,7 @@ export async function startSyncJob(
     onActiveStream?: (stream: NativeStream | null) => void;
   },
 ): Promise<void> {
-  const { grpcUrl, network, viewingKey, startBlockHeight, maxBatchSize } = args;
+  const { grpcUrl, network, viewingKey, startBlockHeight, maxBatchSize, knownNullifiers } = args;
   const { isCancelled, onActiveStream } = hooks;
 
   const native = await getNativeModule();
@@ -121,6 +123,7 @@ export async function startSyncJob(
   }
 
   const allTransactions: ShieldedTransactionRaw[] = [];
+  const allSpentKnownNullifiers: string[] = [];
   let processedBlocks = 0;
   let chunkStart = startBlockHeight;
 
@@ -131,7 +134,7 @@ export async function startSyncJob(
     }
 
     const chunkEnd = Math.min(chunkStart + maxBatchSize - 1, endHeight);
-    const { blocksScanned, transactions } = await syncChunk(
+    const { blocksScanned, transactions, spentKnownNullifiers } = await syncChunk(
       native,
       {
         grpcUrl,
@@ -139,6 +142,7 @@ export async function startSyncJob(
         viewingKey,
         chunkStart,
         chunkEnd,
+        ...(knownNullifiers?.length && { knownNullifiers }),
       },
       isCancelled,
       onActiveStream,
@@ -153,6 +157,7 @@ export async function startSyncJob(
     for (const tx of transactions) {
       allTransactions.push(mapNativeTx(tx));
     }
+    allSpentKnownNullifiers.push(...spentKnownNullifiers);
 
     log(ZCASH_LOG_TYPE, "chunk done", {
       chunkStart,
@@ -183,6 +188,9 @@ export async function startSyncJob(
       remainingBlocks: endHeight - chunkEnd,
       lastProcessedBlock: chunkEnd,
       transactions: [...allTransactions],
+      ...(allSpentKnownNullifiers.length > 0 && {
+        spentKnownNullifiers: [...allSpentKnownNullifiers],
+      }),
     });
 
     chunkStart = chunkEnd + 1;
@@ -202,11 +210,12 @@ async function syncChunk(
     viewingKey: string;
     chunkStart: number;
     chunkEnd: number;
+    knownNullifiers?: string[];
   },
   isCancelled: () => boolean,
   onActiveStream?: (stream: NativeStream | null) => void,
-): Promise<{ blocksScanned: number; transactions: NativeTx[] }> {
-  const { grpcUrl, network, viewingKey, chunkStart, chunkEnd } = args;
+): Promise<{ blocksScanned: number; transactions: NativeTx[]; spentKnownNullifiers: string[] }> {
+  const { grpcUrl, network, viewingKey, chunkStart, chunkEnd, knownNullifiers } = args;
 
   // Retry and split-on-timeout are handled by the Rust layer via maxRetries.
   const stream = await native.startSync({
@@ -217,6 +226,7 @@ async function syncChunk(
     network,
     orchardOnly: true, // Ledger only supports Orchard
     maxRetries: 3, // network retry delegated to Rust
+    ...(knownNullifiers && knownNullifiers.length > 0 && { knownNullifiers }),
   });
   onActiveStream?.(stream);
 
@@ -224,7 +234,7 @@ async function syncChunk(
     if (isCancelled()) {
       log(ZCASH_LOG_TYPE, "cancelled before first read -- calling stream.cancel()");
       stream.cancel();
-      return { blocksScanned: 0, transactions: [] };
+      return { blocksScanned: 0, transactions: [], spentKnownNullifiers: [] };
     }
 
     const transactions: NativeTx[] = [];
@@ -233,7 +243,7 @@ async function syncChunk(
       if (isCancelled()) {
         log(ZCASH_LOG_TYPE, "cancelled mid-stream -- calling stream.cancel()");
         stream.cancel();
-        return { blocksScanned: 0, transactions: [] };
+        return { blocksScanned: 0, transactions: [], spentKnownNullifiers: [] };
       }
       transactions.push(tx);
     }
@@ -241,7 +251,7 @@ async function syncChunk(
     if (isCancelled()) {
       log(ZCASH_LOG_TYPE, "cancelled after stream exhausted -- calling stream.cancel()");
       stream.cancel();
-      return { blocksScanned: 0, transactions: [] };
+      return { blocksScanned: 0, transactions: [], spentKnownNullifiers: [] };
     }
 
     const stats = await stream.stats();
@@ -250,9 +260,14 @@ async function syncChunk(
       chunkEnd,
       blocksScanned: stats.blocksScanned,
       elapsedMs: stats.elapsedMs,
+      spentKnownNullifiers: stats.spentKnownNullifiers?.length ?? 0,
     });
 
-    return { blocksScanned: stats.blocksScanned, transactions };
+    return {
+      blocksScanned: stats.blocksScanned,
+      transactions,
+      spentKnownNullifiers: stats.spentKnownNullifiers ?? [],
+    };
   } finally {
     onActiveStream?.(null);
   }
@@ -277,6 +292,13 @@ function mapNativeTx(tx: NativeTx): ShieldedTransactionRaw {
         amount: String(n.amount),
         memo: n.memo,
         transfer_type: n.transferType,
+        ...(n.nullifier !== undefined && { nullifier: n.nullifier }),
+        ...(n.rho !== undefined && { rho: n.rho }),
+        ...(n.rseed !== undefined && { rseed: n.rseed }),
+        ...(n.cmx !== undefined && { cmx: n.cmx }),
+        ...(n.position !== undefined && { position: n.position }),
+        ...(n.recipient !== undefined && { recipient: n.recipient }),
+        ...(n.isSpent !== undefined && { is_spent: n.isSpent }),
       })),
       sapling_outputs: tx.saplingNotes.map(n => ({
         amount: String(n.amount),

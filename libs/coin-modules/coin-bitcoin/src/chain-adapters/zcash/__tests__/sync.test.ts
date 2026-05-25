@@ -353,7 +353,6 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
 
-    expect(output.accountUpdate.privateInfo).toBeDefined();
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(5000));
     expect(output.accountUpdate.privateInfo?.saplingBalance).toEqual(new BigNumber(2000));
     expect(output.accountUpdate.privateInfo?.transactions).toHaveLength(1);
@@ -569,6 +568,500 @@ describe("reduceShieldedSyncResult", () => {
       },
     });
   });
+
+  it("uses note-based balance when isSpent fields are present (enriched notes with isSpent)", () => {
+    // Two notes with isSpent — balance is direct sum, not delta
+    const incomingTx: ShieldedTransaction = {
+      id: "tx-enriched",
+      hex: "00",
+      blockHeight: 100,
+      blockHash: "hash-enriched",
+      timestamp: 1700000000,
+      fee: new BigNumber(100),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(5000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: "aa".repeat(32),
+          },
+          {
+            amount: new BigNumber(3000),
+            memo: "",
+            transfer_type: "internal",
+            isSpent: false,
+            nullifier: "bb".repeat(32),
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: { operations: [] as BtcOperation[] } as Partial<ZcashAccount>,
+    };
+    const result: ShieldedSyncResult = {
+      transactions: [incomingTx],
+      lastProcessedBlock: 100,
+      processedBlocks: 1,
+      remainingBlocks: 0,
+    };
+    const info = createMockInfo({ balance: new BigNumber(0) });
+
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // Direct sum: 5000 (incoming) + 3000 (internal) = 8000
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(8000));
+  });
+
+  it("falls back to delta when no isSpent fields present (pre-upgrade backward compat)", () => {
+    const tx: ShieldedTransaction = {
+      id: "tx-legacy",
+      hex: "00",
+      blockHeight: 100,
+      blockHash: "hash-legacy",
+      timestamp: 1700000000,
+      fee: new BigNumber(100),
+      decryptedData: {
+        orchard_outputs: [
+          { amount: new BigNumber(4000), memo: "", transfer_type: "incoming" },
+          { amount: new BigNumber(1000), memo: "", transfer_type: "outgoing" },
+        ],
+        sapling_outputs: [],
+      },
+    };
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: { operations: [] as BtcOperation[] } as Partial<ZcashAccount>,
+    };
+    const result: ShieldedSyncResult = {
+      transactions: [tx],
+      lastProcessedBlock: 100,
+      processedBlocks: 1,
+      remainingBlocks: 0,
+    };
+    const info = createMockInfo({ balance: new BigNumber(0) });
+
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // Delta fallback: 4000 (incoming) - 1000 (outgoing) = 3000
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(3000));
+  });
+
+  it("self-send scenario: balance = unspent incoming + unspent internal (not inflated by delta)", () => {
+    // Self-send: 1 outgoing + 1 incoming (recipient = self) + 1 internal (change)
+    // With delta: balance = incoming + internal - outgoing (would be wrong if amounts differ)
+    // With note-based: balance = sum of notes where isSpent === false (correct)
+    const selfSendTx: ShieldedTransaction = {
+      id: "tx-selfsend",
+      hex: "00",
+      blockHeight: 100,
+      blockHash: "hash-selfsend",
+      timestamp: 1700000000,
+      fee: new BigNumber(200),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(10000),
+            memo: "",
+            transfer_type: "outgoing",
+            isSpent: true, // outgoing to recipient — excluded from balance
+            nullifier: "aa".repeat(32),
+          },
+          {
+            amount: new BigNumber(8000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false, // received at self address
+            nullifier: "bb".repeat(32),
+          },
+          {
+            amount: new BigNumber(1800),
+            memo: "",
+            transfer_type: "internal",
+            isSpent: false, // change note
+            nullifier: "cc".repeat(32),
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: { operations: [] as BtcOperation[] } as Partial<ZcashAccount>,
+    };
+    const result: ShieldedSyncResult = {
+      transactions: [selfSendTx],
+      lastProcessedBlock: 100,
+      processedBlocks: 1,
+      remainingBlocks: 0,
+    };
+    const info = createMockInfo({ balance: new BigNumber(0) });
+
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // Note-based: 8000 (incoming, unspent) + 1800 (internal, unspent) = 9800
+    // Delta would give: 8000 + 1800 - 10000 = -200 (wrong!)
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(9800));
+  });
+
+  // ── scenario: incremental sync spent detection ──────────────
+
+  it("incremental sync: marks previously-stored note as spent via spentKnownNullifiers", () => {
+    // Scan 1 result: TX1 received 2.5M ZEC, note has NF1, isSpent=false
+    const NF1 = "aa".repeat(32);
+    const NF2 = "bb".repeat(32);
+    const NF3 = "cc".repeat(32);
+
+    const tx1: ShieldedTransaction = {
+      id: "tx1-receive",
+      hex: "00",
+      blockHeight: 100,
+      blockHash: "hash-100",
+      timestamp: 1700000000,
+      fee: new BigNumber(0),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(2_500_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: NF1,
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    // Accumulated state from previous sync: TX1 stored, balance = 2.5M
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: {
+        operations: [] as BtcOperation[],
+        privateInfo: {
+          orchardBalance: new BigNumber(2_500_000),
+          saplingBalance: new BigNumber(0),
+          syncState: "running" as const,
+          ufvk: "uview1key",
+          birthday: null,
+          lastSyncTimestamp: null,
+          lastProcessedBlock: 100,
+          transactions: [tx1],
+          progress: 50,
+          estimatedTimeRemaining: { hours: 0, minutes: 0 },
+        },
+      } as Partial<ZcashAccount>,
+    };
+
+    // Scan 2: TX2 is a self-send that spends TX1's note (NF1).
+    // Outputs: 100k (incoming, to own address) + 2.39M (incoming, change) + 10k fee
+    const tx2: ShieldedTransaction = {
+      id: "tx2-self-send",
+      hex: "00",
+      blockHeight: 200,
+      blockHash: "hash-200",
+      timestamp: 1700001000,
+      fee: new BigNumber(10_000),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(100_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: NF2,
+          },
+          {
+            amount: new BigNumber(2_390_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: NF3,
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    // Rust detected that NF1 (from knownNullifiers) was spent in this range
+    const result: ShieldedSyncResult = {
+      transactions: [tx2],
+      lastProcessedBlock: 200,
+      processedBlocks: 100,
+      remainingBlocks: 0,
+      spentKnownNullifiers: [NF1],
+    };
+
+    const info = createMockInfo({ balance: new BigNumber(0) });
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // TX1's note must now be marked as spent
+    const storedTx1 = output.accountUpdate.privateInfo?.transactions?.find(
+      t => t.id === "tx1-receive",
+    );
+    expect(storedTx1?.decryptedData?.orchard_outputs[0].isSpent).toBe(true);
+
+    // Balance = sum of unspent notes only
+    // TX1.note: 2.5M isSpent=true → excluded
+    // TX2.note1: 100k isSpent=false → included
+    // TX2.note2: 2.39M isSpent=false → included
+    // Total = 2,490,000 (= 2.5M - 10k fee)
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(2_490_000));
+  });
+
+  it("full sync: both TX1 and TX2 in same scan — isSpent set by Rust directly", () => {
+    const NF1 = "aa".repeat(32);
+
+    // Full scan: TX1 received, then TX2 spends it. Rust sets isSpent=true on TX1's note.
+    const tx1: ShieldedTransaction = {
+      id: "tx1-receive",
+      hex: "00",
+      blockHeight: 100,
+      blockHash: "hash-100",
+      timestamp: 1700000000,
+      fee: new BigNumber(0),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(2_500_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: true,
+            nullifier: NF1,
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    const tx2: ShieldedTransaction = {
+      id: "tx2-self-send",
+      hex: "00",
+      blockHeight: 200,
+      blockHash: "hash-200",
+      timestamp: 1700001000,
+      fee: new BigNumber(10_000),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(100_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: "bb".repeat(32),
+          },
+          {
+            amount: new BigNumber(2_390_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: "cc".repeat(32),
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: {
+        operations: [] as BtcOperation[],
+      } as Partial<ZcashAccount>,
+    };
+
+    const result: ShieldedSyncResult = {
+      transactions: [tx1, tx2],
+      lastProcessedBlock: 200,
+      processedBlocks: 200,
+      remainingBlocks: 0,
+    };
+
+    const info = createMockInfo({ balance: new BigNumber(0) });
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // Same expected balance: 2,490,000
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(2_490_000));
+  });
+});
+
+// ── Serialization round-trip for enriched notes ───────────────────────
+
+describe("serialization round-trip (toRaw → fromRaw)", () => {
+  // Import serialization functions inline to keep test isolation
+  const { toZcashPrivateInfoRaw, fromZcashPrivateInfoRaw } = jest.requireActual(
+    "../serialization",
+  ) as typeof import("../serialization");
+
+  it("enriched note fields survive toRaw → fromRaw round-trip", () => {
+    const info: import("../types").ZcashPrivateInfo = {
+      orchardBalance: new BigNumber(500_000),
+      saplingBalance: new BigNumber(0),
+      syncState: "complete",
+      progress: 100,
+      estimatedTimeRemaining: { hours: 0, minutes: 0 },
+      ufvk: "uview1key",
+      birthday: null,
+      lastSyncTimestamp: null,
+      lastProcessedBlock: 200,
+      transactions: [
+        {
+          id: "tx-roundtrip",
+          hex: "00",
+          blockHeight: 100,
+          blockHash: "hash",
+          timestamp: 1700000000,
+          fee: new BigNumber(10_000),
+          decryptedData: {
+            orchard_outputs: [
+              {
+                amount: new BigNumber(500_000),
+                memo: "test",
+                transfer_type: "incoming",
+                nullifier: "aa".repeat(32),
+                rho: "ee".repeat(32),
+                rseed: "bb".repeat(32),
+                cmx: "cc".repeat(32),
+                position: "42",
+                recipient: "dd".repeat(43),
+                isSpent: false,
+              },
+            ],
+            sapling_outputs: [],
+          },
+        },
+      ],
+    };
+
+    const raw = toZcashPrivateInfoRaw(info);
+    const restored = fromZcashPrivateInfoRaw(raw);
+
+    const note = restored.transactions[0].decryptedData?.orchard_outputs[0];
+    expect(note?.amount).toEqual(new BigNumber(500_000));
+    expect(note?.nullifier).toBe("aa".repeat(32));
+    expect(note?.rho).toBe("ee".repeat(32));
+    expect(note?.rseed).toBe("bb".repeat(32));
+    expect(note?.cmx).toBe("cc".repeat(32));
+    expect(note?.position).toBe("42");
+    expect(note?.recipient).toBe("dd".repeat(43));
+    expect(note?.isSpent).toBe(false);
+  });
+
+  it("is_spent snake_case in raw → isSpent camelCase after rehydration", () => {
+    const info: import("../types").ZcashPrivateInfo = {
+      orchardBalance: new BigNumber(100),
+      saplingBalance: new BigNumber(0),
+      syncState: "complete",
+      progress: 100,
+      estimatedTimeRemaining: { hours: 0, minutes: 0 },
+      ufvk: null,
+      birthday: null,
+      lastSyncTimestamp: null,
+      lastProcessedBlock: null,
+      transactions: [
+        {
+          id: "tx-spent",
+          hex: "00",
+          blockHeight: 50,
+          blockHash: "hash",
+          timestamp: 1700000000,
+          fee: new BigNumber(0),
+          decryptedData: {
+            orchard_outputs: [
+              {
+                amount: new BigNumber(100),
+                memo: "",
+                transfer_type: "incoming",
+                isSpent: true,
+                nullifier: "ff".repeat(32),
+              },
+            ],
+            sapling_outputs: [],
+          },
+        },
+      ],
+    };
+
+    const raw = toZcashPrivateInfoRaw(info);
+    // Verify raw uses is_spent (snake_case)
+    expect(
+      (raw.transactions[0].decryptedData?.orchard_outputs[0] as Record<string, unknown>).is_spent,
+    ).toBe(true);
+
+    const restored = fromZcashPrivateInfoRaw(raw);
+    // Verify restored uses isSpent (camelCase)
+    expect(restored.transactions[0].decryptedData?.orchard_outputs[0].isSpent).toBe(true);
+  });
+
+  it("notes without enriched fields survive round-trip (pre-upgrade compat)", () => {
+    const info: import("../types").ZcashPrivateInfo = {
+      orchardBalance: new BigNumber(1000),
+      saplingBalance: new BigNumber(0),
+      syncState: "complete",
+      progress: 100,
+      estimatedTimeRemaining: { hours: 0, minutes: 0 },
+      ufvk: null,
+      birthday: null,
+      lastSyncTimestamp: null,
+      lastProcessedBlock: null,
+      transactions: [
+        {
+          id: "tx-legacy",
+          hex: "00",
+          blockHeight: 10,
+          blockHash: "hash",
+          timestamp: 1700000000,
+          fee: new BigNumber(0),
+          decryptedData: {
+            orchard_outputs: [{ amount: new BigNumber(1000), memo: "", transfer_type: "incoming" }],
+            sapling_outputs: [],
+          },
+        },
+      ],
+    };
+
+    const raw = toZcashPrivateInfoRaw(info);
+    const restored = fromZcashPrivateInfoRaw(raw);
+
+    const note = restored.transactions[0].decryptedData?.orchard_outputs[0];
+    expect(note?.amount).toEqual(new BigNumber(1000));
+    expect(note?.nullifier).toBeUndefined();
+    expect(note?.rseed).toBeUndefined();
+    expect(note?.isSpent).toBeUndefined();
+  });
+});
+
+// ── rehydrateSyncResult: spentKnownNullifiers passthrough ─────────────
+
+describe("rehydrateSyncResult", () => {
+  const { rehydrateSyncResult } = jest.requireActual(
+    "../serialization/rehydrate",
+  ) as typeof import("../serialization/rehydrate");
+
+  it("passes spentKnownNullifiers through rehydration", () => {
+    const raw: import("../types").ShieldedSyncResultRaw = {
+      processedBlocks: 10,
+      remainingBlocks: 0,
+      transactions: [],
+      spentKnownNullifiers: ["aa".repeat(32), "bb".repeat(32)],
+    };
+
+    const result = rehydrateSyncResult(raw);
+    expect(result.spentKnownNullifiers).toEqual(["aa".repeat(32), "bb".repeat(32)]);
+  });
+
+  it("omits spentKnownNullifiers when absent in raw", () => {
+    const raw: import("../types").ShieldedSyncResultRaw = {
+      processedBlocks: 5,
+      remainingBlocks: 0,
+      transactions: [],
+    };
+
+    const result = rehydrateSyncResult(raw);
+    expect(result.spentKnownNullifiers).toBeUndefined();
+  });
 });
 
 describe("createShieldedSyncObservable", () => {
@@ -749,7 +1242,6 @@ describe("createShieldedSyncObservable", () => {
     expect(updates).toHaveLength(2);
 
     const pi1 = (updates[0] as Partial<ZcashAccount>).privateInfo;
-    expect(pi1).toBeDefined();
     expect(pi1?.saplingBalance).toEqual(new BigNumber(3000));
     expect(pi1?.orchardBalance).toEqual(new BigNumber(0));
     expect(pi1?.transactions).toHaveLength(1);

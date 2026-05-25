@@ -6,6 +6,8 @@ export type SyncShieldedArgs = {
   startBlockHeight: number;
   viewingKey: string;
   maxBatchSize: number;
+  /** Hex-encoded nullifiers of unspent notes from previous syncs. */
+  knownNullifiers?: string[];
 };
 
 /**
@@ -41,12 +43,41 @@ export type DecryptedOutputRaw = {
   memo: string;
   transfer_type: string;
   amount: string; // zatoshis
+  // Spending fields (optional — absent for pre-upgrade syncs)
+  nullifier?: string; // 64-char hex
+  rho?: string; // 64-char hex
+  rseed?: string; // 64-char hex
+  cmx?: string; // 64-char hex
+  position?: string; // decimal string (avoids f64 precision loss)
+  recipient?: string; // 86-char hex
+  is_spent?: boolean;
 };
 
 export type DecryptedOutput = {
   memo: string;
   transfer_type: string;
   amount: BigNumber; // zatoshis
+  // Spending fields
+  nullifier?: string;
+  rho?: string;
+  rseed?: string;
+  cmx?: string;
+  position?: string;
+  recipient?: string;
+  isSpent?: boolean;
+};
+
+/** An unspent Orchard note eligible for spending. */
+export type SpendableNote = {
+  txid: string;
+  outputIndex: number;
+  nullifier: string;
+  amount: BigNumber;
+  rho: string;
+  rseed: string;
+  cmx: string;
+  position: string;
+  recipient: string;
 };
 
 export type DecryptedTransaction = {
@@ -108,6 +139,8 @@ export type ShieldedSyncResult = {
   remainingBlocks: number;
   lastProcessedBlock?: number;
   transactions: ShieldedTransaction[];
+  /** Nullifiers from previous syncs that were spent in this range (for incremental sync). */
+  spentKnownNullifiers?: string[];
 };
 
 /**
@@ -123,6 +156,7 @@ export type ShieldedSyncResultRaw = {
   remainingBlocks: number;
   lastProcessedBlock?: number;
   transactions: ShieldedTransactionRaw[];
+  spentKnownNullifiers?: string[];
 };
 
 export type SyncEstimatedTime = {
@@ -164,6 +198,10 @@ export type ZcashTransaction = Transaction & {
   transferType: ZcashTransferType;
   /** Optional 512-byte memo field for shielded outputs. */
   memo?: string;
+  // Coin selection results (populated by prepareTransaction)
+  selectedNotes?: SpendableNote[];
+  zcashFee?: BigNumber; // ZIP-317 computed fee
+  changeAmount?: BigNumber; // Change returning to self
 };
 
 export function isZcashTransaction(tx: Transaction): tx is ZcashTransaction {

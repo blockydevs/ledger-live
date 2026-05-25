@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import type { OperationType } from "@ledgerhq/types-live";
-import type { ShieldedTransaction } from "./types";
+import type { ShieldedTransaction, SpendableNote } from "./types";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import type { BtcOperation } from "../../types";
 
@@ -62,6 +62,79 @@ export function computeOutgoingFees(transactions: ShieldedTransaction[]): BigNum
     }
   }
   return fees;
+}
+
+/**
+ * Compute Orchard and Sapling balances by summing unspent notes.
+ * This is the authoritative balance method when enriched notes (with isSpent) are available.
+ * Falls back to undefined if no notes have the isSpent field (pre-upgrade data).
+ */
+export function computeBalanceFromNotes(
+  transactions: ShieldedTransaction[],
+): { orchardBalance: BigNumber; saplingBalance: BigNumber } | undefined {
+  const allOrchardNotes = transactions.flatMap(tx => tx.decryptedData?.orchard_outputs ?? []);
+  const allSaplingNotes = transactions.flatMap(tx => tx.decryptedData?.sapling_outputs ?? []);
+
+  // Check if ANY note has the isSpent field — if none do, this is pre-upgrade data.
+  // For mixed datasets (some enriched, some legacy), legacy notes with
+  // isSpent === undefined pass the `!== true` filter and are included in the sum.
+  // This is intentionally conservative: we count notes whose spent status is
+  // unknown rather than excluding them (which would undercount the balance).
+  // After a full re-sync with zcash-utils >= 0.3.0, all notes will have isSpent.
+  const hasEnrichedNotes =
+    allOrchardNotes.some(n => n.isSpent !== undefined) ||
+    allSaplingNotes.some(n => n.isSpent !== undefined);
+
+  if (!hasEnrichedNotes) return undefined; // Caller falls back to delta approach
+
+  const orchardBalance = allOrchardNotes
+    .filter(
+      n => n.isSpent !== true && (n.transfer_type === "incoming" || n.transfer_type === "internal"),
+    )
+    .reduce((sum, n) => sum.plus(n.amount), new BigNumber(0));
+
+  const saplingBalance = allSaplingNotes
+    .filter(
+      n => n.isSpent !== true && (n.transfer_type === "incoming" || n.transfer_type === "internal"),
+    )
+    .reduce((sum, n) => sum.plus(n.amount), new BigNumber(0));
+
+  return { orchardBalance, saplingBalance };
+}
+
+/**
+ * Collect all unspent Orchard notes with full spending data.
+ * Returns only notes that have all spending fields (rseed, cmx, position, etc.).
+ */
+export function collectSpendableNotes(transactions: ShieldedTransaction[]): SpendableNote[] {
+  const notes: SpendableNote[] = [];
+  for (const tx of transactions) {
+    for (const [i, n] of (tx.decryptedData?.orchard_outputs ?? []).entries()) {
+      if (
+        n.isSpent !== true &&
+        (n.transfer_type === "incoming" || n.transfer_type === "internal") &&
+        n.nullifier !== undefined &&
+        n.rho !== undefined &&
+        n.rseed !== undefined &&
+        n.cmx !== undefined &&
+        n.position !== undefined &&
+        n.recipient !== undefined
+      ) {
+        notes.push({
+          txid: tx.id,
+          outputIndex: i,
+          nullifier: n.nullifier,
+          amount: n.amount,
+          rho: n.rho,
+          rseed: n.rseed,
+          cmx: n.cmx,
+          position: n.position,
+          recipient: n.recipient,
+        });
+      }
+    }
+  }
+  return notes;
 }
 
 /**

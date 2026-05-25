@@ -12,7 +12,11 @@ import type { ZCashClient } from "./types";
 import type { BtcOperation } from "../../types";
 import { removeReplaced } from "../../synchronisation";
 import type { ZcashAccount } from "./types";
-import { convertShieldedTransactionsToOperations, computeProtocolDeltas } from "./operations";
+import {
+  convertShieldedTransactionsToOperations,
+  computeProtocolDeltas,
+  computeBalanceFromNotes,
+} from "./operations";
 
 // ─── Zcash native sync (formerly familyConfig.ts) ───────────────────────────
 
@@ -63,7 +67,19 @@ export const zcashSyncShielded = (
     if (!viewingKey) {
       throw new Error("Missing unified full viewing key (ufvk) for ZCash shielded sync");
     }
-    const { lastProcessedBlock, birthday } = acc.initialAccount?.privateInfo ?? {};
+    const { lastProcessedBlock, birthday, transactions } = acc.initialAccount?.privateInfo ?? {};
+
+    // Collect nullifiers of unspent notes from previous syncs so the engine
+    // can detect when previously-received notes are spent in this scan range.
+    const knownNullifiers: string[] = [
+      ...new Set(
+        (transactions ?? []).flatMap(tx =>
+          (tx.decryptedData?.orchard_outputs ?? [])
+            .filter(n => n.isSpent !== true && n.nullifier !== undefined)
+            .map(n => n.nullifier!),
+        ),
+      ),
+    ];
 
     return from(getNativeModule()).pipe(
       mergeMap(({ createZCashClient }) => {
@@ -78,6 +94,7 @@ export const zcashSyncShielded = (
               startBlockHeight,
               viewingKey,
               maxBatchSize: ZCASH_NATIVE_CHUNK_SIZE,
+              ...(knownNullifiers.length > 0 && { knownNullifiers }),
             }),
           ),
         );
@@ -136,12 +153,37 @@ export function reduceShieldedSyncResult(
     ...newTransactions,
   ];
 
+  // Mark previously-stored notes as spent using Rust's cross-scan detection.
+  // spentKnownNullifiers contains nullifiers of notes received in prior scans
+  // that were observed as spent inputs in the current scan range.
+  const spentNfs = result.spentKnownNullifiers ?? [];
+  if (spentNfs.length > 0) {
+    const spentSet = new Set(spentNfs);
+    for (const tx of allShieldedTx) {
+      for (const note of tx.decryptedData?.orchard_outputs ?? []) {
+        if (note.nullifier && spentSet.has(note.nullifier)) {
+          note.isSpent = true;
+        }
+      }
+    }
+  }
+
   const prevSapling = accumulated.accountUpdate.privateInfo?.saplingBalance ?? new BigNumber(0);
   const prevOrchard = accumulated.accountUpdate.privateInfo?.orchardBalance ?? new BigNumber(0);
 
-  const { deltaSapling, deltaOrchard } = computeProtocolDeltas(newTransactions);
-  const saplingBalance = prevSapling.plus(deltaSapling);
-  const orchardBalance = prevOrchard.plus(deltaOrchard);
+  // Prefer direct-sum from enriched notes with isSpent (authoritative).
+  // Falls back to incremental delta for pre-upgrade data.
+  const noteBalance = computeBalanceFromNotes(allShieldedTx);
+  let saplingBalance: BigNumber;
+  let orchardBalance: BigNumber;
+  if (noteBalance) {
+    saplingBalance = noteBalance.saplingBalance;
+    orchardBalance = noteBalance.orchardBalance;
+  } else {
+    const { deltaSapling, deltaOrchard } = computeProtocolDeltas(newTransactions);
+    saplingBalance = prevSapling.plus(deltaSapling);
+    orchardBalance = prevOrchard.plus(deltaOrchard);
+  }
 
   const totalBlocks = result.processedBlocks + result.remainingBlocks;
   const privateInfo: ZcashPrivateInfo = {
