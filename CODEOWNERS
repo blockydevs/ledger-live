@@ -364,6 +364,7 @@ apps/ledger-live-mobile/src/screens/SyncOnboarding/TwoStepStepper/              
 apps/ledger-live-mobile/src/screens/Onboarding/                                                @ledgerhq/engagement
 apps/ledger-live-mobile/src/screens/PostOnboarding/                                            @ledgerhq/engagement
 apps/ledger-live-mobile/src/screens/Settings/Debug/AnalyticsConsentQA/                         @ledgerhq/engagement
+apps/ledger-live-mobile/src/screens/Settings/Debug/ContentCards/                               @ledgerhq/engagement
 apps/ledger-live-mobile/e2e/specs/onboarding.spec.ts                                           @ledgerhq/engagement
 apps/ledger-live-mobile/e2e/specs/onboardingReadOnly.spec.ts                                   @ledgerhq/engagement
 apps/ledger-live-mobile/e2e/page/onboarding/                                                   @ledgerhq/engagement
