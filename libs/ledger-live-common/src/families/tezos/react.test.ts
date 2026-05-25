@@ -40,6 +40,7 @@ const delegationPos = (amount: number | string): StakingPosition => ({
   state: "active",
   asset: { type: "native" },
   amount: new BigNumber(amount),
+  actions: [],
 });
 
 const stakePos = (amount: number | string): StakingPosition => ({
@@ -49,6 +50,7 @@ const stakePos = (amount: number | string): StakingPosition => ({
   state: "active",
   asset: { type: "native" },
   amount: new BigNumber(amount),
+  actions: [],
 });
 
 const unstakingPos = (amount: number | string): StakingPosition => ({
@@ -58,6 +60,7 @@ const unstakingPos = (amount: number | string): StakingPosition => ({
   state: "deactivating",
   asset: { type: "native" },
   amount: new BigNumber(amount),
+  actions: [],
 });
 
 const finalizablePos = (amount: number | string): StakingPosition => ({
@@ -67,6 +70,7 @@ const finalizablePos = (amount: number | string): StakingPosition => ({
   state: "inactive",
   asset: { type: "native" },
   amount: new BigNumber(amount),
+  actions: [],
 });
 
 describe("useTezosStakingInfo", () => {

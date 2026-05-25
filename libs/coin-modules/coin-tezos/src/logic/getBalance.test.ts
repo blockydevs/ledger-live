@@ -135,6 +135,7 @@ describe("getBalance", () => {
             type: "native",
           },
           amount: 15n,
+          actions: [],
         },
       },
       {
@@ -189,6 +190,7 @@ describe("getBalance", () => {
               type: "native",
             },
             amount: 100n,
+            actions: [],
           },
         },
       ]);
@@ -212,6 +214,7 @@ describe("getBalance", () => {
               type: "native",
             },
             amount: 30n,
+            actions: [],
           },
         },
       ]);
@@ -240,6 +243,7 @@ describe("getBalance", () => {
               type: "native",
             },
             amount: 70n,
+            actions: [],
           },
         },
         {
@@ -256,6 +260,7 @@ describe("getBalance", () => {
               type: "native",
             },
             amount: 30n,
+            actions: [],
           },
         },
       ]);
@@ -287,6 +292,7 @@ describe("getBalance", () => {
             type: "native",
           },
           amount: 10n,
+          actions: [],
         },
       });
     });
@@ -318,6 +324,7 @@ describe("getBalance", () => {
           state: "active",
           asset: { type: "native" },
           amount: 100n,
+          actions: [],
         },
         {
           uid: `unstaking-${address}`,
@@ -326,6 +333,7 @@ describe("getBalance", () => {
           state: "deactivating",
           asset: { type: "native" },
           amount: 20n,
+          actions: [],
         },
         {
           uid: `finalizable-${address}`,
@@ -334,6 +342,7 @@ describe("getBalance", () => {
           state: "inactive",
           asset: { type: "native" },
           amount: 30n,
+          actions: [],
         },
       ]);
     });

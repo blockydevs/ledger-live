@@ -95,6 +95,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 30n,
+          actions: [],
         },
       ]);
     });
@@ -124,6 +125,7 @@ describe("getStakes", () => {
           state: "deactivating",
           asset: { type: "native" },
           amount: 10n,
+          actions: [],
         },
       ]);
     });
@@ -163,6 +165,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 5000000n,
+          actions: [],
         },
       ]);
     });
@@ -180,6 +183,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 0n,
+          actions: [],
         },
       ]);
     });
@@ -197,6 +201,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 70n,
+          actions: [],
         },
         {
           uid: `stake-${address}`,
@@ -205,6 +210,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 30n,
+          actions: [],
         },
       ]);
     });
@@ -222,6 +228,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 100n,
+          actions: [],
         },
         {
           uid: `unstaking-${address}`,
@@ -230,6 +237,7 @@ describe("getStakes", () => {
           state: "deactivating",
           asset: { type: "native" },
           amount: 10n,
+          actions: [],
         },
       ]);
     });
@@ -249,6 +257,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 70n,
+          actions: [],
         },
         {
           uid: `stake-${address}`,
@@ -257,6 +266,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 30n,
+          actions: [],
         },
         {
           uid: `unstaking-${address}`,
@@ -265,6 +275,7 @@ describe("getStakes", () => {
           state: "deactivating",
           asset: { type: "native" },
           amount: 10n,
+          actions: [],
         },
       ]);
     });
@@ -310,6 +321,7 @@ describe("getStakes", () => {
           state: "active",
           asset: { type: "native" },
           amount: 1000n,
+          actions: [],
         },
         {
           uid: `unstaking-${address}`,
@@ -318,6 +330,7 @@ describe("getStakes", () => {
           state: "deactivating",
           asset: { type: "native" },
           amount: 60n,
+          actions: [],
         },
         {
           uid: `finalizable-${address}`,
@@ -326,6 +339,7 @@ describe("getStakes", () => {
           state: "inactive",
           asset: { type: "native" },
           amount: 40n,
+          actions: [],
         },
       ]);
     });
@@ -345,6 +359,7 @@ describe("getStakes", () => {
           state: "inactive",
           asset: { type: "native" },
           amount: 100n,
+          actions: [],
         },
       ]);
     });
@@ -367,6 +382,7 @@ describe("getStakes", () => {
           state: "inactive",
           asset: { type: "native" },
           amount: 30n,
+          actions: [],
         },
       ]);
     });

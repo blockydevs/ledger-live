@@ -71,6 +71,7 @@ function mapStakeAccountsToBalances(stakeAccounts: StakeAccount[]): Balance[] {
       state: activation.state as StakeState,
       asset: { type: "native" },
       amount,
+      actions: [],
     };
 
     if (delegateAddress) {

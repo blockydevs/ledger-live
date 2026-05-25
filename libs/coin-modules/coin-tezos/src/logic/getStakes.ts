@@ -42,6 +42,7 @@ export function buildStakesForAccount(
       state: "active",
       asset: { type: "native" },
       amount: balance - stakedBalance,
+      actions: [],
     });
   }
 
@@ -53,6 +54,7 @@ export function buildStakesForAccount(
       state: "active",
       asset: { type: "native" },
       amount: stakedBalance,
+      actions: [],
     });
   }
 
@@ -64,6 +66,7 @@ export function buildStakesForAccount(
       state: "deactivating",
       asset: { type: "native" },
       amount: stillDeactivating,
+      actions: [],
     });
   }
 
@@ -75,6 +78,7 @@ export function buildStakesForAccount(
       state: "inactive",
       asset: { type: "native" },
       amount: finalizableAmount,
+      actions: [],
     });
   }
 
