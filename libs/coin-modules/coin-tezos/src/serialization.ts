@@ -25,6 +25,7 @@ function fromStakingPositionRaw(r: StakingPositionRaw): StakingPosition {
     state: r.state,
     asset: { type: "native" },
     amount: new BigNumber(r.amount),
+    actions: [],
   };
 }
 

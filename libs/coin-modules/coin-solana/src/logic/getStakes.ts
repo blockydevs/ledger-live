@@ -24,6 +24,7 @@ export async function getStakes(
       state: activation.state as StakeState,
       asset: { type: "native" },
       amount: BigInt(account.onChainAcc.account.lamports),
+      actions: [],
       details: {
         activationEpoch: delegation?.activationEpoch.toString(),
         deactivationEpoch: delegation?.deactivationEpoch.toString(),

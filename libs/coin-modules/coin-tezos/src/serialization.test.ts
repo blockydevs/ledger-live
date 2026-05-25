@@ -14,6 +14,7 @@ const positions: StakingPosition[] = [
     state: "active",
     asset: { type: "native" },
     amount: new BigNumber("1234567890"),
+    actions: [],
   },
   {
     uid: `stake-${ADDRESS}`,
@@ -22,6 +23,7 @@ const positions: StakingPosition[] = [
     state: "active",
     asset: { type: "native" },
     amount: new BigNumber("9999999999999999999"),
+    actions: [],
   },
   {
     uid: `unstaking-${ADDRESS}`,
@@ -30,6 +32,7 @@ const positions: StakingPosition[] = [
     state: "deactivating",
     asset: { type: "native" },
     amount: new BigNumber("42"),
+    actions: [],
   },
   {
     uid: `finalizable-${ADDRESS}`,
@@ -38,6 +41,7 @@ const positions: StakingPosition[] = [
     state: "inactive",
     asset: { type: "native" },
     amount: new BigNumber("7"),
+    actions: [],
   },
 ];
 
@@ -97,6 +101,7 @@ describe("coin-tezos serialization", () => {
       state: "active",
       asset: { type: "native" },
       amount: new BigNumber("1234567890"),
+      actions: [],
     });
     // Stake without delegate: delegate field is omitted, not set to undefined
     expect(got[1]).not.toHaveProperty("delegate");
