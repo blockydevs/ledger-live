@@ -61,7 +61,7 @@ export const useVersionedStakePrograms = (): Feature_StakePrograms | null => {
       return null;
     }
 
-    // Zod-derived schema has looser `redirects` keys than the legacy branded type.
+    // TODO(LIVE-31326): drop cast once types-live's `Redirect<M>.queryParams` brand is loosened.
     return getVersionedRedirects(rawStakePrograms as unknown as Feature_StakePrograms, appVersion);
   }, [rawStakePrograms, appVersion]);
 };
