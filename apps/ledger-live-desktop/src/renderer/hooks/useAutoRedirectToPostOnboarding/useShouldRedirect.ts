@@ -5,7 +5,7 @@ import {
   hasBeenUpsoldRecoverSelector,
   lastOnboardedDeviceSelector,
 } from "~/renderer/reducers/settings";
-import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature } from "@features/platform-feature-flags";
 
 /**
  * Returns whether the user should be redirected to the Protect upsell or the post onboarding
