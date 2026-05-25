@@ -5,12 +5,12 @@ import { AssetHeader } from "./components/AssetHeader";
 import { ActionBar } from "./components/ActionBar";
 import { HiddenBanner } from "./components/HiddenBanner";
 import { MarketPriceSection } from "./components/MarketPriceSection";
+import { AddressListSection } from "./components/AddressList";
 import { MarketDataSection } from "./components/MarketDataSection";
-import { PortfolioSection } from "./components/PortfolioSection/PortfolioSection";
-import { StakingSection } from "./components/StakingSection";
+import { MetricsRowSection } from "./components/MetricsRowSection";
+import { TotalBalance } from "./components/TotalBalance";
 import { TransactionsSection } from "./components/TransactionsSection";
 import type { AssetDetailReady } from "./types";
-import { PnLSection } from "./components/PnL";
 
 type AssetDetailViewProps = Readonly<{
   viewModel: AssetDetailReady;
@@ -53,11 +53,15 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
       />
 
       <div className="flex flex-col gap-32">
-        {distributionItem && <PortfolioSection distributionItem={distributionItem} />}
+        {distributionItem && distributionItem.accounts.length > 0 && (
+          <TotalBalance distributionItem={distributionItem} />
+        )}
 
-        {distributionItem && <PnLSection distributionItem={distributionItem} />}
+        {distributionItem && <MetricsRowSection distributionItem={distributionItem} />}
 
-        {distributionItem && <StakingSection distributionItem={distributionItem} />}
+        {distributionItem && distributionItem.accounts.length > 0 && (
+          <AddressListSection distributionItem={distributionItem} />
+        )}
 
         {marketData.marketCurrencyData && <MarketDataSection marketData={marketData} />}
 

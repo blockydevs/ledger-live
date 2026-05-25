@@ -327,7 +327,6 @@ describe("AssetDetail integration", () => {
       renderWithMockedCounterValuesProvider(<AssetDetail />);
 
       await waitFor(() => {
-        expect(screen.getByTestId(TEST_ID.STAKING_SECTION)).toBeVisible();
         expect(screen.getByTestId(TEST_ID.AVAILABLE_BALANCE)).toBeVisible();
         expect(screen.getByTestId(TEST_ID.EARN_DEPOSIT)).toBeVisible();
       });
