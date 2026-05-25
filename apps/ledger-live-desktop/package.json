@@ -186,8 +186,7 @@
     "winston-transport": "4.7.0",
     "write-file-atomic": "5.0.1",
     "ws": "catalog:",
-    "xstate": "catalog:",
-    "zod": "catalog:"
+    "xstate": "catalog:"
   },
   "devDependencies": {
     "@electron/notarize": "3.1.1",

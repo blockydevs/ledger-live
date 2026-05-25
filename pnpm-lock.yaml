@@ -1311,9 +1311,6 @@ importers:
       xstate:
         specifier: 'catalog:'
         version: 5.19.2
-      zod:
-        specifier: 'catalog:'
-        version: 4.3.6
     devDependencies:
       '@electron/notarize':
         specifier: 3.1.1
