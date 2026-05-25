@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useStore } from "LLD/hooks/redux";
 import { EnvName, getEnv } from "@ledgerhq/live-env";
-import { DEFAULT_FEATURES } from "@ledgerhq/live-common/featureFlags/index";
+import { FEATURE_FLAGS_DEFAULTS } from "@shared/feature-flags";
 import { useFeature, useFeatureFlags } from "@features/platform-feature-flags";
-import { Feature, FeatureId, Features } from "@ledgerhq/types-live";
+import { Feature, FeatureId, Features } from "@shared/feature-flags";
 import { enabledExperimentalFeatures } from "~/renderer/experimental";
 import { sentryLogsSelector } from "~/renderer/reducers/settings";
 import { initDatadog, setTags, isDatadogAvailable } from "~/datadog/renderer";
@@ -78,10 +78,10 @@ export const ConnectEnvsToDatadog = () => {
         tags[safekey(key)] = getEnv(key as EnvName) as string | number | boolean;
       });
       const features: { [key in FeatureId]?: boolean } = {};
-      Object.keys(DEFAULT_FEATURES).forEach(k => {
-        const key = k as keyof typeof DEFAULT_FEATURES;
+      Object.keys(FEATURE_FLAGS_DEFAULTS).forEach(k => {
+        const key = k as keyof typeof FEATURE_FLAGS_DEFAULTS;
         const value = featureFlags[key];
-        if (key && value && value.enabled !== DEFAULT_FEATURES[key]!.enabled) {
+        if (key && value && value.enabled !== FEATURE_FLAGS_DEFAULTS[key]!.enabled) {
           features[key] = value.enabled;
         }
       });

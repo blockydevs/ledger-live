@@ -2,12 +2,12 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
-import { DEFAULT_FEATURES, groupedFeatures } from "@ledgerhq/live-common/featureFlags/index";
+import { FEATURE_FLAGS_DEFAULTS, groupedFeatures } from "@shared/feature-flags";
 import { useFeature, useHasLocallyOverriddenFeatureFlags } from "@features/platform-feature-flags";
 import { Flex, SearchInput, Alert, Tag, Text } from "@ledgerhq/react-ui";
 import { Switch, Button } from "@ledgerhq/lumen-ui-react";
 import { SettingsSectionRow as Row } from "../../../SettingsSection";
-import { FeatureId } from "@ledgerhq/types-live";
+import { FeatureId } from "@shared/feature-flags";
 import includes from "lodash/includes";
 import lowerCase from "lodash/lowerCase";
 import trim from "lodash/trim";
@@ -35,7 +35,7 @@ export const FeatureFlagContent = withV3StyleProvider((props: { expanded?: boole
   const [focusedGroupName, setFocusedGroupName] = useState<string | undefined>();
 
   const featureFlags = useMemo(() => {
-    const featureKeys = Object.keys(DEFAULT_FEATURES);
+    const featureKeys = Object.keys(FEATURE_FLAGS_DEFAULTS);
     if (
       searchInputTrimmed &&
       !featureKeys.includes(searchInputTrimmed) &&

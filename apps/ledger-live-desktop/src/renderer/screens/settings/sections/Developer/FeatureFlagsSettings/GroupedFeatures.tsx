@@ -1,7 +1,4 @@
-import {
-  groupedFeatures,
-  GroupedFeature,
-} from "@ledgerhq/live-common/featureFlags/groupedFeatures";
+import { groupedFeatures, GroupedFeature } from "@shared/feature-flags";
 import { useFeatureFlags } from "@features/platform-feature-flags";
 import { setOverride } from "@shared/feature-flags";
 import { useDispatch } from "LLD/hooks/redux";
