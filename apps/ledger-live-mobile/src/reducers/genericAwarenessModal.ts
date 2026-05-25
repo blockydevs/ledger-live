@@ -1,10 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { type GenericAwarenessModalContentCard } from "@ledgerhq/live-common/genericAwarenessModal";
 
+export type GenericAwarenessModalMobileContentCard = GenericAwarenessModalContentCard & {
+  isLocal?: boolean;
+};
+
 export type GenericAwarenessModalState = {
   isOpen: boolean;
   campaignId: string | undefined;
-  contentCards: GenericAwarenessModalContentCard[];
+  contentCards: GenericAwarenessModalMobileContentCard[];
 };
 
 type OpenGenericAwarenessModalDrawerPayload = {
@@ -41,9 +45,21 @@ const genericAwarenessModalSlice = createSlice({
     },
     setGenericAwarenessModalContentCards: (
       state,
-      action: PayloadAction<GenericAwarenessModalContentCard[]>,
+      action: PayloadAction<GenericAwarenessModalMobileContentCard[]>,
     ) => {
       state.contentCards = action.payload;
+    },
+    clearLocalGenericAwarenessModalContentCards: state => {
+      state.contentCards = state.contentCards.filter(card => !card.isLocal);
+    },
+    appendGenericAwarenessModalContentCards: (
+      state,
+      action: PayloadAction<GenericAwarenessModalContentCard[]>,
+    ) => {
+      const brazeCardIds = new Set(action.payload.map(card => card.id));
+      const existingCards = state.contentCards.filter(card => !brazeCardIds.has(card.id));
+
+      state.contentCards = [...existingCards, ...action.payload];
     },
     markGenericAwarenessModalContentCardAsRead: (
       state,
@@ -66,6 +82,8 @@ export const {
   closeGenericAwarenessModalDrawer,
   setGenericAwarenessModalCampaignId,
   setGenericAwarenessModalContentCards,
+  clearLocalGenericAwarenessModalContentCards,
+  appendGenericAwarenessModalContentCards,
   markGenericAwarenessModalContentCardAsRead,
 } = genericAwarenessModalSlice.actions;
 

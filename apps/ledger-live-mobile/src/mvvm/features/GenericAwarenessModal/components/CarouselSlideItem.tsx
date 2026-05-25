@@ -27,7 +27,12 @@ export function CarouselSlideItem({
   onSubtitleTextLayout,
 }: CarouselSlideItemProps) {
   const titleMinHeight = titleLineCount > 1 ? "s80" : "s40";
-  const subtitleMinHeight = subtitleLineCount > 2 ? "s64" : subtitleLineCount > 1 ? "s40" : "s20";
+  let subtitleMinHeight: "s20" | "s40" | "s64" = "s20";
+  if (subtitleLineCount > 2) {
+    subtitleMinHeight = "s64";
+  } else if (subtitleLineCount > 1) {
+    subtitleMinHeight = "s40";
+  }
 
   return (
     <Box
