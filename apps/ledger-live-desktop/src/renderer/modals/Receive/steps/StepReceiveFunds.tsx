@@ -192,12 +192,16 @@ const StepReceiveFunds = (props: StepProps) => {
   // If so, the user should use the Earn live app instead of the old staking modal
   const hasStakeProgramsRedirect =
     !!receivedCurrencyId && !!stakePrograms?.params?.redirects?.[receivedCurrencyId];
+  // Zod-inferred `params` is too loose for index access — narrow via local type.
+  const stakingParams = receiveStakingFlowConfig?.params as
+    | Record<string, { enabled?: boolean; supportLink?: string; direct?: boolean }>
+    | undefined;
   const isStakingEnabledForAccount =
     !!receivedCurrencyId &&
     receiveStakingFlowConfig?.enabled &&
-    receiveStakingFlowConfig?.params?.[receivedCurrencyId]?.enabled;
+    stakingParams?.[receivedCurrencyId]?.enabled;
   const isDirectStakingEnabledForAccount =
-    !!receivedCurrencyId && receiveStakingFlowConfig?.params?.[receivedCurrencyId]?.direct;
+    !!receivedCurrencyId && stakingParams?.[receivedCurrencyId]?.direct;
   const isSPLToken =
     account && account.type === "TokenAccount" && account.token.parentCurrency.family === "solana";
 

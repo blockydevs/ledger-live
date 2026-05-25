@@ -5,6 +5,7 @@ import {
   hasBeenUpsoldRecoverSelector,
   lastOnboardedDeviceSelector,
 } from "~/renderer/reducers/settings";
+import type { DeviceModelId } from "@ledgerhq/types-devices";
 import { useFeature } from "@features/platform-feature-flags";
 
 /**
@@ -19,9 +20,9 @@ export function useShouldRedirect(): {
   const lastOnboardedDevice = useSelector(lastOnboardedDeviceSelector);
   const recoverUpsellFeature = useFeature("recoverUpsellPostOnboarding");
 
-  const supportedDeviceModels =
+  const supportedDeviceModels: DeviceModelId[] =
     recoverUpsellFeature?.enabled && recoverUpsellFeature?.params?.deviceIds
-      ? [...recoverUpsellFeature.params.deviceIds]
+      ? ([...recoverUpsellFeature.params.deviceIds] as DeviceModelId[])
       : [];
 
   return shouldRedirectToPostOnboardingOrRecoverUpsell({

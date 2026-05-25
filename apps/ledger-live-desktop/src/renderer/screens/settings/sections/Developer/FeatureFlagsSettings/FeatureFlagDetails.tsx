@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { useFeatureFlags } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature } from "@features/platform-feature-flags";
 import { Text, Flex, Tag } from "@ledgerhq/react-ui";
 import { FeatureId } from "@ledgerhq/types-live";
 import Box from "~/renderer/components/Box";
@@ -28,8 +28,7 @@ export const Row = styled(Flex).attrs<FlexBoxProps>({
 
 const FeatureFlagDetails: React.FC<Props> = props => {
   const { flagName, focused, setFocusedName } = props;
-  const { getFeature } = useFeatureFlags();
-  const flagValue = getFeature(flagName);
+  const flagValue = useFeature(flagName);
   const { t } = useTranslation();
 
   const {

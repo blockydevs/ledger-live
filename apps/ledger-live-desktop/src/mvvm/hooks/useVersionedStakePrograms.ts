@@ -61,6 +61,7 @@ export const useVersionedStakePrograms = (): Feature_StakePrograms | null => {
       return null;
     }
 
-    return getVersionedRedirects(rawStakePrograms, appVersion);
+    // Zod-derived schema has looser `redirects` keys than the legacy branded type.
+    return getVersionedRedirects(rawStakePrograms as unknown as Feature_StakePrograms, appVersion);
   }, [rawStakePrograms, appVersion]);
 };

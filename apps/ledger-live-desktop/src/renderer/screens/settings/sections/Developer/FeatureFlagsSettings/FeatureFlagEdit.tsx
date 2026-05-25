@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useFeatureFlags } from "@ledgerhq/live-common/featureFlags/index";
+import { useDispatch } from "LLD/hooks/redux";
+import { setOverride } from "@shared/feature-flags";
 import { Text, Input, Flex } from "@ledgerhq/react-ui";
 import { Switch, Button } from "@ledgerhq/lumen-ui-react";
 import { Feature, FeatureId } from "@ledgerhq/types-live";
@@ -31,7 +32,7 @@ const FeatureFlagEdit: React.FC<{ flagName: FeatureId; flagValue: Feature }> = p
 
   const inputValueDefaulted = inputValue || stringifiedPureValue;
 
-  const featureFlagsProvider = useFeatureFlags();
+  const dispatch = useDispatch();
 
   const { t } = useTranslation();
 
@@ -43,19 +44,19 @@ const FeatureFlagEdit: React.FC<{ flagName: FeatureId; flagValue: Feature }> = p
   const handleRestoreFeature = useCallback(() => {
     setError(undefined);
     setInputValue(undefined);
-    featureFlagsProvider.resetFeature(flagName);
-  }, [featureFlagsProvider, flagName]);
+    dispatch(setOverride({ key: flagName, value: undefined }));
+  }, [dispatch, flagName]);
 
   const handleOverrideFeature = useCallback(() => {
     setError(undefined);
     try {
       // Nb if value is invalid or missing, JSON parse will fail
       const newValue = inputValue ? JSON.parse(inputValue) : undefined;
-      featureFlagsProvider.overrideFeature(flagName, newValue);
+      dispatch(setOverride({ key: flagName, value: newValue }));
     } catch (e) {
       setError(e);
     }
-  }, [inputValue, flagName, featureFlagsProvider]);
+  }, [dispatch, inputValue, flagName]);
 
   const isChecked = useMemo(() => {
     if (!inputValueDefaulted) return false;
@@ -67,8 +68,8 @@ const FeatureFlagEdit: React.FC<{ flagName: FeatureId; flagValue: Feature }> = p
   }, [inputValueDefaulted]);
 
   const handleSwitchChange = useCallback(() => {
-    featureFlagsProvider.overrideFeature(flagName, { ...flagValue, enabled: !isChecked });
-  }, [featureFlagsProvider, flagName, flagValue, isChecked]);
+    dispatch(setOverride({ key: flagName, value: { ...flagValue, enabled: !isChecked } }));
+  }, [dispatch, flagName, flagValue, isChecked]);
 
   return (
     <Flex flexDirection="column" pl={6} rowGap={3}>

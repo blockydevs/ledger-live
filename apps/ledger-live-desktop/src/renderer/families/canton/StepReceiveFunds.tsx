@@ -190,12 +190,16 @@ const StepReceiveFunds = ({
   }, [device, isAddressVerified, onChangeAddressVerified, onResetSkip, transitionTo]);
 
   const receiveStakingFlowConfig = useFeature("receiveStakingFlowConfigDesktop");
+  // Zod-inferred `params` is too loose for index access — narrow via local type.
+  const stakingParams = receiveStakingFlowConfig?.params as
+    | Record<string, { enabled?: boolean; supportLink?: string; direct?: boolean }>
+    | undefined;
   const receivedCurrencyId: string | undefined =
     account && account.type !== "TokenAccount" ? account?.currency?.id : undefined;
   const isStakingEnabledForAccount =
     !!receivedCurrencyId &&
     receiveStakingFlowConfig?.enabled &&
-    receiveStakingFlowConfig?.params?.[receivedCurrencyId]?.enabled;
+    stakingParams?.[receivedCurrencyId]?.enabled;
   const onFinishReceiveFlow = useCallback(() => {
     const dismissModal =
       global.localStorage.getItem(`${LOCAL_STORAGE_KEY_PREFIX}${receivedCurrencyId}`) === "true";

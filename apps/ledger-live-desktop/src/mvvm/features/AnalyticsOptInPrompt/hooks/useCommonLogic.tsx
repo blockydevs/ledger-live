@@ -41,7 +41,9 @@ export const useAnalyticsOptInPrompt = ({ entryPoint }: Props) => {
   const [nextStep, setNextStep] = useState<(() => void) | null>(null);
   const flow = trackingKeysByFlow?.[entryPoint];
 
-  const variant = getVariant(lldAnalyticsOptInPromptFlag?.params?.variant);
+  const variant = getVariant(
+    lldAnalyticsOptInPromptFlag?.params?.variant as ABTestingVariants | undefined,
+  );
 
   const privacyPolicyUrl = useLocalizedUrl(urls.privacyPolicy);
   const trackingPolicyUrl = useLocalizedUrl(urls.trackingPolicy);
