@@ -19,12 +19,13 @@ import {
   closeAllSpeculosDevices,
   releaseSpeculosDevice,
   createSpeculosDevice,
+  conventionalAppSubpath,
   getMemorySpeculosDeviceInternal,
   modelMap,
 } from "@ledgerhq/speculos-transport";
 import type { SpeculosTransport } from "@ledgerhq/speculos-transport";
 
-export { closeAllSpeculosDevices, releaseSpeculosDevice, createSpeculosDevice };
+export { closeAllSpeculosDevices, releaseSpeculosDevice, createSpeculosDevice, conventionalAppSubpath };
 export type { SpeculosTransport };
 
 const modelMapPriority: Record<string, number> = {
