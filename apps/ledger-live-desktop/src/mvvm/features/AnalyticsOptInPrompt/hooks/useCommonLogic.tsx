@@ -11,11 +11,11 @@ import {
   setHasSeenAnalyticsOptInPrompt,
 } from "~/renderer/actions/settings";
 import { EntryPoint } from "../types/AnalyticsOptInPromptNavigator";
-import { ABTestingVariants } from "@ledgerhq/types-live";
 import { urls } from "~/config/urls";
 import { useLocalizedUrl } from "~/renderer/hooks/useLocalizedUrls";
 import { openURL } from "~/renderer/linking";
 import { track, updateIdentify } from "~/renderer/analytics/segment";
+import { FEATURE_FLAGS_SCHEMAS } from "@shared/feature-flags";
 
 const trackingKeysByFlow: Record<EntryPoint, string> = {
   onboarding: "consent onboarding",
@@ -41,16 +41,14 @@ export const useAnalyticsOptInPrompt = ({ entryPoint }: Props) => {
   const [nextStep, setNextStep] = useState<(() => void) | null>(null);
   const flow = trackingKeysByFlow?.[entryPoint];
 
-  const variant = getVariant(
-    lldAnalyticsOptInPromptFlag?.params?.variant as ABTestingVariants | undefined,
-  );
+  const variant = getVariant(lldAnalyticsOptInPromptFlag?.params?.variant);
 
   const privacyPolicyUrl = useLocalizedUrl(urls.privacyPolicy);
   const trackingPolicyUrl = useLocalizedUrl(urls.trackingPolicy);
 
   const urlByVariant = {
-    [ABTestingVariants.variantA]: trackingPolicyUrl,
-    [ABTestingVariants.variantB]: privacyPolicyUrl,
+    [AB_TESTING_VARIANTS.A]: trackingPolicyUrl,
+    [AB_TESTING_VARIANTS.B]: privacyPolicyUrl,
   };
 
   const openAnalyticsOptInPrompt = useCallback(
@@ -127,5 +125,13 @@ export const useAnalyticsOptInPrompt = ({ entryPoint }: Props) => {
   };
 };
 
-export const getVariant = (variant?: ABTestingVariants): ABTestingVariants =>
-  variant === ABTestingVariants.variantB ? ABTestingVariants.variantB : ABTestingVariants.variantA;
+export function getVariant(variant?: ABTestingVariants | undefined): ABTestingVariants {
+  return variant === AB_TESTING_VARIANTS.B ? AB_TESTING_VARIANTS.B : AB_TESTING_VARIANTS.A;
+}
+
+const AB_TESTING_VARIANTS = FEATURE_FLAGS_SCHEMAS.lldAnalyticsOptInPrompt
+  .unwrap()
+  .shape.params.unwrap().shape.variant.enum;
+
+type ABTestingVariantsConst = typeof AB_TESTING_VARIANTS;
+type ABTestingVariants = ABTestingVariantsConst[keyof ABTestingVariantsConst];
