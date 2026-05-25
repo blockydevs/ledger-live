@@ -58,8 +58,8 @@ catalogs:
       specifier: 1.2.3
       version: 1.2.3
     '@ledgerhq/lumen-design-core':
-      specifier: 0.1.14
-      version: 0.1.14
+      specifier: 0.1.15
+      version: 0.1.15
     '@ledgerhq/lumen-ui-react':
       specifier: 0.1.35
       version: 0.1.35
@@ -67,8 +67,8 @@ catalogs:
       specifier: 0.1.13
       version: 0.1.13
     '@ledgerhq/lumen-ui-rnative':
-      specifier: 0.1.36
-      version: 0.1.36
+      specifier: 0.1.37
+      version: 0.1.37
     '@ledgerhq/lumen-ui-rnative-visualization':
       specifier: 0.1.12
       version: 0.1.12
@@ -599,7 +599,7 @@ importers:
         version: link:tools/create-release-hash
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/pnpm-utils':
         specifier: workspace:*
         version: link:tools/pnpm-utils
@@ -974,7 +974,7 @@ importers:
         version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -1046,13 +1046,13 @@ importers:
         version: link:../../libs/ledgerjs/packages/logs
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
+        version: 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
       '@ledgerhq/lumen-ui-react-visualization':
         specifier: 'catalog:'
-        version: 0.1.13(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
+        version: 0.1.13(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
       '@ledgerhq/react-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/react
@@ -1636,7 +1636,7 @@ importers:
         version: 1.17.1(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-rnative@0.1.37(ea8f19a0282098dfef532dfdbd5aa68b))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -1720,13 +1720,13 @@ importers:
         version: link:../../libs/ledgerjs/packages/logs
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)
+        version: 0.1.37(ea8f19a0282098dfef532dfdbd5aa68b)
       '@ledgerhq/lumen-ui-rnative-visualization':
         specifier: 'catalog:'
-        version: 0.1.12(c2ca076c1e25b941e9e44c3852b190fd)
+        version: 0.1.12(f414683eda8335a3c09f695f0b3e96b3)
       '@ledgerhq/native-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/native
@@ -2504,7 +2504,7 @@ importers:
         version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -2561,10 +2561,10 @@ importers:
         version: link:../../libs/ledgerjs/packages/logs
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
+        version: 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
       '@ledgerhq/react-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/react
@@ -2850,13 +2850,13 @@ importers:
         version: 30.2.0
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.35(b345b4f31e2f2b2bda7bc73c00ce30cf)
+        version: 0.1.35(81c6f3253259a2d7d0395dad4519fe81)
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.36(a2aa5f8c374d1b5fe4e14b150f0f766a)
+        version: 0.1.37(56f019cb75b84e0ca2fc549aaf636d30)
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -3391,13 +3391,13 @@ importers:
         version: 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.35(@ledgerhq/lumen-design-core@0.1.14)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
+        version: 0.1.35(@ledgerhq/lumen-design-core@0.1.15)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.36(a7e32582d2cd0fe02b399112a5a7a905)
+        version: 0.1.37(bb139e106ed35527d4639932cad9268c)
       '@swc/core':
         specifier: 'catalog:'
         version: 1.15.11
@@ -11909,7 +11909,7 @@ importers:
     dependencies:
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e23d53fa989a9de326d2c59bae773e61))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-rnative@0.1.37(3e7800b232784cf2b3c4cfeb964f9007))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/icons-ui':
         specifier: workspace:^
         version: link:../icons
@@ -11973,10 +11973,10 @@ importers:
         version: 0.19.12
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.36(e23d53fa989a9de326d2c59bae773e61)
+        version: 0.1.37(3e7800b232784cf2b3c4cfeb964f9007)
       '@react-native-async-storage/async-storage':
         specifier: 2.1.2
         version: 2.1.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))
@@ -12237,7 +12237,7 @@ importers:
     dependencies:
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ledgerhq/icons-ui':
         specifier: workspace:^
         version: file:libs/ui/packages/icons(@types/react@19.0.14)(react@19.0.0)(styled-components@5.3.11(@babel/core@7.28.5)(react-dom@19.0.0(react@19.0.0))(react-is@17.0.2)(react@19.0.0))(styled-system@5.1.5)
@@ -12298,10 +12298,10 @@ importers:
         version: 7.28.5(@babel/core@7.28.5)
       '@ledgerhq/lumen-design-core':
         specifier: 'catalog:'
-        version: 0.1.14
+        version: 0.1.15
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
+        version: 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -17204,8 +17204,8 @@ packages:
   '@ledgerhq/logs@6.16.0':
     resolution: {integrity: sha512-v/PLfb1dq1En35kkpbfRWp8jLYgbPUXxGhmd4pmvPSIe0nRGkNTomsZASmWQAv6pRonVGqHIBVlte7j1MBbOww==}
 
-  '@ledgerhq/lumen-design-core@0.1.14':
-    resolution: {integrity: sha512-pL73wXMDwHYU2s19VtweCSwUEXDGs03yNQpjNvbkgGS21AI9sTVdiNfD9TckLHrjM5NG1b9HxzXuFatChDcKaA==}
+  '@ledgerhq/lumen-design-core@0.1.15':
+    resolution: {integrity: sha512-y5cUl3GHtd5RLALfhQGZZ4+6WnMkcU/+rW+Cx7wmAtl5kXin9zmje0CVG/jKlbO6s/7QmFXenqKZSQH46kSFEw==}
 
   '@ledgerhq/lumen-ui-react-visualization@0.1.13':
     resolution: {integrity: sha512-XaNy/WinKL15O/x/kr5wvWjzqKj3GZAGvoc+k4OSIBCuhuHSHs8A4XuJRoBfmhOhDwcpbHrkgjzWP+mTTfgj3g==}
@@ -17249,11 +17249,11 @@ packages:
       react-native-svg: ^15.0.0
       react-native-worklets: '>=0.5.0'
 
-  '@ledgerhq/lumen-ui-rnative@0.1.36':
-    resolution: {integrity: sha512-5Cc2F6Fewt4ClKFxQymXuuRHrs0UW0Ae7aaL+thobXmoq4lYTWsIjj0qdnmiiDOMLoc3wsn6dW+PlSlhnascVw==}
+  '@ledgerhq/lumen-ui-rnative@0.1.37':
+    resolution: {integrity: sha512-iVxTHDedzES02cS9QCtYGH7t8c0BWGkM70rrd0tM1wWO6SQudvetq4iwU8EHV/9/s0uIgopQzUUcbkKPLI0Ziw==}
     peerDependencies:
       '@gorhom/bottom-sheet': ^5.0.0
-      '@ledgerhq/lumen-design-core': 0.1.14
+      '@ledgerhq/lumen-design-core': 0.1.15
       '@sbaiahmed1/react-native-blur': ^4.5.5
       '@types/react': ^19.0.0
       expo: '>=53.0.0'
@@ -17266,6 +17266,11 @@ packages:
 
   '@ledgerhq/lumen-utils-shared@0.1.3':
     resolution: {integrity: sha512-vnYl8joMbicAgcRZs+rnUiwHi6o+LpwmBtjXywWcpVobwxHrgKgTF9Idy3+0mJLGyYYgInIcwKnx2p5ZtG75Yg==}
+    peerDependencies:
+      react: 19.0.0
+
+  '@ledgerhq/lumen-utils-shared@0.1.4':
+    resolution: {integrity: sha512-jHWlRh7WE7rlv7uoiuWbEIUboyuP0Jaj4R6nW8NWhPkRKDsdFY+TYue3+vNWl4HIZyaIf1xf3xVFJPEjKrQJxw==}
     peerDependencies:
       react: 19.0.0
 
@@ -44573,29 +44578,29 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
     optionalDependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-react': 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-ui-react': 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
       react-dom: 19.0.0(react@19.0.0)
 
-  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e23d53fa989a9de326d2c59bae773e61))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-rnative@0.1.37(3e7800b232784cf2b3c4cfeb964f9007))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
     optionalDependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.36(e23d53fa989a9de326d2c59bae773e61)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-ui-rnative': 0.1.37(3e7800b232784cf2b3c4cfeb964f9007)
       react-dom: 19.0.0(react@19.0.0)
       react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0)
 
-  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-rnative@0.1.37(ea8f19a0282098dfef532dfdbd5aa68b))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
     optionalDependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-ui-rnative': 0.1.37(ea8f19a0282098dfef532dfdbd5aa68b)
       react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
 
   '@ledgerhq/device-management-kit@1.5.0':
@@ -44824,15 +44829,15 @@ snapshots:
 
   '@ledgerhq/logs@6.16.0': {}
 
-  '@ledgerhq/lumen-design-core@0.1.14':
+  '@ledgerhq/lumen-design-core@0.1.15':
     dependencies:
       tailwindcss: 4.1.18
       tslib: 2.6.2
 
-  '@ledgerhq/lumen-ui-react-visualization@0.1.13(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
+  '@ledgerhq/lumen-ui-react-visualization@0.1.13(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
     dependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-react': 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-ui-react': 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
       class-variance-authority: 0.7.1
       clsx: 2.1.1
@@ -44843,9 +44848,43 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       tailwind-merge: 3.4.0
 
-  '@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231)':
+  '@ledgerhq/lumen-ui-react@0.1.35(81c6f3253259a2d7d0395dad4519fe81)':
     dependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
+      '@radix-ui/react-checkbox': 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-dropdown-menu': 2.1.16(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-slot': 1.2.4(@types/react@19.0.14)(react@19.0.0)
+      '@radix-ui/react-switch': 1.2.6(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-tooltip': 1.2.8(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@tanstack/react-table': 8.5.11(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      i18next: 23.10.1
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      tailwind-merge: 3.4.0
+    transitivePeerDependencies:
+      - react-native
+
+  '@ledgerhq/lumen-ui-react@0.1.35(@ledgerhq/lumen-design-core@0.1.15)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
+    dependencies:
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
+      clsx: 2.1.1
+      i18next: 23.10.1
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      tailwind-merge: 3.4.0
+    transitivePeerDependencies:
+      - react-native
+
+  '@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)':
+    dependencies:
+      '@ledgerhq/lumen-design-core': 0.1.15
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
       '@radix-ui/react-checkbox': 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -44864,44 +44903,10 @@ snapshots:
     transitivePeerDependencies:
       - react-native
 
-  '@ledgerhq/lumen-ui-react@0.1.35(@ledgerhq/lumen-design-core@0.1.14)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
+  '@ledgerhq/lumen-ui-rnative-visualization@0.1.12(f414683eda8335a3c09f695f0b3e96b3)':
     dependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
-      clsx: 2.1.1
-      i18next: 23.10.1
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      tailwind-merge: 3.4.0
-    transitivePeerDependencies:
-      - react-native
-
-  '@ledgerhq/lumen-ui-react@0.1.35(b345b4f31e2f2b2bda7bc73c00ce30cf)':
-    dependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
-      '@radix-ui/react-checkbox': 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@radix-ui/react-dropdown-menu': 2.1.16(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@radix-ui/react-slot': 1.2.4(@types/react@19.0.14)(react@19.0.0)
-      '@radix-ui/react-switch': 1.2.6(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@radix-ui/react-tooltip': 1.2.8(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@tanstack/react-table': 8.5.11(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      i18next: 23.10.1
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      tailwind-merge: 3.4.0
-    transitivePeerDependencies:
-      - react-native
-
-  '@ledgerhq/lumen-ui-rnative-visualization@0.1.12(c2ca076c1e25b941e9e44c3852b190fd)':
-    dependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-ui-rnative': 0.1.37(ea8f19a0282098dfef532dfdbd5aa68b)
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
       '@types/react': 19.0.14
       d3-array: 3.2.4
@@ -44914,43 +44919,10 @@ snapshots:
       react-native-svg: 15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-worklets: 0.7.2(@babel/core@7.28.5)(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  '@ledgerhq/lumen-ui-rnative@0.1.36(a2aa5f8c374d1b5fe4e14b150f0f766a)':
+  '@ledgerhq/lumen-ui-rnative@0.1.37(3e7800b232784cf2b3c4cfeb964f9007)':
     dependencies:
-      '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native-worklets@0.7.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
-      '@types/react': 19.0.14
-      expo-haptics: 14.1.4(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      i18next: 23.10.1
-      react: 19.0.0
-      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
-      react-native-reanimated: 4.1.6(react-native-worklets@0.7.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react-native-safe-area-context: 5.6.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react-native-svg: 15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-    transitivePeerDependencies:
-      - react-dom
-
-  '@ledgerhq/lumen-ui-rnative@0.1.36(a7e32582d2cd0fe02b399112a5a7a905)':
-    dependencies:
-      '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
-      '@types/react': 19.0.14
-      i18next: 23.10.1
-      react: 19.0.0
-      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
-      react-native-reanimated: 4.1.6(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react-native-safe-area-context: 5.6.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react-native-svg: 15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-    transitivePeerDependencies:
-      - react-dom
-
-  '@ledgerhq/lumen-ui-rnative@0.1.36(e23d53fa989a9de326d2c59bae773e61)':
-    dependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-utils-shared': 0.1.4(react@19.0.0)
       '@types/react': 19.0.14
       expo: 53.0.25(@babel/core@7.28.5)(expo-modules-core@2.5.0)(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)
       i18next: 23.10.1
@@ -44963,11 +44935,44 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@ledgerhq/lumen-ui-rnative@0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)':
+  '@ledgerhq/lumen-ui-rnative@0.1.37(56f019cb75b84e0ca2fc549aaf636d30)':
+    dependencies:
+      '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native-worklets@0.7.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-utils-shared': 0.1.4(react@19.0.0)
+      '@types/react': 19.0.14
+      expo-haptics: 14.1.4(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      i18next: 23.10.1
+      react: 19.0.0
+      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
+      react-native-reanimated: 4.1.6(react-native-worklets@0.7.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-safe-area-context: 5.6.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-svg: 15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+    transitivePeerDependencies:
+      - react-dom
+
+  '@ledgerhq/lumen-ui-rnative@0.1.37(bb139e106ed35527d4639932cad9268c)':
+    dependencies:
+      '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-utils-shared': 0.1.4(react@19.0.0)
+      '@types/react': 19.0.14
+      i18next: 23.10.1
+      react: 19.0.0
+      react-i18next: 14.1.3(i18next@23.10.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
+      react-native-reanimated: 4.1.6(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-safe-area-context: 5.6.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-svg: 15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+    transitivePeerDependencies:
+      - react-dom
+
+  '@ledgerhq/lumen-ui-rnative@0.1.37(ea8f19a0282098dfef532dfdbd5aa68b)':
     dependencies:
       '@gorhom/bottom-sheet': 5.2.6(beb07f7799bea5989bf46dbe8fcef3d9)
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-utils-shared': 0.1.4(react@19.0.0)
       '@sbaiahmed1/react-native-blur': 4.5.5(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@types/react': 19.0.14
       expo: 53.0.25(4b2c01f5a47d338b1c9e7803e0aed015)
@@ -44983,6 +44988,12 @@ snapshots:
       - react-dom
 
   '@ledgerhq/lumen-utils-shared@0.1.3(react@19.0.0)':
+    dependencies:
+      clsx: 2.1.1
+      react: 19.0.0
+      tailwind-merge: 2.6.0
+
+  '@ledgerhq/lumen-utils-shared@0.1.4(react@19.0.0)':
     dependencies:
       clsx: 2.1.1
       react: 19.0.0
