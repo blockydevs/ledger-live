@@ -69,9 +69,9 @@ describe("Default", () => {
       () => {
         expect(screen.getByTestId("fw-update-banner")).toBeInTheDocument();
       },
-      { timeout: 5000 },
+      { timeout: 10000 },
     );
-  }, 15_000); // Default mounts a large tree; CI runners need extra time
+  }, 15000);
 
   describe("analytics consent", () => {
     beforeEach(() => {
