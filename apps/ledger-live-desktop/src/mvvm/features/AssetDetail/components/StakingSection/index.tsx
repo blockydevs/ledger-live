@@ -5,9 +5,13 @@ import { StakingSectionView } from "./StakingSectionView";
 
 type StakingSectionProps = Readonly<{
   distributionItem: DistributionItem;
+  pnlVisible: boolean;
 }>;
 
-export function StakingSection({ distributionItem }: StakingSectionProps) {
+export function StakingSection({ distributionItem, pnlVisible }: StakingSectionProps) {
   const viewModel = useStakingSectionViewModel(distributionItem);
-  return <StakingSectionView {...viewModel} />;
+
+  if (viewModel.state.type === "hidden") return null;
+
+  return <StakingSectionView {...viewModel} pnlVisible={pnlVisible} />;
 }
