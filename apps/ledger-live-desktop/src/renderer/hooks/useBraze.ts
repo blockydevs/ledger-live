@@ -194,19 +194,10 @@ export function useBraze() {
       const genericAwarenessModalBrazeCardsFromBraze = filterByPage(
         filteredDesktopCards,
         LocationContentCard.GenericAwarenessModal,
-      )
-        .filter(card => {
-          const campaignId = card.extras?.campaignId;
-          return (
-            campaignId === undefined ||
-            campaignId === "" ||
-            !dismissedCardIds.includes(String(campaignId))
-          );
-        })
-        .map(card => ({
-          id: String(card.id),
-          extras: card.extras,
-        }));
+      ).map(card => ({
+        id: String(card.id),
+        extras: card.extras,
+      }));
 
       const genericAwarenessModalContentCards = filterDismissedGenericAwarenessModalContentCards(
         processGenericAwarenessModalBrazeCards(genericAwarenessModalBrazeCardsFromBraze),

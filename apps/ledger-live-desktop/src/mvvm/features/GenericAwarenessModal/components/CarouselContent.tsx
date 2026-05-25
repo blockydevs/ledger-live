@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Slides, useSlidesContext } from "LLD/components/Slides";
 import { Button, PageIndicator } from "@ledgerhq/lumen-ui-react";
 import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
@@ -14,7 +15,7 @@ function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselCo
 
   return (
     <div className="flex size-full flex-col">
-      <div className="py-24 overflow-hidden w-full">
+      <div className="pb-24 overflow-hidden w-full">
         {showImage ? (
           <img
             src={imageUrl}
@@ -67,6 +68,7 @@ function CarouselContentFooter({
   onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
   onClose: () => void;
 }>) {
+  const { t } = useTranslation();
   const { currentIndex, totalSlides, goToNext } = useSlidesContext();
   const isLastSlide = currentIndex === totalSlides - 1;
   const currentSlide = slides[currentIndex];
@@ -103,7 +105,7 @@ function CarouselContentFooter({
         onClick={handleContinue}
         data-testid="generic-awareness-modal-continue-button"
       >
-        {isLastSlide ? "Close" : "Continue"}
+        {isLastSlide ? t("common.close") : t("common.continue")}
       </Button>
     </div>
   );

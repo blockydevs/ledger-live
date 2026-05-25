@@ -18,7 +18,7 @@ import type { AppDispatch } from "~/state-manager/configureStore";
 
 const DIALOG_ID: DialogId = "GENERIC_AWARENESS_MODAL";
 
-const isAppStartContentCardId = (contentCardId: string) => contentCardId.startsWith("APP_START");
+const isAppStartContentCardId = (contentCardId: string) => contentCardId.toLowerCase().startsWith("app_start");
 
 export const openGenericAwarenessModalDialog =
   (options?: { campaignId?: string }) => (dispatch: AppDispatch, getState: () => State) => {
