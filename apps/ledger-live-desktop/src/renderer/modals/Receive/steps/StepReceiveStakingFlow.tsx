@@ -35,15 +35,11 @@ export const CheckBoxContainer: typeof Flex = styled(Flex)`
 const StepReceiveStakingFlow = (props: StepProps) => {
   const { t } = useTranslation();
   const receiveStakingFlowConfig = useFeature("receiveStakingFlowConfigDesktop");
-  // Zod-inferred `params` is too loose for index access — narrow via local type.
-  const stakingParams = receiveStakingFlowConfig?.params as
-    | Record<string, { enabled?: boolean; supportLink?: string; direct?: boolean }>
-    | undefined;
   const { account } = props;
   const [doNotShowAgain, setDoNotShowAgain] = useState<boolean>(false);
 
   const id = account && "currency" in account ? account.currency?.id : undefined;
-  const supportLink = id ? stakingParams?.[id]?.supportLink : undefined;
+  const supportLink = id ? receiveStakingFlowConfig?.params?.[id]?.supportLink : undefined;
   const title = t(`receive.steps.staking.${id}.title`);
   const description = t(`receive.steps.staking.${id}.description`);
 
