@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useStore } from "LLD/hooks/redux";
 import { EnvName, getEnv } from "@ledgerhq/live-env";
-import { FEATURE_FLAGS_DEFAULTS } from "@shared/feature-flags";
+import {
+  FEATURE_FLAGS_DEFAULTS,
+  type Feature,
+  type FeatureId,
+  type Features,
+} from "@shared/feature-flags";
 import { useFeature, useFeatureFlags } from "@features/platform-feature-flags";
-import { Feature, FeatureId, Features } from "@shared/feature-flags";
 import { enabledExperimentalFeatures } from "~/renderer/experimental";
 import { sentryLogsSelector } from "~/renderer/reducers/settings";
 import { initDatadog, setTags, isDatadogAvailable } from "~/datadog/renderer";

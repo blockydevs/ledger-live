@@ -1,6 +1,5 @@
-import { groupedFeatures, GroupedFeature } from "@shared/feature-flags";
+import { groupedFeatures, type GroupedFeature, setOverride } from "@shared/feature-flags";
 import { useFeatureFlags } from "@features/platform-feature-flags";
-import { setOverride } from "@shared/feature-flags";
 import { useDispatch } from "LLD/hooks/redux";
 import { Flex, Link, Tag, Box, Text } from "@ledgerhq/react-ui";
 import { Switch } from "@ledgerhq/lumen-ui-react";

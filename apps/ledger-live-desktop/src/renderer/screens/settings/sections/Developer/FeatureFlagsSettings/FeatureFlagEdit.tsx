@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "LLD/hooks/redux";
-import { setOverride } from "@shared/feature-flags";
+import { setOverride, type Feature, type FeatureId } from "@shared/feature-flags";
 import { Text, Input, Flex } from "@ledgerhq/react-ui";
 import { Switch, Button } from "@ledgerhq/lumen-ui-react";
-import { Feature, FeatureId } from "@shared/feature-flags";
 import { InputRenderRightContainer } from "@ledgerhq/react-ui/components/form/BaseInput/index";
 import Alert from "~/renderer/components/Alert";
 

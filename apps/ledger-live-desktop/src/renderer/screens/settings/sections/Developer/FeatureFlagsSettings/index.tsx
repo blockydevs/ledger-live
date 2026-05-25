@@ -2,12 +2,19 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
-import { FEATURE_FLAGS_DEFAULTS, groupedFeatures } from "@shared/feature-flags";
+import {
+  FEATURE_FLAGS_DEFAULTS,
+  FeatureId,
+  FeatureIdSchema,
+  featureFlagsBannerVisibleSelector,
+  groupedFeatures,
+  setAllOverrides,
+  setBannerVisible,
+} from "@shared/feature-flags";
 import { useFeature, useHasLocallyOverriddenFeatureFlags } from "@features/platform-feature-flags";
 import { Flex, SearchInput, Alert, Tag, Text } from "@ledgerhq/react-ui";
 import { Switch, Button } from "@ledgerhq/lumen-ui-react";
 import { SettingsSectionRow as Row } from "../../../SettingsSection";
-import { FeatureId } from "@shared/feature-flags";
 import includes from "lodash/includes";
 import lowerCase from "lodash/lowerCase";
 import trim from "lodash/trim";
@@ -15,12 +22,6 @@ import { withV3StyleProvider } from "~/renderer/styles/StyleProviderV3";
 import FeatureFlagDetails from "./FeatureFlagDetails";
 import GroupedFeatures from "./GroupedFeatures";
 import TabBar from "~/renderer/components/TabBar";
-import {
-  FeatureIdSchema,
-  featureFlagsBannerVisibleSelector,
-  setAllOverrides,
-  setBannerVisible,
-} from "@shared/feature-flags";
 import { objectKeysType } from "@ledgerhq/live-common/helpers";
 
 export const FeatureFlagContent = withV3StyleProvider((props: { expanded?: boolean }) => {
