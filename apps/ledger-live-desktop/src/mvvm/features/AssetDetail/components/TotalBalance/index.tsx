@@ -1,25 +1,20 @@
 import React from "react";
 import type { DistributionItem } from "@ledgerhq/types-live";
-import { CryptoBalanceText } from "../CryptoBalanceText";
-import { TotalBalanceView } from "./TotalBalanceView";
-import { useTotalBalanceViewModel } from "./useTotalBalanceViewModel";
+import { TotalBalanceSkeleton } from "./TotalBalanceSkeleton";
+import { TotalBalance as TotalBalanceComponent } from "./TotalBalance";
+import { shouldShowAssetDetailSectionSkeleton } from "../../utils/shouldShowAssetDetailSectionSkeleton";
 
-type TotalBalanceProps = {
-  readonly distributionItem: DistributionItem;
-};
+type TotalBalanceProps = Readonly<{
+  distributionItem?: DistributionItem;
+  isLoading: boolean;
+}>;
 
-export function TotalBalance({ distributionItem }: TotalBalanceProps) {
-  const viewModel = useTotalBalanceViewModel(distributionItem);
+export function TotalBalance({ distributionItem, isLoading }: TotalBalanceProps) {
+  if (shouldShowAssetDetailSectionSkeleton(isLoading, distributionItem != null)) {
+    return <TotalBalanceSkeleton />;
+  }
 
-  return (
-    <TotalBalanceView
-      totalBalanceLabel={viewModel.totalBalanceLabel}
-      fiatDisplayValue={viewModel.fiatDisplayValue}
-      fiatFormatter={viewModel.fiatFormatter}
-      hidden={viewModel.hidden}
-      cryptoBalance={
-        <CryptoBalanceText amount={viewModel.amount} cryptoUnit={viewModel.cryptoUnit} />
-      }
-    />
-  );
+  if (!distributionItem) return null;
+
+  return <TotalBalanceComponent distributionItem={distributionItem} />;
 }

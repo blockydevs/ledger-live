@@ -40,6 +40,7 @@ const TEST_ID = {
   MARKET_PRICE_FIAT_VARIATION: "asset-detail-market-price-fiat-variation",
   MARKET_DATA_SECTION: "asset-detail-market-data-section",
   TRANSACTIONS_SECTION: "asset-detail-transactions-section",
+  ACTION_BAR: "asset-detail-action-bar",
   ACTION_BUY: "asset-detail-action-buy",
   ACTION_RECEIVE: "asset-detail-action-receive",
   ACTION_SELL: "asset-detail-action-sell",
@@ -133,6 +134,8 @@ const expectNoOwnedView = () => {
   expect(screen.queryByTestId(TEST_ID.ADDRESS_LIST)).not.toBeInTheDocument();
 };
 const expectNotFound = () => expect(screen.getByText(LABEL.NOT_FOUND)).toBeVisible();
+const expectActionBarHidden = () =>
+  expect(screen.queryByTestId(TEST_ID.ACTION_BAR)).not.toBeInTheDocument();
 
 type OwnedAsset = {
   label: string;
@@ -629,13 +632,18 @@ describe("AssetDetail integration", () => {
     beforeEach(() => jest.useFakeTimers());
     afterEach(() => jest.useRealTimers());
 
-    it("shows skeleton while waiting for Market response", () => {
+    it("shows per-section skeletons while waiting for Market response", () => {
       mockMarket.hang();
       setupRoute("unknown-asset", { list: [] });
 
       render(<AssetDetail />);
 
-      expect(screen.queryByTestId(TEST_ID.HEADER)).not.toBeInTheDocument();
+      expect(screen.getByTestId(TEST_ID.MARKET_PRICE_SECTION)).toBeVisible();
+      expect(screen.getByTestId(TEST_ID.MARKET_DATA_SECTION)).toBeVisible();
+      expectActionBarHidden();
+      expect(screen.getByTestId("asset-detail-total-balance-skeleton")).toBeVisible();
+      expect(screen.getByTestId("asset-detail-address-list-skeleton")).toBeVisible();
+      expect(screen.getByTestId("asset-detail-transactions-skeleton")).toBeVisible();
       expect(screen.queryByText(LABEL.NOT_FOUND)).not.toBeInTheDocument();
     });
   });
@@ -658,6 +666,8 @@ describe("AssetDetail integration", () => {
 
       render(<AssetDetail />);
 
+      expectActionBarHidden();
+      expect(screen.getByTestId("asset-detail-total-balance-skeleton")).toBeVisible();
       expect(screen.queryByText(LABEL.NOT_FOUND)).not.toBeInTheDocument();
     });
   });

@@ -11,13 +11,33 @@ import { MetricsRowSection } from "./components/MetricsRowSection";
 import { TotalBalance } from "./components/TotalBalance";
 import { TransactionsSection } from "./components/TransactionsSection";
 import type { AssetDetailReady } from "./types";
+import { resolveAssetDetailSectionLoading } from "./utils/resolveAssetDetailSectionLoading";
 
 type AssetDetailViewProps = Readonly<{
   viewModel: AssetDetailReady;
 }>;
 
 export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
-  const { distributionItem, marketData, displayTicker, ledgerId, ledgerCurrency } = viewModel;
+  const {
+    distributionItem,
+    marketData,
+    displayTicker,
+    ledgerId,
+    ledgerCurrency,
+    isDistributionLoading,
+  } = viewModel;
+
+  const { isLoading: isMarketLoading, marketCurrencyData } = marketData;
+  const hasDistributionItem = distributionItem != null;
+  const hasPortfolioAccounts = (distributionItem?.accounts.length ?? 0) > 0;
+  const portfolioSectionLoading = resolveAssetDetailSectionLoading(
+    isDistributionLoading,
+    isMarketLoading,
+    hasDistributionItem,
+  );
+  const showPortfolioSections = portfolioSectionLoading || hasPortfolioAccounts;
+  const showMarketDataSection =
+    marketCurrencyData != null || isDistributionLoading || isMarketLoading;
 
   return (
     <div className="flex w-full shrink-0 flex-col gap-24 pb-32">
@@ -43,29 +63,47 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
         distributionItem={distributionItem}
         ledgerId={ledgerId}
         marketData={marketData}
+        isDistributionLoading={isDistributionLoading}
       />
 
       <ActionBar
         distributionItem={distributionItem}
         ledgerCurrency={ledgerCurrency}
-        marketCurrencyData={marketData.marketCurrencyData}
+        marketCurrencyData={marketCurrencyData}
         tickerHint={displayTicker}
+        isDistributionLoading={isDistributionLoading}
+        isMarketLoading={isMarketLoading}
       />
 
       <div className="flex flex-col gap-32">
-        {distributionItem && distributionItem.accounts.length > 0 && (
-          <TotalBalance distributionItem={distributionItem} />
+        {showPortfolioSections && (
+          <TotalBalance distributionItem={distributionItem} isLoading={portfolioSectionLoading} />
         )}
 
-        {distributionItem && <MetricsRowSection distributionItem={distributionItem} />}
+        <MetricsRowSection
+          distributionItem={distributionItem}
+          isDistributionLoading={isDistributionLoading}
+          isMarketLoading={isMarketLoading}
+        />
 
-        {distributionItem && distributionItem.accounts.length > 0 && (
-          <AddressListSection distributionItem={distributionItem} />
+        {showPortfolioSections && (
+          <AddressListSection
+            distributionItem={distributionItem}
+            isLoading={portfolioSectionLoading}
+          />
         )}
 
-        {marketData.marketCurrencyData && <MarketDataSection marketData={marketData} />}
+        {showMarketDataSection && (
+          <MarketDataSection
+            marketData={marketData}
+            isDistributionLoading={isDistributionLoading}
+          />
+        )}
 
-        {distributionItem && <TransactionsSection distributionItem={distributionItem} />}
+        <TransactionsSection
+          distributionItem={distributionItem}
+          isLoading={portfolioSectionLoading}
+        />
       </div>
     </div>
   );
