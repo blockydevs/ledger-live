@@ -2,7 +2,7 @@ import invariant from "invariant";
 import { concat, of, from, Subscription } from "rxjs";
 import { concatMap, filter } from "rxjs/operators";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Platform } from "react-native";
+import { InteractionManager, Platform } from "react-native";
 import { log } from "@ledgerhq/logs";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import type {
@@ -170,8 +170,10 @@ export const useSignWithDevice = ({
                   result: e.operation,
                 },
               );
-              updateAccountWithUpdater(mainAccount.id, account =>
-                addPendingOperation(account, e.operation),
+              InteractionManager.runAfterInteractions(() =>
+                updateAccountWithUpdater(mainAccount.id, account =>
+                  addPendingOperation(account, e.operation),
+                ),
               );
               break;
 
@@ -314,11 +316,13 @@ export function useSignedTxHandler({
           route.name.replace("ConnectDevice", "ValidationSuccess"),
           { ...route.params, result: operation },
         );
-        dispatch(
-          updateAccountWithUpdater({
-            accountId: mainAccount.id,
-            updater: account => addPendingOperation(account, operation),
-          }),
+        InteractionManager.runAfterInteractions(() =>
+          dispatch(
+            updateAccountWithUpdater({
+              accountId: mainAccount.id,
+              updater: account => addPendingOperation(account, operation),
+            }),
+          ),
         );
       } catch (error) {
         if (
