@@ -1,10 +1,17 @@
 import type { Page, Stake } from "@ledgerhq/coin-module-framework/api/types";
+import type { HederaCoinConfig } from "../config";
 import { apiClient } from "../network/api";
 
 /**
  * Fetch stakes for a given Hedera account.
  */
-export async function getStakes(address: string): Promise<Page<Stake>> {
+export async function getStakes({
+  configOrCurrencyId: _,
+  address,
+}: {
+  configOrCurrencyId: HederaCoinConfig | string;
+  address: string;
+}): Promise<Page<Stake>> {
   const mirrorAccount = await apiClient.getAccount(address);
   const stakedNodeId = mirrorAccount.staked_node_id;
 

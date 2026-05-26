@@ -6,6 +6,7 @@ import { SUPPORTED_ERC20_TOKENS } from "../constants";
 import { HederaRecipientInvalidChecksum } from "../errors";
 import { getMockedAccount } from "../test/fixtures/account.fixture";
 import {
+  getMockedCurrency,
   getMockedERC20TokenCurrency,
   getMockedHTSTokenCurrency,
 } from "../test/fixtures/currency.fixture";
@@ -21,6 +22,7 @@ import {
   getMockedMirrorAccount,
 } from "../test/fixtures/mirror.fixture";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
+import hederaCoinConfig from "../config";
 import { getMockedThirdwebTransaction } from "../test/fixtures/thirdweb.fixture";
 import type { HederaMirrorCoinTransfer, HederaMirrorTransaction } from "../types";
 import { apiClient } from "./api";
@@ -45,6 +47,11 @@ jest.mock("./hgraph");
 
 describe("network utils", () => {
   const defaultConfig = getMockedConfig();
+  const mockCurrency = getMockedCurrency();
+
+  beforeAll(() => {
+    hederaCoinConfig.setCoinConfig(getMockedConfig);
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -306,10 +313,11 @@ describe("network utils", () => {
         findTokenById: jest.fn().mockReturnValue(erc20Token),
       });
 
-      const res = await getERC20BalancesForAccount(
-        mockAccount.freshAddress,
-        mockedSupportedTokenIds,
-      );
+      const res = await getERC20BalancesForAccount({
+        configOrCurrencyId: mockCurrency.id,
+        evmAccountId: mockAccount.freshAddress,
+        supportedTokenIds: mockedSupportedTokenIds,
+      });
 
       expect(apiClient.getERC20Balance).toHaveBeenCalledTimes(mockedSupportedTokenIds.length);
       expect(apiClient.getERC20Balance).toHaveBeenCalledWith(
@@ -322,7 +330,11 @@ describe("network utils", () => {
 
     it("returns empty array when there are no supported ERC20 tokens", async () => {
       const supportedTokenIds: string[] = [];
-      const res = await getERC20BalancesForAccount("0xaccount", supportedTokenIds);
+      const res = await getERC20BalancesForAccount({
+        configOrCurrencyId: mockCurrency.id,
+        evmAccountId: "0xaccount",
+        supportedTokenIds,
+      });
 
       expect(res).toEqual([]);
       expect(apiClient.getERC20Balance).not.toHaveBeenCalled();
@@ -344,7 +356,10 @@ describe("network utils", () => {
         findTokenById: jest.fn().mockReturnValue(erc20Token),
       });
 
-      const res = await getERC20BalancesForAccountV2(mockAccount.freshAddress);
+      const res = await getERC20BalancesForAccountV2({
+        configOrCurrencyId: mockCurrency.id,
+        address: mockAccount.freshAddress,
+      });
 
       expect(hgraphClient.getERC20Balances).toHaveBeenCalledTimes(1);
       expect(hgraphClient.getERC20Balances).toHaveBeenCalledWith({
@@ -404,7 +419,10 @@ describe("network utils", () => {
         findTokenByAddressInCurrency: jest.fn().mockReturnValue(mockTokenERC20),
       });
 
-      const result = await getERC20Operations([mockThirdwebTransaction]);
+      const result = await getERC20Operations({
+        currencyId: mockCurrency.id,
+        latestERC20Transactions: [mockThirdwebTransaction],
+      });
 
       expect(result).toEqual([
         {
@@ -437,7 +455,10 @@ describe("network utils", () => {
         findTokenByAddressInCurrency: jest.fn().mockReturnValue(undefined),
       });
 
-      const result = await getERC20Operations(mockThirdwebTransactions);
+      const result = await getERC20Operations({
+        currencyId: mockCurrency.id,
+        latestERC20Transactions: mockThirdwebTransactions,
+      });
 
       expect(result).toEqual([]);
       expect(apiClient.getContractCallResult).not.toHaveBeenCalled();
@@ -461,7 +482,10 @@ describe("network utils", () => {
         findTokenByAddressInCurrency: jest.fn().mockReturnValue(mockTokenERC20),
       });
 
-      const result = await getERC20Operations([mockThirdwebTransactions]);
+      const result = await getERC20Operations({
+        currencyId: mockCurrency.id,
+        latestERC20Transactions: [mockThirdwebTransactions],
+      });
 
       expect(result).toEqual([]);
     });
@@ -538,7 +562,10 @@ describe("network utils", () => {
     });
 
     it("should enrich supported ERC20 transfers with contract call result and mirror transaction", async () => {
-      const result = await enrichERC20Transfers([mockERC20Transfer]);
+      const result = await enrichERC20Transfers({
+        configOrCurrencyId: mockCurrency.id,
+        erc20Transfers: [mockERC20Transfer],
+      });
 
       expect(result).toEqual([
         {
@@ -560,7 +587,10 @@ describe("network utils", () => {
       const transfer1 = { ...mockERC20Transfer, amount: 1000 };
       const transfer2 = { ...mockERC20Transfer, amount: 2000 }; // same transaction_hash
 
-      const result = await enrichERC20Transfers([transfer1, transfer2]);
+      const result = await enrichERC20Transfers({
+        configOrCurrencyId: mockCurrency.id,
+        erc20Transfers: [transfer1, transfer2],
+      });
 
       expect(result).toEqual([
         expect.objectContaining({
@@ -572,7 +602,10 @@ describe("network utils", () => {
     it("should skip transfers where mirror transaction is not found", async () => {
       (apiClient.findTransactionByContractCallV2 as jest.Mock).mockResolvedValue(null);
 
-      const result = await enrichERC20Transfers([mockERC20Transfer]);
+      const result = await enrichERC20Transfers({
+        configOrCurrencyId: mockCurrency.id,
+        erc20Transfers: [mockERC20Transfer],
+      });
 
       expect(result).toEqual([]);
     });
@@ -584,7 +617,10 @@ describe("network utils", () => {
         mockMirrorTransaction,
       );
 
-      const result = await enrichERC20Transfers(transfers);
+      const result = await enrichERC20Transfers({
+        configOrCurrencyId: mockCurrency.id,
+        erc20Transfers: transfers,
+      });
       const txHashes = result.flatMap(r => r.transfers.map(t => t.transaction_hash));
 
       expect(txHashes).toEqual([mockERC20Transfer.transaction_hash, "hash456"]);
@@ -596,7 +632,10 @@ describe("network utils", () => {
         consensus_timestamp: 1768092990 * 10 ** 9,
       };
 
-      await enrichERC20Transfers([transferWithTimestamp]);
+      await enrichERC20Transfers({
+        configOrCurrencyId: mockCurrency.id,
+        erc20Transfers: [transferWithTimestamp],
+      });
 
       expect(apiClient.findTransactionByContractCallV2).toHaveBeenCalledTimes(1);
       expect(apiClient.findTransactionByContractCallV2).toHaveBeenCalledWith({
@@ -606,7 +645,10 @@ describe("network utils", () => {
     });
 
     it("should handle empty array", async () => {
-      const result = await enrichERC20Transfers([]);
+      const result = await enrichERC20Transfers({
+        configOrCurrencyId: mockCurrency.id,
+        erc20Transfers: [],
+      });
 
       expect(result).toEqual([]);
       expect(apiClient.getContractCallResult).not.toHaveBeenCalled();
@@ -700,7 +742,10 @@ describe("network utils", () => {
 
   describe("safeParseAccountId", () => {
     it("returns account id and no checksum for valid address without checksum", async () => {
-      const [error, result] = await safeParseAccountId("0.0.9124531");
+      const [error, result] = await safeParseAccountId({
+        configOrCurrencyId: defaultConfig,
+        address: "0.0.9124531",
+      });
 
       expect(error).toBeNull();
       expect(result?.accountId).toBe("0.0.9124531");
@@ -708,7 +753,10 @@ describe("network utils", () => {
     });
 
     it("returns account id and checksum for valid address with correct checksum", async () => {
-      const [error, result] = await safeParseAccountId("0.0.9124531-xrxlv");
+      const [error, result] = await safeParseAccountId({
+        configOrCurrencyId: defaultConfig,
+        address: "0.0.9124531-xrxlv",
+      });
 
       expect(error).toBeNull();
       expect(result?.accountId).toBe("0.0.9124531");
@@ -716,14 +764,20 @@ describe("network utils", () => {
     });
 
     it("returns error for valid address with incorrect checksum", async () => {
-      const [error, accountId] = await safeParseAccountId("0.0.9124531-invld");
+      const [error, accountId] = await safeParseAccountId({
+        configOrCurrencyId: defaultConfig,
+        address: "0.0.9124531-invld",
+      });
 
       expect(error).toBeInstanceOf(HederaRecipientInvalidChecksum);
       expect(accountId).toBeNull();
     });
 
     it("returns error for invalid address format", async () => {
-      const [error, accountId] = await safeParseAccountId("not-a-valid-address");
+      const [error, accountId] = await safeParseAccountId({
+        configOrCurrencyId: defaultConfig,
+        address: "not-a-valid-address",
+      });
 
       expect(error).toBeInstanceOf(InvalidAddress);
       expect(accountId).toBeNull();
@@ -739,7 +793,10 @@ describe("network utils", () => {
     it("returns correct EVM address for valid Hedera account ID", async () => {
       (apiClient.getAccount as jest.Mock).mockResolvedValueOnce(mockMirrorAccount);
 
-      const evmAddress = await toEVMAddress(mockMirrorAccount.account);
+      const evmAddress = await toEVMAddress({
+        configOrCurrencyId: defaultConfig,
+        accountId: mockMirrorAccount.account,
+      });
 
       expect(apiClient.getAccount).toHaveBeenCalledTimes(1);
       expect(apiClient.getAccount).toHaveBeenCalledWith(mockMirrorAccount.account);
@@ -749,7 +806,10 @@ describe("network utils", () => {
     it("returns null when API call fails", async () => {
       (apiClient.getAccount as jest.Mock).mockRejectedValueOnce(new Error("API error"));
 
-      const evmAddress = await toEVMAddress(mockMirrorAccount.account);
+      const evmAddress = await toEVMAddress({
+        configOrCurrencyId: defaultConfig,
+        accountId: mockMirrorAccount.account,
+      });
 
       expect(apiClient.getAccount).toHaveBeenCalledTimes(1);
       expect(evmAddress).toBeNull();
@@ -769,6 +829,7 @@ describe("network utils", () => {
       (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValueOnce([]);
 
       const result = await calculateUncommittedBalanceChange({
+        configOrCurrencyId: defaultConfig,
         address: mockAddress,
         startTimestamp: mockStartTimestamp,
         endTimestamp: mockEndTimestamp,
@@ -813,6 +874,7 @@ describe("network utils", () => {
       );
 
       const result = await calculateUncommittedBalanceChange({
+        configOrCurrencyId: defaultConfig,
         address: mockAddress,
         startTimestamp: mockStartTimestamp,
         endTimestamp: mockEndTimestamp,
@@ -844,6 +906,7 @@ describe("network utils", () => {
       );
 
       const result = await calculateUncommittedBalanceChange({
+        configOrCurrencyId: defaultConfig,
         address: mockAddress,
         startTimestamp: mockStartTimestamp,
         endTimestamp: mockEndTimestamp,
@@ -857,11 +920,13 @@ describe("network utils", () => {
 
       const [resultEqual, resultInvalid] = await Promise.all([
         calculateUncommittedBalanceChange({
+          configOrCurrencyId: defaultConfig,
           address: mockAddress,
           startTimestamp: mockStartTimestamp,
           endTimestamp: mockStartTimestamp,
         }),
         calculateUncommittedBalanceChange({
+          configOrCurrencyId: defaultConfig,
           address: mockAddress,
           startTimestamp: mockEndTimestamp,
           endTimestamp: mockStartTimestamp,
@@ -894,7 +959,11 @@ describe("network utils", () => {
         .mockResolvedValueOnce(accountBefore)
         .mockResolvedValueOnce(accountAfter);
 
-      const result = await analyzeStakingOperation(mockAddress, mockTx);
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
 
       expect(result).toEqual({
         operationType: "DELEGATE",
@@ -916,7 +985,11 @@ describe("network utils", () => {
         .mockResolvedValueOnce(accountBefore)
         .mockResolvedValueOnce(accountAfter);
 
-      const result = await analyzeStakingOperation(mockAddress, mockTx);
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
 
       expect(result).toEqual({
         operationType: "UNDELEGATE",
@@ -935,7 +1008,11 @@ describe("network utils", () => {
         .mockResolvedValueOnce(accountBefore)
         .mockResolvedValueOnce(accountAfter);
 
-      const result = await analyzeStakingOperation(mockAddress, mockTx);
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
 
       expect(result).toEqual({
         operationType: "REDELEGATE",
@@ -974,7 +1051,11 @@ describe("network utils", () => {
         .mockResolvedValueOnce(mockAccountBefore)
         .mockResolvedValueOnce(mockAccountAfter);
 
-      const result = await analyzeStakingOperation(mockAddress, mockTx);
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
 
       expect(apiClient.getTransactionsByTimestampRange).toHaveBeenCalledTimes(1);
       expect(apiClient.getTransactionsByTimestampRange).toHaveBeenCalledWith({
@@ -998,7 +1079,11 @@ describe("network utils", () => {
         .mockResolvedValueOnce(accountBefore)
         .mockResolvedValueOnce(accountAfter);
 
-      const result = await analyzeStakingOperation(mockAddress, mockTx);
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
 
       expect(result).toBeNull();
     });
@@ -1011,7 +1096,11 @@ describe("network utils", () => {
         .mockResolvedValueOnce(accountBefore)
         .mockResolvedValueOnce(accountAfter);
 
-      const result = await analyzeStakingOperation(mockAddress, mockTx);
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
 
       expect(result).toBeNull();
     });

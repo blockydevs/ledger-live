@@ -36,7 +36,7 @@ describe("getEstimatedFees", () => {
     (cvsApi.fetchLatest as jest.Mock).mockResolvedValueOnce([usdRate]);
 
     const result = await estimateFees({
-      currency: mockedAccount.currency,
+      currencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.CryptoTransfer,
     });
 
@@ -56,7 +56,7 @@ describe("getEstimatedFees", () => {
     (cvsApi.fetchLatest as jest.Mock).mockResolvedValueOnce([usdRate]);
 
     const result = await estimateFees({
-      currency: mockedAccount.currency,
+      currencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.TokenTransfer,
     });
 
@@ -76,7 +76,7 @@ describe("getEstimatedFees", () => {
     (cvsApi.fetchLatest as jest.Mock).mockResolvedValueOnce([usdRate]);
 
     const result = await estimateFees({
-      currency: mockedAccount.currency,
+      currencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.TokenAssociate,
     });
 
@@ -113,6 +113,7 @@ describe("getEstimatedFees", () => {
     (apiClient.estimateContractCallGas as jest.Mock).mockResolvedValueOnce(estimatedGasLimit);
 
     const result = await estimateFees({
+      configOrCurrencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.ContractCall,
       txIntent: {
         intentType: "transaction",
@@ -139,8 +140,14 @@ describe("getEstimatedFees", () => {
     expect(apiClient.getNetworkFees).toHaveBeenCalledTimes(1);
     expect(apiClient.estimateContractCallGas).toHaveBeenCalledTimes(1);
     expect(apiClient.estimateContractCallGas).toHaveBeenCalledWith(
-      await toEVMAddress(senderAddress),
-      await toEVMAddress(recipientAddress),
+      await toEVMAddress({
+        configOrCurrencyId: mockedAccount.currency.id,
+        accountId: senderAddress,
+      }),
+      await toEVMAddress({
+        configOrCurrencyId: mockedAccount.currency.id,
+        accountId: recipientAddress,
+      }),
       mockedTokenCurrencyERC20.contractAddress,
       transferAmount,
     );
@@ -156,6 +163,7 @@ describe("getEstimatedFees", () => {
     (apiClient.getNetworkFees as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
 
     const result = await estimateFees({
+      configOrCurrencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.ContractCall,
       txIntent: {
         intentType: "transaction",
@@ -192,6 +200,7 @@ describe("getEstimatedFees", () => {
     );
 
     const result = await estimateFees({
+      configOrCurrencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.ContractCall,
       txIntent: {
         intentType: "transaction",
@@ -222,7 +231,7 @@ describe("getEstimatedFees", () => {
     (cvsApi.fetchLatest as jest.Mock).mockResolvedValueOnce([usdRate]);
 
     const result = await estimateFees({
-      currency: mockedAccount.currency,
+      currencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.CryptoTransfer,
     });
 
@@ -239,7 +248,7 @@ describe("getEstimatedFees", () => {
     (cvsApi.fetchLatest as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
 
     const result = await estimateFees({
-      currency: mockedAccount.currency,
+      currencyId: mockedAccount.currency.id,
       operationType: HEDERA_OPERATION_TYPES.CryptoTransfer,
     });
 

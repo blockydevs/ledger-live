@@ -1,4 +1,5 @@
 import { rpcClient } from "../network/rpc";
+import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { broadcast } from "./broadcast";
 import { deserializeTransaction } from "./utils";
 
@@ -6,6 +7,8 @@ jest.mock("../network/rpc");
 jest.mock("./utils");
 
 describe("broadcast", () => {
+  const mockCurrency = getMockedCurrency();
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -18,7 +21,7 @@ describe("broadcast", () => {
     (deserializeTransaction as jest.Mock).mockReturnValue(mockDeserializedTx);
     (rpcClient.broadcastTransaction as jest.Mock).mockResolvedValue(mockResponse);
 
-    const result = await broadcast(txWithSignature);
+    const result = await broadcast({ configOrCurrencyId: mockCurrency.id, txWithSignature });
 
     expect(deserializeTransaction).toHaveBeenCalledTimes(1);
     expect(deserializeTransaction).toHaveBeenCalledWith(txWithSignature);
@@ -35,7 +38,9 @@ describe("broadcast", () => {
       throw error;
     });
 
-    await expect(broadcast(txWithSignature)).rejects.toThrow(error);
+    await expect(
+      broadcast({ configOrCurrencyId: mockCurrency.id, txWithSignature }),
+    ).rejects.toThrow(error);
     expect(deserializeTransaction).toHaveBeenCalledTimes(1);
     expect(deserializeTransaction).toHaveBeenCalledWith(txWithSignature);
     expect(rpcClient.broadcastTransaction).not.toHaveBeenCalled();
@@ -49,7 +54,9 @@ describe("broadcast", () => {
     (deserializeTransaction as jest.Mock).mockReturnValue(mockDeserializedTx);
     (rpcClient.broadcastTransaction as jest.Mock).mockRejectedValue(error);
 
-    await expect(broadcast(txWithSignature)).rejects.toThrow(error);
+    await expect(
+      broadcast({ configOrCurrencyId: mockCurrency.id, txWithSignature }),
+    ).rejects.toThrow(error);
     expect(deserializeTransaction).toHaveBeenCalledTimes(1);
     expect(deserializeTransaction).toHaveBeenCalledWith(txWithSignature);
     expect(rpcClient.broadcastTransaction).toHaveBeenCalledTimes(1);

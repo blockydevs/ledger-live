@@ -4,18 +4,20 @@ import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import { getEnv } from "@ledgerhq/live-env";
 import BigNumber from "bignumber.js";
 import { apiClient } from "../network/api";
+import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import type { HederaMirrorTransaction } from "../types";
 import { listOperations } from "./listOperations";
 import * as utils from "./utils";
 
-setupMockCryptoAssetsStore();
 jest.mock("@ledgerhq/ledger-wallet-framework/account/accountId");
 jest.mock("@ledgerhq/ledger-wallet-framework/operation");
 jest.mock("../network/api");
 jest.mock("./utils");
 
 describe("listOperations", () => {
+  const mockConfig = getMockedConfig();
+
   beforeEach(() => {
     jest.clearAllMocks();
     (utils.extractFeesPayer as jest.Mock).mockImplementation(input =>
@@ -29,6 +31,7 @@ describe("listOperations", () => {
     (utils.createStakingRewardOperationHash as jest.Mock).mockImplementation(
       hash => `${hash}-reward`,
     );
+    (utils.resolveConfig as jest.Mock).mockImplementation(() => mockConfig);
     (encodeOperationId as jest.Mock).mockImplementation(
       (accountId, hash, type) => `${accountId}-${hash}-${type}`,
     );
@@ -47,7 +50,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "asc",
@@ -98,7 +101,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
@@ -171,7 +174,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
@@ -230,7 +233,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
@@ -291,7 +294,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
@@ -316,7 +319,7 @@ describe("listOperations", () => {
     });
 
     await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 20,
       order: "asc",
@@ -366,7 +369,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
@@ -415,7 +418,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
@@ -458,7 +461,7 @@ describe("listOperations", () => {
     });
 
     const result = await listOperations({
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address,
       limit: 10,
       order: "desc",
