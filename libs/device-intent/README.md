@@ -96,7 +96,7 @@ individually reusable from a CLI host:
 In practice the biggest win on the CLI is the **`Job` abstraction itself**:
 keeping a flow's business logic inside a reusable `Job` (or composition of
 reusable jobs) means the same logic can drive the LWM and LWD UI through DIE
-*and* power CLI commands directly, without duplicating device-interaction
+_and_ power CLI commands directly, without duplicating device-interaction
 code per platform.
 
 [die-sm]: ./src/DeviceIntentExecutorStateMachine.ts
@@ -439,6 +439,21 @@ An `IntentDefinition` contains the `Job` function and execution metadata. The
 job receives the device connection, extracted context and typed input, and
 returns an `Observable<JobState>`.
 
+The executor does not prescribe how a job is implemented internally. A job can
+be written as an RxJS operator pipeline, as an imperative
+`new Observable(observer => { ... })`, or by adapting another workflow tool.
+Choose the style that makes the flow easiest to understand, test and maintain.
+The boundary contract is what matters: emit meaningful `JobState` values,
+complete when the job is done, and keep internal orchestration details out of
+React.
+
+For complex flows with many explicit states, transitions, guards, retries or
+user-driven branches, consider using a state machine such as XState internally.
+It can be more verbose than a hand-written observable, but the explicit state
+chart is often easier to read and maintain. The machine should remain an
+implementation detail of the job; expose only `JobState` values through the
+returned observable.
+
 **Important: model errors as `JobState` values, not observable errors.** A job
 observable should **not** error (i.e. should not call `observer.error()`).
 Instead, include an error variant in your `JobState` discriminated union (e.g.
@@ -446,8 +461,9 @@ Instead, include an error variant in your `JobState` discriminated union (e.g.
 This gives you full control over the error UI through the intent's `component`,
 whereas an observable error triggers a generic `executingIntentError` phase
 handled by the platform-injected `IntentErrorComponent`, which cannot be
-customised per intent. Use `catchError` to convert thrown errors into emitted
-error states.
+customised per intent. Convert thrown errors into emitted error states in
+whichever style the job uses (for example, `catchError` in an RxJS pipeline or
+`try` / `catch` in an imperative observable).
 
 **Be aware of `jobState: undefined` before the first emission.** When the
 executor starts running a job, the `jobState` passed to the intent's UI
@@ -457,17 +473,18 @@ request), the component will render with `jobState: undefined` for a while.
 
 You can handle this in two ways:
 
-- **Emit an initial state synchronously** using `concat(of(initialState), ...)`
-  or `startWith(initialState)` so the component immediately receives a
-  meaningful state.
+- **Emit an initial state synchronously** from the job implementation (for
+  example, `startWith(initialState)` in an RxJS pipeline or
+  `observer.next(initialState)` in an imperative observable) so the component
+  immediately receives a meaningful state.
 - **Handle `undefined` in the component** by rendering a generic loading
   indicator when `jobState` is `undefined`.
 
-Example of a synchronous initial emission:
+Example of a synchronous initial emission in an RxJS pipeline:
 
 ```typescript
-import { concat, of, from } from "rxjs";
-import { map, catchError } from "rxjs/operators";
+import { of } from "rxjs";
+import { map, catchError, startWith } from "rxjs/operators";
 import type { Job } from "@ledgerhq/device-intent";
 
 type MyJobState =
@@ -476,19 +493,17 @@ type MyJobState =
   | { step: "error"; error: Error };
 
 const myJob: Job<MyJobState, { rawTxHex: string }> = ({ deviceConnectionResult, input }) =>
-  concat(
-    // Synchronous initial emission -- the UI immediately knows what to render
-    of<MyJobState>({ step: "waiting-for-confirmation" }),
+  signOnDevice(deviceConnectionResult.sessionId, input.rawTxHex).pipe(
     // Async device work follows
-    signOnDevice(deviceConnectionResult.sessionId, input.rawTxHex).pipe(
-      map((hex): MyJobState => ({ step: "signed", signedTxHex: hex })),
-      catchError(err =>
-        of<MyJobState>({
-          step: "error",
-          error: err instanceof Error ? err : new Error(String(err)),
-        }),
-      ),
+    map((hex): MyJobState => ({ step: "signed", signedTxHex: hex })),
+    catchError(err =>
+      of<MyJobState>({
+        step: "error",
+        error: err instanceof Error ? err : new Error(String(err)),
+      }),
     ),
+    // Synchronous initial emission -- the UI immediately knows what to render
+    startWith<MyJobState>({ step: "waiting-for-confirmation" }),
   );
 
 const MyIntentDefinition: IntentDefinition<MyJobState, { rawTxHex: string }> = {
@@ -633,9 +648,9 @@ file naming.
 For a given user flow, you have two ways to slice work between the caller and
 the executor:
 
-1. **One big intent** whose `Job` Observable internally orchestrates several
-   steps (RxJS `concat` / `switchMap` / `mergeMap`, conditional branches,
-   retries, etc.).
+1. **One big intent** whose `Job` observable internally orchestrates several
+   steps. That orchestration can be an RxJS pipeline, an imperative observable,
+   a state machine, or another internal abstraction.
 2. **Multiple intents** that the caller chains by swapping `intent` (and
    possibly `deviceInitializationInput`) on the executor (see
    [Orchestrating a multi-intent flow](#orchestrating-a-multi-intent-flow)).
@@ -648,20 +663,17 @@ its job orchestrate sub-steps internally.
 
 Reasons to prefer this:
 
-- **Orchestration stays in plain RxJS, not in React.** Sub-step wiring is a
-  pipeline (`concat(of(initial), signStep$, postProcessStep$, …)`), not a
-  reducer reacting to `onIntentJobComplete`. Easier to read, easier to unit
-  test (no rendering needed), no coupling to the executor's lifecycle.
+- **Orchestration stays inside the job, not in React.** Sub-step wiring can be
+  expressed with RxJS operators, an imperative observable, XState, or another
+  internal abstraction. The important part is that React receives a clear
+  stream of `JobState` values instead of coordinating sub-steps from
+  `onIntentJobComplete`.
 - **Sub-steps remain modular.** A single big job is just a composition of
-  smaller pure functions / Observables — those building blocks stay reusable
-  across intents and apps.
-- **No flash between phases.** With multiple intents the executor briefly
-  returns to idle between them; with one intent the user sees a single
-  continuous Phase 3 driven by `JobState` transitions in your discriminated
-  union.
+  smaller building blocks -- functions, observables, state-machine actions or
+  services -- that stay reusable across intents and apps.
 - **No need to thread step results through React.** Intermediate results
-  (e.g. a `signedTxHex`) stay inside the Observable pipeline instead of
-  having to be lifted to React state to feed the next intent's input.
+  (e.g. a `signedTxHex`) stay inside the job implementation instead of having
+  to be lifted to React state to feed the next intent's input.
 
 The `JobState` example in [Defining intents](#defining-intents) — a job that
 emits `waiting-for-confirmation` → `signed` → `error` — is already this
@@ -817,36 +829,11 @@ In practice this means:
   signed transaction hex), but do **not** set a new intent or context from it
   -- the job is still running at that point.
 - **Interactive jobs must complete before the orchestrator advances.** If a
-  job waits for user action (e.g. a "Continue" button), give it a completion
-  signal -- a `Subject<never>` passed as input. The button handler calls
-  `subject.complete()`, which completes the job observable, which triggers
-  `onIntentJobComplete`, which drives the orchestrator forward. Do **not** use
-  `NEVER` as a job tail; it prevents the observable from ever completing,
-  forcing the orchestrator to bypass the completion contract.
-
-A correct interactive job pattern:
-
-```typescript
-import { type Subject, type Observable, concat, of } from "rxjs";
-
-type ConfirmJobState = { type: "waiting" };
-type ConfirmInput = { done$: Subject<never> };
-
-const confirmJob: Job<ConfirmJobState, ConfirmInput> = ({ input }) =>
-  concat(of<ConfirmJobState>({ type: "waiting" }), input.done$);
-```
-
-The orchestrator creates the Subject and wires the button:
-
-```typescript
-const done$ = new Subject<never>();
-const intent = createIntent(confirmDef, { done$ });
-// In extraProps or jobState callback:
-const onContinue = () => done$.complete();
-```
-
-When the user presses Continue, `done$.complete()` completes the observable,
-the executor fires `onIntentJobComplete`, and the orchestrator advances.
+  job waits for user action, emit callbacks in `JobState` and let the intent
+  component call them from UI handlers. The callback can resume the job, emit a
+  terminal state such as `cancelled`, then complete the observable. This keeps
+  interactivity inside the job/component contract. See
+  [Advanced: interactive jobs with callbacks in `JobState`](#advanced-interactive-jobs-with-callbacks-in-jobstate).
 
 ### Changing `deviceInitializationInput` and `intent` together
 
@@ -1003,40 +990,63 @@ executor renders nothing during idle.
 `JobState` does not have to be serializable -- it can contain functions.
 Because `JobState` is just a TypeScript type flowing from the observable to the
 component via React state, it can carry callbacks. This enables interactive
-patterns where the job pauses and emits a callback for the UI to resume it.
+patterns where the job pauses and emits callbacks for the UI to resume or
+cancel it. This is a natural fit for React: those callbacks end up as props
+passed to the intent component.
 
-For example, a job that waits for user confirmation before broadcasting:
+For example, a job can display transaction warnings before broadcasting. The
+user can ignore the warning, which resumes execution, or cancel, which emits a
+final `cancelled` state and completes the job:
 
 ```typescript
+import { Observable } from "rxjs";
+import type { Job } from "@ledgerhq/device-intent";
+
+type TransactionWarning = { message: string };
+
 type MyJobState =
-  | { step: "waiting-for-confirmation"; onConfirm: () => void }
-  | { step: "broadcasting" }
-  | { step: "done"; txHash: string };
+  | {
+      type: "transactionChecksWarning";
+      warnings: TransactionWarning[];
+      onIgnoreWarning: () => void;
+      onCancel: () => void;
+    }
+  | { type: "broadcasting" }
+  | { type: "done"; txHash: string }
+  | { type: "cancelled" };
 
 const myJob: Job<MyJobState, { signedTxHex: string }> = ({ input }) =>
   new Observable<MyJobState>(async subscriber => {
-    let resolveConfirm: () => void;
-    const confirmed = new Promise<void>(r => {
-      resolveConfirm = r;
+    let resolveWarning!: (action: "ignore" | "cancel") => void;
+    const warningAction = new Promise<"ignore" | "cancel">(resolve => {
+      resolveWarning = resolve;
     });
 
     subscriber.next({
-      step: "waiting-for-confirmation",
-      onConfirm: () => resolveConfirm(),
+      type: "transactionChecksWarning",
+      warnings: await getTransactionWarnings(input.signedTxHex),
+      onIgnoreWarning: () => resolveWarning("ignore"),
+      onCancel: () => resolveWarning("cancel"),
     });
 
-    await confirmed;
-    subscriber.next({ step: "broadcasting" });
+    const action = await warningAction;
+    if (action === "cancel") {
+      subscriber.next({ type: "cancelled" });
+      subscriber.complete();
+      return;
+    }
+
+    subscriber.next({ type: "broadcasting" });
 
     const txHash = await broadcast(input.signedTxHex);
-    subscriber.next({ step: "done", txHash });
+    subscriber.next({ type: "done", txHash });
     subscriber.complete();
   });
 ```
 
-The intent component renders a confirmation button that calls
-`jobState.onConfirm()`, creating a two-way communication channel between the
-job and the UI without any external state.
+The intent component renders warning actions that call
+`jobState.onIgnoreWarning()` or `jobState.onCancel()`, creating a two-way
+communication channel between the job and the UI without external state.
 
 ### Working with ledgerjs `Transport`-based code
 
@@ -1061,10 +1071,7 @@ import Eth from "@ledgerhq/hw-app-eth";
 import { defer, map, catchError, of } from "rxjs";
 import type { Job } from "@ledgerhq/device-intent";
 
-const myJob: Job<MyJobState, { txHex: string }> = ({
-  deviceConnectionResult,
-  input,
-}) =>
+const myJob: Job<MyJobState, { txHex: string }> = ({ deviceConnectionResult, input }) =>
   defer(async () => {
     const transport = new DmkCompatTransport(
       deviceConnectionResult.dmk,
@@ -1126,9 +1133,9 @@ Either emit an initial state synchronously in the job:
 
 ```typescript
 const job: Job<MyState, MyInput> = ({ input }) =>
-  concat(
-    of<MyState>({ step: "loading" }),  // synchronous, immediate
-    fetchData(input).pipe(map(...)),   // async work follows
+  fetchData(input).pipe(
+    map(...),                                // async work follows
+    startWith<MyState>({ step: "loading" }), // synchronous, immediate
   );
 ```
 
@@ -1154,17 +1161,18 @@ Common causes:
 - Advancing the flow from `onIntentJobStateChanged` instead of
   `onIntentJobComplete`. The job may still be emitting when the state callback
   fires.
-- Using `NEVER` as a job tail for interactive intents. The observable never
-  completes, so the orchestrator is forced to bypass the completion contract.
-  Use a `Subject<never>` completion signal instead (see
-  [Job completion contract](#job-completion-contract)).
+- Leaving an interactive job waiting forever. If the observable never
+  completes, the orchestrator is forced to bypass the completion contract. Emit
+  callbacks in `JobState` so the component can resume or cancel the job, then
+  complete the observable (see
+  [Advanced: interactive jobs with callbacks in `JobState`](#advanced-interactive-jobs-with-callbacks-in-jobstate)).
 - Calling a navigation callback (e.g. `goTo()`) from a UI button without
   first completing the job.
 
 **Fix:** always ensure the job observable completes before transitioning. For
-interactive jobs, complete a `Subject<never>` from the button handler. For
-async jobs, let the observable complete naturally and react in
-`onIntentJobComplete`.
+interactive jobs, callbacks emitted in `JobState` should resume or cancel the
+job and let it complete. For async jobs, let the observable complete naturally
+and react in `onIntentJobComplete`.
 
 #### Changing `deviceInitializationInput` and `intent` in separate renders
 
@@ -1207,17 +1215,15 @@ inside the observable:
 
 ```typescript
 const job: Job<MyState, MyInput> = ({ input }) =>
-  concat(
-    of<MyState>({ step: "loading" }),
-    doWork(input).pipe(
-      map((result): MyState => ({ step: "done", result })),
-      catchError(err =>
-        of<MyState>({
-          step: "error",
-          error: err instanceof Error ? err : new Error(String(err)),
-        }),
-      ),
+  doWork(input).pipe(
+    map((result): MyState => ({ step: "done", result })),
+    catchError(err =>
+      of<MyState>({
+        step: "error",
+        error: err instanceof Error ? err : new Error(String(err)),
+      }),
     ),
+    startWith<MyState>({ step: "loading" }),
   );
 ```
 
