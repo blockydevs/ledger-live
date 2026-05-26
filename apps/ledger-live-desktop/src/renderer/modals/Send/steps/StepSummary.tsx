@@ -349,7 +349,7 @@ const StepSummary = (props: StepProps) => {
           />
         )}
 
-        {!totalSpent.eq(amount) ? (
+        {feesCurrency.id === currency.id && !totalSpent.eq(amount) ? (
           <>
             <Separator />
             <Box horizontal justifyContent="space-between">
