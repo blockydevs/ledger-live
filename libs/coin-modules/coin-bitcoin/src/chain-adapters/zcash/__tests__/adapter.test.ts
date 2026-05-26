@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { Account } from "@ledgerhq/types-live";
-import type { Transaction, TransactionStatus } from "../../../types";
+import type { TransactionStatus } from "../../../types";
 import type { SignerContext } from "../../../signer";
 import type {
   ZcashTransferType,
@@ -148,9 +148,10 @@ describe("zcash chain adapter — transaction routing", () => {
       const tx = makeTx("shielded", new BigNumber(100_000));
       const result = (await adapter.prepareTransaction!(account, tx)) as ZcashTransaction;
 
-      expect(result.selectedNotes?.length).toBeGreaterThan(0);
-      expect(result.zcashFee?.toNumber()).toBeGreaterThan(0);
-      expect(result.changeAmount?.toNumber()).toBeGreaterThanOrEqual(0);
+      // 1 note of 500_000, amount 100_000, fee 10_000 (2 grace actions), change 390_000
+      expect(result.selectedNotes).toHaveLength(1);
+      expect(result.zcashFee?.toNumber()).toBe(10_000);
+      expect(result.changeAmount?.toNumber()).toBe(390_000);
     });
 
     it("returns original tx (no selectedNotes) when insufficient balance", async () => {
@@ -165,6 +166,36 @@ describe("zcash chain adapter — transaction routing", () => {
       // selectNotes returns undefined -> prepareTransaction sets selectedNotes: []
       expect(result.selectedNotes).toEqual([]);
       expect(result.transferType).toBe("shielded");
+    });
+
+    it("handles useAllAmount by computing effective amount from max spendable", async () => {
+      const note = makeSpendableNote({ amount: new BigNumber(500_000) });
+      const account = makeZcashAccount({
+        orchardBalance: new BigNumber(500_000),
+        transactions: [
+          {
+            id: "tx1",
+            hex: "00",
+            blockHeight: 100,
+            blockHash: "hash1",
+            timestamp: 1700000000,
+            fee: new BigNumber(100),
+            decryptedData: {
+              orchard_outputs: [makeOrchardOutputNote(note)],
+              sapling_outputs: [],
+            },
+          },
+        ],
+      });
+
+      const tx = makeTx("shielded", new BigNumber(0), { useAllAmount: true });
+      const result = (await adapter.prepareTransaction!(account, tx)) as ZcashTransaction;
+
+      // 1 note of 500_000, fee = 10_000 (2 grace actions), max spendable = 490_000
+      expect(result.amount.toNumber()).toBe(490_000);
+      expect(result.selectedNotes).toHaveLength(1);
+      expect(result.zcashFee?.toNumber()).toBe(10_000);
+      expect(result.changeAmount?.toNumber()).toBe(0);
     });
 
     it("returns undefined for transparent-to-shielded (Bitcoin legacy path)", () => {
@@ -236,6 +267,19 @@ describe("zcash chain adapter — transaction routing", () => {
       expect(result.errors.amount.message).toContain("Insufficient shielded balance");
     });
 
+    it("returns recipient error for shielded-to-transparent without recipient", async () => {
+      const account = makeZcashAccount({ orchardBalance: new BigNumber(500_000) });
+      const tx = makeTx("shielded-to-transparent", new BigNumber(100_000), {
+        selectedNotes: [makeSpendableNote()],
+        zcashFee: new BigNumber(10_000),
+      });
+      // recipient is "" (empty) from makeTx
+      const result = (await adapter.getTransactionStatus!(account, tx)) as TransactionStatus;
+
+      expect(result.errors.recipient).toBeInstanceOf(Error);
+      expect(result.errors.recipient.message).toContain("Recipient address is required");
+    });
+
     it("returns insufficient balance error when selectedNotes is undefined (prepareTransaction not called)", async () => {
       const account = makeZcashAccount({ orchardBalance: new BigNumber(500_000) });
       // No selectedNotes at all — tx was not prepared
@@ -246,6 +290,19 @@ describe("zcash chain adapter — transaction routing", () => {
 
       expect(result.errors.amount).toBeInstanceOf(Error);
       expect(result.errors.amount.message).toContain("Insufficient shielded balance");
+    });
+
+    it("returns error when selectedNotes do not cover amount + fee", async () => {
+      const account = makeZcashAccount({ orchardBalance: new BigNumber(500_000) });
+      // amount(100k) + fee(10k) = 110k, but selectedNotes only total 50k
+      const tx = makeTx("shielded", new BigNumber(100_000), {
+        selectedNotes: [makeSpendableNote({ amount: new BigNumber(50_000) })],
+        zcashFee: new BigNumber(10_000),
+      });
+      const result = (await adapter.getTransactionStatus!(account, tx)) as TransactionStatus;
+
+      expect(result.errors.amount).toBeInstanceOf(Error);
+      expect(result.errors.amount.message).toContain("Selected notes do not cover amount + fee");
     });
 
     it("returns no errors for a valid shielded transaction", async () => {
@@ -305,14 +362,22 @@ describe("zcash chain adapter — transaction routing", () => {
         ],
       });
 
-      const result = (await adapter.estimateMaxSpendable!(account, undefined, makeTx("shielded"))) as BigNumber;
+      const result = (await adapter.estimateMaxSpendable!(
+        account,
+        undefined,
+        makeTx("shielded"),
+      )) as BigNumber;
       // 500_000 - fee(1 spend, 1 output = max(1,1)=1, clamped to 2 grace) = 500_000 - 10_000
       expect(result.toNumber()).toBe(490_000);
     });
 
     it("returns 0 when no spendable notes", async () => {
       const account = makeZcashAccount({ transactions: [] });
-      const result = (await adapter.estimateMaxSpendable!(account, undefined, makeTx("shielded"))) as BigNumber;
+      const result = (await adapter.estimateMaxSpendable!(
+        account,
+        undefined,
+        makeTx("shielded"),
+      )) as BigNumber;
       expect(result.toNumber()).toBe(0);
     });
 

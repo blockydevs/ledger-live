@@ -12,11 +12,7 @@ import type { ZCashClient } from "./types";
 import type { BtcOperation } from "../../types";
 import { removeReplaced } from "../../synchronisation";
 import type { ZcashAccount } from "./types";
-import {
-  convertShieldedTransactionsToOperations,
-  computeProtocolDeltas,
-  computeBalanceFromNotes,
-} from "./operations";
+import { convertShieldedTransactionsToOperations, computeBalanceFromNotes } from "./operations";
 
 // ─── Zcash native sync (formerly familyConfig.ts) ───────────────────────────
 
@@ -75,7 +71,12 @@ export const zcashSyncShielded = (
       ...new Set(
         (transactions ?? []).flatMap(tx =>
           (tx.decryptedData?.orchard_outputs ?? [])
-            .filter(n => n.isSpent !== true && n.nullifier !== undefined)
+            .filter(
+              n =>
+                n.isSpent !== true &&
+                n.nullifier !== undefined &&
+                (n.transfer_type === "incoming" || n.transfer_type === "internal"),
+            )
             .map(n => n.nullifier!),
         ),
       ),
@@ -125,6 +126,25 @@ export function reduceShieldedSyncResult(
 
   if (newTransactions.length === 0) {
     const totalBlocks = result.processedBlocks + result.remainingBlocks;
+    // Even without new transactions, spentKnownNullifiers may mark existing notes as spent.
+    const spentNfs = result.spentKnownNullifiers ?? [];
+    let updatedTransactions = existingPrivateInfo.transactions;
+    if (spentNfs.length > 0) {
+      const spentSet = new Set(spentNfs);
+      updatedTransactions = updatedTransactions.map(tx => {
+        const outputs = tx.decryptedData?.orchard_outputs;
+        if (!outputs?.some(n => n.nullifier && spentSet.has(n.nullifier))) return tx;
+        return {
+          ...tx,
+          decryptedData: {
+            orchard_outputs: outputs.map(n =>
+              n.nullifier && spentSet.has(n.nullifier) ? { ...n, isSpent: true } : n,
+            ),
+            sapling_outputs: tx.decryptedData?.sapling_outputs ?? [],
+          },
+        };
+      });
+    }
     return {
       ...accumulated,
       accountUpdate: {
@@ -137,6 +157,11 @@ export function reduceShieldedSyncResult(
             totalBlocks > 0 ? Math.round((result.processedBlocks / totalBlocks) * 100) : 100,
           lastProcessedBlock: result.lastProcessedBlock ?? null,
           lastSyncTimestamp: Date.now(),
+          transactions: updatedTransactions,
+          orchardBalance:
+            spentNfs.length > 0
+              ? computeBalanceFromNotes(updatedTransactions)
+              : existingPrivateInfo.orchardBalance,
         },
       },
     };
@@ -154,36 +179,30 @@ export function reduceShieldedSyncResult(
   ];
 
   // Mark previously-stored notes as spent using Rust's cross-scan detection.
-  // spentKnownNullifiers contains nullifiers of notes received in prior scans
-  // that were observed as spent inputs in the current scan range.
+  // Clone transactions that need mutation to preserve immutability of the
+  // accumulated state (allShieldedTx contains refs to existing objects).
   const spentNfs = result.spentKnownNullifiers ?? [];
   if (spentNfs.length > 0) {
     const spentSet = new Set(spentNfs);
-    for (const tx of allShieldedTx) {
-      for (const note of tx.decryptedData?.orchard_outputs ?? []) {
-        if (note.nullifier && spentSet.has(note.nullifier)) {
-          note.isSpent = true;
-        }
-      }
+    for (let i = 0; i < allShieldedTx.length; i++) {
+      const tx = allShieldedTx[i];
+      const outputs = tx.decryptedData?.orchard_outputs;
+      if (!outputs?.some(n => n.nullifier && spentSet.has(n.nullifier))) continue;
+      // Clone only txs that need mutation
+      allShieldedTx[i] = {
+        ...tx,
+        decryptedData: {
+          orchard_outputs: outputs.map(n =>
+            n.nullifier && spentSet.has(n.nullifier) ? { ...n, isSpent: true } : n,
+          ),
+          sapling_outputs: tx.decryptedData?.sapling_outputs ?? [],
+        },
+      };
     }
   }
 
-  const prevSapling = accumulated.accountUpdate.privateInfo?.saplingBalance ?? new BigNumber(0);
-  const prevOrchard = accumulated.accountUpdate.privateInfo?.orchardBalance ?? new BigNumber(0);
-
-  // Prefer direct-sum from enriched notes with isSpent (authoritative).
-  // Falls back to incremental delta for pre-upgrade data.
-  const noteBalance = computeBalanceFromNotes(allShieldedTx);
-  let saplingBalance: BigNumber;
-  let orchardBalance: BigNumber;
-  if (noteBalance) {
-    saplingBalance = noteBalance.saplingBalance;
-    orchardBalance = noteBalance.orchardBalance;
-  } else {
-    const { deltaSapling, deltaOrchard } = computeProtocolDeltas(newTransactions);
-    saplingBalance = prevSapling.plus(deltaSapling);
-    orchardBalance = prevOrchard.plus(deltaOrchard);
-  }
+  const orchardBalance = computeBalanceFromNotes(allShieldedTx);
+  const saplingBalance = accumulated.accountUpdate.privateInfo?.saplingBalance ?? new BigNumber(0);
 
   const totalBlocks = result.processedBlocks + result.remainingBlocks;
   const privateInfo: ZcashPrivateInfo = {

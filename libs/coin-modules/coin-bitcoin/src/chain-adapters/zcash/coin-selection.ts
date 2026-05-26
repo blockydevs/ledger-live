@@ -6,6 +6,8 @@ export const ZIP317_MARGINAL_FEE = 5_000; // per logical action
 export const ZIP317_GRACE_ACTIONS = 2;
 /** Minimum fee (grace actions * marginal fee). */
 export const ZIP317_MINIMUM_FEE = ZIP317_GRACE_ACTIONS * ZIP317_MARGINAL_FEE; // 10_000
+/** Change below this threshold is absorbed into the fee (avoids near-unspendable dust notes). */
+export const DUST_THRESHOLD = ZIP317_MARGINAL_FEE; // 5_000
 
 /**
  * Compute ZIP-317 fee for a given number of logical actions.
@@ -80,21 +82,32 @@ export function selectNotes(
 
     if (totalInput.lt(target)) return undefined; // Insufficient balance
 
-    const changeAmount = totalInput.minus(amount).minus(fee);
+    let changeAmount = totalInput.minus(amount).minus(fee);
+
+    // Absorb dust change into the fee to avoid creating near-unspendable notes.
+    if (changeAmount.gt(0) && changeAmount.lt(DUST_THRESHOLD)) {
+      fee = fee.plus(changeAmount);
+      changeAmount = new BigNumber(0);
+    }
+
     const hasChange = changeAmount.gt(0);
     const outputCount = hasChange ? 2 : 1; // recipient + optional change
     const spendCount = selected.length;
     const logicalActions = computeLogicalActions(spendCount, outputCount, transferType);
     const newFee = computeZip317Fee(logicalActions);
 
-    if (newFee.eq(fee)) {
-      // Fee converged
+    if (newFee.eq(fee) || newFee.lt(fee)) {
+      // Fee converged (or dust absorption made fee exceed the computed minimum)
       return { selectedNotes: selected, fee, changeAmount, totalInput };
     }
     fee = newFee; // Retry with updated fee
   }
 
-  // Should not happen — fee is monotonically bounded, but defensive
+  // Should not happen — fee is monotonically bounded
+  console.warn(
+    `[zcash] selectNotes: fee iteration did not converge after ${MAX_ITERATIONS} rounds ` +
+    `(amount=${amount.toFixed()}, notes=${spendableNotes.length}, lastFee=${fee.toFixed()})`,
+  );
   return undefined;
 }
 

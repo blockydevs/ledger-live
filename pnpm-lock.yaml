@@ -17720,6 +17720,7 @@ packages:
 
   '@nx/s3-cache@5.0.2':
     resolution: {integrity: sha512-XdtxJEqhsctkMoyrbb4WbXFTMmK12nxggumpmZeTUHI+OEwh994sep/TbOY/7NMLreHGaUmZeuF9s6zO7Icc3w==}
+    deprecated: This package has been deprecated. See https://nx.dev/docs/reference/deprecated/self-hosted-cache-packages for details
     peerDependencies:
       nx: '>= 18 < 23'
 
@@ -23561,7 +23562,7 @@ packages:
     resolution: {integrity: sha512-/FQM1EDkTsf63Ub2C6O7GuYFDsSXUwsaZDurV0np41ocwq0jthUAYCmhBX9f+KwlaCgIuWyr/4WlUQUBfKfZog==}
     engines: {node: '>=6'}
     peerDependencies:
-      rxjs: '*'
+      rxjs: ^5.5.10
       zenObservable: '*'
     peerDependenciesMeta:
       rxjs:

@@ -8,7 +8,6 @@ import { DmkSignerZcash } from "@ledgerhq/live-signer-zcash";
 import type { ZcashAddress, ZcashViewKey } from "@ledgerhq/live-signer-zcash";
 import { registerChainAdapter } from "../registry";
 import type { ZcashAccount, ZcashAccountRaw, ZcashTransaction } from "./types";
-import { isShieldedTransfer } from "./types";
 import { toZcashPrivateInfoRaw, fromZcashPrivateInfoRaw } from "./serialization";
 import { buildExtraSyncObservable } from "./sync";
 import { collectSpendableNotes } from "./operations";
@@ -83,7 +82,8 @@ const zcashChainAdapter: ChainAdapter = {
     const tx = transaction as ZcashTransaction;
     // Only handle flows with shielded inputs (Orchard note selection).
     // transparent and transparent-to-shielded use the Bitcoin legacy path.
-    if (tx.transferType !== "shielded" && tx.transferType !== "shielded-to-transparent") return undefined;
+    if (tx.transferType !== "shielded" && tx.transferType !== "shielded-to-transparent")
+      return undefined;
 
     const errors: Record<string, Error> = {};
     const warnings: Record<string, Error> = {};
@@ -114,15 +114,29 @@ const zcashChainAdapter: ChainAdapter = {
 
     const orchardBalance = privateInfo.orchardBalance;
     const fee = tx.zcashFee ?? new BigNumber(ZIP317_MINIMUM_FEE);
-    const totalSpent = tx.amount.plus(fee);
+    const amount = tx.amount;
+    const totalSpent = amount.plus(fee);
 
-    if (tx.amount.lte(0)) {
+    // Recipient validation for shielded-to-transparent (transparent address required).
+    // For shielded-to-shielded, recipient validation is deferred to the PCZT builder.
+    if (tx.transferType === "shielded-to-transparent" && !tx.recipient) {
+      errors.recipient = new Error("Recipient address is required for shielded-to-transparent");
+    }
+
+    if (amount.lte(0) && !tx.useAllAmount) {
       errors.amount = new Error("Amount must be positive");
     } else if (!tx.selectedNotes || tx.selectedNotes.length === 0) {
-      // No notes selected — either insufficient balance or no spendable notes
       errors.amount = new Error("Insufficient shielded balance");
     } else if (totalSpent.gt(orchardBalance)) {
       errors.amount = new Error("Insufficient shielded balance");
+    } else {
+      // Verify selected notes actually cover the spend (consistency check)
+      const selectedTotal = tx.selectedNotes.reduce(
+        (sum, n) => sum.plus(n.amount), new BigNumber(0),
+      );
+      if (selectedTotal.lt(totalSpent)) {
+        errors.amount = new Error("Selected notes do not cover amount + fee");
+      }
     }
 
     return Promise.resolve({
@@ -153,16 +167,30 @@ const zcashChainAdapter: ChainAdapter = {
     const zcashAccount = account as ZcashAccount;
     const tx = transaction as ZcashTransaction;
     // Only handle flows with shielded inputs (Orchard note selection).
-    if (tx.transferType !== "shielded" && tx.transferType !== "shielded-to-transparent") return undefined;
+    if (tx.transferType !== "shielded" && tx.transferType !== "shielded-to-transparent")
+      return undefined;
 
     const notes = collectSpendableNotes(zcashAccount.privateInfo?.transactions ?? []);
-    const result = selectNotes(notes, tx.amount, tx.transferType);
+
+    // When useAllAmount is set, compute the effective amount from max spendable
+    const effectiveAmount = tx.useAllAmount
+      ? estimateMaxSpendableAmount(notes, tx.transferType)
+      : tx.amount;
+
+    const result = selectNotes(notes, effectiveAmount, tx.transferType);
     if (!result) {
-      return Promise.resolve({ ...tx, selectedNotes: [] } as ZcashTransaction);
+      // Destructure to strip stale zcashFee/changeAmount from a prior prepare
+      const { zcashFee: _, changeAmount: __, ...rest } = tx;
+      return Promise.resolve({
+        ...rest,
+        amount: effectiveAmount,
+        selectedNotes: [],
+      } as ZcashTransaction);
     }
 
     return Promise.resolve({
       ...tx,
+      amount: effectiveAmount,
       selectedNotes: result.selectedNotes,
       zcashFee: result.fee,
       changeAmount: result.changeAmount,

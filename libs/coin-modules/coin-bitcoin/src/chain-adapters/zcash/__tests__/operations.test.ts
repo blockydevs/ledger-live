@@ -384,17 +384,17 @@ describe("computeBalanceFromNotes", () => {
     decryptedData: { orchard_outputs: orchardNotes, sapling_outputs: saplingNotes },
   });
 
-  it("returns undefined when no notes have the isSpent field (pre-upgrade data without isSpent)", () => {
+  it("treats notes without isSpent as unspent (conservative)", () => {
     const txs = [
       makeTxWithNotes([
         { amount: new BigNumber(1000), memo: "", transfer_type: "incoming" },
         { amount: new BigNumber(500), memo: "", transfer_type: "outgoing" },
       ]),
     ];
-    expect(computeBalanceFromNotes(txs)).toBeUndefined();
+    expect(computeBalanceFromNotes(txs)).toEqual(new BigNumber(1000));
   });
 
-  it("returns correct balance summing only unspent incoming and internal orchard notes", () => {
+  it("sums only unspent incoming and internal orchard notes", () => {
     const txs = [
       makeTxWithNotes([
         { amount: new BigNumber(5000), memo: "", transfer_type: "incoming", isSpent: false },
@@ -403,9 +403,7 @@ describe("computeBalanceFromNotes", () => {
         { amount: new BigNumber(1000), memo: "", transfer_type: "incoming", isSpent: true }, // excluded (spent)
       ]),
     ];
-    const result = computeBalanceFromNotes(txs);
-    expect(result?.orchardBalance).toEqual(new BigNumber(7000)); // 5000 + 2000
-    expect(result?.saplingBalance).toEqual(new BigNumber(0));
+    expect(computeBalanceFromNotes(txs)).toEqual(new BigNumber(7000)); // 5000 + 2000
   });
 
   it("excludes notes where isSpent === true", () => {
@@ -415,37 +413,11 @@ describe("computeBalanceFromNotes", () => {
         { amount: new BigNumber(3000), memo: "", transfer_type: "incoming", isSpent: false },
       ]),
     ];
-    const result = computeBalanceFromNotes(txs);
-    expect(result?.orchardBalance).toEqual(new BigNumber(3000));
+    expect(computeBalanceFromNotes(txs)).toEqual(new BigNumber(3000));
   });
 
-  it("computes sapling balance from unspent sapling notes", () => {
-    const txs = [
-      makeTxWithNotes(
-        [{ amount: new BigNumber(2000), memo: "", transfer_type: "incoming", isSpent: false }],
-        [
-          { amount: new BigNumber(1500), memo: "", transfer_type: "incoming", isSpent: false },
-          { amount: new BigNumber(500), memo: "", transfer_type: "incoming", isSpent: true },
-        ],
-      ),
-    ];
-    const result = computeBalanceFromNotes(txs);
-    expect(result?.orchardBalance).toEqual(new BigNumber(2000));
-    expect(result?.saplingBalance).toEqual(new BigNumber(1500));
-  });
-
-  it("returns enriched balance even when only sapling notes have isSpent", () => {
-    const txs = [
-      makeTxWithNotes(
-        [{ amount: new BigNumber(1000), memo: "", transfer_type: "incoming" }], // no isSpent
-        [{ amount: new BigNumber(800), memo: "", transfer_type: "incoming", isSpent: false }],
-      ),
-    ];
-    const result = computeBalanceFromNotes(txs);
-    // sapling note has isSpent → hasEnrichedNotes = true
-    // orchard note has no isSpent → treated as isSpent !== true (undefined !== true), so included
-    expect(result?.orchardBalance).toEqual(new BigNumber(1000));
-    expect(result?.saplingBalance).toEqual(new BigNumber(800));
+  it("returns zero for empty transaction list", () => {
+    expect(computeBalanceFromNotes([])).toEqual(new BigNumber(0));
   });
 
   it("aggregates notes across multiple transactions", () => {
@@ -461,8 +433,7 @@ describe("computeBalanceFromNotes", () => {
         "tx2",
       ),
     ];
-    const result = computeBalanceFromNotes(txs);
-    expect(result?.orchardBalance).toEqual(new BigNumber(8000));
+    expect(computeBalanceFromNotes(txs)).toEqual(new BigNumber(8000));
   });
 });
 

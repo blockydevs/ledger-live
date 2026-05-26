@@ -65,41 +65,19 @@ export function computeOutgoingFees(transactions: ShieldedTransaction[]): BigNum
 }
 
 /**
- * Compute Orchard and Sapling balances by summing unspent notes.
- * This is the authoritative balance method when enriched notes (with isSpent) are available.
- * Falls back to undefined if no notes have the isSpent field (pre-upgrade data).
+ * Compute Orchard balance by summing unspent notes.
+ * Notes without `isSpent` are treated as unspent (conservative).
+ * Sapling balance is not computed (Ledger is Orchard-only).
  */
 export function computeBalanceFromNotes(
   transactions: ShieldedTransaction[],
-): { orchardBalance: BigNumber; saplingBalance: BigNumber } | undefined {
-  const allOrchardNotes = transactions.flatMap(tx => tx.decryptedData?.orchard_outputs ?? []);
-  const allSaplingNotes = transactions.flatMap(tx => tx.decryptedData?.sapling_outputs ?? []);
-
-  // Check if ANY note has the isSpent field — if none do, this is pre-upgrade data.
-  // For mixed datasets (some enriched, some legacy), legacy notes with
-  // isSpent === undefined pass the `!== true` filter and are included in the sum.
-  // This is intentionally conservative: we count notes whose spent status is
-  // unknown rather than excluding them (which would undercount the balance).
-  // After a full re-sync with zcash-utils >= 0.3.0, all notes will have isSpent.
-  const hasEnrichedNotes =
-    allOrchardNotes.some(n => n.isSpent !== undefined) ||
-    allSaplingNotes.some(n => n.isSpent !== undefined);
-
-  if (!hasEnrichedNotes) return undefined; // Caller falls back to delta approach
-
-  const orchardBalance = allOrchardNotes
+): BigNumber {
+  return transactions
+    .flatMap(tx => tx.decryptedData?.orchard_outputs ?? [])
     .filter(
       n => n.isSpent !== true && (n.transfer_type === "incoming" || n.transfer_type === "internal"),
     )
     .reduce((sum, n) => sum.plus(n.amount), new BigNumber(0));
-
-  const saplingBalance = allSaplingNotes
-    .filter(
-      n => n.isSpent !== true && (n.transfer_type === "incoming" || n.transfer_type === "internal"),
-    )
-    .reduce((sum, n) => sum.plus(n.amount), new BigNumber(0));
-
-  return { orchardBalance, saplingBalance };
 }
 
 /**

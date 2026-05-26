@@ -69,6 +69,67 @@ describe("reduceShieldedSyncResult", () => {
     });
   });
 
+  it("marks existing notes as spent via spentKnownNullifiers even when no new transactions", () => {
+    const NF1 = "aa".repeat(32);
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: {
+        operations: [] as BtcOperation[],
+        privateInfo: {
+          orchardBalance: new BigNumber(100_000),
+          saplingBalance: new BigNumber(0),
+          syncState: "running" as const,
+          ufvk: "uview1key",
+          birthday: null,
+          lastSyncTimestamp: null,
+          lastProcessedBlock: 100,
+          transactions: [
+            {
+              id: "tx-old",
+              hex: "00",
+              blockHeight: 100,
+              blockHash: "hash-old",
+              timestamp: 1700000000,
+              fee: new BigNumber(0),
+              decryptedData: {
+                orchard_outputs: [
+                  {
+                    amount: new BigNumber(100_000),
+                    memo: "",
+                    transfer_type: "incoming",
+                    isSpent: false,
+                    nullifier: NF1,
+                  },
+                ],
+                sapling_outputs: [],
+              },
+            },
+          ],
+          progress: 50,
+          estimatedTimeRemaining: { hours: 0, minutes: 0 },
+        },
+      } as Partial<ZcashAccount>,
+    };
+    // Chunk with no new transactions but spentKnownNullifiers says NF1 was spent
+    const result: ShieldedSyncResult = {
+      transactions: [],
+      lastProcessedBlock: 200,
+      processedBlocks: 100,
+      remainingBlocks: 0,
+      spentKnownNullifiers: [NF1],
+    };
+    const info = createMockInfo({ balance: new BigNumber(0) });
+
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // The existing note must now be marked as spent
+    const note =
+      output.accountUpdate.privateInfo?.transactions?.[0]?.decryptedData?.orchard_outputs[0];
+    expect(note?.isSpent).toBe(true);
+    // Balance recomputed: no unspent notes -> 0
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(0));
+  });
+
   it("should never set balance or spendableBalance on the accountUpdate when processing shielded transactions", () => {
     const incomingTx: ShieldedTransaction = {
       id: "tx1",
@@ -78,7 +139,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(50000), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(50000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -112,7 +175,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: txAmount, memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: txAmount, memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -156,7 +221,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: txAmount, memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: txAmount, memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -204,7 +271,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(500),
       decryptedData: {
-        orchard_outputs: [{ amount: outgoingAmount, memo: "", transfer_type: "outgoing" }],
+        orchard_outputs: [
+          { amount: outgoingAmount, memo: "", transfer_type: "outgoing", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -216,7 +285,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000001,
       fee: new BigNumber(300),
       decryptedData: {
-        orchard_outputs: [{ amount: incomingAmount, memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: incomingAmount, memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -238,9 +309,7 @@ describe("reduceShieldedSyncResult", () => {
 
     const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
 
-    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(
-      incomingAmount.minus(outgoingAmount),
-    );
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(incomingAmount);
     expect(output.accountUpdate).not.toHaveProperty("balance");
     expect(output.accountUpdate).not.toHaveProperty("spendableBalance");
   });
@@ -256,7 +325,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(3000), memo: "", transfer_type: "outgoing" }],
+        orchard_outputs: [
+          { amount: new BigNumber(3000), memo: "", transfer_type: "outgoing", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -268,7 +339,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000001,
       fee: new BigNumber(50),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(4000), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(4000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -280,7 +353,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000002,
       fee: new BigNumber(50),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(500), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(500), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -301,7 +376,7 @@ describe("reduceShieldedSyncResult", () => {
       info,
       "acc-1",
     );
-    expect(chunk1.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(1000));
+    expect(chunk1.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(4000));
     expect(chunk1.accountUpdate).not.toHaveProperty("balance");
 
     const chunk2 = reduceShieldedSyncResult(
@@ -315,7 +390,7 @@ describe("reduceShieldedSyncResult", () => {
       info,
       "acc-1",
     );
-    expect(chunk2.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(1500));
+    expect(chunk2.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(4500));
     expect(chunk2.accountUpdate).not.toHaveProperty("balance");
   });
 
@@ -329,9 +404,11 @@ describe("reduceShieldedSyncResult", () => {
       fee: new BigNumber(100),
       decryptedData: {
         orchard_outputs: [
-          { amount: new BigNumber(5000), memo: "hello", transfer_type: "incoming" },
+          { amount: new BigNumber(5000), memo: "hello", transfer_type: "incoming", isSpent: false },
         ],
-        sapling_outputs: [{ amount: new BigNumber(2000), memo: "", transfer_type: "incoming" }],
+        sapling_outputs: [
+          { amount: new BigNumber(2000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
       },
     };
 
@@ -354,7 +431,7 @@ describe("reduceShieldedSyncResult", () => {
     );
 
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(5000));
-    expect(output.accountUpdate.privateInfo?.saplingBalance).toEqual(new BigNumber(2000));
+    expect(output.accountUpdate.privateInfo?.saplingBalance).toEqual(new BigNumber(0));
     expect(output.accountUpdate.privateInfo?.transactions).toHaveLength(1);
     expect(output.accountUpdate.privateInfo?.syncState).toBe("complete");
   });
@@ -368,7 +445,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(1000), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(1000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -418,8 +497,8 @@ describe("reduceShieldedSyncResult", () => {
       fee: new BigNumber(500),
       decryptedData: {
         orchard_outputs: [
-          { amount: new BigNumber(200), memo: "", transfer_type: "outgoing" },
-          { amount: new BigNumber(1000), memo: "", transfer_type: "incoming" },
+          { amount: new BigNumber(200), memo: "", transfer_type: "outgoing", isSpent: false },
+          { amount: new BigNumber(1000), memo: "", transfer_type: "incoming", isSpent: false },
         ],
         sapling_outputs: [],
       },
@@ -430,7 +509,7 @@ describe("reduceShieldedSyncResult", () => {
       createMockInfo({ balance: new BigNumber(100000) }),
       "acc-1",
     );
-    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(800));
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(1000));
     expect(output.accountUpdate).not.toHaveProperty("balance");
   });
 
@@ -443,8 +522,12 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(5000), memo: "", transfer_type: "incoming" }],
-        sapling_outputs: [{ amount: new BigNumber(2000), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(5000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
+        sapling_outputs: [
+          { amount: new BigNumber(2000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
       },
     };
     const output = reduceShieldedSyncResult(
@@ -454,7 +537,7 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(5000));
-    expect(output.accountUpdate.privateInfo?.saplingBalance).toEqual(new BigNumber(2000));
+    expect(output.accountUpdate.privateInfo?.saplingBalance).toEqual(new BigNumber(0));
     expect(output.accountUpdate).not.toHaveProperty("balance");
   });
 
@@ -467,7 +550,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(1000),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(9000), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(9000), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -490,7 +575,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(500),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(8000), memo: "", transfer_type: "outgoing" }],
+        orchard_outputs: [
+          { amount: new BigNumber(8000), memo: "", transfer_type: "outgoing", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -500,7 +587,7 @@ describe("reduceShieldedSyncResult", () => {
       createMockInfo({ balance: new BigNumber(50000) }),
       "acc-1",
     );
-    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(-8000));
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(0));
     expect(output.accountUpdate).not.toHaveProperty("balance");
   });
 
@@ -514,8 +601,8 @@ describe("reduceShieldedSyncResult", () => {
       fee: new BigNumber(200),
       decryptedData: {
         orchard_outputs: [
-          { amount: new BigNumber(5000), memo: "", transfer_type: "outgoing" },
-          { amount: new BigNumber(1000), memo: "", transfer_type: "internal" },
+          { amount: new BigNumber(5000), memo: "", transfer_type: "outgoing", isSpent: false },
+          { amount: new BigNumber(1000), memo: "", transfer_type: "internal", isSpent: false },
         ],
         sapling_outputs: [],
       },
@@ -526,7 +613,7 @@ describe("reduceShieldedSyncResult", () => {
       createMockInfo({ balance: new BigNumber(100000) }),
       "acc-1",
     );
-    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(-5000));
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(1000));
     expect(output.accountUpdate).not.toHaveProperty("balance");
   });
 
@@ -539,7 +626,9 @@ describe("reduceShieldedSyncResult", () => {
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(800), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(800), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -616,18 +705,17 @@ describe("reduceShieldedSyncResult", () => {
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(8000));
   });
 
-  it("falls back to delta when no isSpent fields present (pre-upgrade backward compat)", () => {
+  it("treats notes without isSpent as unspent (conservative)", () => {
     const tx: ShieldedTransaction = {
-      id: "tx-legacy",
+      id: "tx-no-isspent",
       hex: "00",
       blockHeight: 100,
-      blockHash: "hash-legacy",
+      blockHash: "hash-no-isspent",
       timestamp: 1700000000,
       fee: new BigNumber(100),
       decryptedData: {
         orchard_outputs: [
-          { amount: new BigNumber(4000), memo: "", transfer_type: "incoming" },
-          { amount: new BigNumber(1000), memo: "", transfer_type: "outgoing" },
+          { amount: new BigNumber(4000), memo: "", transfer_type: "incoming" } as any,
         ],
         sapling_outputs: [],
       },
@@ -646,8 +734,9 @@ describe("reduceShieldedSyncResult", () => {
 
     const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
 
-    // Delta fallback: 4000 (incoming) - 1000 (outgoing) = 3000
-    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(3000));
+    // Notes without isSpent are treated as unspent (conservative)
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(4000));
+    expect(output.accountUpdate.privateInfo?.syncState).toBe("complete");
   });
 
   it("self-send scenario: balance = unspent incoming + unspent internal (not inflated by delta)", () => {
@@ -1015,7 +1104,9 @@ describe("serialization round-trip (toRaw → fromRaw)", () => {
           timestamp: 1700000000,
           fee: new BigNumber(0),
           decryptedData: {
-            orchard_outputs: [{ amount: new BigNumber(1000), memo: "", transfer_type: "incoming" }],
+            orchard_outputs: [
+              { amount: new BigNumber(1000), memo: "", transfer_type: "incoming" } as any,
+            ],
             sapling_outputs: [],
           },
         },
@@ -1074,7 +1165,9 @@ describe("createShieldedSyncObservable", () => {
       timestamp: 1700000000,
       fee: new BigNumber(120),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(3710), memo: "", transfer_type: "outgoing" }],
+        orchard_outputs: [
+          { amount: new BigNumber(3710), memo: "", transfer_type: "outgoing", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -1087,7 +1180,9 @@ describe("createShieldedSyncObservable", () => {
       timestamp: 1700000000,
       fee: new BigNumber(70),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(4321), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(4321), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -1100,7 +1195,9 @@ describe("createShieldedSyncObservable", () => {
       timestamp: 1800000000,
       fee: new BigNumber(40),
       decryptedData: {
-        orchard_outputs: [{ amount: new BigNumber(585), memo: "", transfer_type: "incoming" }],
+        orchard_outputs: [
+          { amount: new BigNumber(585), memo: "", transfer_type: "incoming", isSpent: false },
+        ],
         sapling_outputs: [],
       },
     };
@@ -1150,7 +1247,7 @@ describe("createShieldedSyncObservable", () => {
     expect(updates[0]).toMatchObject({
       blockHeight: 100,
       privateInfo: {
-        orchardBalance: new BigNumber(611),
+        orchardBalance: new BigNumber(4321),
       },
     });
     expect(updates[0]?.operations).toHaveLength(2);
@@ -1158,7 +1255,7 @@ describe("createShieldedSyncObservable", () => {
     expect(updates[1]).toMatchObject({
       blockHeight: 101,
       privateInfo: {
-        orchardBalance: new BigNumber(1196),
+        orchardBalance: new BigNumber(4906),
       },
     });
     expect(updates[1]?.operations).toHaveLength(3);
@@ -1175,7 +1272,7 @@ describe("createShieldedSyncObservable", () => {
       decryptedData: {
         orchard_outputs: [],
         sapling_outputs: [
-          { amount: new BigNumber(3000), memo: "memo1", transfer_type: "incoming" },
+          { amount: new BigNumber(3000), memo: "memo1", transfer_type: "incoming", isSpent: false },
         ],
       },
     };
@@ -1188,7 +1285,7 @@ describe("createShieldedSyncObservable", () => {
       fee: new BigNumber(50),
       decryptedData: {
         orchard_outputs: [
-          { amount: new BigNumber(2000), memo: "memo2", transfer_type: "incoming" },
+          { amount: new BigNumber(2000), memo: "memo2", transfer_type: "incoming", isSpent: false },
         ],
         sapling_outputs: [],
       },
@@ -1242,14 +1339,14 @@ describe("createShieldedSyncObservable", () => {
     expect(updates).toHaveLength(2);
 
     const pi1 = (updates[0] as Partial<ZcashAccount>).privateInfo;
-    expect(pi1?.saplingBalance).toEqual(new BigNumber(3000));
+    expect(pi1?.saplingBalance).toEqual(new BigNumber(0));
     expect(pi1?.orchardBalance).toEqual(new BigNumber(0));
     expect(pi1?.transactions).toHaveLength(1);
     expect(pi1?.ufvk).toBe("uview1testkey");
     expect(pi1?.birthday).toBe("2023-01-01");
 
     const pi2 = (updates[1] as Partial<ZcashAccount>).privateInfo;
-    expect(pi2?.saplingBalance).toEqual(new BigNumber(3000));
+    expect(pi2?.saplingBalance).toEqual(new BigNumber(0));
     expect(pi2?.orchardBalance).toEqual(new BigNumber(2000));
     expect(pi2?.transactions).toHaveLength(2);
     expect(pi2?.lastProcessedBlock).toBe(101);
@@ -1491,7 +1588,12 @@ describe("zcashSyncShielded", () => {
           fee: new BigNumber(10000),
           decryptedData: {
             orchard_outputs: [
-              { amount: new BigNumber(5000), memo: "hello", transfer_type: "incoming" },
+              {
+                amount: new BigNumber(5000),
+                memo: "hello",
+                transfer_type: "incoming",
+                isSpent: false,
+              },
             ],
             sapling_outputs: [],
           },

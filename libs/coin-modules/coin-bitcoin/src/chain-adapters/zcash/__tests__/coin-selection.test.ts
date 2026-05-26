@@ -92,9 +92,11 @@ describe("selectNotes", () => {
     ];
     const result = selectNotes(notes, new BigNumber(400_000), "shielded");
 
-    // 400_000 + fee needs to be covered
-    expect(result?.selectedNotes.length).toBeGreaterThanOrEqual(2);
-    expect(result?.totalInput.gte(result!.fee.plus(400_000))).toBe(true);
+    // 3 notes of 200k each, amount 400k. max(3 spends, 2 outputs) = 3 actions, fee = 15k
+    expect(result?.selectedNotes).toHaveLength(3);
+    expect(result?.fee.toNumber()).toBe(15_000);
+    expect(result?.totalInput.toNumber()).toBe(600_000);
+    expect(result?.changeAmount.toNumber()).toBe(185_000);
   });
 
   it("returns undefined for insufficient balance", () => {
@@ -133,8 +135,12 @@ describe("selectNotes", () => {
     const amount = new BigNumber(400_000);
     const result = selectNotes(notes, amount, "shielded");
 
-    expect(result?.totalInput.gte(amount.plus(result!.fee))).toBe(true);
-    expect(result?.fee.toNumber()).toBeGreaterThan(0);
+    // 9 notes of 50k (450k total), amount 400k, max(9 spends, 2 outputs) = 9 actions, fee = 45k
+    // change = 450k - 400k - 45k = 5k (exactly at DUST_THRESHOLD, not absorbed)
+    expect(result?.selectedNotes).toHaveLength(9);
+    expect(result?.totalInput.toNumber()).toBe(450_000);
+    expect(result?.fee.toNumber()).toBe(45_000);
+    expect(result?.changeAmount.toNumber()).toBe(5_000);
   });
 
   it("sorts notes largest-first to minimize action count", () => {
