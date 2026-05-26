@@ -108,7 +108,22 @@ type CountervaluesChildren = React.ComponentProps<typeof CountervaluesProvider>[
 type WrapperProps = { children?: NavigationChildren };
 
 function createStore({ overrideInitialState }: { overrideInitialState: (state: State) => State }) {
-  const state = overrideInitialState(INITIAL_STATE);
+  const transformed = overrideInitialState(INITIAL_STATE);
+  // Mirror the slice's resolution chain (override > default) so tests that mutate
+  // `featureFlags.overrides` directly (custom helpers, ad-hoc state shaping) get a
+  // `resolved` consistent with their overrides — the Redux-backed `useFeature` reads
+  // from `resolved`, not `overrides`. `withFlagOverrides` already does this; this
+  // safety net covers everything else.
+  const state: State = {
+    ...transformed,
+    featureFlags: {
+      ...transformed.featureFlags,
+      resolved: {
+        ...FEATURE_FLAGS_DEFAULTS,
+        ...transformed.featureFlags.overrides,
+      } as Features,
+    },
+  };
 
   return configureStore({
     reducer: reducers,

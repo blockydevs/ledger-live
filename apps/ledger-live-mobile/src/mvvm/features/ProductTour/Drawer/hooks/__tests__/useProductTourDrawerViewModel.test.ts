@@ -6,10 +6,15 @@ import { useProductTourDrawerViewModel } from "../useProductTourDrawerViewModel"
 import { PAGE_TRACKING_PRODUCT_TOUR, PRODUCT_TOUR_LAST_SLIDE_INDEX } from "../../const";
 import { productTourCompletedSelector } from "~/reducers/settings";
 import { setProductTourCompleted } from "~/actions/settings";
-import * as featureFlagsModule from "@features/platform-feature-flags";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import type { WalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/walletFeaturesConfig/types";
 
 const mockNavigate = jest.fn();
+
+jest.mock("@features/platform-feature-flags", () => ({
+  ...jest.requireActual("@features/platform-feature-flags"),
+  useWalletFeaturesConfig: jest.fn(),
+}));
 
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
@@ -29,7 +34,9 @@ const withProductTourCompleted = (state: State): State => ({
   settings: { ...state.settings, productTourCompleted: true },
 });
 
-const mockUseWalletFeaturesConfig = jest.spyOn(featureFlagsModule, "useWalletFeaturesConfig");
+const mockUseWalletFeaturesConfig = useWalletFeaturesConfig as jest.MockedFunction<
+  typeof useWalletFeaturesConfig
+>;
 
 describe("useProductTourDrawerViewModel", () => {
   beforeEach(() => {
