@@ -514,6 +514,7 @@ export async function listOperationsV2({
   const [mirrorTransactions, enrichedERC20Transfers, latestHgraphIndexedTimestampNs] =
     await Promise.all([
       apiClient.getAccountTransactions({
+        configOrCurrencyId: config ?? currencyId,
         address,
         order,
         limit,

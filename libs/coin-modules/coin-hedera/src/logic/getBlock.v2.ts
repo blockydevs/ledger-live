@@ -168,6 +168,7 @@ export async function getBlockV2({
   const [blockInfo, mirrorTransactions, enrichedERC20Transfers] = await Promise.all([
     getBlockInfo(height),
     apiClient.getTransactionsByTimestampRange({
+      configOrCurrencyId,
       startTimestamp: `gte:${startSeconds}`,
       endTimestamp: `lt:${endSeconds}`,
       limit,
