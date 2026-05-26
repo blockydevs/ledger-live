@@ -1,10 +1,10 @@
 import { sub } from "date-fns";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
 import { ABTestingVariants } from "@ledgerhq/types-live";
-import type {
-  Feature_BrazePushNotifications,
-  Feature_LwmNewWordingOptInNotificationsDrawer,
-} from "@ledgerhq/types-live";
+import type { Features } from "@shared/feature-flags";
+
+type BrazePushNotifications = Features["brazePushNotifications"];
+type LwmNewWordingOptInNotificationsDrawer = Features["lwmNewWordingOptInNotificationsDrawer"];
 import {
   INACTIVITY_DRAWER_DELAY_MS,
   evaluateAfterActionTrigger,
@@ -15,8 +15,8 @@ import {
 const NOW = new Date("2026-01-01T00:00:00.000Z").getTime();
 
 const createBrazePushNotificationsFeature = (
-  overrides?: Partial<Feature_BrazePushNotifications>,
-): Feature_BrazePushNotifications =>
+  overrides?: Partial<BrazePushNotifications>,
+): BrazePushNotifications =>
   ({
     enabled: true,
     params: {
@@ -36,19 +36,19 @@ const createBrazePushNotificationsFeature = (
       notificationsCategories: [],
     },
     ...overrides,
-  }) as Feature_BrazePushNotifications;
+  }) as BrazePushNotifications;
 
 const createWordingFeature = (
   variant: ABTestingVariants = ABTestingVariants.variantB,
-): Feature_LwmNewWordingOptInNotificationsDrawer =>
+): LwmNewWordingOptInNotificationsDrawer =>
   ({
     enabled: true,
     params: { variant },
-  }) as Feature_LwmNewWordingOptInNotificationsDrawer;
+  }) as LwmNewWordingOptInNotificationsDrawer;
 
 type EvaluationContext = {
-  brazePushNotifications: Feature_BrazePushNotifications;
-  wordingFeature: Feature_LwmNewWordingOptInNotificationsDrawer;
+  brazePushNotifications: BrazePushNotifications;
+  wordingFeature: LwmNewWordingOptInNotificationsDrawer;
   isRatingsModalOpen: boolean;
   isDrawerPending: boolean;
   now: number;
