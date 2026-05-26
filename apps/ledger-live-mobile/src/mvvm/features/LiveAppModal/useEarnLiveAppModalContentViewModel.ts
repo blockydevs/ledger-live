@@ -3,8 +3,7 @@ import {
   stakeProgramsToEarnParam,
   getEthDepositScreenSetting,
 } from "@ledgerhq/live-common/featureFlags/stakePrograms/index";
-import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
-import { useFeature } from "@features/platform-feature-flags";
+import { useFeature, useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { useVersionedStakePrograms } from "LLM/hooks/useStake/useVersionedStakePrograms";
 import type { ExtraInputs } from "./useLiveAppModalContentViewModel";
 import { computeEarnUiVersion } from "@ledgerhq/live-common/domain/computeEarnUiVersion";

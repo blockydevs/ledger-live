@@ -145,7 +145,9 @@ const getDecisionBase = <TSource extends NotificationsPromptSource>(
   source,
   dismissedCount: getDismissedCount(pushNotificationsDataOfUser),
   nextRepromptDelay,
-  variant: getVariant(wordingFeature),
+  // Zod-derived `variant` is the literal "A" | "B" which is structurally identical
+  // to the ABTestingVariants enum used by `NotificationsPromptDecisionBase`.
+  variant: getVariant(wordingFeature) as ABTestingVariants | undefined,
 });
 
 export const getNextRepromptDelay = ({

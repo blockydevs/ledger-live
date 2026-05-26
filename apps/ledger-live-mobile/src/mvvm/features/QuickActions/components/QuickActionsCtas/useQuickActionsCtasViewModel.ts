@@ -18,8 +18,7 @@ import {
 } from "~/components/RootNavigator/types/helpers";
 import { languageSelector, readOnlyModeEnabledSelector } from "~/reducers/settings";
 import { accountsCountSelector, useAreAccountsEmpty } from "~/reducers/accounts";
-import { useFeature } from "@features/platform-feature-flags";
-import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
+import { useFeature, useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { resolveRemoteCopy } from "@ledgerhq/live-common/featureFlags/remoteABTesting/resolveRemoteCopy";
 import { track } from "~/analytics";
 import { useTransferDrawerController } from "../../hooks/useTransferDrawerController";
