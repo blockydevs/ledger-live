@@ -13,6 +13,7 @@ import type { ExplorerView, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { AccountLike, Operation as LiveOperation } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
+import coinConfig, { type HederaCoinConfig } from "../config";
 import {
   HEDERA_DELEGATION_STATUS,
   HEDERA_OPERATION_TYPES,
@@ -610,4 +611,13 @@ export function toTimestamp(consensusTimestamp: string): Timestamp {
 
 export function createStakingRewardOperationHash(hash: string): string {
   return `${hash}${STAKING_REWARD_HASH_SUFFIX}`;
+}
+
+export function resolveConfig(configOrCurrencyId: HederaCoinConfig | string): HederaCoinConfig {
+  if (typeof configOrCurrencyId === "string") {
+    const config = coinConfig.getCoinConfig(configOrCurrencyId);
+    return config;
+  }
+
+  return configOrCurrencyId;
 }

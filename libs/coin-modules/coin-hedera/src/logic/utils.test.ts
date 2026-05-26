@@ -4,6 +4,7 @@ import type { AssetInfo, TransactionIntent } from "@ledgerhq/coin-module-framewo
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 import { getEnv, setEnv } from "@ledgerhq/live-env";
 import BigNumber from "bignumber.js";
+import hederaConfig from "../config";
 import {
   HEDERA_OPERATION_TYPES,
   HEDERA_TRANSACTION_MODES,
@@ -23,6 +24,7 @@ import * as preloadData from "../preload-data";
 
 const mockGetCurrentHederaPreloadData = preloadData.getCurrentHederaPreloadData as jest.Mock;
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
+import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockedEnrichedERC20Transfer } from "../test/fixtures/common.fixture";
 import {
   getMockedERC20TokenCurrency,
@@ -77,15 +79,20 @@ import {
   secondsToNanos,
   toTimestamp,
   createStakingRewardOperationHash,
+  resolveConfig,
 } from "./utils";
 
+jest.mock("../config");
 jest.mock("../network/api");
 jest.mock("../network/rpc", () => ({
   rpcClient: require("../test/fixtures/rpc.fixture").getMockedRpcClient(),
 }));
 
+const mockedHederaConfig = jest.mocked(hederaConfig);
+
 describe("logic utils", () => {
   let oldStakingLedgerNodeIdEnv: number;
+  const mockConfig = getMockedConfig();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -1389,6 +1396,36 @@ describe("logic utils", () => {
       const result = createStakingRewardOperationHash(hash);
 
       expect(result).toBe(`${hash}${STAKING_REWARD_HASH_SUFFIX}`);
+    });
+  });
+
+  describe("resolveConfig", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("should return the config object directly when passed a HederaCoinConfig", () => {
+      const result = resolveConfig(mockConfig);
+
+      expect(result).toBe(mockConfig);
+      expect(mockedHederaConfig.getCoinConfig).not.toHaveBeenCalled();
+    });
+
+    it("should resolve config by currency id string using getCoinConfig", () => {
+      mockedHederaConfig.getCoinConfig.mockReturnValue(mockConfig);
+
+      const result = resolveConfig("hedera");
+
+      expect(mockedHederaConfig.getCoinConfig).toHaveBeenCalledWith("hedera");
+      expect(result).toBe(mockConfig);
+    });
+
+    it("should propagate error when getCoinConfig throws for currency without config", () => {
+      mockedHederaConfig.getCoinConfig.mockImplementation(() => {
+        throw new Error("No config for currency: hedera");
+      });
+
+      expect(() => resolveConfig("hedera")).toThrow("No config for currency: hedera");
     });
   });
 });
