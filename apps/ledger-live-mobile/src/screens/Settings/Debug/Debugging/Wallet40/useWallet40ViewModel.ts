@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from "react";
-import { useFeatureFlags } from "@ledgerhq/live-common/featureFlags/index";
+import { useDispatch } from "react-redux";
+import { useFeature } from "@features/platform-feature-flags";
+import { setOverride } from "@shared/feature-flags";
 
 const WALLET_40_FLAG = "lwmWallet40";
 
@@ -24,9 +26,8 @@ type WalletFeatureParamKey = (typeof WALLET_40_PARAMS)[number]["key"];
 type WalletFeatureParams = Partial<Record<WalletFeatureParamKey, boolean>>;
 
 export const useWallet40ViewModel = () => {
-  const { getFeature, overrideFeature } = useFeatureFlags();
-
-  const featureFlag = getFeature(WALLET_40_FLAG);
+  const dispatch = useDispatch();
+  const featureFlag = useFeature(WALLET_40_FLAG);
   const isEnabled = featureFlag?.enabled ?? false;
 
   const params = useMemo<WalletFeatureParams>(() => {
@@ -35,34 +36,46 @@ export const useWallet40ViewModel = () => {
   }, [featureFlag?.params]);
 
   const handleToggleEnabled = useCallback(() => {
-    overrideFeature(WALLET_40_FLAG, {
-      ...featureFlag,
-      enabled: !isEnabled,
-    });
-  }, [featureFlag, isEnabled, overrideFeature]);
+    dispatch(
+      setOverride({
+        key: WALLET_40_FLAG,
+        value: { ...featureFlag, enabled: !isEnabled },
+      }),
+    );
+  }, [featureFlag, isEnabled, dispatch]);
 
   const handleToggleParam = useCallback(
     (key: WalletFeatureParamKey) => {
       const currentValue = params[key] ?? false;
-      overrideFeature(WALLET_40_FLAG, {
-        ...featureFlag,
-        enabled: isEnabled,
-        params: { ...params, [key]: !currentValue },
-      });
+      dispatch(
+        setOverride({
+          key: WALLET_40_FLAG,
+          value: {
+            ...featureFlag,
+            enabled: isEnabled,
+            params: { ...params, [key]: !currentValue },
+          },
+        }),
+      );
     },
-    [featureFlag, params, isEnabled, overrideFeature],
+    [featureFlag, params, isEnabled, dispatch],
   );
 
   const handleToggleAll = useCallback(
     (enable: boolean) => {
       const newParams = WALLET_40_PARAMS.reduce((acc, { key }) => ({ ...acc, [key]: enable }), {});
-      overrideFeature(WALLET_40_FLAG, {
-        ...featureFlag,
-        enabled: enable,
-        params: { ...params, ...newParams },
-      });
+      dispatch(
+        setOverride({
+          key: WALLET_40_FLAG,
+          value: {
+            ...featureFlag,
+            enabled: enable,
+            params: { ...params, ...newParams },
+          },
+        }),
+      );
     },
-    [featureFlag, params, overrideFeature],
+    [featureFlag, params, dispatch],
   );
 
   const allEnabled = useMemo(
