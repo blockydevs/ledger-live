@@ -1586,6 +1586,9 @@ importers:
       '@datadog/mobile-react-navigation':
         specifier: 2.8.2
         version: 2.8.2(@datadog/mobile-react-native@2.8.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@features/platform-feature-flags':
+        specifier: workspace:^
+        version: link:../../features/platform/feature-flags
       '@formatjs/intl-locale':
         specifier: 3.4.5
         version: 3.4.5
@@ -13039,7 +13042,7 @@ packages:
   '@apollo/server@4.12.2':
     resolution: {integrity: sha512-jKRlf+sBMMdKYrjMoiWKne42Eb6paBfDOr08KJnUaeaiyWFj+/040FjVPQI7YGLfdwnYIsl1NUUqS2UdgezJDg==}
     engines: {node: '>=14.16.0'}
-    deprecated: Apollo Server v4 is end-of-life since January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
+    deprecated: Apollo Server v4 is deprecated and will transition to end-of-life on January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
     peerDependencies:
       graphql: ^16.6.0
 
@@ -21278,7 +21281,7 @@ packages:
       metro-react-native-babel-preset: '*'
       react: 19.0.0
       react-dom: 19.0.0
-      webpack: '*'
+      webpack: ^5.89.0
     peerDependenciesMeta:
       '@react-native/babel-preset':
         optional: true
@@ -23224,7 +23227,7 @@ packages:
   '@xmldom/xmldom@0.7.13':
     resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
+    deprecated: this version is no longer supported, please update to at least 0.8.*
 
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
@@ -32846,7 +32849,6 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode-terminal@0.11.0:

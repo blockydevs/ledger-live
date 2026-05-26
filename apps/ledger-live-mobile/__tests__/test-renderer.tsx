@@ -175,6 +175,12 @@ function withFlagOverrides(
           ...base.featureFlags.overrides,
           ...(merged as unknown as PartialFeatures),
         },
+        // Mirror the slice's resolution chain (override > default) so hooks reading
+        // from `resolved` see the override immediately, without needing an action dispatch.
+        resolved: {
+          ...base.featureFlags.resolved,
+          ...merged,
+        } as Features,
       },
     };
   };
