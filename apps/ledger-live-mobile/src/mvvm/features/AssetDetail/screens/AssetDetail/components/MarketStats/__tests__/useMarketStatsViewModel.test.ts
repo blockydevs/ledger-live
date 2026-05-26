@@ -71,6 +71,40 @@ describe("useMarketStatsViewModel", () => {
       expect(result.current.stats.find(s => s.key === "market_cap")?.value).toBe("-");
       expect(result.current.stats.find(s => s.key === "max_supply")?.value).toBe("-");
     });
+
+    it("formats supply rows with the ticker suffix from market data", () => {
+      const { result } = renderHook(() => useMarketStatsViewModel(mockBtcCryptoCurrency));
+
+      const circulating = result.current.stats.find(s => s.key === "circulating_supply")?.value;
+      const maxSupply = result.current.stats.find(s => s.key === "max_supply")?.value;
+
+      expect(circulating).toMatch(/BTC$/);
+      expect(maxSupply).toMatch(/BTC$/);
+      expect(circulating).not.toMatch(/^\d+$/);
+    });
+
+    it("falls back to the currency prop ticker when market data ticker is missing", () => {
+      mockMarketData({
+        marketCurrency: { ...marketCurrencyData, ticker: "" } as any,
+      });
+
+      const { result } = renderHook(() => useMarketStatsViewModel(mockBtcCryptoCurrency));
+
+      const circulating = result.current.stats.find(s => s.key === "circulating_supply")?.value;
+      expect(circulating).toMatch(/BTC$/);
+    });
+
+    it("never renders a raw unformatted integer for very large supply values", () => {
+      mockMarketData({
+        marketCurrency: { ...marketCurrencyData, circulatingSupply: 124329543825 } as any,
+      });
+
+      const { result } = renderHook(() => useMarketStatsViewModel(mockBtcCryptoCurrency));
+
+      const circulating = result.current.stats.find(s => s.key === "circulating_supply")?.value;
+      expect(circulating).not.toBe("124329543825");
+      expect(circulating).toMatch(/BTC$/);
+    });
   });
 
   describe("loading state", () => {
