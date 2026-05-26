@@ -5,7 +5,7 @@ import {
   lastConnectedDeviceSelector,
 } from "~/reducers/settings";
 import { shouldRedirectToPostOnboardingOrRecoverUpsell } from "@ledgerhq/live-common/postOnboarding/logic/shouldRedirectToPostOnboardingOrRecoverUpsell";
-import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature } from "@features/platform-feature-flags";
 
 /**
  * Returns whether the user should be redirected to the Protect upsell or the post onboarding

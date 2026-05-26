@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { DeviceConnectionResult } from "@ledgerhq/device-intent";
 import { log } from "@ledgerhq/logs";
-import { useFeature, useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature, useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import {
   connectDeviceUseCase,
   type ConnectDeviceUIState,

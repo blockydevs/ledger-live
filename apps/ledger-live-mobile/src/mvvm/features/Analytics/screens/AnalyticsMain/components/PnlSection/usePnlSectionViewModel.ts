@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { usePortfolioPnL } from "@ledgerhq/wallet-pnl/hooks";
 import { useSelector } from "~/context/hooks";
 import { shallowAccountsSelector } from "~/reducers/accounts";

@@ -6,7 +6,7 @@ import { useProductTourDrawerViewModel } from "../useProductTourDrawerViewModel"
 import { PAGE_TRACKING_PRODUCT_TOUR, PRODUCT_TOUR_LAST_SLIDE_INDEX } from "../../const";
 import { productTourCompletedSelector } from "~/reducers/settings";
 import { setProductTourCompleted } from "~/actions/settings";
-import * as featureFlagsModule from "@ledgerhq/live-common/featureFlags/index";
+import * as featureFlagsModule from "@features/platform-feature-flags";
 import type { WalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/walletFeaturesConfig/types";
 
 const mockNavigate = jest.fn();

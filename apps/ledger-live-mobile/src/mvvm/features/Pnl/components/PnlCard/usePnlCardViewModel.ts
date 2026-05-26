@@ -1,4 +1,4 @@
-import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { TriangleDown, TriangleUp } from "@ledgerhq/lumen-ui-rnative/symbols";
 import type { LumenTextStyle } from "@ledgerhq/lumen-ui-rnative/styles";
 import type { CardType } from "@ledgerhq/lumen-ui-rnative";

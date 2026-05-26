@@ -7,7 +7,7 @@ import * as config from "@ledgerhq/live-common/config/index";
 import { CurrencyConfig } from "@ledgerhq/coin-module-framework/config";
 import type { Account, TokenAccount, Operation } from "@ledgerhq/types-live";
 import { ActionButtonEvent } from "~/components/FabActions";
-import * as featureFlagsIndex from "@ledgerhq/live-common/featureFlags/index";
+import * as featureFlagsIndex from "@features/platform-feature-flags";
 import * as accountIndex from "@ledgerhq/live-common/account/index";
 import { useAccountBridgeOrNull } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import type { TFunction } from "i18next";
