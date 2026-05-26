@@ -12,7 +12,7 @@ import { getStackNavigatorConfig } from "~/navigation/navigatorConfig";
 import { BorrowLiveAppNavigatorParamList } from "./types/BorrowLiveAppNavigator";
 import { BaseNavigatorStackParamList } from "./types/BaseNavigator";
 import { BorrowLiveAppWrapper } from "LLM/features/Borrow";
-import type { BorrowSwapNavigationParams } from "LLM/features/Borrow/screens/BorrowLiveApp/BorrowLiveAppWrapper";
+import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
 import type { DefaultAccountSwapParamList } from "~/screens/Swap/types";
 import type { BaseComposite, StackNavigatorProps } from "./types/helpers";
 

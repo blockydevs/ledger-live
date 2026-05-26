@@ -12,21 +12,12 @@ import { BorrowLoader } from "LLD/features/Borrow/components/BorrowLoader";
 import type { BorrowWebviewInputs } from "../BorrowApp/useBorrowAppViewModel";
 import { useDeeplinkCustomHandlers } from "~/renderer/components/WebPlatformPlayer/CustomHandlers";
 import { WalletAPICustomHandlers } from "@ledgerhq/live-common/wallet-api/types";
+import {
+  BorrowSwapNavigationParams,
+  createBorrowNavigateHandler,
+} from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
 
-export type BorrowSwapNavigationParams = {
-  fromCurrencyId?: string;
-  toCurrencyId?: string;
-  fromTokenId?: string;
-  toTokenId?: string;
-  fromAccountId?: string;
-  toAccountId?: string;
-  amountFrom?: string;
-  affiliate?: string;
-};
-
-type BorrowNavigateRequestParams = {
-  action?: string;
-} & BorrowSwapNavigationParams;
+export type { BorrowSwapNavigationParams };
 
 export type BorrowWebProps = {
   manifest: LiveAppManifest;
@@ -55,40 +46,10 @@ export const BorrowWebView = ({
   const customHandlers = useMemo<WalletAPICustomHandlers>(
     () => ({
       ...customDeeplinkHandlers,
-      "custom.navigate": async (request: { params?: BorrowNavigateRequestParams }) => {
-        const requestAction = request.params?.action;
-
-        if (requestAction === "go-back") {
-          onWalletApiGoBack?.();
-          return { success: true };
-        }
-
-        if (requestAction === "go-to-swap") {
-          const {
-            fromCurrencyId,
-            toCurrencyId,
-            fromTokenId,
-            toTokenId,
-            fromAccountId,
-            toAccountId,
-            amountFrom,
-            affiliate,
-          } = request.params ?? {};
-          onWalletApiGoToSwap?.({
-            fromCurrencyId,
-            toCurrencyId,
-            fromTokenId,
-            toTokenId,
-            fromAccountId,
-            toAccountId,
-            amountFrom,
-            affiliate,
-          });
-          return { success: true };
-        }
-
-        throw new Error("Unknown borrow navigation action");
-      },
+      "custom.navigate": createBorrowNavigateHandler({
+        onGoBack: onWalletApiGoBack,
+        onGoToSwap: onWalletApiGoToSwap,
+      }),
     }),
     [customDeeplinkHandlers, onWalletApiGoBack, onWalletApiGoToSwap],
   );

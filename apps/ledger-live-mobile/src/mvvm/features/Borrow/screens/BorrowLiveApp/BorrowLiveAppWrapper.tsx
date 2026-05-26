@@ -1,22 +1,13 @@
 import { WalletAPICustomHandlers } from "@ledgerhq/live-common/wallet-api/types";
+import {
+  BorrowSwapNavigationParams,
+  createBorrowNavigateHandler,
+} from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
 import React, { useEffect, useMemo } from "react";
 import { BorrowLiveAppView } from ".";
 import { useBorrowLiveAppViewModel } from "LLM/features/Borrow/screens/BorrowLiveApp/useBorrowLiveAppViewModel";
 
-export type BorrowSwapNavigationParams = {
-  fromCurrencyId?: string;
-  toCurrencyId?: string;
-  fromTokenId?: string;
-  toTokenId?: string;
-  fromAccountId?: string;
-  toAccountId?: string;
-  amountFrom?: string;
-  affiliate?: string;
-};
-
-type BorrowNavigateRequestParams = {
-  action?: string;
-} & BorrowSwapNavigationParams;
+export type { BorrowSwapNavigationParams };
 
 type BorrowLiveAppWrapperProps = Readonly<{
   action?: "go-back";
@@ -39,40 +30,10 @@ export function BorrowLiveAppWrapper({
 
   const customHandlers = useMemo<WalletAPICustomHandlers>(
     () => ({
-      "custom.navigate": async (request: { params?: BorrowNavigateRequestParams }) => {
-        const requestAction = request.params?.action;
-
-        if (requestAction === "go-back") {
-          onWalletApiGoBack?.();
-          return { success: true };
-        }
-
-        if (requestAction === "go-to-swap") {
-          const {
-            fromCurrencyId,
-            toCurrencyId,
-            fromTokenId,
-            toTokenId,
-            fromAccountId,
-            toAccountId,
-            amountFrom,
-            affiliate,
-          } = request.params ?? {};
-          onWalletApiGoToSwap?.({
-            fromCurrencyId,
-            toCurrencyId,
-            fromTokenId,
-            toTokenId,
-            fromAccountId,
-            toAccountId,
-            amountFrom,
-            affiliate,
-          });
-          return { success: true };
-        }
-
-        throw new Error("Unknown borrow navigation action");
-      },
+      "custom.navigate": createBorrowNavigateHandler({
+        onGoBack: onWalletApiGoBack,
+        onGoToSwap: onWalletApiGoToSwap,
+      }),
     }),
     [onWalletApiGoBack, onWalletApiGoToSwap],
   );

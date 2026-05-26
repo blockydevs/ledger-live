@@ -20,7 +20,7 @@ import {
 } from "~/renderer/reducers/settings";
 import { getParsedSystemDeviceLocale } from "~/helpers/systemLocale";
 import { useBorrowLiveConfig } from "LLD/features/Borrow/hooks/useBorrowLiveConfig";
-import type { BorrowSwapNavigationParams } from "LLD/features/Borrow/screens/BorrowWebView/BorrowWebView";
+import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
 
 type BorrowLocationState = { returnTo?: string };
 
