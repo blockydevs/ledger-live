@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useSelector, useDispatch } from "~/context/hooks";
 import { add, isBefore, parseISO } from "date-fns";
 import storage from "LLM/storage";
-import useFeature from "@ledgerhq/live-common/featureFlags/useFeature";
+import { useFeature } from "@features/platform-feature-flags";
 import { accountsWithPositiveBalanceCountSelector } from "~/reducers/accounts";
 import {
   ratingsModalOpenSelector,
@@ -105,7 +105,6 @@ const useNpsRatings = () => {
     }
 
     // minimum accounts number criteria
-    // @ts-expect-error TYPINGS
     const minimumAccountsNumber: number =
       ratingsFeature?.params?.conditions?.minimum_accounts_number;
     if (minimumAccountsNumber && accountsWithAmountCount < minimumAccountsNumber) {
@@ -113,7 +112,6 @@ const useNpsRatings = () => {
     }
 
     // minimum app start number criteria
-    // @ts-expect-error TYPINGS
     const minimumAppStartsNumber: number =
       ratingsFeature?.params?.conditions?.minimum_app_starts_number;
     if (
@@ -124,7 +122,6 @@ const useNpsRatings = () => {
     }
 
     // duration since first app start long enough criteria
-    // @ts-expect-error TYPINGS
     const minimumDurationSinceAppFirstStart: Duration =
       ratingsFeature?.params?.conditions?.minimum_duration_since_app_first_start;
 
@@ -138,7 +135,6 @@ const useNpsRatings = () => {
     }
 
     // No crash in last session criteria
-    // @ts-expect-error TYPINGS
     const minimumNumberOfAppStartsSinceLastCrash: number =
       ratingsFeature?.params?.conditions?.minimum_number_of_app_starts_since_last_crash;
     if (
@@ -173,9 +169,7 @@ const useNpsRatings = () => {
 
       if (isPushNotificationsModalOpen || !areRatingsConditionsMet()) return false;
 
-      // @ts-expect-error TYPINGS
       for (const happyMoment of ratingsFeature?.params?.happy_moments) {
-        // @ts-expect-error TYPINGS
         if (isHappyMomentTriggered(happyMoment, ratingsNewRoute)) {
           const timeout = setTimeout(() => {
             setRatingsModalOpenCallback(true);
@@ -183,7 +177,6 @@ const useNpsRatings = () => {
           dispatch(
             setRatingsHappyMoment({
               ...happyMoment,
-              // @ts-expect-error TYPINGS
               timeout,
             }),
           );
