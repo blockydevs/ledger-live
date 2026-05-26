@@ -16,7 +16,7 @@ See the [ADR: Device Intent Executor component](https://ledgerhq.atlassian.net/w
 ### What's covered
 
 - **Concepts** — what a Device Intent is, what the Device Intent Executor (DIE) is, and how they fit together.
-- **Usage guide** — mounting the executor, building the `deviceInitializationInput`, defining and structuring intents, orchestrating multi-step (and context-switching) flows.
+- **Usage guide** — implementation checklist, mounting the executor, building the `deviceInitializationInput`, defining and structuring intents, orchestrating multi-step (and context-switching) flows.
 - **Runtime contracts and observability** — completion, intent/context co-changes, cancellation, callbacks, interactive jobs, idle state.
 - **Pitfalls and common mistakes** when integrating.
 - **Internals** — three-layer architecture, XState lifecycle, hook orchestration, disconnection handling.
@@ -36,6 +36,7 @@ See the [ADR: Device Intent Executor component](https://ledgerhq.atlassian.net/w
   - [Core types](#core-types-srccorets)
   - [Executor types](#executor-types-srcexecutorts)
 - [Usage Guide](#usage-guide)
+  - [Intent implementation checklist](#intent-implementation-checklist)
   - [Mounting the executor](#mounting-the-executor)
   - [Building the `deviceInitializationInput`](#building-the-deviceinitializationinput)
   - [Defining intents](#defining-intents)
@@ -47,7 +48,7 @@ See the [ADR: Device Intent Executor component](https://ledgerhq.atlassian.net/w
   - [Cancelling an intent](#cancelling-an-intent)
   - [Enabling / disabling](#enabling--disabling)
   - [Idle state and `lastIntentSnapshot`](#idle-state-and-lastintentsnapshot)
-  - [Advanced: interactive jobs with callbacks in `JobState`](#advanced-interactive-jobs-with-callbacks-in-jobstate)
+  - [Interactive jobs with callbacks in `JobState`](#interactive-jobs-with-callbacks-in-jobstate)
   - [Working with ledgerjs `Transport`-based code](#working-with-ledgerjs-transport-based-code)
   - [Pitfalls and common mistakes](#pitfalls-and-common-mistakes)
 - [How It Works](#how-it-works)
@@ -250,6 +251,88 @@ sequenceDiagram
 
 ## Usage Guide
 
+### Intent implementation checklist
+
+Once you are familiar with the concepts below, use this checklist as a compact
+implementation guide for adding a new intent.
+
+1. **Choose the intent granularity for the flow.**
+   If every device interaction happens in the same device app, prefer one
+   intent and keep orchestration inside its job. If the flow crosses device
+   apps or app requirements, use one intent per device context, each with its
+   own `deviceInitializationInput`, and orchestrate the phases from a shared
+   hook.
+   Read more:
+   [Structuring intents](#structuring-intents-single-vs-multiple),
+   [When to split into multiple intents](#when-to-split-into-multiple-intents),
+   [Orchestrating a multi-intent flow](#orchestrating-a-multi-intent-flow).
+
+2. **Decide where the intent lives.**
+   Keep reusable contracts and execution logic in a shared package, then bind
+   them to platform-specific renderers in LWM and LWD. This keeps orchestration
+   hooks testable because they can depend on typed contracts and injected
+   platform definitions rather than concrete app implementations.
+   Read more:
+   [Recommended file organization](#recommended-file-organization),
+   [`IntentDefinition`](#1-intentdefinition----shared-cross-platform-logic),
+   [`IntentPlatformDefinition`](#2-intentplatformdefinition----platform-specific-ui).
+
+3. **Define the intent input.**
+   Include the raw business input the job needs, such as a swap quote,
+   transaction payload, or user address. Also include injected dependencies
+   that are not available when the intent definition is declared but are needed
+   at execution time, such as feature flags, analytics helpers, or flow-specific
+   logic. This keeps the intent reusable while preserving dependency inversion.
+   Read more:
+   [Defining intents](#defining-intents),
+   [Runtime `Intent` via `createIntent()`](#3-runtime-intent-via-createintent).
+
+4. **Define the `JobState` union.**
+   Model every state the UI needs to display as a discriminated union so the
+   platform component can render with an exhaustive switch. If a state needs
+   user interaction, such as displaying a warning before resuming execution,
+   carry callbacks in `JobState` and let the React component call them from UI
+   handlers.
+   Read more:
+   [`IntentDefinition`](#1-intentdefinition----shared-cross-platform-logic),
+   [`IntentPlatformDefinition`](#2-intentplatformdefinition----platform-specific-ui),
+   [interactive jobs with callbacks in `JobState`](#interactive-jobs-with-callbacks-in-jobstate).
+
+5. **Implement the job.**
+   Choose the implementation style that best fits the flow: an RxJS pipeline,
+   an imperative `new Observable(observer => { ... })`, or another internal
+   abstraction. Consider XState when orchestration is complex, especially when
+   it includes user interactivity, retries, guards, or many explicit
+   transitions. The job should emit `JobState` values, model recoverable errors
+   as `JobState`, and complete when the intent is finished.
+   Read more:
+   [`IntentDefinition`](#1-intentdefinition----shared-cross-platform-logic),
+   [Job completion contract](#job-completion-contract),
+   [Working with ledgerjs `Transport`-based code](#working-with-ledgerjs-transport-based-code),
+   [Pitfalls and common mistakes](#pitfalls-and-common-mistakes).
+
+6. **Implement the platform components.**
+   Add the intent component for each supported platform, such as LWM and LWD.
+   Render from `JobState` with an exhaustive switch, and use an `assertNever`
+   helper so newly added `JobState` variants cannot be missed silently.
+   Read more:
+   [`IntentPlatformDefinition`](#2-intentplatformdefinition----platform-specific-ui),
+   [Recommended file organization](#recommended-file-organization).
+
+7. **Integrate the executor in the flow.**
+   Import the platform-specific DeviceIntentExecutor component, build the
+   `deviceInitializationInput` with the appropriate helper, then either use the
+   flow orchestration hook or create the intent at runtime and pass it with the
+   initialization input to the DIE component. Add job state listeners when the
+   caller needs to capture intermediate results, and wire cancellation or
+   lifecycle callbacks when the flow needs them.
+   Read more:
+   [Mounting the executor](#mounting-the-executor),
+   [Building the `deviceInitializationInput`](#building-the-deviceinitializationinput),
+   [Observability: callbacks](#observability-callbacks),
+   [Cancelling an intent](#cancelling-an-intent),
+   [Changing `deviceInitializationInput` and `intent` together](#changing-deviceinitializationinput-and-intent-together).
+
 ### Mounting the executor
 
 The executor is typically placed inside a bottom sheet (LWM) or modal (LWD).
@@ -257,6 +340,9 @@ Each platform provides a thin wrapper (`DeviceIntentExecutorLWM` /
 `DeviceIntentExecutorLWD`) that injects the platform-specific UI components
 (device connection, context initialiser, error screens). The caller screen
 mounts that wrapper and passes all the required props:
+
+Do not import the raw `DeviceIntentExecutor` from `@ledgerhq/device-intent`;
+always use the existing platform wrapper.
 
 ```tsx
 import { createIntent } from "@ledgerhq/device-intent";
@@ -833,7 +919,7 @@ In practice this means:
   component call them from UI handlers. The callback can resume the job, emit a
   terminal state such as `cancelled`, then complete the observable. This keeps
   interactivity inside the job/component contract. See
-  [Advanced: interactive jobs with callbacks in `JobState`](#advanced-interactive-jobs-with-callbacks-in-jobstate).
+  [Interactive jobs with callbacks in `JobState`](#interactive-jobs-with-callbacks-in-jobstate).
 
 ### Changing `deviceInitializationInput` and `intent` together
 
@@ -985,7 +1071,7 @@ a new intent, closing the flow, or showing terminal UI).
 If no intent has ever executed, `lastIntentSnapshot` is `null` and the
 executor renders nothing during idle.
 
-### Advanced: interactive jobs with callbacks in `JobState`
+### Interactive jobs with callbacks in `JobState`
 
 `JobState` does not have to be serializable -- it can contain functions.
 Because `JobState` is just a TypeScript type flowing from the observable to the
@@ -1165,7 +1251,7 @@ Common causes:
   completes, the orchestrator is forced to bypass the completion contract. Emit
   callbacks in `JobState` so the component can resume or cancel the job, then
   complete the observable (see
-  [Advanced: interactive jobs with callbacks in `JobState`](#advanced-interactive-jobs-with-callbacks-in-jobstate)).
+  [Interactive jobs with callbacks in `JobState`](#interactive-jobs-with-callbacks-in-jobstate)).
 - Calling a navigation callback (e.g. `goTo()`) from a UI button without
   first completing the job.
 
