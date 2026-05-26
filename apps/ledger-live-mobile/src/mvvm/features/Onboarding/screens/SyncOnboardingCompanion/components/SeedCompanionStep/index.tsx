@@ -1,12 +1,7 @@
-import React, { useCallback } from "react";
-import { OnboardingState, CharonStatus } from "@ledgerhq/live-common/hw/extractOnboardingState";
+import React from "react";
+import { Image } from "react-native";
+import { CharonStatus } from "@ledgerhq/live-common/hw/extractOnboardingState";
 import { Flex, Link, Text, VerticalTimeline } from "@ledgerhq/native-ui";
-import { TrackScreen, useTrack } from "~/analytics";
-import { Image, Linking } from "react-native";
-import SecretRecoveryPhraseImage from "../assets/srp@2x.png";
-import ContinueOnDeviceWithAnim from "./ContinueOnDeviceWithAnim";
-import { Device } from "@ledgerhq/live-common/hw/actions/types";
-import { useTranslation } from "~/context/Locale";
 import {
   ExternalLinkMedium,
   RecoveryKey,
@@ -14,21 +9,16 @@ import {
   ShieldCheck,
 } from "@ledgerhq/native-ui/assets/icons";
 import { ShadowedView } from "react-native-fast-shadow";
+import { TrackScreen } from "~/analytics";
+import { useTranslation } from "~/context/Locale";
 import Animation from "~/components/Animation";
 import CHARON from "~/animations/device/charon/charon.json";
-import { SeedPathStatus } from "./types";
+import ContinueOnDeviceWithAnim from "../ContinueOnDeviceWithAnim";
+import SecretRecoveryPhraseImage from "../../assets/srp@2x.png";
+import { useSeedCompanionStepViewModel } from "./useSeedCompanionStepViewModel";
+import { SeedCompanionStepProps } from "./types";
 
 const { BodyText, SubtitleText } = VerticalTimeline;
-
-const CHARON_LEARN_MORE_URL = "https://shop.ledger.com/products/ledger-recovery-key";
-
-interface SeedCompanionStepProps {
-  seedPathStatus: SeedPathStatus;
-  charonSupported?: OnboardingState["charonSupported"];
-  charonStatus?: OnboardingState["charonStatus"];
-  productName: string;
-  device: Device;
-}
 
 const SeedStep = ({
   seedPathStatus,
@@ -38,16 +28,7 @@ const SeedStep = ({
   device,
 }: SeedCompanionStepProps) => {
   const { t } = useTranslation();
-  const track = useTrack();
-
-  const handleLearnMoreClick = useCallback(() => {
-    track("button_clicked", {
-      button: "Learn More",
-      page: "Charon Start",
-      flow: "onboarding",
-    });
-    Linking.openURL(CHARON_LEARN_MORE_URL);
-  }, [track]);
+  const { handleLearnMoreClick } = useSeedCompanionStepViewModel();
 
   if (seedPathStatus === "new_seed") {
     return (
