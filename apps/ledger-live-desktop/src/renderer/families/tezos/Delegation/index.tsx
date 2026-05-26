@@ -3,7 +3,7 @@ import { useDispatch } from "LLD/hooks/redux";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { useBaker, useTezosStakingInfo } from "@ledgerhq/live-common/families/tezos/react";
-import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature } from "@features/platform-feature-flags";
 import { TokenAccount } from "@ledgerhq/types-live";
 import { openURL } from "~/renderer/linking";
 import { openModal } from "~/renderer/actions/modals";
