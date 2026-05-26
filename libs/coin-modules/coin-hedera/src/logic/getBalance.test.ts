@@ -100,7 +100,7 @@ describe("getBalance", () => {
     expect(apiClient.getAccountTokens).toHaveBeenCalledWith(address);
     expect(networkUtils.getERC20BalancesForAccountV2).toHaveBeenCalledTimes(1);
     expect(networkUtils.getERC20BalancesForAccountV2).toHaveBeenCalledWith({
-      configOrCurrencyId: mockCurrency.id,
+      configOrCurrencyId: mockConfig,
       address,
     });
     expect(findTokenByAddressInCurrencyMock).toHaveBeenCalledTimes(2);
