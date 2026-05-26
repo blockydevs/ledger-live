@@ -1,5 +1,4 @@
 import {
-  GenericAwarenessModalCarouselSlideSchema,
   GenericAwarenessModalLayout,
   GenericAwarenessModalPromptInputSchema,
   type GenericAwarenessModalBrazeCard,
@@ -38,6 +37,12 @@ export const buildPrompt = (
   return {
     layout: GenericAwarenessModalLayout.Prompt,
     id: campaignId,
-    ...GenericAwarenessModalCarouselSlideSchema.parse(prompt),
+    imageUrl: prompt.imageUrl,
+    title: prompt.title,
+    subtitle: prompt.subtitle,
+    primaryButtonLabel: prompt.primaryButtonLabel,
+    primaryButtonLink: prompt.primaryButtonLink,
+    secondaryButtonLabel: prompt.secondaryButtonLabel,
+    secondaryButtonLink: prompt.secondaryButtonLink,
   };
 };

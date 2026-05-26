@@ -13,8 +13,12 @@ import useGenericAwarenessModalFeatureIntroViewModel, {
 import useGenericAwarenessModalCarouselViewModel, {
   type GenericAwarenessModalCarouselViewModel,
 } from "./hooks/useGenericAwarenessModalCarouselViewModel";
+import useGenericAwarenessModalPromptViewModel, {
+  type GenericAwarenessModalPromptViewModel,
+} from "./hooks/useGenericAwarenessModalPromptViewModel";
 import CarouselContent from "./components/CarouselContent";
 import FeatureIntroContent from "./components/FeatureIntroContent";
+import PromptContent from "./components/PromptContent";
 
 type LayoutChromeHandlers = Pick<
   GenericAwarenessModalCarouselViewModel | GenericAwarenessModalFeatureIntroViewModel,
@@ -40,12 +44,15 @@ function renderModalContent(
   contentCard: GenericAwarenessModalContentCard,
   carouselViewModel: GenericAwarenessModalCarouselViewModel,
   featureIntroViewModel: GenericAwarenessModalFeatureIntroViewModel,
+  promptViewModel: GenericAwarenessModalPromptViewModel,
 ) {
   switch (contentCard.layout) {
     case GenericAwarenessModalLayout.Carousel:
       return <CarouselContent {...carouselViewModel} />;
     case GenericAwarenessModalLayout.FeatureIntro:
       return <FeatureIntroContent {...featureIntroViewModel} />;
+    case GenericAwarenessModalLayout.Prompt:
+      return <PromptContent {...promptViewModel} />;
     default:
       return null;
   }
@@ -59,6 +66,7 @@ const GenericAwarenessModalView = ({
   const hasStoredContentCards = useSelector(selectGenericAwarenessModalHasStoredContentCards);
   const carouselViewModel = useGenericAwarenessModalCarouselViewModel(contentCard, isOpen);
   const featureIntroViewModel = useGenericAwarenessModalFeatureIntroViewModel(contentCard, isOpen);
+  const promptViewModel = useGenericAwarenessModalPromptViewModel(contentCard);
 
   useEffect(() => {
     if (isOpen && !contentCard && hasStoredContentCards) {
@@ -91,7 +99,12 @@ const GenericAwarenessModalView = ({
       >
         <DialogHeader density="expanded" onClose={onHeaderClose} />
         <DialogBody className="flex min-h-0 flex-1 flex-col gap-24 overflow-hidden">
-          {renderModalContent(contentCard, carouselViewModel, featureIntroViewModel)}
+          {renderModalContent(
+            contentCard,
+            carouselViewModel,
+            featureIntroViewModel,
+            promptViewModel,
+          )}
         </DialogBody>
       </DialogContent>
     </Dialog>

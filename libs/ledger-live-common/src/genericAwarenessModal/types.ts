@@ -38,17 +38,6 @@ export const GenericAwarenessModalCarouselInputSchema = z.object({
   primaryButtonLink: z.string().catch(""),
 });
 
-export const GenericAwarenessModalPromptInputSchema = z.object({
-  layout: z.literal(GenericAwarenessModalLayout.Prompt),
-  campaignId: z.string(),
-  location: z.literal("generic_awareness_modal").default("generic_awareness_modal"),
-  title: z.string().catch(""),
-  subtitle: z.string().catch(""),
-  imageUrl: z.string().catch(""),
-  primaryButtonLabel: z.string().catch(""),
-  primaryButtonLink: z.string().catch(""),
-});
-
 export const GenericAwarenessModalFeatureIntroMainInputSchema = z.object({
   layout: z.literal(GenericAwarenessModalLayout.FeatureIntro),
   campaignId: z.string(),
@@ -72,6 +61,19 @@ export const GenericAwarenessModalFeatureIntroItemInputSchema = z.object({
   icon: z.string().catch(""),
   title: z.string().catch(""),
   subtitle: z.string().catch(""),
+});
+
+export const GenericAwarenessModalPromptInputSchema = z.object({
+  layout: z.literal(GenericAwarenessModalLayout.Prompt),
+  campaignId: z.string(),
+  location: z.literal("generic_awareness_modal").default("generic_awareness_modal"),
+  imageUrl: z.string().catch(""),
+  title: z.string().catch(""),
+  subtitle: z.string().catch(""),
+  primaryButtonLabel: z.string().catch(""),
+  primaryButtonLink: z.string().catch(""),
+  secondaryButtonLabel: z.string().catch(""),
+  secondaryButtonLink: z.string().catch(""),
 });
 
 export const GenericAwarenessModalInputSchema = z.union([
@@ -159,11 +161,6 @@ export type GenericAwarenessModalCarousel = {
   data: GenericAwarenessModalCarouselSlide[];
 };
 
-export type GenericAwarenessModalPrompt = {
-  layout: GenericAwarenessModalLayout.Prompt;
-  id: string;
-} & GenericAwarenessModalCarouselSlide;
-
 export type GenericAwarenessModalFeatureIntroItem = {
   icon: string;
   title: string;
@@ -183,10 +180,22 @@ export type GenericAwarenessModalFeatureIntro = {
   items: GenericAwarenessModalFeatureIntroItem[];
 };
 
+export type GenericAwarenessModalPrompt = {
+  layout: GenericAwarenessModalLayout.Prompt;
+  id: string;
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+  primaryButtonLabel: string;
+  primaryButtonLink: string;
+  secondaryButtonLabel: string;
+  secondaryButtonLink: string;
+};
+
 export type GenericAwarenessModalContentCard =
   | GenericAwarenessModalCarousel
-  | GenericAwarenessModalPrompt
-  | GenericAwarenessModalFeatureIntro;
+  | GenericAwarenessModalFeatureIntro
+  | GenericAwarenessModalPrompt;
 
 export type GenericAwarenessModalOutput = GenericAwarenessModalContentCard;
 

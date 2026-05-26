@@ -22,6 +22,18 @@ jest.mock("LLD/features/GenericAwarenessModal/genericAwarenessModalDialog", () =
   closeGenericAwarenessModalDialog: jest.fn(() => jest.fn()),
 }));
 
+jest.mock("../hooks/useGenericAwarenessModalPromptViewModel", () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    title: "",
+    subtitle: "",
+    primaryButtonLabel: "",
+    secondaryButtonLabel: "",
+    onPrimaryClick: jest.fn(),
+    onSecondaryClick: jest.fn(),
+  })),
+}));
+
 describe("GenericAwarenessModalView", () => {
   beforeEach(() => {
     jest.clearAllMocks();

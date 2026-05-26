@@ -7,6 +7,7 @@ import {
   APP_START_CAMPAIGN_ID,
   CAROUSEL_CAMPAIGN_ID,
   FEATURE_INTRO_CAMPAIGN_ID,
+  PROMPT_CAMPAIGN_ID,
 } from "../testUtils/fixtures";
 import {
   advanceCarouselSlide,
@@ -20,7 +21,10 @@ import {
   PAGE_TRACKING_AWARENESS_MODAL_CAROUSEL,
   PAGE_TRACKING_AWARENESS_MODAL_FEATURE_INTRO,
 } from "../analytics/const";
-import { closeGenericAwarenessModalDialog } from "../genericAwarenessModalDialog";
+import {
+  closeGenericAwarenessModalDialog,
+  openGenericAwarenessModalDialog,
+} from "../genericAwarenessModalDialog";
 
 jest.mock("~/renderer/linking", () => ({
   openURL: jest.fn(),
@@ -134,6 +138,56 @@ describe("GenericAwarenessModal Integration", () => {
         "button_clicked",
         expect.objectContaining({ button: "close", contentId: APP_START_CAMPAIGN_ID }),
       );
+      await waitFor(() => {
+        expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
+      });
+      expect(store.getState().dialogs.GENERIC_AWARENESS_MODAL).toBe(false);
+    });
+  });
+
+  describe("prompt variant", () => {
+    it("should render prompt when opened with prompt campaign id", async () => {
+      const { store } = renderModal();
+
+      act(() => {
+        seedGenericAwarenessModalContentCards(store);
+        dispatchGenericAwarenessModalThunk(
+          store,
+          openGenericAwarenessModalDialog({ campaignId: PROMPT_CAMPAIGN_ID }),
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Stay in control")).toBeVisible();
+      });
+      expect(
+        screen.getByText("Move assets to a hardware signer for true self-custody."),
+      ).toBeVisible();
+      expect(screen.getByRole("button", { name: "Learn more" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "Maybe later" })).toBeVisible();
+      expect(screen.queryByTestId("generic-awareness-modal-continue-button")).not.toBeInTheDocument();
+      expect(screen.getByTestId("generic-awareness-modal").getAttribute("data-campaign-id")).toBe(
+        PROMPT_CAMPAIGN_ID,
+      );
+    });
+
+    it("should close when the prompt primary button is clicked", async () => {
+      const { store, user } = renderModal();
+
+      act(() => {
+        seedGenericAwarenessModalContentCards(store);
+        dispatchGenericAwarenessModalThunk(
+          store,
+          openGenericAwarenessModalDialog({ campaignId: PROMPT_CAMPAIGN_ID }),
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "Learn more" })).toBeVisible();
+      });
+
+      await user.click(screen.getByTestId("generic-awareness-modal-primary-button"));
+
       await waitFor(() => {
         expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
       });
