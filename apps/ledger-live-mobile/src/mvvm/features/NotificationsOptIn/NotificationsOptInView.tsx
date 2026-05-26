@@ -17,7 +17,7 @@ export function NotificationsOptInView({ viewModel }: Props) {
   const isError = viewModel.state === "error";
 
   return (
-    <Box lx={{ flex: 1, backgroundColor: "base" }}>
+    <Box lx={{ flex: 1, backgroundColor: "canvas" }}>
       <SafeAreaView isFlex>
         <TrackScreen
           category="Drawer push notification opt-in"
@@ -44,7 +44,7 @@ export function NotificationsOptInView({ viewModel }: Props) {
                 ? t("notifications.optInScreen.errorTitle")
                 : t("notifications.optInScreen.title")}
             </Text>
-            <Text typography="body2" lx={{ color: "muted", marginTop: "s12" }}>
+            <Text typography="body2" lx={{ color: "muted", marginTop: "s8" }}>
               {isError
                 ? t("notifications.optInScreen.errorDescription")
                 : t("notifications.optInScreen.description")}
@@ -52,26 +52,24 @@ export function NotificationsOptInView({ viewModel }: Props) {
           </Box>
 
           {isError ? (
-            <Box lx={{ flex: 1 }} />
+            <>
+              <Box lx={{ flex: 1 }} />
+              <Box lx={{ paddingHorizontal: "s16", gap: "s16" }}>
+                <Button
+                  appearance="gray"
+                  size="lg"
+                  isFull
+                  onPress={viewModel.onContinue}
+                  testID="notifications-opt-in-continue"
+                >
+                  {t("common.continue")}
+                </Button>
+              </Box>
+            </>
           ) : (
-            <Box lx={{ flex: 1, overflow: "hidden" }}>
+            <Box lx={{ flex: 1 }} testID="notifications-opt-in-illustration">
               <NotificationsOptInIllustration />
-            </Box>
-          )}
-
-          <Box lx={{ paddingHorizontal: "s16", gap: "s16" }}>
-            {isError ? (
-              <Button
-                appearance="gray"
-                size="lg"
-                isFull
-                onPress={viewModel.onContinue}
-                testID="notifications-opt-in-continue"
-              >
-                {t("common.continue")}
-              </Button>
-            ) : (
-              <>
+              <Box style={{ marginTop: "auto" }} lx={{ paddingHorizontal: "s16", gap: "s32" }}>
                 <Button
                   appearance="base"
                   size="lg"
@@ -82,19 +80,21 @@ export function NotificationsOptInView({ viewModel }: Props) {
                 >
                   {t("notifications.prompt.allow")}
                 </Button>
-                <Pressable
-                  onPress={viewModel.onMaybeLater}
-                  accessibilityRole="button"
-                  testID="notifications-opt-in-later"
-                  lx={{ alignItems: "center", paddingVertical: "s20" }}
-                >
-                  <Text typography="body1SemiBold" lx={{ color: "base" }}>
-                    {t("notifications.prompt.later")}
-                  </Text>
-                </Pressable>
-              </>
-            )}
-          </Box>
+                <Box lx={{ alignItems: "center", justifyContent: "center" }}>
+                  <Pressable
+                    onPress={viewModel.onMaybeLater}
+                    accessibilityRole="button"
+                    testID="notifications-opt-in-later"
+                    lx={{ alignItems: "center" }}
+                  >
+                    <Text typography="body1SemiBold" lx={{ color: "base" }}>
+                      {t("notifications.prompt.later")}
+                    </Text>
+                  </Pressable>
+                </Box>
+              </Box>
+            </Box>
+          )}
         </Box>
       </SafeAreaView>
     </Box>

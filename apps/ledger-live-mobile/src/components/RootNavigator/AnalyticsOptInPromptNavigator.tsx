@@ -64,7 +64,11 @@ export default function AnalyticsOptInPromptNavigator() {
       <Stack.Screen
         name={ScreenName.AnalyticsOptInPromptMain}
         component={screensByVariant[activeVariant].main}
-        options={navigationOptions}
+        options={
+          activeVariant === "AnalyticsConsent"
+            ? { ...navigationOptions, headerShown: false }
+            : navigationOptions
+        }
       />
       <Stack.Screen
         name={ScreenName.AnalyticsOptInPromptDetails}

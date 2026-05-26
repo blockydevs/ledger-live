@@ -53,10 +53,10 @@ describe("NotificationsOptIn", () => {
   it("should render the notifications opt-in screen when permission is not determined", async () => {
     render(<TestNavigator />);
 
-    expect(await screen.findByText("Enable notifications?")).toBeOnTheScreen();
-    expect(screen.getByText("Allow notifications")).toBeOnTheScreen();
-    expect(screen.getByText("Maybe later")).toBeOnTheScreen();
-    expect(screen.getByTestId("notifications-opt-in-illustration")).toBeOnTheScreen();
+    expect(await screen.findByText("Enable notifications?")).toBeVisible();
+    expect(screen.getByText("Allow notifications")).toBeVisible();
+    expect(screen.getByText("Maybe later")).toBeVisible();
+    expect(screen.getByTestId("notifications-opt-in-illustration")).toBeVisible();
   });
 
   it("should request OS permission and complete lazy onboarding when allowing notifications", async () => {
@@ -66,7 +66,7 @@ describe("NotificationsOptIn", () => {
     await user.press(screen.getByText("Allow notifications"));
 
     await waitFor(() => expect(mockRequestPermission).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText("Portfolio route")).toBeOnTheScreen();
+    expect(await screen.findByText("Portfolio route")).toBeVisible();
   });
 
   it("should complete lazy onboarding to notification settings when app notifications are disabled", async () => {
@@ -86,7 +86,7 @@ describe("NotificationsOptIn", () => {
     await waitFor(() => expect(mockHasPermission).toHaveBeenCalled());
     await user.press(screen.getByText("Allow notifications"));
 
-    expect(await screen.findByText("Notifications settings route")).toBeOnTheScreen();
+    expect(await screen.findByText("Notifications settings route")).toBeVisible();
   });
 
   it("should go back when pressing the back button", async () => {
@@ -96,7 +96,7 @@ describe("NotificationsOptIn", () => {
     await screen.findByText("Enable notifications?");
     await user.press(screen.getByLabelText("Back"));
 
-    expect(await screen.findByText("Previous onboarding screen")).toBeOnTheScreen();
+    expect(await screen.findByText("Previous onboarding screen")).toBeVisible();
   });
 
   it("should opt out and complete lazy onboarding when choosing maybe later", async () => {
@@ -105,7 +105,7 @@ describe("NotificationsOptIn", () => {
     await screen.findByText("Enable notifications?");
     await user.press(screen.getByText("Maybe later"));
 
-    expect(await screen.findByText("Portfolio route")).toBeOnTheScreen();
+    expect(await screen.findByText("Portfolio route")).toBeVisible();
   });
 
   it("should skip the opt-in screen when notifications are already enabled", async () => {
@@ -113,7 +113,7 @@ describe("NotificationsOptIn", () => {
 
     render(<TestNavigator />);
 
-    expect(await screen.findByText("Portfolio route")).toBeOnTheScreen();
+    expect(await screen.findByText("Portfolio route")).toBeVisible();
     expect(screen.queryByText("Notifications are already enabled")).not.toBeOnTheScreen();
   });
 
@@ -122,8 +122,8 @@ describe("NotificationsOptIn", () => {
 
     render(<TestNavigator />);
 
-    expect(await screen.findByText("Notifications are unavailable")).toBeOnTheScreen();
+    expect(await screen.findByText("Notifications are unavailable")).toBeVisible();
     expect(screen.queryByTestId("notifications-opt-in-illustration")).not.toBeOnTheScreen();
-    expect(screen.getByText("Continue")).toBeOnTheScreen();
+    expect(screen.getByText("Continue")).toBeVisible();
   });
 });

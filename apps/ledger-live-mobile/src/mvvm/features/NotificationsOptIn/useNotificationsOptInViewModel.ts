@@ -107,14 +107,6 @@ export function useNotificationsOptInViewModel(): NotificationsOptInViewModel {
     [dismissedCount, nextRepromptDelay, variant],
   );
 
-  const onContinue = useCallback(() => {
-    completeLazyOnboarding();
-  }, [completeLazyOnboarding]);
-
-  const onBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
-
   const onMaybeLater = useCallback(() => {
     trackButtonClicked("maybe later");
     markUserAsOptOut();
@@ -173,10 +165,10 @@ export function useNotificationsOptInViewModel(): NotificationsOptInViewModel {
   return useMemo(
     () => ({
       state,
-      onBack,
+      onBack: navigation.goBack,
       onAllowNotifications,
       onMaybeLater,
-      onContinue,
+      onContinue: completeLazyOnboarding,
       isAllowNotificationsDisabled: !isInitialized || isSubmitting,
       dismissedCount,
       nextRepromptDelay,
@@ -185,12 +177,12 @@ export function useNotificationsOptInViewModel(): NotificationsOptInViewModel {
     [
       dismissedCount,
       nextRepromptDelay,
-      onBack,
       onAllowNotifications,
-      onContinue,
       onMaybeLater,
+      completeLazyOnboarding,
       isInitialized,
       isSubmitting,
+      navigation.goBack,
       state,
       variant,
     ],

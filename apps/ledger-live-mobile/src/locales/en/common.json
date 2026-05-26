@@ -3678,7 +3678,7 @@
     },
     "optInScreen": {
       "title": "Enable notifications?",
-      "description": "Get real-time alerts on new tokens, earning opportunities, and market shifts. Opt out at any time in settings",
+      "description": "Get real-time alerts on new tokens, earning opportunities, and market shifts. Opt out at any time in settings.",
       "emptyTitle": "Notifications are already enabled",
       "emptyDescription": "You are all set to receive real-time alerts from Ledger Wallet.",
       "errorTitle": "Notifications are unavailable",
