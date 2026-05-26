@@ -1,18 +1,11 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
-import { render, screen } from "@tests/test-renderer";
-import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { render, screen, withFlagOverrides } from "@tests/test-renderer";
 import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
 import { NavigatorName, ScreenName } from "~/const";
-import { getStackNavigatorConfig } from "~/navigation/navigatorConfig";
 import BorrowLiveAppNavigator from "../BorrowLiveAppNavigator";
 
 const baseNavigate = jest.fn();
-
-jest.mock("@ledgerhq/live-common/featureFlags/index", () => ({
-  ...jest.requireActual("@ledgerhq/live-common/featureFlags/index"),
-  useWalletFeaturesConfig: jest.fn(),
-}));
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
@@ -47,17 +40,6 @@ jest.mock("LLM/features/Borrow", () => ({
   ),
 }));
 
-jest.mock("~/navigation/navigatorConfig", () => ({
-  getStackNavigatorConfig: jest.fn(() => ({ headerShown: true })),
-}));
-
-const setWallet40Flag = (enabled: boolean) =>
-  jest
-    .mocked(useWalletFeaturesConfig)
-    .mockReturnValue({ shouldDisplayWallet40MainNav: enabled } as ReturnType<
-      typeof useWalletFeaturesConfig
-    >);
-
 const expectedSwapParams = {
   fromCurrencyId: "ethereum",
   toCurrencyId: "bitcoin",
@@ -69,19 +51,20 @@ const expectedSwapParams = {
 describe("BorrowLiveAppNavigator", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    setWallet40Flag(false);
   });
 
   it("renders the borrow live app wrapper screen", () => {
     render(<BorrowLiveAppNavigator />);
 
     expect(screen.getByTestId("borrow-live-app-wrapper")).toBeOnTheScreen();
-    expect(jest.mocked(getStackNavigatorConfig)).toHaveBeenCalled();
   });
 
   it("routes go-to-swap to the top-level Swap navigator when shouldDisplayWallet40MainNav is false", async () => {
-    setWallet40Flag(false);
-    const { user } = render(<BorrowLiveAppNavigator />);
+    const { user } = render(<BorrowLiveAppNavigator />, {
+      overrideInitialState: withFlagOverrides({
+        lwmWallet40: { enabled: true, params: { mainNavigation: false } },
+      }),
+    });
 
     await user.press(screen.getByTestId("go-to-swap"));
 
@@ -92,8 +75,11 @@ describe("BorrowLiveAppNavigator", () => {
   });
 
   it("routes go-to-swap through the Main navigator when shouldDisplayWallet40MainNav is true", async () => {
-    setWallet40Flag(true);
-    const { user } = render(<BorrowLiveAppNavigator />);
+    const { user } = render(<BorrowLiveAppNavigator />, {
+      overrideInitialState: withFlagOverrides({
+        lwmWallet40: { enabled: true, params: { mainNavigation: true } },
+      }),
+    });
 
     await user.press(screen.getByTestId("go-to-swap"));
 
