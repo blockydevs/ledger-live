@@ -1,7 +1,9 @@
 import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useTheme } from "styled-components/native";
@@ -25,8 +27,7 @@ type BorrowNavigation = NavigationProp<ParamListBase>;
 const Borrow = (props: NavigationProps) => {
   const paramAction = props.route.params?.action;
   const navigation: BorrowNavigation = props.navigation as unknown as BorrowNavigation;
-  const baseNavigation =
-    useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
+  const baseNavigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
   const { shouldDisplayWallet40MainNav } = useWalletFeaturesConfig("mobile");
 
   const triggerGoBackAction = useCallback(() => {
@@ -110,11 +111,7 @@ export default function BorrowLiveAppNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{ ...stackNavigationConfig }}>
-      <Stack.Screen
-        name={ScreenName.Borrow}
-        component={Borrow}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name={ScreenName.Borrow} component={Borrow} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
