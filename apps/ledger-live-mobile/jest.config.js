@@ -58,7 +58,10 @@ const transformIncludePatterns = [
 module.exports = {
   /** CI sets `JEST_MAX_WORKERS` (e.g. `100%`); local default leaves laptops headroom. */
   maxWorkers: process.env.JEST_MAX_WORKERS || "50%",
-  verbose: true,
+  // CI: `verbose: false` so Jest uses BufferedConsole and jest-quiet-reporter
+  // can replay captured logs only on failure. Local: keep verbose streaming so
+  // engineers see per-test logs live.
+  verbose: !process.env.CI,
   preset: "react-native",
   workerIdleMemoryLimit: "1GB",
   modulePaths: [compilerOptions.baseUrl ?? "."],
@@ -106,7 +109,10 @@ module.exports = {
   ],
   coverageReporters: ["json", ["lcov", { projectRoot: "../" }], "json-summary"],
   reporters: [
-    "default",
+    // CI: jest-quiet-reporter buffers stdout/stderr per test and flushes only on
+    // failure, keeping passing-run logs out of the workflow output. Local: keep
+    // the default reporter so engineers see live streaming logs.
+    process.env.CI ? "jest-quiet-reporter" : "default",
     ...(process.env.CI ? ["github-actions"] : []),
     ["jest-sonar", { outputName: "sonar-executionTests-report.xml", reportedFilePath: "absolute" }],
   ],
