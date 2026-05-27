@@ -140,9 +140,9 @@ export function usePendingTransferProposalsViewModel({
       );
 
       const byTokenAndDate = (a: ProcessedProposal, b: ProcessedProposal) =>
-        a.instrumentId !== b.instrumentId
-          ? a.instrumentId.localeCompare(b.instrumentId)
-          : a.expiresAtMicros - b.expiresAtMicros;
+        a.instrumentId === b.instrumentId
+          ? a.expiresAtMicros - b.expiresAtMicros
+          : a.instrumentId.localeCompare(b.instrumentId);
       incoming.sort(byTokenAndDate);
       outgoing.sort(byTokenAndDate);
 
