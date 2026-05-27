@@ -217,6 +217,7 @@ jobs:
           SPECULOS_FIRMWARE_VERSION: ${{ env.SMOKE_SPECULOS_FIRMWARE_VERSION }}
       - name: Upload Allure Results
         if: ${{ !cancelled() }}
+        continue-on-error: true
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: allure-results-speculos-smoke
@@ -224,6 +225,7 @@ jobs:
       - name: Publish Allure report
         id: publish-allure
         if: ${{ !cancelled() }}
+        continue-on-error: true
         uses: LedgerHQ/ledger-live/tools/actions/composites/upload-allure-report@develop
         with:
           login: ${{ vars.ALLURE_USERNAME }}
