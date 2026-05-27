@@ -54,7 +54,7 @@ const Value = styled(Box).attrs(() => ({
   fontSize: 4,
   color: "neutral.c70",
   ff: "Inter|Medium",
-})) <{ status?: string }>`
+}))<{ status?: string }>`
   flex: 1;
   ${p => (p.status ? `color:${getStatusColor(p.status, p.theme)};` : "")}
 `;
