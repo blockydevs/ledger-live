@@ -27,7 +27,6 @@ type ViewProps = PendingTransferProposalsDetailsViewModel & {
 };
 
 export function View({
-  unit,
   timeRemaining,
   handleAction,
   handleCopy,

@@ -63,7 +63,6 @@ const ExpiresInDisplay: React.FC<ExpiresInDisplayProps> = ({ timeRemaining, isEx
 
 export function View({
   proposal,
-  unit,
   timeRemaining,
   addressToShow,
   amountValue,

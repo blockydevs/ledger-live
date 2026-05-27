@@ -21,7 +21,6 @@ type ViewProps = ProposalRowViewModel & {
 export function View({
   proposal,
   account,
-  unit,
   timeRemaining,
   formattedTime,
   addressToShow,

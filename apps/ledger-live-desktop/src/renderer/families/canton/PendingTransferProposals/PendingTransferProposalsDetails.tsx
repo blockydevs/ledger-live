@@ -32,7 +32,6 @@ export type PendingTransferProposalsDetailsProps = {
 
 export function View({
   proposal,
-  unit,
   dateFormatted,
   timeRemaining,
   handleAction,

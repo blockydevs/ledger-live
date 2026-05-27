@@ -437,7 +437,7 @@ describe("makeGetAccountShape", () => {
         instrument_id: tokenInstrumentId,
         instrument_admin: tokenAdminId,
         memo: "Faucet drop",
-        expires_at_micros: Date.now() + 100000,
+        expires_at_micros: (Date.now() + 100000) * 1000,
         update_id: "update-cbtc-1",
       },
     ]);
