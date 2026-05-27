@@ -16,8 +16,8 @@ catalogs:
       specifier: 30.2.0
       version: 30.2.0
     '@ledgerhq/coin-module-framework':
-      specifier: 3.0.0
-      version: 3.0.0
+      specifier: 3.1.0
+      version: 3.1.0
     '@ledgerhq/coin-xrp':
       specifier: 7.21.5
       version: 7.21.5
@@ -61,17 +61,17 @@ catalogs:
       specifier: 0.1.14
       version: 0.1.14
     '@ledgerhq/lumen-ui-react':
-      specifier: 0.1.32
-      version: 0.1.32
+      specifier: 0.1.35
+      version: 0.1.35
     '@ledgerhq/lumen-ui-react-visualization':
-      specifier: 0.1.10
-      version: 0.1.10
+      specifier: 0.1.13
+      version: 0.1.13
     '@ledgerhq/lumen-ui-rnative':
-      specifier: 0.1.33
-      version: 0.1.33
+      specifier: 0.1.36
+      version: 0.1.36
     '@ledgerhq/lumen-ui-rnative-visualization':
-      specifier: 0.1.10
-      version: 0.1.10
+      specifier: 0.1.12
+      version: 0.1.12
     '@ledgerhq/speculos-device-controller':
       specifier: 0.2.3
       version: 0.2.3
@@ -508,9 +508,9 @@ patchedDependencies:
   '@bunli/core@0.9.1':
     hash: fbe5c853111cb92eab35c575f445da139fd7664c9be9bbca5ebbadfb0f292565
     path: patches/@bunli__core@0.9.1.patch
-  '@callstack/repack@5.2.3':
+  '@callstack/repack@5.2.5':
     hash: 8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60
-    path: patches/@callstack__repack@5.2.3.patch
+    path: patches/@callstack__repack@5.2.5.patch
   '@changesets/get-github-info@0.6.0':
     hash: e4ccd9dc35d4ccf42e8e83fdf0dcd00efc4170407493e6e0a3d15e2991e7d2b9
     path: patches/@changesets__get-github-info@0.6.0.patch
@@ -701,7 +701,7 @@ importers:
         version: link:../../libs/coin-modules/coin-bitcoin
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -933,6 +933,9 @@ importers:
       '@features/flow-market-banner':
         specifier: workspace:^
         version: link:../../features/flow/market-banner
+      '@features/platform-feature-flags':
+        specifier: workspace:^
+        version: link:../../features/platform/feature-flags
       '@ledgerhq/asset-aggregation':
         specifier: workspace:^
         version: link:../../libs/asset-aggregation
@@ -968,10 +971,10 @@ importers:
         version: link:../../libs/coin-modules/coin-filecoin
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -1046,10 +1049,10 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.32(8f58ce52213bf263b9f0aa2e082ed231)
+        version: 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
       '@ledgerhq/lumen-ui-react-visualization':
         specifier: 'catalog:'
-        version: 0.1.10(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
+        version: 0.1.13(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
       '@ledgerhq/react-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/react
@@ -1621,7 +1624,7 @@ importers:
         version: link:../../libs/coin-modules/coin-filecoin
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/coin-multiversx':
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-multiversx
@@ -1633,7 +1636,7 @@ importers:
         version: 1.17.1(@ledgerhq/device-management-kit@1.5.0(rxjs@7.8.2))
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -1720,10 +1723,10 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac)
+        version: 0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)
       '@ledgerhq/lumen-ui-rnative-visualization':
         specifier: 'catalog:'
-        version: 0.1.10(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac))(@types/react@19.0.14)(react-native-svg@15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 0.1.12(c2ca076c1e25b941e9e44c3852b190fd)
       '@ledgerhq/native-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/native
@@ -2098,14 +2101,14 @@ importers:
         specifier: 7.28.4
         version: 7.28.4
       '@callstack/repack':
-        specifier: 5.2.3
-        version: 5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
+        specifier: 5.2.5
+        version: 5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
       '@callstack/repack-plugin-expo-modules':
-        specifier: 5.2.3
-        version: 5.2.3(@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))
+        specifier: 5.2.5
+        version: 5.2.5(@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))
       '@callstack/repack-plugin-reanimated':
-        specifier: 5.2.3
-        version: 5.2.3(@babel/core@7.28.5)(@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))
+        specifier: 5.2.5
+        version: 5.2.5(@babel/core@7.28.5)(@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))
       '@features/flow-market-banner':
         specifier: workspace:^
         version: link:../../features/flow/market-banner
@@ -2162,7 +2165,7 @@ importers:
         version: 1.2.0(@types/react@19.0.14)(react-native-get-random-values@1.11.0(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react-redux@9.2.0(@types/react@19.0.14)(react@19.0.0)(redux@5.0.1))(react@19.0.0)(redux@5.0.1)
       '@rozenite/repack':
         specifier: 1.2.0
-        version: 1.2.0(@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))
+        version: 1.2.0(@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))
       '@rsdoctor/rspack-plugin':
         specifier: 'catalog:'
         version: 1.5.2(@rspack/core@1.7.3(@swc/helpers@0.5.17))
@@ -2345,7 +2348,7 @@ importers:
         version: link:../../libs/coin-modules/coin-evm
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/coin-solana':
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-solana
@@ -2495,10 +2498,10 @@ importers:
         version: link:../../features/platform/feature-flags
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -2558,7 +2561,7 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.32(8f58ce52213bf263b9f0aa2e082ed231)
+        version: 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
       '@ledgerhq/react-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/react
@@ -2847,10 +2850,10 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.32(b345b4f31e2f2b2bda7bc73c00ce30cf)
+        version: 0.1.35(b345b4f31e2f2b2bda7bc73c00ce30cf)
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.33(a2aa5f8c374d1b5fe4e14b150f0f766a)
+        version: 0.1.36(a2aa5f8c374d1b5fe4e14b150f0f766a)
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -3388,10 +3391,10 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.32(@ledgerhq/lumen-design-core@0.1.14)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
+        version: 0.1.35(@ledgerhq/lumen-design-core@0.1.14)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.33(a7e32582d2cd0fe02b399112a5a7a905)
+        version: 0.1.36(a7e32582d2cd0fe02b399112a5a7a905)
       '@swc/core':
         specifier: 'catalog:'
         version: 1.15.11
@@ -3688,7 +3691,7 @@ importers:
     devDependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0
+        version: 3.1.0
       '@ledgerhq/disable-network-setup':
         specifier: workspace:^
         version: link:../disable-network-setup
@@ -3727,7 +3730,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -3809,7 +3812,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -3900,7 +3903,7 @@ importers:
         version: 3.1.3(got@11.8.5)
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -3997,7 +4000,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4169,7 +4172,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4254,7 +4257,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4342,7 +4345,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4433,7 +4436,7 @@ importers:
         version: link:../coin-evm
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4533,7 +4536,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/concordium-core':
         specifier: workspace:^
         version: link:../../concordium-core
@@ -4633,7 +4636,7 @@ importers:
         version: 0.12.306
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4736,7 +4739,7 @@ importers:
         version: 5.7.0
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4860,7 +4863,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4954,7 +4957,7 @@ importers:
         version: 2.78.0
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5042,7 +5045,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5130,7 +5133,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5221,7 +5224,7 @@ importers:
         version: 1.2.0
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5327,7 +5330,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5415,7 +5418,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5491,7 +5494,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5585,7 +5588,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5667,7 +5670,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5785,7 +5788,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5897,7 +5900,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6006,7 +6009,7 @@ importers:
         version: 1.0.0-alpha.1(patch_hash=7deb6c5bd39ee007fca03da7609b2e0dee99dbb9962c3c8715edfd026da0a732)
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/errors':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/errors
@@ -6067,7 +6070,7 @@ importers:
         version: 1.0.11(graphql@16.13.2)
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6161,7 +6164,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6261,7 +6264,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6352,7 +6355,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6449,7 +6452,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6744,7 +6747,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0
+        version: 3.1.0
       '@ledgerhq/coin-polkadot':
         specifier: workspace:^
         version: link:../../coin-modules/coin-polkadot
@@ -7657,7 +7660,7 @@ importers:
         version: link:../coin-modules/coin-mina
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/coin-multiversx':
         specifier: workspace:^
         version: link:../coin-modules/coin-multiversx
@@ -8270,7 +8273,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../ledgerjs/packages/cryptoassets
@@ -11903,7 +11906,7 @@ importers:
     dependencies:
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.33(e23d53fa989a9de326d2c59bae773e61))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e23d53fa989a9de326d2c59bae773e61))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/icons-ui':
         specifier: workspace:^
         version: link:../icons
@@ -11970,7 +11973,7 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.33(e23d53fa989a9de326d2c59bae773e61)
+        version: 0.1.36(e23d53fa989a9de326d2c59bae773e61)
       '@react-native-async-storage/async-storage':
         specifier: 2.1.2
         version: 2.1.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))
@@ -12231,7 +12234,7 @@ importers:
     dependencies:
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
-        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ledgerhq/icons-ui':
         specifier: workspace:^
         version: file:libs/ui/packages/icons(@types/react@19.0.14)(react@19.0.0)(styled-components@5.3.11(@babel/core@7.28.5)(react-dom@19.0.0(react@19.0.0))(react-is@17.0.2)(react@19.0.0))(styled-system@5.1.5)
@@ -12295,7 +12298,7 @@ importers:
         version: 0.1.14
       '@ledgerhq/lumen-ui-react':
         specifier: 'catalog:'
-        version: 0.1.32(8f58ce52213bf263b9f0aa2e082ed231)
+        version: 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -14751,25 +14754,25 @@ packages:
     peerDependencies:
       bun: '>=1.3.11'
 
-  '@callstack/repack-dev-server@5.2.3':
-    resolution: {integrity: sha512-JijNFuhPeC4mEfO3m1nS1ZNaj33eZQGEvJ85qqeTpiLt0DPktoXgaBeVX3Diu5WzFDR6rzpVOROQozpZGCR5lQ==}
+  '@callstack/repack-dev-server@5.2.5':
+    resolution: {integrity: sha512-zIpG9g98O0fumKBy7kJZixPWHIf+iYYA7OvfltF/g9nS2nT4Gc0sXa0oQ9nv13ecK95UNPj3vsZUV/rLg6OpKA==}
     engines: {node: '>=18'}
 
-  '@callstack/repack-plugin-expo-modules@5.2.3':
-    resolution: {integrity: sha512-T2ETh2rz1O79dvmiJQb+Lui0jdmvn+T6unj6vIKMiPuVm15SCmNOtz+vSN9Xw+buy7yD1EuFr2hspGNhH4gLRg==}
+  '@callstack/repack-plugin-expo-modules@5.2.5':
+    resolution: {integrity: sha512-TCCmIIMWrnLjTxvQIzC2TRwgFY7N/q05Mrau1ujXiPJ0EhLOzsxVsEzYIzrBy4KLeMOfhQmGbZSwN/JKyyd+yg==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@callstack/repack': 5.2.3
+      '@callstack/repack': 5.2.5
 
-  '@callstack/repack-plugin-reanimated@5.2.3':
-    resolution: {integrity: sha512-panz4sRTnblWPI90KPiGL3DUFgq5k3GoBhZGSgGy7Ht0mMor6Pvg/qp/NYA4cqlhMU6FrcziD0aW5H19tBHD8Q==}
+  '@callstack/repack-plugin-reanimated@5.2.5':
+    resolution: {integrity: sha512-EqQLTytStboLVaFyWcM9KUqnLOoUQIcT3zpFA6HwFIcINC67scwkNESjwTW/q8FQpfZ4NdzCSA34vas9jUBEmA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/core': ^7.20
-      '@callstack/repack': 5.2.3
+      '@callstack/repack': 5.2.5
 
-  '@callstack/repack@5.2.3':
-    resolution: {integrity: sha512-oLDa6OowUUSHFJSvmKsiflpEBRhStvXU2MnuYI8bSfOjxwbTtGECrljLHaErLobLWDpBuX3/JolRPjPl+gKFUA==}
+  '@callstack/repack@5.2.5':
+    resolution: {integrity: sha512-lqvZCLvDYOseRMnUrrDf4yYuZsMDPEU2VGZcJUCb+ToBMn+TW7bt4PlvqaOk0BnMLLJONeBSIxsgxHkP0YjCUw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@module-federation/enhanced': '>=0.6.10'
@@ -15984,27 +15987,33 @@ packages:
     resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
-  '@fastify/ajv-compiler@3.6.0':
-    resolution: {integrity: sha512-LwdXQJjmMD+GwLOkP7TVC68qa+pSSogeWWmznRJ/coyTcfe9qA05AHFSe1eZFwK6q+xVRpChnvFUkf1iYaSZsQ==}
+  '@fastify/ajv-compiler@4.0.5':
+    resolution: {integrity: sha512-KoWKW+MhvfTRWL4qrhUwAAZoaChluo0m0vbiJlGMt2GXvL4LVPQEjt8kSpHI3IBq5Rez8fg+XeH3cneztq+C7A==}
 
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fastify/error@3.4.1':
-    resolution: {integrity: sha512-wWSvph+29GR783IhmvdwWnN4bUxTD01Vm5Xad4i7i1VuAOItLvbPAb69sb0IQ2N57yprvhNIwAP5B6xfKTmjmQ==}
+  '@fastify/error@4.2.0':
+    resolution: {integrity: sha512-RSo3sVDXfHskiBZKBPRgnQTtIqpi/7zhJOEmAxCiBcM7d0uwdGdxLlsCaLzGs8v8NnxIRlfG0N51p5yFaOentQ==}
 
-  '@fastify/fast-json-stringify-compiler@4.3.0':
-    resolution: {integrity: sha512-aZAXGYo6m22Fk1zZzEUKBvut/CIIQe/BapEORnxiD5Qr0kPHqqI69NtEMCme74h+at72sPhbkb4ZrLd1W3KRLA==}
+  '@fastify/fast-json-stringify-compiler@5.0.3':
+    resolution: {integrity: sha512-uik7yYHkLr6fxd8hJSZ8c+xF4WafPK+XzneQDPU+D10r5X19GW8lJcom2YijX2+qtFF1ENJlHXKFM9ouXNJYgQ==}
 
-  '@fastify/merge-json-schemas@0.1.1':
-    resolution: {integrity: sha512-fERDVz7topgNjtXsJTTW1JKLy0rhuLRcquYqNR9rF7OcVpCa2OVW49ZPDIhaRRCaUuvVxI+N416xUoF76HNSXA==}
+  '@fastify/forwarded@3.0.1':
+    resolution: {integrity: sha512-JqDochHFqXs3C3Ml3gOY58zM7OqO9ENqPo0UqAjAjH8L01fRZqwX9iLeX34//kiJubF7r2ZQHtBRU36vONbLlw==}
 
-  '@fastify/middie@8.3.3':
-    resolution: {integrity: sha512-+WHavMQr9CNTZoy2cjoDxoWp76kZ3JKjAtZj5sXNlxX5XBzHig0TeCPfPc+1+NQmliXtndT3PFwAjrQHE/6wnQ==}
+  '@fastify/merge-json-schemas@0.2.1':
+    resolution: {integrity: sha512-OA3KGBCy6KtIvLf8DINC5880o5iBlDX4SxzLQS8HorJAbqluzLRn80UXU0bxZn7UOFhFgpRJDasfwn9nG4FG4A==}
 
-  '@fastify/sensible@5.6.0':
-    resolution: {integrity: sha512-Vq6Z2ZQy10GDqON+hvLF52K99s9et5gVVxTul5n3SIAf0Kq5QjPRUKkAMT3zPAiiGvoHtS3APa/3uaxfDgCODQ==}
+  '@fastify/middie@9.3.2':
+    resolution: {integrity: sha512-5C3xMHJxpfqoHd+xZSHPBI71fpzkoF6wMsYtgzXRyQUNvsIAxJm2yY4r2fUjF0h3rS9MXlo/aXLaXv3s4TL+JQ==}
+
+  '@fastify/proxy-addr@5.1.0':
+    resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
+
+  '@fastify/sensible@6.0.4':
+    resolution: {integrity: sha512-1vxcCUlPMew6WroK8fq+LVOwbsLtX+lmuRuqpcp6eYqu6vmkLwbKTdBWAZwbeaSgCfW4tzUpTIHLLvTiQQ1BwQ==}
 
   '@firebase/analytics-compat@0.2.17':
     resolution: {integrity: sha512-SJNVOeTvzdqZQvXFzj7yAirXnYcLDxh57wBFROfeowq/kRN1AqOw1tG6U4OiFOEhqi7s3xLze/LMkZatk2IEww==}
@@ -17015,8 +17024,8 @@ packages:
   '@kwsites/promise-deferred@1.1.1':
     resolution: {integrity: sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==}
 
-  '@ledgerhq/coin-module-framework@3.0.0':
-    resolution: {integrity: sha512-jFLnA5zdAsXesRWzE+lX6ZP4tSn3dVxvbMUeJwwW5L1YIMlBJnf1oRdSr6ImrFRqP3bxLoW4CmI2ZGzr721RxQ==}
+  '@ledgerhq/coin-module-framework@3.1.0':
+    resolution: {integrity: sha512-7COZ4fGsABwug/5deApVF+c/BnNYEROFCPHmRho2XLH+8Gh5ZdahvgcpN+J1G7HvE9xxF0UJ7If5Ojsrg7tDOA==}
     peerDependencies:
       '@ledgerhq/errors': ^6.33.0
 
@@ -17178,19 +17187,19 @@ packages:
   '@ledgerhq/lumen-design-core@0.1.14':
     resolution: {integrity: sha512-pL73wXMDwHYU2s19VtweCSwUEXDGs03yNQpjNvbkgGS21AI9sTVdiNfD9TckLHrjM5NG1b9HxzXuFatChDcKaA==}
 
-  '@ledgerhq/lumen-ui-react-visualization@0.1.10':
-    resolution: {integrity: sha512-Py4Wuzg/wHADl/cqCOyyLqfH+X0RCBMOFuZ9rJdOW8sOZB8yEO8RE/+TAeljK5U2wmyUyditEiFn39PKGHNceQ==}
+  '@ledgerhq/lumen-ui-react-visualization@0.1.13':
+    resolution: {integrity: sha512-XaNy/WinKL15O/x/kr5wvWjzqKj3GZAGvoc+k4OSIBCuhuHSHs8A4XuJRoBfmhOhDwcpbHrkgjzWP+mTTfgj3g==}
     peerDependencies:
-      '@ledgerhq/lumen-design-core': 0.1.13
-      '@ledgerhq/lumen-ui-react': 0.1.31
+      '@ledgerhq/lumen-design-core': 0.1.14
+      '@ledgerhq/lumen-ui-react': 0.1.34
       class-variance-authority: ^0.7.1
       clsx: ^2.1.1
       react: 19.0.0
       react-dom: 19.0.0
       tailwind-merge: ^2.6.0
 
-  '@ledgerhq/lumen-ui-react@0.1.32':
-    resolution: {integrity: sha512-BjnDELXJ8cs0eH/sPBGt45S+bXB3EsKm31SlEzP82qvsvg/XvTUP0Hyvu45a+gTMMlsUnD4ORZMD6W1QFdkGpg==}
+  '@ledgerhq/lumen-ui-react@0.1.35':
+    resolution: {integrity: sha512-PBCDITzpeReZACHXDEg5Bs0v6ULYXVizaRREwueXuAFTQJJxGtjdcOUHQsbw/aFgS5J46mliuc29mGpinXSqcQ==}
     peerDependencies:
       '@base-ui/react': ^1.3.0
       '@ledgerhq/lumen-design-core': 0.1.14
@@ -17207,18 +17216,21 @@ packages:
       react-dom: 19.0.0
       tailwind-merge: ^2.6.0
 
-  '@ledgerhq/lumen-ui-rnative-visualization@0.1.10':
-    resolution: {integrity: sha512-U7qazXPA1LVUJPhxdRhNRIVpEA820FqI0cGcs6mshP4C82yDdcy9lxdjHwoVSmGhXL8tZQcj5GrH6BQA78P2/g==}
+  '@ledgerhq/lumen-ui-rnative-visualization@0.1.12':
+    resolution: {integrity: sha512-AN5E/bYRSLNxuXCGYGsxrz+9IFaKpQ7boA8uTpDmfxLvZIdgMAODcQtrLpiRKAtOh3FNxtKK6LG6jWZQk2z0sw==}
     peerDependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.33
+      '@ledgerhq/lumen-ui-rnative': 0.1.35
       '@types/react': ^19.0.0
       react: 19.0.0
       react-native: ~0.79.7
+      react-native-gesture-handler: '>=2.0.0'
+      react-native-reanimated: '>=4.0.0'
       react-native-svg: ^15.0.0
+      react-native-worklets: '>=0.5.0'
 
-  '@ledgerhq/lumen-ui-rnative@0.1.33':
-    resolution: {integrity: sha512-E8TGl0sf5G9gaoUew0vqTjWgWjy9pFoJa70krAuN78Zim+W0uwGlgH+2nheQahEo7d72qdLLv2ed6gDi30MFqQ==}
+  '@ledgerhq/lumen-ui-rnative@0.1.36':
+    resolution: {integrity: sha512-5Cc2F6Fewt4ClKFxQymXuuRHrs0UW0Ae7aaL+thobXmoq4lYTWsIjj0qdnmiiDOMLoc3wsn6dW+PlSlhnascVw==}
     peerDependencies:
       '@gorhom/bottom-sheet': ^5.0.0
       '@ledgerhq/lumen-design-core': 0.1.14
@@ -23793,8 +23805,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  avvio@8.4.0:
-    resolution: {integrity: sha512-CDSwaxINFy59iNwhYnkvALBwZiTydGkOecZyPkqBpABYR1KqGEsET0VOOYDwtleZSUIdeY36DC2bSZ24CO1igA==}
+  avvio@9.2.0:
+    resolution: {integrity: sha512-2t/sy01ArdHHE0vRH5Hsay+RtCZt3dLPji7W7/MMOCEgze5b7SNDC4j5H6FnVgPkI1MTNFGzHdHrVXDDl7QSSQ==}
 
   await-to-js@3.0.0:
     resolution: {integrity: sha512-zJAaP9zxTcvTHRlejau3ZOY4V7SRpiByf3/dxx2uyKxxor19tpmpV2QRsTKikckwhaPmr2dVpxxMr7jOCYVp5g==}
@@ -27171,9 +27183,6 @@ packages:
     resolution: {integrity: sha512-jIKXJVe6ZO0SpwEgVtEVujTf8TwjI9wMXFJCjsDHUB3RroUbXBgF4kOSz3A7MW0UR26aqsoB8i9O2mjtjERAiA==}
     engines: {node: '>=8.0.0'}
 
-  fast-content-type-parse@1.1.0:
-    resolution: {integrity: sha512-fBHHqSTFLVnR61C+gltJuE5GkVQMV0S2nqUO8TJ+5Z3qAKG8vAx4FKai1s5jq/inV1+sREynIWSuQ6HgoSXpDQ==}
-
   fast-copy@3.0.2:
     resolution: {integrity: sha512-dl0O9Vhju8IrcLndv2eU4ldt1ftXMqqfgN4H1cpmGV7P6jeB9FwpN9a2c8DPGE1Ys88rNUJVYDHq73CGAGOPfQ==}
 
@@ -27199,8 +27208,8 @@ packages:
   fast-json-stable-stringify@2.1.0:
     resolution: {integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==}
 
-  fast-json-stringify@5.16.1:
-    resolution: {integrity: sha512-KAdnLvy1yu/XrRtP+LJnxbBGrhN+xXu+gt3EUvZhYGKCr3lFHq/7UFJHHFgmJKoqlh6B40bZLEv7w46B0mqn1g==}
+  fast-json-stringify@6.4.0:
+    resolution: {integrity: sha512-ibRCQ0GZKJIQ+P3Et1h0LhPgp3PMTYk0MH8O+kW3lNYsvmaQww5Nn3f1jf73Q0jR1Yz3a1CDP4/NZD3vOajWJQ==}
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
@@ -27214,10 +27223,6 @@ packages:
   fast-querystring@1.1.2:
     resolution: {integrity: sha512-g6KuKWmFXc0fID8WWH0jit4g0AGBoJhCkJMb1RmbsSEUNvQ+ZC8D6CUZ+GtF8nMzSPXnhiePyyqqipzNNEnHjg==}
 
-  fast-redact@3.5.0:
-    resolution: {integrity: sha512-dwsoQlS7h9hMeYUq1W++23NDcBLV4KqONnITDV9DjfS3q1SgDGVrBdvvTLUotWtPSD7asWDV9/CmsZPy8Hf70A==}
-    engines: {node: '>=6'}
-
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
@@ -27226,9 +27231,6 @@ packages:
 
   fast-stable-stringify@1.0.0:
     resolution: {integrity: sha512-wpYMUmFu5f00Sm0cj2pfivpmawLZ0NKdviQ4w9zJeR8JVtOpOxHmLaJuj0vxvGqMJQWyP/COUkF75/57OKyRag==}
-
-  fast-uri@2.4.0:
-    resolution: {integrity: sha512-ypuAmmMKInk5q7XcepxlnUWDLWv4GFtaJqAzWKqn62IpQ3pejtr5dTVbt3vwqVaMKmkNR55sTT+CqUKIaT21BA==}
 
   fast-uri@3.0.3:
     resolution: {integrity: sha512-aLrHthzCjH5He4Z2H9YZ+v6Ujb9ocRuW6ZzkJQOrTxleEijANq4v1TsaPaVG1PZcuurEzrLcWRyYBYXD5cEiaw==}
@@ -27255,15 +27257,15 @@ packages:
     resolution: {integrity: sha512-eRnCtTTtGZFpQCwhJiUOuxPQWRXVKYDn0b2PeHfXL6/Zi53SLAzAHfVhVWK2AryC/WH05kGfxhFIPvTF0SXQzg==}
     engines: {node: '>= 4.9.1'}
 
-  fastify-favicon@4.3.0:
-    resolution: {integrity: sha512-EDJ7oYTvJs7bfyU7WKVw8PGoVuwWXIsyJr2woVS2K3kNii2AWd2svppJCsPnV8ZwuyxRfwt4KNgJQjo6kOut4w==}
-    engines: {node: '>=14.15.0'}
+  fastify-favicon@5.0.0:
+    resolution: {integrity: sha512-t+elngZ+o/Q3mR8btRqqGbCYNck5BmmW49iUCOw5ya0senmXBsSTKQKfrJlijG9e9YQi0VX2hlhWDYDRBUca+w==}
+    engines: {node: '>=20.9.0'}
 
-  fastify-plugin@4.5.1:
-    resolution: {integrity: sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ==}
+  fastify-plugin@5.1.0:
+    resolution: {integrity: sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==}
 
-  fastify@4.29.1:
-    resolution: {integrity: sha512-m2kMNHIG92tSNWv+Z3UeTR9AWLLuo7KctC7mlFPtMEVrfjIhmQhkQnT9v15qA/BfVq3vvj134Y0jl9SBje3jXQ==}
+  fastify@5.8.5:
+    resolution: {integrity: sha512-Yqptv59pQzPgQUSIm87hMqHJmdkb1+GPxdE6vW6FRyVE9G86mt7rOghitiU4JHRaTyDUk9pfeKmDeu70lAwM4Q==}
 
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
@@ -27384,9 +27386,9 @@ packages:
     resolution: {integrity: sha512-9ZonPT4ZAK4a+1pUPVPZJapbi7O5qbbJPdYw/NOQWZZbVLdDTYM3A4R9z/DpAM08IDaFGsvPgiGZ82WEwUDWjg==}
     engines: {node: '>=14.16'}
 
-  find-my-way@8.2.2:
-    resolution: {integrity: sha512-Dobi7gcTEq8yszimcfp/R7+owiT4WncAJ7VTTgFH1jYJ5GaG1FbhjwDG820hptN0QDFvzVY3RfCzdInvGPGzjA==}
-    engines: {node: '>=14'}
+  find-my-way@9.6.0:
+    resolution: {integrity: sha512-Zf4Xve4RymLl7NgaavNebZ01joJ8MfVerOG43wy7SHLO+r+K0C6d/SE0BiR7AV5V1VOCFlOP7ecdo+I4qmiHrQ==}
+    engines: {node: '>=20'}
 
   find-replace@3.0.0:
     resolution: {integrity: sha512-6Tb2myMioCAgv5kfvP5/PkZZ/ntTpVK39fHY7WkWBgvbeE+VHd/tZuZ4mrC+bxh4cfOZeYKVPaJIZtZXV7GNCQ==}
@@ -29459,8 +29461,8 @@ packages:
     resolution: {integrity: sha512-CTUKmIlPJbsWfzRRnOXz+0MjIqvnleIXwFTzz+t9T86HnYX/Rozria6ZVGLktAU9e+NygNljveP+yxqtQp/Q4w==}
     engines: {node: '>=12.0.0'}
 
-  json-schema-ref-resolver@1.0.1:
-    resolution: {integrity: sha512-EJAj1pgHc1hxF6vo2Z3s69fMjO1INq6eGHXZ8Z6wCQeldCuwxGK9Sxf4/cScGn3FZubCVUehfWtcDM/PLteCQw==}
+  json-schema-ref-resolver@3.0.0:
+    resolution: {integrity: sha512-hOrZIVL5jyYFjzk7+y7n5JDzGlU8rfWDuYyHwGa2WA8/pcmMHezp2xsVwxrebD/Q9t8Nc5DboieySDpCp4WG4A==}
 
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
@@ -29532,6 +29534,10 @@ packages:
     resolution: {integrity: sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ==}
     engines: {node: '>=12', npm: '>=6'}
 
+  jsonwebtoken@9.0.3:
+    resolution: {integrity: sha512-MT/xP0CrubFRNLNKvxJ2BYfy53Zkm++5bX9dtuPbqAeQpTVe0MQTFhao8+Cp//EmJp244xt6Drw/GVEGCUj40g==}
+    engines: {node: '>=12', npm: '>=6'}
+
   jsprim@1.4.2:
     resolution: {integrity: sha512-P2bSOMAc/ciLz6DzgjVlGJP9+BrJWu5UDGK70C2iweC5QBIeFf0ZXRvGjEj2uYgrY2MkAAhsSWHDWlFtEroZWw==}
     engines: {node: '>=0.6.0'}
@@ -29563,6 +29569,9 @@ packages:
 
   jws@4.0.0:
     resolution: {integrity: sha512-KDncfTmOZoOMTFG4mBlG0qUIOlc03fmzH+ru6RgYVZhPkyiy/92Owlt/8UEN+a4TXR1FQetfIpJE8ApdvdVxTg==}
+
+  jws@4.0.1:
+    resolution: {integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==}
 
   jwt-decode@4.0.0:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
@@ -29784,8 +29793,8 @@ packages:
   lie@3.3.0:
     resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
 
-  light-my-request@5.14.0:
-    resolution: {integrity: sha512-aORPWntbpH5esaYpGOOmri0OHDOe3wC5M2MQxZ9dvMLZm6DnaAn0kJlcbU9hwsQgLzmZyReKwFwwPkR+nHu5kA==}
+  light-my-request@6.6.0:
+    resolution: {integrity: sha512-CHYbu8RtboSIoVsHZ6Ye4cj4Aw/yg2oAFimlF7mNvfDV192LR7nDiKtSIfCuLT7KokPSTn/9kfVLm5OGN0A28A==}
 
   lighthouse-logger@1.4.2:
     resolution: {integrity: sha512-gPWxznF6TKmUHrOQjlVo2UbaL2EJ71mb2CCeRs/2qBpi4L/g4LUVc9+3lKQ6DTUZwJswfM7ainGrLO1+fOqa2g==}
@@ -32020,10 +32029,6 @@ packages:
     resolution: {integrity: sha512-0zZC2ygfdqvqK8zJIr1e+wT1T/L+LF6qvqvbzEQ6tiMAoTqEVK9a1K3YRu8HEUvGEvNqZyPJTtb2sNIoTkB83w==}
     hasBin: true
 
-  pino@9.6.0:
-    resolution: {integrity: sha512-i85pKRCt4qMjZ1+L7sy2Ag4t1atFcdbEt76+7iRJn1g2BvsnRMGu9p8pivl9fs63M2kF/A0OacFZhTub+m/qMg==}
-    hasBin: true
-
   pirates@3.0.2:
     resolution: {integrity: sha512-c5CgUJq6H2k6MJz72Ak1F5sN9n9wlSlJyEnwvpm9/y3WB4E3pHBDT2c6PEiS1vyJvq2bUxUAIu0EGf8Cx4Ic7Q==}
     engines: {node: '>= 4'}
@@ -32640,9 +32645,6 @@ packages:
   process-on-spawn@1.0.0:
     resolution: {integrity: sha512-1WsPDsUSMmZH5LeMLegqkPDrsGgsWwk1Exipy2hvB0o/F0ASzbpIctSCcZIK1ykJvtTJULEH+20WOFjMvGnCTg==}
     engines: {node: '>=8'}
-
-  process-warning@3.0.0:
-    resolution: {integrity: sha512-mqn0kFRl0EoqhnL0GQ0veqFHyIN1yig9RHh/InzORTUiZHFRAur+aMtRkELNwGs9aNwKS6tg/An4NYBPGwvtzQ==}
 
   process-warning@4.0.1:
     resolution: {integrity: sha512-3c2LzQ3rY9d0hc1emcsHhfT9Jwz0cChib/QN89oME2R451w5fy3f0afAhERFZAwrbDU43wk12d0ORBpDVME50Q==}
@@ -33820,8 +33822,8 @@ packages:
     resolution: {integrity: sha512-I9fPXU9geO9bHOt9pHHOhOkYerIMsmVaWB0rA2AI9ERh/+x/i7MV5HKBNrg+ljO5eoPVgCcnFuRjJ9uH6I/3eg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  ret@0.4.3:
-    resolution: {integrity: sha512-0f4Memo5QP7WQyUEAYUO3esD/XjOc3Zjjg5CPsAq1p8sIu0XPeMbHJemKA0BO7tV0X7+A0FoEpbmHXWxPyD3wQ==}
+  ret@0.5.0:
+    resolution: {integrity: sha512-I1XxrZSQ+oErkRR4jYbAyEEu2I0avBvvMM5JN+6EBprOGRCs63ENqZ3vjavq8fBw2+62G5LF5XelKwuJpcvcxw==}
     engines: {node: '>=10'}
 
   retry-request@7.0.2:
@@ -34005,8 +34007,9 @@ packages:
     resolution: {integrity: sha512-x/+Cz4YrimQxQccJf5mKEbIa1NzeCRNI5Ecl/ekmlYaampdNLPalVyIcCZNNH3MvmqBugV5TMYZXv0ljslUlaw==}
     engines: {node: '>= 0.4'}
 
-  safe-regex2@3.1.0:
-    resolution: {integrity: sha512-RAAZAGbap2kBfbVhvmnTFv73NWLMvDGOITFYTZBAaY8eR+Ir4ef7Up/e7amo+y1+AH+3PtLkrt9mvcTsG9LXug==}
+  safe-regex2@5.1.1:
+    resolution: {integrity: sha512-mOSBvHGDZMuIEZMdOz/aCEYDCv0E7nfcNsIhUF+/P+xC7Hyf3FkvymqgPbg9D1EdSGu+uKbJgy09K/RKKc7kJA==}
+    hasBin: true
 
   safe-stable-stringify@2.4.3:
     resolution: {integrity: sha512-e2bDA2WJT0wxseVd4lsDP4+3ONX6HpMXQa1ZhFQ7SU+GjvORCmShbCMltrtIDfkYhVHrOcPtj+KhmDBdPdZD1g==}
@@ -34055,10 +34058,6 @@ packages:
     resolution: {integrity: sha512-pN/yOAvcC+5rQ5nERGuwrjLlYvLTbCibnZ1I7B1LaiAz9BRBlE9GMgE/eqV30P7aJQUf7Ddimy/RsbYO/GrVGg==}
     engines: {node: '>= 10.13.0'}
 
-  schema-utils@4.2.0:
-    resolution: {integrity: sha512-L0jRsrPpjdckP3oPug3/VxNKt2trR8TcabrM6FOAAlvC/9Phcmm+cuAgTlxBqdBR1WJx7Naj9WHw+aOmheSVbw==}
-    engines: {node: '>= 12.13.0'}
-
   schema-utils@4.3.3:
     resolution: {integrity: sha512-eflK8wEtyOE6+hsaRVPxvUKYCpRgzLqDTb8krvAsRIwOGlHoSgYLgBXoubGgLd2fT41/OUYdb48v4k4WWHQurA==}
     engines: {node: '>= 10.13.0'}
@@ -34079,6 +34078,9 @@ packages:
 
   secure-json-parse@2.7.0:
     resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
+
+  secure-json-parse@4.1.0:
+    resolution: {integrity: sha512-l4KnYfEyqYJxDwlNVyRfO2E4NTHfMKAWdUuA8J0yve2Dz/E/PdBepY03RvyJpssIpRFwJoCD55wA+mEDs6ByWA==}
 
   select-hose@2.0.0:
     resolution: {integrity: sha512-mEugaLK+YfkijB4fx0e6kImuJdCIt2LxCRcbEYPqRGCs4F2ogyfZU5IAZRdjCP8JPq2AtdNoC/Dux63d9Kiryg==}
@@ -35015,10 +35017,6 @@ packages:
 
   tapable@1.1.3:
     resolution: {integrity: sha512-4WK/bYZmj8xLr+HUCODHGF1ZFzsYffasLUgEiMBY4fgtltdO6B4WJtlSbPaDTLpYTcGVwM2qLnFTICEcNxs3kA==}
-    engines: {node: '>=6'}
-
-  tapable@2.2.1:
-    resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
 
   tapable@2.2.3:
@@ -40573,14 +40571,14 @@ snapshots:
       '@standard-schema/utils': 0.3.0
       better-result: 2.8.2
 
-  '@callstack/repack-dev-server@5.2.3':
+  '@callstack/repack-dev-server@5.2.5':
     dependencies:
       '@babel/code-frame': 7.29.0
-      '@fastify/middie': 8.3.3
-      '@fastify/sensible': 5.6.0
-      fastify: 4.29.1
-      fastify-favicon: 4.3.0
-      fastify-plugin: 4.5.1
+      '@fastify/middie': 9.3.2
+      '@fastify/sensible': 6.0.4
+      fastify: 5.8.5
+      fastify-favicon: 5.0.0
+      fastify-plugin: 5.1.0
       http-proxy-middleware: 3.0.5
       launch-editor: 2.12.0
       open: 10.2.0
@@ -40592,19 +40590,19 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@callstack/repack-plugin-expo-modules@5.2.3(@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))':
+  '@callstack/repack-plugin-expo-modules@5.2.5(@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))':
     dependencies:
-      '@callstack/repack': 5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
+      '@callstack/repack': 5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
 
-  '@callstack/repack-plugin-reanimated@5.2.3(@babel/core@7.28.5)(@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))':
+  '@callstack/repack-plugin-reanimated@5.2.5(@babel/core@7.28.5)(@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))':
     dependencies:
       '@babel/core': 7.28.5
-      '@callstack/repack': 5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
+      '@callstack/repack': 5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
       semver: 7.7.3
 
-  '@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))':
+  '@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))':
     dependencies:
-      '@callstack/repack-dev-server': 5.2.3
+      '@callstack/repack-dev-server': 5.2.5
       '@discoveryjs/json-ext': 0.5.7
       '@rspack/plugin-react-refresh': 1.0.0(react-refresh@0.14.2)
       babel-loader: 9.2.1(@babel/core@7.28.5)
@@ -40617,16 +40615,16 @@ snapshots:
       flow-remove-types: 2.301.0
       gradient-string: 2.0.2
       image-size: 1.1.1
-      jsonwebtoken: 9.0.2
+      jsonwebtoken: 9.0.3
       memfs: 4.51.1
       mime-types: 2.1.35
       pretty-format: 26.6.2
       react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
       react-refresh: 0.14.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       semver: 7.7.3
       shallowequal: 1.1.0
-      tapable: 2.2.1
+      tapable: 2.2.3
       terser-webpack-plugin: 5.3.16(@swc/core@1.15.11(@swc/helpers@0.5.17))
       throttleit: 2.1.0
       webpack-merge: 6.0.1
@@ -42660,39 +42658,47 @@ snapshots:
 
   '@faker-js/faker@9.9.0': {}
 
-  '@fastify/ajv-compiler@3.6.0':
+  '@fastify/ajv-compiler@4.0.5':
     dependencies:
       ajv: 8.17.1
-      ajv-formats: 2.1.1
-      fast-uri: 2.4.0
+      ajv-formats: 3.0.1
+      fast-uri: 3.0.3
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fastify/error@3.4.1': {}
+  '@fastify/error@4.2.0': {}
 
-  '@fastify/fast-json-stringify-compiler@4.3.0':
+  '@fastify/fast-json-stringify-compiler@5.0.3':
     dependencies:
-      fast-json-stringify: 5.16.1
+      fast-json-stringify: 6.4.0
 
-  '@fastify/merge-json-schemas@0.1.1':
-    dependencies:
-      fast-deep-equal: 3.1.3
+  '@fastify/forwarded@3.0.1': {}
 
-  '@fastify/middie@8.3.3':
+  '@fastify/merge-json-schemas@0.2.1':
     dependencies:
-      '@fastify/error': 3.4.1
-      fastify-plugin: 4.5.1
-      path-to-regexp: 6.3.0
+      dequal: 2.0.3
+
+  '@fastify/middie@9.3.2':
+    dependencies:
+      '@fastify/error': 4.2.0
+      fastify-plugin: 5.1.0
+      find-my-way: 9.6.0
+      path-to-regexp: 8.3.0
       reusify: 1.0.4
 
-  '@fastify/sensible@5.6.0':
+  '@fastify/proxy-addr@5.1.0':
+    dependencies:
+      '@fastify/forwarded': 3.0.1
+      ipaddr.js: 2.1.0
+
+  '@fastify/sensible@6.0.4':
     dependencies:
       '@lukeed/ms': 2.0.2
-      fast-deep-equal: 3.1.3
-      fastify-plugin: 4.5.1
+      dequal: 2.0.3
+      fastify-plugin: 5.1.0
       forwarded: 0.2.0
       http-errors: 2.0.0
-      type-is: 1.6.18
+      type-is: 2.0.1
       vary: 1.1.2
 
   '@firebase/analytics-compat@0.2.17(@firebase/app-compat@0.2.50)(@firebase/app@0.11.1)':
@@ -44455,18 +44461,18 @@ snapshots:
 
   '@kwsites/promise-deferred@1.1.1': {}
 
-  '@ledgerhq/coin-module-framework@3.0.0':
+  '@ledgerhq/coin-module-framework@3.1.0':
     dependencies:
       bignumber.js: 9.1.2
 
-  '@ledgerhq/coin-module-framework@3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)':
+  '@ledgerhq/coin-module-framework@3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)':
     dependencies:
       '@ledgerhq/errors': link:libs/ledgerjs/packages/errors
       bignumber.js: 9.1.2
 
   '@ledgerhq/coin-xrp@7.21.5(@ledgerhq/errors@libs+ledgerjs+packages+errors)(@ledgerhq/live-network@libs+live-network)(@ledgerhq/logs@libs+ledgerjs+packages+logs)':
     dependencies:
-      '@ledgerhq/coin-module-framework': 3.0.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+      '@ledgerhq/coin-module-framework': 3.1.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/errors': link:libs/ledgerjs/packages/errors
       '@ledgerhq/live-network': link:libs/live-network
       '@ledgerhq/logs': link:libs/ledgerjs/packages/logs
@@ -44490,29 +44496,29 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
     optionalDependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-react': 0.1.32(8f58ce52213bf263b9f0aa2e082ed231)
+      '@ledgerhq/lumen-ui-react': 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
       react-dom: 19.0.0(react@19.0.0)
 
-  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.33(e23d53fa989a9de326d2c59bae773e61))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e23d53fa989a9de326d2c59bae773e61))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
     optionalDependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.33(e23d53fa989a9de326d2c59bae773e61)
+      '@ledgerhq/lumen-ui-rnative': 0.1.36(e23d53fa989a9de326d2c59bae773e61)
       react-dom: 19.0.0(react@19.0.0)
       react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(metro-transform-worker@0.81.5)(metro@0.81.5)(react@19.0.0)
 
-  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/crypto-icons@2.0.3(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
     optionalDependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac)
+      '@ledgerhq/lumen-ui-rnative': 0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)
       react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
 
   '@ledgerhq/device-management-kit@1.5.0':
@@ -44746,10 +44752,10 @@ snapshots:
       tailwindcss: 4.1.18
       tslib: 2.6.2
 
-  '@ledgerhq/lumen-ui-react-visualization@0.1.10(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
+  '@ledgerhq/lumen-ui-react-visualization@0.1.13(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-react': 0.1.32(8f58ce52213bf263b9f0aa2e082ed231)
+      '@ledgerhq/lumen-ui-react': 0.1.35(8f58ce52213bf263b9f0aa2e082ed231)
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
       class-variance-authority: 0.7.1
       clsx: 2.1.1
@@ -44760,7 +44766,7 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       tailwind-merge: 3.4.0
 
-  '@ledgerhq/lumen-ui-react@0.1.32(8f58ce52213bf263b9f0aa2e082ed231)':
+  '@ledgerhq/lumen-ui-react@0.1.35(8f58ce52213bf263b9f0aa2e082ed231)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
@@ -44781,7 +44787,7 @@ snapshots:
     transitivePeerDependencies:
       - react-native
 
-  '@ledgerhq/lumen-ui-react@0.1.32(@ledgerhq/lumen-design-core@0.1.14)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
+  '@ledgerhq/lumen-ui-react@0.1.35(@ledgerhq/lumen-design-core@0.1.14)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
@@ -44794,7 +44800,7 @@ snapshots:
     transitivePeerDependencies:
       - react-native
 
-  '@ledgerhq/lumen-ui-react@0.1.32(b345b4f31e2f2b2bda7bc73c00ce30cf)':
+  '@ledgerhq/lumen-ui-react@0.1.35(b345b4f31e2f2b2bda7bc73c00ce30cf)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
@@ -44815,10 +44821,10 @@ snapshots:
     transitivePeerDependencies:
       - react-native
 
-  '@ledgerhq/lumen-ui-rnative-visualization@0.1.10(@ledgerhq/lumen-design-core@0.1.14)(@ledgerhq/lumen-ui-rnative@0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac))(@types/react@19.0.14)(react-native-svg@15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@ledgerhq/lumen-ui-rnative-visualization@0.1.12(c2ca076c1e25b941e9e44c3852b190fd)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-rnative': 0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac)
+      '@ledgerhq/lumen-ui-rnative': 0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
       '@types/react': 19.0.14
       d3-array: 3.2.4
@@ -44826,9 +44832,12 @@ snapshots:
       d3-shape: 3.2.0
       react: 19.0.0
       react-native: 0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)
+      react-native-gesture-handler: 2.28.0(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-reanimated: 4.1.6(@babel/core@7.28.5)(react-native-worklets@0.7.2(@babel/core@7.28.5)(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-svg: 15.15.1(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-worklets: 0.7.2(@babel/core@7.28.5)(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  '@ledgerhq/lumen-ui-rnative@0.1.33(a2aa5f8c374d1b5fe4e14b150f0f766a)':
+  '@ledgerhq/lumen-ui-rnative@0.1.36(a2aa5f8c374d1b5fe4e14b150f0f766a)':
     dependencies:
       '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native-worklets@0.7.2(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/lumen-design-core': 0.1.14
@@ -44845,7 +44854,7 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@ledgerhq/lumen-ui-rnative@0.1.33(a7e32582d2cd0fe02b399112a5a7a905)':
+  '@ledgerhq/lumen-ui-rnative@0.1.36(a7e32582d2cd0fe02b399112a5a7a905)':
     dependencies:
       '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.1.6(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@ledgerhq/lumen-design-core': 0.1.14
@@ -44861,7 +44870,7 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@ledgerhq/lumen-ui-rnative@0.1.33(e23d53fa989a9de326d2c59bae773e61)':
+  '@ledgerhq/lumen-ui-rnative@0.1.36(e23d53fa989a9de326d2c59bae773e61)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.14
       '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
@@ -44877,7 +44886,7 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@ledgerhq/lumen-ui-rnative@0.1.33(e38d46b63ac2823bb77e8d49d5c7f3ac)':
+  '@ledgerhq/lumen-ui-rnative@0.1.36(e38d46b63ac2823bb77e8d49d5c7f3ac)':
     dependencies:
       '@gorhom/bottom-sheet': 5.2.6(beb07f7799bea5989bf46dbe8fcef3d9)
       '@ledgerhq/lumen-design-core': 0.1.14
@@ -48199,9 +48208,9 @@ snapshots:
       - tedious
       - utf-8-validate
 
-  '@rozenite/repack@1.2.0(@callstack/repack@5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))':
+  '@rozenite/repack@1.2.0(@callstack/repack@5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0)))':
     dependencies:
-      '@callstack/repack': 5.2.3(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
+      '@callstack/repack': 5.2.5(patch_hash=8d7db4e65c8982b51b689b97af043f6e2c411605b19084c3781cb5ec5e635b60)(@babel/core@7.28.5)(@rspack/core@1.7.3(@swc/helpers@0.5.17))(@swc/core@1.15.11(@swc/helpers@0.5.17))(react-native@0.79.7(patch_hash=4744872a4d5177ec833786050853390422679378b06f4cf3a90ad6e27b560053)(@babel/core@7.28.5)(@react-native-community/cli@18.0.1(typescript@6.0.2))(@types/react@19.0.14)(react@19.0.0))
       '@rozenite/middleware': 1.2.0
       '@rozenite/tools': 1.2.0
       semver: 7.7.3
@@ -54406,9 +54415,9 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.0.0
 
-  avvio@8.4.0:
+  avvio@9.2.0:
     dependencies:
-      '@fastify/error': 3.4.1
+      '@fastify/error': 4.2.0
       fastq: 1.17.1
 
   await-to-js@3.0.0: {}
@@ -54546,7 +54555,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.5
       find-cache-dir: 4.0.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
@@ -58701,8 +58710,6 @@ snapshots:
     dependencies:
       pure-rand: 6.1.0
 
-  fast-content-type-parse@1.1.0: {}
-
   fast-copy@3.0.2: {}
 
   fast-decode-uri-component@1.0.1: {}
@@ -58725,14 +58732,13 @@ snapshots:
 
   fast-json-stable-stringify@2.1.0: {}
 
-  fast-json-stringify@5.16.1:
+  fast-json-stringify@6.4.0:
     dependencies:
-      '@fastify/merge-json-schemas': 0.1.1
+      '@fastify/merge-json-schemas': 0.2.1
       ajv: 8.17.1
       ajv-formats: 3.0.1
-      fast-deep-equal: 3.1.3
-      fast-uri: 2.4.0
-      json-schema-ref-resolver: 1.0.1
+      fast-uri: 3.0.3
+      json-schema-ref-resolver: 3.0.0
       rfdc: 1.3.1
 
   fast-levenshtein@2.0.6: {}
@@ -58747,15 +58753,11 @@ snapshots:
     dependencies:
       fast-decode-uri-component: 1.0.1
 
-  fast-redact@3.5.0: {}
-
   fast-safe-stringify@2.1.1: {}
 
   fast-sha256@1.3.0: {}
 
   fast-stable-stringify@1.0.0: {}
-
-  fast-uri@2.4.0: {}
 
   fast-uri@3.0.3: {}
 
@@ -58783,28 +58785,27 @@ snapshots:
 
   fastest-levenshtein@1.0.16: {}
 
-  fastify-favicon@4.3.0:
+  fastify-favicon@5.0.0:
     dependencies:
-      fastify-plugin: 4.5.1
+      fastify-plugin: 5.1.0
 
-  fastify-plugin@4.5.1: {}
+  fastify-plugin@5.1.0: {}
 
-  fastify@4.29.1:
+  fastify@5.8.5:
     dependencies:
-      '@fastify/ajv-compiler': 3.6.0
-      '@fastify/error': 3.4.1
-      '@fastify/fast-json-stringify-compiler': 4.3.0
+      '@fastify/ajv-compiler': 4.0.5
+      '@fastify/error': 4.2.0
+      '@fastify/fast-json-stringify-compiler': 5.0.3
+      '@fastify/proxy-addr': 5.1.0
       abstract-logging: 2.0.1
-      avvio: 8.4.0
-      fast-content-type-parse: 1.1.0
-      fast-json-stringify: 5.16.1
-      find-my-way: 8.2.2
-      light-my-request: 5.14.0
-      pino: 9.6.0
-      process-warning: 3.0.0
-      proxy-addr: 2.0.7
+      avvio: 9.2.0
+      fast-json-stringify: 6.4.0
+      find-my-way: 9.6.0
+      light-my-request: 6.6.0
+      pino: 10.1.0
+      process-warning: 5.0.0
       rfdc: 1.3.1
-      secure-json-parse: 2.7.0
+      secure-json-parse: 4.1.0
       semver: 7.7.3
       toad-cache: 3.7.0
 
@@ -58962,11 +58963,11 @@ snapshots:
       common-path-prefix: 3.0.0
       pkg-dir: 7.0.0
 
-  find-my-way@8.2.2:
+  find-my-way@9.6.0:
     dependencies:
       fast-deep-equal: 3.1.3
       fast-querystring: 1.1.2
-      safe-regex2: 3.1.0
+      safe-regex2: 5.1.1
 
   find-replace@3.0.0:
     dependencies:
@@ -62020,9 +62021,9 @@ snapshots:
       json-schema-compare: 0.2.2
       lodash: 4.17.21
 
-  json-schema-ref-resolver@1.0.1:
+  json-schema-ref-resolver@3.0.0:
     dependencies:
-      fast-deep-equal: 3.1.3
+      dequal: 2.0.3
 
   json-schema-traverse@0.4.1: {}
 
@@ -62087,6 +62088,19 @@ snapshots:
       ms: 2.1.3
       semver: 7.7.3
 
+  jsonwebtoken@9.0.3:
+    dependencies:
+      jws: 4.0.1
+      lodash.includes: 4.3.0
+      lodash.isboolean: 3.0.3
+      lodash.isinteger: 4.0.4
+      lodash.isnumber: 3.0.3
+      lodash.isplainobject: 4.0.6
+      lodash.isstring: 4.0.1
+      lodash.once: 4.1.1
+      ms: 2.1.3
+      semver: 7.7.3
+
   jsprim@1.4.2:
     dependencies:
       assert-plus: 1.0.0
@@ -62132,6 +62146,11 @@ snapshots:
       safe-buffer: 5.2.1
 
   jws@4.0.0:
+    dependencies:
+      jwa: 2.0.1
+      safe-buffer: 5.2.1
+
+  jws@4.0.1:
     dependencies:
       jwa: 2.0.1
       safe-buffer: 5.2.1
@@ -62423,10 +62442,10 @@ snapshots:
     dependencies:
       immediate: 3.0.6
 
-  light-my-request@5.14.0:
+  light-my-request@6.6.0:
     dependencies:
-      cookie: 0.7.2
-      process-warning: 3.0.0
+      cookie: 1.1.1
+      process-warning: 4.0.1
       set-cookie-parser: 2.7.2
 
   lighthouse-logger@1.4.2:
@@ -65418,20 +65437,6 @@ snapshots:
       sonic-boom: 4.0.1
       thread-stream: 3.0.0
 
-  pino@9.6.0:
-    dependencies:
-      atomic-sleep: 1.0.0
-      fast-redact: 3.5.0
-      on-exit-leak-free: 2.1.2
-      pino-abstract-transport: 2.0.0
-      pino-std-serializers: 7.0.0
-      process-warning: 4.0.1
-      quick-format-unescaped: 4.0.4
-      real-require: 0.2.0
-      safe-stable-stringify: 2.4.3
-      sonic-boom: 4.0.1
-      thread-stream: 3.0.0
-
   pirates@3.0.2:
     dependencies:
       node-modules-regexp: 1.0.0
@@ -66065,8 +66070,6 @@ snapshots:
   process-on-spawn@1.0.0:
     dependencies:
       fromentries: 1.3.2
-
-  process-warning@3.0.0: {}
 
   process-warning@4.0.1: {}
 
@@ -67780,7 +67783,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  ret@0.4.3: {}
+  ret@0.5.0: {}
 
   retry-request@7.0.2:
     dependencies:
@@ -67984,9 +67987,9 @@ snapshots:
       es-errors: 1.3.0
       is-regex: 1.2.1
 
-  safe-regex2@3.1.0:
+  safe-regex2@5.1.1:
     dependencies:
-      ret: 0.4.3
+      ret: 0.5.0
 
   safe-stable-stringify@2.4.3: {}
 
@@ -68033,13 +68036,6 @@ snapshots:
       ajv: 6.12.6
       ajv-keywords: 3.5.2(ajv@6.12.6)
 
-  schema-utils@4.2.0:
-    dependencies:
-      '@types/json-schema': 7.0.15
-      ajv: 8.17.1
-      ajv-formats: 2.1.1
-      ajv-keywords: 5.1.0(ajv@8.17.1)
-
   schema-utils@4.3.3:
     dependencies:
       '@types/json-schema': 7.0.15
@@ -68062,6 +68058,8 @@ snapshots:
   secure-compare@3.0.1: {}
 
   secure-json-parse@2.7.0: {}
+
+  secure-json-parse@4.1.0: {}
 
   select-hose@2.0.0: {}
 
@@ -69468,8 +69466,6 @@ snapshots:
   tailwindcss@4.1.18: {}
 
   tapable@1.1.3: {}
-
-  tapable@2.2.1: {}
 
   tapable@2.2.3: {}
 
