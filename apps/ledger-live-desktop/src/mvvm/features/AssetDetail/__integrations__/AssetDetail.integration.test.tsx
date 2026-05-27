@@ -39,6 +39,9 @@ const TEST_ID = {
   MARKET_PRICE_PERCENT: "asset-detail-market-price-percent",
   MARKET_PRICE_FIAT_VARIATION: "asset-detail-market-price-fiat-variation",
   MARKET_DATA_SECTION: "asset-detail-market-data-section",
+  CHART_SECTION: "asset-detail-chart-section",
+  LINE_CHART_RANGE_DEFAULT: "line-chart-range-1D",
+  LINE_CHART_RANGE_ONE_YEAR: "line-chart-range-1Y",
   TRANSACTIONS_SECTION: "asset-detail-transactions-section",
   ACTION_BAR: "asset-detail-action-bar",
   ACTION_BUY: "asset-detail-action-buy",
@@ -335,6 +338,38 @@ describe("AssetDetail integration", () => {
       });
 
       expect(screen.queryByTestId(TEST_ID.EARN_BANNER)).not.toBeInTheDocument();
+    });
+
+    describe("chart section", () => {
+      it("renders with the 1D range selected by default and switches range on click", async () => {
+        mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+        setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+        const { user } = renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+        await waitFor(() => {
+          expect(screen.getByTestId(TEST_ID.CHART_SECTION)).toBeVisible();
+        });
+
+        const defaultRange = screen.getByTestId(TEST_ID.LINE_CHART_RANGE_DEFAULT);
+        expect(defaultRange).toHaveAttribute("aria-checked", "true");
+
+        const oneYearRange = screen.getByTestId(TEST_ID.LINE_CHART_RANGE_ONE_YEAR);
+        expect(oneYearRange).toHaveAttribute("aria-checked", "false");
+
+        await user.click(oneYearRange);
+
+        await waitFor(() => {
+          expect(screen.getByTestId(TEST_ID.LINE_CHART_RANGE_ONE_YEAR)).toHaveAttribute(
+            "aria-checked",
+            "true",
+          );
+        });
+        expect(screen.getByTestId(TEST_ID.LINE_CHART_RANGE_DEFAULT)).toHaveAttribute(
+          "aria-checked",
+          "false",
+        );
+      });
     });
 
     describe("addresses see all", () => {
