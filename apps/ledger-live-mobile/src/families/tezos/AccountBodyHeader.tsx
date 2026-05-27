@@ -4,15 +4,15 @@ import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
 import LegacyAccountBodyHeader from "./LegacyAccountBodyHeader";
 import TezosDelegation from "./Delegations";
 
-type Props = {
+type Props = Readonly<{
   account: AccountLike;
   parentAccount?: Account;
-};
+}>;
 
 export default function TezosAccountBodyHeader({ account, parentAccount }: Props) {
   const stakingDashboard = useFeature("llmTezosStaking");
   if (stakingDashboard?.enabled) {
-    return <TezosDelegation account={account} parentAccount={parentAccount} />;
+    return <TezosDelegation account={account} />;
   }
   return <LegacyAccountBodyHeader account={account} parentAccount={parentAccount} />;
 }

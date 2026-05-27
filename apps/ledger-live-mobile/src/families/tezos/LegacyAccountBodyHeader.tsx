@@ -83,10 +83,10 @@ const placeholderProps = {
 export default function TezosAccountBodyHeader({
   account,
   parentAccount,
-}: {
+}: Readonly<{
   account: AccountLike;
   parentAccount?: Account;
-}) {
+}>) {
   const [openedModal, setOpenedModal] = useState(false);
 
   const onModalClose = useCallback(() => {
@@ -113,7 +113,8 @@ export default function TezosAccountBodyHeader({
       }
       return shortAddressPreview(delegation.address);
     }
-    return shortAddressPreview(stakingPositions[0].delegate!);
+    const { delegate } = stakingPositions[0];
+    return delegate ? shortAddressPreview(delegate) : "";
   };
 
   const name = getDelegationName();

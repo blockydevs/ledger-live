@@ -12,7 +12,7 @@ import {
   useTezosStakingInfo,
 } from "@ledgerhq/live-common/families/tezos/react";
 import type { StakingPosition } from "@ledgerhq/live-common/families/tezos/types";
-import type { AccountLike, Account } from "@ledgerhq/types-live";
+import type { AccountLike } from "@ledgerhq/types-live";
 import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 import AccountDelegationInfo from "~/components/AccountDelegationInfo";
 import AccountSectionLabel from "~/components/AccountSectionLabel";
@@ -27,10 +27,9 @@ import BakerImage from "../BakerImage";
 import DelegationRow from "./Row";
 import LabelRight from "./LabelRight";
 
-type Props = {
+type Props = Readonly<{
   account: AccountLike;
-  parentAccount?: Account | null;
-};
+}>;
 
 type Selected =
   | { kind: "stake" }
@@ -57,11 +56,8 @@ export default function TezosDelegation({ account }: Props) {
   const lastStake = ops.find(o => o?.type === "STAKE");
   const lastDelegate = ops.find(o => o?.type === "DELEGATE");
   const stakeDays = lastStake ? differenceInCalendarDays(Date.now(), lastStake.date) : 0;
-  const delegationDays = info.delegation
-    ? differenceInCalendarDays(Date.now(), info.delegation.operation.date)
-    : lastDelegate
-      ? differenceInCalendarDays(Date.now(), lastDelegate.date)
-      : 0;
+  const delegationDate = info.delegation?.operation.date ?? lastDelegate?.date;
+  const delegationDays = delegationDate ? differenceInCalendarDays(Date.now(), delegationDate) : 0;
 
   const onDelegate = useCallback(() => {
     if (account.type !== "Account") return;
@@ -192,12 +188,9 @@ export default function TezosDelegation({ account }: Props) {
     );
   }
 
-  const drawerAmount =
-    selected?.kind === "unstaking"
-      ? selected.position.amount
-      : selected?.kind === "stake"
-        ? info.stakedBalance
-        : info.availableBalance;
+  let drawerAmount = info.availableBalance;
+  if (selected?.kind === "unstaking") drawerAmount = selected.position.amount;
+  else if (selected?.kind === "stake") drawerAmount = info.stakedBalance;
 
   const stakingRows: {
     key: string;

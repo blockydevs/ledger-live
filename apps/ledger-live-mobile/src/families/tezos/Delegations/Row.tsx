@@ -13,7 +13,7 @@ import LText from "~/components/LText";
 import ArrowRight from "~/icons/ArrowRight";
 import BakerImage from "../BakerImage";
 
-type Props = {
+type Props = Readonly<{
   baker?: Baker | null;
   address: string;
   amount: BigNumber;
@@ -22,7 +22,7 @@ type Props = {
   onPress: () => void;
   isLast?: boolean;
   statusLabel?: string;
-};
+}>;
 
 export default function DelegationRow({
   baker,
@@ -43,7 +43,7 @@ export default function DelegationRow({
       style={[
         styles.row,
         styles.wrapper,
-        !isLast ? { ...styles.borderBottom, borderBottomColor: colors.lightGrey } : undefined,
+        isLast ? undefined : { ...styles.borderBottom, borderBottomColor: colors.lightGrey },
       ]}
       onPress={onPress}
     >
