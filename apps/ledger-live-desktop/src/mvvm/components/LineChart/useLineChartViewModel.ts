@@ -40,13 +40,14 @@ export function useLineChartViewModel({
 
   useEffect(() => {
     const element = chartWrapperRef.current;
-    if (!element || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(entries => {
-      const entry = entries[0];
-      if (entry) setContainerWidth(entry.contentRect.width);
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
+    if (element && typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(entries => {
+        const entry = entries[0];
+        if (entry) setContainerWidth(entry.contentRect.width);
+      });
+      observer.observe(element);
+      return () => observer.disconnect();
+    }
   }, []);
 
   const handleSelectedChange = useCallback(
