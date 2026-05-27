@@ -79,8 +79,8 @@ export type MarketCurrencyData = {
   priceChangePercentage: Record<KeysPriceChange, number>;
   marketCapChangePercentage24h: number;
   circulatingSupply: number;
-  totalSupply: number;
-  maxSupply: number;
+  totalSupply?: number;
+  maxSupply?: number;
   ath: number;
   athDate: Date;
   atl: number;
