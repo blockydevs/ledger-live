@@ -138,7 +138,7 @@ describe("useRemoveMember", () => {
         step: Step.UnsecuredLedger,
       });
     });
-    await waitFor(() => expect(result.current.error).toBeInstanceOf(TrustchainNotAllowed));
+    expect(result.current.error).toBeInstanceOf(TrustchainNotAllowed);
   });
 
   it("should set error on generic error", async () => {
