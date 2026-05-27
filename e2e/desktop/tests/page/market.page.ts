@@ -1,6 +1,7 @@
 import { AppPage } from "./abstractClasses";
 import { step } from "../misc/reporters/step";
 import { expect } from "@playwright/test";
+import { isWallet40Enabled } from "tests/utils/featureFlagUtils";
 
 export class MarketPage extends AppPage {
   private readonly navbarTitle = this.page.getByTestId("page-header-title");
@@ -10,6 +11,13 @@ export class MarketPage extends AppPage {
     this.page.getByTestId(`market-${ticker}-row`).first();
   private coinPageContainer = this.page.getByTestId("market-coin-page-container");
   private swapButtonOnAsset = this.page.getByTestId("market-coin-swap-button");
+
+  private buyButtonLegacy = (ticker: string) =>
+    this.page.locator(`[data-testid="market-${ticker}-buy-button"]:visible`).first();
+  private swapButtonLegacy = (ticker: string) =>
+    this.page.locator(`[data-testid="market-${ticker}-swap-button"]:visible`).first();
+  private stakeButtonLegacy = (ticker: string) =>
+    this.page.locator(`[data-testid="market-${ticker}-stake-button"]:visible`).first();
 
   private readonly buyButton = (ticker: string) =>
     this.coinRow(ticker).getByTestId(`market-${ticker}-buy-button-icon`);
@@ -45,13 +53,19 @@ export class MarketPage extends AppPage {
 
   @step("Open buy page for $0")
   async openBuyPage(ticker: string) {
-    const button = this.buyButton(ticker.toLowerCase());
+    const button = (await isWallet40Enabled(this.page))
+      ? this.buyButton(ticker.toLowerCase())
+      : this.buyButtonLegacy(ticker.toLowerCase());
+
     await button.click();
   }
 
   @step("Click on swap button for $0")
   async startSwapForSelectedTicker(ticker: string) {
-    const button = this.swapButton(ticker.toLowerCase());
+    const button = (await isWallet40Enabled(this.page))
+      ? this.swapButton(ticker.toLowerCase())
+      : this.swapButtonLegacy(ticker.toLowerCase());
+
     await button.click();
   }
 
@@ -62,7 +76,10 @@ export class MarketPage extends AppPage {
 
   @step("Click on stake button for $0")
   async stakeButtonClick(ticker: string) {
-    const button = this.stakeButton(ticker.toLowerCase());
+    const button = (await isWallet40Enabled(this.page))
+      ? this.stakeButton(ticker.toLowerCase())
+      : this.stakeButtonLegacy(ticker.toLowerCase());
+
     await button.click();
   }
 

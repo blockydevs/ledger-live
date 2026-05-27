@@ -2,6 +2,7 @@ import { test } from "tests/fixtures/common";
 import { Team } from "@ledgerhq/live-common/e2e/enum/Team";
 import { addTmsLink } from "tests/utils/allureUtils";
 import { getDescription } from "tests/utils/customJsonReporter";
+import { LWD_WALLET_40_FF_ENABLED } from "tests/utils/featureFlagUtils";
 
 const DEVICE_TAGS = ["@NanoSP", "@LNS", "@NanoX", "@Stax", "@Flex", "@NanoGen5"] as const;
 
@@ -10,6 +11,7 @@ test.describe("Main navigation", () => {
     teamOwner: Team.WALLET_XP,
     userdata: "1AccountBTC1AccountETH",
     featureFlags: {
+      ...LWD_WALLET_40_FF_ENABLED,
       referralProgramDesktopSidebar: {
         enabled: true,
         params: {
