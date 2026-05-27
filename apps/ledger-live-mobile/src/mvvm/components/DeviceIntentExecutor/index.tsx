@@ -60,6 +60,7 @@ export function DeviceIntentExecutorLWM<JobState, Input, ExtraProps>(
       isRequestingToBeOpened={props.enabled}
       onClose={props.onUserCancel}
       preventBackdropClick={!props.cancellableUI}
+      hideHandle
       enableDynamicSizing
     >
       <BottomSheetView style={{ paddingBottom: bottomInset + 16 }}>
