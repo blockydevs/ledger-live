@@ -1,6 +1,6 @@
 import React from "react";
 import { IconButton, Tooltip, TooltipContent, TooltipTrigger } from "@ledgerhq/lumen-ui-react";
-import { ChevronRight, Information, Plus } from "@ledgerhq/lumen-ui-react/symbols";
+import { ChevronRight, Information } from "@ledgerhq/lumen-ui-react/symbols";
 import { cn } from "LLD/utils/cn";
 import type { StakingSectionViewModelResult } from "./useStakingSectionViewModel";
 import { StakingCard } from "./components/StakingCard";
@@ -36,7 +36,7 @@ export function StakingSectionView({
             <IconButton
               appearance="transparent"
               size="sm"
-              icon={Plus}
+              icon={ChevronRight}
               aria-label={earnBannerActionLabel}
               onClick={event => {
                 event.stopPropagation();

@@ -89,6 +89,7 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
 
         <MetricsRowSection
           distributionItem={distributionItem}
+          ledgerCurrency={ledgerCurrency}
           isDistributionLoading={isDistributionLoading}
           isMarketLoading={isMarketLoading}
         />

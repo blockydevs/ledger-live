@@ -87,6 +87,7 @@ export function useMarketPriceSectionViewModel({
   );
   const { percentageText: trendPercentageText, variant: trendVariant } = useTrendViewModel({
     valueChange,
+    useDiscreetMasking: false,
   });
   const { percentageText, variationVariant } = resolveTrendPercentAndVariant({
     hasVariationData,

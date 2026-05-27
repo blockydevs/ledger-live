@@ -59,4 +59,14 @@ describe("useMetricsRowSectionViewModel", () => {
 
     expect(result.current).toEqual({ shouldRenderSection: false });
   });
+
+  it("shows the section for a stakeable asset without accounts when PnL is off", () => {
+    const empty = buildDistributionItem({ currency: BTC_ACCOUNT.currency, accounts: [] });
+    const { result } = renderHook(
+      () => useMetricsRowSectionViewModel({ distributionItem: empty }),
+      { initialState: flagsOff },
+    );
+
+    expect(result.current).toEqual({ shouldRenderSection: true });
+  });
 });
