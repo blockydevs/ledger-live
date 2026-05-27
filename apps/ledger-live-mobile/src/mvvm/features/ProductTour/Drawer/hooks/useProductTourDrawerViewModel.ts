@@ -16,15 +16,6 @@ import type { ProductTourPrimaryAction } from "../const";
 
 type CloseSource = "cross" | "external" | "internal";
 
-// Module-scoped so the auto-open only fires once per app session, even if the
-// Portfolio screen remounts (e.g. after deleting the last account of a currency,
-// which calls `navigation.replace(NavigatorName.Base)`).
-let hasAutoOpenedThisSession = false;
-
-export const __resetProductTourAutoOpenForTests = () => {
-  hasAutoOpenedThisSession = false;
-};
-
 export const useProductTourDrawerViewModel = (): ProductTourDrawerViewModel => {
   const currentIndexRef = useRef(0);
   const closeSourceRef = useRef<CloseSource>("external");
@@ -34,14 +25,9 @@ export const useProductTourDrawerViewModel = (): ProductTourDrawerViewModel => {
   const lwmProductTour = useFeature("lwmProductTour");
   const isLWMProductTourEnabled = !!lwmProductTour?.enabled;
   const { shouldDisplayWallet40MainNav } = useWalletFeaturesConfig("mobile");
-  const [isDrawerOpen, setIsDrawerOpen] = useState(() => {
-    const shouldAutoOpen =
-      !hasAutoOpenedThisSession && !productTourCompleted && isLWMProductTourEnabled;
-    if (shouldAutoOpen) {
-      hasAutoOpenedThisSession = true;
-    }
-    return shouldAutoOpen;
-  });
+  const [isDrawerOpen, setIsDrawerOpen] = useState(
+    !productTourCompleted && isLWMProductTourEnabled,
+  );
   const dispatch = useDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
   const { openDrawer: openModularDrawer } = useModularDrawerController();

@@ -285,17 +285,11 @@ describe("History export dialog integration", () => {
     mockExportShouldError = true;
     await selectAllAndExport(user, dialog);
 
-    await waitFor(
-      () => expect(screen.getByTestId("history-export-error-title")).toBeVisible(),
-      { timeout: 10000 },
-    );
+    expect(await screen.findByTestId("history-export-error-title")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: /try again/i }));
 
-    await waitFor(
-      () => expect(screen.getByTestId("history-export-dialog")).toBeVisible(),
-      { timeout: 10000 },
-    );
+    expect(await screen.findByTestId("history-export-dialog")).toBeVisible();
     expect(screen.queryByTestId("history-export-error-title")).not.toBeInTheDocument();
-  }, 30000);
+  });
 });

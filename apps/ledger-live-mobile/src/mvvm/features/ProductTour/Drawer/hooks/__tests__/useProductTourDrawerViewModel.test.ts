@@ -2,10 +2,7 @@ import { act, renderHook } from "@tests/test-renderer";
 import { State } from "~/reducers/types";
 import { NavigatorName } from "~/const/navigation";
 import { track } from "~/analytics";
-import {
-  __resetProductTourAutoOpenForTests,
-  useProductTourDrawerViewModel,
-} from "../useProductTourDrawerViewModel";
+import { useProductTourDrawerViewModel } from "../useProductTourDrawerViewModel";
 import { PAGE_TRACKING_PRODUCT_TOUR } from "../../const";
 import { productTourCompletedSelector } from "~/reducers/settings";
 import { setProductTourCompleted } from "~/actions/settings";
@@ -37,7 +34,6 @@ const mockUseWalletFeaturesConfig = jest.spyOn(featureFlagsModule, "useWalletFea
 describe("useProductTourDrawerViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    __resetProductTourAutoOpenForTests();
     mockUseWalletFeaturesConfig.mockReturnValue({
       shouldDisplayWallet40MainNav: true,
     } as WalletFeaturesConfig);
@@ -64,21 +60,6 @@ describe("useProductTourDrawerViewModel", () => {
       });
 
       expect(result.current.isDrawerOpen).toBe(false);
-    });
-
-    it("should not re-auto-open when the hook remounts after the user has dismissed it", () => {
-      const first = renderHook(() => useProductTourDrawerViewModel(), {
-        overrideInitialState: withFeatureEnabled,
-      });
-      expect(first.result.current.isDrawerOpen).toBe(true);
-      act(() => first.result.current.onCloseButtonPress());
-      expect(first.result.current.isDrawerOpen).toBe(false);
-      first.unmount();
-
-      const second = renderHook(() => useProductTourDrawerViewModel(), {
-        overrideInitialState: withFeatureEnabled,
-      });
-      expect(second.result.current.isDrawerOpen).toBe(false);
     });
   });
 
