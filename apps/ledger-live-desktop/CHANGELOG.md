@@ -1,5 +1,11 @@
 # ledger-live-desktop
 
+## 4.6.0-next.2
+
+### Minor Changes
+
+- [#17880](https://github.com/LedgerHQ/ledger-live/pull/17880) [`071cc59`](https://github.com/LedgerHQ/ledger-live/commit/071cc591f9cc8d5c345fe52b48cdfc154f980361) Thanks [@desirendr](https://github.com/desirendr)! - Minor housekeeping
+
 ## 4.6.0-next.1
 
 ### Minor Changes
