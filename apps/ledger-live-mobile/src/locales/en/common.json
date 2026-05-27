@@ -6580,8 +6580,16 @@
       "title": "You can earn rewards by delegating your account",
       "btn": "Earn rewards"
     },
+    "manage": "Manage",
     "delegation": {
-      "addCustomValidator": "+ Add custom validator"
+      "addCustomValidator": "+ Add custom validator",
+      "sectionLabel": "Delegation"
+    },
+    "staking": {
+      "sectionLabel": "Staking",
+      "status": "Status",
+      "unstaking": "Unstaking",
+      "available": "Available"
     }
   },
   "evm": {
