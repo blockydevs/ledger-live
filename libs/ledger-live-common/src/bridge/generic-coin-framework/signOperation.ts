@@ -61,6 +61,9 @@ export const genericSignOperation =
             feesStrategy: transaction.feesStrategy,
             data: transaction.data,
             type: transaction.type,
+            sponsored: transaction.sponsored,
+            valAddress: transaction?.valAddress || "",
+            dstValAddress: transaction?.dstValAddress || "",
           };
           // TODO Remove the call to `validateIntent` https://ledgerhq.atlassian.net/browse/LIVE-22227
           const { amount } = await coinModuleApi.validateIntent(

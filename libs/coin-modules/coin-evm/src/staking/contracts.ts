@@ -44,6 +44,9 @@ export const STAKING_CONTRACTS: Record<string, StakingContractConfig> = {
     // The redelegate/undelegate precompile encodes amounts in usei (6 decimals).
     // Multiply by this scale to convert back to the EVM-native 18-decimal unit.
     calldataAmountScale: USEI_TO_EVM_SCALE,
+    // Reserve 0.1 SEI (≈ 830k gas at 120 gwei) so that fee spikes between
+    // prepareTransaction and broadcast do not cause the staking precompile to revert.
+    delegationMaxAmountReserve: 10n ** 17n, // 0.1 SEI in wei (10^17)
   },
 
   // Celo staking
