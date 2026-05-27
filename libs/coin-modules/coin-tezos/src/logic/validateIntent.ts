@@ -15,11 +15,7 @@ import { validateAddress, ValidationResult } from "@taquito/utils";
 import api from "../network/tzkt";
 import type { APIAccount } from "../network/types";
 import { InvalidAddressBecauseAlreadyDelegated, MustDelegateBeforeStaking } from "../types/errors";
-import {
-  parseTezosTokenAsset,
-  resolveTezosOperationMode,
-  STAKE_USE_ALL_RESERVE_MUTEZ,
-} from "../utils";
+import { computeMaxStakeAmount, parseTezosTokenAsset, resolveTezosOperationMode } from "../utils";
 import { estimateFees } from "./estimateFees";
 import type { TezosOperationMode } from "../types/model";
 
@@ -207,9 +203,11 @@ function calculateAmounts(
       return { amount: estimatedAmount, totalSpent: estimatedAmount + estimatedFees };
     }
     // Mirrors estimateFees() stake-max formula for the !revealed short-circuit path.
-    const balance = BigInt(senderInfo.balance);
-    const reserved = estimatedFees + STAKE_USE_ALL_RESERVE_MUTEZ;
-    const amount = balance > reserved ? balance - reserved : 0n;
+    const amount = computeMaxStakeAmount(
+      BigInt(senderInfo.balance),
+      BigInt(senderInfo.stakedBalance ?? 0),
+      estimatedFees,
+    );
     return { amount, totalSpent: amount + estimatedFees };
   }
 
@@ -272,6 +270,7 @@ async function estimateFeesForIntent(
       address: intent.sender,
       revealed: senderInfo.revealed,
       balance: BigInt(senderInfo.balance),
+      stakedBalance: BigInt(senderInfo.stakedBalance ?? 0),
       xpub: intent.senderPublicKey ?? senderInfo.publicKey,
     },
     transaction: {
