@@ -3,6 +3,7 @@ import { Team } from "@ledgerhq/live-common/e2e/enum/Team";
 import { Account, TokenAccount } from "@ledgerhq/live-common/e2e/enum/Account";
 import { Swap } from "@ledgerhq/live-common/e2e/models/Swap";
 import { Provider } from "@ledgerhq/live-common/e2e/enum/Provider";
+import { AppInfos } from "@ledgerhq/live-common/e2e/enum/AppInfos";
 import {
   setupEnv,
   performSwapUntilQuoteSelectionStep,
@@ -18,7 +19,13 @@ import { pickRotatingProvider } from "@ledgerhq/live-common/e2e/swap";
 const xrayTicket = "B2CQA-4012";
 const fromAccount = TokenAccount.ETH_USDC_1;
 const toAccount = Account.ETH_1;
-const eligibleProviders = [Provider.THORCHAIN, Provider.LIFI, Provider.OKX];
+const eligibleProviders = [
+  Provider.THORCHAIN,
+  Provider.LIFI,
+  Provider.OKX,
+  Provider.ONE_INCH,
+  Provider.VELORA,
+];
 const provider = pickRotatingProvider(eligibleProviders);
 
 test.describe("Token reapproval - flow", () => {
@@ -32,7 +39,7 @@ test.describe("Token reapproval - flow", () => {
   test.use({
     teamOwner: Team.SWAP,
     userdata: "skip-onboarding-with-last-seen-device",
-    speculosApp: provider.app ?? fromAccount.currency.speculosApp,
+    speculosApp: AppInfos.ETHEREUM,
 
     cliCommandsOnApp: [
       [

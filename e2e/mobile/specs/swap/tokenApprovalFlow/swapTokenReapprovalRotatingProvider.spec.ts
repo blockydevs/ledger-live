@@ -2,7 +2,13 @@ import { Provider } from "@ledgerhq/live-common/e2e/enum/Provider";
 import { runSwapTokenReapprovalFlow } from "./swapTokenReapprovalFlow";
 import { pickRotatingProvider } from "@ledgerhq/live-common/e2e/swap";
 
-const eligibleProviders = [Provider.THORCHAIN, Provider.LIFI, Provider.OKX];
+const eligibleProviders = [
+  Provider.THORCHAIN,
+  Provider.LIFI,
+  Provider.OKX,
+  Provider.ONE_INCH,
+  Provider.VELORA,
+];
 const provider = pickRotatingProvider(eligibleProviders);
 
 const swapTokenReapprovalFlowTestConfig = {
