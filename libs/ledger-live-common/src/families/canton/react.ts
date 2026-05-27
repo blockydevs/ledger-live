@@ -105,6 +105,7 @@ type TransferProposal = {
   sender: string;
   amount: string;
   expires_at_micros: number;
+  instrument_id: string;
 };
 
 type CantonTokenAccountLike = AccountLike & {
