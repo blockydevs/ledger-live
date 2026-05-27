@@ -64,8 +64,9 @@ test.describe("Token reapproval - flow", () => {
       await app.swap.logSelectedProvider(provider.uiName);
       await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
       await revokeTokenApproval(fromAccount, provider);
+      await app.swap.ensureRevokeTokenApproval(fromAccount, provider);
       const minAmount = await app.swap.getMinimumAmount(fromAccount, toAccount);
-      const smallAmount = new BigNumber(minAmount).div(4).toFixed();
+      const smallAmount = new BigNumber(minAmount).div(4).toFixed(6, BigNumber.ROUND_DOWN);
       await ensureTokenApproval(fromAccount, provider, smallAmount);
       const swap = new Swap(fromAccount, toAccount, minAmount, provider);
       await performSwapUntilQuoteSelectionStep(app, swap, minAmount);

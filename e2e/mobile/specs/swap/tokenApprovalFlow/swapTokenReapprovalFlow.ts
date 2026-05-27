@@ -46,8 +46,9 @@ export function runSwapTokenReapprovalFlow(
     it("Swap - token reapproval flow", async () => {
       await app.swap.logSelectedProvider(provider.uiName);
       await revokeTokenApproval(fromAccount, provider);
+      await app.swap.ensureRevokeTokenApproval(fromAccount, provider);
       const minAmount = await app.swapLiveApp.getMinimumAmount(fromAccount, toAccount);
-      const smallAmount = new BigNumber(minAmount).div(4).toFixed();
+      const smallAmount = new BigNumber(minAmount).div(4).toFixed(6, BigNumber.ROUND_DOWN);
       await ensureTokenApproval(fromAccount, provider, smallAmount);
       const swap = new Swap(fromAccount, toAccount, minAmount, provider);
       await performSwapUntilQuoteSelectionStep(
