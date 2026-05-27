@@ -64,7 +64,7 @@ export function View({
           <Box alignItems="flex-end">
             <FormattedVal
               val={isIncoming ? proposal.amount : proposal.amount.negated()}
-              unit={unit}
+              unit={proposal.unit}
               showCode
               fontSize={4}
               alwaysShowSign

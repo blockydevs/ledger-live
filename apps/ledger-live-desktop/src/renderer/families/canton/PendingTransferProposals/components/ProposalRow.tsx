@@ -137,7 +137,7 @@ export function View({
         >
           <FormattedVal
             val={amountValue}
-            unit={unit}
+            unit={proposal.unit}
             showCode
             fontSize={4}
             alwaysShowSign
@@ -149,10 +149,11 @@ export function View({
           px={3}
           horizontal={true}
           alignItems="center"
+          justifyContent="flex-end"
           style={{
             flex: "0 0 auto",
             gap: "8px",
-            minWidth: "150px",
+            minWidth: "220px",
           }}
         >
           {isIncoming ? (

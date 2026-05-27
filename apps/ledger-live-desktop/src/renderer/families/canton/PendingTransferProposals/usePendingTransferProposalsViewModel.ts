@@ -2,6 +2,7 @@ import { isCantonAccount } from "@ledgerhq/coin-canton";
 import { useBridgeSync } from "@ledgerhq/live-common/bridge/react/index";
 import { useFeature } from "@features/platform-feature-flags";
 import { useCantonAcceptOrRejectOffer } from "@ledgerhq/live-common/families/canton/react";
+import type { Unit } from "@ledgerhq/types-cryptoassets";
 import { Account } from "@ledgerhq/types-live";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { useCallback, useMemo, useState } from "react";
@@ -16,6 +17,25 @@ import {
   INSTRUCTION_TYPE_MAP,
   processTransferProposals,
 } from "./utils/transferProposals";
+
+// Resolve each proposal's instrument_id back to its Unit (token ticker +
+// magnitude). The parent account's sub-accounts already carry per-token
+// pending proposals after sync, so we build a lookup from there; native
+// proposals fall back to the parent currency's unit.
+const buildUnitResolver = (parentAccount: Account): ((instrumentId: string) => Unit) => {
+  const unitByInstrumentId = new Map<string, Unit>();
+  for (const sub of parentAccount.subAccounts ?? []) {
+    if (sub.type !== "TokenAccount") continue;
+    const subProposals =
+      (sub as { cantonResources?: { pendingTransferProposals?: Array<{ instrument_id: string }> } })
+        .cantonResources?.pendingTransferProposals ?? [];
+    for (const p of subProposals) {
+      unitByInstrumentId.set(p.instrument_id, sub.token.units[0]);
+    }
+  }
+  const fallback = parentAccount.currency.units[0];
+  return (instrumentId: string) => unitByInstrumentId.get(instrumentId) ?? fallback;
+};
 
 const EMPTY_PROPOSALS: {
   groupedIncoming: GroupedProposals;
@@ -73,7 +93,15 @@ export function usePendingTransferProposalsViewModel(
       const { incoming, outgoing } = processTransferProposals(
         pendingTransferProposals,
         accountXpub,
+        buildUnitResolver(parentAccount),
       );
+
+      const byTokenAndDate = (a: ProcessedProposal, b: ProcessedProposal) =>
+        a.instrumentId !== b.instrumentId
+          ? a.instrumentId.localeCompare(b.instrumentId)
+          : a.expiresAtMicros - b.expiresAtMicros;
+      incoming.sort(byTokenAndDate);
+      outgoing.sort(byTokenAndDate);
 
       return {
         groupedIncoming: groupByDay(incoming),
@@ -82,7 +110,7 @@ export function usePendingTransferProposalsViewModel(
         outgoingCount: outgoing.length,
         allProposals: [...incoming, ...outgoing],
       };
-    }, [account, accountXpub]);
+    }, [account, accountXpub, parentAccount]);
 
   const onOpenModal = useCallback((contractId: string, action: TransferProposalAction) => {
     setModal({ isOpen: true, action, contractId });

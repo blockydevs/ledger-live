@@ -79,7 +79,7 @@ export function View({
 
         <Flex alignItems="flex-end" mr={3}>
           <Text variant="body" fontWeight="semiBold" color={amountColor}>
-            <CurrencyUnitValue unit={unit} value={amountValue} showCode alwaysShowSign />
+            <CurrencyUnitValue unit={proposal.unit} value={amountValue} showCode alwaysShowSign />
           </Text>
           <Text variant="small" color="neutral.c70" mt={0.5}>
             <CounterValue
