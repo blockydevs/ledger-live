@@ -54,7 +54,7 @@ const Value = styled(Box).attrs(() => ({
   fontSize: 4,
   color: "neutral.c70",
   ff: "Inter|Medium",
-}))<{ status?: string }>`
+})) <{ status?: string }>`
   flex: 1;
   ${p => (p.status ? `color:${getStatusColor(p.status, p.theme)};` : "")}
 `;
@@ -161,6 +161,9 @@ const SwapOperationDetails = ({
       url = "https://track.swapkit.dev/tx/$hash".replace("$hash", operation.hash);
       break;
     case "swapsxyz":
+      url = `https://scan.swaps.xyz/transactions/${swapId}`;
+      break;
+    case "moonpay_trade":
       url = `https://scan.swaps.xyz/transactions/${swapId}`;
       break;
     case "okx":
