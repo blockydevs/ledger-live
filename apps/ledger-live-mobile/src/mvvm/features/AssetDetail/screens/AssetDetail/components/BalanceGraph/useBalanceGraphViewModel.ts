@@ -63,6 +63,7 @@ type Params = {
   knownLedgerIds?: readonly string[];
   knownMarketId?: string;
   hideReceive?: boolean;
+  ledgerIds?: string[];
 };
 
 export function useBalanceGraphViewModel({
@@ -71,16 +72,26 @@ export function useBalanceGraphViewModel({
   knownLedgerIds,
   knownMarketId,
   hideReceive,
+  ledgerIds,
 }: Params) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterValueUnit = counterValueCurrency.units[0];
-  const { marketCurrency, counterCurrency, isLoading } = useAssetMarketData({
+  const {
+    marketCurrency,
+    counterCurrency,
+    isLoading,
+    ledgerIds: derivedLedgerIds,
+  } = useAssetMarketData({
     marketApiId,
     knownLedgerIds,
     knownMarketId,
   });
+  // Prefer ledgerIds explicitly threaded down by the parent (which has the
+  // distribution item's `marketId` and resolves tokens correctly). Fall back
+  // to the locally derived list when used standalone (e.g. unit tests).
+  const effectiveLedgerIds = ledgerIds ?? derivedLedgerIds;
 
   const [range, setRange] = useState<RangeKey>("1d");
 
@@ -151,6 +162,7 @@ export function useBalanceGraphViewModel({
 
   const { handleOpenReceiveDrawer } = useOpenReceiveDrawer({
     currency,
+    currencyIds: effectiveLedgerIds,
     sourceScreenName: "Asset Detail",
   });
 

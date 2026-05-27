@@ -3584,6 +3584,9 @@ importers:
 
   libs/asset-detail:
     dependencies:
+      '@ledgerhq/asset-aggregation':
+        specifier: workspace:*
+        version: link:../asset-aggregation
       '@ledgerhq/live-common':
         specifier: workspace:*
         version: link:../ledger-live-common

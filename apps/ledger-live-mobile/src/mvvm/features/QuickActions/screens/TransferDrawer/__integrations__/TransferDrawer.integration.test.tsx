@@ -5,9 +5,15 @@ import { track } from "~/analytics";
 import { overrideStateWithFunds } from "LLM/features/QuickActions/__integrations__/shared";
 import { State } from "~/reducers/types";
 import type { Account } from "@ledgerhq/types-live";
+import type { useOpenReceiveDrawer } from "LLM/features/Receive";
 
 const mockNavigate = jest.fn();
 const mockHandleOpenReceiveDrawer = jest.fn();
+const mockUseOpenReceiveDrawer = jest.fn(
+  (..._args: Parameters<typeof useOpenReceiveDrawer>) => ({
+    handleOpenReceiveDrawer: mockHandleOpenReceiveDrawer,
+  }),
+);
 
 jest.mock("@ledgerhq/live-common/bridge/useAccountBridge", () => ({
   useAccountBridge: jest.fn(),
@@ -23,7 +29,8 @@ jest.mock("@react-navigation/native", () => ({
 }));
 
 jest.mock("LLM/features/Receive", () => ({
-  useOpenReceiveDrawer: () => ({ handleOpenReceiveDrawer: mockHandleOpenReceiveDrawer }),
+  useOpenReceiveDrawer: (...args: Parameters<typeof useOpenReceiveDrawer>) =>
+    mockUseOpenReceiveDrawer(...args),
 }));
 
 jest.mock("LLM/features/Noah/useNoahEntryPoint", () => ({
@@ -48,8 +55,8 @@ describe("TransferDrawer Navigation", () => {
     jest.clearAllMocks();
   });
 
-  const renderViewModel = () =>
-    renderHook(() => useTransferDrawerViewModel(), {
+  const renderViewModel = (params?: Parameters<typeof useTransferDrawerViewModel>[0]) =>
+    renderHook(() => useTransferDrawerViewModel(params), {
       overrideInitialState: overrideWithOpenDrawer,
     });
 
@@ -101,5 +108,27 @@ describe("TransferDrawer Navigation", () => {
       buttonLocation: "quick_action_transfer",
       page: SOURCE_SCREEN,
     });
+  });
+
+  it("forwards ledgerIds to useOpenReceiveDrawer for multi-network pre-selection", () => {
+    const ledgerIds = [
+      "ethereum/erc20/usd_coin",
+      "polygon/erc20/usd_coin",
+      "base/erc20/usd_coin",
+    ];
+
+    renderViewModel({ ledgerIds });
+
+    expect(mockUseOpenReceiveDrawer).toHaveBeenCalledWith(
+      expect.objectContaining({ currencyIds: ledgerIds }),
+    );
+  });
+
+  it("does not pass currencyIds when ledgerIds is omitted", () => {
+    renderViewModel();
+
+    expect(mockUseOpenReceiveDrawer).toHaveBeenCalledWith(
+      expect.objectContaining({ currencyIds: undefined }),
+    );
   });
 });

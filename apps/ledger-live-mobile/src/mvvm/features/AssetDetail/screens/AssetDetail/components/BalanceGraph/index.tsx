@@ -9,6 +9,7 @@ type Props = Readonly<{
   knownLedgerIds?: readonly string[];
   knownMarketId?: string;
   hideReceive?: boolean;
+  ledgerIds?: string[];
 }>;
 
 export function BalanceGraph({
@@ -17,6 +18,7 @@ export function BalanceGraph({
   knownLedgerIds,
   knownMarketId,
   hideReceive,
+  ledgerIds,
 }: Props) {
   const viewModel = useBalanceGraphViewModel({
     currency,
@@ -24,6 +26,7 @@ export function BalanceGraph({
     knownLedgerIds,
     knownMarketId,
     hideReceive,
+    ledgerIds,
   });
   return <BalanceGraphView {...viewModel} />;
 }
