@@ -164,7 +164,9 @@ function mapTaquitoErrors(taquitoError: string, intentType: string): Record<stri
     errors.amount = new NotEnoughBalance();
   } else if (taquitoError.endsWith("contract.must_be_delegated_to_stake")) {
     errors.amount = new MustDelegateBeforeStaking();
-  } else if (taquitoError.endsWith("delegate.unchanged") && intentType === "stake") {
+  } else if (taquitoError.endsWith("delegate.unchanged")) {
+    // Re-delegating (or staking) to the current baker leaves the delegate unchanged; the node
+    // rejects it. Surfaces for both `delegate` and `stake` intents as "already delegated".
     errors.recipient = new InvalidAddressBecauseAlreadyDelegated();
   } else if (taquitoError.includes("empty_implicit_contract")) {
     errors.amount = new NotEnoughBalanceToDelegate();
