@@ -5561,6 +5561,14 @@
         "alert": "Only use a recovery phrase that your device displayed when it was set up"
       }
     },
+    "counterfeitWarning": {
+      "title": "Before you start",
+      "body": "We recommend buying from <ledgerCom>Ledger.com</ledgerCom> or our <resellerLink>official reseller network</resellerLink>. This helps ensure your device is genuine and ready to use.",
+      "cta": {
+        "primary": "Continue setup",
+        "secondary": "Learn more"
+      }
+    },
     "alerts": {
       "beCareful": {
         "title": "Please be careful",
