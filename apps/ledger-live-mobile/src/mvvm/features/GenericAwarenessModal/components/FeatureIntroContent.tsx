@@ -7,9 +7,21 @@ import type { GenericAwarenessModalFeatureIntro } from "@ledgerhq/live-common/ge
 type FeatureIntroContentProps = Readonly<{
   content: GenericAwarenessModalFeatureIntro;
   onClose: () => void;
+  onPrimaryPress: () => void;
+  onSecondaryPress: () => void;
 }>;
 
-export function FeatureIntroContent({ content, onClose }: FeatureIntroContentProps) {
+const TITLE_NUMBER_OF_LINES = 2;
+const SUBTITLE_NUMBER_OF_LINES = 3;
+const ITEM_TITLE_NUMBER_OF_LINES = 1;
+const ITEM_SUBTITLE_NUMBER_OF_LINES = 2;
+
+export function FeatureIntroContent({
+  content,
+  onClose,
+  onPrimaryPress,
+  onSecondaryPress,
+}: FeatureIntroContentProps) {
   const {
     imageUrl,
     title,
@@ -21,7 +33,9 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
     secondaryButtonLink,
   } = content;
 
-  const handleButtonPress = async (link: string) => {
+  const handleButtonPress = async (link: string, onPress: () => void) => {
+    onPress();
+
     if (link) {
       try {
         await Linking.openURL(link);
@@ -52,6 +66,7 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
           color: "base",
           marginBottom: "s2",
         }}
+        numberOfLines={TITLE_NUMBER_OF_LINES}
       >
         {title}
       </Text>
@@ -62,6 +77,7 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
           color: "muted",
           marginBottom: "s8",
         }}
+        numberOfLines={SUBTITLE_NUMBER_OF_LINES}
       >
         {subtitle}
       </Text>
@@ -79,10 +95,15 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
                   lx={{
                     color: "base",
                   }}
+                  numberOfLines={ITEM_TITLE_NUMBER_OF_LINES}
                 >
                   {item.title}
                 </Text>
-                <Text typography="body2" lx={{ color: "muted" }}>
+                <Text
+                  typography="body2"
+                  lx={{ color: "muted" }}
+                  numberOfLines={ITEM_SUBTITLE_NUMBER_OF_LINES}
+                >
                   {item.subtitle}
                 </Text>
               </Box>
@@ -91,10 +112,18 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
         })}
       </Box>
 
-      <Button appearance="base" size="lg" onPress={() => handleButtonPress(primaryButtonLink)}>
+      <Button
+        appearance="base"
+        size="lg"
+        onPress={() => handleButtonPress(primaryButtonLink, onPrimaryPress)}
+      >
         {primaryButtonLabel}
       </Button>
-      <Button appearance="gray" size="lg" onPress={() => handleButtonPress(secondaryButtonLink)}>
+      <Button
+        appearance="gray"
+        size="lg"
+        onPress={() => handleButtonPress(secondaryButtonLink, onSecondaryPress)}
+      >
         {secondaryButtonLabel}
       </Button>
     </Box>

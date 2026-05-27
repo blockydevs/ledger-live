@@ -11,6 +11,12 @@ type GenericAwarenessModalDrawerViewProps = Readonly<{
   onClose: () => void;
   data: GenericAwarenessModalContentCard | undefined;
   bottomInset: number;
+  onFeatureIntroPrimaryPress: () => void;
+  onFeatureIntroSecondaryPress: () => void;
+  onCarouselSlideViewed: (slideIndex: number, isLastSlide: boolean) => void;
+  onCarouselNavigationPress: (slideIndex: number, button: string, isLastSlide: boolean) => void;
+  onCarouselPrimaryPress: (slideIndex: number) => void;
+  onCarouselMalformedUrl: (slideIndex: number) => void;
 }>;
 
 export function GenericAwarenessModalDrawerView({
@@ -18,6 +24,12 @@ export function GenericAwarenessModalDrawerView({
   onClose,
   data,
   bottomInset,
+  onFeatureIntroPrimaryPress,
+  onFeatureIntroSecondaryPress,
+  onCarouselSlideViewed,
+  onCarouselNavigationPress,
+  onCarouselPrimaryPress,
+  onCarouselMalformedUrl,
 }: GenericAwarenessModalDrawerViewProps) {
   if (!data) {
     return null;
@@ -29,11 +41,27 @@ export function GenericAwarenessModalDrawerView({
     if (!isOpen) return null;
 
     if (data.layout === "carousel") {
-      return <CarouselContent slides={data.data} onClose={onClose} />;
+      return (
+        <CarouselContent
+          slides={data.data}
+          onClose={onClose}
+          onSlideViewed={onCarouselSlideViewed}
+          onNavigationPress={onCarouselNavigationPress}
+          onPrimaryPress={onCarouselPrimaryPress}
+          onMalformedUrl={onCarouselMalformedUrl}
+        />
+      );
     }
 
     if (data.layout === "featureIntro") {
-      return <FeatureIntroContent content={data} onClose={onClose} />;
+      return (
+        <FeatureIntroContent
+          content={data}
+          onClose={onClose}
+          onPrimaryPress={onFeatureIntroPrimaryPress}
+          onSecondaryPress={onFeatureIntroSecondaryPress}
+        />
+      );
     }
 
     return null;
