@@ -50,6 +50,12 @@ export type MarketCurrencyRequestParams = {
   range?: string;
 };
 
+export type MarketAssetChartDataRequestParams = {
+  id?: string;
+  counterCurrency?: string;
+  range?: string;
+};
+
 export type SparklineSvgData = {
   path: string;
   viewBox: string;
