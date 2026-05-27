@@ -55,6 +55,9 @@ const LiveAppModalContent = ({
         alignItems: "center",
         padding: theme.spacings.s48,
       },
+      headerContent: {
+        marginTop: theme.spacings.s12,
+      },
       webviewContainer: {
         flex: 1,
       },
@@ -72,14 +75,21 @@ const LiveAppModalContent = ({
     );
   }
 
+  // The live-app renders its own title/header, so when no native title is
+  // passed we use the compact bar (back button only) to avoid the expanded
+  // bar reserving an empty large-title area below the back button.
+  const hasNativeHeader = Boolean(title || description);
+
   return (
     <SafeAreaView style={styles.root} edges={["top", "bottom"]} isFlex>
-      <NavBar density="expanded">
+      <NavBar density={hasNativeHeader ? "expanded" : "compact"}>
         <NavBarBackButton onPress={onClose} accessibilityLabel={t("common.close")} />
-        <NavBarContent>
-          {title ? <NavBarTitle>{title}</NavBarTitle> : null}
-          {description ? <NavBarDescription>{description}</NavBarDescription> : null}
-        </NavBarContent>
+        {hasNativeHeader ? (
+          <NavBarContent style={styles.headerContent}>
+            {title ? <NavBarTitle>{title}</NavBarTitle> : null}
+            {description ? <NavBarDescription>{description}</NavBarDescription> : null}
+          </NavBarContent>
+        ) : null}
       </NavBar>
       <Box style={styles.webviewContainer}>
         <Web3AppWebview
