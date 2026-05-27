@@ -19,9 +19,10 @@ const AccountHeaderManageActions: TezosFamily["accountHeaderManageActions"] = ({
   const label = useGetStakeLabelLocaleBased();
   const lldTezosStaking = useFeature("lldTezosStaking");
 
-  const { delegation, isDelegated, isStaked } = useTezosStakingInfo(account);
+  const { delegation, isStaked } = useTezosStakingInfo(account);
 
   const onClick = useCallback(() => {
+    if (account.type !== "Account") return;
     if (bridge.isAccountEmpty(account)) {
       dispatch(
         openModal("MODAL_NO_FUNDS_STAKE", {
@@ -31,7 +32,7 @@ const AccountHeaderManageActions: TezosFamily["accountHeaderManageActions"] = ({
       );
       return;
     }
-    if (lldTezosStaking?.enabled && !isDelegated && !isStaked) {
+    if (lldTezosStaking?.enabled && !isStaked) {
       dispatch(
         openModal("MODAL_TEZOS_EARNING_CHOICE", {
           account,
@@ -59,7 +60,6 @@ const AccountHeaderManageActions: TezosFamily["accountHeaderManageActions"] = ({
     account,
     bridge,
     delegation,
-    isDelegated,
     isStaked,
     lldTezosStaking?.enabled,
     parentAccount,
