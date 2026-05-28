@@ -14,6 +14,14 @@ describe("Add account from modal", () => {
         noah: {
           enabled: false,
         },
+        // The portfolio asset list assertions in this spec use `assetItem-${name}`
+        // testIDs that only the Wallet 4.0 layout renders. On develop, the legacy
+        // Context-driven `useFeature` happened to read Firebase remote (which has
+        // `lwmWallet40: true` in CI) before the bridge override flushed `false`,
+        // so the test passed. The Redux-backed `useFeature` resolves
+        // deterministically and never sees the Firebase flicker, so we have to
+        // pin Wallet 4.0 on here.
+        lwmWallet40: { enabled: true },
       },
       knownDevices: [knownDevice],
     });
