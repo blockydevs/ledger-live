@@ -54,6 +54,7 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
       mode: "ready",
       distributionItem,
       marketData: { marketCurrencyData, marketId, isLoading },
+      isDistributionLoading: distribution.isLoading,
       ledgerCurrency,
       displayName: ledgerCurrency?.name ?? marketFallback?.name ?? "",
       displayTicker: (ledgerCurrency?.ticker ?? marketFallback?.ticker ?? "").toUpperCase(),
@@ -61,7 +62,18 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
     };
   }
 
-  if (isLoading) return { mode: "loading" };
+  if (isLoading || distribution.isLoading) {
+    return {
+      mode: "ready",
+      distributionItem,
+      marketData: { marketCurrencyData, marketId, isLoading },
+      isDistributionLoading: distribution.isLoading,
+      ledgerCurrency,
+      displayName: ledgerCurrency?.name ?? "",
+      displayTicker: (ledgerCurrency?.ticker ?? "").toUpperCase(),
+      ledgerId: ledgerCurrency?.id ?? decodedAssetId,
+    };
+  }
 
   return { mode: "not-found" };
 }

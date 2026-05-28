@@ -440,7 +440,7 @@ const evmConfig: CurrencyLiveConfigDefinition = {
       },
       node: {
         type: "external",
-        uri: "https://flare.coin.ledger.com",
+        uri: "https://flare.coin.ledger.com/ext/bc/C/rpc",
       },
       explorer: {
         type: "blockscout",

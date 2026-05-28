@@ -56,4 +56,16 @@ describe("useGenericAwarenessModalCarouselViewModel", () => {
     expect(openURL).toHaveBeenCalledWith("https://www.ledger.com/products/ledger-flex");
     expect(jest.mocked(closeGenericAwarenessModalDialog)).toHaveBeenCalled();
   });
+
+  it("should close dialog when onClose is called", () => {
+    const { result } = renderHookWithStore(() =>
+      useGenericAwarenessModalCarouselViewModel(carouselCampaignCard),
+    );
+
+    act(() => {
+      result.current.onClose();
+    });
+
+    expect(jest.mocked(closeGenericAwarenessModalDialog)).toHaveBeenCalled();
+  });
 });

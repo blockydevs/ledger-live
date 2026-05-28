@@ -3716,6 +3716,14 @@
       "allow": "Allow notifications",
       "later": "Maybe later"
     },
+    "optInScreen": {
+      "title": "Enable notifications?",
+      "description": "Get real-time alerts on new tokens, earning opportunities, and market shifts. Opt out at any time in settings.",
+      "emptyTitle": "Notifications are already enabled",
+      "emptyDescription": "You are all set to receive real-time alerts from Ledger Wallet.",
+      "errorTitle": "Notifications are unavailable",
+      "errorDescription": "We could not check your notification settings. You can continue onboarding and update them later in settings."
+    },
     "ptxServices": {
       "toast": {
         "title": "In order to comply with Apple’s recent updates on the App Store, this feature is temporarily unavailable. You can still access it on Ledger Wallet on desktop."
@@ -9077,10 +9085,12 @@
       "marketCap": "Market cap",
       "marketRank": "Market rank",
       "circulatingSupply": "Circulating supply",
-      "circulatingSupplyTooltip": "The number of coins currently available for trading and circulating in the market.",
+      "circulatingSupplyTooltip": "The total number of tokens currently available in the market and held by the public. It excludes locked, reserved, or unminted tokens.",
       "maxSupply": "Max supply",
-      "maxSupplyTooltip": "The maximum number of coins that will ever exist for this cryptocurrency.",
+      "maxSupplyTooltip": "The maximum number of tokens that will ever exist. For some assets, this is fixed to prevent inflation.",
+      "marketCapTooltip": "The total value of all coins in circulation. Think of it as the crypto's total worth on the market.",
       "tradingVolume": "24h trading volume",
+      "tradingVolumeTooltip": "The total amount traded in the last 24 hours.",
       "error": "Unable to load market stats"
     },
     "pricePerformance": {
@@ -9114,7 +9124,7 @@
       "earnBannerGeneric": "Earn with this asset",
       "earnBannerSubtitle": "Hold and earn with this asset",
       "earnBannerAction": "Go to Earn",
-      "availableBalanceTooltip": "Funds available for immediate use, excluding staked or delegated amounts."
+      "availableBalanceTooltip": "The portion of the holdings you can use right now, free to send, swap, or withdraw at any time."
     },
     "coinOptions": {
       "openMenuA11yLabel": "Coin options",

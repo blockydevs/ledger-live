@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Slides, useSlidesContext } from "LLD/components/Slides";
 import { Button, PageIndicator } from "@ledgerhq/lumen-ui-react";
 import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
@@ -14,7 +15,7 @@ function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselCo
 
   return (
     <div className="flex size-full flex-col">
-      <div className="py-24 overflow-hidden w-full">
+      <div className="pb-24 overflow-hidden w-full">
         {showImage ? (
           <img
             src={imageUrl}
@@ -46,6 +47,7 @@ function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselCo
 export type CarouselContentProps = {
   slides: GenericAwarenessModalCarouselSlide[];
   onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 };
 
 function CarouselContentProgress() {
@@ -60,21 +62,24 @@ function CarouselContentProgress() {
 function CarouselContentFooter({
   slides,
   onSlidePrimaryClick,
+  onClose,
 }: Readonly<{
   slides: GenericAwarenessModalCarouselSlide[];
   onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 }>) {
-  const { currentIndex, totalSlides, goToNext, goToSlide } = useSlidesContext();
+  const { t } = useTranslation();
+  const { currentIndex, totalSlides, goToNext } = useSlidesContext();
   const isLastSlide = currentIndex === totalSlides - 1;
   const currentSlide = slides[currentIndex];
 
   const handleContinue = useCallback(() => {
     if (isLastSlide) {
-      goToSlide(0);
+      onClose();
     } else {
       goToNext();
     }
-  }, [isLastSlide, goToNext, goToSlide]);
+  }, [goToNext, isLastSlide, onClose]);
 
   const handlePrimary = useCallback(() => {
     if (currentSlide) {
@@ -100,7 +105,7 @@ function CarouselContentFooter({
         onClick={handleContinue}
         data-testid="generic-awareness-modal-continue-button"
       >
-        {isLastSlide ? "Go to first slide" : "Continue"}
+        {isLastSlide ? t("common.close") : t("common.continue")}
       </Button>
     </div>
   );
@@ -109,6 +114,7 @@ function CarouselContentFooter({
 export default function CarouselContent({
   slides,
   onSlidePrimaryClick,
+  onClose,
 }: Readonly<CarouselContentProps>) {
   return (
     <Slides initialSlideIndex={0}>
@@ -123,7 +129,11 @@ export default function CarouselContent({
         <CarouselContentProgress />
       </Slides.ProgressIndicator>
       <Slides.Footer>
-        <CarouselContentFooter slides={slides} onSlidePrimaryClick={onSlidePrimaryClick} />
+        <CarouselContentFooter
+          slides={slides}
+          onSlidePrimaryClick={onSlidePrimaryClick}
+          onClose={onClose}
+        />
       </Slides.Footer>
     </Slides>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, screen, waitFor } from "tests/testSetup";
+import { act, fireEvent, render, screen, waitFor } from "tests/testSetup";
 import { setGenericAwarenessModalContentCards } from "~/renderer/reducers/genericAwarenessModalSlice";
 import GenericAwarenessModal from "..";
 import {
@@ -139,6 +139,54 @@ describe("GenericAwarenessModal Integration", () => {
         expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
       });
       expect(store.getState().genericAwarenessModal.campaignId).toBeUndefined();
+    });
+
+    it("should close when Close is clicked on the last carousel slide", async () => {
+      const { store, user } = renderModal();
+
+      act(() => {
+        seedContentCards(store);
+        dispatchGenericAwarenessModalThunk(
+          store,
+          openGenericAwarenessModalDialog({ campaignId: CAROUSEL_CAMPAIGN_ID }),
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Ledger Flex")).toBeVisible();
+      });
+
+      const advanceToNextSlide = async (currentTitle: string) => {
+        await user.click(screen.getByTestId("generic-awareness-modal-continue-button"));
+        const slideOutAnimationStart = new Event("animationstart", { bubbles: true });
+        Object.defineProperty(slideOutAnimationStart, "animationName", {
+          value: "slide-out-to-left",
+        });
+        fireEvent(screen.getByText(currentTitle), slideOutAnimationStart);
+      };
+
+      await advanceToNextSlide("Ledger Flex");
+      await waitFor(() => {
+        expect(screen.getByText("Ledger Wallet clarity")).toBeVisible();
+      });
+
+      await advanceToNextSlide("Ledger Wallet clarity");
+      await waitFor(() => {
+        expect(screen.getByText("Bitcoin, secured")).toBeVisible();
+      });
+
+      await advanceToNextSlide("Bitcoin, secured");
+      await waitFor(() => {
+        expect(screen.getByText("Ethereum & beyond")).toBeVisible();
+        expect(screen.getByRole("button", { name: "Close" })).toBeVisible();
+      });
+
+      await user.click(screen.getByRole("button", { name: "Close" }));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
+      });
+      expect(store.getState().dialogs.GENERIC_AWARENESS_MODAL).toBe(false);
     });
 
     it("should close when the carousel primary button is clicked", async () => {

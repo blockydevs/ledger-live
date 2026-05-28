@@ -11,6 +11,7 @@ import { openURL } from "~/renderer/linking";
 export interface GenericAwarenessModalCarouselViewModel {
   slides: GenericAwarenessModalCarouselSlide[];
   onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 }
 
 const useGenericAwarenessModalCarouselViewModel = (
@@ -21,20 +22,25 @@ const useGenericAwarenessModalCarouselViewModel = (
   const carousel =
     contentCard?.layout === GenericAwarenessModalLayout.Carousel ? contentCard : undefined;
 
+  const onClose = useCallback(() => {
+    dispatch(closeGenericAwarenessModalDialog());
+  }, [dispatch]);
+
   const onSlidePrimaryClick = useCallback(
     (slide: GenericAwarenessModalCarouselSlide) => {
       openURL(slide.primaryButtonLink);
-      dispatch(closeGenericAwarenessModalDialog());
+      onClose();
     },
-    [dispatch],
+    [onClose],
   );
 
   return useMemo(
     () => ({
       slides: carousel?.data ?? [],
       onSlidePrimaryClick,
+      onClose,
     }),
-    [carousel, onSlidePrimaryClick],
+    [carousel, onClose, onSlidePrimaryClick],
   );
 };
 
