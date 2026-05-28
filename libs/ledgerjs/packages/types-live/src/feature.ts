@@ -165,6 +165,8 @@ export type CurrencyFeatures = {
   currencyAleoTestnet: DefaultFeature;
   currencyUnichain: DefaultFeature;
   currencyUnichainSepolia: DefaultFeature;
+  currencyArc: DefaultFeature;
+  currencyArcTestnet: DefaultFeature;
 };
 
 /**

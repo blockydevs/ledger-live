@@ -157,6 +157,8 @@ const abandonSeedAddresses: Partial<Record<CryptoCurrency["id"], string>> = {
   concordium_testnet: "3a9gh23nNY3kH4k3ajaCqAbM8rcbWMor2VhEzQ6qkn2r17UU7w",
   unichain: EVM_DEAD_ADDRESS,
   unichain_sepolia: EVM_DEAD_ADDRESS,
+  arc: EVM_DEAD_ADDRESS,
+  arc_testnet: EVM_DEAD_ADDRESS,
 };
 
 /**
