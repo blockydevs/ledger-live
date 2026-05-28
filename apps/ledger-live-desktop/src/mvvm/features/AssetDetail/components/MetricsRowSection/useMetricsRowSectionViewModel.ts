@@ -14,6 +14,5 @@ export function useMetricsRowSectionViewModel({ distributionItem }: Props) {
 
   return {
     shouldRenderSection: pnlVisible || stakingVisible,
-    pnlVisible,
   };
 }

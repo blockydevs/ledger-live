@@ -10,18 +10,14 @@ type MetricsRowSectionProps = Readonly<{
 }>;
 
 export function MetricsRowSection({ distributionItem, sectionLoading }: MetricsRowSectionProps) {
-  const { shouldRenderSection, pnlVisible } = useMetricsRowSectionViewModel({ distributionItem });
+  const { shouldRenderSection } = useMetricsRowSectionViewModel({ distributionItem });
 
   if (!shouldRenderSection && !sectionLoading) return null;
 
   return (
     <div className="flex items-stretch gap-12">
       <PnLSection distributionItem={distributionItem} isLoading={sectionLoading} />
-      <StakingSection
-        distributionItem={distributionItem}
-        pnlVisible={pnlVisible}
-        isLoading={sectionLoading}
-      />
+      <StakingSection distributionItem={distributionItem} isLoading={sectionLoading} />
     </div>
   );
 }

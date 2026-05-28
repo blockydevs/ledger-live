@@ -35,7 +35,7 @@ describe("useMetricsRowSectionViewModel", () => {
       initialState: flagsOn,
     });
 
-    expect(result.current).toEqual({ shouldRenderSection: true, pnlVisible: true });
+    expect(result.current).toEqual({ shouldRenderSection: true });
   });
 
   it("shows the section when staking is visible but PnL is off", () => {
@@ -43,7 +43,7 @@ describe("useMetricsRowSectionViewModel", () => {
       initialState: flagsOff,
     });
 
-    expect(result.current).toEqual({ shouldRenderSection: true, pnlVisible: false });
+    expect(result.current).toEqual({ shouldRenderSection: true });
   });
 
   it("hides the section when neither PnL nor staking is visible", () => {
@@ -57,6 +57,6 @@ describe("useMetricsRowSectionViewModel", () => {
       { initialState: flagsOff },
     );
 
-    expect(result.current).toEqual({ shouldRenderSection: false, pnlVisible: false });
+    expect(result.current).toEqual({ shouldRenderSection: false });
   });
 });
