@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { trendFromSign } from "../utils";
+import { trendFromSign } from "../trend";
 
 describe("trendFromSign", () => {
   it("returns 'neutral' when the value is zero", () => {

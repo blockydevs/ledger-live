@@ -12,6 +12,7 @@ export function PnlDetailDrawer({
   description,
   bodyText,
   items = [],
+  footer,
   testID,
 }: Readonly<PnlDetailDrawerProps>) {
   const { bottom: bottomInset } = useSafeAreaInsets();
@@ -35,6 +36,11 @@ export function PnlDetailDrawer({
             <PnlDetailRow key={item.title} item={item} />
           ))}
         </Box>
+        {footer ? (
+          <Text typography="body4" lx={{ color: "muted", marginTop: "s16" }}>
+            {footer}
+          </Text>
+        ) : null}
       </BottomSheetView>
     </QueuedDrawerBottomSheet>
   );
