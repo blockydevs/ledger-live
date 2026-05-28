@@ -50,8 +50,6 @@ export interface WalletFeaturesConfig {
   readonly shouldDisplayTour: boolean;
   /** Whether to show the asset section */
   readonly shouldDisplayAssetSection: boolean;
-  /** Whether to show the onboarding widget (mobile only) */
-  readonly shouldDisplayOnboardingWidget: boolean;
   /** Whether to show Braze content cards as ContentBanner (e.g. action cards on portfolio, mobile only) */
   readonly shouldDisplayBrazePlacement: boolean;
   /** Whether to show the TX History section */
