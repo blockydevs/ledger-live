@@ -33,5 +33,11 @@ export const getWallet40Attributes = (
     assetDiscoverability: wallet40FeatureFlag?.params?.assetDiscoverability ?? false,
     aggregatedAssets: wallet40FeatureFlag?.params?.aggregatedAssets ?? false,
     pnl: wallet40FeatureFlag?.params?.pnl ?? false,
+    finishOnboardingWidget:
+      wallet40FeatureFlag?.params?.finishOnboardingWidget ??
+      onboardingWidgetFeatureFlag?.enabled ??
+      false,
+    earnUpselling: wallet40FeatureFlag?.params?.earnUpselling ?? false,
+    earnSimulator: wallet40FeatureFlag?.params?.earnSimulator ?? false,
   };
 };

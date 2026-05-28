@@ -903,6 +903,10 @@ type Feature_Wallet40_Params = {
   // Specifics
   brazePlacement?: boolean;
   newReceiveDialog?: boolean;
+  finishOnboardingWidget?: boolean;
+  onboardingWidget?: boolean;
+  earnUpselling?: boolean;
+  earnSimulator?: boolean;
 };
 
 export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params>;
