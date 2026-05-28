@@ -10,6 +10,7 @@ import {
 } from "@ledgerhq/errors";
 import coinConfig from "../config";
 import { InvalidAddressBecauseAlreadyDelegated, MustDelegateBeforeStaking } from "../types/errors";
+import { STAKE_USE_ALL_RESERVE_MUTEZ } from "../utils";
 import { validateIntent } from "./validateIntent";
 
 const mockEstimateFees = jest.fn();
@@ -344,6 +345,37 @@ describe("validateIntent", () => {
 
       expect(result.errors.amount).toBeInstanceOf(NotEnoughBalanceToDelegate);
       expect(result.amount).toBe(0n);
+    });
+
+    it("excludes already-staked funds when stake useAllAmount falls back to balance computation", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({
+          balance: 5_000_000,
+          stakedBalance: 1_000_000,
+          delegate: { alias: "baker", address: validRecipient, active: true },
+          delegationLevel: 1,
+        }),
+      );
+      // No `amount` field => estimatedAmount is undefined, exercising the fallback path.
+      mockEstimateFees.mockResolvedValueOnce({
+        fees: 1000n,
+        gasLimit: 10000n,
+        storageLimit: 0n,
+        estimatedFees: 1000n,
+      });
+
+      const result = await validateIntent({
+        intentType: "staking",
+        asset: { type: "native" },
+        type: "stake",
+        sender: senderAddress,
+        recipient: "",
+        amount: 0n,
+        useAllAmount: true,
+      });
+
+      expect(result.errors.amount).toBeUndefined();
+      expect(result.amount).toBe(4_000_000n - 1000n - STAKE_USE_ALL_RESERVE_MUTEZ);
     });
 
     it("should return NotEnoughBalance when unstake has no staked balance", async () => {
