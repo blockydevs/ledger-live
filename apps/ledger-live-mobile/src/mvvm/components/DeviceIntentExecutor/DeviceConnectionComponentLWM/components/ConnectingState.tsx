@@ -7,7 +7,7 @@ import {
 } from "@ledgerhq/live-dmk-mobile";
 import { TrackScreen } from "~/analytics";
 import { useTranslation } from "~/context/Locale";
-import { useSourceFlow } from "../../SourceFlowContext";
+import { useSourceFlow } from "../../utils/SourceFlowContext";
 import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
 
 type ConnectingStateProps = {

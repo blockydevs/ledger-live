@@ -8,7 +8,7 @@ import {
   type ConnectDeviceUIState,
   type DisplayedDevice,
 } from "@ledgerhq/live-dmk-mobile";
-import { SourceFlowProvider } from "../../SourceFlowContext";
+import { SourceFlowProvider } from "../../utils/SourceFlowContext";
 import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
 import { DiscoveringState } from "./DiscoveringState";
 

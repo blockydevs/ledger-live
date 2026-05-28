@@ -4,7 +4,7 @@ import { ConnectDeviceUIStateTypes } from "@ledgerhq/live-dmk-mobile";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import type { KnownDevice } from "@ledgerhq/live-dmk-shared";
 import { TrackScreen } from "~/analytics";
-import { SourceFlowProvider } from "../../SourceFlowContext";
+import { SourceFlowProvider } from "../../utils/SourceFlowContext";
 import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
 import { ConnectingState } from "./ConnectingState";
 

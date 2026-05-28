@@ -9,7 +9,7 @@ import {
   type ConnectDeviceUIState,
 } from "@ledgerhq/live-dmk-mobile";
 import { getDeviceAnimation } from "~/helpers/getDeviceAnimation";
-import { SourceFlowProvider } from "../SourceFlowContext";
+import { SourceFlowProvider } from "../utils/SourceFlowContext";
 import { DeviceConnectionComponentLWMView } from "./DeviceConnectionComponentLWMView";
 import type { DeviceConnectionComponentLWMViewModel } from "./useDeviceConnectionComponentLWMViewModel";
 
@@ -133,8 +133,8 @@ describe("DeviceConnectionComponentLWMView", () => {
   });
 
   it("should throw when the state is not handled", () => {
-    expect(() =>
-      renderView({ type: "unsupported" } as unknown as ConnectDeviceUIState),
-    ).toThrow('Unhandled connect device state: {"type":"unsupported"}');
+    expect(() => renderView({ type: "unsupported" } as unknown as ConnectDeviceUIState)).toThrow(
+      'Unhandled connect device state: {"type":"unsupported"}',
+    );
   });
 });

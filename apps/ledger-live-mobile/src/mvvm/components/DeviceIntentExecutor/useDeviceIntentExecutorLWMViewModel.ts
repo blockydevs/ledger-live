@@ -13,7 +13,7 @@ import {
 } from "./utils/trackDeviceIntent";
 import type { InitializerConfig } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
-import type { SourceFlow } from "./SourceFlowContext";
+import type { SourceFlow } from "./utils/SourceFlowContext";
 
 type Props<JobState, Input, ExtraProps> = DeviceIntentExecutorProps<
   JobState,

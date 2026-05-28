@@ -14,7 +14,7 @@ import DeviceConnectionComponentLWM from "./DeviceConnectionComponentLWM";
 import DeviceContextInitializerComponentLWM, {
   InitializerConfig,
 } from "./DeviceContextInitializerComponentLWM";
-import { SourceFlowProvider, type SourceFlow } from "./SourceFlowContext";
+import { SourceFlowProvider, type SourceFlow } from "./utils/SourceFlowContext";
 import type { InitializationInput } from "./types";
 import { useDeviceIntentExecutorLWMViewModel } from "./useDeviceIntentExecutorLWMViewModel";
 
@@ -23,7 +23,7 @@ export {
   type BuildDeviceInitializationInputParams,
 } from "./DeviceContextInitializerComponentLWM/utils/buildDeviceInitializationInput";
 export type { InitializationInput } from "./types";
-export type { SourceFlow } from "./SourceFlowContext";
+export type { SourceFlow } from "./utils/SourceFlowContext";
 
 type Props<JobState, Input, ExtraProps> = DeviceIntentExecutorProps<
   JobState,
@@ -56,14 +56,14 @@ export function DeviceIntentExecutorLWM<JobState, Input, ExtraProps>(
   const { sourceFlow, wrappedProps } = useDeviceIntentExecutorLWMViewModel(props);
 
   return (
-    <SourceFlowProvider value={sourceFlow}>
-      <QueuedDrawerBottomSheet
-        isRequestingToBeOpened={wrappedProps.enabled}
-        onClose={wrappedProps.onUserCancel}
-        preventBackdropClick={!wrappedProps.cancellableUI}
-        hideHandle
-        enableDynamicSizing
-      >
+    <QueuedDrawerBottomSheet
+      isRequestingToBeOpened={wrappedProps.enabled}
+      onClose={wrappedProps.onUserCancel}
+      preventBackdropClick={!wrappedProps.cancellableUI}
+      hideHandle
+      enableDynamicSizing
+    >
+      <SourceFlowProvider value={sourceFlow}>
         <BottomSheetView style={{ paddingBottom: bottomInset + 16 }}>
           {wrappedProps.cancellableUI && <BottomSheetHeader density="expanded" />}
           <DeviceIntentExecutor
@@ -72,7 +72,7 @@ export function DeviceIntentExecutorLWM<JobState, Input, ExtraProps>(
             initializerConfig={wrappedProps.initializerConfig}
           />
         </BottomSheetView>
-      </QueuedDrawerBottomSheet>
-    </SourceFlowProvider>
+      </SourceFlowProvider>
+    </QueuedDrawerBottomSheet>
   );
 }

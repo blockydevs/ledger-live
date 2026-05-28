@@ -1,7 +1,7 @@
 import type { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
-import type { SourceFlow } from "../SourceFlowContext";
+import type { SourceFlow } from "./SourceFlowContext";
 
 export const PAGE_CONNECT_DEVICE = {
   Discovering: "Connect Device - Discovering",

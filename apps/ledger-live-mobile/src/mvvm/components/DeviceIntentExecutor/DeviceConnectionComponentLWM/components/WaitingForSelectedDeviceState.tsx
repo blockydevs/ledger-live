@@ -1,13 +1,10 @@
 import React from "react";
-import {
-  ConnectDeviceUIStateTypes,
-  type ConnectDeviceUIState,
-} from "@ledgerhq/live-dmk-mobile";
+import { ConnectDeviceUIStateTypes, type ConnectDeviceUIState } from "@ledgerhq/live-dmk-mobile";
 import { getDeviceModel } from "@ledgerhq/devices";
 import { DeviceActionContent } from "LLM/components/DeviceActionContent";
 import { TrackScreen } from "~/analytics";
 import { useTranslation } from "~/context/Locale";
-import { useSourceFlow } from "../../SourceFlowContext";
+import { useSourceFlow } from "../../utils/SourceFlowContext";
 import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
 
 type WaitingForSelectedDeviceStateProps = {

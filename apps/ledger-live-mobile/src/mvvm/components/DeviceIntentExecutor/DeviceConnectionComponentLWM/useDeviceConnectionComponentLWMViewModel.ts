@@ -28,7 +28,7 @@ import {
   trackDeviceflowStarted,
   trackDevicePrompted,
 } from "../utils/trackDeviceIntent";
-import { useSourceFlow } from "../SourceFlowContext";
+import { useSourceFlow } from "../utils/SourceFlowContext";
 
 const LOG_TYPE = "DeviceConnectionComponentLWM";
 

@@ -18,7 +18,7 @@ import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { NavigatorName, ScreenName } from "~/const";
 import type { DeviceLike, State } from "~/reducers/types";
 import { urls } from "~/utils/urls";
-import { SourceFlowProvider, type SourceFlow } from "../SourceFlowContext";
+import { SourceFlowProvider, type SourceFlow } from "../utils/SourceFlowContext";
 import { useDeviceConnectionComponentLWMViewModel } from "./useDeviceConnectionComponentLWMViewModel";
 
 jest.mock("~/analytics", () => {
@@ -56,9 +56,7 @@ type ConnectDeviceObserver = {
 const mockedUseDeviceManagementKit = jest.mocked(useDeviceManagementKit);
 const mockedConnectDeviceUseCase = jest.mocked(connectDeviceUseCase);
 const mockedLinkingOpenURL = jest.mocked(Linking.openURL);
-const mockDmk = { id: "dmk" } as unknown as NonNullable<
-  ReturnType<typeof useDeviceManagementKit>
->;
+const mockDmk = { id: "dmk" } as unknown as NonNullable<ReturnType<typeof useDeviceManagementKit>>;
 
 let connectDeviceObserver: ConnectDeviceObserver | undefined;
 let mockUnsubscribe: jest.Mock;
