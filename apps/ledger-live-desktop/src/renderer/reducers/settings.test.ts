@@ -10,11 +10,13 @@ import { State } from ".";
 import { purgeExpiredAnonymousUserNotifications } from "../actions/settings";
 import reducer, {
   lastSeenDeviceSelector,
+  languageSelector,
   localeSelector,
   INITIAL_STATE as SETTINGS_INITIAL_STATE,
   SettingsState,
   filterValidSettings,
   trackingEnabledSelector,
+  canPushDeviceIdsSelector,
 } from "./settings";
 const invalidDeviceModelIds = ["nanoFTS", undefined, "whatever"];
 const validDeviceModelIds: DeviceModelId[] = Object.values(DeviceModelId);
@@ -115,6 +117,56 @@ describe("lastSeenDeviceSelector", () => {
       },
     };
     expect(localeSelector(state)).toEqual("en-US");
+  });
+
+  it("should fall back to the language when the locale is unknown to regions.json", () => {
+    const state = {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      ...({} as State),
+      settings: {
+        ...SETTINGS_INITIAL_STATE,
+        language: "en" as const,
+        locale: "xx-YY",
+      },
+    };
+    expect(localeSelector(state)).toEqual("en");
+  });
+});
+
+describe("languageSelector", () => {
+  const buildState = (settings: Partial<SettingsState>): State => ({
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    ...({} as State),
+    settings: {
+      ...SETTINGS_INITIAL_STATE,
+      ...settings,
+    },
+  });
+
+  it.each([
+    { case: "supported language", language: "fr", expected: "fr" },
+    {
+      case: "unsupported language",
+      language: "xx",
+      expected: SETTINGS_INITIAL_STATE.language,
+    },
+    {
+      case: "missing language",
+      language: undefined,
+      expected: SETTINGS_INITIAL_STATE.language,
+    },
+  ])("should resolve to $expected for $case", ({ language, expected }) => {
+    expect(
+      languageSelector(
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        buildState({ language: language as SettingsState["language"] }),
+      ),
+    ).toBe(expected);
+  });
+
+  it("should return a stable primitive across calls (no new reference allocated)", () => {
+    const state = buildState({ language: "fr" });
+    expect(languageSelector(state)).toBe(languageSelector(state));
   });
 });
 
@@ -623,5 +675,43 @@ describe("trackingEnabledSelector", () => {
         },
       }),
     ).toBe(true);
+  });
+});
+
+describe("canPushDeviceIdsSelector", () => {
+  const FIXED_NOW = new Date("2024-06-15T12:00:00.000Z");
+
+  beforeAll(() => jest.useFakeTimers());
+  afterAll(() => jest.useRealTimers());
+  beforeEach(() => jest.setSystemTime(FIXED_NOW));
+
+  const optedInSettings: Partial<SettingsState> = {
+    lastAnalyticsConsentDate: FIXED_NOW.toISOString(),
+    privacyPolicyVersion: 1,
+    shareAnalytics: true,
+    sharePersonalizedRecommandations: true,
+  };
+
+  it("returns false when FF is off (regardless of user opt-in)", () => {
+    expect(
+      canPushDeviceIdsSelector(mockStateWithSettings(optedInSettings, { enabled: false })),
+    ).toBe(false);
+  });
+
+  it("returns false when FF is on but user has not opted in", () => {
+    expect(
+      canPushDeviceIdsSelector(
+        mockStateWithSettings({
+          lastAnalyticsConsentDate: FIXED_NOW.toISOString(),
+          privacyPolicyVersion: 1,
+          shareAnalytics: false,
+          sharePersonalizedRecommandations: false,
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("returns true only when FF is on and user has opted in", () => {
+    expect(canPushDeviceIdsSelector(mockStateWithSettings(optedInSettings))).toBe(true);
   });
 });

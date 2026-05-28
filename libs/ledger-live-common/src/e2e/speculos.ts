@@ -8,10 +8,9 @@ import {
   SpeculosTransport,
 } from "../load/speculos";
 import { createSpeculosDeviceCI, releaseSpeculosDeviceCI } from "./speculosCI";
-import type { AppCandidate } from "@ledgerhq/ledger-wallet-framework/bot/types";
 import { DeviceModelId } from "@ledgerhq/devices";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios from "axios";
 import { getEnv } from "@ledgerhq/live-env";
 import { getCryptoCurrencyById } from "../currencies";
 import { DeviceLabels } from "./enum/DeviceLabels";
@@ -43,13 +42,14 @@ import { AppInfos } from "./enum/AppInfos";
 import { DEVICE_LABELS_CONFIG } from "./data/deviceLabelsData";
 import { sendSui } from "./families/sui";
 import { sendConcordium } from "./families/concordium";
-import { getAppVersionFromCatalog, getSpeculosModel, isTouchDevice } from "./speculosAppVersion";
+import { getNanoAppCatalogVersionMap, getSpeculosModel, isTouchDevice } from "./speculosAppVersion";
 import {
   pressAndRelease,
   longPressAndRelease,
   swipeRight,
 } from "./deviceInteraction/TouchDeviceSimulator";
 import { withDeviceController } from "./deviceInteraction/DeviceController";
+import { retryAxiosRequest } from "./deviceInteraction/retryAxiosRequest";
 import { sanitizeError } from ".";
 import { sendVechain } from "./families/vechain";
 import { getDeviceCoordinates } from "./deviceCoordinates";
@@ -434,11 +434,12 @@ export async function startSpeculos(
   const appCandidates = await listAppCandidates(coinapps);
 
   const nanoAppCatalogPath = getEnv("E2E_NANO_APP_VERSION_PATH");
+  const catalogVersions = await getNanoAppCatalogVersionMap(nanoAppCatalogPath);
 
   const { appQuery, onSpeculosDeviceCreated } = spec;
   try {
     const displayName = spec.currency?.managerAppName || appQuery.appName;
-    const catalogVersion = await getAppVersionFromCatalog(displayName, nanoAppCatalogPath);
+    const catalogVersion = catalogVersions.get(displayName);
     if (catalogVersion) {
       appQuery.appVersion = catalogVersion;
     }
@@ -447,19 +448,6 @@ export async function startSpeculos(
   }
 
   const appCandidate = findLatestAppCandidate(appCandidates, appQuery);
-  const { model } = appQuery;
-  const { dependencies } = spec;
-  const newAppQuery = dependencies?.map(dep => {
-    return findLatestAppCandidate(appCandidates, {
-      model,
-      appName: dep.name,
-      firmware: appCandidate?.firmware,
-    });
-  });
-  const appVersionMap = new Map(newAppQuery?.map(app => [app?.appName, app?.appVersion]));
-  dependencies?.forEach(dependency => {
-    dependency.appVersion = appVersionMap.get(dependency.name) || "1.0.0";
-  });
   if (!appCandidate) {
     console.warn("no app found for " + testName);
     console.warn(appQuery);
@@ -470,12 +458,37 @@ export async function startSpeculos(
     testName,
     coinapps,
   );
+
+  const { model } = appQuery;
+  const { dependencies } = spec;
+  dependencies?.forEach(dependency => {
+    const catalogVersion = catalogVersions.get(dependency.name);
+    const dependencyCandidate = findLatestAppCandidate(appCandidates, {
+      model,
+      appName: dependency.name,
+      appVersion: catalogVersion,
+      firmware: appCandidate.firmware,
+    });
+
+    invariant(
+      dependencyCandidate,
+      "%s: no dependency app found for %s %s on %s %s. Are you sure your COINAPPS is up to date?",
+      testName,
+      dependency.name,
+      catalogVersion ?? "latest local version",
+      model,
+      appCandidate.firmware,
+    );
+
+    dependency.appVersion = dependencyCandidate.appVersion;
+  });
+
   log(
     "engine",
     `test ${testName} will use ${appCandidate.appName} ${appCandidate.appVersion} on ${appCandidate.model} ${appCandidate.firmware}`,
   );
   const deviceParams = {
-    ...(appCandidate as AppCandidate),
+    ...appCandidate,
     appName: spec.currency ? spec.currency.managerAppName : spec.appQuery.appName,
     seed,
     dependencies,
@@ -505,9 +518,11 @@ export async function startSpeculos(
 export async function stopSpeculos(deviceId: string | undefined) {
   if (deviceId) {
     log("engine", `test ${deviceId} finished`);
-    isSpeculosRemote
-      ? await releaseSpeculosDeviceCI(deviceId)
-      : await releaseSpeculosDevice(deviceId);
+    if (isSpeculosRemote) {
+      await releaseSpeculosDeviceCI(deviceId);
+    } else {
+      await releaseSpeculosDevice(deviceId);
+    }
   }
 }
 
@@ -532,47 +547,6 @@ export function drainSpeculosScreenshots(port: number): Buffer[] {
   const screenshots = _capturedSpeculosScreenshots.get(port) ?? [];
   _capturedSpeculosScreenshots.delete(port);
   return screenshots;
-}
-
-export async function retryAxiosRequest<T>(
-  requestFn: () => Promise<AxiosResponse<T>>,
-  maxRetries: number = 5,
-  baseDelay: number = 1000,
-  retryableStatusCodes: number[] = [500, 502, 503, 504],
-): Promise<AxiosResponse<T>> {
-  let lastError: AxiosError | Error;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await requestFn();
-    } catch (error) {
-      lastError = error as AxiosError | Error;
-
-      const isRetryable =
-        axios.isAxiosError(error) &&
-        error.response &&
-        retryableStatusCodes.includes(error.response.status);
-
-      const isNetworkError = axios.isAxiosError(error) && !error.response;
-
-      if ((isRetryable || isNetworkError) && attempt < maxRetries) {
-        const delay = baseDelay * (attempt + 1);
-        console.warn(
-          `Axios request failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`,
-          {
-            status: axios.isAxiosError(error) ? error.response?.status : "network error",
-            message: error.message,
-          },
-        );
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-
-      throw lastError;
-    }
-  }
-
-  throw lastError!;
 }
 
 export async function waitFor(text: string, maxAttempts = 60): Promise<string> {
@@ -1119,16 +1093,12 @@ export const exportUfvk = withDeviceController(
   ({ getButtonsController }) =>
     async (account: Account) => {
       const buttons = getButtonsController();
-      const { receiveVerifyLabel, receiveConfirmLabel } = getDeviceLabels(
-        account.currency.speculosApp,
-      );
-      await waitFor(receiveVerifyLabel);
 
       if (isTouchDevice()) {
-        await pressUntilTextFound(receiveConfirmLabel);
+        await pressUntilTextFound(DeviceLabels.CONFIRM);
         await pressAndRelease(DeviceLabels.CONFIRM);
       } else {
-        await pressUntilTextFound(receiveConfirmLabel);
+        await pressUntilTextFound(DeviceLabels.CONFIRM);
         await buttons.both();
       }
     },

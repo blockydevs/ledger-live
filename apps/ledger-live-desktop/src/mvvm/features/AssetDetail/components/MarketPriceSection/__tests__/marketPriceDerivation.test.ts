@@ -1,7 +1,5 @@
-import type { Unit } from "@ledgerhq/types-cryptoassets";
 import {
   clampDayChangePercentPointsNearZero,
-  formatSignedFiatVariation,
   getFiatPriceVariationFromPercentChange,
   resolveTrendPercentAndVariant,
 } from "../utils/marketPriceDerivation";
@@ -15,25 +13,6 @@ describe("clampDayChangePercentPointsNearZero", () => {
   it("preserves nullish and larger values", () => {
     expect(clampDayChangePercentPointsNearZero(undefined)).toBeUndefined();
     expect(clampDayChangePercentPointsNearZero(1.5)).toBe(1.5);
-  });
-});
-
-describe("formatSignedFiatVariation", () => {
-  const usdUnit: Unit = {
-    name: "US Dollar",
-    code: "USD",
-    magnitude: 2,
-    showAllDigits: true,
-    prefixCode: true,
-  };
-
-  it("uses formatCurrencyUnit with sign for non-zero values", () => {
-    expect(formatSignedFiatVariation(120, usdUnit, "en-US")).toBe("+USD1.20");
-    expect(formatSignedFiatVariation(-346, usdUnit, "en-US")).toBe("-USD3.46");
-  });
-
-  it("omits leading plus when variation is zero", () => {
-    expect(formatSignedFiatVariation(0, usdUnit, "en-US")).toBe("USD0.00");
   });
 });
 

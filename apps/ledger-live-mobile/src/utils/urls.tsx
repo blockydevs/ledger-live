@@ -114,6 +114,8 @@ export const urls = {
   celoStakingRewards: "https://support.ledger.com/article/360020499920-zd",
   cosmosStaking:
     "https://www.ledger.com/staking-cosmos?utm_source=ledger_live_mobile&utm_medium=self_referral&utm_content=cosmos",
+  evmNativeStaking:
+    "https://www.ledger.com/staking-ethereum?utm_source=ledger_live_mobile&utm_medium=self_referral&utm_content=ethereum",
   cardanoStaking: "https://support.ledger.com/article/7880073204253-zd",
   algorandStaking: "https://support.ledger.com/article/360015897740-zd",
   polkadotStaking: "https://support.ledger.com/article/360018131260-zd",
@@ -268,10 +270,6 @@ export const urls = {
   },
   concordium: {
     learnMore: "https://support.ledger.com/article/Concordium-CCD",
-    idApp: {
-      appStore: "https://apps.apple.com/app/concordium-id/id6746754485",
-      playStore: "https://play.google.com/store/apps/details?id=com.idwallet.app",
-    },
   },
   fwUpdateReleaseNotes: {
     nanoS: "https://support.ledger.com/article/360010446000-zd",

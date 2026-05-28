@@ -14,6 +14,7 @@ import { DeviceModelId } from "@ledgerhq/types-devices";
 import type { CurrencySettings, SettingsState, State, Theme } from "./types";
 import { currencySettingsDefaults } from "../helpers/CurrencySettingsDefaults";
 import { getDefaultLanguageLocale, getDefaultLocale } from "../languages";
+import { selectFeature } from "@shared/feature-flags";
 import type {
   SettingsBlacklistTokenPayload,
   SettingsDismissBannerPayload,
@@ -94,8 +95,8 @@ export const INITIAL_STATE: SettingsState = {
   counterValueExchange: null,
   privacy: null,
   reportErrorsEnabled: true,
-  analyticsEnabled: true,
-  personalizedRecommendationsEnabled: true,
+  analyticsEnabled: false,
+  personalizedRecommendationsEnabled: false,
   currenciesSettings: {},
   pairExchanges: {},
   selectedTimeRange: "day",
@@ -778,6 +779,8 @@ export const trackingEnabledSelector = (state: State) => {
   }
   return settings.analyticsEnabled || settings.personalizedRecommendationsEnabled;
 };
+export const canPushDeviceIdsSelector = (state: State) =>
+  !!selectFeature(state, "analyticsOptIn")?.enabled && trackingEnabledSelector(state);
 export const lastSeenCustomImageSelector = createSelector(
   settingsStoreSelector,
   s => s.lastSeenCustomImage,

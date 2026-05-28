@@ -9,6 +9,7 @@ import reducer, {
   resolvedThemeSelector,
   themeSelector,
   trackingEnabledSelector,
+  canPushDeviceIdsSelector,
   INITIAL_STATE as SETTINGS_INITIAL_STATE,
   filterValidSettings,
 } from "./settings";
@@ -43,6 +44,7 @@ const stateWithSettings = (settingsPatch: Partial<SettingsState>): State => ({
 const withAnalyticsOptInResolved = (
   base: State,
   params: Partial<{ policyVersion: number; consentValidityDays: number }> = {},
+  enabled = true,
 ): State =>
   ({
     ...base,
@@ -55,7 +57,7 @@ const withAnalyticsOptInResolved = (
         analyticsOptIn: {
           ...FEATURE_FLAGS_INITIAL_STATE.resolved.analyticsOptIn,
           ...base.featureFlags?.resolved?.analyticsOptIn,
-          enabled: true,
+          enabled,
           params: {
             ...FEATURE_FLAGS_INITIAL_STATE.resolved.analyticsOptIn.params,
             ...base.featureFlags?.resolved?.analyticsOptIn?.params,
@@ -248,6 +250,50 @@ describe("trackingEnabledSelector", () => {
   });
 });
 
+describe("canPushDeviceIdsSelector", () => {
+  const FIXED_NOW = new Date("2026-03-01T12:00:00.000Z");
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(FIXED_NOW);
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const optedInState = (): State =>
+    withAnalyticsOptInResolved(
+      stateWithSettings({
+        analyticsConsentInfo: { consentDate: FIXED_NOW.toISOString(), privacyPolicyVersion: 1 },
+        analyticsEnabled: true,
+        personalizedRecommendationsEnabled: true,
+      }),
+    );
+
+  it("returns false when FF is off (regardless of user opt-in)", () => {
+    const state = withAnalyticsOptInResolved(
+      stateWithSettings({ analyticsEnabled: true }),
+      {},
+      false,
+    );
+    expect(canPushDeviceIdsSelector(state)).toBe(false);
+  });
+
+  it("returns false when FF is on but user has not opted in", () => {
+    const state = withAnalyticsOptInResolved(
+      stateWithSettings({
+        analyticsConsentInfo: { consentDate: FIXED_NOW.toISOString(), privacyPolicyVersion: 1 },
+        analyticsEnabled: false,
+        personalizedRecommendationsEnabled: false,
+      }),
+    );
+    expect(canPushDeviceIdsSelector(state)).toBe(false);
+  });
+
+  it("returns true only when FF is on and user has opted in", () => {
+    expect(canPushDeviceIdsSelector(optedInState())).toBe(true);
+  });
+});
+
 describe("lastConnectedDeviceSelector", () => {
   it("should return the last connected device if the deviceModelId is valid", () => {
     validDeviceModelIds.forEach(deviceModelId => {
@@ -374,6 +420,13 @@ describe("resolvedThemeSelector", () => {
 describe("default theme", () => {
   it("should have theme set to 'dark' in initial state", () => {
     expect(SETTINGS_INITIAL_STATE.theme).toBe("dark");
+  });
+});
+
+describe("analytics consent defaults", () => {
+  it("should default analyticsEnabled and personalizedRecommendationsEnabled to false", () => {
+    expect(SETTINGS_INITIAL_STATE.analyticsEnabled).toBe(false);
+    expect(SETTINGS_INITIAL_STATE.personalizedRecommendationsEnabled).toBe(false);
   });
 });
 
@@ -574,6 +627,26 @@ describe("SETTINGS_IMPORT action", () => {
     const action = importSettings({ productTourCompleted: true });
     const newState = reducer(SETTINGS_INITIAL_STATE, action);
     expect(newState.productTourCompleted).toBe(true);
+  });
+
+  it("preserves persisted analyticsEnabled=true (returning opted-in users not regressed)", () => {
+    const action = importSettings({
+      analyticsEnabled: true,
+      personalizedRecommendationsEnabled: true,
+    });
+    const newState = reducer(SETTINGS_INITIAL_STATE, action);
+    expect(newState.analyticsEnabled).toBe(true);
+    expect(newState.personalizedRecommendationsEnabled).toBe(true);
+  });
+
+  it("preserves persisted analyticsEnabled=false for returning opted-out users", () => {
+    const action = importSettings({
+      analyticsEnabled: false,
+      personalizedRecommendationsEnabled: false,
+    });
+    const newState = reducer(SETTINGS_INITIAL_STATE, action);
+    expect(newState.analyticsEnabled).toBe(false);
+    expect(newState.personalizedRecommendationsEnabled).toBe(false);
   });
 });
 

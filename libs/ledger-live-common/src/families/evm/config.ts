@@ -440,7 +440,7 @@ const evmConfig: CurrencyLiveConfigDefinition = {
       },
       node: {
         type: "external",
-        uri: "https://flare.coin.ledger.com/ext/bc/C/rpc",
+        uri: "https://flare.coin.ledger.com",
       },
       explorer: {
         type: "blockscout",
@@ -1185,7 +1185,8 @@ const evmConfig: CurrencyLiveConfigDefinition = {
         uri: "https://zero-gravity.coin.ledger.com",
       },
       explorer: {
-        type: "none",
+        type: "blockscout",
+        uri: "https://chainscan.0g.ai/open/api",
       },
       showNfts: false,
     },
