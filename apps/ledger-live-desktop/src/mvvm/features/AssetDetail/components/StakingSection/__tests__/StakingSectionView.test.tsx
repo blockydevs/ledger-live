@@ -59,15 +59,9 @@ describe("StakingSectionView", () => {
     expect(screen.getByText("$200.00")).toBeVisible();
   });
 
-  it("spans two columns for the earn banner when PnL is visible", () => {
-    render(
-      <StakingSectionView
-        {...baseViewModel}
-        pnlVisible
-        state={{ type: "banner", label: "Earn up to 12.0% APY" }}
-      />,
-    );
+  it("keeps earn banner width aligned with other cards", () => {
+    render(<StakingSectionView {...baseViewModel} state={{ type: "banner", label: "Earn up to 12.0% APY" }} />);
 
-    expect(screen.getByTestId("asset-detail-earn-banner")).toHaveClass("flex-[2]");
+    expect(screen.getByTestId("asset-detail-earn-banner")).toHaveClass("flex-1");
   });
 });

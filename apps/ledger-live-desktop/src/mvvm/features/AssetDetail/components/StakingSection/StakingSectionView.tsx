@@ -8,11 +8,7 @@ import { StakingCard } from "./components/StakingCard";
 const cardClassName = "min-w-0 flex-1";
 export const STAKING_SECTION_TEST_ID = "asset-detail-staking-section";
 
-type StakingSectionViewProps = Readonly<
-  StakingSectionViewModelResult & {
-    pnlVisible?: boolean;
-  }
->;
+type StakingSectionViewProps = Readonly<StakingSectionViewModelResult>;
 
 export function StakingSectionView({
   state,
@@ -23,7 +19,6 @@ export function StakingSectionView({
   earnBannerActionLabel,
   onEarnBannerPress,
   onEarnDepositPress,
-  pnlVisible = false,
 }: StakingSectionViewProps) {
   if (state.type === "hidden") return null;
 
@@ -34,7 +29,7 @@ export function StakingSectionView({
           cardType="interactive"
           onClick={onEarnBannerPress}
           data-testid="asset-detail-earn-banner"
-          className={cn("flex flex-col", pnlVisible ? "min-w-0 flex-[2]" : cardClassName)}
+          className={cn("flex flex-col", cardClassName)}
           title={<span className="body-2-semi-bold text-base">{state.label}</span>}
           description={<span className="body-3 text-muted">{earnBannerSubtitle}</span>}
           trailing={
