@@ -1,24 +1,21 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Slides, useSlidesContext } from "LLD/components/Slides";
 import { Button, PageIndicator } from "@ledgerhq/lumen-ui-react";
+import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
+import { TruncatedText } from "LLD/components/TruncatedText";
 
-export type AwarenessCarouselSlide = {
-  id: string;
-  title: string;
-  subtitle: string;
-  imageUrl: string;
-  primaryButtonLabel: string;
-  primaryButtonLink: string;
-};
-
-type CarouselContentSlideProps = Pick<AwarenessCarouselSlide, "title" | "subtitle" | "imageUrl">;
+type CarouselContentSlideProps = Pick<
+  GenericAwarenessModalCarouselSlide,
+  "title" | "subtitle" | "imageUrl"
+>;
 
 function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselContentSlideProps>) {
   const showImage = imageUrl != null && imageUrl.length > 0;
 
   return (
     <div className="flex size-full flex-col">
-      <div className="py-24 overflow-hidden w-full">
+      <div className="pb-24 overflow-hidden w-full">
         {showImage ? (
           <img
             src={imageUrl}
@@ -29,13 +26,16 @@ function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselCo
           />
         ) : null}
       </div>
-      <div className="flex flex-1 flex-col items-center px-20 gap-30">
+      <div className="flex min-w-0 flex-1 flex-col items-center gap-30 px-20">
         <div
-          className="flex animate-fade-in flex-col items-center text-center"
+          className="flex w-full min-w-0 animate-fade-in flex-col items-center text-center"
           style={{ pointerEvents: "none" }}
         >
-          <div>
-            <h3 className="m-0 mb-8 heading-4-semi-bold text-base">{title}</h3>
+          <div className="w-full min-w-0">
+            <TruncatedText
+              text={title}
+              className="mb-8 text-center heading-4-semi-bold text-base"
+            />
             <p className="m-0 body-2 text-muted">{subtitle}</p>
           </div>
         </div>
@@ -45,8 +45,9 @@ function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselCo
 }
 
 export type CarouselContentProps = {
-  slides: AwarenessCarouselSlide[];
-  onSlidePrimaryClick: (slide: AwarenessCarouselSlide) => void;
+  slides: GenericAwarenessModalCarouselSlide[];
+  onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 };
 
 function CarouselContentProgress() {
@@ -61,21 +62,24 @@ function CarouselContentProgress() {
 function CarouselContentFooter({
   slides,
   onSlidePrimaryClick,
+  onClose,
 }: Readonly<{
-  slides: AwarenessCarouselSlide[];
-  onSlidePrimaryClick: (slide: AwarenessCarouselSlide) => void;
+  slides: GenericAwarenessModalCarouselSlide[];
+  onSlidePrimaryClick: (slide: GenericAwarenessModalCarouselSlide) => void;
+  onClose: () => void;
 }>) {
-  const { currentIndex, totalSlides, goToNext, goToSlide } = useSlidesContext();
+  const { t } = useTranslation();
+  const { currentIndex, totalSlides, goToNext } = useSlidesContext();
   const isLastSlide = currentIndex === totalSlides - 1;
   const currentSlide = slides[currentIndex];
 
   const handleContinue = useCallback(() => {
     if (isLastSlide) {
-      goToSlide(0);
+      onClose();
     } else {
       goToNext();
     }
-  }, [isLastSlide, goToNext, goToSlide]);
+  }, [goToNext, isLastSlide, onClose]);
 
   const handlePrimary = useCallback(() => {
     if (currentSlide) {
@@ -101,7 +105,7 @@ function CarouselContentFooter({
         onClick={handleContinue}
         data-testid="generic-awareness-modal-continue-button"
       >
-        {isLastSlide ? "Go to first slide" : "Continue"}
+        {isLastSlide ? t("common.close") : t("common.continue")}
       </Button>
     </div>
   );
@@ -110,12 +114,13 @@ function CarouselContentFooter({
 export default function CarouselContent({
   slides,
   onSlidePrimaryClick,
+  onClose,
 }: Readonly<CarouselContentProps>) {
   return (
     <Slides initialSlideIndex={0}>
       <Slides.Content>
-        {slides.map(slide => (
-          <Slides.Content.Item key={slide.id}>
+        {slides.map((slide, index) => (
+          <Slides.Content.Item key={`${slide.title}-carousel-slide-${index}`}>
             <CarouselContentSlide {...slide} />
           </Slides.Content.Item>
         ))}
@@ -124,7 +129,11 @@ export default function CarouselContent({
         <CarouselContentProgress />
       </Slides.ProgressIndicator>
       <Slides.Footer>
-        <CarouselContentFooter slides={slides} onSlidePrimaryClick={onSlidePrimaryClick} />
+        <CarouselContentFooter
+          slides={slides}
+          onSlidePrimaryClick={onSlidePrimaryClick}
+          onClose={onClose}
+        />
       </Slides.Footer>
     </Slides>
   );

@@ -16,6 +16,12 @@ import DeviceContextInitializerComponentLWM, {
 } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
 
+export {
+  buildDeviceInitializationInput,
+  type BuildDeviceInitializationInputParams,
+} from "./DeviceContextInitializerComponentLWM/utils/buildDeviceInitializationInput";
+export type { InitializationInput } from "./types";
+
 type Props<JobState, Input, ExtraProps> = DeviceIntentExecutorProps<
   JobState,
   Input,
@@ -54,6 +60,7 @@ export function DeviceIntentExecutorLWM<JobState, Input, ExtraProps>(
       isRequestingToBeOpened={props.enabled}
       onClose={props.onUserCancel}
       preventBackdropClick={!props.cancellableUI}
+      hideHandle
       enableDynamicSizing
     >
       <BottomSheetView style={{ paddingBottom: bottomInset + 16 }}>

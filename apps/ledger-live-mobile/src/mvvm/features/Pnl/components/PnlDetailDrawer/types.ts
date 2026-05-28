@@ -13,5 +13,7 @@ export type PnlDetailDrawerProps = {
   /** Longer body text rendered inside the BottomSheetView (body1, base color). */
   bodyText?: string;
   items?: PnlDetailItem[];
+  /** Optional muted footer (body4, muted) rendered below the items. */
+  footer?: string;
   testID?: string;
 };

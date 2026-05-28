@@ -32,7 +32,7 @@ import { State } from "~/renderer/reducers";
 import { getLLDCoinFamily } from "~/renderer/families";
 import NftEntryPoint from "LLD/features/NftEntryPoint";
 import { useAddressPoisoningOperationsFamilies } from "@ledgerhq/live-common/hooks/useAddressPoisoningOperationsFamilies";
-import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { getAccountsSidebarPath } from "LLD/components/SideBar/utils";
 
 type Params = {
@@ -159,7 +159,12 @@ const AccountPage = ({
         <AccountSubHeader account={account} parentAccount={parentAccount} />
       ) : null}
       {bridge?.isAccountEmpty(account) ? (
-        <EmptyStateAccount account={account} parentAccount={parentAccount} />
+        <>
+          <EmptyStateAccount account={account} parentAccount={parentAccount} />
+          {PendingTransferProposals && (
+            <PendingTransferProposals account={account as Account} parentAccount={mainAccount} />
+          )}
+        </>
       ) : (
         <>
           <Box mb={7}>
@@ -172,14 +177,13 @@ const AccountPage = ({
               setCountervalueFirst={setCountervalueFirst}
             />
           </Box>
+          {PendingTransferProposals && (
+            <PendingTransferProposals account={account as Account} parentAccount={mainAccount} />
+          )}
           <AccountStakeBanner account={account} />
           {AccountBodyHeader ? (
             <AccountBodyHeader account={account} parentAccount={parentAccount} />
           ) : null}
-
-          {PendingTransferProposals && (
-            <PendingTransferProposals account={account as Account} parentAccount={mainAccount} />
-          )}
 
           {account.type === "Account" && <NftEntryPoint account={account} />}
 

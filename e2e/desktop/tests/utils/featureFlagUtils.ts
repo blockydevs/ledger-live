@@ -36,6 +36,7 @@ export const LWD_WALLET_40_Q2_FF_ENABLED: OptionalFeatureMap = {
     params: {
       ...lwdWallet40BaseParams,
       operationsList: true,
+      myWallet: true,
     },
   },
 };

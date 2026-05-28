@@ -10,7 +10,7 @@ import {
   transactionToIntent,
 } from "./utils";
 import { FeeNotLoaded } from "@ledgerhq/errors";
-import { Result } from "@ledgerhq/ledger-wallet-framework/derivation";
+import { type GetAddressResult } from "@ledgerhq/ledger-wallet-framework/derivation";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { GenericTransaction } from "./types";
@@ -61,6 +61,9 @@ export const genericSignOperation =
             feesStrategy: transaction.feesStrategy,
             data: transaction.data,
             type: transaction.type,
+            sponsored: transaction.sponsored,
+            valAddress: transaction?.valAddress || "",
+            dstValAddress: transaction?.dstValAddress || "",
           };
           // TODO Remove the call to `validateIntent` https://ledgerhq.atlassian.net/browse/LIVE-22227
           const { amount } = await coinModuleApi.validateIntent(
@@ -79,7 +82,7 @@ export const genericSignOperation =
           const derivationPath = account.freshAddressPath;
           const { publicKey } = (await signer.getAddress(derivationPath, {
             derivationMode: account.derivationMode,
-          })) as Result;
+          })) as GetAddressResult;
 
           const transactionIntent = transactionToIntent(
             account,

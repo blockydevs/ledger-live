@@ -37,13 +37,14 @@ import { useNavigate } from "react-router";
 import { walletSelector } from "~/renderer/reducers/wallet";
 import {
   counterValueCurrencySelector,
+  lastSeenDeviceSelector,
   localeSelector,
 } from "~/renderer/reducers/settings";
 import { objectToURLSearchParams } from "@ledgerhq/live-common/wallet-api/helpers";
 import { useRemoteLiveAppContext } from "@ledgerhq/live-common/platform/providers/RemoteLiveAppProvider/index";
 import { useLocalLiveAppContext } from "@ledgerhq/live-common/wallet-api/LocalLiveAppProvider/index";
 import { usesEncodedAccountIdFormat } from "@ledgerhq/live-common/wallet-api/utils/deriveAccountIdForManifest";
-import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { validateInfoDialogParams } from "@ledgerhq/live-common/wallet-api/validation/validateInfoDialogParams";
 import type { InfoDialogParams } from "@ledgerhq/live-common/wallet-api/validation/validateInfoDialogParams";
 import { setPtxInfoDialog } from "~/renderer/reducers/ptxInfoDialog";
@@ -58,6 +59,7 @@ export function usePTXCustomHandlers(manifest: WebviewProps["manifest"], account
   const walletState = useSelector(walletSelector);
   const locale = useSelector(localeSelector);
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
+  const lastSeenDevice = useSelector(lastSeenDeviceSelector);
   const { state: liveAppRegistryState } = useRemoteLiveAppContext();
   const { state: localLiveAppState } = useLocalLiveAppContext();
   const syncAccountsById = useSyncAccountsById();
@@ -179,6 +181,7 @@ export function usePTXCustomHandlers(manifest: WebviewProps["manifest"], account
         flags,
         locale,
         counterValueCurrency: counterValueCurrency.ticker,
+        deviceModelId: lastSeenDevice?.modelId,
         uiHooks: {
           "custom.exchange.start": ({ exchangeParams, onSuccess, onCancel }) => {
             dispatch(
@@ -402,6 +405,7 @@ export function usePTXCustomHandlers(manifest: WebviewProps["manifest"], account
     flags,
     locale,
     counterValueCurrency,
+    lastSeenDevice,
     dispatch,
     setDrawer,
     navigate,

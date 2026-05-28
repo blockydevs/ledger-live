@@ -17,6 +17,7 @@ export class Provider {
   static readonly CIC = new Provider("cic_v2", "CIC", false, true, true);
   static readonly NEAR_INTENTS = new Provider("nearintents", "NEAR Intents", false, true, true);
   static readonly SWAPSXYZ = new Provider("swapsxyz", "Swaps.xyz", false, true, true);
+  static readonly MOONPAY_TRADE = new Provider("moonpay_trade", "MoonPay Trade", false, true, true);
 
   static readonly THORCHAIN = new Provider(
     "thorswap",

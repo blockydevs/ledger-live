@@ -248,6 +248,12 @@ export enum ScreenName {
   EvmUndelegationConnectDevice = "EvmUndelegationConnectDevice",
   EvmUndelegationValidationError = "EvmUndelegationValidationError",
   EvmUndelegationValidationSuccess = "EvmUndelegationValidationSuccess",
+  EvmRedelegationValidator = "EvmRedelegationValidator",
+  EvmRedelegationAmount = "EvmRedelegationAmount",
+  EvmRedelegationSelectDevice = "EvmRedelegationSelectDevice",
+  EvmRedelegationConnectDevice = "EvmRedelegationConnectDevice",
+  EvmRedelegationValidationError = "EvmRedelegationValidationError",
+  EvmRedelegationValidationSuccess = "EvmRedelegationValidationSuccess",
 
   // cosmos
   CosmosFamilyEditMemo = "CosmosFamilyEditMemo",
@@ -385,6 +391,7 @@ export enum ScreenName {
 
   OnboardingWelcome = "OnboardingWelcome",
   OnboardingPostWelcomeSelection = "OnboardingPostWelcomeSelection",
+  OnboardingNotificationsOptIn = "OnboardingNotificationsOptIn",
   OnboardingWelcomeBack = "OnboardingWelcomeBack",
   OnboardingLanguage = "OnboardingLanguage",
   OnboardingTermsOfUse = "OnboardingTermsOfUse",

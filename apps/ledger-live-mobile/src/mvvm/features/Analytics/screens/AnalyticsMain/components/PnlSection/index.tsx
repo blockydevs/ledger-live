@@ -8,10 +8,10 @@ import { usePnlSectionViewModel } from "./usePnlSectionViewModel";
 export { PNL_SECTION_TEST_IDS };
 
 export default function PnlSection() {
-  const { shouldRender, unrealised, costBasis, pnlDrawer, costBasisDrawer } =
+  const { shouldDisplayPnl, unrealised, secondary, pnlDrawer, secondaryDrawer } =
     usePnlSectionViewModel();
 
-  if (!shouldRender) return null;
+  if (!shouldDisplayPnl) return null;
 
   return (
     <>
@@ -32,9 +32,9 @@ export default function PnlSection() {
         <Box lx={{ flex: 1 }}>
           <PnlCard
             type="info"
-            title={costBasis.title}
-            value={costBasis.value}
-            onPress={costBasis.onPress}
+            title={secondary.title}
+            value={secondary.value}
+            onPress={secondary.onPress}
             testID={PNL_SECTION_TEST_IDS.costBasisCard}
           />
         </Box>
@@ -45,13 +45,14 @@ export default function PnlSection() {
         title={pnlDrawer.title}
         description={pnlDrawer.description}
         items={pnlDrawer.items}
+        footer={pnlDrawer.footer}
         testID={PNL_SECTION_TEST_IDS.detailDrawer}
       />
       <PnlDetailDrawer
-        isOpen={costBasisDrawer.isOpen}
-        onClose={costBasisDrawer.onClose}
-        title={costBasisDrawer.title}
-        bodyText={costBasisDrawer.bodyText}
+        isOpen={secondaryDrawer.isOpen}
+        onClose={secondaryDrawer.onClose}
+        title={secondaryDrawer.title}
+        bodyText={secondaryDrawer.bodyText}
         testID={PNL_SECTION_TEST_IDS.costBasisDrawer}
       />
     </>
