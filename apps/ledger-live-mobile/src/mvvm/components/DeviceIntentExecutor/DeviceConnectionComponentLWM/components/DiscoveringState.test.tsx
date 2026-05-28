@@ -7,6 +7,7 @@ import {
   type ConnectDeviceUIState,
   type DisplayedDevice,
 } from "@ledgerhq/live-dmk-mobile";
+import { SourceFlowProvider } from "../../SourceFlowContext";
 import { DiscoveringState } from "./DiscoveringState";
 
 type DiscoveringUIState = Extract<
@@ -39,7 +40,11 @@ function renderState(devices: DisplayedDevice[]) {
     devices,
   };
 
-  return render(<DiscoveringState state={state} />);
+  return render(
+    <SourceFlowProvider value="my_ledger">
+      <DiscoveringState state={state} />
+    </SourceFlowProvider>,
+  );
 }
 
 describe("DiscoveringState", () => {

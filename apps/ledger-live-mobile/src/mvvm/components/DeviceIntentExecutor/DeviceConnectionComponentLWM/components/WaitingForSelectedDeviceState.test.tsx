@@ -7,6 +7,7 @@ import {
   ConnectDeviceUIStateTypes,
   type ConnectDeviceUIState,
 } from "@ledgerhq/live-dmk-mobile";
+import { SourceFlowProvider } from "../../SourceFlowContext";
 import { WaitingForSelectedDeviceState } from "./WaitingForSelectedDeviceState";
 
 type WaitingForSelectedDeviceUIState = Extract<
@@ -30,7 +31,11 @@ function renderState(device: KnownDevice) {
     device,
   };
 
-  return render(<WaitingForSelectedDeviceState state={state} />);
+  return render(
+    <SourceFlowProvider value="my_ledger">
+      <WaitingForSelectedDeviceState state={state} />
+    </SourceFlowProvider>,
+  );
 }
 
 describe("WaitingForSelectedDeviceState", () => {
