@@ -6602,6 +6602,35 @@
       "unstaking": "Unstaking",
       "available": "Available"
     },
+    "earnRewards": {
+      "title": "Earn Rewards",
+      "steps": {
+        "delegate": "Delegate",
+        "stake": "Stake"
+      },
+      "delegation": {
+        "step": "Step 1 · Delegation",
+        "title": "Earn risk-free rewards",
+        "subtitle": "No lock-up, no risk.",
+        "bullets": {
+          "0": "Your full balance will be delegated",
+          "1": "Delegated funds remain in your account",
+          "2": "Spend your tez at any time"
+        }
+      },
+      "staking": {
+        "step": "Step 2 · Staking",
+        "title": "Earn higher rewards",
+        "subtitle": "Requires active delegation first.",
+        "bullets": {
+          "0": "Stake however much you'd like",
+          "1": "Staked funds are locked in your account",
+          "2": "Unstake in just 4 days"
+        }
+      },
+      "learnMore": "Learn more about staking and delegation",
+      "cta": "Start Earning"
+    },
     "account": {
       "availableBalanceTooltip": "Funds you can use right now.",
       "delegatedAssetsTooltip": "XTZ delegated to a baker. Funds remain in your wallet and can be sent at any time.",
