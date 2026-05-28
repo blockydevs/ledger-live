@@ -113,7 +113,12 @@ module.exports = {
     // failure, keeping passing-run logs out of the workflow output. Local: keep
     // the default reporter so engineers see live streaming logs.
     process.env.CI ? "jest-quiet-reporter" : "default",
-    ...(process.env.CI ? ["github-actions"] : []),
+    // CI: emit GitHub Actions ::error file=… annotations. We use a thin subclass
+    // of the built-in github-actions reporter that writes via fs.writeSync(2, …)
+    // instead of process.stderr.write — jest-quiet-reporter's __wrapStdio replaces
+    // process.stderr.write with a swallow-everything stub, so the built-in
+    // string reporter's annotations would otherwise be dropped on the floor.
+    ...(process.env.CI ? [["<rootDir>/scripts/jestGithubActionsReporter.js", {}]] : []),
     ["jest-sonar", { outputName: "sonar-executionTests-report.xml", reportedFilePath: "absolute" }],
   ],
   resolver: "<rootDir>/scripts/resolver.js",
