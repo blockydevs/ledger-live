@@ -359,8 +359,8 @@ export class InitializationManager {
     );
     const mergedFeatureFlags = {
       ...defaultFlags,
-      ...featureFlags,
       ...extraFeatureFlags,
+      ...featureFlags,
     };
     await allure.attachment(
       "Merged Feature Flags",
