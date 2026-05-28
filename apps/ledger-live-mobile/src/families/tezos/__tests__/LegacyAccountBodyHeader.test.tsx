@@ -62,14 +62,12 @@ jest.mock("../DelegationDetailsModal", () => {
     isOpened ? <View testID="delegation-details-modal" /> : null;
 });
 
-const makeAccount = (): AccountLike =>
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  ({
-    type: "Account",
-    id: "tezos-acc-1",
-    currency: { id: "tezos", name: "Tezos", ticker: "XTZ", units: [] },
-    balance: new BigNumber(100),
-  }) as unknown as AccountLike;
+const account = {
+  type: "Account",
+  id: "tezos-acc-1",
+  currency: { id: "tezos", name: "Tezos", ticker: "XTZ", units: [] },
+  balance: new BigNumber(100),
+} as unknown as AccountLike;
 
 describe("LegacyAccountBodyHeader", () => {
   beforeEach(() => {
@@ -78,7 +76,7 @@ describe("LegacyAccountBodyHeader", () => {
   });
 
   it("renders nothing without a delegation or staking position", () => {
-    const { toJSON } = render(<LegacyAccountBodyHeader account={makeAccount()} />);
+    const { toJSON } = render(<LegacyAccountBodyHeader account={account} />);
     expect(toJSON()).toBeNull();
   });
 
@@ -89,7 +87,7 @@ describe("LegacyAccountBodyHeader", () => {
       operation: { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
       isPending: false,
     };
-    render(<LegacyAccountBodyHeader account={makeAccount()} />);
+    render(<LegacyAccountBodyHeader account={account} />);
     expect(screen.getByText("GreenBaker")).toBeTruthy();
     expect(screen.getByTestId("ViewDelegationDetails")).toBeTruthy();
   });
@@ -100,7 +98,7 @@ describe("LegacyAccountBodyHeader", () => {
       address: "tz1delegateaddressxxxxxxxxxxxxxxxx",
       operation: { date: new Date() },
     };
-    render(<LegacyAccountBodyHeader account={makeAccount()} />);
+    render(<LegacyAccountBodyHeader account={account} />);
     expect(screen.queryByTestId("delegation-details-modal")).toBeNull();
     fireEvent.press(screen.getByTestId("ViewDelegationDetails"));
     expect(screen.getByTestId("delegation-details-modal")).toBeTruthy();
@@ -108,7 +106,7 @@ describe("LegacyAccountBodyHeader", () => {
 
   it("shows the staking-position delegate when there is no delegation", () => {
     mockPositions = [{ delegate: "tz1stakedelegatexxxxxxxxxxxxxxxxxx" }];
-    render(<LegacyAccountBodyHeader account={makeAccount()} />);
+    render(<LegacyAccountBodyHeader account={account} />);
     expect(
       screen.getByText(shortAddressPreview("tz1stakedelegatexxxxxxxxxxxxxxxxxx")),
     ).toBeTruthy();
@@ -117,7 +115,7 @@ describe("LegacyAccountBodyHeader", () => {
 
   it("renders without crashing when a staking position has no delegate", () => {
     mockPositions = [{}];
-    render(<LegacyAccountBodyHeader account={makeAccount()} />);
+    render(<LegacyAccountBodyHeader account={account} />);
     expect(screen.getByText("delegation.delegation")).toBeTruthy();
   });
 });

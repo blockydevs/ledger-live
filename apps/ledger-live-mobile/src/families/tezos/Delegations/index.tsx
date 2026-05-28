@@ -2,8 +2,9 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Linking, StyleSheet, View } from "react-native";
 import { differenceInCalendarDays } from "date-fns";
 import { useNavigation, useTheme } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Trans, useTranslation } from "~/context/Locale";
+import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
+import { StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import { getAccountCurrency, shortAddressPreview } from "@ledgerhq/live-common/account/index";
 import { getAddressExplorer, getDefaultExplorerView } from "@ledgerhq/live-common/explorers";
 import {
@@ -31,6 +32,8 @@ type Props = Readonly<{
   account: AccountLike;
 }>;
 
+type Navigation = StackNavigatorProps<BaseNavigatorStackParamList, ScreenName.Account>;
+
 type Selected =
   | { kind: "stake" }
   | { kind: "delegation" }
@@ -39,7 +42,7 @@ type Selected =
 export default function TezosDelegation({ account }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<Navigation["navigation"]>();
   const info = useTezosStakingInfo(account);
   const unit = useAccountUnit(account);
   const currency = getAccountCurrency(account);
@@ -61,13 +64,10 @@ export default function TezosDelegation({ account }: Props) {
 
   const onDelegate = useCallback(() => {
     if (account.type !== "Account") return;
-    (navigation as NativeStackNavigationProp<{ [key: string]: object | undefined }>).navigate(
-      NavigatorName.TezosDelegationFlow,
-      {
-        screen: ScreenName.DelegationStarted,
-        params: { accountId: account.id },
-      },
-    );
+    navigation.navigate(NavigatorName.TezosDelegationFlow, {
+      screen: ScreenName.DelegationStarted,
+      params: { accountId: account.id },
+    });
   }, [account, navigation]);
 
   // Section "manage" CTAs are visible but inert until the stake / unstake flows land.
