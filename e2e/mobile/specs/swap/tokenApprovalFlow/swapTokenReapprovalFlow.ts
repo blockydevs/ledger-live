@@ -26,7 +26,7 @@ export function runSwapTokenReapprovalFlow(
       await app.speculos.setExchangeDependencies(fromAccount, toAccount);
       await beforeAllFunctionSwap({
         userdata: "skip-onboarding",
-        speculosApp: AppInfos.ETHEREUM,
+        speculosApp: fromAccount.currency.speculosApp ?? AppInfos.ETHEREUM,
 
         cliCommandsOnApp: [
           {

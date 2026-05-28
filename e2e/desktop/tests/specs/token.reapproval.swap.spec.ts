@@ -38,7 +38,7 @@ test.describe("Token reapproval - flow", () => {
   test.use({
     teamOwner: Team.SWAP,
     userdata: "skip-onboarding-with-last-seen-device",
-    speculosApp: AppInfos.ETHEREUM,
+    speculosApp: fromAccount.currency.speculosApp ?? AppInfos.ETHEREUM,
 
     cliCommandsOnApp: [
       [
