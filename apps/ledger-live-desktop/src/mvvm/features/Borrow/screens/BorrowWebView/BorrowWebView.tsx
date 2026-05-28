@@ -12,12 +12,8 @@ import { BorrowLoader } from "LLD/features/Borrow/components/BorrowLoader";
 import type { BorrowWebviewInputs } from "../BorrowApp/useBorrowAppViewModel";
 import { useDeeplinkCustomHandlers } from "~/renderer/components/WebPlatformPlayer/CustomHandlers";
 import { WalletAPICustomHandlers } from "@ledgerhq/live-common/wallet-api/types";
-import {
-  BorrowSwapNavigationParams,
-  createBorrowNavigateHandler,
-} from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
-
-export type { BorrowSwapNavigationParams };
+import { createBorrowNavigateHandler } from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
+import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/types";
 
 export type BorrowWebProps = {
   manifest: LiveAppManifest;

@@ -1,7 +1,5 @@
-import {
-  BorrowSwapNavigationParams,
-  createBorrowNavigateHandler,
-} from "./navigate";
+import { createBorrowNavigateHandler } from "./navigate";
+import type { BorrowSwapNavigationParams } from "./types";
 
 describe("createBorrowNavigateHandler", () => {
   const buildHooks = () => ({
@@ -76,15 +74,24 @@ describe("createBorrowNavigateHandler", () => {
     ).resolves.toEqual({ success: true });
   });
 
-  it("throws for unknown actions", async () => {
+  it("throws a dedicated error when the action is missing", async () => {
+    const hooks = buildHooks();
+    const handler = createBorrowNavigateHandler(hooks);
+
+    await expect(handler({})).rejects.toThrow("Missing action parameter");
+    await expect(handler({ params: {} })).rejects.toThrow("Missing action parameter");
+
+    expect(hooks.onGoBack).not.toHaveBeenCalled();
+    expect(hooks.onGoToSwap).not.toHaveBeenCalled();
+  });
+
+  it("throws and surfaces the unsupported action value for unknown actions", async () => {
     const hooks = buildHooks();
     const handler = createBorrowNavigateHandler(hooks);
 
     await expect(handler({ params: { action: "go-to-mars" } })).rejects.toThrow(
-      "Unknown borrow navigation action",
+      "Unknown borrow navigation action: go-to-mars",
     );
-    await expect(handler({})).rejects.toThrow("Unknown borrow navigation action");
-    await expect(handler({ params: {} })).rejects.toThrow("Unknown borrow navigation action");
 
     expect(hooks.onGoBack).not.toHaveBeenCalled();
     expect(hooks.onGoToSwap).not.toHaveBeenCalled();

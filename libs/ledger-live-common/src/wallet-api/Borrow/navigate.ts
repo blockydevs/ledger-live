@@ -6,16 +6,7 @@
  * keep behaviour identical across platforms.
  */
 
-export type BorrowSwapNavigationParams = {
-  fromCurrencyId?: string;
-  toCurrencyId?: string;
-  fromTokenId?: string;
-  toTokenId?: string;
-  fromAccountId?: string;
-  toAccountId?: string;
-  amountFrom?: string;
-  affiliate?: string;
-};
+import type { BorrowSwapNavigationParams } from "./types";
 
 type BorrowNavigateRequestParams = {
   action?: string;
@@ -62,6 +53,10 @@ export const createBorrowNavigateHandler =
   async request => {
     const action = request.params?.action;
 
+    if (!action) {
+      throw new Error("Missing action parameter");
+    }
+
     if (action === "go-back") {
       onGoBack?.();
       return { success: true };
@@ -72,5 +67,5 @@ export const createBorrowNavigateHandler =
       return { success: true };
     }
 
-    throw new Error("Unknown borrow navigation action");
+    throw new Error(`Unknown borrow navigation action: ${action}`);
   };

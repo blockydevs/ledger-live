@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { render, screen, withFlagOverrides } from "@tests/test-renderer";
-import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/navigate";
+import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/types";
 import { NavigatorName, ScreenName } from "~/const";
 import BorrowLiveAppNavigator from "../BorrowLiveAppNavigator";
 
