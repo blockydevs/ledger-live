@@ -16,7 +16,6 @@ import Braze from "@braze/react-native-sdk";
 import { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
 import { hasCompletedOnboardingSelector } from "~/reducers/settings";
 import { navigationRef, isReadyRef } from "../rootnavigation";
-import { useAndroidBackExit } from "./useAndroidBackExit";
 import { ScreenName, NavigatorName } from "~/const";
 import { setWallectConnectUri } from "~/actions/walletconnect";
 import { useGeneralTermsAccepted } from "~/logic/terms";
@@ -952,8 +951,6 @@ export const DeeplinksProvider = ({
     },
     [],
   );
-
-  useAndroidBackExit(isNavigationContainerReady);
 
   return (
     <View style={styles.appBackground}>
