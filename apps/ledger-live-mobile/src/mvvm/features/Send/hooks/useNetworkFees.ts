@@ -66,9 +66,10 @@ export function useNetworkFees({
   const feeCurrencySubAccount = useMemo<TokenAccount | null>(() => {
     if (!feeCurrencyAccountId) return null;
     const found = (mainAccount.subAccounts ?? []).find(
-      sub => sub.id === feeCurrencyAccountId && sub.type === "TokenAccount",
+      (sub): sub is TokenAccount =>
+        sub.id === feeCurrencyAccountId && sub.type === "TokenAccount",
     );
-    return (found as TokenAccount | undefined) ?? null;
+    return found ?? null;
   }, [feeCurrencyAccountId, mainAccount.subAccounts]);
 
   const displayUnit = feeCurrencySubAccount?.token.units[0] ?? accountUnit;

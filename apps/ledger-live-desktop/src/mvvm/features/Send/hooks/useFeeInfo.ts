@@ -39,13 +39,13 @@ export function useFeeInfo({
   const accountUnit = useMaybeAccountUnit(mainAccount) ?? accountCurrency.units[0];
   const fiatUnit = counterValueCurrency.units[0];
 
-  const feeCurrencySubAccount = useMemo(() => {
+  const feeCurrencySubAccount = useMemo<TokenAccount | null>(() => {
     if (!feeCurrencyAccountId) return null;
-    return (
-      ((mainAccount.subAccounts ?? []).find(
-        sub => sub.id === feeCurrencyAccountId && sub.type === "TokenAccount",
-      ) as TokenAccount | undefined) ?? null
+    const found = (mainAccount.subAccounts ?? []).find(
+      (sub): sub is TokenAccount =>
+        sub.id === feeCurrencyAccountId && sub.type === "TokenAccount",
     );
+    return found ?? null;
   }, [feeCurrencyAccountId, mainAccount.subAccounts]);
 
   const displayUnit = feeCurrencySubAccount?.token.units[0] ?? accountUnit;

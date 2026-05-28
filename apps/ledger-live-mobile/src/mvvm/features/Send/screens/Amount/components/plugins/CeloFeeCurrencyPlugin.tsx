@@ -49,7 +49,7 @@ function CeloFeeCurrencyPluginInner({
   const selectedName = useMemo(() => {
     if (!transaction.feeCurrencyAccountId) return FEE_CURRENCY_OPTIONS[0].name;
     const sub = findSubAccountById(mainAccount, transaction.feeCurrencyAccountId);
-    if (!sub || sub.type !== "TokenAccount") return FEE_CURRENCY_OPTIONS[0].name;
+    if (sub?.type !== "TokenAccount") return FEE_CURRENCY_OPTIONS[0].name;
     return (
       FEE_CURRENCY_BY_CONTRACT.get(sub.token.contractAddress.toLowerCase())?.name ??
       FEE_CURRENCY_OPTIONS[0].name

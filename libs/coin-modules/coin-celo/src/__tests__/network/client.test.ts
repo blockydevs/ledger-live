@@ -119,18 +119,6 @@ describe("network/client", () => {
       });
     });
 
-    it("omits feeCurrency when null", async () => {
-      const { celoEstimateGas } = loadClientModule();
-      const requestMock = setupClient("0x1");
-
-      await celoEstimateGas({ from, to, feeCurrency: null });
-
-      expect(requestMock).toHaveBeenCalledWith({
-        method: "eth_estimateGas",
-        params: [{ from, to }],
-      });
-    });
-
     it("hex-encodes bigint value and gas price fields", async () => {
       const { celoEstimateGas } = loadClientModule();
       const requestMock = setupClient("0x1");

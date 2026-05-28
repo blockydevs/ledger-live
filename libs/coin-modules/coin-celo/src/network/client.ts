@@ -34,12 +34,12 @@ export const celoGasPrice = async (feeCurrency?: `0x${string}`): Promise<bigint>
 
 export type CeloEstimateGasParams = {
   from: `0x${string}`;
-  to?: `0x${string}` | undefined;
-  data?: `0x${string}` | undefined;
-  value?: bigint | undefined;
-  maxFeePerGas?: bigint | undefined;
-  maxPriorityFeePerGas?: bigint | undefined;
-  feeCurrency?: `0x${string}` | null | undefined;
+  to?: `0x${string}`;
+  data?: `0x${string}`;
+  value?: bigint;
+  maxFeePerGas?: bigint;
+  maxPriorityFeePerGas?: bigint;
+  feeCurrency?: `0x${string}`;
 };
 
 /**
@@ -59,7 +59,7 @@ export const celoEstimateGas = async (params: CeloEstimateGasParams): Promise<bi
   if (params.maxPriorityFeePerGas !== undefined) {
     rpcParams.maxPriorityFeePerGas = `0x${params.maxPriorityFeePerGas.toString(16)}`;
   }
-  if (params.feeCurrency) rpcParams.feeCurrency = params.feeCurrency;
+  if (params.feeCurrency !== undefined) rpcParams.feeCurrency = params.feeCurrency;
   const result = await c.request({
     method: "eth_estimateGas",
     params: [rpcParams],
