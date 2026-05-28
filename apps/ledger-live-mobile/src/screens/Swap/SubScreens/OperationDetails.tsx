@@ -67,6 +67,8 @@ export function OperationDetails({ route }: OperationDetailsParamList) {
     switch (provider.toLowerCase()) {
       case "swapsxyz":
         return `https://scan.swaps.xyz/transactions/${swapId}`;
+      case "moonpay_trade":
+        return `https://scan.swaps.xyz/transactions/${swapId}`;
       case "okx":
         if (fromCurrency?.id) {
           return `https://web3.okx.com/fi/explorer/${fromCurrency.id}/tx/${operation.hash}`;
