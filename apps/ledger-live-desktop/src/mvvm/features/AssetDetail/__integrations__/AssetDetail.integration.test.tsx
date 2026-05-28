@@ -59,10 +59,13 @@ const TEST_ID = {
 
 const mockGetCanStakeCurrency = jest.fn().mockReturnValue(false);
 const mockUseInterestRatesByCurrencies = jest.fn().mockReturnValue({});
+const mockStartStakeFlow = jest.fn();
 
 jest.mock("LLD/hooks/useStake", () => ({
   useStake: () => ({ getCanStakeCurrency: mockGetCanStakeCurrency }),
 }));
+
+jest.mock("~/renderer/screens/stake", () => () => mockStartStakeFlow);
 
 jest.mock("@ledgerhq/live-common/dada-client/hooks/useInterestRatesByCurrencies", () => ({
   useInterestRatesByCurrencies: (...args: unknown[]) => mockUseInterestRatesByCurrencies(...args),
