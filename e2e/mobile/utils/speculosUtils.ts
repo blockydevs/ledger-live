@@ -8,7 +8,11 @@ import {
 } from "@ledgerhq/live-common/e2e/speculos";
 import { setEnv } from "@ledgerhq/live-env";
 import { device, log } from "detox";
-import { waitForSpeculosReady, fetchSpeculinhoLogs } from "@ledgerhq/live-common/e2e/speculosCI";
+import {
+  waitForSpeculosReady,
+  fetchSpeculinhoLogs,
+  fetchSpeculinhoStatus,
+} from "@ledgerhq/live-common/e2e/speculosCI";
 import { isSpeculosRemote } from "../helpers/commonHelpers";
 import { addKnownSpeculos, getEnvs, removeKnownSpeculos } from "../bridge/server";
 import { CLI } from "./cliUtils";
@@ -217,11 +221,16 @@ export async function attachSpeculinhoLogsToAllure() {
     return;
   }
 
-  for (const [deviceId, apiPort] of speculosDevices.entries()) {
+  for (const [deviceId] of speculosDevices.entries()) {
     try {
-      const logs = await fetchSpeculinhoLogs(deviceId);
-      const title = `Speculos logs (Speculinho run_id=${deviceId})`;
-      await allure.attachment(title, logs, "text/plain");
+      const [logs, status] = await Promise.all([
+        fetchSpeculinhoLogs(deviceId),
+        fetchSpeculinhoStatus(deviceId),
+      ]);
+      await allure.step(`Speculinho debug (run_id=${deviceId})`, async () => {
+        await allure.attachment("Speculos logs", logs, "text/plain");
+        await allure.attachment("Speculinho status", status, "text/plain");
+      });
     } catch (error) {
       log.warn("E2E", `attachSpeculinhoLogsToAllure: ${sanitizeError(error)}`);
     }
