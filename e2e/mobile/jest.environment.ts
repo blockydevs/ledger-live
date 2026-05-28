@@ -243,9 +243,14 @@ export default class TestEnvironment extends DetoxEnvironment {
   }
 
   async handleTestEvent(event: Circus.Event, state: Circus.State) {
+    if (event.name === "hook_failure") {
+      this.global.IS_FAILED = true;
+      await captureFailureDiagnostics();
+    }
+
     await super.handleTestEvent(event, state);
 
-    if (["hook_failure", "test_fn_failure"].includes(event.name)) {
+    if (event.name === "test_fn_failure") {
       this.global.IS_FAILED = true;
       await captureFailureDiagnostics();
     }
