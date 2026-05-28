@@ -26,26 +26,32 @@ export function MarketPriceSectionView(viewModel: MarketPriceSectionViewProps) {
               />
             ) : (
               <span className="body-1 text-muted" data-testid="asset-detail-market-price">
-                —
+                -----
               </span>
             )}
-            <div className="flex flex-row items-center gap-4">
-              <span
-                data-testid="asset-detail-market-price-percent"
-                className={trendPercentageBody2Styles({ variant: viewModel.variationVariant })}
-              >
-                {viewModel.percentageText}
-              </span>
-              <span
-                className="body-2 tabular-nums text-muted"
-                data-testid="asset-detail-market-price-fiat-variation"
-              >
-                {viewModel.variationText}
-              </span>
+            {viewModel.hasPriceData ? (
+              <div className="flex flex-row items-center gap-4">
+                <span
+                  data-testid="asset-detail-market-price-percent"
+                  className={trendPercentageBody2Styles({ variant: viewModel.variationVariant })}
+                >
+                  {viewModel.percentageText}
+                </span>
+                <span
+                  className="body-2 tabular-nums text-muted"
+                  data-testid="asset-detail-market-price-fiat-variation"
+                >
+                  {viewModel.variationText}
+                </span>
+                <span className="body-2 text-muted">
+                  <span aria-hidden>&middot;</span> {viewModel.dayLabel}
+                </span>
+              </div>
+            ) : (
               <span className="body-2 text-muted">
                 <span aria-hidden>&middot;</span> {viewModel.dayLabel}
               </span>
-            </div>
+            )}
           </div>
         </>
       )}
