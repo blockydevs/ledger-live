@@ -227,10 +227,8 @@ export async function attachSpeculinhoLogsToAllure() {
         fetchSpeculinhoLogs(deviceId),
         fetchSpeculinhoStatus(deviceId),
       ]);
-      await allure.step(`Speculinho debug (run_id=${deviceId})`, async () => {
-        await allure.attachment("Speculos logs", logs, "text/plain");
-        await allure.attachment("Speculinho status", status, "text/plain");
-      });
+      await allure.attachment(`Speculos ${deviceId} logs`, logs, "text/plain");
+      await allure.attachment(`Speculos ${deviceId} status`, status, "text/plain");
     } catch (error) {
       log.warn("E2E", `attachSpeculinhoLogsToAllure: ${sanitizeError(error)}`);
     }
