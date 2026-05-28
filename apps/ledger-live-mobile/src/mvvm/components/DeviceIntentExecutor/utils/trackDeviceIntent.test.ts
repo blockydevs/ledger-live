@@ -1,10 +1,17 @@
+import type { TransportIdentifier } from "@ledgerhq/device-management-kit";
+import { rnHidTransportIdentifier } from "@ledgerhq/device-transport-kit-react-native-hid";
+import { ConnectionErrorTypes, DiscoveryErrorTypes } from "@ledgerhq/live-dmk-mobile";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
 import {
+  getTrackingSubError,
+  getTrackingTransport,
+  trackConnectDeviceButtonClicked,
   trackAppReady,
   trackDeviceConnected,
   trackDeviceConnecting,
+  trackDeviceSelected,
   trackDeviceflowAborted,
   trackDeviceflowCompleted,
   trackDeviceflowStarted,
@@ -21,6 +28,7 @@ jest.mock("~/analytics", () => {
 
 const mockedTrack = jest.mocked(track);
 const TEST_SOURCE = "Portfolio";
+const TEST_BLE_TRANSPORT = "RN_BLE" as TransportIdentifier;
 
 const layerABaseProperties = {
   source: TEST_SOURCE,
@@ -157,6 +165,71 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
           expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
             ...layerABaseProperties,
             sourceFlow: "my_ledger",
+          });
+        });
+      });
+    });
+  });
+
+  describe("getTrackingSubError", () => {
+    describe("Given a Connect Device error type", () => {
+      describe("When called", () => {
+        it("Then returns the mapped PascalCase subError value", () => {
+          expect(getTrackingSubError(DiscoveryErrorTypes.BluetoothDisabledPromptable)).toBe(
+            "BluetoothDisabledPromptable",
+          );
+          expect(getTrackingSubError(ConnectionErrorTypes.BlePairingPeerRemovedPairing)).toBe(
+            "BlePairingPeerRemovedPairing",
+          );
+        });
+      });
+    });
+  });
+
+  describe("getTrackingTransport", () => {
+    describe("Given a transport id", () => {
+      describe("When called", () => {
+        it("Then maps HID to usb and other transports to ble", () => {
+          expect(getTrackingTransport(rnHidTransportIdentifier)).toBe("usb");
+          expect(getTrackingTransport(TEST_BLE_TRANSPORT)).toBe("ble");
+          expect(getTrackingTransport(undefined)).toBe("ble");
+        });
+      });
+    });
+  });
+
+  describe("trackDeviceSelected", () => {
+    describe("Given a sourceFlow and modelId", () => {
+      describe("When called", () => {
+        it("Then tracks device_selected with the Layer B properties", () => {
+          trackDeviceSelected({
+            sourceFlow: "receive",
+            modelId: DeviceModelId.nanoS,
+          });
+
+          expect(mockedTrack).toHaveBeenCalledWith("device_selected", {
+            ...layerABaseProperties,
+            sourceFlow: "receive",
+            modelId: DeviceModelId.nanoS,
+          });
+        });
+      });
+    });
+  });
+
+  describe("trackConnectDeviceButtonClicked", () => {
+    describe("Given a sourceFlow and button", () => {
+      describe("When called", () => {
+        it("Then tracks button_clicked with the Layer B properties", () => {
+          trackConnectDeviceButtonClicked({
+            sourceFlow: "send",
+            button: "Retry",
+          });
+
+          expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+            ...layerABaseProperties,
+            sourceFlow: "send",
+            button: "Retry",
           });
         });
       });

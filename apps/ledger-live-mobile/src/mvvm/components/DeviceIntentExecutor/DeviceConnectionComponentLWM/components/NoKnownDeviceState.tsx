@@ -1,7 +1,10 @@
 import React from "react";
 import { Box, Button, Spot, Text } from "@ledgerhq/lumen-ui-rnative";
 import { LedgerDevices } from "@ledgerhq/lumen-ui-rnative/symbols";
+import { TrackScreen } from "~/analytics";
 import { useTranslation } from "~/context/Locale";
+import { useSourceFlow } from "../../utils/SourceFlowContext";
+import { PAGE_CONNECT_DEVICE, trackConnectDeviceButtonClicked } from "../../utils/trackDeviceIntent";
 
 type NoKnownDeviceStateProps = {
   onConnectLedgerDevice: () => void;
@@ -13,9 +16,27 @@ export function NoKnownDeviceState({
   onBuyLedgerDevice,
 }: Readonly<NoKnownDeviceStateProps>): React.ReactNode {
   const { t } = useTranslation();
+  const sourceFlow = useSourceFlow();
+  const connectLedgerDeviceLabel = t(
+    "deviceIntentExecutor.connectDevice.states.noKnownDevice.connectLedgerDevice",
+  );
+  const noLedgerDeviceLabel = t("deviceIntentExecutor.connectDevice.states.noKnownDevice.noLedgerDevice");
+  const handleConnectLedgerDevice = () => {
+    trackConnectDeviceButtonClicked({ sourceFlow, button: connectLedgerDeviceLabel });
+    onConnectLedgerDevice();
+  };
+  const handleBuyLedgerDevice = () => {
+    trackConnectDeviceButtonClicked({ sourceFlow, button: noLedgerDeviceLabel });
+    onBuyLedgerDevice();
+  };
 
   return (
     <Box lx={{ width: "full", alignItems: "center", gap: "s32" }}>
+      <TrackScreen
+        category={PAGE_CONNECT_DEVICE.NoKnownDevice}
+        sourceFlow={sourceFlow}
+        deviceUxV2
+      />
       <Box lx={{ width: "full", alignItems: "center", gap: "s24" }}>
         <Spot appearance="icon" icon={LedgerDevices} size={72} />
         <Box lx={{ width: "full", alignItems: "center", gap: "s8" }}>
@@ -28,11 +49,11 @@ export function NoKnownDeviceState({
         </Box>
       </Box>
       <Box lx={{ width: "full", gap: "s16" }}>
-        <Button appearance="base" size="lg" lx={{ width: "full" }} onPress={onConnectLedgerDevice}>
-          {t("deviceIntentExecutor.connectDevice.states.noKnownDevice.connectLedgerDevice")}
+        <Button appearance="base" size="lg" lx={{ width: "full" }} onPress={handleConnectLedgerDevice}>
+          {connectLedgerDeviceLabel}
         </Button>
-        <Button appearance="gray" size="lg" lx={{ width: "full" }} onPress={onBuyLedgerDevice}>
-          {t("deviceIntentExecutor.connectDevice.states.noKnownDevice.noLedgerDevice")}
+        <Button appearance="gray" size="lg" lx={{ width: "full" }} onPress={handleBuyLedgerDevice}>
+          {noLedgerDeviceLabel}
         </Button>
       </Box>
     </Box>
