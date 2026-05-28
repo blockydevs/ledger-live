@@ -42,24 +42,6 @@ function mapConnectionResult(result: DeviceConnectionResult): ConnectionTracking
   };
 }
 
-/**
- * ViewModel for `DeviceIntentExecutorLWM` (LWM index View).
- *
- * Owns:
- * - `completedRef`: gates the abort vs completion path. Set on the FIRST
- *   `executingIntent` transition.
- * - `wrappedOnExecutorStateChanged`: fires `app_ready` and
- *   `deviceflow_completed` once when the executor first reaches
- *   `executingIntent` (the moment the device context initializer succeeds
- *   and the executor hands off to intent execution — see Confluence §10).
- *   Reads `connectionResult` directly off the new ExecutorState payload
- *   instead of plumbing it through a parallel context.
- * - `wrappedOnUserCancel`: fires `deviceflow_aborted` if the user cancels
- *   before completion, otherwise stays silent (post-completion close is not
- *   an abort).
- *
- * Both wrapped callbacks always forward to the original prop callbacks.
- */
 export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>(
   props: Props<JobState, Input, ExtraProps>,
 ): DeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps> {
