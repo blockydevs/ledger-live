@@ -886,6 +886,7 @@ type Feature_Wallet40_Params = {
   aggregatedAssets: boolean;
   myWallet: boolean;
   pnl: boolean;
+  assetDiscoverability: boolean;
   // Specifics
   brazePlacement?: boolean;
   newReceiveDialog?: boolean;

@@ -848,6 +848,7 @@ export const DEFAULT_FEATURES: Features = {
       aggregatedAssets: false,
       myWallet: false,
       pnl: false,
+      assetDiscoverability: false,
     },
   },
   lwdWallet40: {
@@ -868,6 +869,7 @@ export const DEFAULT_FEATURES: Features = {
       aggregatedAssets: false,
       myWallet: false,
       pnl: false,
+      assetDiscoverability: false,
       finishOnboardingWidget: false,
     },
   },

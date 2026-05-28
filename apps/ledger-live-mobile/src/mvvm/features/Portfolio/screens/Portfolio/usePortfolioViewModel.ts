@@ -34,6 +34,7 @@ interface UsePortfolioViewModelResult {
   hideEmptyTokenAccount: boolean;
   isAWalletCardDisplayed: boolean;
   isAccountListUIEnabled: boolean;
+  shouldDisplayAssetDiscoverability: boolean;
   shouldDisplayQuickActionCtas: boolean;
   shouldDisplayWallet40MainNav: boolean;
   shouldDisplayAssetSection: boolean;
@@ -69,6 +70,7 @@ const usePortfolioViewModel = (navigation: {
     shouldDisplayAssetSection,
     shouldDisplayMarketBanner,
     shouldDisplayOperationsList,
+    shouldDisplayAssetDiscoverability,
   } = useWalletFeaturesConfig("mobile");
   const isAccountListUIEnabled = accountListFF?.enabled ?? false;
   const borrowConfig = useBorrowLiveConfig();
@@ -159,6 +161,7 @@ const usePortfolioViewModel = (navigation: {
     hideEmptyTokenAccount,
     isAWalletCardDisplayed,
     isAccountListUIEnabled,
+    shouldDisplayAssetDiscoverability,
     shouldDisplayQuickActionCtas,
     shouldDisplayWallet40MainNav,
     shouldDisplayAssetSection,
