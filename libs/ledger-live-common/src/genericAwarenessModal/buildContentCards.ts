@@ -1,5 +1,6 @@
 import { buildCarousel } from "./buildCarousel";
 import { buildFeatureIntro } from "./buildFeatureIntro";
+import { buildPrompt } from "./buildPrompt";
 import {
   GenericAwarenessModalLayout,
   type GenericAwarenessModalBrazeCard,
@@ -52,6 +53,10 @@ const buildContentCard = (
 
   if (layout === GenericAwarenessModalLayout.FeatureIntro) {
     return buildFeatureIntro(campaignId, cards);
+  }
+
+  if (layout === GenericAwarenessModalLayout.Prompt) {
+    return buildPrompt(campaignId, cards);
   }
 
   return undefined;

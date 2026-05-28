@@ -2,13 +2,11 @@ import React from "react";
 import { Box, Button, Text } from "@ledgerhq/lumen-ui-rnative";
 import * as Icons from "@ledgerhq/lumen-ui-rnative/symbols";
 import { Image, Linking } from "react-native";
-import type { GenericAwarenessModalFeatureIntro } from "@ledgerhq/live-common/genericAwarenessModal";
+import type { FeatureIntroViewModel } from "../screens/useGenericAwarenessModalDrawerViewModel";
 
-type FeatureIntroContentProps = Readonly<{
-  content: GenericAwarenessModalFeatureIntro;
+type FeatureIntroLayoutProps = Readonly<{
   onClose: () => void;
-  onPrimaryPress: () => void;
-  onSecondaryPress: () => void;
+  viewModel: FeatureIntroViewModel;
 }>;
 
 const TITLE_NUMBER_OF_LINES = 2;
@@ -16,12 +14,8 @@ const SUBTITLE_NUMBER_OF_LINES = 3;
 const ITEM_TITLE_NUMBER_OF_LINES = 1;
 const ITEM_SUBTITLE_NUMBER_OF_LINES = 2;
 
-export function FeatureIntroContent({
-  content,
-  onClose,
-  onPrimaryPress,
-  onSecondaryPress,
-}: FeatureIntroContentProps) {
+export function FeatureIntroLayout({ onClose, viewModel }: FeatureIntroLayoutProps) {
+  const { content } = viewModel;
   const {
     imageUrl,
     title,
@@ -53,11 +47,7 @@ export function FeatureIntroContent({
   return (
     <Box lx={{ gap: "s16", marginTop: "s8" }}>
       <Box lx={{ borderRadius: "lg", overflow: "hidden" }}>
-        <Image
-          source={{ uri: imageUrl }}
-          style={{ width: "100%", height: 200 }}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: imageUrl }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
       </Box>
 
       <Text
@@ -115,14 +105,14 @@ export function FeatureIntroContent({
       <Button
         appearance="base"
         size="lg"
-        onPress={() => handleButtonPress(primaryButtonLink, onPrimaryPress)}
+        onPress={() => handleButtonPress(primaryButtonLink, viewModel.onPrimaryPress)}
       >
         {primaryButtonLabel}
       </Button>
       <Button
         appearance="gray"
         size="lg"
-        onPress={() => handleButtonPress(secondaryButtonLink, onSecondaryPress)}
+        onPress={() => handleButtonPress(secondaryButtonLink, viewModel.onSecondaryPress)}
       >
         {secondaryButtonLabel}
       </Button>

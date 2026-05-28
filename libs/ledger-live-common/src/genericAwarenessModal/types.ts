@@ -3,6 +3,7 @@ import { z } from "zod";
 export enum GenericAwarenessModalLayout {
   Carousel = "carousel",
   FeatureIntro = "featureIntro",
+  Prompt = "prompt",
 }
 
 export enum FeatureIntroRole {
@@ -29,6 +30,17 @@ export const GenericAwarenessModalCarouselInputSchema = z.object({
   layout: z.literal(GenericAwarenessModalLayout.Carousel),
   campaignId: z.string(),
   index: GenericAwarenessModalInputIndexSchema,
+  location: z.literal("generic_awareness_modal").default("generic_awareness_modal"),
+  title: z.string().catch(""),
+  subtitle: z.string().catch(""),
+  imageUrl: z.string().catch(""),
+  primaryButtonLabel: z.string().catch(""),
+  primaryButtonLink: z.string().catch(""),
+});
+
+export const GenericAwarenessModalPromptInputSchema = z.object({
+  layout: z.literal(GenericAwarenessModalLayout.Prompt),
+  campaignId: z.string(),
   location: z.literal("generic_awareness_modal").default("generic_awareness_modal"),
   title: z.string().catch(""),
   subtitle: z.string().catch(""),
@@ -64,6 +76,7 @@ export const GenericAwarenessModalFeatureIntroItemInputSchema = z.object({
 
 export const GenericAwarenessModalInputSchema = z.union([
   GenericAwarenessModalCarouselInputSchema,
+  GenericAwarenessModalPromptInputSchema,
   GenericAwarenessModalFeatureIntroMainInputSchema,
   GenericAwarenessModalFeatureIntroItemInputSchema,
 ]);
@@ -86,6 +99,14 @@ export type GenericAwarenessModalParsedCarouselInput = z.output<
   typeof GenericAwarenessModalCarouselInputSchema
 >;
 
+export type GenericAwarenessModalPromptInput = z.input<
+  typeof GenericAwarenessModalPromptInputSchema
+>;
+
+export type GenericAwarenessModalParsedPromptInput = z.output<
+  typeof GenericAwarenessModalPromptInputSchema
+>;
+
 export type GenericAwarenessModalFeatureIntroMainInput = z.input<
   typeof GenericAwarenessModalFeatureIntroMainInputSchema
 >;
@@ -104,6 +125,7 @@ export type GenericAwarenessModalParsedFeatureIntroItemInput = z.output<
 
 export type GenericAwarenessModalInput =
   | GenericAwarenessModalCarouselInput
+  | GenericAwarenessModalPromptInput
   | GenericAwarenessModalFeatureIntroMainInput
   | GenericAwarenessModalFeatureIntroItemInput;
 
@@ -137,6 +159,11 @@ export type GenericAwarenessModalCarousel = {
   data: GenericAwarenessModalCarouselSlide[];
 };
 
+export type GenericAwarenessModalPrompt = {
+  layout: GenericAwarenessModalLayout.Prompt;
+  id: string;
+} & GenericAwarenessModalCarouselSlide;
+
 export type GenericAwarenessModalFeatureIntroItem = {
   icon: string;
   title: string;
@@ -158,11 +185,14 @@ export type GenericAwarenessModalFeatureIntro = {
 
 export type GenericAwarenessModalContentCard =
   | GenericAwarenessModalCarousel
+  | GenericAwarenessModalPrompt
   | GenericAwarenessModalFeatureIntro;
 
 export type GenericAwarenessModalOutput = GenericAwarenessModalContentCard;
 
 export type GenericAwarenessModalCarouselExtrasType = GenericAwarenessModalCarouselInput;
+
+export type GenericAwarenessModalPromptExtrasType = GenericAwarenessModalPromptInput;
 
 export type GenericAwarenessModalFeatureIntroExtrasMainType =
   GenericAwarenessModalFeatureIntroMainInput;
