@@ -30,16 +30,13 @@ import { DeviceLike } from "~/reducers/types";
 import { loadAccounts, loadBleState, loadConfig, setFeatureFlags } from "../bridge/server";
 import { initTestAccounts } from "../models/currencies";
 import { setupEnvironment } from "../helpers/commonHelpers";
-import {
-  FEATURE_FLAGS_DEFAULTS,
-  type Feature,
-  type FeatureId,
-  type Features,
-  type PartialFeatures,
-} from "@shared/feature-flags";
+import type { FeatureId, Features, PartialFeatures } from "@shared/feature-flags";
 
 setupEnvironment();
 
+// The slice keeps overrides as-is (see `resolveFeature` in @shared/feature-flags) — we
+// deliberately don't merge with FEATURE_FLAGS_DEFAULTS here. Merging would activate
+// unrelated default params and shift UI paths the page objects don't target.
 type LooseFlagOverrides = {
   [K in FeatureId]?: {
     enabled?: boolean;
@@ -53,25 +50,6 @@ type ApplicationOptions = {
   testedCurrencies?: string[];
   featureFlags?: LooseFlagOverrides;
 };
-
-function resolveFlagOverrides(flags: LooseFlagOverrides): PartialFeatures {
-  const merged: Record<string, Feature> = {};
-  for (const key of Object.keys(flags) as FeatureId[]) {
-    const override = flags[key];
-    const def = FEATURE_FLAGS_DEFAULTS[key] ?? { enabled: false };
-    merged[key] = {
-      ...def,
-      ...(override?.enabled !== undefined && { enabled: override.enabled }),
-      ...(override?.params !== undefined && {
-        params: {
-          ...((def as Record<string, unknown>)["params"] as Record<string, unknown> | undefined),
-          ...override.params,
-        },
-      }),
-    };
-  }
-  return merged as PartialFeatures;
-}
 
 const lazyInit = <T>(PageClass: new () => T) => {
   let instance: T | null = null;
@@ -125,12 +103,10 @@ export class Application {
     }
 
     // NOTE: KEEP WALLET 4.0 disabled for legacy mocks
-    await setFeatureFlags(
-      resolveFlagOverrides({
-        lwmWallet40: { enabled: false },
-        ...featureFlags,
-      }),
-    );
+    await setFeatureFlags({
+      lwmWallet40: { enabled: false },
+      ...featureFlags,
+    } as PartialFeatures);
   }
 
   public get assetAccountsPage() {
