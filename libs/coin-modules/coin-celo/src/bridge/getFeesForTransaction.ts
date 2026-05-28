@@ -216,7 +216,7 @@ const getFeesForTransaction = async ({
       data,
       maxFeePerGas: tokenMaxFeePerGas,
       maxPriorityFeePerGas,
-      ...(transaction.feeCurrency != null && { feeCurrency: transaction.feeCurrency }),
+      ...(transaction.feeCurrency && { feeCurrency: transaction.feeCurrency }),
     });
 
     gas = Number(Math.ceil(Number(estimatedGas) * MAX_FEES_THRESHOLD_MULTIPLIER).toString());

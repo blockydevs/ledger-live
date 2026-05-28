@@ -329,7 +329,7 @@ const buildTransaction = async (
     ...(celoTransaction.to !== undefined && { to: celoTransaction.to }),
     ...(celoTransaction.data !== undefined && { data: celoTransaction.data }),
     ...(celoTransaction.value !== undefined && { value: BigInt(celoTransaction.value) }),
-    ...(celoTransaction.feeCurrency != null && { feeCurrency: celoTransaction.feeCurrency }),
+    ...(celoTransaction.feeCurrency && { feeCurrency: celoTransaction.feeCurrency }),
   });
 
   const gas = Math.ceil(Number(estimatedGas) * MAX_FEES_THRESHOLD_MULTIPLIER).toString();
