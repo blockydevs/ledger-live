@@ -4,7 +4,16 @@ import { cn } from "LLD/utils/cn";
 import { useFlowWizard } from "../../FlowWizard/FlowWizardContext";
 import { useSendFlowData } from "../context/SendFlowContext";
 import { FLOW_STATUS } from "@ledgerhq/live-common/flows/wizard/types";
-import type { SendFlowStep, SendFlowBusinessContext } from "@ledgerhq/live-common/flows/send/types";
+import {
+  SEND_FLOW_STEP,
+  type SendFlowStep,
+  type SendFlowBusinessContext,
+} from "@ledgerhq/live-common/flows/send/types";
+import {
+  getAccountCurrency,
+  getMainAccount,
+} from "@ledgerhq/ledger-wallet-framework/account/helpers";
+import { sendFeatures } from "@ledgerhq/live-common/bridge/descriptor/send/features";
 import type { SendStepConfig } from "../types";
 import { SendHeader } from "./SendHeader";
 import { AnimatedHeight } from "./AnimatedHeight";
@@ -41,7 +50,17 @@ export function SendFlowLayout({ isOpen, onClose }: SendFlowLayoutProps) {
     [onClose, wizard.currentStep, sendFlowTrackingProperties],
   );
 
-  const dialogHeight = currentStepConfig?.height ?? "fixed";
+  const accountCurrency = useMemo(() => {
+    if (!state.account.account) return undefined;
+    return getAccountCurrency(
+      getMainAccount(state.account.account, state.account.parentAccount ?? undefined),
+    );
+  }, [state.account.account, state.account.parentAccount]);
+  const hasAmountPlugins =
+    wizard.currentStep === SEND_FLOW_STEP.AMOUNT &&
+    sendFeatures.getAmountPlugins(accountCurrency).length > 0;
+
+  const dialogHeight = hasAmountPlugins ? "fixed" : (currentStepConfig?.height ?? "fixed");
 
   const shouldShowStatusGradient =
     state.flowStatus === FLOW_STATUS.ERROR || state.flowStatus === FLOW_STATUS.SUCCESS;

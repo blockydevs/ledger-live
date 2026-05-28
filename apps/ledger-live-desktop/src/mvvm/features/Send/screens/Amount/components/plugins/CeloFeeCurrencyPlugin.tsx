@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import BigNumber from "bignumber.js";
 import type { Account, AccountLike, TokenAccount } from "@ledgerhq/types-live";
@@ -66,6 +66,19 @@ function CeloFeeCurrencyPluginInner({
   );
 
   const selectedId = transaction.feeCurrencyAccountId ?? NATIVE_CELO_ID;
+
+  useEffect(() => {
+    if (!transaction.feeCurrencyAccountId) return;
+    if (mainAccount.subAccounts === undefined) return;
+    const stillSelectable = tokenOptions.some(t => t.id === transaction.feeCurrencyAccountId);
+    if (stillSelectable) return;
+    transactionActions.updateTransaction(tx => ({
+      ...tx,
+      feeCurrency: null,
+      feeCurrencyUnwrapped: null,
+      feeCurrencyAccountId: null,
+    }));
+  }, [transaction.feeCurrencyAccountId, mainAccount.subAccounts, tokenOptions, transactionActions]);
 
   const selectedLabel = useMemo(() => {
     if (!transaction.feeCurrencyAccountId) return FEE_CURRENCY_OPTIONS[0].name;

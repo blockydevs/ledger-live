@@ -75,7 +75,7 @@ export function useNetworkFees({
   });
 
   const feeCurrencyAccountId =
-    (transaction as { feeCurrencyAccountId?: string | null }).feeCurrencyAccountId ?? null;
+    transaction.family === "celo" ? (transaction.feeCurrencyAccountId ?? null) : null;
 
   const { feeSummary } = useFeeInfo({
     account,

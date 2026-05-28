@@ -30,7 +30,7 @@ export const SEND_STEP_CONFIGS: Record<SendFlowStep, SendStepConfig> = {
     id: SEND_FLOW_STEP.AMOUNT,
     canGoBack: true,
     addressInput: true,
-    height: "fixed",
+    height: "fit",
   },
   [SEND_FLOW_STEP.CUSTOM_FEES]: {
     id: SEND_FLOW_STEP.CUSTOM_FEES,

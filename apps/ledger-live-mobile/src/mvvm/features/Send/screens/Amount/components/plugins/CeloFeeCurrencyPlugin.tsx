@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import BigNumber from "bignumber.js";
 import { useTranslation } from "~/context/Locale";
@@ -70,6 +70,19 @@ function CeloFeeCurrencyPluginInner({
         })),
     [mainAccount.subAccounts],
   );
+
+  useEffect(() => {
+    if (!transaction.feeCurrencyAccountId) return;
+    if (mainAccount.subAccounts === undefined) return;
+    const stillSelectable = tokenOptions.some(t => t.id === transaction.feeCurrencyAccountId);
+    if (stillSelectable) return;
+    transactionActions.updateTransaction(tx => ({
+      ...tx,
+      feeCurrency: null,
+      feeCurrencyUnwrapped: null,
+      feeCurrencyAccountId: null,
+    }));
+  }, [transaction.feeCurrencyAccountId, mainAccount.subAccounts, tokenOptions, transactionActions]);
 
   const onSelectNative = useCallback(() => {
     transactionActions.updateTransaction(tx => ({
