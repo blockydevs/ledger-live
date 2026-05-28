@@ -27,6 +27,7 @@ import { useAccountName } from "~/reducers/wallet";
 import BakerImage from "../BakerImage";
 import DelegationRow from "./Row";
 import LabelRight from "./LabelRight";
+import UnstakingRow from "./UnstakingRow";
 
 type Props = Readonly<{
   account: AccountLike;
@@ -38,6 +39,9 @@ type Selected =
   | { kind: "stake" }
   | { kind: "delegation" }
   | { kind: "unstaking"; position: StakingPosition };
+
+const daysSince = (d: Date | string | undefined | null) =>
+  d ? differenceInCalendarDays(Date.now(), new Date(d)) : 0;
 
 export default function TezosDelegation({ account }: Props) {
   const { t } = useTranslation();
@@ -52,15 +56,20 @@ export default function TezosDelegation({ account }: Props) {
   const [selected, setSelected] = useState<Selected | undefined>();
   const onCloseDrawer = useCallback(() => setSelected(undefined), []);
 
-  const baker = info.delegation?.baker ?? fallbackBaker;
-  const delegateAddress = info.delegateAddress ?? "";
+  const currentBaker = info.delegation?.baker ?? fallbackBaker;
+  const currentAddress = info.delegateAddress ?? "";
+
+  const selectedUnstakingAddress =
+    selected?.kind === "unstaking" ? selected.position.delegate ?? "" : "";
+  const selectedUnstakingBaker = useBaker(selectedUnstakingAddress);
+  const drawerBaker = selected?.kind === "unstaking" ? selectedUnstakingBaker : currentBaker;
+  const drawerAddress = selected?.kind === "unstaking" ? selectedUnstakingAddress : currentAddress;
 
   const ops = account.type === "Account" ? account.operations ?? [] : [];
-  const lastStake = ops.find(o => o?.type === "STAKE");
-  const lastDelegate = ops.find(o => o?.type === "DELEGATE");
-  const stakeDays = lastStake ? differenceInCalendarDays(Date.now(), lastStake.date) : 0;
-  const delegationDate = info.delegation?.operation.date ?? lastDelegate?.date;
-  const delegationDays = delegationDate ? differenceInCalendarDays(Date.now(), delegationDate) : 0;
+  const stakeDays = daysSince(ops.find(o => o?.type === "STAKE")?.date);
+  const delegationDays = daysSince(
+    info.delegation?.operation.date ?? ops.find(o => o?.type === "DELEGATE")?.date,
+  );
 
   const onDelegate = useCallback(() => {
     if (account.type !== "Account") return;
@@ -74,21 +83,21 @@ export default function TezosDelegation({ account }: Props) {
   const onManageStub = useCallback(() => undefined, []);
 
   const onOpenExplorer = useCallback(() => {
-    if (account.type !== "Account" || !delegateAddress) return;
-    const url = getAddressExplorer(getDefaultExplorerView(account.currency), delegateAddress);
+    if (account.type !== "Account" || !drawerAddress) return;
+    const url = getAddressExplorer(getDefaultExplorerView(account.currency), drawerAddress);
     if (url) Linking.openURL(url);
-  }, [account, delegateAddress]);
+  }, [account, drawerAddress]);
 
   const validatorField: FieldType = useMemo(
     () => ({
       label: t("delegation.validator"),
       Component: (
         <LText numberOfLines={1} semiBold ellipsizeMode="middle" style={styles.fieldValue}>
-          {baker?.name ?? shortAddressPreview(delegateAddress)}
+          {drawerBaker?.name ?? shortAddressPreview(drawerAddress)}
         </LText>
       ),
     }),
-    [t, baker, delegateAddress],
+    [t, drawerBaker, drawerAddress],
   );
 
   const durationField = useCallback(
@@ -113,9 +122,6 @@ export default function TezosDelegation({ account }: Props) {
     if (selected.kind === "unstaking") {
       const pos = selected.position;
       const finalizable = isFinalizablePosition(pos.uid);
-      const unstakeDays = pos.createdAt
-        ? differenceInCalendarDays(Date.now(), new Date(pos.createdAt))
-        : 0;
       return [
         validatorField,
         {
@@ -126,7 +132,7 @@ export default function TezosDelegation({ account }: Props) {
             </LText>
           ),
         },
-        durationField(unstakeDays),
+        durationField(daysSince(pos.createdAt)),
       ];
     }
 
@@ -143,7 +149,7 @@ export default function TezosDelegation({ account }: Props) {
               style={styles.fieldValue}
               color="live"
             >
-              {delegateAddress}
+              {drawerAddress}
             </LText>
           </Touchable>
         ),
@@ -164,7 +170,7 @@ export default function TezosDelegation({ account }: Props) {
     validatorField,
     durationField,
     onOpenExplorer,
-    delegateAddress,
+    drawerAddress,
     accountName,
     stakeDays,
     delegationDays,
@@ -192,31 +198,9 @@ export default function TezosDelegation({ account }: Props) {
   if (selected?.kind === "unstaking") drawerAmount = selected.position.amount;
   else if (selected?.kind === "stake") drawerAmount = info.stakedBalance;
 
-  const stakingRows: {
-    key: string;
-    amount: StakingPosition["amount"];
-    statusLabel?: string;
-    onPress: () => void;
-  }[] = [];
-  if (info.isStaked) {
-    stakingRows.push({
-      key: "stake",
-      amount: info.stakedBalance,
-      onPress: () => setSelected({ kind: "stake" }),
-    });
-  }
-  info.unstakingPositions.forEach(position => {
-    stakingRows.push({
-      key: position.uid,
-      amount: position.amount,
-      statusLabel: t(
-        isFinalizablePosition(position.uid) ? "tezos.staking.available" : "tezos.staking.unstaking",
-      ),
-      onPress: () => setSelected({ kind: "unstaking", position }),
-    });
-  });
-
-  const showStaking = stakingRows.length > 0;
+  const unstakingPositions = info.unstakingPositions;
+  const showStaking = info.isStaked || unstakingPositions.length > 0;
+  const lastUnstakingIndex = unstakingPositions.length - 1;
 
   return (
     <View style={styles.root}>
@@ -229,17 +213,25 @@ export default function TezosDelegation({ account }: Props) {
             }
           />
           <View style={[styles.card, { backgroundColor: colors.card }]}>
-            {stakingRows.map((row, i) => (
+            {info.isStaked && (
               <DelegationRow
-                key={row.key}
-                baker={baker}
-                address={delegateAddress}
-                amount={row.amount}
+                baker={currentBaker}
+                address={currentAddress}
+                amount={info.stakedBalance}
                 unit={unit}
                 currency={currency}
-                statusLabel={row.statusLabel}
-                onPress={row.onPress}
-                isLast={i === stakingRows.length - 1}
+                onPress={() => setSelected({ kind: "stake" })}
+                isLast={unstakingPositions.length === 0}
+              />
+            )}
+            {unstakingPositions.map((position, i) => (
+              <UnstakingRow
+                key={position.uid}
+                position={position}
+                unit={unit}
+                currency={currency}
+                onPress={() => setSelected({ kind: "unstaking", position })}
+                isLast={i === lastUnstakingIndex}
               />
             ))}
           </View>
@@ -256,8 +248,8 @@ export default function TezosDelegation({ account }: Props) {
           />
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <DelegationRow
-              baker={baker}
-              address={delegateAddress}
+              baker={currentBaker}
+              address={currentAddress}
               amount={info.availableBalance}
               unit={unit}
               currency={currency}
@@ -272,7 +264,7 @@ export default function TezosDelegation({ account }: Props) {
         isOpen={!!selected}
         onClose={onCloseDrawer}
         account={account}
-        ValidatorImage={({ size }) => <BakerImage size={size} baker={baker} />}
+        ValidatorImage={({ size }) => <BakerImage size={size} baker={drawerBaker} />}
         amount={drawerAmount}
         data={drawerData}
         actions={[]}

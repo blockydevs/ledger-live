@@ -25,9 +25,10 @@ jest.mock("~/context/Locale", () => {
 
 // Drive every screen state through the staking-info hook.
 let mockStakingInfo: ReturnType<typeof makeInfo>;
+let mockBakerByAddress: Record<string, { name: string } | null> = {};
 jest.mock("@ledgerhq/live-common/families/tezos/react", () => ({
   useTezosStakingInfo: () => mockStakingInfo,
-  useBaker: () => null,
+  useBaker: (address: string) => mockBakerByAddress[address] ?? null,
   isFinalizablePosition: (uid: string) => uid.includes("final"),
 }));
 
@@ -102,9 +103,21 @@ jest.mock("../LabelRight", () => {
 
 jest.mock("../Row", () => {
   const { TouchableOpacity, Text } = jest.requireActual("react-native");
-  return ({ onPress, statusLabel }: { onPress: () => void; statusLabel?: string }) => (
+  return ({
+    onPress,
+    statusLabel,
+    baker,
+    address,
+  }: {
+    onPress: () => void;
+    statusLabel?: string;
+    baker?: { name: string } | null;
+    address: string;
+  }) => (
     <TouchableOpacity testID="delegation-row" onPress={onPress}>
       <Text>{statusLabel ?? "row"}</Text>
+      <Text testID="row-baker">{baker?.name ?? ""}</Text>
+      <Text testID="row-address">{address}</Text>
     </TouchableOpacity>
   );
 });
@@ -134,7 +147,12 @@ jest.mock("~/components/DelegationDrawer", () => {
     ) : null;
 });
 
-type StakingPositionLike = { uid: string; amount: BigNumber; createdAt?: string };
+type StakingPositionLike = {
+  uid: string;
+  amount: BigNumber;
+  createdAt?: string;
+  delegate?: string;
+};
 
 function makeInfo(
   overrides: Partial<{
@@ -186,6 +204,7 @@ describe("TezosDelegation (staking dashboard)", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     mockStakingInfo = makeInfo();
+    mockBakerByAddress = {};
     jest.spyOn(Linking, "openURL").mockResolvedValue(true);
   });
 
@@ -309,6 +328,57 @@ describe("TezosDelegation (staking dashboard)", () => {
     expect(screen.getByTestId("section-tezos.staking.sectionLabel")).toBeTruthy();
     expect(screen.getByTestId("section-tezos.delegation.sectionLabel")).toBeTruthy();
     expect(screen.getAllByTestId("delegation-row")).toHaveLength(2);
+  });
+
+  it("resolves baker per unstaking position when re-delegated to another baker", () => {
+    mockBakerByAddress = {
+      tz1A: { name: "BakerA" },
+      tz1B: { name: "BakerB" },
+    };
+    mockStakingInfo = makeInfo({
+      isDelegated: true,
+      hasUnstaking: true,
+      availableBalance: new BigNumber(50),
+      delegateAddress: "tz1B",
+      delegation: {
+        address: "tz1B",
+        baker: { name: "BakerB" },
+        operation: { date: new Date("2026-05-15") },
+      },
+      unstakingPositions: [
+        {
+          uid: "unstaking-1",
+          amount: new BigNumber(3),
+          createdAt: "2026-05-20",
+          delegate: "tz1A",
+        },
+      ],
+    });
+    render(<TezosDelegation account={makeAccount()} />);
+    const rows = screen.getAllByTestId("delegation-row");
+    const bakerLabels = screen.getAllByTestId("row-baker").map(n => n.props.children);
+    const addressLabels = screen.getAllByTestId("row-address").map(n => n.props.children);
+    expect(rows).toHaveLength(2);
+    expect(bakerLabels).toEqual(expect.arrayContaining(["BakerA", "BakerB"]));
+    expect(addressLabels).toEqual(expect.arrayContaining(["tz1A", "tz1B"]));
+  });
+
+  it("shows the unstaking baker when the account is fully un-delegated", () => {
+    mockBakerByAddress = { tz1A: { name: "BakerA" } };
+    mockStakingInfo = makeInfo({
+      hasUnstaking: true,
+      unstakingPositions: [
+        {
+          uid: "finalizable-1",
+          amount: new BigNumber(2),
+          createdAt: "2026-05-10",
+          delegate: "tz1A",
+        },
+      ],
+    });
+    render(<TezosDelegation account={makeAccount()} />);
+    expect(screen.getByTestId("row-baker").props.children).toBe("BakerA");
+    expect(screen.getByTestId("row-address").props.children).toBe("tz1A");
   });
 
   it("closes the drawer", () => {
