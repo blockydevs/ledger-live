@@ -321,6 +321,26 @@ describe("AssetDetail integration", () => {
       expect(screen.queryByTestId(TEST_ID.EARN_DEPOSIT)).not.toBeInTheDocument();
     });
 
+    it("shows the earn banner when stakeable with a zero-balance account", async () => {
+      mockGetCanStakeCurrency.mockReturnValue(true);
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      const account = genAccount("asset-detail-staking-zero-balance", { currency: btc });
+      account.balance = new BigNumber(0);
+      account.spendableBalance = new BigNumber(0);
+      const item = buildDistributionItem({ accounts: [account], amount: 0, countervalue: 0 });
+      setupRoute("bitcoin", { bySlug: { bitcoin: item }, list: [item] });
+
+      renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.EARN_BANNER)).toBeVisible();
+        expect(screen.getByText("Earn with this asset")).toBeVisible();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.AVAILABLE_BALANCE)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(TEST_ID.EARN_DEPOSIT)).not.toBeInTheDocument();
+    });
+
     it("shows available balance and earn deposit cards when stakeable with an earn deposit", async () => {
       mockGetCanStakeCurrency.mockReturnValue(true);
       mockMarket.withData(MarketMockedResponse.bitcoinDetail);
@@ -627,6 +647,53 @@ describe("AssetDetail integration", () => {
         expectNoOwnedView();
       },
     );
+
+    it("shows the earn banner when the asset is stakeable and not in the portfolio", async () => {
+      mockGetCanStakeCurrency.mockReturnValue(true);
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", { list: [] });
+
+      render(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.EARN_BANNER)).toBeVisible();
+        expect(screen.getByText("Earn with this asset")).toBeVisible();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.AVAILABLE_BALANCE)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(TEST_ID.EARN_DEPOSIT)).not.toBeInTheDocument();
+    });
+
+    it("shows APY in the earn banner in discovery mode when interest rate is available", async () => {
+      mockGetCanStakeCurrency.mockReturnValue(true);
+      mockUseInterestRatesByCurrencies.mockReturnValue({
+        bitcoin: { value: 0.12, type: "APY" },
+      });
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", { list: [] });
+
+      render(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.EARN_BANNER)).toBeVisible();
+        expect(screen.getByText("Earn up to 12.0% APY")).toBeVisible();
+      });
+    });
+
+    it("hides the staking section in discovery mode when the asset is not stakeable", async () => {
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", { list: [] });
+
+      render(<AssetDetail />);
+
+      await waitFor(() => {
+        expectHeader();
+        expectMarketView();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.STAKING_SECTION)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(TEST_ID.EARN_BANNER)).not.toBeInTheDocument();
+    });
 
     it.each(DISCOVERY_ASSETS)(
       "$label - falls back to Market API when DADA fails",

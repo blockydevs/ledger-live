@@ -50,13 +50,51 @@ describe("useStakingSectionViewModel", () => {
     expect(result.current.state.type).toBe("hidden");
   });
 
-  it("returns hidden state when there are no accounts", () => {
+  it("shows the earn banner when stakeable without accounts", () => {
     mockGetCanStakeCurrency.mockReturnValue(true);
     const item = buildDistributionItem({ currency: btc, accounts: [] });
 
     const { result } = renderHook(() => useStakingSectionViewModel(item));
 
-    expect(result.current.state.type).toBe("hidden");
+    expect(result.current.state.type).toBe("banner");
+    if (result.current.state.type === "banner") {
+      expect(result.current.state.label).toBe("Earn with this asset");
+    }
+  });
+
+  it("shows APY in the earn banner when stakeable without accounts and interest rate is available", () => {
+    mockGetCanStakeCurrency.mockReturnValue(true);
+    mockUseInterestRatesByCurrencies.mockReturnValue({
+      bitcoin: { value: 0.12, type: "APY" },
+    });
+    const item = buildDistributionItem({ currency: btc, accounts: [] });
+
+    const { result } = renderHook(() => useStakingSectionViewModel(item));
+
+    expect(result.current.state.type).toBe("banner");
+    if (result.current.state.type === "banner") {
+      expect(result.current.state.label).toBe("Earn up to 12.0% APY");
+    }
+  });
+
+  it("shows the earn banner when stakeable with a zero-balance account", () => {
+    mockGetCanStakeCurrency.mockReturnValue(true);
+    const account = genAccount("staking-btc-zero-balance", { currency: btc });
+    account.balance = new BigNumber(0);
+    account.spendableBalance = new BigNumber(0);
+    const item = buildDistributionItem({
+      currency: btc,
+      accounts: [account],
+      amount: 0,
+      countervalue: 0,
+    });
+
+    const { result } = renderHook(() => useStakingSectionViewModel(item));
+
+    expect(result.current.state.type).toBe("banner");
+    if (result.current.state.type === "banner") {
+      expect(result.current.state.label).toBe("Earn with this asset");
+    }
   });
 
   it("shows the default earn banner when stakeable without an earn deposit and no APY", () => {
@@ -104,7 +142,7 @@ describe("useStakingSectionViewModel", () => {
     }
   });
 
-  it("shows staked balances in the app fiat currency when balance exceeds spendable balance", () => {
+  it("shows staked balances when an earn deposit exists", () => {
     mockGetCanStakeCurrency.mockReturnValue(true);
     const account = genAccount("staking-btc-deposit", { currency: btc });
     account.balance = new BigNumber(10);
