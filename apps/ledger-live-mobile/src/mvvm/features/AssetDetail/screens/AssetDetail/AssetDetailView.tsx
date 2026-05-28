@@ -101,5 +101,5 @@ const screenStyle: LumenViewStyle = {
 
 const contentStyle: LumenViewStyle = {
   padding: "s16",
-  gap: "s32",
+  gap: "s24",
 };

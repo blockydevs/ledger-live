@@ -8123,30 +8123,55 @@
     }
   },
   "pnl": {
-    "unrealisedReturn": {
-      "title": "Unrealised return"
-    },
-    "costBasis": {
-      "title": "Cost basis",
+    "disclaimer": "This data is provided for informational purposes only and is not financial advice. Not to be used for tax purposes.",
+    "asset": {
+      "return": {
+        "title": "Unrealised return"
+      },
+      "entry": {
+        "title": "Average entry price",
+        "tooltip": "The average price you paid for this asset through Ledger Wallet, including everything you’ve bought or received from other wallets. This is used to track your profit or loss."
+      },
       "drawer": {
-        "title": "Cost basis",
-        "body": "The total amount you paid to acquire your current holdings, including fees."
+        "title": "Asset profit and loss",
+        "description": "A summary of how this asset has performed in your portfolio.",
+        "estimatedReturn": {
+          "title": "Estimated return",
+          "description": "The estimated profit or loss if sold at current price."
+        },
+        "realisedReturn": {
+          "title": "Realised return",
+          "description": "Profit or loss confirmed from previous sale, send, or swap."
+        },
+        "totalReturn": {
+          "title": "Total return",
+          "description": "The sum of estimated and realised returns."
+        }
       }
     },
-    "drawer": {
-      "title": "Profit and loss",
-      "description": "Your portfolio performance broken down into realised and unrealised returns.",
-      "totalReturn": {
-        "title": "Total return",
-        "definition": "Realised and unrealised returns combined, reflecting your overall position."
+    "portfolio": {
+      "return": {
+        "title": "Unrealised return"
       },
-      "unrealisedReturn": {
-        "title": "Unrealised return",
-        "definition": "Estimated gain or loss on your current holdings."
+      "costBasis": {
+        "title": "Cost basis",
+        "tooltip": "The total amount you paid to acquire your current holdings, including fees."
       },
-      "realisedReturn": {
-        "title": "Realised return",
-        "definition": "Profit or loss confirmed from previous sales or outgoing transfers."
+      "drawer": {
+        "title": "Portfolio profit and loss",
+        "description": "Your portfolio performance broken down into estimated and realised returns.",
+        "estimatedReturn": {
+          "title": "Estimated return",
+          "description": "The estimated profit or loss if sold at current price."
+        },
+        "realisedReturn": {
+          "title": "Realised return",
+          "description": "Profit or loss confirmed from previous sale, send, or swap."
+        },
+        "totalReturn": {
+          "title": "Total return",
+          "description": "The sum of estimated and realised returns."
+        }
       }
     }
   },
