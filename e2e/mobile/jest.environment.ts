@@ -43,8 +43,8 @@ async function captureFailureDiagnostics(): Promise<void> {
   await withTimeout(takeSpeculosScreenshot(), FAST_DIAGNOSTIC_TIMEOUT_MS, "takeSpeculosScreenshot");
   await withTimeout(
     attachSpeculinhoLogsToAllure(),
-    FAST_DIAGNOSTIC_TIMEOUT_MS,
-    "attachSpeculosLogsToAllure",
+    SLOW_DIAGNOSTIC_TIMEOUT_MS,
+    "attachSpeculinhoLogsToAllure",
   );
   await withTimeout(
     takeAppScreenshot("Test Failure"),

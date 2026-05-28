@@ -16,17 +16,15 @@ import { formatAppCandidate } from "../bot/formatters";
 import { mustUpgrade, shouldUpgrade } from "../apps";
 
 import {
-  closeAllSpeculosDevices,
+  type SpeculosTransport,
   releaseSpeculosDevice,
   createSpeculosDevice,
-  conventionalAppSubpath,
   getMemorySpeculosDeviceInternal,
   modelMap,
 } from "@ledgerhq/speculos-transport";
-import type { SpeculosTransport } from "@ledgerhq/speculos-transport";
 
-export { closeAllSpeculosDevices, releaseSpeculosDevice, createSpeculosDevice, conventionalAppSubpath };
-export type { SpeculosTransport };
+export { closeAllSpeculosDevices, conventionalAppSubpath } from "@ledgerhq/speculos-transport";
+export { type SpeculosTransport, releaseSpeculosDevice, createSpeculosDevice };
 
 const modelMapPriority: Record<string, number> = {
   apex_p: 7,

@@ -231,7 +231,7 @@ export async function fetchSpeculinhoLogs(runId: string): Promise<string> {
   try {
     const res = await axios.get<string>(url, {
       responseType: "text",
-      timeout: 60_000,
+      timeout: 10_000,
       validateStatus: () => true,
     });
 
@@ -259,7 +259,7 @@ export async function fetchSpeculinhoStatus(runId: string): Promise<string> {
   const url = `${speculinhoUrl}/status/${encodeURIComponent(runId)}`;
   try {
     const res = await axios.get(url, {
-      timeout: 15_000,
+      timeout: 10_000,
       validateStatus: () => true,
     });
 

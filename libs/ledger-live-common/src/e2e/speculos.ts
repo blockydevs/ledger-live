@@ -449,11 +449,11 @@ export async function startSpeculos(
   invariant(appVersion, "%s: no app version found in catalog for %s", testName, displayName);
 
   const appName = spec.currency ? spec.currency.managerAppName : appQuery.appName;
-  const dependencies = spec.dependencies?.map(dep => ({
-    name: dep.name,
-    appVersion: dep.appVersion ?? catalogVersions.get(dep.name),
-  }));
-
+  const dependencies = spec.dependencies?.map(dep => {
+    const appVersion = dep.appVersion ?? catalogVersions.get(dep.name);
+    invariant(appVersion, "%s: no dependency version found in catalog for %s", testName, dep.name);
+    return { name: dep.name, appVersion };
+  });
   if (!isSpeculosRemote) {
     invariant(COINAPPS, "COINAPPS is not set");
     const assertElfExists = (n: string, v: string) => {
@@ -462,7 +462,7 @@ export async function startSpeculos(
     };
     assertElfExists(appName, appVersion!);
     dependencies?.forEach(dep => {
-      if (dep.appVersion) assertElfExists(dep.name, dep.appVersion);
+      assertElfExists(dep.name, dep.appVersion);
     });
   }
 
@@ -477,10 +477,7 @@ export async function startSpeculos(
     onSpeculosDeviceCreated,
   };
 
-  log(
-    "engine",
-    `test ${testName} will use ${appName} ${appVersion} on ${model} ${firmware}`,
-  );
+  log("engine", `test ${testName} will use ${appName} ${appVersion} on ${model} ${firmware}`);
 
   try {
     if (isSpeculosRemote) return await createSpeculosDeviceCI(deviceParams);
