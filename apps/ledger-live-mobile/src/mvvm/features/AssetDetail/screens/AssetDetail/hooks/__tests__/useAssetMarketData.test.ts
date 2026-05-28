@@ -1,9 +1,17 @@
 import { renderHook, waitFor } from "@tests/test-renderer";
 import { server, http, HttpResponse } from "@tests/server";
-import { useAssetMarketData } from "../useAssetMarketData";
 import { mockBtcCryptoCurrency } from "@ledgerhq/live-common/modularDrawer/__mocks__/currencies.mock";
+import type { State } from "~/reducers/types";
+import { useAssetMarketData } from "../useAssetMarketData";
 
 const COUNTERVALUES_API = "https://countervalues.live.ledger.com";
+
+const withCounterValue =
+  (ticker: string) =>
+  (state: State): State => ({
+    ...state,
+    settings: { ...state.settings, counterValue: ticker },
+  });
 
 describe("useAssetMarketData", () => {
   describe("data forwarding", () => {
@@ -19,10 +27,39 @@ describe("useAssetMarketData", () => {
       expect(result.current.isError).toBe(false);
     });
 
-    it("returns counterCurrency from market params", () => {
+    it("defaults counterCurrency to the USD settings value", () => {
       const { result } = renderHook(() => useAssetMarketData(mockBtcCryptoCurrency));
 
-      expect(result.current.counterCurrency).toBe("USD");
+      expect(result.current.counterCurrency).toBe("usd");
+    });
+  });
+
+  describe("settings counter-value reactivity", () => {
+    it("derives counterCurrency from the user's settings counter-value (not market screen state)", () => {
+      const { result } = renderHook(() => useAssetMarketData(mockBtcCryptoCurrency), {
+        overrideInitialState: withCounterValue("EUR"),
+      });
+
+      expect(result.current.counterCurrency).toBe("eur");
+    });
+
+    it("forwards the settings counter-value as the `to` query param to /v3/markets", async () => {
+      const requestedToValues: string[] = [];
+      server.use(
+        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
+          const to = new URL(request.url).searchParams.get("to");
+          if (to) requestedToValues.push(to);
+          return HttpResponse.json([]);
+        }),
+      );
+
+      renderHook(() => useAssetMarketData(mockBtcCryptoCurrency), {
+        overrideInitialState: withCounterValue("GBP"),
+      });
+
+      await waitFor(() => {
+        expect(requestedToValues).toContain("gbp");
+      });
     });
   });
 

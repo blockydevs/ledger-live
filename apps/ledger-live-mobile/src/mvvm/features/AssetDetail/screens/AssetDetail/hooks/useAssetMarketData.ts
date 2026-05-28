@@ -1,12 +1,11 @@
 import VersionNumber from "react-native-version-number";
 import { useAssetMarketData as useSharedAssetMarketData } from "@ledgerhq/asset-detail";
 import { useSelector } from "~/context/hooks";
-import { marketParamsSelector } from "~/reducers/market";
+import { counterValueCurrencySelector } from "~/reducers/settings";
 import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
 
 export function useAssetMarketData(currency: AssetDetailCurrencyProps) {
-  const marketParams = useSelector(marketParamsSelector);
-  const { counterCurrency = "usd" } = marketParams;
+  const counterCurrency = useSelector(counterValueCurrencySelector).ticker.toLowerCase();
 
   const knownLedgerIds = currency ? [currency.id] : undefined;
 
