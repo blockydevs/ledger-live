@@ -4398,6 +4398,19 @@
   "graph": {
     "noGraphWarning": "The graph is not available for this token"
   },
+  "lineChart": {
+    "error": "Unable to load chart",
+    "rangeSelectorLabel": "Select time range",
+    "range": {
+      "1D": "1D",
+      "1W": "1W",
+      "1M": "1M",
+      "6M": "6M",
+      "1Y": "1Y",
+      "5Y": "5Y",
+      "ALL": "All"
+    }
+  },
   "near": {
     "account": {
       "stakedBalance": "Staked balance",

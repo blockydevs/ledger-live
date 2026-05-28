@@ -3,6 +3,7 @@ import { CryptoIcon } from "@ledgerhq/crypto-icons";
 import { getValidCryptoIconSize } from "~/renderer/utils/cryptoIconSize";
 import { AssetHeader } from "./components/AssetHeader";
 import { ActionBar } from "./components/ActionBar";
+import { ChartSection } from "./components/ChartSection";
 import { HiddenBanner } from "./components/HiddenBanner";
 import { MarketPriceSection } from "./components/MarketPriceSection";
 import { AddressListSection } from "./components/AddressList";
@@ -73,6 +74,12 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
         tickerHint={displayTicker}
         isDistributionLoading={isDistributionLoading}
         isMarketLoading={isMarketLoading}
+      />
+
+      <ChartSection
+        marketData={marketData}
+        ledgerId={ledgerId}
+        isDistributionLoading={isDistributionLoading}
       />
 
       <div className="flex flex-col gap-32">
