@@ -47,7 +47,10 @@ export const getDeviceUxV2BaseProperties = (sourceFlow: SourceFlow) => ({
 
 export const getTrackingTransport = (
   transportId: TransportIdentifier | undefined,
-): TrackingTransport => (transportId === rnHidTransportIdentifier ? "usb" : "ble");
+): TrackingTransport | undefined => {
+  if (!transportId) return undefined;
+  return transportId === rnHidTransportIdentifier ? "usb" : "ble";
+};
 
 export const getTrackingSubError = (errorType: ConnectDeviceErrorType): string =>
   TRACKING_SUB_ERRORS[errorType];

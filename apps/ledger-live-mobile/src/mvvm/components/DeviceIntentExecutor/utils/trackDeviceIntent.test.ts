@@ -189,10 +189,10 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
   describe("getTrackingTransport", () => {
     describe("Given a transport id", () => {
       describe("When called", () => {
-        it("Then maps HID to usb and other transports to ble", () => {
+        it("Then maps HID to usb, other transports to ble, and keeps unknown transport undefined", () => {
           expect(getTrackingTransport(rnHidTransportIdentifier)).toBe("usb");
           expect(getTrackingTransport(TEST_BLE_TRANSPORT)).toBe("ble");
-          expect(getTrackingTransport(undefined)).toBe("ble");
+          expect(getTrackingTransport(undefined)).toBeUndefined();
         });
       });
     });

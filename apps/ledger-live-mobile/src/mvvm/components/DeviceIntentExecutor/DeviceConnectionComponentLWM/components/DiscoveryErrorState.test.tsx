@@ -227,6 +227,23 @@ describe("DiscoveryErrorState", () => {
     );
   });
 
+  it("GIVEN an unknown discovery error without transport WHEN rendering THEN it does not invent a transport", () => {
+    // GIVEN / WHEN
+    renderState({ type: DiscoveryErrorTypes.Unknown });
+
+    // THEN
+    expect(mockedTrackScreen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: PAGE_CONNECT_DEVICE.DiscoveryError,
+        sourceFlow: "my_ledger",
+        subError: "Unknown",
+        deviceUxV2: true,
+      }),
+      undefined,
+    );
+    expect(mockedTrackScreen.mock.calls[0]?.[0]).not.toHaveProperty("transport");
+  });
+
   it("GIVEN a retry CTA WHEN it is pressed THEN it tracks button_clicked", async () => {
     // GIVEN
     const retry = jest.fn();

@@ -48,6 +48,16 @@ export function DiscoveryErrorState({
 }: Readonly<DiscoveryErrorStateProps>): React.ReactNode {
   const { t } = useTranslation();
   const sourceFlow = useSourceFlow();
+  const trackingTransport = getTrackingTransport(state.error.transportId);
+  const trackingScreen = (
+    <TrackScreen
+      category={PAGE_CONNECT_DEVICE.DiscoveryError}
+      sourceFlow={sourceFlow}
+      {...(trackingTransport ? { transport: trackingTransport } : {})}
+      subError={getTrackingSubError(state.error.type)}
+      deviceUxV2
+    />
+  );
 
   const retryCta = (labelKey: string): InfoStateCta | undefined => {
     if (!state.retry) return undefined;
@@ -176,13 +186,7 @@ export function DiscoveryErrorState({
 
     return (
       <Box lx={{ width: "full", alignItems: "center", paddingTop: "s16" }}>
-        <TrackScreen
-          category={PAGE_CONNECT_DEVICE.DiscoveryError}
-          sourceFlow={sourceFlow}
-          transport={getTrackingTransport(state.error.transportId)}
-          subError={getTrackingSubError(state.error.type)}
-          deviceUxV2
-        />
+        {trackingScreen}
         <Spinner size={32} color="base" />
         <Text
           typography="heading4SemiBold"
@@ -198,13 +202,7 @@ export function DiscoveryErrorState({
 
   return (
     <>
-      <TrackScreen
-        category={PAGE_CONNECT_DEVICE.DiscoveryError}
-        sourceFlow={sourceFlow}
-        transport={getTrackingTransport(state.error.transportId)}
-        subError={getTrackingSubError(state.error.type)}
-        deviceUxV2
-      />
+      {trackingScreen}
       <InfoState
         preset={errorState.preset}
         size="hug"
