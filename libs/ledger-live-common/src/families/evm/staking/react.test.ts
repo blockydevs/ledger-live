@@ -35,7 +35,7 @@ const sampleValidators: StakingValidatorItem[] = [
     validatorAddress: "addr-a",
     name: "Joe",
     commission: 0.05,
-    tokens: 100,
+    tokens: "100",
     votingPower: 1,
     estimatedYearlyRewardsRate: 0,
   },
@@ -43,7 +43,7 @@ const sampleValidators: StakingValidatorItem[] = [
     validatorAddress: "addr-b",
     name: "Moxie",
     commission: 1,
-    tokens: 999,
+    tokens: "999",
     votingPower: 2,
     estimatedYearlyRewardsRate: 0,
   },
@@ -51,7 +51,7 @@ const sampleValidators: StakingValidatorItem[] = [
     validatorAddress: "addr-c",
     name: "Bruce",
     commission: 0.1,
-    tokens: 500,
+    tokens: "500",
     votingPower: 3,
     estimatedYearlyRewardsRate: 0,
   },
@@ -75,6 +75,66 @@ describe("useEvmStakingValidators", () => {
     expect(mockedGetValidators).toHaveBeenCalledWith("sei_evm");
     expect(result.current.error).toBeNull();
     expect(result.current.validators.map(v => v.validatorAddress)).toEqual(["addr-c", "addr-a"]);
+  });
+
+  it("should sort validators by token amount in descending order", async () => {
+    mockedGetValidators.mockResolvedValue([
+      {
+        validatorAddress: "addr-small",
+        name: "Small",
+        commission: 0.05,
+        tokens: "999",
+        votingPower: 1,
+        estimatedYearlyRewardsRate: 0,
+      },
+      {
+        validatorAddress: "addr-huge",
+        name: "Huge",
+        commission: 0.05,
+        tokens: "1000000000000000000000",
+        votingPower: 3,
+        estimatedYearlyRewardsRate: 0,
+      },
+      {
+        validatorAddress: "addr-mid",
+        name: "Mid",
+        commission: 0.05,
+        tokens: "1500",
+        votingPower: 2,
+        estimatedYearlyRewardsRate: 0,
+      },
+    ]);
+
+    const { result } = renderHook(() => useEvmStakingValidators("sei_evm"));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.validators).toEqual([
+      {
+        validatorAddress: "addr-huge",
+        name: "Huge",
+        commission: 0.05,
+        tokens: "1000000000000000000000",
+        votingPower: 3,
+        estimatedYearlyRewardsRate: 0,
+      },
+      {
+        validatorAddress: "addr-mid",
+        name: "Mid",
+        commission: 0.05,
+        tokens: "1500",
+        votingPower: 2,
+        estimatedYearlyRewardsRate: 0,
+      },
+      {
+        validatorAddress: "addr-small",
+        name: "Small",
+        commission: 0.05,
+        tokens: "999",
+        votingPower: 1,
+        estimatedYearlyRewardsRate: 0,
+      },
+    ]);
   });
 
   it("should narrow validators by case-insensitive name search", async () => {
@@ -114,7 +174,7 @@ describe("useEvmStakingValidators", () => {
         validatorAddress: "sei-addr",
         name: "Sei Validator",
         commission: 0.05,
-        tokens: 100,
+        tokens: "100",
         votingPower: 1,
         estimatedYearlyRewardsRate: 0,
       },
@@ -124,7 +184,7 @@ describe("useEvmStakingValidators", () => {
         validatorAddress: "celo-addr",
         name: "Celo Validator",
         commission: 0.1,
-        tokens: 200,
+        tokens: "200",
         votingPower: 1,
         estimatedYearlyRewardsRate: 0,
       },

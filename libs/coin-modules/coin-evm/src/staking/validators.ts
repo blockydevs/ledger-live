@@ -61,7 +61,7 @@ const seiValidatorApi: ValidatorApi = {
                 validatorAddress: v.operator_address,
                 name: v.description?.moniker ?? v.operator_address,
                 commission: Number.parseFloat(v.commission?.commission_rates?.rate ?? "0"),
-                tokens: Number.parseFloat(v.tokens ?? "0"),
+                tokens: v.tokens ?? "0",
                 votingPower: index,
                 estimatedYearlyRewardsRate: 0,
               }),
@@ -84,11 +84,6 @@ export const getValidatorApi = (currencyId: string): ValidatorApi | undefined =>
     default:
       return undefined;
   }
-};
-
-const toValidatorBalance = (tokens: number): bigint => {
-  if (!Number.isFinite(tokens) || tokens <= 0) return 0n;
-  return BigInt(Math.floor(tokens));
 };
 
 const validatorsCache: Map<string, CacheEntry> = new Map();
@@ -175,6 +170,15 @@ export const getMaxRedelegations = (currencyId: string): number | undefined =>
 export const hasUnbondingPeriod = (currencyId: string): boolean => {
   const days = getUnbondingPeriodDays(currencyId);
   return typeof days === "number" && days > 0;
+};
+
+const toValidatorBalance = (tokens: string): bigint => {
+  try {
+    const balance = BigInt(tokens);
+    return balance > 0n ? balance : 0n;
+  } catch {
+    return 0n;
+  }
 };
 
 export const getValidatorsPage = async (currencyId: string): Promise<Page<Validator>> => {

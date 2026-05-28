@@ -78,7 +78,14 @@ export function useEvmStakingValidators(
         if (!query) return true;
         return v.name.toLowerCase().includes(query);
       })
-      .sort((a, b) => b.tokens - a.tokens);
+      .sort((a, b) => {
+        const aTokens = BigInt(a.tokens);
+        const bTokens = BigInt(b.tokens);
+
+        if (bTokens > aTokens) return 1;
+        if (bTokens < aTokens) return -1;
+        return 0;
+      });
   }, [fetchState.items, searchInput]);
 
   return {

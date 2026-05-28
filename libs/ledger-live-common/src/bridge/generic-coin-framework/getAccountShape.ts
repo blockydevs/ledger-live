@@ -187,7 +187,7 @@ function syntheticParentForTokenOnlyTx(
   // In the case of smart contract interaction, the contract must be the recipient of the parent operation => this
   // is why we need to extract this information from the operation details.
   const contract = getTokenContract(referenceOp);
-  const parentRecipients = contract === undefined ? referenceOp.recipients ?? [] : [contract];
+  const parentRecipients = contract === undefined ? (referenceOp.recipients ?? []) : [contract];
   const parentSenders = referenceOp.senders ?? [];
   return cleanedOperation({
     id: encodeOperationId(accountId, referenceOp.hash, parentType),
@@ -349,7 +349,7 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
               validatorAddress: validator.address,
               name: validator.name ?? validator.address,
               commission: Number(validator.commissionRate ?? 0),
-              tokens: Number(validator.balance ?? 0n),
+              tokens: (validator.balance ?? 0n).toString(),
               votingPower: 0,
               estimatedYearlyRewardsRate: Number(validator.apy ?? 0),
             })),
