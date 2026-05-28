@@ -20,27 +20,44 @@ const CONTENT_CARD_BUILDERS: Record<GenericAwarenessModalLayout, ContentCardBuil
   [GenericAwarenessModalLayout.Prompt]: buildPrompt,
 };
 
-const isGenericAwarenessModalLayout = (
+const normalizeGenericAwarenessModalLayout = (
   layout: string | undefined,
-): layout is GenericAwarenessModalLayout =>
-  layout !== undefined && layout in CONTENT_CARD_BUILDERS;
+): GenericAwarenessModalLayout | undefined => {
+  const trimmedLayout = layout?.trim();
+  if (!trimmedLayout) {
+    return undefined;
+  }
+
+  return Object.values(GenericAwarenessModalLayout).find(
+    value => value.toLowerCase() === trimmedLayout.toLowerCase(),
+  );
+};
 
 export const groupByCampaignId = (
   cards: GenericAwarenessModalBrazeCard[],
 ): Map<string, GenericAwarenessModalBrazeCard[]> => {
-  const cardsByCampaignId = new Map<string, GenericAwarenessModalBrazeCard[]>();
+  const cardsByNormalizedCampaignId = new Map<string, GenericAwarenessModalBrazeCard[]>();
 
   for (const card of cards) {
-    const campaignId = card.extras?.campaignId;
+    const campaignId = card.extras?.campaignId?.trim();
     if (!campaignId) {
       continue;
     }
 
-    const campaignCards = cardsByCampaignId.get(campaignId);
+    const normalizedCampaignId = campaignId.toLowerCase();
+    const campaignCards = cardsByNormalizedCampaignId.get(normalizedCampaignId);
     if (campaignCards) {
       campaignCards.push(card);
     } else {
-      cardsByCampaignId.set(campaignId, [card]);
+      cardsByNormalizedCampaignId.set(normalizedCampaignId, [card]);
+    }
+  }
+
+  const cardsByCampaignId = new Map<string, GenericAwarenessModalBrazeCard[]>();
+  for (const campaignCards of cardsByNormalizedCampaignId.values()) {
+    const canonicalCampaignId = campaignCards[0]?.extras?.campaignId?.trim();
+    if (canonicalCampaignId) {
+      cardsByCampaignId.set(canonicalCampaignId, campaignCards);
     }
   }
 
@@ -48,7 +65,9 @@ export const groupByCampaignId = (
 };
 
 export const hasUniqueLayout = (cards: GenericAwarenessModalBrazeCard[]) =>
-  new Set(cards.map(card => card.extras?.layout)).size === 1;
+  new Set(
+    cards.map(card => normalizeGenericAwarenessModalLayout(card.extras?.layout)?.toLowerCase()),
+  ).size === 1;
 
 export const getValidGenericAwarenessModalCards = (
   groupedCards: Map<string, GenericAwarenessModalBrazeCard[]>,
@@ -63,8 +82,8 @@ const buildContentCard = (
   campaignId: string,
   cards: GenericAwarenessModalBrazeCard[],
 ): GenericAwarenessModalContentCard | undefined => {
-  const layout = cards[0]?.extras?.layout;
-  if (!isGenericAwarenessModalLayout(layout)) {
+  const layout = normalizeGenericAwarenessModalLayout(cards[0]?.extras?.layout);
+  if (!layout) {
     return undefined;
   }
 

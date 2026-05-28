@@ -20,6 +20,7 @@ import {
 import {
   PAGE_TRACKING_AWARENESS_MODAL_CAROUSEL,
   PAGE_TRACKING_AWARENESS_MODAL_FEATURE_INTRO,
+  PAGE_TRACKING_AWARENESS_MODAL_PROMPT,
 } from "../analytics/const";
 import {
   closeGenericAwarenessModalDialog,
@@ -146,7 +147,7 @@ describe("GenericAwarenessModal Integration", () => {
   });
 
   describe("prompt variant", () => {
-    it("should render prompt when opened with prompt campaign id", async () => {
+    it("should open prompt, track page view, and render actions", async () => {
       const { store } = renderModal();
 
       act(() => {
@@ -169,9 +170,16 @@ describe("GenericAwarenessModal Integration", () => {
       expect(screen.getByTestId("generic-awareness-modal").getAttribute("data-campaign-id")).toBe(
         PROMPT_CAMPAIGN_ID,
       );
+      expect(trackPage).toHaveBeenCalledWith(
+        PAGE_TRACKING_AWARENESS_MODAL_PROMPT,
+        undefined,
+        expect.objectContaining({ contentId: PROMPT_CAMPAIGN_ID }),
+        true,
+        false,
+      );
     });
 
-    it("should close when the prompt primary button is clicked", async () => {
+    it("should track primary click, open the link, and close the modal", async () => {
       const { store, user } = renderModal();
 
       act(() => {
@@ -188,6 +196,53 @@ describe("GenericAwarenessModal Integration", () => {
 
       await user.click(screen.getByTestId("generic-awareness-modal-primary-button"));
 
+      expect(track).toHaveBeenCalledWith(
+        "button_clicked",
+        expect.objectContaining({
+          button: "learn more",
+          contentId: PROMPT_CAMPAIGN_ID,
+          ctaPosition: "primary",
+          link: "https://www.ledger.com/academy",
+        }),
+      );
+      expect(openURL).toHaveBeenCalledWith("https://www.ledger.com/academy");
+      await waitFor(() => {
+        expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
+      });
+      expect(store.getState().dialogs.GENERIC_AWARENESS_MODAL).toBe(false);
+    });
+
+    it("should track secondary click, open the link, and close the modal", async () => {
+      const { store, user } = renderModal();
+      openModal(store, PROMPT_CAMPAIGN_ID);
+
+      await user.click(await screen.findByRole("button", { name: "Maybe later" }));
+
+      expect(track).toHaveBeenCalledWith(
+        "button_clicked",
+        expect.objectContaining({
+          button: "maybe later",
+          contentId: PROMPT_CAMPAIGN_ID,
+          ctaPosition: "secondary",
+          link: "https://www.ledger.com",
+        }),
+      );
+      expect(openURL).toHaveBeenCalledWith("https://www.ledger.com");
+      await waitFor(() => {
+        expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should close when the header close button is clicked", async () => {
+      const { store, user } = renderModal();
+      openModal(store, PROMPT_CAMPAIGN_ID);
+
+      await user.click(getGenericAwarenessModalHeaderCloseButton());
+
+      expect(track).toHaveBeenCalledWith(
+        "button_clicked",
+        expect.objectContaining({ button: "close", contentId: PROMPT_CAMPAIGN_ID }),
+      );
       await waitFor(() => {
         expect(screen.queryByTestId("generic-awareness-modal")).not.toBeInTheDocument();
       });

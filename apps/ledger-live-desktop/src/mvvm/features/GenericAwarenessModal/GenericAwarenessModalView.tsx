@@ -21,7 +21,9 @@ import FeatureIntroContent from "./components/FeatureIntroContent";
 import PromptContent from "./components/PromptContent";
 
 type LayoutChromeHandlers = Pick<
-  GenericAwarenessModalCarouselViewModel | GenericAwarenessModalFeatureIntroViewModel,
+  | GenericAwarenessModalCarouselViewModel
+  | GenericAwarenessModalFeatureIntroViewModel
+  | GenericAwarenessModalPromptViewModel,
   "onDismiss" | "onHeaderClose"
 >;
 
@@ -29,12 +31,15 @@ const getLayoutViewModel = (
   layout: GenericAwarenessModalContentCard["layout"],
   carouselViewModel: GenericAwarenessModalCarouselViewModel,
   featureIntroViewModel: GenericAwarenessModalFeatureIntroViewModel,
+  promptViewModel: GenericAwarenessModalPromptViewModel,
 ): LayoutChromeHandlers | undefined => {
   switch (layout) {
     case GenericAwarenessModalLayout.Carousel:
       return carouselViewModel;
     case GenericAwarenessModalLayout.FeatureIntro:
       return featureIntroViewModel;
+    case GenericAwarenessModalLayout.Prompt:
+      return promptViewModel;
     default:
       return undefined;
   }
@@ -66,7 +71,7 @@ const GenericAwarenessModalView = ({
   const hasStoredContentCards = useSelector(selectGenericAwarenessModalHasStoredContentCards);
   const carouselViewModel = useGenericAwarenessModalCarouselViewModel(contentCard, isOpen);
   const featureIntroViewModel = useGenericAwarenessModalFeatureIntroViewModel(contentCard, isOpen);
-  const promptViewModel = useGenericAwarenessModalPromptViewModel(contentCard);
+  const promptViewModel = useGenericAwarenessModalPromptViewModel(contentCard, isOpen);
 
   useEffect(() => {
     if (isOpen && !contentCard && hasStoredContentCards) {
@@ -82,6 +87,7 @@ const GenericAwarenessModalView = ({
     contentCard.layout,
     carouselViewModel,
     featureIntroViewModel,
+    promptViewModel,
   );
 
   const onDismiss = layoutViewModel?.onDismiss ?? onClose;

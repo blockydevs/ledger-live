@@ -3,4 +3,4 @@
 "@ledgerhq/live-common": minor
 ---
 
-Implement GAM prompt layout
+Add prompt layout

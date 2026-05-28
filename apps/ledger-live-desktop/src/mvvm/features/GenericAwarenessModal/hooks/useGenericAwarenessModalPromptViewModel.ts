@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "LLD/hooks/redux";
 import {
   GenericAwarenessModalLayout,
@@ -7,6 +7,14 @@ import {
 } from "@ledgerhq/live-common/genericAwarenessModal";
 import { closeGenericAwarenessModalDialog } from "../genericAwarenessModalDialog";
 import { openURL } from "~/renderer/linking";
+import {
+  getPromptAnalyticsContext,
+  trackPromptCloseClick,
+  trackPromptDismissed,
+  trackPromptPage,
+  trackPromptPrimaryClick,
+  trackPromptSecondaryClick,
+} from "../analytics/promptAnalytics";
 
 export interface GenericAwarenessModalPromptViewModel {
   title: string;
@@ -16,29 +24,78 @@ export interface GenericAwarenessModalPromptViewModel {
   imageUrl?: string;
   onPrimaryClick: () => void;
   onSecondaryClick: () => void;
+  onHeaderClose: () => void;
+  onDismiss: () => void;
 }
 
 const useGenericAwarenessModalPromptViewModel = (
   contentCard: GenericAwarenessModalContentCard | undefined,
+  isOpen: boolean,
 ): GenericAwarenessModalPromptViewModel => {
   const dispatch = useDispatch();
+  const hasTrackedOpenRef = useRef(false);
 
   const prompt: GenericAwarenessModalPrompt | undefined =
     contentCard?.layout === GenericAwarenessModalLayout.Prompt ? contentCard : undefined;
 
-  const onPrimaryClick = useCallback(() => {
-    if (prompt) {
-      openURL(prompt.primaryButtonLink);
-      dispatch(closeGenericAwarenessModalDialog());
+  const closeDialog = useCallback(() => {
+    dispatch(closeGenericAwarenessModalDialog());
+  }, [dispatch]);
+
+  const getContext = useCallback(() => {
+    if (!prompt) {
+      return undefined;
     }
-  }, [dispatch, prompt]);
+    return getPromptAnalyticsContext(prompt);
+  }, [prompt]);
+
+  useEffect(() => {
+    if (!isOpen || !prompt) {
+      hasTrackedOpenRef.current = false;
+      return;
+    }
+
+    if (hasTrackedOpenRef.current) {
+      return;
+    }
+
+    hasTrackedOpenRef.current = true;
+    trackPromptPage(prompt);
+  }, [isOpen, prompt]);
+
+  const onPrimaryClick = useCallback(() => {
+    const context = getContext();
+    if (context && prompt) {
+      trackPromptPrimaryClick(context, prompt.primaryButtonLabel, prompt.primaryButtonLink);
+      openURL(prompt.primaryButtonLink);
+    }
+    closeDialog();
+  }, [closeDialog, getContext, prompt]);
 
   const onSecondaryClick = useCallback(() => {
-    if (prompt) {
+    const context = getContext();
+    if (context && prompt) {
+      trackPromptSecondaryClick(context, prompt.secondaryButtonLabel, prompt.secondaryButtonLink);
       openURL(prompt.secondaryButtonLink);
-      dispatch(closeGenericAwarenessModalDialog());
     }
-  }, [dispatch, prompt]);
+    closeDialog();
+  }, [closeDialog, getContext, prompt]);
+
+  const onHeaderClose = useCallback(() => {
+    const context = getContext();
+    if (context) {
+      trackPromptCloseClick(context);
+    }
+    closeDialog();
+  }, [closeDialog, getContext]);
+
+  const onDismiss = useCallback(() => {
+    const context = getContext();
+    if (context) {
+      trackPromptDismissed(context);
+    }
+    closeDialog();
+  }, [closeDialog, getContext]);
 
   return useMemo(
     () => ({
@@ -49,8 +106,10 @@ const useGenericAwarenessModalPromptViewModel = (
       imageUrl: prompt?.imageUrl || undefined,
       onPrimaryClick,
       onSecondaryClick,
+      onHeaderClose,
+      onDismiss,
     }),
-    [onPrimaryClick, onSecondaryClick, prompt],
+    [onDismiss, onHeaderClose, onPrimaryClick, onSecondaryClick, prompt],
   );
 };
 

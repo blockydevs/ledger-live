@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@ledgerhq/lumen-ui-react";
-import { TruncatedText } from "LLD/components/TruncatedText";
+import { AwarenessModalClampedText, CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "./clampedText";
 
 export type PromptContentProps = {
   title: string;
@@ -38,8 +38,16 @@ export default function PromptContent({
           <div className="h-[200px] shrink-0 rounded-xl bg-muted" aria-hidden />
         )}
         <div className="flex w-full min-w-0 flex-col items-center text-center">
-          <TruncatedText text={title} className="mb-8 text-center heading-4-semi-bold text-base" />
-          <p className="m-0 body-2 text-muted">{subtitle}</p>
+          <AwarenessModalClampedText
+            text={title}
+            maxLines={CAROUSEL_SLIDE_TEXT_LINE_LIMITS.title}
+            className="mb-8 text-center heading-4-semi-bold text-base"
+          />
+          <AwarenessModalClampedText
+            text={subtitle}
+            maxLines={CAROUSEL_SLIDE_TEXT_LINE_LIMITS.subtitle}
+            className="body-2 text-center text-muted"
+          />
         </div>
       </div>
       <div className="flex w-full shrink-0 flex-col items-center gap-16 pt-24">
