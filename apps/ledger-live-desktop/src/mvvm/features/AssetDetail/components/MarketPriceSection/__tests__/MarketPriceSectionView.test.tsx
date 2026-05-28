@@ -5,7 +5,7 @@ import type { MarketPriceSectionViewModelResult } from "../useMarketPriceSection
 
 const baseViewModel: MarketPriceSectionViewModelResult = {
   title: "Market price",
-  dayLabel: "1 day",
+  rangeLabel: "1 day",
   priceValue: 12.34,
   priceFormatter: jest.fn() as unknown as MarketPriceSectionViewModelResult["priceFormatter"],
   variationText: "$0.22",

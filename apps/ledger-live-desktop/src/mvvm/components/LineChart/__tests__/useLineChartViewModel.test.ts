@@ -18,7 +18,7 @@ const MOCK_SERIES: LineChartSeries[] = [
 
 const defaultProps: LineChartProps = {
   series: MOCK_SERIES,
-  selectedRange: "1D",
+  selectedRange: "1d",
   onRangeChange: jest.fn(),
 };
 
@@ -57,7 +57,7 @@ describe("useLineChartViewModel", () => {
         isError: true,
         errorMessage: "Custom error",
         height: 180,
-        selectedRange: "1Y",
+        selectedRange: "1y",
       }),
     );
 
@@ -65,7 +65,7 @@ describe("useLineChartViewModel", () => {
     expect(result.current.isError).toBe(true);
     expect(result.current.errorMessage).toBe("Custom error");
     expect(result.current.height).toBe(180);
-    expect(result.current.selectedRange).toBe("1Y");
+    expect(result.current.selectedRange).toBe("1y");
   });
 
   it("calls onRangeChange when handleSelectedChange is invoked", () => {
@@ -78,10 +78,10 @@ describe("useLineChartViewModel", () => {
     );
 
     act(() => {
-      result.current.handleSelectedChange("1Y");
+      result.current.handleSelectedChange("1y");
     });
 
-    expect(onRangeChange).toHaveBeenCalledWith("1Y");
+    expect(onRangeChange).toHaveBeenCalledWith("1y");
   });
 
   it("builds translated range buttons for every supported range", () => {
@@ -89,7 +89,7 @@ describe("useLineChartViewModel", () => {
 
     expect(result.current.rangeButtons).toHaveLength(LINE_CHART_RANGES.length);
     expect(result.current.rangeButtons.map(button => button.value)).toEqual([...LINE_CHART_RANGES]);
-    expect(result.current.rangeButtons.find(button => button.value === "ALL")?.label).toBe("All");
+    expect(result.current.rangeButtons.find(button => button.value === "all")?.label).toBe("All");
     expect(result.current.rangeSelectorLabel).toBe("Select time range");
   });
 
@@ -97,11 +97,5 @@ describe("useLineChartViewModel", () => {
     const { result } = renderHook(() => useLineChartViewModel(defaultProps));
 
     expect(result.current.height).toBe(DEFAULT_LINE_CHART_HEIGHT);
-  });
-
-  it("keeps chartWidth null until the container is measured", () => {
-    const { result } = renderHook(() => useLineChartViewModel(defaultProps));
-
-    expect(result.current.chartWidth).toBeNull();
   });
 });

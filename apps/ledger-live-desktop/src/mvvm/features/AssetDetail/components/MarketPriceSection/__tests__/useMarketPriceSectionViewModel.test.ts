@@ -26,6 +26,7 @@ describe("useMarketPriceSectionViewModel", () => {
           ledgerId: "bitcoin",
           marketData,
           isDistributionLoading: false,
+          selectedRange: "1d",
         }),
       {
         initialState: {

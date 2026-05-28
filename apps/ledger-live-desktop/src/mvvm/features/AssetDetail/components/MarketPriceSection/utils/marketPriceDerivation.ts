@@ -1,6 +1,24 @@
+import { KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
+import type { LineChartRange } from "LLD/components/LineChart";
+
 export const DAY_CHANGE_PERCENT_NEAR_ZERO_EPSILON = 0.01;
 
 export type TrendVariant = "positive" | "negative" | "neutral";
+
+const RANGE_TO_PRICE_CHANGE_KEY: Record<LineChartRange, KeysPriceChange> = {
+  "1h": KeysPriceChange.hour,
+  "1d": KeysPriceChange.day,
+  "1w": KeysPriceChange.week,
+  "1m": KeysPriceChange.month,
+  "6m": KeysPriceChange.year,
+  "1y": KeysPriceChange.year,
+  "5y": KeysPriceChange.year,
+  all: KeysPriceChange.year,
+};
+
+export function getPriceChangeKeyForRange(range: LineChartRange): KeysPriceChange {
+  return RANGE_TO_PRICE_CHANGE_KEY[range];
+}
 
 /** Implied fiat delta from current spot price and a percent change (e.g. 24h %) in percent points. */
 export function getFiatPriceVariationFromPercentChange(

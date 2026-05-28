@@ -2,5 +2,6 @@ export { resolveMarketPriceSectionSourceId } from "./resolveMarketPriceSectionSo
 export {
   clampDayChangePercentPointsNearZero,
   getFiatPriceVariationFromPercentChange,
+  getPriceChangeKeyForRange,
   resolveTrendPercentAndVariant,
 } from "./marketPriceDerivation";

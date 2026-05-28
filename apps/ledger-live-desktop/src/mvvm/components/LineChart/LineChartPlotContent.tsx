@@ -9,7 +9,6 @@ export type LineChartPlotContentProps = Readonly<{
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
-  chartWidth: number | null;
   chartSeries: LineChartSeries[];
 }>;
 
@@ -18,16 +17,19 @@ export function LineChartPlotContent({
   isLoading,
   isError,
   errorMessage,
-  chartWidth,
   chartSeries,
 }: LineChartPlotContentProps) {
   if (isError) {
     return <LineChartError height={height} message={errorMessage} />;
   }
 
-  if (isLoading || chartWidth == null) {
+  if (isLoading) {
     return <LineChartLoading height={height} />;
   }
 
-  return <LumenLineChart series={chartSeries} height={height} width={chartWidth} showArea />;
+  return (
+    <div data-testid="line-chart-plot" className="w-full min-w-0">
+      <LumenLineChart series={chartSeries} height={height} width="100%" showArea />
+    </div>
+  );
 }

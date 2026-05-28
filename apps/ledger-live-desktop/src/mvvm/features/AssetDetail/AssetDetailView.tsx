@@ -26,6 +26,8 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
     ledgerId,
     ledgerCurrency,
     isDistributionLoading,
+    selectedRange,
+    onRangeChange,
   } = viewModel;
 
   const { isLoading: isMarketLoading, marketCurrencyData } = marketData;
@@ -65,6 +67,7 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
         ledgerId={ledgerId}
         marketData={marketData}
         isDistributionLoading={isDistributionLoading}
+        selectedRange={selectedRange}
       />
 
       <ActionBar
@@ -80,6 +83,8 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
         marketData={marketData}
         ledgerId={ledgerId}
         isDistributionLoading={isDistributionLoading}
+        selectedRange={selectedRange}
+        onRangeChange={onRangeChange}
       />
 
       <div className="flex flex-col gap-32">

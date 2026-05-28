@@ -1,4 +1,4 @@
-import React, { createRef } from "react";
+import React from "react";
 import { render, screen } from "tests/testSetup";
 import { LineChartPlot } from "../LineChartPlot";
 import type { LineChartSeries } from "../types";
@@ -13,11 +13,9 @@ const MOCK_SERIES: LineChartSeries[] = [
 ];
 
 const defaultProps = {
-  chartWrapperRef: createRef<HTMLDivElement>(),
   height: 240,
   isLoading: false,
   isError: false,
-  chartWidth: null as number | null,
   chartSeries: MOCK_SERIES,
 };
 
@@ -42,11 +40,11 @@ describe("LineChartPlot", () => {
     expect(screen.getByText("Network unavailable")).toBeVisible();
   });
 
-  it("renders the chart when chartWidth is available", () => {
-    const { container } = render(<LineChartPlot {...defaultProps} chartWidth={400} />);
+  it("renders the chart plot by default", () => {
+    render(<LineChartPlot {...defaultProps} />);
 
     expect(screen.queryByTestId("line-chart-loading")).not.toBeInTheDocument();
     expect(screen.queryByTestId("line-chart-error")).not.toBeInTheDocument();
-    expect(container.querySelector("svg")).toBeInTheDocument();
+    expect(screen.getByTestId("line-chart-plot")).toBeVisible();
   });
 });
