@@ -1,6 +1,7 @@
 import React from "react";
 import {
   BottomSheetHeader,
+  BottomSheetScrollView,
   BottomSheetView,
   Box,
   Button,
@@ -46,59 +47,58 @@ export function PostOnboardingHubDrawerView({
   areAllPostOnboardingActionsCompleted,
 }: PostOnboardingHubDrawerViewProps) {
   const { t } = useTranslation();
-  const safeAreaInsets = useSafeAreaInsets();
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const { currentStep, totalSteps, stepperLabel } = stepperDisplay;
 
   return (
-    <BottomSheetView
-      testID="post-onboarding-hub-container"
-      style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
-    >
-      <BottomSheetHeader />
-      <Box
-        lx={{
-          alignSelf: "flex-start",
-          marginBottom: "s16",
-          paddingVertical: "s12",
-        }}
-      >
-        <Box lx={{ alignSelf: "flex-start" }} style={{ transform: [{ scale: 1.12 }] }}>
-          <Stepper currentStep={currentStep} totalSteps={totalSteps} label={stepperLabel} />
-        </Box>
-      </Box>
-      <Text typography="heading3SemiBold" lx={{ color: "base", marginBottom: "s24" }}>
-        {t(
-          areAllPostOnboardingActionsCompleted
-            ? "postOnboarding.drawer.titleCompleted"
-            : "postOnboarding.drawer.title",
-        )}
-      </Text>
-
-      <HubStepRow
-        leadingIcon={<CheckmarkCircleFill size={24} color="success" />}
-        title={t("postOnboarding.drawer.actions.deviceOnboarded.title")}
-        description={t("postOnboarding.drawer.actionCompletedLabel")}
-      />
-
-      {actionsState.map(action => (
-        <HubActionItem
-          key={action.id}
-          {...action}
-          deviceModelId={deviceModelId}
-          productName={productName}
-          openActivationDrawer={openActivationDrawer}
-          isLedgerSyncActive={isLedgerSyncActive}
-          accounts={accounts}
-          closeHubDrawer={closeHubDrawer}
-          completionStatus={{
-            isCompleted: stepperDisplay.actionCompletionById[action.id] ?? false,
-            isLoading: stepperDisplay.loading,
+    <BottomSheetView testID="post-onboarding-hub-container">
+      <BottomSheetScrollView>
+        <BottomSheetHeader />
+        <Box
+          lx={{
+            alignSelf: "flex-start",
+            marginBottom: "s16",
+            paddingVertical: "s12",
           }}
+        >
+          <Box lx={{ alignSelf: "flex-start" }} style={{ transform: [{ scale: 1.12 }] }}>
+            <Stepper currentStep={currentStep} totalSteps={totalSteps} label={stepperLabel} />
+          </Box>
+        </Box>
+        <Text typography="heading3SemiBold" lx={{ color: "base", marginBottom: "s24" }}>
+          {t(
+            areAllPostOnboardingActionsCompleted
+              ? "postOnboarding.drawer.titleCompleted"
+              : "postOnboarding.drawer.title",
+          )}
+        </Text>
+
+        <HubStepRow
+          leadingIcon={<CheckmarkCircleFill size={24} color="success" />}
+          title={t("postOnboarding.drawer.actions.deviceOnboarded.title")}
+          description={t("postOnboarding.drawer.actionCompletedLabel")}
         />
-      ))}
+
+        {actionsState.map(action => (
+          <HubActionItem
+            key={action.id}
+            {...action}
+            deviceModelId={deviceModelId}
+            productName={productName}
+            openActivationDrawer={openActivationDrawer}
+            isLedgerSyncActive={isLedgerSyncActive}
+            accounts={accounts}
+            closeHubDrawer={closeHubDrawer}
+            completionStatus={{
+              isCompleted: stepperDisplay.actionCompletionById[action.id] ?? false,
+              isLoading: stepperDisplay.loading,
+            }}
+          />
+        ))}
+      </BottomSheetScrollView>
 
       {areAllPostOnboardingActionsCompleted ? (
-        <Box lx={{ marginTop: "s24" }}>
+        <Box lx={{ marginTop: "s24" }} style={{ marginBottom: bottomInset }}>
           <Button appearance="base" size="lg" isFull onPress={onRequestExit}>
             {t("postOnboarding.drawer.primaryLabel")}
           </Button>

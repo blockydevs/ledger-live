@@ -36,7 +36,6 @@ export function PostOnboardingHubDrawerWrapper() {
       <QueuedDrawerBottomSheet
         isRequestingToBeOpened={canOpenPostOnboardingHubDrawer}
         onClose={closePostOnboardingHubDrawer}
-        enableDynamicSizing
       >
         {deviceModelId ? (
           <>
