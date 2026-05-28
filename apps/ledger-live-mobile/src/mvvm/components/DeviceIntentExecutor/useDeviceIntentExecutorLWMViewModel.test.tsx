@@ -8,6 +8,7 @@ import type {
 import { DeviceModelId as DMKDeviceModelId } from "@ledgerhq/device-management-kit";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
+import { previousRouteNameRef } from "~/analytics/screenRefs";
 import type { InitializerConfig } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
 import { useDeviceIntentExecutorLWMViewModel } from "./useDeviceIntentExecutorLWMViewModel";
@@ -21,6 +22,12 @@ jest.mock("~/analytics", () => {
 });
 
 const mockedTrack = jest.mocked(track);
+const TEST_SOURCE = "Connect Device - Connecting";
+
+const layerABaseProperties = {
+  source: TEST_SOURCE,
+  deviceUxV2: true,
+};
 
 type Props = DeviceIntentExecutorProps<unknown, unknown, unknown, InitializationInput> & {
   initializerConfig?: InitializerConfig;
@@ -84,6 +91,7 @@ function executingIntentState(
 describe("useDeviceIntentExecutorLWMViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   describe("GIVEN the executor reaches executingIntent for the first time", () => {
@@ -102,10 +110,12 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
 
       // THEN
       expect(mockedTrack).toHaveBeenNthCalledWith(1, "app_ready", {
+        ...layerABaseProperties,
         sourceFlow: "swap",
         modelId: DeviceModelId.stax,
       });
       expect(mockedTrack).toHaveBeenNthCalledWith(2, "deviceflow_completed", {
+        ...layerABaseProperties,
         sourceFlow: "swap",
         modelId: DeviceModelId.stax,
         transport: "ble",
@@ -127,12 +137,14 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
 
       // THEN
       expect(mockedTrack).toHaveBeenNthCalledWith(1, "app_ready", {
+        ...layerABaseProperties,
         sourceFlow: "swap",
-        modelId: DeviceModelId.stax,
+        modelId: DeviceModelId.nanoX,
       });
       expect(mockedTrack).toHaveBeenNthCalledWith(2, "deviceflow_completed", {
+        ...layerABaseProperties,
         sourceFlow: "swap",
-        modelId: DeviceModelId.stax,
+        modelId: DeviceModelId.nanoX,
         transport: "usb",
       });
     });
@@ -206,7 +218,10 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
       });
 
       // THEN
-      expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", { sourceFlow: "swap" });
+      expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+      });
       expect(onUserCancel).toHaveBeenCalledTimes(1);
     });
   });

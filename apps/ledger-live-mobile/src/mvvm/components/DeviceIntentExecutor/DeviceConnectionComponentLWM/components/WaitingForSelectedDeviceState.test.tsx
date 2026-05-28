@@ -3,12 +3,24 @@ import { render, screen } from "@tests/test-renderer";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { getDeviceModel } from "@ledgerhq/devices";
 import type { KnownDevice } from "@ledgerhq/live-dmk-shared";
+import { TrackScreen } from "~/analytics";
 import {
   ConnectDeviceUIStateTypes,
   type ConnectDeviceUIState,
 } from "@ledgerhq/live-dmk-mobile";
 import { SourceFlowProvider } from "../../SourceFlowContext";
+import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
 import { WaitingForSelectedDeviceState } from "./WaitingForSelectedDeviceState";
+
+jest.mock("~/analytics", () => {
+  const actual = jest.requireActual("~/analytics");
+  return {
+    ...actual,
+    TrackScreen: jest.fn(() => null),
+  };
+});
+
+const mockedTrackScreen = jest.mocked(TrackScreen);
 
 type WaitingForSelectedDeviceUIState = Extract<
   ConnectDeviceUIState,
@@ -39,6 +51,10 @@ function renderState(device: KnownDevice) {
 }
 
 describe("WaitingForSelectedDeviceState", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("should render the selected device name and product-specific title", () => {
     renderState(makeKnownDevice({ name: "My Ledger" }));
 
@@ -54,5 +70,23 @@ describe("WaitingForSelectedDeviceState", () => {
     renderState(makeKnownDevice({ name: null }));
 
     expect(screen.getByText("Ledger device")).toBeVisible();
+  });
+
+  it("GIVEN a selected device WHEN rendering THEN it tracks the Device UX V2 page event", () => {
+    // GIVEN
+    const device = makeKnownDevice();
+
+    // WHEN
+    renderState(device);
+
+    // THEN
+    expect(mockedTrackScreen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: PAGE_CONNECT_DEVICE.WaitingForSelectedDevice,
+        sourceFlow: "my_ledger",
+        deviceUxV2: true,
+      }),
+      undefined,
+    );
   });
 });

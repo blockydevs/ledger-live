@@ -29,6 +29,7 @@ export function ConnectingState({ state }: Readonly<ConnectingStateProps>): Reac
         modelId={modelId}
         matchedDevice={modelId}
         transport={transport}
+        deviceUxV2
       />
       <Box lx={{ width: "full", alignItems: "center", gap: "s16" }}>
         <Spinner size={40} color="base" />

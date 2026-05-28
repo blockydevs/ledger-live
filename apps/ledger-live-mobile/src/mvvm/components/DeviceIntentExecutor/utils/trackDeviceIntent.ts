@@ -1,5 +1,6 @@
 import type { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
+import { previousRouteNameRef } from "~/analytics/screenRefs";
 import type { SourceFlow } from "../SourceFlowContext";
 
 export const PAGE_CONNECT_DEVICE = {
@@ -8,12 +9,18 @@ export const PAGE_CONNECT_DEVICE = {
   Connecting: "Connect Device - Connecting",
 } as const;
 
+const getLayerABaseProperties = (sourceFlow: SourceFlow) => ({
+  sourceFlow,
+  source: previousRouteNameRef.current,
+  deviceUxV2: true,
+});
+
 export const trackDeviceflowStarted = (params: { sourceFlow: SourceFlow }): void => {
-  track("deviceflow_started", { sourceFlow: params.sourceFlow });
+  track("deviceflow_started", getLayerABaseProperties(params.sourceFlow));
 };
 
 export const trackDevicePrompted = (params: { sourceFlow: SourceFlow }): void => {
-  track("device_prompted", { sourceFlow: params.sourceFlow });
+  track("device_prompted", getLayerABaseProperties(params.sourceFlow));
 };
 
 export const trackDeviceConnecting = (params: {
@@ -22,7 +29,7 @@ export const trackDeviceConnecting = (params: {
   transport: "ble" | "usb";
 }): void => {
   track("device_connecting", {
-    sourceFlow: params.sourceFlow,
+    ...getLayerABaseProperties(params.sourceFlow),
     modelId: params.modelId,
     transport: params.transport,
     matchedDevice: params.modelId,
@@ -35,7 +42,7 @@ export const trackDeviceConnected = (params: {
   transport: "ble" | "usb";
 }): void => {
   track("device_connected", {
-    sourceFlow: params.sourceFlow,
+    ...getLayerABaseProperties(params.sourceFlow),
     modelId: params.modelId,
     transport: params.transport,
     matchedDevice: params.modelId,
@@ -44,7 +51,7 @@ export const trackDeviceConnected = (params: {
 
 export const trackAppReady = (params: { sourceFlow: SourceFlow; modelId: DeviceModelId }): void => {
   track("app_ready", {
-    sourceFlow: params.sourceFlow,
+    ...getLayerABaseProperties(params.sourceFlow),
     modelId: params.modelId,
   });
 };
@@ -55,12 +62,12 @@ export const trackDeviceflowCompleted = (params: {
   transport: "ble" | "usb";
 }): void => {
   track("deviceflow_completed", {
-    sourceFlow: params.sourceFlow,
+    ...getLayerABaseProperties(params.sourceFlow),
     modelId: params.modelId,
     transport: params.transport,
   });
 };
 
 export const trackDeviceflowAborted = (params: { sourceFlow: SourceFlow }): void => {
-  track("deviceflow_aborted", { sourceFlow: params.sourceFlow });
+  track("deviceflow_aborted", getLayerABaseProperties(params.sourceFlow));
 };

@@ -36,6 +36,7 @@ export function WaitingForSelectedDeviceState({
       <TrackScreen
         category={PAGE_CONNECT_DEVICE.WaitingForSelectedDevice}
         sourceFlow={sourceFlow}
+        deviceUxV2
       />
       <DeviceActionContent
         action="power-and-unlock"

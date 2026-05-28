@@ -1,5 +1,6 @@
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
+import { previousRouteNameRef } from "~/analytics/screenRefs";
 import {
   trackAppReady,
   trackDeviceConnected,
@@ -19,20 +20,28 @@ jest.mock("~/analytics", () => {
 });
 
 const mockedTrack = jest.mocked(track);
+const TEST_SOURCE = "Portfolio";
+
+const layerABaseProperties = {
+  source: TEST_SOURCE,
+  deviceUxV2: true,
+};
 
 describe("trackDeviceIntent — Layer A tracking helpers", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   describe("trackDeviceflowStarted", () => {
     describe("Given a sourceFlow", () => {
       describe("When called", () => {
-        it("Then tracks deviceflow_started with sourceFlow only", () => {
+        it("Then tracks deviceflow_started with the Layer A base properties", () => {
           trackDeviceflowStarted({ sourceFlow: "swap" });
 
           expect(mockedTrack).toHaveBeenCalledTimes(1);
           expect(mockedTrack).toHaveBeenCalledWith("deviceflow_started", {
+            ...layerABaseProperties,
             sourceFlow: "swap",
           });
         });
@@ -43,10 +52,11 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
   describe("trackDevicePrompted", () => {
     describe("Given a sourceFlow", () => {
       describe("When called", () => {
-        it("Then tracks device_prompted with sourceFlow only", () => {
+        it("Then tracks device_prompted with the Layer A base properties", () => {
           trackDevicePrompted({ sourceFlow: "send" });
 
           expect(mockedTrack).toHaveBeenCalledWith("device_prompted", {
+            ...layerABaseProperties,
             sourceFlow: "send",
           });
         });
@@ -65,6 +75,7 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
           });
 
           expect(mockedTrack).toHaveBeenCalledWith("device_connecting", {
+            ...layerABaseProperties,
             sourceFlow: "earn",
             modelId: DeviceModelId.nanoX,
             transport: "ble",
@@ -86,6 +97,7 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
           });
 
           expect(mockedTrack).toHaveBeenCalledWith("device_connected", {
+            ...layerABaseProperties,
             sourceFlow: "wallet_connect",
             modelId: DeviceModelId.stax,
             transport: "ble",
@@ -106,6 +118,7 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
           });
 
           expect(mockedTrack).toHaveBeenCalledWith("app_ready", {
+            ...layerABaseProperties,
             sourceFlow: "add_account",
             modelId: DeviceModelId.nanoSP,
           });
@@ -125,6 +138,7 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
           });
 
           expect(mockedTrack).toHaveBeenCalledWith("deviceflow_completed", {
+            ...layerABaseProperties,
             sourceFlow: "onboarding",
             modelId: DeviceModelId.europa,
             transport: "usb",
@@ -137,10 +151,11 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
   describe("trackDeviceflowAborted", () => {
     describe("Given a sourceFlow", () => {
       describe("When called", () => {
-        it("Then tracks deviceflow_aborted with sourceFlow only", () => {
+        it("Then tracks deviceflow_aborted with the Layer A base properties", () => {
           trackDeviceflowAborted({ sourceFlow: "my_ledger" });
 
           expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+            ...layerABaseProperties,
             sourceFlow: "my_ledger",
           });
         });

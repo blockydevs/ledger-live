@@ -14,6 +14,7 @@ import {
 } from "@ledgerhq/live-dmk-mobile";
 import type { KnownDevice } from "@ledgerhq/live-dmk-shared";
 import { track } from "~/analytics";
+import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { NavigatorName, ScreenName } from "~/const";
 import type { DeviceLike, State } from "~/reducers/types";
 import { urls } from "~/utils/urls";
@@ -111,6 +112,12 @@ function withViewModelState({
 }
 
 const sourceFlow: SourceFlow = "my_ledger";
+const TEST_SOURCE = "Portfolio";
+
+const layerABaseProperties = {
+  source: TEST_SOURCE,
+  deviceUxV2: true,
+};
 
 function SourceFlowWrapper({ children }: { children?: React.ReactNode }) {
   return <SourceFlowProvider value={sourceFlow}>{children}</SourceFlowProvider>;
@@ -168,6 +175,7 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
     jest.clearAllMocks();
     connectDeviceObserver = undefined;
     mockUnsubscribe = jest.fn();
+    previousRouteNameRef.current = TEST_SOURCE;
     mockedUseDeviceManagementKit.mockReturnValue(mockDmk);
     mockConnectDeviceSubscription();
   });
@@ -400,7 +408,10 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
           ([eventName]) => eventName === "deviceflow_started",
         );
         expect(startedCalls).toHaveLength(1);
-        expect(startedCalls[0]).toEqual(["deviceflow_started", { sourceFlow: "my_ledger" }]);
+        expect(startedCalls[0]).toEqual([
+          "deviceflow_started",
+          { ...layerABaseProperties, sourceFlow: "my_ledger" },
+        ]);
       });
     });
 
@@ -428,7 +439,10 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
           ([eventName]) => eventName === "device_prompted",
         );
         expect(promptedCalls).toHaveLength(1);
-        expect(promptedCalls[0]).toEqual(["device_prompted", { sourceFlow: "my_ledger" }]);
+        expect(promptedCalls[0]).toEqual([
+          "device_prompted",
+          { ...layerABaseProperties, sourceFlow: "my_ledger" },
+        ]);
       });
     });
 
@@ -448,6 +462,7 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
 
         // THEN
         expect(mockedTrack).toHaveBeenCalledWith("device_prompted", {
+          ...layerABaseProperties,
           sourceFlow: "my_ledger",
         });
       });
@@ -471,6 +486,7 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
 
         // THEN
         expect(mockedTrack).toHaveBeenCalledWith("device_connecting", {
+          ...layerABaseProperties,
           sourceFlow: "my_ledger",
           modelId: DeviceModelId.stax,
           transport: "ble",
@@ -495,6 +511,7 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
 
         // THEN
         expect(mockedTrack).toHaveBeenCalledWith("device_connecting", {
+          ...layerABaseProperties,
           sourceFlow: "my_ledger",
           modelId: DeviceModelId.nanoX,
           transport: "usb",
@@ -515,6 +532,7 @@ describe("useDeviceConnectionComponentLWMViewModel", () => {
 
         // THEN
         expect(mockedTrack).toHaveBeenCalledWith("device_connected", {
+          ...layerABaseProperties,
           sourceFlow: "my_ledger",
           modelId: DeviceModelId.nanoX,
           transport: "ble",

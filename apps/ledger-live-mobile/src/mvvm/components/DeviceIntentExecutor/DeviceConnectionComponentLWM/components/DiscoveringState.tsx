@@ -20,7 +20,11 @@ export function DiscoveringState({ state }: Readonly<DiscoveringStateProps>): Re
 
   return (
     <Box lx={{ width: "full", gap: "s16", paddingHorizontal: "s8" }}>
-      <TrackScreen category={PAGE_CONNECT_DEVICE.Discovering} sourceFlow={sourceFlow} />
+      <TrackScreen
+        category={PAGE_CONNECT_DEVICE.Discovering}
+        sourceFlow={sourceFlow}
+        deviceUxV2
+      />
       <Text
         typography="heading4SemiBold"
         lx={{ color: "base", textAlign: "left" }}
