@@ -337,7 +337,7 @@ export class InitializationManager {
         },
       },
       onboardingWidget: {
-        enabled: isWallet40,
+        enabled: true,
       },
       llmModularDrawer: {
         enabled: true,
