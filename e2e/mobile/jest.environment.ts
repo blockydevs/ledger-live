@@ -1,4 +1,4 @@
-import { takeSpeculosScreenshot } from "./utils/speculosUtils";
+import { attachSpeculinhoLogsToAllure, takeSpeculosScreenshot } from "./utils/speculosUtils";
 import {
   attachTestExecutionConsoleToAllure,
   attachFailureLogsToAllure,
@@ -41,6 +41,11 @@ const SLOW_DIAGNOSTIC_TIMEOUT_MS = 15_000;
 
 async function captureFailureDiagnostics(): Promise<void> {
   await withTimeout(takeSpeculosScreenshot(), FAST_DIAGNOSTIC_TIMEOUT_MS, "takeSpeculosScreenshot");
+  await withTimeout(
+    attachSpeculinhoLogsToAllure(),
+    FAST_DIAGNOSTIC_TIMEOUT_MS,
+    "attachSpeculosLogsToAllure",
+  );
   await withTimeout(
     takeAppScreenshot("Test Failure"),
     FAST_DIAGNOSTIC_TIMEOUT_MS,

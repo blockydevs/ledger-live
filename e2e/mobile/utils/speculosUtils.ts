@@ -8,7 +8,7 @@ import {
 } from "@ledgerhq/live-common/e2e/speculos";
 import { setEnv } from "@ledgerhq/live-env";
 import { device, log } from "detox";
-import { waitForSpeculosReady } from "@ledgerhq/live-common/e2e/speculosCI";
+import { waitForSpeculosReady, fetchSpeculinhoLogs } from "@ledgerhq/live-common/e2e/speculosCI";
 import { isSpeculosRemote } from "../helpers/commonHelpers";
 import { addKnownSpeculos, getEnvs, removeKnownSpeculos } from "../bridge/server";
 import { CLI } from "./cliUtils";
@@ -210,6 +210,22 @@ export async function deleteSpeculos(deviceId?: string): Promise<number | undefi
   delete process.env.SPECULOS_API_PORT;
 
   return port;
+}
+
+export async function attachSpeculinhoLogsToAllure() {
+  if (!speculosDevices.size && !isSpeculosRemote()) {
+    return;
+  }
+
+  for (const [deviceId, apiPort] of speculosDevices.entries()) {
+    try {
+      const logs = await fetchSpeculinhoLogs(deviceId);
+      const title = `Speculos logs (Speculinho run_id=${deviceId})`;
+      await allure.attachment(title, logs, "text/plain");
+    } catch (error) {
+      log.warn("E2E", `attachSpeculinhoLogsToAllure: ${sanitizeError(error)}`);
+    }
+  }
 }
 
 export async function takeSpeculosScreenshot() {
