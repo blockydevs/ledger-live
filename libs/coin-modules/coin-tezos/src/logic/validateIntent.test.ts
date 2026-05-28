@@ -682,6 +682,34 @@ describe("validateIntent", () => {
       expect(result.errors.recipient).toBeInstanceOf(InvalidAddressBecauseAlreadyDelegated);
     });
 
+    it("maps delegate.unchanged to InvalidAddressBecauseAlreadyDelegated for delegate", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({
+          delegate: { alias: "baker", address: validRecipient, active: true },
+          delegationLevel: 1,
+        }),
+      );
+
+      mockEstimateFees.mockResolvedValue({
+        fees: 0n,
+        gasLimit: 0n,
+        storageLimit: 0n,
+        estimatedFees: 500n,
+        taquitoError: "proto.024-PtTALLiN.delegate.unchanged",
+      });
+
+      const result = await validateIntent({
+        intentType: "staking",
+        asset: { type: "native" },
+        type: "delegate",
+        sender: senderAddress,
+        recipient: validRecipient,
+        amount: 0n,
+      });
+
+      expect(result.errors.recipient).toBeInstanceOf(InvalidAddressBecauseAlreadyDelegated);
+    });
+
     it("maps empty_implicit_contract to NotEnoughBalanceToDelegate", async () => {
       mockEstimateFees.mockResolvedValue({
         fees: 0n,
