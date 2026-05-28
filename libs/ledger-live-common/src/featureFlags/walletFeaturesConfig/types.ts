@@ -11,7 +11,6 @@ export type Wallet40Params = {
   readonly balanceRefreshRework?: boolean;
   readonly tour?: boolean;
   readonly assetSection?: boolean;
-  readonly onboardingWidget?: boolean;
   readonly brazePlacement?: boolean;
   readonly operationsList?: boolean;
   readonly aggregatedAssets?: boolean;

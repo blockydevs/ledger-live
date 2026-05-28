@@ -16,7 +16,10 @@ const PLATFORMS: [WalletPlatform, "lwdWallet40" | "lwmWallet40"][] = [
 
 type FlagValue = { enabled: boolean; params?: Wallet40Params };
 
-function renderWalletFeaturesConfig(platform: WalletPlatform, flagValue?: FlagValue) {
+function renderWalletFeaturesConfig(
+  platform: WalletPlatform,
+  flagValue?: FlagValue,
+) {
   const flagKey = FEATURE_FLAG_KEYS[platform];
   const resolved: Features = {
     ...FEATURE_FLAGS_DEFAULTS,
@@ -45,7 +48,6 @@ const makeConfig = (
   shouldDisplayBalanceRefreshRework: value,
   shouldDisplayTour: value,
   shouldDisplayAssetSection: value,
-  shouldDisplayOnboardingWidget: value,
   shouldDisplayBrazePlacement: value,
   shouldDisplayOperationsList: value,
   shouldDisplayMyWallet: value,
@@ -68,7 +70,6 @@ const makeParams = (value: boolean): Wallet40Params => ({
   balanceRefreshRework: value,
   tour: value,
   assetSection: value,
-  onboardingWidget: value,
   brazePlacement: value,
   operationsList: value,
   aggregatedAssets: value,
@@ -135,7 +136,6 @@ describe("useWalletFeaturesConfig hook", () => {
         ],
         ["tour", { tour: true }, { shouldDisplayTour: true }],
         ["assetSection", { assetSection: true }, { shouldDisplayAssetSection: true }],
-        ["onboardingWidget", { onboardingWidget: true }, { shouldDisplayOnboardingWidget: true }],
         ["brazePlacement", { brazePlacement: true }, { shouldDisplayBrazePlacement: true }],
         ["operationsList", { operationsList: true }, { shouldDisplayOperationsList: true }],
         ["aggregatedAssets", { aggregatedAssets: true }, { shouldDisplayAggregatedAssets: true }],
@@ -166,5 +166,6 @@ describe("useWalletFeaturesConfig hook", () => {
         expectConfig(result, { ...ENABLED_NO_PARAMS_CONFIG, shouldDisplayMarketBanner: true });
       });
     });
+
   });
 });
