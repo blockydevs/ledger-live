@@ -456,7 +456,7 @@ const extraProperties = async (store: AppStore) => {
     totalStakeableAssets: combinedIds.size,
     stakeableAssets: stakeableAssetsList,
     wallet40Attributes,
-    onboardingWidget: onboardingWidgetFlag?.enabled,
+    finishOnboardingWidget: onboardingWidgetFlag?.enabled,
     ...optimiseOptInNotificationsNewWordingAttributes,
     ...remoteABTestingAttributes,
   };
