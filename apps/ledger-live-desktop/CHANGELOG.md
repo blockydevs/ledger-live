@@ -1,5 +1,11 @@
 # ledger-live-desktop
 
+## 4.6.0-next.3
+
+### Minor Changes
+
+- [#17906](https://github.com/LedgerHQ/ledger-live/pull/17906) [`7772f2d`](https://github.com/LedgerHQ/ledger-live/commit/7772f2d122159d491cedd86570c351b4b39b2be2) Thanks [@desirendr](https://github.com/desirendr)! - Merge pending Smartling desktop translations for LWD 4.6 release
+
 ## 4.6.0-next.2
 
 ### Minor Changes
