@@ -10,7 +10,7 @@ import {
   ZERO_ADDRESS,
 } from "../constants";
 import { getPendingStakingOperationAmounts, getVote } from "../logic";
-import { celoGasPrice, getCeloClient } from "../network/client";
+import { celoEstimateGas, celoGasPrice, getCeloClient } from "../network/client";
 import { getRegistryAddressFor } from "../network/registry";
 import type { CeloAccount, Transaction } from "../types";
 import buildTransaction from "./buildTransaction";
@@ -210,22 +210,14 @@ const getFeesForTransaction = async ({
       args: [transaction.recipient as `0x${string}`, BigInt(value.toFixed())],
     });
 
-    // Use eth_estimateGas directly so we can pass feeCurrency (viem's estimateGas doesn't expose it).
-    const estimateParams: Record<string, string | undefined> = {
-      from: account.freshAddress,
+    const estimatedGas = await celoEstimateGas({
+      from: account.freshAddress as `0x${string}`,
       to: tokenAddress,
       data,
-      maxFeePerGas: `0x${tokenMaxFeePerGas.toString(16)}`,
-      maxPriorityFeePerGas: `0x${maxPriorityFeePerGas.toString(16)}`,
-    };
-    if (transaction.feeCurrency) {
-      estimateParams.feeCurrency = transaction.feeCurrency;
-    }
-    const estimatedGasHex = await client.request({
-      method: "eth_estimateGas",
-      params: [estimateParams],
-    } as Parameters<typeof client.request>[0]);
-    const estimatedGas = BigInt(estimatedGasHex as string);
+      maxFeePerGas: tokenMaxFeePerGas,
+      maxPriorityFeePerGas,
+      feeCurrency: transaction.feeCurrency,
+    });
 
     gas = Number(Math.ceil(Number(estimatedGas) * MAX_FEES_THRESHOLD_MULTIPLIER).toString());
   } else {
