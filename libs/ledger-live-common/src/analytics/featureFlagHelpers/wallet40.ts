@@ -13,6 +13,7 @@ export const getWallet40Attributes = (
 
   const featureFlagKey = FEATURE_FLAG_KEYS[platform];
   const wallet40FeatureFlag = analyticsFeatureFlagMethod(featureFlagKey);
+  const onboardingWidgetFeatureFlag = analyticsFeatureFlagMethod("onboardingWidget");
   const isEnabled = wallet40FeatureFlag?.enabled ?? false;
 
   return {
@@ -34,7 +35,7 @@ export const getWallet40Attributes = (
     pnl: wallet40FeatureFlag?.params?.pnl ?? false,
     finishOnboardingWidget:
       wallet40FeatureFlag?.params?.finishOnboardingWidget ??
-      wallet40FeatureFlag?.params?.onboardingWidget ??
+      onboardingWidgetFeatureFlag?.enabled ??
       false,
   };
 };

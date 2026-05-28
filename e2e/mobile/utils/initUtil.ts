@@ -332,12 +332,14 @@ export class InitializationManager {
           lazyOnboarding: isWallet40,
           balanceRefreshRework: isWallet40,
           assetSection: false,
-          onboardingWidget: isWallet40,
           operationsList: false,
           aggregatedAssets: false,
           myWallet: isWallet40,
           pnl: false,
         },
+      },
+      onboardingWidget: {
+        enabled: true,
       },
       llmModularDrawer: {
         enabled: true,

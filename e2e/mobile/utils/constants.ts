@@ -13,7 +13,6 @@ export const WALLET_40_FEATURE_FLAGS = {
       lazyOnboarding: true,
       balanceRefreshRework: true,
       assetSection: true,
-      onboardingWidget: true,
       operationsList: true,
       aggregatedAssets: false,
       myWallet: false,

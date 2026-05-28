@@ -311,6 +311,7 @@ export type Features = CurrencyFeatures & {
   supportDeviceApex: DefaultFeature;
   llmSyncOnboardingIncr1: DefaultFeature;
   lldSyncOnboardingIncr1: DefaultFeature;
+  onboardingWidget: DefaultFeature;
   noah: Feature_Noah;
   newSendFlow: Feature_NewSendFlow;
   zcashShielded: DefaultFeature;
@@ -889,10 +890,9 @@ type Feature_Wallet40_Params = {
   brazePlacement?: boolean;
   newReceiveDialog?: boolean;
   finishOnboardingWidget?: boolean;
-  onboardingWidget?: boolean;
 };
 
-export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params & { onboardingWidget: boolean }>;
+export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params>;
 export type Feature_LwdWallet40 = Feature<
   {
     newReceiveDialog: boolean;
