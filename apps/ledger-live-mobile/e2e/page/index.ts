@@ -30,16 +30,48 @@ import { DeviceLike } from "~/reducers/types";
 import { loadAccounts, loadBleState, loadConfig, setFeatureFlags } from "../bridge/server";
 import { initTestAccounts } from "../models/currencies";
 import { setupEnvironment } from "../helpers/commonHelpers";
-import type { PartialFeatures } from "@shared/feature-flags";
+import {
+  FEATURE_FLAGS_DEFAULTS,
+  type Feature,
+  type FeatureId,
+  type Features,
+  type PartialFeatures,
+} from "@shared/feature-flags";
 
 setupEnvironment();
+
+type LooseFlagOverrides = {
+  [K in FeatureId]?: {
+    enabled?: boolean;
+    params?: Features[K] extends { params?: infer P } ? Partial<NonNullable<P>> : never;
+  };
+};
 
 type ApplicationOptions = {
   userdata?: string;
   knownDevices?: DeviceLike[];
   testedCurrencies?: string[];
-  featureFlags?: PartialFeatures;
+  featureFlags?: LooseFlagOverrides;
 };
+
+function resolveFlagOverrides(flags: LooseFlagOverrides): PartialFeatures {
+  const merged: Record<string, Feature> = {};
+  for (const key of Object.keys(flags) as FeatureId[]) {
+    const override = flags[key];
+    const def = FEATURE_FLAGS_DEFAULTS[key] ?? { enabled: false };
+    merged[key] = {
+      ...def,
+      ...(override?.enabled !== undefined && { enabled: override.enabled }),
+      ...(override?.params !== undefined && {
+        params: {
+          ...((def as Record<string, unknown>)["params"] as Record<string, unknown> | undefined),
+          ...override.params,
+        },
+      }),
+    };
+  }
+  return merged as PartialFeatures;
+}
 
 const lazyInit = <T>(PageClass: new () => T) => {
   let instance: T | null = null;
@@ -93,10 +125,12 @@ export class Application {
     }
 
     // NOTE: KEEP WALLET 4.0 disabled for legacy mocks
-    await setFeatureFlags({
-      lwmWallet40: { enabled: false },
-      ...featureFlags,
-    });
+    await setFeatureFlags(
+      resolveFlagOverrides({
+        lwmWallet40: { enabled: false },
+        ...featureFlags,
+      }),
+    );
   }
 
   public get assetAccountsPage() {
