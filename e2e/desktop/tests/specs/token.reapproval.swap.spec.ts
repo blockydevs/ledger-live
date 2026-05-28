@@ -16,7 +16,6 @@ import { getDescription } from "tests/utils/customJsonReporter";
 import BigNumber from "bignumber.js";
 import { pickRotatingProvider } from "@ledgerhq/live-common/e2e/swap";
 
-const xrayTicket = "B2CQA-4012";
 const fromAccount = TokenAccount.ETH_USDC_1;
 const toAccount = Account.ETH_1;
 const eligibleProviders = [
@@ -63,7 +62,7 @@ test.describe("Token reapproval - flow", () => {
       annotation: [
         {
           type: "TMS",
-          description: xrayTicket,
+          description: "B2CQA-4012",
         },
       ],
     },
