@@ -7,6 +7,7 @@ import { PAGE_TRACKING_PRODUCT_TOUR, PRODUCT_TOUR_LAST_SLIDE_INDEX } from "../..
 import { productTourCompletedSelector } from "~/reducers/settings";
 import { setProductTourCompleted } from "~/actions/settings";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
+import { setOverride } from "@shared/feature-flags";
 import type { WalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/walletFeaturesConfig/types";
 
 const mockNavigate = jest.fn();
@@ -316,21 +317,19 @@ describe("useProductTourDrawerViewModel", () => {
 
   describe("feature flag changes while drawer is open", () => {
     it("should close the drawer when the product tour feature is disabled", () => {
-      const mockUseFeature = jest.spyOn(featureFlagsModule, "useFeature");
-      mockUseFeature.mockReturnValue({ enabled: true });
-
-      const { result, rerender } = renderHook(() => useProductTourDrawerViewModel(), {
+      const { result, store, rerender } = renderHook(() => useProductTourDrawerViewModel(), {
         overrideInitialState: withFeatureEnabled,
       });
 
       act(() => result.current.openProductTour());
       expect(result.current.isDrawerOpen).toBe(true);
 
-      mockUseFeature.mockReturnValue({ enabled: false });
+      act(() => {
+        store.dispatch(setOverride({ key: "lwmProductTour", value: { enabled: false } }));
+      });
       rerender({});
 
       expect(result.current.isDrawerOpen).toBe(false);
-      mockUseFeature.mockRestore();
     });
   });
 
