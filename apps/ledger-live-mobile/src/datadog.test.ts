@@ -35,7 +35,7 @@ describe("broadcastLogger", () => {
     broadcastLogger({
       status: "failure",
       error,
-      txPayload: "payload",
+      txPayload: { signature: "signature" },
       appVersion: "1.0.0",
       currencyId: "ethereum",
       family: "family",
@@ -49,7 +49,7 @@ describe("broadcastLogger", () => {
       {
         event: {
           status: "failure",
-          txPayload: "payload",
+          txPayload: { signature: "signature" },
           appVersion: "1.0.0",
           currencyId: "ethereum",
           family: "family",
