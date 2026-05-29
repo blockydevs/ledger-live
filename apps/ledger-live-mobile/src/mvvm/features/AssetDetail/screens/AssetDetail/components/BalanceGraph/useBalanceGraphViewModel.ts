@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
 import type { FormattedValue } from "@ledgerhq/lumen-ui-rnative";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
+import { useAssetChartData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
 import { formatPriceFragment, formatSignedFiatVariation } from "@ledgerhq/live-currency-format";
 import { useSelector } from "~/context/hooks";
 import { flattenAccountsSelector } from "~/reducers/accounts";
@@ -20,19 +21,6 @@ import {
   type RangeKey,
 } from "../../utils/rangeMapping";
 import { useAssetMarketData } from "../../hooks/useAssetMarketData";
-
-// Placeholder data until range-driven price series are wired in.
-// `stroke` is overridden by the shared LineChart from the `color` prop.
-const PLACEHOLDER_SERIES: LineChartSeries[] = [
-  {
-    id: "asset-detail-price-preview",
-    data: [
-      1, 2, 5, 12, 56, 3, 33, 34, 56, 55, 100, 101, 102, 103, 12, 105, 106, 107, 108, 109, 110,
-    ],
-    label: "Price",
-    stroke: "",
-  },
-];
 
 type Params = {
   currency?: AssetDetailCurrencyProps;
@@ -53,13 +41,21 @@ export function useBalanceGraphViewModel({
   const { locale } = useLocale();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterValueUnit = counterValueCurrency.units[0];
-  const { marketCurrency, isLoading } = useAssetMarketData({
+  const { marketCurrency, counterCurrency, isLoading } = useAssetMarketData({
     marketApiId,
     knownLedgerIds,
     knownMarketId,
   });
 
   const [range, setRange] = useState<RangeKey>("1d");
+
+  const id =
+    knownLedgerIds?.[0] ?? marketCurrency?.ledgerIds?.[0] ?? marketCurrency?.id ?? marketApiId;
+
+  const { data: chartData, isLoading: isChartLoading } = useAssetChartData(
+    { id, counterCurrency, range },
+    { skip: !id },
+  );
 
   const ranges = useMemo(
     () =>
@@ -132,7 +128,19 @@ export function useBalanceGraphViewModel({
     handleOpenReceiveDrawer();
   }, [handleOpenReceiveDrawer, currency?.id]);
 
-  const series = PLACEHOLDER_SERIES;
+  const series = useMemo<LineChartSeries[]>(() => {
+    const points = chartData?.[range] ?? [];
+    return [
+      {
+        id: "asset-detail-price",
+        data: points.map(([, value]) => value),
+        label: "Price",
+        // `stroke` is required by the Series type but is overridden by the
+        // shared LineChart from the `color` prop.
+        stroke: "",
+      },
+    ];
+  }, [chartData, range]);
   const chartColor = resolveLineChartColorFromPercentChange(priceChangePercentage);
 
   return {
@@ -148,7 +156,7 @@ export function useBalanceGraphViewModel({
     isRangeValue: isRangeKey,
     showReceive,
     onReceivePress,
-    isLoading,
+    isLoading: isLoading || isChartLoading,
     series,
     chartColor,
   };

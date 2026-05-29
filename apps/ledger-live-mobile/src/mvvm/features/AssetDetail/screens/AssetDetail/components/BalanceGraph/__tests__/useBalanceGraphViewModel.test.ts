@@ -1,17 +1,35 @@
 import { renderHook, act } from "@tests/test-renderer";
 import { useBalanceGraphViewModel } from "../useBalanceGraphViewModel";
 import { track } from "~/analytics";
-import { useGetCurrencyDataQuery } from "@ledgerhq/live-common/market/state-manager/marketApi";
+import {
+  useGetCurrencyDataQuery,
+  useGetAssetChartDataQuery,
+} from "@ledgerhq/live-common/market/state-manager/marketApi";
 import { useOpenReceiveDrawer } from "LLM/features/Receive";
 import {
   mockBtcCryptoCurrency,
   mockEthCryptoCurrency,
 } from "@ledgerhq/live-common/modularDrawer/__mocks__/currencies.mock";
 import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
-import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import BigNumber from "bignumber.js";
 import type { State } from "~/reducers/types";
 import { marketCurrencyData } from "../../../__fixtures__/marketCurrencyData";
+import type { RangeKey } from "../../../utils/rangeMapping";
+
+jest.mock("@ledgerhq/live-common/market/state-manager/marketApi", () => ({
+  ...jest.requireActual("@ledgerhq/live-common/market/state-manager/marketApi"),
+  useGetCurrencyDataQuery: jest.fn(),
+  useGetAssetChartDataQuery: jest.fn(),
+}));
+jest.mock("LLM/features/Receive");
+
+const mockUseGetCurrencyDataQuery = jest.mocked(useGetCurrencyDataQuery);
+const mockUseGetAssetChartDataQuery = jest.mocked(useGetAssetChartDataQuery);
+const mockUseOpenReceiveDrawer = jest.mocked(useOpenReceiveDrawer);
+const handleOpenReceiveDrawer = jest.fn();
+
+// --- Fixtures ---------------------------------------------------------------
 
 const eursToken: TokenCurrency = {
   type: "TokenCurrency",
@@ -24,98 +42,102 @@ const eursToken: TokenCurrency = {
   units: [{ name: "STASIS EURS Token", code: "EURS", magnitude: 2 }],
 };
 
-function withEthAndEursToken({
-  ethBalance,
-  eursBalance,
-}: {
-  ethBalance: number;
-  eursBalance: number;
-}) {
-  return {
-    overrideInitialState: (state: State): State => {
-      const parent = genAccount("ethereum-0", {
-        currency: mockEthCryptoCurrency,
-        operationsSize: 0,
-      });
-      parent.balance = new BigNumber(ethBalance);
-      parent.spendableBalance = new BigNumber(ethBalance);
+const CHART_DATA_BY_RANGE: Record<RangeKey, Array<[number, number]>> = {
+  "1d": [
+    [1, 100],
+    [2, 110],
+    [3, 120],
+  ],
+  "1w": [
+    [1, 200],
+    [2, 210],
+  ],
+  "1m": [[1, 300]],
+  "1y": [
+    [1, 400],
+    [2, 410],
+    [3, 420],
+    [4, 430],
+  ],
+};
 
-      const tokenAccount = genTokenAccount(0, parent, eursToken);
-      tokenAccount.balance = new BigNumber(eursBalance);
-      tokenAccount.spendableBalance = new BigNumber(eursBalance);
-      parent.subAccounts = [tokenAccount];
+// --- Helpers ----------------------------------------------------------------
 
-      return {
-        ...state,
-        accounts: { ...state.accounts, active: [parent] },
-      };
-    },
-  };
+type VMParams = Parameters<typeof useBalanceGraphViewModel>[0];
+type StateOption = { overrideInitialState: (state: State) => State };
+
+const mockCurrency = (result: { data: unknown; isFetching?: boolean }) =>
+  mockUseGetCurrencyDataQuery.mockReturnValue({
+    isFetching: false,
+    ...result,
+  } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
+
+const mockChart = (result: { data: unknown; isLoading?: boolean }) =>
+  mockUseGetAssetChartDataQuery.mockReturnValue({
+    isLoading: false,
+    ...result,
+  } as unknown as ReturnType<typeof useGetAssetChartDataQuery>);
+
+const renderVM = (params: VMParams = { currency: mockBtcCryptoCurrency }, options?: StateOption) =>
+  renderHook(() => useBalanceGraphViewModel(params), options);
+
+type TokenFunds = { token: TokenCurrency; balance: number };
+type AccountFunds = { currencyId: string; balance: number; tokens?: TokenFunds[] };
+
+const CURRENCY_BY_ID: Record<string, CryptoCurrency> = {
+  bitcoin: mockBtcCryptoCurrency,
+  ethereum: mockEthCryptoCurrency,
+};
+
+function buildAccount({ currencyId, balance, tokens }: AccountFunds, index: number) {
+  const account = genAccount(`${currencyId}-${index}`, {
+    currency: CURRENCY_BY_ID[currencyId],
+    operationsSize: 0,
+  });
+  account.balance = new BigNumber(balance);
+  account.spendableBalance = new BigNumber(balance);
+
+  if (tokens?.length) {
+    account.subAccounts = tokens.map(({ token, balance: tokenBalance }) => {
+      const tokenAccount = genTokenAccount(index, account, token);
+      tokenAccount.balance = new BigNumber(tokenBalance);
+      tokenAccount.spendableBalance = new BigNumber(tokenBalance);
+      return tokenAccount;
+    });
+  }
+
+  return account;
 }
 
-jest.mock("@ledgerhq/live-common/market/state-manager/marketApi", () => ({
-  ...jest.requireActual("@ledgerhq/live-common/market/state-manager/marketApi"),
-  useGetCurrencyDataQuery: jest.fn(),
-}));
-jest.mock("LLM/features/Receive");
+const withFunds = (accounts: AccountFunds[]): StateOption => ({
+  overrideInitialState: (state: State): State => ({
+    ...state,
+    accounts: { ...state.accounts, active: accounts.map(buildAccount) },
+  }),
+});
 
-const mockUseGetCurrencyDataQuery = jest.mocked(useGetCurrencyDataQuery);
-const mockUseOpenReceiveDrawer = jest.mocked(useOpenReceiveDrawer);
-const mockHandleOpenReceiveDrawer = jest.fn();
-
-function withAccounts(accounts: Array<{ currencyId: string; balance: number }>) {
-  return {
-    overrideInitialState: (state: State): State => ({
-      ...state,
-      accounts: {
-        ...state.accounts,
-        active: accounts.map((a, i) => {
-          const currency =
-            a.currencyId === "bitcoin" ? mockBtcCryptoCurrency : mockEthCryptoCurrency;
-          const account = genAccount(`${a.currencyId}-${i}`, {
-            currency,
-            operationsSize: 0,
-          });
-          account.balance = new BigNumber(a.balance);
-          account.spendableBalance = new BigNumber(a.balance);
-          return account;
-        }),
-      },
-    }),
-  };
-}
+// --- Tests ------------------------------------------------------------------
 
 describe("useBalanceGraphViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseGetCurrencyDataQuery.mockReturnValue({
-      data: marketCurrencyData,
-      isFetching: false,
-    } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
-    mockUseOpenReceiveDrawer.mockReturnValue({
-      handleOpenReceiveDrawer: mockHandleOpenReceiveDrawer,
-    });
+    mockCurrency({ data: marketCurrencyData });
+    mockChart({ data: CHART_DATA_BY_RANGE });
+    mockUseOpenReceiveDrawer.mockReturnValue({ handleOpenReceiveDrawer });
   });
 
   describe("price & trend", () => {
     it("exposes price and the 24h change percentage by default", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.price).toBe(50000);
       expect(result.current.priceChangePercentage).toBe(2.35);
     });
 
     it("returns price=0 and hasMarketData=false when no market data", () => {
-      mockUseGetCurrencyDataQuery.mockReturnValue({
-        data: undefined,
-        isFetching: false,
-      } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
+      mockCurrency({ data: undefined });
 
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.price).toBe(0);
       expect(result.current.hasMarketData).toBe(false);
@@ -123,9 +145,7 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("uses the correct priceChangePercentage key after range change", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       act(() => result.current.onRangeChange("1w"));
       expect(result.current.priceChangePercentage).toBe(-5.12);
@@ -137,9 +157,7 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("priceFormatter", () => {
     it("splits a USD-formatted value into FormattedValue parts", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       const formatted = result.current.priceFormatter(1234.56);
 
@@ -150,9 +168,7 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("preserves 6 decimals for a sub-cent BONK-like price", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       const formatted = result.current.priceFormatter(0.000006);
 
@@ -164,17 +180,13 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("formattedPriceChange", () => {
     it("returns a signed currency string for a positive change", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.formattedPriceChange).toMatch(/^\+/);
     });
 
     it("returns a minus-prefixed string for a negative change", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       act(() => result.current.onRangeChange("1w"));
 
@@ -182,27 +194,17 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("returns undefined when no market data", () => {
-      mockUseGetCurrencyDataQuery.mockReturnValue({
-        data: undefined,
-        isFetching: false,
-      } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
+      mockCurrency({ data: undefined });
 
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.formattedPriceChange).toBeUndefined();
     });
 
     it("renders a signed '<' threshold marker for a tiny BONK-like variation", () => {
-      mockUseGetCurrencyDataQuery.mockReturnValue({
-        data: { ...marketCurrencyData, price: 6e-6 },
-        isFetching: false,
-      } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
+      mockCurrency({ data: { ...marketCurrencyData, price: 6e-6 } });
 
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.formattedPriceChange).toBe("+<$0.000001");
     });
@@ -210,9 +212,7 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("onRangeChange", () => {
     it("updates selectedRange and fires analytics", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.selectedRange).toBe("1d");
 
@@ -228,9 +228,7 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("does not fire analytics when selecting the same range", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       act(() => result.current.onRangeChange("1d"));
 
@@ -240,15 +238,15 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("showReceive", () => {
     it("is false when currency is undefined", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel({ currency: undefined }));
+      const { result } = renderVM({ currency: undefined });
 
       expect(result.current.showReceive).toBe(false);
     });
 
     it("is true when the asset has no funds but another asset does", () => {
-      const { result } = renderHook(
-        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-        withAccounts([
+      const { result } = renderVM(
+        { currency: mockBtcCryptoCurrency },
+        withFunds([
           { currencyId: "bitcoin", balance: 0 },
           { currencyId: "ethereum", balance: 1000 },
         ]),
@@ -258,9 +256,9 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("is false when the asset already has funds", () => {
-      const { result } = renderHook(
-        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-        withAccounts([
+      const { result } = renderVM(
+        { currency: mockBtcCryptoCurrency },
+        withFunds([
           { currencyId: "bitcoin", balance: 500 },
           { currencyId: "ethereum", balance: 1000 },
         ]),
@@ -270,9 +268,9 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("is false when the wallet has no funds at all", () => {
-      const { result } = renderHook(
-        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-        withAccounts([
+      const { result } = renderVM(
+        { currency: mockBtcCryptoCurrency },
+        withFunds([
           { currencyId: "bitcoin", balance: 0 },
           { currencyId: "ethereum", balance: 0 },
         ]),
@@ -282,9 +280,9 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("is false when hideReceive is true even if conditions are met", () => {
-      const { result } = renderHook(
-        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency, hideReceive: true }),
-        withAccounts([
+      const { result } = renderVM(
+        { currency: mockBtcCryptoCurrency, hideReceive: true },
+        withFunds([
           { currencyId: "bitcoin", balance: 0 },
           { currencyId: "ethereum", balance: 1000 },
         ]),
@@ -294,9 +292,15 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("is false for a token the user already holds (regression: ERC-20 detected via flattenAccounts)", () => {
-      const { result } = renderHook(
-        () => useBalanceGraphViewModel({ currency: eursToken }),
-        withEthAndEursToken({ ethBalance: 0, eursBalance: 36_300_500 }),
+      const { result } = renderVM(
+        { currency: eursToken },
+        withFunds([
+          {
+            currencyId: "ethereum",
+            balance: 0,
+            tokens: [{ token: eursToken, balance: 36_300_500 }],
+          },
+        ]),
       );
 
       expect(result.current.showReceive).toBe(false);
@@ -305,9 +309,7 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("onReceivePress", () => {
     it("tracks analytics and opens the receive drawer", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       act(() => result.current.onReceivePress());
 
@@ -316,24 +318,20 @@ describe("useBalanceGraphViewModel", () => {
         page: "Asset Detail",
         currency: "bitcoin",
       });
-      expect(mockHandleOpenReceiveDrawer).toHaveBeenCalledTimes(1);
+      expect(handleOpenReceiveDrawer).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("ranges", () => {
     it("exposes the full range list in chronological order (1d → 1y)", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       const values = result.current.ranges.map(r => r.value);
       expect(values).toEqual(["1d", "1w", "1m", "1y"]);
     });
 
     it("exposes a runtime guard that accepts only known range keys", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.isRangeValue("1d")).toBe(true);
       expect(result.current.isRangeValue("1y")).toBe(true);
@@ -342,45 +340,58 @@ describe("useBalanceGraphViewModel", () => {
   });
 
   describe("series and chartColor", () => {
-    it("exposes a non-empty placeholder series with stable identity across renders", () => {
-      const { result, rerender } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+    it("builds the price series from the chart data of the selected range", () => {
+      const { result } = renderVM();
+
+      expect(result.current.series).toHaveLength(1);
+      expect(result.current.series[0]?.id).toBe("asset-detail-price");
+      expect(result.current.series[0]?.data).toEqual([100, 110, 120]);
+    });
+
+    it("rebuilds the series when the selected range changes", () => {
+      const { result } = renderVM();
+
+      act(() => result.current.onRangeChange("1w"));
+      expect(result.current.series[0]?.data).toEqual([200, 210]);
+
+      act(() => result.current.onRangeChange("1y"));
+      expect(result.current.series[0]?.data).toEqual([400, 410, 420, 430]);
+    });
+
+    it("keeps a stable series identity across renders when inputs are unchanged", () => {
+      const { result, rerender } = renderVM();
 
       const initial = result.current.series;
-      expect(initial.length).toBeGreaterThan(0);
-      expect(initial[0]?.data?.length).toBeGreaterThan(0);
-
       rerender({});
       expect(result.current.series).toBe(initial);
     });
 
+    it("returns an empty series when no chart data is available", () => {
+      mockChart({ data: undefined });
+
+      const { result } = renderVM();
+
+      expect(result.current.series).toHaveLength(1);
+      expect(result.current.series[0]?.data).toEqual([]);
+    });
+
     it("returns chartColor='success' when the selected range has a positive % change", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.chartColor).toBe("success");
     });
 
     it("returns chartColor='error' when the selected range has a negative % change", () => {
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       act(() => result.current.onRangeChange("1w"));
       expect(result.current.chartColor).toBe("error");
     });
 
     it("returns chartColor='muted' when no market data is available", () => {
-      mockUseGetCurrencyDataQuery.mockReturnValue({
-        data: undefined,
-        isFetching: false,
-      } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
+      mockCurrency({ data: undefined });
 
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
-      );
+      const { result } = renderVM();
 
       expect(result.current.chartColor).toBe("muted");
     });
@@ -388,18 +399,21 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("isLoading", () => {
     it("reflects the fetching state of useCurrencyData", () => {
-      mockUseGetCurrencyDataQuery.mockReturnValue({
-        data: undefined,
-        isFetching: true,
-      } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
+      mockCurrency({ data: undefined, isFetching: true });
 
-      const { result } = renderHook(() =>
-        useBalanceGraphViewModel({
-          currency: mockBtcCryptoCurrency,
-          marketApiId: mockBtcCryptoCurrency.id,
-          knownLedgerIds: [mockBtcCryptoCurrency.id],
-        }),
-      );
+      const { result } = renderVM({
+        currency: mockBtcCryptoCurrency,
+        marketApiId: mockBtcCryptoCurrency.id,
+        knownLedgerIds: [mockBtcCryptoCurrency.id],
+      });
+
+      expect(result.current.isLoading).toBe(true);
+    });
+
+    it("is true while the chart data query is loading", () => {
+      mockChart({ data: undefined, isLoading: true });
+
+      const { result } = renderVM();
 
       expect(result.current.isLoading).toBe(true);
     });
