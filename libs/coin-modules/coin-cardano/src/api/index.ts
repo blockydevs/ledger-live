@@ -20,10 +20,14 @@ import type {
   Validator,
   AddressValidationCurrencyParameters,
 } from "@ledgerhq/coin-module-framework/api/index";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
+import { broadcast } from "../logic/broadcast";
 
-export function createApi(config: CardanoConfig, _currencyId: string): CoinModuleApi<StringMemo> {
+export function createApi(config: CardanoConfig, currencyId: string): CoinModuleApi<StringMemo> {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
+
+  const currency = getCryptoCurrencyById(currencyId);
 
   return {
     lastBlock: (): Promise<BlockInfo> => {
@@ -76,9 +80,8 @@ export function createApi(config: CardanoConfig, _currencyId: string): CoinModul
     combine: (_tx: string, _signature: string, _pubkey?: string): string => {
       throw new Error("combine is not supported");
     },
-    broadcast: (_tx: string, _broadcastConfig?: BroadcastConfig): Promise<string> => {
-      throw new Error("broadcast is not supported");
-    },
+    broadcast: (tx: string, broadcastConfig?: BroadcastConfig): Promise<string> =>
+      broadcast(currency, { signature: tx, broadcastConfig }),
     validateIntent: (
       _transactionIntent: TransactionIntent<StringMemo>,
       _balances: Balance[],
