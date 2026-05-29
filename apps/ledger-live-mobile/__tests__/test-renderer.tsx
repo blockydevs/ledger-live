@@ -120,7 +120,9 @@ function createStore({ overrideInitialState }: { overrideInitialState: (state: S
       ...transformed.featureFlags,
       resolved: {
         ...FEATURE_FLAGS_DEFAULTS,
-        ...transformed.featureFlags.overrides,
+        ...Object.fromEntries(
+          Object.entries(transformed.featureFlags.overrides).filter(([, v]) => v !== undefined),
+        ),
       } as Features,
     },
   };

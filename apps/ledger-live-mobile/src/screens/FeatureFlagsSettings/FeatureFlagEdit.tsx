@@ -68,7 +68,12 @@ const FeatureFlagEdit: React.FC<{
       // Nb if value is invalid or missing, JSON parse will fail
       const newValue = inputValueStringified ? JSON.parse(inputValueStringified) : undefined;
       setFeatureFlagValue(newValue);
-      dispatch(setOverride({ key: flagName, value: newValue }));
+      dispatch(
+        setOverride({
+          key: flagName,
+          value: newValue ? { ...newValue, overridesRemote: true } : undefined,
+        }),
+      );
     } catch (e) {
       setError(e);
     }
@@ -88,7 +93,7 @@ const FeatureFlagEdit: React.FC<{
       const newValue = { ...featureFlagValue, enabled };
       setFeatureFlagValue(newValue);
       setInputValueStringified(formatValue(newValue));
-      dispatch(setOverride({ key: flagName, value: newValue }));
+      dispatch(setOverride({ key: flagName, value: { ...newValue, overridesRemote: true } }));
     },
     [dispatch, flagName, featureFlagValue],
   );

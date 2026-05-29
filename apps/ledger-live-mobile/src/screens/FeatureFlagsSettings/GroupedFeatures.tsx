@@ -51,7 +51,12 @@ const GroupedFeatures: React.FC<Props> = ({ groupName, focused, setFocusedGroupN
   const handleSwitchChange = useCallback(
     (enabled: boolean) => {
       featureIds.forEach(featureId =>
-        dispatch(setOverride({ key: featureId, value: { ...flags[featureId], enabled } })),
+        dispatch(
+          setOverride({
+            key: featureId,
+            value: { ...flags[featureId], enabled, overridesRemote: true },
+          }),
+        ),
       );
     },
     [featureIds, flags, dispatch],
