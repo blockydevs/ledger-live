@@ -149,7 +149,7 @@ export async function getERC20BalancesForAccount({
 }
 
 export async function getERC20BalancesForAccountV2({
-  configOrCurrencyId: _,
+  configOrCurrencyId,
   address,
 }: {
   configOrCurrencyId: HederaCoinConfig | string;
@@ -157,7 +157,7 @@ export async function getERC20BalancesForAccountV2({
 }): Promise<HederaERC20TokenBalance[]> {
   const balances: HederaERC20TokenBalance[] = [];
 
-  const rawBalances = await hgraphClient.getERC20Balances({ address });
+  const rawBalances = await hgraphClient.getERC20Balances({ configOrCurrencyId, address });
 
   for (const rawBalance of rawBalances) {
     const rawBalanceTokenId = toEntityId({ num: rawBalance.token_id });
@@ -350,7 +350,7 @@ export const checkAccountTokenAssociationStatus = makeLRUCache(
 );
 
 export const safeParseAccountId = async ({
-  configOrCurrencyId: _,
+  configOrCurrencyId,
   address,
 }: {
   configOrCurrencyId: HederaCoinConfig | string;
@@ -364,7 +364,7 @@ export const safeParseAccountId = async ({
     const checksum = getChecksum(address);
 
     if (checksum) {
-      const client = await rpcClient.getInstance();
+      const client = await rpcClient.getInstance(configOrCurrencyId);
       const expectedChecksum = accountId.toStringWithChecksum(client).split("-")[1];
 
       if (checksum !== expectedChecksum) {

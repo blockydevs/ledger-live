@@ -16,7 +16,7 @@ import { getSyntheticBlock, nanosToSeconds } from "./utils";
  * 3. Convert this timestamp into a synthetic block using a hardcoded time window (10 seconds by default)
  */
 export async function lastBlockV2({
-  configOrCurrencyId: _,
+  configOrCurrencyId,
 }: {
   configOrCurrencyId: HederaCoinConfig | string;
 }): Promise<BlockInfo> {
@@ -25,7 +25,7 @@ export async function lastBlockV2({
   const before = new Date(Date.now() - FINALITY_MS - SYNTHETIC_BLOCK_WINDOW_SECONDS * 1000);
   const [latestTransaction, latestHgraphTimestampNs] = await Promise.all([
     apiClient.getLatestTransaction(before),
-    hgraphClient.getLatestIndexedConsensusTimestamp(),
+    hgraphClient.getLatestIndexedConsensusTimestamp({ configOrCurrencyId }),
   ]);
 
   const lastMirrorTimestamp = latestTransaction.consensus_timestamp;
