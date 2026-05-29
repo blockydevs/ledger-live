@@ -49,7 +49,7 @@ export const STAKING_CONFIG: Record<string, StakingStrategy> = {
         validatorAddress: config.contractAddress,
         name: "",
         commission: 0,
-        tokens: 0,
+        tokens: "0",
         votingPower: 0,
         estimatedYearlyRewardsRate: 0,
       },

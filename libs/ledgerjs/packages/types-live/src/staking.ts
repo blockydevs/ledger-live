@@ -85,8 +85,8 @@ export type StakingValidatorItem = {
   // value from 0.0 to 1.0 (normalized percentage)
   commission: number;
   // value from 0.0 to 1.0 (normalized percentage)
-  estimatedYearlyRewardsRate: number; // value from 0.0 to 1.0 (normalized percentage)
-  tokens: number;
+  estimatedYearlyRewardsRate: number;
+  tokens: string;
 };
 
 export type StakingLikeNetworkInfo = {
