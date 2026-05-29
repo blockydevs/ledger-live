@@ -1,5 +1,18 @@
 # @ledgerhq/coin-tester-bitcoin
 
+## 1.10.4-next.0
+
+### Patch Changes
+
+- Updated dependencies [[`812538e`](https://github.com/LedgerHQ/ledger-live/commit/812538e1788cf63aa3166d3842f0b27248400690), [`5fc817a`](https://github.com/LedgerHQ/ledger-live/commit/5fc817a5ee316396a327e5b10eccd8314bfb2df5), [`177e07f`](https://github.com/LedgerHQ/ledger-live/commit/177e07ffc6c733b4b9811d6f7dff6b75a106075c), [`44fd893`](https://github.com/LedgerHQ/ledger-live/commit/44fd8931435a52232cfd5abed3fec7a5b275a9be), [`89ae79b`](https://github.com/LedgerHQ/ledger-live/commit/89ae79b0bdd01fb8329fceaba8672bb34d420393), [`5e2b764`](https://github.com/LedgerHQ/ledger-live/commit/5e2b76429c0b3024782dc179875a24c5f2655274)]:
+  - @ledgerhq/types-live@6.110.0-next.0
+  - @ledgerhq/cryptoassets@13.50.0-next.0
+  - @ledgerhq/ledger-wallet-framework@2.0.0-next.0
+  - @ledgerhq/coin-bitcoin@0.43.0-next.0
+  - @ledgerhq/coin-tester@0.20.0
+  - @ledgerhq/live-network@2.6.3-next.0
+  - @ledgerhq/hw-app-btc@11.0.1-next.0
+
 ## 1.10.3
 
 ### Patch Changes
