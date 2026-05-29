@@ -96,7 +96,49 @@ describe("DeviceIntentExecutorStateMachine", () => {
     it("WHEN DEVICE_CONNECTED is received THEN it transitions to initializingDeviceContext", () => {
       const { sm, listeners } = createSM();
       sm.deviceConnected(makeConnectionResult());
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
+      sm.stop();
+    });
+
+    it("WHEN DEVICE_CONNECTED is received THEN initializingDeviceContext carries the connectionResult", () => {
+      const connectionResult = makeConnectionResult("session-xyz");
+      const { sm, listeners } = createSM();
+      sm.deviceConnected(connectionResult);
+      expect(lastExecutorState(listeners)).toEqual({
+        type: "initializingDeviceContext",
+        connectionResult,
+      });
+      sm.stop();
+    });
+  });
+
+  describe("GIVEN the machine has reached intentExecution", () => {
+    it("THEN executingIntent carries both connectionResult and extractedContext", () => {
+      const connectionResult = makeConnectionResult();
+      const extractedContext = makeExtractedContext();
+      const { sm, listeners } = createSM({ job: () => NEVER });
+      driveToExecution(sm, connectionResult, extractedContext);
+      expect(lastExecutorState(listeners)).toEqual({
+        type: "executingIntent",
+        connectionResult,
+        extractedContext,
+      });
+      sm.stop();
+    });
+
+    it("WHEN the job errors THEN executingIntentError carries connectionResult and extractedContext too", () => {
+      const connectionResult = makeConnectionResult();
+      const extractedContext = makeExtractedContext();
+      const jobError = new Error("job failed");
+      const intent = makeIntent(() => throwError(() => jobError));
+      const { sm, listeners } = createSM({ intent });
+      driveToExecution(sm, connectionResult, extractedContext);
+      expect(lastExecutorState(listeners)).toEqual({
+        type: "executingIntentError",
+        error: jobError,
+        connectionResult,
+        extractedContext,
+      });
       sm.stop();
     });
   });
@@ -119,7 +161,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       const { sm, listeners } = createSM({ job: () => NEVER });
       sm.deviceConnected(makeConnectionResult());
       sm.deviceContextInitialized(makeExtractedContext());
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
       sm.stop();
     });
 
@@ -134,13 +176,13 @@ describe("DeviceIntentExecutorStateMachine", () => {
     it("WHEN SET_INTENT is received THEN it stays in initializingDeviceContext without extra listener call", () => {
       const { sm, listeners } = createSM({ job: () => NEVER });
       sm.deviceConnected(makeConnectionResult());
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
       const callCountBefore = (listeners.onExecutorStateChanged as jest.Mock).mock.calls.length;
 
       const newIntent = makeIntent(() => NEVER);
       sm.setIntent(newIntent);
 
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
       const callCountAfter = (listeners.onExecutorStateChanged as jest.Mock).mock.calls.length;
       expect(callCountAfter).toBe(callCountBefore);
       sm.stop();
@@ -172,7 +214,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       const subject = new Subject<TestJobState>();
       const { sm, listeners } = createSM({ job: () => subject.asObservable() });
       driveToExecution(sm);
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
 
       subject.next({ step: "running" });
       await flushMicrotasks();
@@ -214,7 +256,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       const intent = makeIntent(() => throwError(() => jobError));
       const { sm, listeners } = createSM({ intent });
       driveToExecution(sm);
-      expect(lastExecutorState(listeners)).toEqual({
+      expect(lastExecutorState(listeners)).toMatchObject({
         type: "executingIntentError",
         error: jobError,
       });
@@ -370,7 +412,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       expect(callCount).toBe(1);
 
       sm.retry();
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
       expect(callCount).toBe(2);
       sm.stop();
     });
@@ -383,7 +425,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
 
       const newIntent = makeIntent(newJobSpy);
       sm.setIntent(newIntent);
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
       expect(newJobSpy).toHaveBeenCalled();
       sm.stop();
     });
@@ -394,7 +436,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       expect(lastExecutorState(listeners)?.type).toBe("executingIntentError");
 
       sm.reinitialize();
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
       sm.stop();
     });
   });
@@ -407,7 +449,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
 
       const newIntent = makeIntent(() => NEVER);
       sm.setIntent(newIntent);
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
       sm.stop();
     });
 
@@ -417,7 +459,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       expect(lastExecutorState(listeners)).toEqual({ type: "idle" });
 
       sm.reinitialize();
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
       sm.stop();
     });
 
@@ -441,10 +483,10 @@ describe("DeviceIntentExecutorStateMachine", () => {
       expect(lastExecutorState(listeners)).toEqual({ type: "connectingDevice" });
 
       sm.deviceConnected(makeConnectionResult());
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
 
       sm.deviceContextInitialized(makeExtractedContext());
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
 
       subject.next({ step: "running" });
       await flushMicrotasks();
@@ -516,10 +558,10 @@ describe("DeviceIntentExecutorStateMachine", () => {
       expect(listeners.onIntentJobComplete).toHaveBeenCalledWith(intentA);
 
       sm.reinitialize();
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
 
       sm.setIntent(intentB);
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
 
       sm.deviceContextInitialized(makeExtractedContext());
       expect(lastExecutorState(listeners)).toEqual({ type: "idle" });
@@ -537,7 +579,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       const { sm, listeners } = createSM({ job: jobFn });
 
       driveToExecution(sm);
-      expect(lastExecutorState(listeners)).toEqual({ type: "executingIntent" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "executingIntent" });
 
       sm.deviceDisconnected();
       expect(lastExecutorState(listeners)).toEqual({ type: "deviceDisconnected" });
@@ -546,7 +588,7 @@ describe("DeviceIntentExecutorStateMachine", () => {
       expect(lastExecutorState(listeners)).toEqual({ type: "connectingDevice" });
 
       sm.deviceConnected(makeConnectionResult("session-2"));
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
 
       sm.deviceContextInitialized(makeExtractedContext());
       expect(lastExecutorState(listeners)).toEqual({ type: "idle" });
@@ -560,10 +602,10 @@ describe("DeviceIntentExecutorStateMachine", () => {
       const { sm, listeners } = createSM({ intent: intentA });
 
       sm.deviceConnected(makeConnectionResult());
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
 
       sm.setIntent(intentB);
-      expect(lastExecutorState(listeners)).toEqual({ type: "initializingDeviceContext" });
+      expect(lastExecutorState(listeners)).toMatchObject({ type: "initializingDeviceContext" });
 
       sm.deviceContextInitialized(makeExtractedContext());
 

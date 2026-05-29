@@ -1,6 +1,7 @@
 import type { Series } from "@ledgerhq/lumen-ui-react-visualization";
+import type { ChartRangeSegment } from "@ledgerhq/live-common/market/utils/index";
 
-export type LineChartRange = "1D" | "1W" | "1M" | "6M" | "1Y" | "5Y" | "ALL";
+export type LineChartRange = ChartRangeSegment;
 
 export type LineChartColor = "success" | "error" | "muted";
 

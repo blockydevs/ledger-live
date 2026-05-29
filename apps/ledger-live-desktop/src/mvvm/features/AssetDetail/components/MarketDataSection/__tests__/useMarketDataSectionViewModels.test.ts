@@ -98,6 +98,19 @@ describe("useMarketStatsViewModel", () => {
     expect(result.current.sectionTooltip).toBeTruthy();
   });
 
+  it("exposes tooltips for stat rows that include an info icon", () => {
+    const { result } = renderHook(
+      () => useMarketStatsViewModel(buildCurrencyData()),
+      hookOptions(),
+    );
+
+    expect(result.current.rows.find(r => r.key === "market_cap")?.tooltip).toBeTruthy();
+    expect(result.current.rows.find(r => r.key === "market_rank")?.tooltip).toBeUndefined();
+    expect(result.current.rows.find(r => r.key === "circulating_supply")?.tooltip).toBeTruthy();
+    expect(result.current.rows.find(r => r.key === "max_supply")?.tooltip).toBeTruthy();
+    expect(result.current.rows.find(r => r.key === "trading_volume_24h")?.tooltip).toBeTruthy();
+  });
+
   it("appends the asset ticker on supply rows", () => {
     const { result } = renderHook(
       () => useMarketStatsViewModel(buildCurrencyData()),

@@ -12,10 +12,26 @@ type StatRow = {
   tooltip?: { title: string; content: string };
 };
 
-export function useMarketStatsViewModel(currency: AssetDetailCurrencyProps) {
+type Params = {
+  currency: AssetDetailCurrencyProps;
+  marketApiId?: string;
+  knownLedgerIds?: readonly string[];
+  knownMarketId?: string;
+};
+
+export function useMarketStatsViewModel({
+  currency,
+  marketApiId,
+  knownLedgerIds,
+  knownMarketId,
+}: Params) {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const { marketCurrency, counterCurrency, isLoading, isError } = useAssetMarketData(currency);
+  const { marketCurrency, counterCurrency, isLoading, isError } = useAssetMarketData({
+    marketApiId,
+    knownLedgerIds,
+    knownMarketId,
+  });
 
   const stats: StatRow[] = useMemo(() => {
     if (!marketCurrency) return [];
@@ -104,9 +120,10 @@ export function useMarketStatsViewModel(currency: AssetDetailCurrencyProps) {
   const onTooltipOpen = useCallback(
     (statName: string, open: boolean) => {
       if (open) {
-        track("info_bubble_pressed", {
+        track("button_clicked", {
+          button: "market_stat_definition",
           currency: currency?.id,
-          stat_name: statName,
+          type: statName,
           page: "Asset Detail",
         });
       }

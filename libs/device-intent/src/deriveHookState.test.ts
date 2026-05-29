@@ -3,12 +3,14 @@ import { deriveHookState, type DeriveHookStateParams } from "./deriveHookState";
 import {
   defaultDeviceInitializationInput,
   makeConnectionResult,
+  makeExtractedContext,
   type MockDeviceInitializationInput,
 } from "./__tests__/test-utils";
 
 const noop = () => {};
 
 const defaultConnectionResult = makeConnectionResult();
+const defaultExtractedContext = makeExtractedContext();
 
 const DummyComponent = () => null;
 
@@ -77,7 +79,10 @@ describe("deriveHookState", () => {
       onContextInitialized,
       onUserCancel,
     });
-    const state: ExecutorState = { type: "initializingDeviceContext" };
+    const state: ExecutorState = {
+      type: "initializingDeviceContext",
+      connectionResult: defaultConnectionResult,
+    };
 
     const result = deriveHookState(state, params);
 
@@ -100,7 +105,11 @@ describe("deriveHookState", () => {
       intentComponentExtraProps,
       onUserCancel,
     });
-    const state: ExecutorState = { type: "executingIntent" };
+    const state: ExecutorState = {
+      type: "executingIntent",
+      connectionResult: defaultConnectionResult,
+      extractedContext: defaultExtractedContext,
+    };
 
     const result = deriveHookState(state, params);
 
@@ -115,7 +124,11 @@ describe("deriveHookState", () => {
 
   it("maps executingIntent with undefined jobState when no emission yet", () => {
     const params = makeParams({ latestJobState: undefined });
-    const state: ExecutorState = { type: "executingIntent" };
+    const state: ExecutorState = {
+      type: "executingIntent",
+      connectionResult: defaultConnectionResult,
+      extractedContext: defaultExtractedContext,
+    };
 
     const result = deriveHookState(state, params);
 
@@ -130,7 +143,12 @@ describe("deriveHookState", () => {
     const onUserCancel = jest.fn();
     const error = new Error("job failed");
     const params = makeParams({ onRetry, onUserCancel });
-    const state: ExecutorState = { type: "executingIntentError", error };
+    const state: ExecutorState = {
+      type: "executingIntentError",
+      error,
+      connectionResult: defaultConnectionResult,
+      extractedContext: defaultExtractedContext,
+    };
 
     const result = deriveHookState(state, params);
 
@@ -197,9 +215,21 @@ describe("deriveHookState", () => {
     const phases: ExecutorState[] = [
       { type: "connectingDevice" },
       { type: "deviceDisconnected" },
-      { type: "initializingDeviceContext" },
-      { type: "executingIntent" },
-      { type: "executingIntentError", error: new Error("e") },
+      {
+        type: "initializingDeviceContext",
+        connectionResult: defaultConnectionResult,
+      },
+      {
+        type: "executingIntent",
+        connectionResult: defaultConnectionResult,
+        extractedContext: defaultExtractedContext,
+      },
+      {
+        type: "executingIntentError",
+        error: new Error("e"),
+        connectionResult: defaultConnectionResult,
+        extractedContext: defaultExtractedContext,
+      },
       { type: "idle" },
     ];
 

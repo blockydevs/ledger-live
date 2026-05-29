@@ -92,6 +92,7 @@ describe("getBlockV2", () => {
     });
     expect(hgraphClient.getERC20TransfersByTimestampRange).toHaveBeenCalledTimes(1);
     expect(hgraphClient.getERC20TransfersByTimestampRange).toHaveBeenCalledWith({
+      configOrCurrencyId,
       startTimestamp: "1704067200.123000000",
       endTimestamp: "1704067260.456000000",
       limit: 100,

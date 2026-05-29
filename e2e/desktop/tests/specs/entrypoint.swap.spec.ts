@@ -17,7 +17,6 @@ import { overrideNetworkPayload } from "tests/utils/networkUtils";
 import { getModularSelector } from "tests/utils/modularSelectorUtils";
 import { liveDataWithAddressCommand } from "@ledgerhq/live-common/e2e/cliCommandsUtils";
 import { Addresses } from "@ledgerhq/live-common/e2e/enum/Addresses";
-import { isWallet40Enabled } from "tests/utils/featureFlagUtils";
 
 const app: AppInfos = AppInfos.EXCHANGE;
 
@@ -102,13 +101,7 @@ test.describe("Swap flow from different entry point", () => {
     },
     async ({ app }) => {
       await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
-
-      if (await isWallet40Enabled(app.getPage())) {
-        await app.marketBanner.clickExploreMarketHeader();
-      } else {
-        await app.layout.goToMarket();
-      }
-
+      await app.marketBanner.clickExploreMarketHeader();
       await app.swap.goAndWaitForSwapToBeReady(() =>
         app.market.startSwapForSelectedTicker(swapEntryPoint.swap.accountToDebit.currency.ticker),
       );
@@ -139,13 +132,7 @@ test.describe("Swap flow from different entry point", () => {
     },
     async ({ app }) => {
       await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
-
-      if (await isWallet40Enabled(app.getPage())) {
-        await app.marketBanner.clickExploreMarketHeader();
-      } else {
-        await app.layout.goToMarket();
-      }
-
+      await app.marketBanner.clickExploreMarketHeader();
       await app.market.openCoinPage(swapEntryPoint.swap.accountToDebit.currency.ticker);
       await app.swap.goAndWaitForSwapToBeReady(() => app.market.clickOnSwapButtonOnAsset());
       await app.swap.checkAssetToContains(swapEntryPoint.swap.accountToDebit.currency.name);

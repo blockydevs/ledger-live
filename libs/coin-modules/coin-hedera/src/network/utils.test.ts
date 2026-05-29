@@ -27,6 +27,7 @@ import { getMockedThirdwebTransaction } from "../test/fixtures/thirdweb.fixture"
 import type { HederaMirrorCoinTransfer, HederaMirrorTransaction } from "../types";
 import { apiClient } from "./api";
 import { hgraphClient } from "./hgraph";
+import { rpcClient } from "./rpc";
 import {
   analyzeStakingOperation,
   calculateUncommittedBalanceChange,
@@ -55,6 +56,10 @@ describe("network utils", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await rpcClient._resetInstance();
   });
 
   afterEach(() => {
@@ -363,6 +368,7 @@ describe("network utils", () => {
 
       expect(hgraphClient.getERC20Balances).toHaveBeenCalledTimes(1);
       expect(hgraphClient.getERC20Balances).toHaveBeenCalledWith({
+        configOrCurrencyId: mockCurrency.id,
         address: mockAccount.freshAddress,
       });
       expect(res).toEqual([

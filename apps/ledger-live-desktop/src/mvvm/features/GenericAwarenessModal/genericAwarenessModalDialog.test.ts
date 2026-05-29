@@ -12,11 +12,11 @@ import {
   appStartFeatureIntroCard,
   CAROUSEL_CAMPAIGN_ID,
   carouselCampaignCard,
-} from "./__tests__/fixtures";
+} from "./testUtils/fixtures";
 import {
   createGenericAwarenessModalTestState,
   initialGenericAwarenessModalState,
-} from "./__tests__/testHelpers";
+} from "./testUtils/modalTestUtils";
 import {
   closeGenericAwarenessModalDialog,
   openGenericAwarenessModalDialog,

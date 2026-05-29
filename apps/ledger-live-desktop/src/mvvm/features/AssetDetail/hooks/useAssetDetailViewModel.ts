@@ -1,15 +1,19 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import {
   isMarketCurrencyData,
   resolveAssetDetailMarketInfo,
   useAssetMarketData,
 } from "@ledgerhq/asset-detail";
+import type { LineChartRange } from "LLD/components/LineChart";
 import { useSelector } from "LLD/hooks/redux";
 import { useDistribution } from "~/renderer/actions/general";
 import { counterValueCurrencySelector } from "~/renderer/reducers/settings";
 import { decodeRouteParam } from "../utils/decodeRouteParam";
-import { resolveDistributionItem } from "@ledgerhq/asset-aggregation/assetDistribution/index";
+import {
+  resolveAssetMarketInputs,
+  resolveDistributionItem,
+} from "@ledgerhq/asset-aggregation/assetDistribution/index";
 import { type AssetDetailViewModel } from "../types";
 
 export function useAssetDetailViewModel(): AssetDetailViewModel {
@@ -17,6 +21,7 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
   const location = useLocation();
   const distribution = useDistribution({ groupBy: "asset" });
   const counterCurrency = useSelector(counterValueCurrencySelector).ticker.toLowerCase();
+  const [selectedRange, setSelectedRange] = useState<LineChartRange>("1d");
 
   const marketState = isMarketCurrencyData(location.state) ? location.state : undefined;
   const decodedAssetId = routeAssetId ? decodeRouteParam(routeAssetId) : undefined;
@@ -26,15 +31,15 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
     [routeAssetId, decodedAssetId, marketState, distribution],
   );
 
-  const marketApiId =
-    distributionItem?.marketId ??
-    distributionItem?.slug ??
-    distributionItem?.currency.id ??
-    decodedAssetId;
-  const knownLedgerIds = useMemo<readonly string[] | undefined>(() => {
-    if (distributionItem) return [distributionItem.currency.id];
-    return marketState?.ledgerIds;
-  }, [distributionItem, marketState]);
+  const { marketApiId, knownLedgerIds } = useMemo(
+    () =>
+      resolveAssetMarketInputs({
+        distributionItem,
+        marketState,
+        fallbackId: decodedAssetId,
+      }),
+    [distributionItem, marketState, decodedAssetId],
+  );
 
   const { marketCurrencyData, marketId, ledgerCurrencyFromDada, isLoading } = useAssetMarketData({
     marketApiId,
@@ -59,6 +64,8 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
       displayName: ledgerCurrency?.name ?? marketFallback?.name ?? "",
       displayTicker: (ledgerCurrency?.ticker ?? marketFallback?.ticker ?? "").toUpperCase(),
       ledgerId: ledgerCurrency?.id ?? marketFallback?.ledgerIds?.[0],
+      selectedRange,
+      onRangeChange: setSelectedRange,
     };
   }
 
@@ -72,6 +79,8 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
       displayName: ledgerCurrency?.name ?? "",
       displayTicker: (ledgerCurrency?.ticker ?? "").toUpperCase(),
       ledgerId: ledgerCurrency?.id ?? decodedAssetId,
+      selectedRange,
+      onRangeChange: setSelectedRange,
     };
   }
 

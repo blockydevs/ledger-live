@@ -35,7 +35,7 @@ export async function getBalance({
       mirrorAccountPromise,
       apiClient.getAccountTokens(address),
       coinConfig.useHgraphForErc20
-        ? getERC20BalancesForAccountV2({ configOrCurrencyId: config ?? currencyId, address })
+        ? getERC20BalancesForAccountV2({ configOrCurrencyId: coinConfig, address })
         : Promise.resolve([]),
       validatorPromise,
     ]);
