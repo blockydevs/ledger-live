@@ -21,9 +21,6 @@ if (!process.env.USER_ID) {
 const ledgerClientVersion = `wallet-cli/${pkg.version}`;
 setEnv("LEDGER_CLIENT_VERSION", ledgerClientVersion);
 process.env.LEDGER_CLIENT_VERSION = ledgerClientVersion;
-// Bun can resolve ESM imports to lib-es/ and require() calls to lib/, creating
-// separate live-env singletons. Keep both aligned for lazy CJS coin modules.
-require("@ledgerhq/live-env").setEnv("LEDGER_CLIENT_VERSION", ledgerClientVersion);
 
 /**
  * Wallet-cli-specific coin-module loaders (bitcoin, evm, solana only).
@@ -94,14 +91,7 @@ export const WALLET_CLI_SUPPORTED_CRYPTO_CURRENCY_IDS: readonly CryptoCurrencyId
 setWalletAPIVersion(WALLET_API_VERSION);
 registerCoinModules(walletCliLoaders);
 setSupportedCurrencies([...WALLET_CLI_SUPPORTED_CRYPTO_CURRENCY_IDS]);
-// Set config on the ESM singleton (used by coin-framework families like EVM whose
-// bridge code is reached through ESM imports).
 LiveConfig.setConfig(walletCliConfig);
-// Also set on the CJS singleton — Bun's bundler resolves ESM imports to lib-es/
-// and require() to lib/, creating separate LiveConfig.instance singletons.
-// Non-coin-framework families (solana, bitcoin) load their bridge via require() in
-// the lazy loaders above, so they read from the CJS instance.
-require("@ledgerhq/live-config/LiveConfig").LiveConfig.setConfig(walletCliConfig);
 // TODO: wallet-cli should own its Redux store setup (createRtkCryptoAssetsStore + RTK middleware)
 // instead of relying on setupCalClientStore from @ledgerhq/cryptoassets/cal-client (test-helpers).
 setupCalClientStore();
