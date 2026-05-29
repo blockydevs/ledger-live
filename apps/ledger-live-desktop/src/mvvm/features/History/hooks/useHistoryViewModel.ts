@@ -13,6 +13,7 @@ import { track } from "~/renderer/analytics/segment";
 import { parseHistoryBackPath } from "../utils/historyLocationState";
 
 export type HistoryViewModel = {
+  showBackButton: boolean;
   navigateBack: () => void;
   table: HistoryTable;
   parentRef: React.RefObject<HTMLDivElement | null>;
@@ -35,13 +36,16 @@ export function useHistoryViewModel(): HistoryViewModel {
     };
   }, [dispatch]);
 
+  const showBackButton = useMemo(
+    () => parseHistoryBackPath(location.state) !== undefined,
+    [location.state],
+  );
+
   const navigateBack = useCallback(() => {
-    if (parseHistoryBackPath(location.state) !== undefined) {
-      navigate(-1);
-      return;
-    }
-    navigate("/");
-  }, [navigate, location.state]);
+    // Pop the history stack; do not navigate(backPath) — that pushes a duplicate entry
+    // and traps users between asset detail and tx history on the next back press.
+    navigate(-1);
+  }, [navigate]);
 
   const operations = useHistoryOperations();
   const table = useHistoryTable(operations);
@@ -64,6 +68,7 @@ export function useHistoryViewModel(): HistoryViewModel {
   const hasPendingOperations = useMemo(() => operations.some(op => op.isPending), [operations]);
 
   return {
+    showBackButton,
     navigateBack,
     table,
     parentRef,
