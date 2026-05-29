@@ -327,7 +327,7 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
   return async (info, syncConfig) => {
     const { address, initialAccount, currency, derivationMode } = info;
     const coinModuleApi = await getCoinModuleApi(currency.id, kind);
-    const bridgeApi = getBridgeApi(currency, network);
+    const bridgeApi = await getBridgeApi(currency, network);
 
     const chainSpecificValidation = bridgeApi.getChainSpecificRules;
     if (chainSpecificValidation) {
