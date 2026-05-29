@@ -6,6 +6,7 @@ import { accountsSelector } from "~/renderer/reducers/accounts";
 import { setDrawer } from "~/renderer/drawers/Provider";
 import { OperationDetails } from "~/renderer/drawers/OperationDetails";
 import { track } from "~/renderer/analytics/segment";
+import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
 import { useHistoryTable } from "LLD/features/History/hooks/useHistoryTable";
 import { useHistoryOperationItemsForRootAccounts } from "LLD/features/History/hooks/useHistoryOperationItemsForRootAccounts";
 import {
@@ -61,20 +62,27 @@ export function useTransactionsSectionViewModel(
     const { operation, account, parentAccount } = row.original;
     track("transaction_clicked", {
       transaction: operation.type,
+      page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+      currency: distributionItem.currency.id,
     });
     setDrawer(OperationDetails, {
       operationId: operation.id,
       accountId: account.id,
       parentId: parentAccount?.id,
     });
-  }, []);
+  }, [distributionItem.currency.id]);
 
   const onSeeAll = useCallback(() => {
+    track("button_clicked", {
+      button: "Transactions",
+      currency: distributionItem.currency.id,
+      page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+    });
     const query = distributionItem.accounts.map(a => a.id).join(",");
     navigate(`/history?accountIds=${encodeURIComponent(query)}`, {
       state: { historyBackPath: assetDetailPath },
     });
-  }, [assetDetailPath, distributionItem.accounts, navigate]);
+  }, [assetDetailPath, distributionItem.accounts, distributionItem.currency.id, navigate]);
 
   return {
     visible: scopedOperationItems.length > 0,

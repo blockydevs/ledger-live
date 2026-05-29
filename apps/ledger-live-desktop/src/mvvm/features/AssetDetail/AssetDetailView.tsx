@@ -82,6 +82,7 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
       <ChartSection
         marketData={marketData}
         ledgerId={ledgerId}
+        currencyId={ledgerCurrency?.id}
         isDistributionLoading={isDistributionLoading}
         selectedRange={selectedRange}
         onRangeChange={onRangeChange}
@@ -110,6 +111,7 @@ export function AssetDetailView({ viewModel }: AssetDetailViewProps) {
           <MarketDataSection
             marketData={marketData}
             isDistributionLoading={isDistributionLoading}
+            ledgerCurrencyId={ledgerCurrency?.id ?? ledgerId}
           />
         )}
 

@@ -126,6 +126,20 @@ export function useStakingSectionViewModel(distributionItem: DistributionItem) {
     openStakeDrawer();
   }, [currencyId, openStakeDrawer]);
 
+  const onAvailableBalanceTooltipOpen = useCallback(
+    (open: boolean) => {
+      if (open) {
+        track("button_clicked", {
+          button: "market_stat_definition",
+          currency: currencyId,
+          type: "available_balance",
+          page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+        });
+      }
+    },
+    [currencyId],
+  );
+
   return {
     state,
     availableBalanceTooltip: t("assetDetails.staking.availableBalanceTooltip"),
@@ -135,6 +149,7 @@ export function useStakingSectionViewModel(distributionItem: DistributionItem) {
     earnBannerActionLabel: t("assetDetails.staking.earnBannerAction"),
     onEarnBannerPress,
     onEarnDepositPress,
+    onAvailableBalanceTooltipOpen,
   };
 }
 
