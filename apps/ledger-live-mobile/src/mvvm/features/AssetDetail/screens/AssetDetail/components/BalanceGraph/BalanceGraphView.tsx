@@ -52,7 +52,10 @@ export function BalanceGraphView({
   return (
     <Box testID={ASSET_DETAIL_TEST_IDS.balanceGraph} lx={containerStyle}>
       {isLoading && !hasMarketData ? (
-        <Skeleton lx={{ height: "s56", width: "s256", borderRadius: "md" }} />
+        <Box lx={{ gap: "s16" }}>
+          <Skeleton lx={{ height: "s12", width: "s128", borderRadius: "full" }} />
+          <Skeleton lx={{ height: "s80", width: "s224", borderRadius: "md" }} />
+        </Box>
       ) : (
         <Box lx={headerStyle}>
           <Text typography="body2" lx={{ color: "muted" }}>
