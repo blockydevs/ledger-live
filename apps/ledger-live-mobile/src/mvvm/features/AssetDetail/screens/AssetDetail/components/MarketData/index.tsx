@@ -5,11 +5,28 @@ import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
 import { MarketStats } from "../MarketStats";
 import { PricePerformance } from "../PricePerformance";
 
-export function MarketData({ currency }: Readonly<{ currency: AssetDetailCurrencyProps }>) {
+type Props = Readonly<{
+  currency: AssetDetailCurrencyProps;
+  marketApiId?: string;
+  knownLedgerIds?: readonly string[];
+  knownMarketId?: string;
+}>;
+
+export function MarketData({ currency, marketApiId, knownLedgerIds, knownMarketId }: Props) {
   return (
     <Box lx={containerStyle}>
-      <MarketStats currency={currency} />
-      <PricePerformance currency={currency} />
+      <MarketStats
+        currency={currency}
+        marketApiId={marketApiId}
+        knownLedgerIds={knownLedgerIds}
+        knownMarketId={knownMarketId}
+      />
+      <PricePerformance
+        currency={currency}
+        marketApiId={marketApiId}
+        knownLedgerIds={knownLedgerIds}
+        knownMarketId={knownMarketId}
+      />
     </Box>
   );
 }

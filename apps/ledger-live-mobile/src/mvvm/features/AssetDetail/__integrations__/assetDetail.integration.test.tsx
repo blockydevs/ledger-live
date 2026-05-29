@@ -33,7 +33,17 @@ jest.mock("@ledgerhq/live-common/bridge/useAccountBridge", () => ({
 
 const Stack = createNativeStackNavigator();
 
-function AssetDetailTestNavigator() {
+type NavigatorParams = {
+  currencyId: string;
+  source?: string;
+  marketState?: { id: string; ledgerIds?: string[] };
+};
+
+function AssetDetailTestNavigator({
+  params = { currencyId: "bitcoin" },
+}: {
+  params?: NavigatorParams;
+} = {}) {
   return (
     <Stack.Navigator>
       <Stack.Screen
@@ -41,7 +51,7 @@ function AssetDetailTestNavigator() {
         component={AssetDetailNavigator}
         initialParams={{
           screen: ScreenName.AssetDetail,
-          params: { currencyId: "bitcoin" },
+          params,
         }}
         options={{ headerShown: false }}
       />
@@ -337,6 +347,25 @@ describe("AssetDetail screen layout", () => {
         expect(screen.queryByTestId(ASSET_DETAIL_TEST_IDS.hiddenAssetBanner)).toBeNull(),
       );
       expect(store.getState().settings.blacklistedTokenIds).not.toContain("bitcoin");
+    });
+  });
+
+  describe("market-origin navigation (marketState)", () => {
+    it("renders the screen when navigated from Market with a marketState hint", async () => {
+      render(
+        <AssetDetailTestNavigator
+          params={{
+            currencyId: "binancecoin",
+            source: "market_banner",
+            marketState: { id: "binancecoin", ledgerIds: ["bsc"] },
+          }}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.screen)).toBeVisible();
+      });
+      expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.balanceGraph)).toBeVisible();
     });
   });
 });

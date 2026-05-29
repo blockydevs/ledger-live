@@ -6,7 +6,7 @@ import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/Ba
 import { NavigatorName, ScreenName } from "~/const";
 import { Asset } from "~/types/asset";
 import { useAnalytics } from "~/analytics";
-import { dadaIdToMarketId } from "@ledgerhq/live-common/market/utils/index";
+import { useAssetDetailNavigation } from "LLM/features/AssetDetail/hooks/useAssetDetailNavigation";
 
 interface PortfolioSectionActions {
   onPressShowAll: () => void;
@@ -17,10 +17,10 @@ export function usePortfolioSectionActions(
   isReadOnly: boolean,
   variant: "crypto" | "stablecoin" | "all",
 ): PortfolioSectionActions {
-  const { shouldDisplayAssetSection, shouldDisplayAggregatedAssets } =
-    useWalletFeaturesConfig("mobile");
+  const { shouldDisplayAssetSection } = useWalletFeaturesConfig("mobile");
   const navigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
   const { track } = useAnalytics();
+  const { openFromAsset } = useAssetDetailNavigation();
 
   const onPressShowAll = useCallback(() => {
     track("button_clicked", {
@@ -49,29 +49,14 @@ export function usePortfolioSectionActions(
         asset: asset.currency.name,
         page: "Wallet",
       });
-      if (shouldDisplayAggregatedAssets) {
-        navigation.navigate(NavigatorName.AssetDetail, {
-          screen: ScreenName.AssetDetail,
-          params: {
-            currencyId: asset.currency.id,
-            source: "portfolio",
-          },
-        });
-      } else if (asset.isPlaceholder) {
-        const currencyId = dadaIdToMarketId(asset.marketId ?? asset.currency.id);
-        navigation.navigate(ScreenName.MarketDetail, {
-          currencyId,
-        });
-      } else {
-        navigation.navigate(NavigatorName.Accounts, {
-          screen: ScreenName.Asset,
-          params: {
-            currency: asset.currency,
-          },
-        });
-      }
+      openFromAsset({
+        currency: asset.currency,
+        source: "portfolio",
+        isPlaceholder: asset.isPlaceholder,
+        marketId: asset.marketId,
+      });
     },
-    [navigation, track, shouldDisplayAggregatedAssets],
+    [openFromAsset, track],
   );
 
   return { onPressShowAll, onItemPress };

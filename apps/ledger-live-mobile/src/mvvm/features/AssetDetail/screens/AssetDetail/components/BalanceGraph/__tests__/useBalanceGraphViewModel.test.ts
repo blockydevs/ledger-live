@@ -99,7 +99,9 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("price & trend", () => {
     it("exposes price and the 24h change percentage by default", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       expect(result.current.price).toBe(50000);
       expect(result.current.priceChangePercentage).toBe(2.35);
@@ -111,7 +113,9 @@ describe("useBalanceGraphViewModel", () => {
         isFetching: false,
       } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
 
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       expect(result.current.price).toBe(0);
       expect(result.current.hasMarketData).toBe(false);
@@ -119,7 +123,9 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("uses the correct priceChangePercentage key after range change", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       act(() => result.current.onRangeChange("7d"));
       expect(result.current.priceChangePercentage).toBe(-5.12);
@@ -131,7 +137,9 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("priceFormatter", () => {
     it("splits a USD-formatted value into FormattedValue parts", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       const formatted = result.current.priceFormatter(1234.56);
 
@@ -142,7 +150,9 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("preserves 6 decimals for a sub-cent BONK-like price", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       const formatted = result.current.priceFormatter(0.000006);
 
@@ -154,13 +164,17 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("formattedPriceChange", () => {
     it("returns a signed currency string for a positive change", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       expect(result.current.formattedPriceChange).toMatch(/^\+/);
     });
 
     it("returns a minus-prefixed string for a negative change", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       act(() => result.current.onRangeChange("7d"));
 
@@ -173,7 +187,9 @@ describe("useBalanceGraphViewModel", () => {
         isFetching: false,
       } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
 
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       expect(result.current.formattedPriceChange).toBeUndefined();
     });
@@ -184,7 +200,9 @@ describe("useBalanceGraphViewModel", () => {
         isFetching: false,
       } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
 
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       expect(result.current.formattedPriceChange).toBe("+<$0.000001");
     });
@@ -192,7 +210,9 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("onRangeChange", () => {
     it("updates selectedRange and fires analytics", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       expect(result.current.selectedRange).toBe("24h");
 
@@ -208,7 +228,9 @@ describe("useBalanceGraphViewModel", () => {
     });
 
     it("does not fire analytics when selecting the same range", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       act(() => result.current.onRangeChange("24h"));
 
@@ -218,14 +240,14 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("showReceive", () => {
     it("is false when currency is undefined", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(undefined));
+      const { result } = renderHook(() => useBalanceGraphViewModel({ currency: undefined }));
 
       expect(result.current.showReceive).toBe(false);
     });
 
     it("is true when the asset has no funds but another asset does", () => {
       const { result } = renderHook(
-        () => useBalanceGraphViewModel(mockBtcCryptoCurrency),
+        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
         withAccounts([
           { currencyId: "bitcoin", balance: 0 },
           { currencyId: "ethereum", balance: 1000 },
@@ -237,7 +259,7 @@ describe("useBalanceGraphViewModel", () => {
 
     it("is false when the asset already has funds", () => {
       const { result } = renderHook(
-        () => useBalanceGraphViewModel(mockBtcCryptoCurrency),
+        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
         withAccounts([
           { currencyId: "bitcoin", balance: 500 },
           { currencyId: "ethereum", balance: 1000 },
@@ -249,7 +271,7 @@ describe("useBalanceGraphViewModel", () => {
 
     it("is false when the wallet has no funds at all", () => {
       const { result } = renderHook(
-        () => useBalanceGraphViewModel(mockBtcCryptoCurrency),
+        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
         withAccounts([
           { currencyId: "bitcoin", balance: 0 },
           { currencyId: "ethereum", balance: 0 },
@@ -261,7 +283,7 @@ describe("useBalanceGraphViewModel", () => {
 
     it("is false when hideReceive is true even if conditions are met", () => {
       const { result } = renderHook(
-        () => useBalanceGraphViewModel(mockBtcCryptoCurrency, true),
+        () => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency, hideReceive: true }),
         withAccounts([
           { currencyId: "bitcoin", balance: 0 },
           { currencyId: "ethereum", balance: 1000 },
@@ -273,7 +295,7 @@ describe("useBalanceGraphViewModel", () => {
 
     it("is false for a token the user already holds (regression: ERC-20 detected via flattenAccounts)", () => {
       const { result } = renderHook(
-        () => useBalanceGraphViewModel(eursToken),
+        () => useBalanceGraphViewModel({ currency: eursToken }),
         withEthAndEursToken({ ethBalance: 0, eursBalance: 36_300_500 }),
       );
 
@@ -283,7 +305,9 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("onReceivePress", () => {
     it("tracks analytics and opens the receive drawer", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       act(() => result.current.onReceivePress());
 
@@ -298,7 +322,9 @@ describe("useBalanceGraphViewModel", () => {
 
   describe("ranges", () => {
     it("exposes translated range options in chronological order (24h first, 1y last)", () => {
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }),
+      );
 
       const values = result.current.ranges.map(r => r.value);
       expect(values).toEqual(["24h", "7d", "30d", "1y"]);
@@ -312,7 +338,13 @@ describe("useBalanceGraphViewModel", () => {
         isFetching: true,
       } as unknown as ReturnType<typeof useGetCurrencyDataQuery>);
 
-      const { result } = renderHook(() => useBalanceGraphViewModel(mockBtcCryptoCurrency));
+      const { result } = renderHook(() =>
+        useBalanceGraphViewModel({
+          currency: mockBtcCryptoCurrency,
+          marketApiId: mockBtcCryptoCurrency.id,
+          knownLedgerIds: [mockBtcCryptoCurrency.id],
+        }),
+      );
 
       expect(result.current.isLoading).toBe(true);
     });
