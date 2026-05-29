@@ -64,8 +64,8 @@ catalogs:
       specifier: 0.1.35
       version: 0.1.35
     '@ledgerhq/lumen-ui-react-visualization':
-      specifier: 0.1.13
-      version: 0.1.13
+      specifier: 0.1.15
+      version: 0.1.15
     '@ledgerhq/lumen-ui-rnative':
       specifier: 0.1.37
       version: 0.1.37
@@ -1052,7 +1052,7 @@ importers:
         version: 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
       '@ledgerhq/lumen-ui-react-visualization':
         specifier: 'catalog:'
-        version: 0.1.13(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
+        version: 0.1.15(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)
       '@ledgerhq/react-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/react
@@ -17207,11 +17207,11 @@ packages:
   '@ledgerhq/lumen-design-core@0.1.15':
     resolution: {integrity: sha512-y5cUl3GHtd5RLALfhQGZZ4+6WnMkcU/+rW+Cx7wmAtl5kXin9zmje0CVG/jKlbO6s/7QmFXenqKZSQH46kSFEw==}
 
-  '@ledgerhq/lumen-ui-react-visualization@0.1.13':
-    resolution: {integrity: sha512-XaNy/WinKL15O/x/kr5wvWjzqKj3GZAGvoc+k4OSIBCuhuHSHs8A4XuJRoBfmhOhDwcpbHrkgjzWP+mTTfgj3g==}
+  '@ledgerhq/lumen-ui-react-visualization@0.1.15':
+    resolution: {integrity: sha512-3/zedLhnitebl2a5905m9/03edT7dkDhp3RAVQDs1FowUJAslPYR3i/7LwljKEE1jmkdZ+x9XQZBTERrJlEzZQ==}
     peerDependencies:
-      '@ledgerhq/lumen-design-core': 0.1.14
-      '@ledgerhq/lumen-ui-react': 0.1.34
+      '@ledgerhq/lumen-design-core': 0.1.15
+      '@ledgerhq/lumen-ui-react': 0.1.36
       class-variance-authority: ^0.7.1
       clsx: ^2.1.1
       react: 19.0.0
@@ -21278,7 +21278,7 @@ packages:
       metro-react-native-babel-preset: '*'
       react: 19.0.0
       react-dom: 19.0.0
-      webpack: '*'
+      webpack: ^5.89.0
     peerDependenciesMeta:
       '@react-native/babel-preset':
         optional: true
@@ -32846,7 +32846,6 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode-terminal@0.11.0:
@@ -44834,11 +44833,11 @@ snapshots:
       tailwindcss: 4.1.18
       tslib: 2.6.2
 
-  '@ledgerhq/lumen-ui-react-visualization@0.1.13(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
+  '@ledgerhq/lumen-ui-react-visualization@0.1.15(@ledgerhq/lumen-design-core@0.1.15)(@ledgerhq/lumen-ui-react@0.1.35(e90fd83ca17bf10e850de74ae9e31ccb))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0)':
     dependencies:
       '@ledgerhq/lumen-design-core': 0.1.15
       '@ledgerhq/lumen-ui-react': 0.1.35(e90fd83ca17bf10e850de74ae9e31ccb)
-      '@ledgerhq/lumen-utils-shared': 0.1.3(react@19.0.0)
+      '@ledgerhq/lumen-utils-shared': 0.1.4(react@19.0.0)
       class-variance-authority: 0.7.1
       clsx: 2.1.1
       d3-array: 3.2.4
