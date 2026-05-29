@@ -9074,9 +9074,13 @@
     "notFound": "Asset distribution item not found.",
     "marketStats": "Market stats",
     "marketStatsTooltip": "Market metrics for this asset.",
+    "marketCapTooltip": "The total value of all coins in circulation. Think of it as the crypto's total worth on the market.",
+    "circulatingSupplyTooltip": "The total number of tokens currently available in the market and held by the public. It excludes locked, reserved, or unminted tokens.",
+    "maxSupplyTooltip": "The maximum number of tokens that will ever exist. For some assets, this is fixed to prevent inflation.",
     "pricePerformance": "Price performance",
     "marketRank": "Market rank",
     "tradingVolume24h": "24h trading volume",
+    "tradingVolume24hTooltip": "The total amount traded in the last 24 hours.",
     "day": "1 day",
     "staking": {
       "availableBalance": "Available balance",
