@@ -40,8 +40,8 @@ const TEST_ID = {
   MARKET_PRICE_FIAT_VARIATION: "asset-detail-market-price-fiat-variation",
   MARKET_DATA_SECTION: "asset-detail-market-data-section",
   CHART_SECTION: "asset-detail-chart-section",
-  LINE_CHART_RANGE_DEFAULT: "line-chart-range-1D",
-  LINE_CHART_RANGE_ONE_YEAR: "line-chart-range-1Y",
+  LINE_CHART_RANGE_DEFAULT: "line-chart-range-1d",
+  LINE_CHART_RANGE_ONE_YEAR: "line-chart-range-1y",
   TRANSACTIONS_SECTION: "asset-detail-transactions-section",
   ACTION_BAR: "asset-detail-action-bar",
   ACTION_BUY: "asset-detail-action-buy",
@@ -369,6 +369,7 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expect(screen.getByTestId(TEST_ID.CHART_SECTION)).toBeVisible();
+          expect(screen.getByTestId(TEST_ID.LINE_CHART_RANGE_DEFAULT)).toBeVisible();
         });
 
         const defaultRange = screen.getByTestId(TEST_ID.LINE_CHART_RANGE_DEFAULT);
@@ -389,6 +390,29 @@ describe("AssetDetail integration", () => {
           "aria-checked",
           "false",
         );
+      });
+
+      it("updates the market price section variation when the chart range changes", async () => {
+        mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+        setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+        const { user } = renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+        await waitForMarketPriceSectionShowsQuote();
+
+        const section = screen.getByTestId(TEST_ID.MARKET_PRICE_SECTION);
+        expect(within(section).getByText("1 day")).toBeVisible();
+        // BTC fixture has a negative 24h change.
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT)).toHaveTextContent(/^-/);
+
+        const oneYearRange = await screen.findByTestId(TEST_ID.LINE_CHART_RANGE_ONE_YEAR);
+        await user.click(oneYearRange);
+
+        await waitFor(() => {
+          expect(within(section).getByText("1 year")).toBeVisible();
+        });
+        // BTC fixture has a +118.89% 1y change.
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT)).toHaveTextContent(/^\+/);
       });
     });
 

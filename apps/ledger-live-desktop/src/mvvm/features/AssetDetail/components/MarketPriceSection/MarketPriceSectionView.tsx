@@ -44,12 +44,12 @@ export function MarketPriceSectionView(viewModel: MarketPriceSectionViewProps) {
                   {viewModel.variationText}
                 </span>
                 <span className="body-2 text-muted">
-                  <span aria-hidden>&middot;</span> {viewModel.dayLabel}
+                  <span aria-hidden>&middot;</span> {viewModel.rangeLabel}
                 </span>
               </div>
             ) : (
               <span className="body-2 text-muted">
-                <span aria-hidden>&middot;</span> {viewModel.dayLabel}
+                <span aria-hidden>&middot;</span> {viewModel.rangeLabel}
               </span>
             )}
           </div>

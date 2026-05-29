@@ -1,16 +1,17 @@
 import { useCallback, useMemo } from "react";
 import type { AssetMarketData } from "@ledgerhq/asset-detail";
 import type { DistributionItem, ValueChange } from "@ledgerhq/types-live";
-import { KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
 import { useTrendViewModel } from "LLD/features/Portfolio/hooks/useTrendViewModel";
 import { useSelector } from "LLD/hooks/redux";
 import { formatPriceFragment, formatSignedFiatVariation } from "@ledgerhq/live-currency-format";
 import type { FormattedValue } from "@ledgerhq/lumen-ui-react";
+import type { LineChartRange } from "LLD/components/LineChart";
 import { useTranslation } from "react-i18next";
 import { counterValueCurrencySelector, localeSelector } from "~/renderer/reducers/settings";
 import {
   clampDayChangePercentPointsNearZero,
   getFiatPriceVariationFromPercentChange,
+  getPriceChangeKeyForRange,
   resolveMarketPriceSectionSourceId,
   resolveTrendPercentAndVariant,
 } from "./utils";
@@ -21,12 +22,13 @@ type UseMarketPriceSectionViewModelProps = Readonly<{
   ledgerId?: string;
   marketData: AssetMarketData;
   isDistributionLoading: boolean;
+  selectedRange: LineChartRange;
 }>;
 
 type UseMarketPriceSectionViewModelResult = Readonly<{
   shouldRenderSection: boolean;
   title: string;
-  dayLabel: string;
+  rangeLabel: string;
   priceValue?: number;
   priceFormatter: (value: number) => FormattedValue;
   variationText: string;
@@ -37,11 +39,23 @@ type UseMarketPriceSectionViewModelResult = Readonly<{
   hasVariationData: boolean;
 }>;
 
+const RANGE_I18N_KEY: Record<LineChartRange, string> = {
+  "1h": "assetDetails.day",
+  "1d": "assetDetails.day",
+  "1w": "assetDetails.week",
+  "1m": "assetDetails.month",
+  "6m": "assetDetails.year",
+  "1y": "assetDetails.year",
+  "5y": "assetDetails.allTime",
+  all: "assetDetails.allTime",
+};
+
 export function useMarketPriceSectionViewModel({
   distributionItem,
   ledgerId,
   marketData,
   isDistributionLoading,
+  selectedRange,
 }: UseMarketPriceSectionViewModelProps): UseMarketPriceSectionViewModelResult {
   const { t } = useTranslation();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
@@ -60,30 +74,27 @@ export function useMarketPriceSectionViewModel({
     marketAssetId &&
       resolveAssetDetailSectionLoading(isDistributionLoading, marketData.isLoading, hasPriceData),
   );
-  const dayPercentage = data?.priceChangePercentage?.[KeysPriceChange.day];
-  const normalizedDayPercentage = clampDayChangePercentPointsNearZero(dayPercentage);
-  const dayVariationFiat = getFiatPriceVariationFromPercentChange(
-    data?.price,
-    normalizedDayPercentage,
-  );
+  const priceChangeKey = getPriceChangeKeyForRange(selectedRange);
+  const rangePercentage = data?.priceChangePercentage?.[priceChangeKey];
+  const normalizedPercentage = clampDayChangePercentPointsNearZero(rangePercentage);
+  const variationFiat = getFiatPriceVariationFromPercentChange(data?.price, normalizedPercentage);
 
   const priceFormatter = useCallback(
     (value: number): FormattedValue => formatPriceFragment(fiatUnit, value, locale),
     [fiatUnit, locale],
   );
 
-  const hasVariationData =
-    hasPriceData && normalizedDayPercentage != null && dayVariationFiat != null;
+  const hasVariationData = hasPriceData && normalizedPercentage != null && variationFiat != null;
   const variationText = hasVariationData
-    ? formatSignedFiatVariation(dayVariationFiat, fiatUnit, locale)
+    ? formatSignedFiatVariation(variationFiat, fiatUnit, locale)
     : "—";
 
   const valueChange: ValueChange = useMemo(
     () => ({
-      percentage: hasVariationData ? normalizedDayPercentage / 100 : 0,
+      percentage: hasVariationData ? normalizedPercentage / 100 : 0,
       value: 0,
     }),
-    [hasVariationData, normalizedDayPercentage],
+    [hasVariationData, normalizedPercentage],
   );
   const { percentageText: trendPercentageText, variant: trendVariant } = useTrendViewModel({
     valueChange,
@@ -98,7 +109,7 @@ export function useMarketPriceSectionViewModel({
   return {
     shouldRenderSection,
     title: t("assetDetails.marketPrice"),
-    dayLabel: t("assetDetails.day"),
+    rangeLabel: t(RANGE_I18N_KEY[selectedRange]),
     priceValue: hasPriceData ? data?.price : undefined,
     priceFormatter,
     variationText,
