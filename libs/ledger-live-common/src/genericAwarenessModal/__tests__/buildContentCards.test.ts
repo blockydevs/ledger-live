@@ -212,6 +212,33 @@ describe("buildGenericAwarenessModalContentCards", () => {
     expect(contentCards).toEqual([]);
   });
 
+  it("should build prompt content from grouped braze card extras", () => {
+    const promptCard = makeCard("prompt", {
+      layout: GenericAwarenessModalLayout.Prompt,
+      campaignId: "campaign-prompt",
+      title: "Prompt title",
+      subtitle: "Prompt subtitle",
+      imageUrl: "https://example.com/prompt.png",
+      primaryButtonLabel: "Learn more",
+      primaryButtonLink: "https://example.com",
+    });
+    const groupedCards = makeGroupedCards("campaign-prompt", [promptCard]);
+
+    const contentCards = buildGenericAwarenessModalContentCards(groupedCards);
+
+    expect(contentCards).toEqual([
+      {
+        layout: GenericAwarenessModalLayout.Prompt,
+        id: "campaign-prompt",
+        title: "Prompt title",
+        subtitle: "Prompt subtitle",
+        imageUrl: "https://example.com/prompt.png",
+        primaryButtonLabel: "Learn more",
+        primaryButtonLink: "https://example.com",
+      },
+    ]);
+  });
+
   it("should ignore campaigns with unknown layout", () => {
     const unknownLayoutCard = makeCard("1", {
       layout: "unknown",

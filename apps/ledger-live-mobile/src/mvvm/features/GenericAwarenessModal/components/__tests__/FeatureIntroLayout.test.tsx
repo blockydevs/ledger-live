@@ -1,10 +1,11 @@
 import React from "react";
 import { render, screen } from "@tests/test-renderer";
-import { FeatureIntroContent } from "../FeatureIntroContent";
+import { FeatureIntroLayout } from "../FeatureIntroLayout";
 import {
   GenericAwarenessModalLayout,
   type GenericAwarenessModalFeatureIntro,
 } from "@ledgerhq/live-common/genericAwarenessModal";
+import type { FeatureIntroViewModel } from "../../screens/useGenericAwarenessModalDrawerViewModel";
 
 const content: GenericAwarenessModalFeatureIntro = {
   id: "featureIntro",
@@ -30,24 +31,26 @@ const content: GenericAwarenessModalFeatureIntro = {
   ],
 };
 
-describe("FeatureIntroContent", () => {
-  const renderFeatureIntroContent = (props?: {
+describe("FeatureIntroLayout", () => {
+  const renderFeatureIntroLayout = (props?: {
     readonly onClose?: () => void;
     readonly onPrimaryPress?: () => void;
     readonly onSecondaryPress?: () => void;
     readonly content?: GenericAwarenessModalFeatureIntro;
-  }) =>
-    render(
-      <FeatureIntroContent
-        content={props?.content ?? content}
-        onClose={props?.onClose ?? jest.fn()}
-        onPrimaryPress={props?.onPrimaryPress ?? jest.fn()}
-        onSecondaryPress={props?.onSecondaryPress ?? jest.fn()}
-      />,
-    );
+  }) => {
+    const viewModel: FeatureIntroViewModel = {
+      content: props?.content ?? content,
+      onPrimaryPress: props?.onPrimaryPress ?? jest.fn(),
+      onSecondaryPress: props?.onSecondaryPress ?? jest.fn(),
+    };
 
-  it("should render the feature intro content", () => {
-    renderFeatureIntroContent();
+    return render(
+      <FeatureIntroLayout onClose={props?.onClose ?? jest.fn()} viewModel={viewModel} />,
+    );
+  };
+
+  it("should render the feature intro layout", () => {
+    renderFeatureIntroLayout();
 
     expect(screen.getByText("Connect a Ledger device")).toBeOnTheScreen();
     expect(
@@ -61,7 +64,7 @@ describe("FeatureIntroContent", () => {
 
   it("should call onClose when action buttons are pressed", async () => {
     const onClose = jest.fn();
-    const { user } = renderFeatureIntroContent({ onClose });
+    const { user } = renderFeatureIntroLayout({ onClose });
 
     await user.press(screen.getByText("Connect"));
     await user.press(screen.getByText("Buy your Ledger device"));
@@ -81,7 +84,7 @@ describe("FeatureIntroContent", () => {
       ],
     };
 
-    renderFeatureIntroContent({ content: contentWithInvalidIcon });
+    renderFeatureIntroLayout({ content: contentWithInvalidIcon });
 
     expect(screen.getByText("Fallback icon item")).toBeOnTheScreen();
     expect(screen.getByText("This item still renders.")).toBeOnTheScreen();

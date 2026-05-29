@@ -3,32 +3,22 @@ import { Slides, useSlidesContext } from "@ledgerhq/native-ui";
 import { StyleSheet } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
 import { CarouselFooterButton } from "./CarouselFooterButton";
 import { CarouselProgressIndicator } from "./CarouselProgressIndicator";
 import { CarouselSlideItem } from "./CarouselSlideItem";
+import type { CarouselViewModel } from "../screens/useGenericAwarenessModalDrawerViewModel";
 
-type CarouselContentProps = Readonly<{
-  slides: GenericAwarenessModalCarouselSlide[];
+type CarouselLayoutProps = Readonly<{
   onClose: () => void;
-  onSlideViewed: (slideIndex: number, isLastSlide: boolean) => void;
-  onNavigationPress: (slideIndex: number, button: string, isLastSlide: boolean) => void;
-  onPrimaryPress: (slideIndex: number) => void;
-  onMalformedUrl: (slideIndex: number) => void;
+  viewModel: CarouselViewModel;
 }>;
 
 const AnimatedGestureHandlerFlatList = Animated.createAnimatedComponent(FlatList);
 
 const DEFAULT_LINE_COUNT = 1;
 
-export function CarouselContent({
-  slides,
-  onClose,
-  onSlideViewed,
-  onNavigationPress,
-  onPrimaryPress,
-  onMalformedUrl,
-}: CarouselContentProps) {
+export function CarouselLayout({ onClose, viewModel }: CarouselLayoutProps) {
+  const { data: slides } = viewModel.content;
   const [titleLineCounts, setTitleLineCounts] = useState<number[]>(() =>
     slides.map(() => DEFAULT_LINE_COUNT),
   );
@@ -91,13 +81,13 @@ export function CarouselContent({
       </Slides.ProgressIndicator>
 
       <Slides.Footer>
-        <CarouselSlideViewedTracker onSlideViewed={onSlideViewed} />
+        <CarouselSlideViewedTracker onSlideViewed={viewModel.onSlideViewed} />
         <CarouselFooterButton
           slides={slides}
           onClose={onClose}
-          onNavigationPress={onNavigationPress}
-          onPrimaryPress={onPrimaryPress}
-          onMalformedUrl={onMalformedUrl}
+          onNavigationPress={viewModel.onNavigationPress}
+          onPrimaryPress={viewModel.onPrimaryPress}
+          onMalformedUrl={viewModel.onMalformedUrl}
         />
       </Slides.Footer>
     </Slides>

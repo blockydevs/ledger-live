@@ -11,6 +11,7 @@ export const COPY = {
   layout: "Layout",
   layoutCarousel: "Carousel",
   layoutFeatureIntro: "Feature intro",
+  layoutPrompt: "Prompt",
   trigger: "Trigger",
   triggerAppStart: "App start",
   triggerBannerClick: "Banner click / deeplink",

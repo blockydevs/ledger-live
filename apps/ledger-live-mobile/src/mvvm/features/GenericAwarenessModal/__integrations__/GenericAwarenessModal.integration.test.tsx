@@ -3,11 +3,12 @@ import { Linking } from "react-native";
 import { act, fireEvent, render, screen, waitFor } from "@tests/test-renderer";
 import { screen as analyticsScreen, track } from "~/analytics";
 import type { State } from "~/reducers/types";
-import { carouselMockData, featureIntroMockData } from "../mockData";
+import { carouselMockData, featureIntroMockData, promptMockData } from "../mockData";
 import { GenericAwarenessModalDrawer } from "../screens/GenericAwarenessModalDrawer";
 import {
   GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
   GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+  GENERIC_AWARENESS_MODAL_PROMPT_PAGE,
 } from "../analytics";
 
 describe("GenericAwarenessModalDrawer", () => {
@@ -25,6 +26,7 @@ describe("GenericAwarenessModalDrawer", () => {
   const genericAwarenessModalContentCards = [
     featureIntroMockData,
     carouselMockData,
+    promptMockData,
     appStartFeatureIntroMockData,
   ];
   const featureIntroContent = featureIntroMockData;
@@ -344,6 +346,56 @@ describe("GenericAwarenessModalDrawer", () => {
       await waitFor(() => {
         expect(screen.queryAllByText(carouselSlides[0].title)).toHaveLength(0);
       });
+    });
+  });
+
+  describe("prompt layout", () => {
+    it("should render prompt content and track interactions", async () => {
+      const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
+      const { user } = render(<GenericAwarenessModalDrawer />, {
+        overrideInitialState: withGenericAwarenessModal({
+          isOpen: true,
+          campaignId: promptMockData.id,
+        }),
+      });
+      act(() => jest.runOnlyPendingTimers());
+
+      expect(await screen.findByText(promptMockData.title)).toBeOnTheScreen();
+      expect(screen.getByText(promptMockData.subtitle)).toBeOnTheScreen();
+      expect(screen.getByText("Close")).toBeOnTheScreen();
+      expect(analyticsScreen).toHaveBeenCalledWith(GENERIC_AWARENESS_MODAL_PROMPT_PAGE, undefined, {
+        name: GENERIC_AWARENESS_MODAL_PROMPT_PAGE,
+        contentId: promptMockData.id,
+      });
+
+      await user.press(screen.getByText(promptMockData.primaryButtonLabel));
+
+      await waitFor(() => {
+        expect(openURLSpy).toHaveBeenCalledWith(promptMockData.primaryButtonLink);
+      });
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: promptMockData.primaryButtonLabel,
+        page: GENERIC_AWARENESS_MODAL_PROMPT_PAGE,
+        contentId: promptMockData.id,
+        ctaPosition: "secondary",
+        link: promptMockData.primaryButtonLink,
+      });
+
+      await user.press(screen.getByText("Close"));
+      act(() => jest.runOnlyPendingTimers());
+
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "Close",
+        page: GENERIC_AWARENESS_MODAL_PROMPT_PAGE,
+        contentId: promptMockData.id,
+        ctaPosition: "primary",
+      });
+      expect(track).toHaveBeenCalledWith("drawer_dismissed", {
+        drawer: GENERIC_AWARENESS_MODAL_PROMPT_PAGE,
+        page: GENERIC_AWARENESS_MODAL_PROMPT_PAGE,
+        contentId: promptMockData.id,
+      });
+      openURLSpy.mockRestore();
     });
   });
 });
