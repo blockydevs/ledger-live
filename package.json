@@ -27,7 +27,7 @@
     "release": "changeset publish",
     "build:libs": "nx run-many -t build -p \"@ledgerhq/*\" --exclude \"@ledgerhq/dummy-*-app,@ledgerhq/live-cli,@ledgerhq/web-tools,@ledgerhq/wallet-cli\" --parallel=20",
     "build:libs:force": "pnpm run build:libs --skip-nx-cache",
-    "build:tests": "nx run-many -t build --include \"@ledgerhq/dummy-*-app\"",
+    "build:tests": "nx run-many -t build -p \"@ledgerhq/dummy-*-app\"",
     "build:dummy-apps": "nx run-many -t build -p \"@ledgerhq/dummy-*-app\"",
     "build:dummy-wallet-app": "nx run-many -t build -p @ledgerhq/dummy-wallet-app",
     "build:dummy-live-app": "nx run-many -t build -p @ledgerhq/dummy-live-app",
