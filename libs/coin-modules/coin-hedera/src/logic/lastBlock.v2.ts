@@ -24,7 +24,7 @@ export async function lastBlockV2({
   // => we search the most recent transaction, but only in finalized time range (ending 10 seconds ago).
   const before = new Date(Date.now() - FINALITY_MS - SYNTHETIC_BLOCK_WINDOW_SECONDS * 1000);
   const [latestTransaction, latestHgraphTimestampNs] = await Promise.all([
-    apiClient.getLatestTransaction(before),
+    apiClient.getLatestTransaction({ configOrCurrencyId, before }),
     hgraphClient.getLatestIndexedConsensusTimestamp({ configOrCurrencyId }),
   ]);
 
