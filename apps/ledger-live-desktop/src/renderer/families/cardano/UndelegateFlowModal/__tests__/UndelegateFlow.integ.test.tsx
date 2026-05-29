@@ -105,7 +105,20 @@ jest.mock("@ledgerhq/live-common/bridge/index", () => ({
 }));
 
 jest.mock("~/renderer/families", () => ({
-  getLLDCoinFamily: jest.fn(() => ({})),
+  useLLDCoinFamily: jest.fn(() => ({})),
+  importLLDCoinFamily: jest.fn(() => Promise.resolve({})),
+}));
+
+// Render coin modals synchronously here: this test exercises the openModal → ModalsLayer flow, not
+// the lazy chunk loading (covered by families/__tests__/loaders.test.ts), which never settles in jest.
+jest.mock("~/renderer/families/modals-loaders", () => ({
+  __esModule: true,
+  coinModalLoaders: {
+    MODAL_CARDANO_UNDELEGATE: jest.requireActual("../index").default,
+    MODAL_CARDANO_UNDELEGATE_SELF_TX_INFO: jest.requireActual("../info").default,
+  },
+  coinModalImports: {},
+  preloadCoinModals: jest.fn(),
 }));
 
 jest.mock("~/renderer/modals/Send/AccountFooter", () => ({

@@ -14,6 +14,7 @@ import { DomainServiceProvider } from "@ledgerhq/domain-service/hooks/index";
 import { Transaction, TransactionStatus } from "@ledgerhq/live-common/generated/types";
 import { getAccountBridgeByFamily } from "@ledgerhq/live-common/bridge/impl";
 import RecipientField from "./RecipientField";
+import { importLLDCoinFamily } from "~/renderer/families";
 
 // Temp mock to prevent error on sentry init
 jest.mock("../../../../sentry/install", () => ({
@@ -146,6 +147,8 @@ describe("RecipientField", () => {
   beforeAll(async () => {
     setSupportedCurrencies(["polygon", "ethereum"]);
     await getAccountBridgeByFamily("evm");
+    // Preload so useLLDCoinFamily resolves synchronously on first render instead of suspending.
+    await importLLDCoinFamily("evm");
   });
 
   beforeEach(() => {

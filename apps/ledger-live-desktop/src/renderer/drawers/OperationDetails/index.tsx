@@ -50,7 +50,7 @@ import ConfirmationCheck from "~/renderer/components/OperationsList/Confirmation
 import OperationComponent from "~/renderer/components/OperationsList/Operation";
 import Text, { TextProps } from "~/renderer/components/Text";
 import ToolTip from "~/renderer/components/Tooltip";
-import { getLLDCoinFamily } from "~/renderer/families";
+import { useLLDCoinFamily } from "~/renderer/families";
 import { getOperationTypeI18nKey } from "~/renderer/helpers/operationTypeI18nKey";
 import IconChevronRight from "~/renderer/icons/ChevronRight";
 import IconExternalLink from "~/renderer/icons/ExternalLink";
@@ -155,7 +155,7 @@ const OperationD = (props: Props) => {
 
   const unit = useAccountUnit(account);
   const cryptoCurrency = mainAccount.currency;
-  const specific = cryptoCurrency ? getLLDCoinFamily(cryptoCurrency.family) : null;
+  const specific = useLLDCoinFamily(cryptoCurrency.family);
   const amount =
     specific?.operationDetails?.getAmount?.(operation) ?? getOperationAmountNumber(operation);
   const isNegative = amount.isNegative();
@@ -848,6 +848,30 @@ const More = styled(Text).attrs<TextProps>(p => ({
   text-transform: ${p => (!p.textTransform ? "auto" : "uppercase")};
   outline: none;
 `;
+const DataListLine = ({
+  line,
+  cryptoCurrencyFamily,
+  operationType,
+}: {
+  line: string;
+  cryptoCurrencyFamily: string | undefined;
+  operationType: OperationType | undefined;
+}) => {
+  const specific = useLLDCoinFamily(cryptoCurrencyFamily);
+  const SplitAddressComponent =
+    specific?.operationDetails?.splitAddress?.[operationType as OperationType] || SplitAddress;
+  return (
+    <OpDetailsData relative horizontal>
+      <HashContainer>
+        <SplitAddressComponent value={line} />
+      </HashContainer>
+      <GradientHover>
+        <CopyWithFeedback text={line} />
+      </GradientHover>
+    </OpDetailsData>
+  );
+};
+
 export class DataList extends Component<{
   lines: string[];
   t: TFunction;
@@ -871,18 +895,13 @@ export class DataList extends Component<{
     const { showMore, numToShow } = this.state;
     // Hardcoded for now
     const shouldShowMore = lines.length > 3;
-    const specific = cryptoCurrency ? getLLDCoinFamily(cryptoCurrency.family) : null;
-    const SplitAddressComponent =
-      specific?.operationDetails?.splitAddress?.[operation?.type as OperationType] || SplitAddress;
     const renderLine = (line: string, index: number) => (
-      <OpDetailsData relative horizontal key={line + index}>
-        <HashContainer>
-          <SplitAddressComponent value={line} />
-        </HashContainer>
-        <GradientHover>
-          <CopyWithFeedback text={line} />
-        </GradientHover>
-      </OpDetailsData>
+      <DataListLine
+        key={line + index}
+        line={line}
+        cryptoCurrencyFamily={cryptoCurrency?.family}
+        operationType={operation?.type as OperationType | undefined}
+      />
     );
     return (
       <Box
