@@ -9,8 +9,8 @@ import {
 
 import storage from "LLM/storage";
 import { add, sub, type Duration } from "date-fns";
-import { ABTestingVariants } from "@ledgerhq/types-live";
 import { Button, Text } from "@ledgerhq/lumen-ui-rnative";
+import { AB_TESTING_VARIANTS, type ABTestingVariants } from "../types/variants";
 import { NotificationsState } from "~/reducers/types";
 import { createNotificationsPromptFeatureFlags } from "../testUtils";
 
@@ -82,7 +82,7 @@ describe("NotificationsPrompt Integration", () => {
     lastActionAt,
     dateOfNextAllowedRequest,
     alreadyDelayedToLater,
-    variant = ABTestingVariants.variantB,
+    variant = AB_TESTING_VARIANTS.B,
     skipStorageSetup = false,
   }: {
     actionSource?: Exclude<NotificationsState["drawerSource"], undefined | "inactivity">;
@@ -855,7 +855,7 @@ describe("NotificationsPrompt Integration", () => {
         const { tryTriggerDrawer } = await setup({
           osPermission: AuthorizationStatus.NOT_DETERMINED,
           appNotifications: false,
-          variant: ABTestingVariants.variantA,
+          variant: AB_TESTING_VARIANTS.A,
         });
 
         await tryTriggerDrawer();
@@ -867,7 +867,7 @@ describe("NotificationsPrompt Integration", () => {
           actionSource: "add_favorite_coin",
           osPermission: AuthorizationStatus.AUTHORIZED,
           appNotifications: false,
-          variant: ABTestingVariants.variantA,
+          variant: AB_TESTING_VARIANTS.A,
         });
 
         await tryTriggerDrawer();
@@ -879,7 +879,7 @@ describe("NotificationsPrompt Integration", () => {
           osPermission: AuthorizationStatus.AUTHORIZED,
           appNotifications: false,
           lastActionAt: sub(Date.now(), INACTIVITY_REPROMPT).getTime(),
-          variant: ABTestingVariants.variantA,
+          variant: AB_TESTING_VARIANTS.A,
         });
 
         act(() => jest.runOnlyPendingTimers());

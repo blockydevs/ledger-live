@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "~/context/hooks";
 import { useNavigation } from "@react-navigation/core";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
 import { useFeature } from "@features/platform-feature-flags";
-import { ABTestingVariants } from "@ledgerhq/types-live";
+import { AB_TESTING_VARIANTS } from "../types/variants";
 import {
   notificationsModalOpenSelector,
   notificationsDrawerSource,
@@ -97,7 +97,7 @@ export const useNotificationsDrawer = ({
       // Group A (variant A) never sees inactivity drawer
       const variant = featureNewWordingNotificationsDrawer?.params?.variant;
       const isVariantA =
-        featureNewWordingNotificationsDrawer?.enabled && variant === ABTestingVariants.variantA;
+        featureNewWordingNotificationsDrawer?.enabled && variant === AB_TESTING_VARIANTS.A;
       if (isVariantA) {
         return;
       }
@@ -146,7 +146,7 @@ export const useNotificationsDrawer = ({
 
       const variant = featureNewWordingNotificationsDrawer?.params?.variant;
       const isVariantA =
-        featureNewWordingNotificationsDrawer?.enabled && variant === ABTestingVariants.variantA;
+        featureNewWordingNotificationsDrawer?.enabled && variant === AB_TESTING_VARIANTS.A;
 
       // For non-onboarding actions, Group A (variant A) never shows drawer
       if (actionSource !== "onboarding" && isVariantA) {

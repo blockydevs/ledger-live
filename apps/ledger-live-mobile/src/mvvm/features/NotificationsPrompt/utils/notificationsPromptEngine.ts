@@ -1,7 +1,7 @@
 import { add } from "date-fns";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
-import { ABTestingVariants } from "@ledgerhq/types-live";
 import type { Features } from "@shared/feature-flags";
+import { AB_TESTING_VARIANTS, type ABTestingVariants } from "../types/variants";
 import type { NotificationsState } from "~/reducers/types";
 import type { DataOfUser } from "../types";
 
@@ -126,7 +126,7 @@ const getVariant = (wordingFeature: WordingFeature) =>
   wordingFeature?.enabled ? wordingFeature.params?.variant : undefined;
 
 const isVariantA = (wordingFeature: WordingFeature) =>
-  getVariant(wordingFeature) === ABTestingVariants.variantA;
+  getVariant(wordingFeature) === AB_TESTING_VARIANTS.A;
 
 const getDismissedCount = (pushNotificationsDataOfUser: DataOfUser | null | undefined) =>
   pushNotificationsDataOfUser?.dismissedOptInDrawerAtList?.length ?? 0;
@@ -145,9 +145,7 @@ const getDecisionBase = <TSource extends NotificationsPromptSource>(
   source,
   dismissedCount: getDismissedCount(pushNotificationsDataOfUser),
   nextRepromptDelay,
-  // Zod-derived `variant` is the literal "A" | "B" which is structurally identical
-  // to the ABTestingVariants enum used by `NotificationsPromptDecisionBase`.
-  variant: getVariant(wordingFeature) as ABTestingVariants | undefined,
+  variant: getVariant(wordingFeature),
 });
 
 export const getNextRepromptDelay = ({

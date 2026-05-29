@@ -1,8 +1,8 @@
 import React from "react";
 import type { ComponentType } from "react";
 import { View } from "react-native";
-import { ABTestingVariants } from "@ledgerhq/types-live";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
+import { AB_TESTING_VARIANTS } from "./types/variants";
 import { getCryptoCurrencyById } from "@ledgerhq/live-common/currencies/index";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
 import * as TezosReact from "@ledgerhq/live-common/families/tezos/react";
@@ -776,7 +776,7 @@ describe("NotificationsPrompt stake flow", () => {
           {
             action: "stake",
             shouldPrompt: true,
-            variant: ABTestingVariants.variantB,
+            variant: AB_TESTING_VARIANTS.B,
             repromptDelay: null,
             dismissedCount: 0,
             skipReason: undefined,
@@ -791,7 +791,7 @@ describe("NotificationsPrompt stake flow", () => {
           source: "stake",
           repromptDelay: null,
           dismissedCount: 0,
-          variant: ABTestingVariants.variantB,
+          variant: AB_TESTING_VARIANTS.B,
         });
       },
     );

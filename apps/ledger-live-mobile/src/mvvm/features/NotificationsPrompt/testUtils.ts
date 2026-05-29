@@ -1,5 +1,5 @@
-import { ABTestingVariants } from "@ledgerhq/types-live";
 import type { Features } from "@shared/feature-flags";
+import { AB_TESTING_VARIANTS } from "./types/variants";
 
 type BrazePushNotificationsParams = NonNullable<Features["brazePushNotifications"]["params"]>;
 type WordingFeatureParams = NonNullable<
@@ -54,7 +54,7 @@ export const notificationsPromptActionEvents: BrazePushNotificationsParams["acti
 };
 
 export function createNotificationsPromptFeatureFlags({
-  variant = ABTestingVariants.variantB,
+  variant = AB_TESTING_VARIANTS.B,
   repromptSchedule = defaultRepromptSchedule,
   inactivityEnabled = false,
   inactivityReprompt = defaultInactivityReprompt,
