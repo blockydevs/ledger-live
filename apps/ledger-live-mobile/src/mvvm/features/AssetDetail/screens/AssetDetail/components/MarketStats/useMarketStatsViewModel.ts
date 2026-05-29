@@ -120,9 +120,10 @@ export function useMarketStatsViewModel({
   const onTooltipOpen = useCallback(
     (statName: string, open: boolean) => {
       if (open) {
-        track("info_bubble_pressed", {
+        track("button_clicked", {
+          button: "market_stat_definition",
           currency: currency?.id,
-          stat_name: statName,
+          type: statName,
           page: "Asset Detail",
         });
       }

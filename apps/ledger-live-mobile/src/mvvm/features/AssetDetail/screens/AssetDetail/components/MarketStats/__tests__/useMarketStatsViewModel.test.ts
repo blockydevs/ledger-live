@@ -154,16 +154,17 @@ describe("useMarketStatsViewModel", () => {
   });
 
   describe("onTooltipOpen", () => {
-    it("tracks info_bubble_pressed when tooltip opens", () => {
+    it("tracks button_clicked with market_stat_definition when tooltip opens", () => {
       const { result } = renderHook(() =>
         useMarketStatsViewModel({ currency: mockBtcCryptoCurrency }),
       );
 
       result.current.onTooltipOpen("circulating_supply", true);
 
-      expect(track).toHaveBeenCalledWith("info_bubble_pressed", {
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "market_stat_definition",
         currency: "bitcoin",
-        stat_name: "circulating_supply",
+        type: "circulating_supply",
         page: "Asset Detail",
       });
     });
