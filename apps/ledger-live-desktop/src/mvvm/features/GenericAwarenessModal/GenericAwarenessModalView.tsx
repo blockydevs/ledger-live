@@ -16,6 +16,26 @@ import useGenericAwarenessModalCarouselViewModel, {
 import CarouselContent from "./components/CarouselContent";
 import FeatureIntroContent from "./components/FeatureIntroContent";
 
+type LayoutChromeHandlers = Pick<
+  GenericAwarenessModalCarouselViewModel | GenericAwarenessModalFeatureIntroViewModel,
+  "onDismiss" | "onHeaderClose"
+>;
+
+const getLayoutViewModel = (
+  layout: GenericAwarenessModalContentCard["layout"],
+  carouselViewModel: GenericAwarenessModalCarouselViewModel,
+  featureIntroViewModel: GenericAwarenessModalFeatureIntroViewModel,
+): LayoutChromeHandlers | undefined => {
+  switch (layout) {
+    case GenericAwarenessModalLayout.Carousel:
+      return carouselViewModel;
+    case GenericAwarenessModalLayout.FeatureIntro:
+      return featureIntroViewModel;
+    default:
+      return undefined;
+  }
+};
+
 function renderModalContent(
   contentCard: GenericAwarenessModalContentCard,
   carouselViewModel: GenericAwarenessModalCarouselViewModel,
@@ -37,12 +57,8 @@ const GenericAwarenessModalView = ({
   contentCard,
 }: GenericAwarenessModalViewProps) => {
   const hasStoredContentCards = useSelector(selectGenericAwarenessModalHasStoredContentCards);
-  const carouselViewModel = useGenericAwarenessModalCarouselViewModel(contentCard);
-  const featureIntroViewModel = useGenericAwarenessModalFeatureIntroViewModel(contentCard);
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) onClose();
-  };
+  const carouselViewModel = useGenericAwarenessModalCarouselViewModel(contentCard, isOpen);
+  const featureIntroViewModel = useGenericAwarenessModalFeatureIntroViewModel(contentCard, isOpen);
 
   useEffect(() => {
     if (isOpen && !contentCard && hasStoredContentCards) {
@@ -54,15 +70,26 @@ const GenericAwarenessModalView = ({
     return null;
   }
 
+  const layoutViewModel = getLayoutViewModel(
+    contentCard.layout,
+    carouselViewModel,
+    featureIntroViewModel,
+  );
+
+  const onDismiss = layoutViewModel?.onDismiss ?? onClose;
+  const onHeaderClose = layoutViewModel?.onHeaderClose ?? onClose;
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent
         className="max-h-[90vh] rounded-xl"
         aria-describedby={undefined}
         data-testid="generic-awareness-modal"
         data-campaign-id={contentCard.id}
+        onPointerDownOutside={onDismiss}
+        onEscapeKeyDown={onDismiss}
       >
-        <DialogHeader density="expanded" onClose={onClose} />
+        <DialogHeader density="expanded" onClose={onHeaderClose} />
         <DialogBody className="flex min-h-0 flex-1 flex-col gap-24 overflow-hidden">
           {renderModalContent(contentCard, carouselViewModel, featureIntroViewModel)}
         </DialogBody>
