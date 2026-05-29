@@ -22,9 +22,15 @@ type Props = Readonly<{
   formattedAvailable: string;
   formattedDeposit: string;
   onEarnDepositPress: () => void;
+  onAvailableBalanceTooltipOpen: (open: boolean) => void;
 }>;
 
-export function EarnCardsView({ formattedAvailable, formattedDeposit, onEarnDepositPress }: Props) {
+export function EarnCardsView({
+  formattedAvailable,
+  formattedDeposit,
+  onEarnDepositPress,
+  onAvailableBalanceTooltipOpen,
+}: Props) {
   const { t } = useTranslation();
   const { bottom } = useSafeAreaInsets();
 
@@ -39,7 +45,7 @@ export function EarnCardsView({ formattedAvailable, formattedDeposit, onEarnDepo
                   <CardContentDescription>
                     {t("assetDetail.balanceDetails.availableBalance")}
                   </CardContentDescription>
-                  <Tooltip>
+                  <Tooltip onOpenChange={onAvailableBalanceTooltipOpen}>
                     <TooltipTrigger>
                       <Information size={16} color="muted" />
                     </TooltipTrigger>
