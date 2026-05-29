@@ -522,6 +522,11 @@ export const WalletAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
       customWebviewStyle,
       manifestDomainCheckEnabled,
     );
+    const isNetworkErrorVisible = !webviewState.loading && webviewState.isAppUnavailable;
+    const displayedWebviewStyle = useMemo(
+      () => (isNetworkErrorVisible ? { ...webviewStyle, display: "none" } : webviewStyle),
+      [isNetworkErrorVisible, webviewStyle],
+    );
 
     const isDapp = !!manifest.dapp;
     const preloader = isDapp ? "webviewDappPreloader" : "webviewPreloader";
@@ -540,9 +545,7 @@ export const WalletAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
 
     return (
       <>
-        {!webviewState.loading && webviewState.isAppUnavailable && (
-          <NetworkErrorScreen refresh={handleRefresh} />
-        )}
+        {isNetworkErrorVisible && <NetworkErrorScreen refresh={handleRefresh} />}
         <webview
           ref={webviewRef}
           /**
@@ -551,7 +554,7 @@ export const WalletAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
            * When using a styled webview componennt, the `allowpopups` prop does not
            * seem to be set
            */
-          style={webviewStyle}
+          style={displayedWebviewStyle}
           preload={`file://${window.api.appDirname}/${preloader}.bundle.js`}
           /**
            * There seems to be an issue between Electron webview and react
