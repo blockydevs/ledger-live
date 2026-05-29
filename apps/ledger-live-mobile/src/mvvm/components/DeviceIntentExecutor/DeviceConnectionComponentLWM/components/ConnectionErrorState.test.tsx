@@ -121,7 +121,7 @@ describe("ConnectionErrorState", () => {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
       deviceUxV2: true,
-      button: "Try again",
+      button: "Retry",
     });
     expect(retry).toHaveBeenCalledTimes(1);
   });
@@ -135,7 +135,7 @@ describe("ConnectionErrorState", () => {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
       deviceUxV2: true,
-      button: "Get help",
+      button: "Get Help",
     });
     expect(Linking.openURL).toHaveBeenCalledWith(urls.pairingIssues);
   });

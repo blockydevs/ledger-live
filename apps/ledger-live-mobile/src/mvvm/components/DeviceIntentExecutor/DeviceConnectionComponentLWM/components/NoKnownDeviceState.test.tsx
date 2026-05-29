@@ -85,13 +85,13 @@ describe("NoKnownDeviceState", () => {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
       deviceUxV2: true,
-      button: "Connect Ledger device",
+      button: "Connect Ledger Device",
     });
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
       deviceUxV2: true,
-      button: "I don't have a Ledger device",
+      button: "I Don't Have A Ledger Device",
     });
   });
 });

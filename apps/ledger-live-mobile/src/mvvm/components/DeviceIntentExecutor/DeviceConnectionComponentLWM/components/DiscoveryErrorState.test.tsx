@@ -260,7 +260,7 @@ describe("DiscoveryErrorState", () => {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
       deviceUxV2: true,
-      button: "Allow",
+      button: "Retry",
     });
     expect(retry).toHaveBeenCalledTimes(1);
   });

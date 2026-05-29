@@ -12,6 +12,7 @@ import { useTranslation } from "~/context/Locale";
 import { urls } from "~/utils/urls";
 import { useSourceFlow } from "../../utils/SourceFlowContext";
 import {
+  CONNECT_DEVICE_BUTTON,
   getTrackingSubError,
   getTrackingTransport,
   PAGE_CONNECT_DEVICE,
@@ -73,7 +74,7 @@ export function ConnectionErrorState({ state }: Readonly<ConnectionErrorStatePro
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: label });
+        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
         state.retry();
       },
     };
@@ -84,7 +85,7 @@ export function ConnectionErrorState({ state }: Readonly<ConnectionErrorStatePro
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: label });
+        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.GetHelp });
         Linking.openURL(url).catch(() => undefined);
       },
     };
@@ -128,11 +129,11 @@ export function ConnectionErrorState({ state }: Readonly<ConnectionErrorStatePro
           helpLabel={helpLabel}
           retryLabel={retryLabel}
           onHelp={() => {
-            trackConnectDeviceButtonClicked({ sourceFlow, button: helpLabel });
+            trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.GetHelp });
             Linking.openURL(bleForgetDeviceUrl).catch(() => undefined);
           }}
           onRetry={() => {
-            trackConnectDeviceButtonClicked({ sourceFlow, button: retryLabel });
+            trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
             state.retry();
           }}
         />

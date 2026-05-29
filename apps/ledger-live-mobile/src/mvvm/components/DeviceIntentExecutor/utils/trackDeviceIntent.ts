@@ -15,6 +15,21 @@ export const PAGE_CONNECT_DEVICE = {
   ConnectionError: "Connect Device - Connection Error",
 } as const;
 
+/**
+ * Canonical, locale-independent `button` values for Connect Device `button_clicked`
+ * events. The displayed CTA label stays localized; analytics receives these stable
+ * strings so the property is not fragmented across languages. The error screen is
+ * already disambiguated by the `subError` property, so primary retry/allow CTAs
+ * collapse to a single `Retry` value.
+ */
+export const CONNECT_DEVICE_BUTTON = {
+  ConnectLedgerDevice: "Connect Ledger Device",
+  NoLedgerDevice: "I Don't Have A Ledger Device",
+  Retry: "Retry",
+  ContinueWithUsb: "Continue with USB",
+  GetHelp: "Get Help",
+} as const;
+
 export type TrackingTransport = "ble" | "usb";
 type ConnectDeviceErrorType = ConnectionErrorTypes | DiscoveryErrorTypes;
 

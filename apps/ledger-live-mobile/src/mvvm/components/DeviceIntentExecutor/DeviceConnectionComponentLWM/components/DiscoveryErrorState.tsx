@@ -11,6 +11,7 @@ import { useTranslation } from "~/context/Locale";
 import { Box, Spinner, Text } from "@ledgerhq/lumen-ui-rnative";
 import { useSourceFlow } from "../../utils/SourceFlowContext";
 import {
+  CONNECT_DEVICE_BUTTON,
   getTrackingSubError,
   getTrackingTransport,
   PAGE_CONNECT_DEVICE,
@@ -65,7 +66,7 @@ export function DiscoveryErrorState({
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: label });
+        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
         state.retry?.();
       },
     };
@@ -76,7 +77,10 @@ export function DiscoveryErrorState({
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: label });
+        trackConnectDeviceButtonClicked({
+          sourceFlow,
+          button: CONNECT_DEVICE_BUTTON.ContinueWithUsb,
+        });
         state.ignore();
       },
     };
