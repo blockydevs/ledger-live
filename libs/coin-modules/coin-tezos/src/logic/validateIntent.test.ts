@@ -9,7 +9,11 @@ import {
   NotEnoughBalanceToDelegate,
 } from "@ledgerhq/errors";
 import coinConfig from "../config";
-import { InvalidAddressBecauseAlreadyDelegated, MustDelegateBeforeStaking } from "../types/errors";
+import {
+  InvalidAddressBecauseAlreadyDelegated,
+  MustDelegateBeforeStaking,
+  TezosNotEnoughStaked,
+} from "../types/errors";
 import { STAKE_USE_ALL_RESERVE_MUTEZ } from "../utils";
 import { validateIntent } from "./validateIntent";
 
@@ -378,7 +382,7 @@ describe("validateIntent", () => {
       expect(result.amount).toBe(4_000_000n - 1000n - STAKE_USE_ALL_RESERVE_MUTEZ);
     });
 
-    it("should return NotEnoughBalance when unstake has no staked balance", async () => {
+    it("should return TezosNotEnoughStaked when unstake has no staked balance", async () => {
       mockGetAccountByAddress.mockResolvedValue(makeUserAccount({ stakedBalance: 0 }));
 
       const result = await validateIntent({
@@ -390,7 +394,7 @@ describe("validateIntent", () => {
         amount: 1n,
       });
 
-      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+      expect(result.errors.amount).toBeInstanceOf(TezosNotEnoughStaked);
       expect(mockEstimateFees).not.toHaveBeenCalled();
     });
 
@@ -410,7 +414,7 @@ describe("validateIntent", () => {
       expect(mockEstimateFees).not.toHaveBeenCalled();
     });
 
-    it("should return NotEnoughBalance when unstake amount exceeds staked balance", async () => {
+    it("should return TezosNotEnoughStaked when unstake amount exceeds staked balance", async () => {
       mockGetAccountByAddress.mockResolvedValue(makeUserAccount({ stakedBalance: 4000 }));
 
       const result = await validateIntent({
@@ -422,7 +426,8 @@ describe("validateIntent", () => {
         amount: 5000n,
       });
 
-      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+      expect(result.errors.amount).toBeInstanceOf(TezosNotEnoughStaked);
+      expect(result.amount).toBe(5000n);
       expect(mockEstimateFees).not.toHaveBeenCalled();
     });
 
@@ -444,7 +449,7 @@ describe("validateIntent", () => {
       expect(result.totalSpent).toBe(1000n);
     });
 
-    it("should return NotEnoughBalance when unstake useAllAmount with zero stakedBalance", async () => {
+    it("should return TezosNotEnoughStaked when unstake useAllAmount with zero stakedBalance", async () => {
       mockGetAccountByAddress.mockResolvedValue(makeUserAccount({ stakedBalance: 0 }));
 
       const result = await validateIntent({
@@ -457,7 +462,7 @@ describe("validateIntent", () => {
         useAllAmount: true,
       });
 
-      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+      expect(result.errors.amount).toBeInstanceOf(TezosNotEnoughStaked);
       expect(mockEstimateFees).not.toHaveBeenCalled();
     });
 
@@ -763,7 +768,7 @@ describe("validateIntent", () => {
       expect(result.errors.amount).toBeInstanceOf(NotEnoughBalanceToDelegate);
     });
 
-    it("maps staking.too_much_unstaked to NotEnoughBalance for unstake", async () => {
+    it("maps staking.too_much_unstaked to TezosNotEnoughStaked for unstake", async () => {
       mockGetAccountByAddress.mockResolvedValue(makeUserAccount({ stakedBalance: 4000 }));
       mockEstimateFees.mockResolvedValue({
         fees: 0n,
@@ -782,7 +787,7 @@ describe("validateIntent", () => {
         amount: 1000n,
       });
 
-      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+      expect(result.errors.amount).toBeInstanceOf(TezosNotEnoughStaked);
     });
 
     it("maps contract.must_be_delegated_to_stake to MustDelegateBeforeStaking", async () => {
@@ -1026,6 +1031,32 @@ describe("validateIntent", () => {
 
       expect(result.amount).toBe(estimatedFromTaquito);
       expect(result.totalSpent).toBe(estimatedFromTaquito + 1000n);
+    });
+
+    it("excludes staked and unstaked funds from the send-max fallback", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({ balance: 5_000_000, stakedBalance: 1_000_000, unstakedBalance: 500_000 }),
+      );
+      mockEstimateFees.mockResolvedValue({
+        fees: 1000n,
+        gasLimit: 10000n,
+        storageLimit: 0n,
+        estimatedFees: 1000n,
+        amount: 0n,
+      });
+
+      const result = await validateIntent({
+        intentType: "transaction",
+        asset: { type: "native" },
+        type: "send",
+        sender: senderAddress,
+        recipient: validRecipient,
+        amount: 0n,
+        useAllAmount: true,
+      });
+
+      expect(result.amount).toBe(3_499_000n);
+      expect(result.totalSpent).toBe(3_500_000n);
     });
   });
 

@@ -3,6 +3,7 @@ import {
   computeMaxStakeAmount,
   normalizePublicKeyForAddress,
   parseTezosTokenAsset,
+  partitionNativeBalance,
   resolveTezosOperationMode,
   STAKE_USE_ALL_RESERVE_MUTEZ,
 } from "./utils";
@@ -160,5 +161,19 @@ describe("computeMaxStakeAmount", () => {
 
   it("clamps to 0 when the liquid balance cannot cover fees and reserve", () => {
     expect(computeMaxStakeAmount(305_000n, 300_000n, 1000n)).toBe(0n);
+  });
+});
+
+describe("partitionNativeBalance", () => {
+  it("splits total into spendable and locked (staked + unstaked)", () => {
+    expect(partitionNativeBalance(100n, 30n, 10n)).toEqual({ spendable: 60n, locked: 40n });
+  });
+
+  it("treats the whole balance as spendable when nothing is frozen", () => {
+    expect(partitionNativeBalance(100n, 0n, 0n)).toEqual({ spendable: 100n, locked: 0n });
+  });
+
+  it("clamps locked to total (spendable to 0) when frozen funds exceed balance", () => {
+    expect(partitionNativeBalance(50n, 80n, 10n)).toEqual({ spendable: 0n, locked: 50n });
   });
 });

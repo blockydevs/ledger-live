@@ -172,9 +172,13 @@ export function useTezosStakingInfo(account: AccountLike): TezosStakingInfo {
     const stakedBalance = stakePos?.amount ?? ZERO;
     const unstakedBalance = sumAmounts(pendingPositions);
     const unstakedFinalizable = sumAmounts(finalizablePositions);
-    // account.balance includes the staked portion on Tezos — subtract when no delegation-* position.
+    // account.balance includes staked + unstaked on Tezos; subtract them for the non-delegated case.
     const availableBalance =
-      delegationPos?.amount ?? BigNumber.max(0, account.balance.minus(stakedBalance));
+      delegationPos?.amount ??
+      BigNumber.max(
+        0,
+        account.balance.minus(stakedBalance).minus(unstakedBalance).minus(unstakedFinalizable),
+      );
     const delegateAddress = delegationPos?.delegate ?? delegation?.address;
 
     return {

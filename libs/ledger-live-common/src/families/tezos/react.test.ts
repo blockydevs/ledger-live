@@ -125,6 +125,13 @@ describe("useTezosStakingInfo", () => {
     expect(result.current.availableBalance).toEqual(new BigNumber(700));
   });
 
+  it("non-delegated with unstaking: availableBalance excludes staked and cooling-down funds", () => {
+    const account = makeTezosAccount([stakePos(300), unstakingPos(100)]);
+    const { result } = renderHook(() => useTezosStakingInfo(account));
+    expect(result.current.isDelegated).toBe(false);
+    expect(result.current.availableBalance).toEqual(new BigNumber(600));
+  });
+
   it("falls back to legacy useDelegation when stakingPositions is empty", () => {
     const legacyDelegation = {
       address: DELEGATE,

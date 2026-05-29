@@ -28,6 +28,20 @@ export function computeMaxStakeAmount(
 }
 
 /**
+ * Splits a Tezos native balance (which includes frozen funds) into spendable and locked
+ * (staked + unstaked). `locked` is clamped to `total` so spendable stays >= 0 across TzKT reorgs.
+ */
+export function partitionNativeBalance(
+  total: bigint,
+  staked: bigint,
+  unstaked: bigint,
+): { spendable: bigint; locked: bigint } {
+  const frozen = staked + unstaked;
+  const locked = frozen > total ? total : frozen;
+  return { spendable: total - locked, locked };
+}
+
+/**
  * Suggested fee returned by Taquito for a minimal amount pre-estimation (mutez)
  * Used as a stable fallback for send-max when RPC estimation is unavailable.
  */

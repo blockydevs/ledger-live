@@ -205,6 +205,7 @@
       "STAKE": "Staked",
       "UNSTAKE": "Unstaked",
       "WITHDRAW_UNSTAKED": "Withdrawn",
+      "FINALIZE_UNSTAKE": "Withdrawn",
       "SENDING": "Sending",
       "BURN": "Burned",
       "ASSOCIATE_TOKEN": "Associate token",
@@ -7223,6 +7224,9 @@
     },
     "MustDelegateBeforeStaking": {
       "title": "Please delegate your account before staking"
+    },
+    "TezosNotEnoughStaked": {
+      "title": "Insufficient staked balance"
     },
     "RecommendSubAccountsToEmpty": {
       "title": "Please empty all subaccounts first"

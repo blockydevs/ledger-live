@@ -2,6 +2,7 @@ import type { Cursor, Page, Stake } from "@ledgerhq/coin-module-framework/api/ty
 import { log } from "@ledgerhq/logs";
 import api from "../network/tzkt";
 import type { APIAccount, APIUnstakeRequest } from "../network/types";
+import { partitionNativeBalance } from "../utils";
 import { STAKING_UID_PREFIX } from "./positionUid";
 
 export {
@@ -22,6 +23,14 @@ export function fetchUnstakeRequests(
 }
 
 function unstakeRequestToStake(address: string, req: APIUnstakeRequest): Stake | null {
+  // TzKT's status filter is unreliable; never build a position for a finalized request.
+  if (req.status !== "pending" && req.status !== "finalizable") {
+    log("coin:tezos", "unstakeRequestToStake: dropping non-active unstake request", {
+      requestId: req.id,
+      status: req.status,
+    });
+    return null;
+  }
   if (req.actualAmount <= 0) {
     log("coin:tezos", "unstakeRequestToStake: dropping non-positive unstake request", {
       requestId: req.id,
@@ -60,15 +69,32 @@ export function buildStakesForAccount(
   const stakedBalance = BigInt(account.stakedBalance ?? 0);
   const delegateAddress = account.delegate?.address;
 
+  const unstakeStakes: Stake[] = [];
+  for (const req of unstakeRequests) {
+    const stake = unstakeRequestToStake(address, req);
+    if (stake) unstakeStakes.push(stake);
+  }
+  const unstakedTotal = unstakeStakes.reduce((sum, s) => sum + s.amount, 0n);
+
   const stakes: Stake[] = [];
 
   if (delegateAddress) {
-    if (balance < stakedBalance) {
-      log("coin:tezos", "buildStakesForAccount: balance < stakedBalance, clamping to 0", {
-        address,
-        balance: balance.toString(),
-        stakedBalance: stakedBalance.toString(),
-      });
+    const { spendable: delegated, locked } = partitionNativeBalance(
+      balance,
+      stakedBalance,
+      unstakedTotal,
+    );
+    if (locked < stakedBalance + unstakedTotal) {
+      log(
+        "coin:tezos",
+        "buildStakesForAccount: balance < stakedBalance + unstaked, clamping to 0",
+        {
+          address,
+          balance: balance.toString(),
+          stakedBalance: stakedBalance.toString(),
+          unstakedTotal: unstakedTotal.toString(),
+        },
+      );
     }
     stakes.push({
       uid: `${STAKING_UID_PREFIX.delegation}${address}`,
@@ -76,7 +102,7 @@ export function buildStakesForAccount(
       delegate: delegateAddress,
       state: "active",
       asset: { type: "native" },
-      amount: balance > stakedBalance ? balance - stakedBalance : 0n,
+      amount: delegated,
       actions: [],
     });
   }
@@ -93,10 +119,7 @@ export function buildStakesForAccount(
     });
   }
 
-  for (const req of unstakeRequests) {
-    const stake = unstakeRequestToStake(address, req);
-    if (stake) stakes.push(stake);
-  }
+  stakes.push(...unstakeStakes);
 
   return stakes;
 }

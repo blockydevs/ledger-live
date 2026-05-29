@@ -200,7 +200,7 @@ describe("getBalance", () => {
       mockAccount({ balance: 100, stakedBalance: 30 });
 
       expect(await getBalance(address)).toEqual([
-        { value: 100n, asset: { type: "native" } },
+        { value: 100n, asset: { type: "native" }, locked: 30n },
         {
           value: 30n,
           asset: {
@@ -228,7 +228,7 @@ describe("getBalance", () => {
       });
 
       expect(await getBalance(address)).toEqual([
-        { value: 100n, asset: { type: "native" } },
+        { value: 100n, asset: { type: "native" }, locked: 30n },
         {
           value: 70n,
           asset: {
@@ -296,7 +296,7 @@ describe("getBalance", () => {
       const result = await getBalance(address);
 
       expect(result).toHaveLength(4);
-      expect(result[0]).toEqual({ value: 100n, asset: { type: "native" } });
+      expect(result[0]).toEqual({ value: 100n, asset: { type: "native" }, locked: 40n });
       expect(result[3]).toEqual({
         value: 10n,
         asset: { type: "native" },
@@ -350,6 +350,8 @@ describe("getBalance", () => {
 
       const result = await getBalance(address);
 
+      expect(result[0]).toEqual({ value: 100n, asset: { type: "native" }, locked: 50n });
+
       const stakes = result.filter(b => b.stake).map(b => b.stake);
       expect(stakes).toEqual([
         {
@@ -358,7 +360,7 @@ describe("getBalance", () => {
           delegate: delegateAddress,
           state: "active",
           asset: { type: "native" },
-          amount: 100n,
+          amount: 50n,
           actions: [],
         },
         {

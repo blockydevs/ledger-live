@@ -729,4 +729,34 @@ describe("estimateFees", () => {
     expect(result.amount).not.toBeUndefined();
     expect(result.amount!).toBeLessThanOrEqual(BigInt(balance));
   });
+
+  it("useAllAmount send excludes staked and unstaked funds from the max", async () => {
+    const balance = 10000n;
+    const stakedBalance = 3000n;
+    const unstakedBalance = 1000n;
+    mockTezosToolkit.estimate.transfer.mockResolvedValue({
+      suggestedFeeMutez: 100,
+      gasLimit: 1500,
+      storageLimit: 0,
+      burnFeeMutez: 0,
+      opSize: 200,
+    });
+    (coinConfig.getCoinConfig as jest.Mock).mockReturnValue({
+      fees: { ...defaultFeesConfig, minFees: 0 },
+    });
+
+    const result = await estimateFees({
+      account: { ...revealedAccount, balance, stakedBalance, unstakedBalance },
+      transaction: {
+        mode: "send",
+        recipient: "tz1VSUr8wwNhLAzempoch5d6nLRSNtxK8LBr",
+        amount: 0n,
+        useAllAmount: true,
+      },
+    });
+
+    expect(result.amount).not.toBeUndefined();
+    expect(result.amount!).toBeLessThanOrEqual(6000n);
+    expect(result.amount!).toBeGreaterThan(5000n);
+  });
 });

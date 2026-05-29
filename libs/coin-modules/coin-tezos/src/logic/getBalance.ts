@@ -1,7 +1,13 @@
 import type { Balance } from "@ledgerhq/coin-module-framework/api/index";
 import { log } from "@ledgerhq/logs";
 import api from "../network/tzkt";
-import { buildStakesForAccount, fetchUnstakeRequests } from "./getStakes";
+import {
+  buildStakesForAccount,
+  fetchUnstakeRequests,
+  isFinalizablePosition,
+  isUnstakingPosition,
+} from "./getStakes";
+import { partitionNativeBalance } from "../utils";
 
 /** Returns `[native, ...stakes, ...tokens]` per the Paris upgrade. */
 export async function getBalance(address: string): Promise<Balance[]> {
@@ -27,14 +33,20 @@ export async function getBalance(address: string): Promise<Balance[]> {
     return [];
   });
 
-  const stakeBalances: Balance[] =
-    apiAccount.type === "user"
-      ? buildStakesForAccount(address, apiAccount, unstakeRequests).map(stake => ({
-          value: stake.amount,
-          asset: { type: "native" },
-          stake,
-        }))
-      : [];
+  const stakes =
+    apiAccount.type === "user" ? buildStakesForAccount(address, apiAccount, unstakeRequests) : [];
+
+  const stakedBalance = apiAccount.type === "user" ? BigInt(apiAccount.stakedBalance ?? 0) : 0n;
+  const unstakedTotal = stakes
+    .filter(stake => isUnstakingPosition(stake.uid) || isFinalizablePosition(stake.uid))
+    .reduce((sum, stake) => sum + stake.amount, 0n);
+  const { locked } = partitionNativeBalance(normalized, stakedBalance, unstakedTotal);
+
+  const stakeBalances: Balance[] = stakes.map(stake => ({
+    value: stake.amount,
+    asset: { type: "native" },
+    stake,
+  }));
 
   const tokensBalance: Balance[] = tokensBalancesRaw.map(({ balance, token }) => {
     const magnitude = Number.parseInt(token.metadata?.decimals || "0", 10);
@@ -64,6 +76,7 @@ export async function getBalance(address: string): Promise<Balance[]> {
     {
       value: normalized,
       asset: { type: "native" },
+      ...(locked > 0n && { locked }),
     },
     ...stakeBalances,
     ...tokensBalance,
