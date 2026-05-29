@@ -868,7 +868,6 @@ export const DEFAULT_FEATURES: Features = {
       aggregatedAssets: false,
       myWallet: false,
       pnl: false,
-      finishOnboardingWidget: false,
     },
   },
   addressPoisoningOperationsFilter: {

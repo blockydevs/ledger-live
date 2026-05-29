@@ -51,7 +51,6 @@ const makeConfig = (
   shouldDisplayMyWallet: value,
   shouldDisplayAggregatedAssets: value,
   shouldDisplayPnl: value,
-  shouldDisplayFinishOnboardingWidget: value,
   shouldDisplayEarnUpselling: value,
   shouldDisplayEarnSimulator: value,
   ...overrides,
@@ -73,7 +72,6 @@ const makeParams = (value: boolean): Wallet40Params => ({
   aggregatedAssets: value,
   myWallet: value,
   pnl: value,
-  finishOnboardingWidget: value,
   earnUpselling: value,
   earnSimulator: value,
 });
@@ -142,11 +140,6 @@ describe("useWalletFeaturesConfig hook", () => {
         ["operationsList", { operationsList: true }, { shouldDisplayOperationsList: true }],
         ["aggregatedAssets", { aggregatedAssets: true }, { shouldDisplayAggregatedAssets: true }],
         ["myWallet", { myWallet: true }, { shouldDisplayMyWallet: true }],
-        [
-          "finishOnboardingWidget",
-          { finishOnboardingWidget: true },
-          { shouldDisplayFinishOnboardingWidget: true },
-        ],
         ["earnUpselling", { earnUpselling: true }, { shouldDisplayEarnUpselling: true }],
         ["earnSimulator", { earnSimulator: true }, { shouldDisplayEarnSimulator: true }],
         ["pnl", { pnl: true }, { shouldDisplayPnl: true }],
