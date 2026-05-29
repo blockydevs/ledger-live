@@ -1,9 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
+import BigNumber from "bignumber.js";
 import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
 import type { FormattedValue } from "@ledgerhq/lumen-ui-rnative";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
 import { useAssetChartData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
-import { formatPriceFragment, formatSignedFiatVariation } from "@ledgerhq/live-currency-format";
+import {
+  formatPrice,
+  formatPriceFragment,
+  formatSignedFiatVariation,
+} from "@ledgerhq/live-currency-format";
 import { useSelector } from "~/context/hooks";
 import { flattenAccountsSelector } from "~/reducers/accounts";
 import { counterValueCurrencySelector } from "~/reducers/settings";
@@ -13,6 +18,10 @@ import { useOpenReceiveDrawer } from "LLM/features/Receive";
 import {
   resolveLineChartColorFromPercentChange,
   type LineChartSeries,
+  type LineChartTooltipTitle,
+  type LineChartValueFormatter,
+  type LineChartXAxisConfig,
+  type LineChartYAxisConfig,
 } from "LLM/components/LineChart";
 import {
   BALANCE_GRAPH_RANGES,
@@ -21,6 +30,32 @@ import {
   type RangeKey,
 } from "../../utils/rangeMapping";
 import { useAssetMarketData } from "../../hooks/useAssetMarketData";
+
+const MIN_X_AXIS_TICKS = 5;
+const MIN_X_AXIS_TICKS_1D = 8;
+
+/**
+ * Asymmetric padding added to the y-axis domain (as a ratio of the value range).
+ * Most of it sits at the bottom to lift the lowest point off the x-axis so its
+ * "below" label clears the x-axis tick labels, while the top stays nearly tight
+ * so the line keeps its amplitude and does not look flat.
+ */
+const Y_AXIS_PADDING_BOTTOM_RATIO = 0.12;
+const Y_AXIS_PADDING_TOP_RATIO = 0.04;
+
+/**
+ * Returns evenly spaced data indices (always including the first and last point)
+ * so the x-axis renders at least `minTicks` labels when enough data is available.
+ */
+function getEvenlySpacedTicks(length: number, minTicks: number): number[] {
+  if (length <= 0) return [];
+  if (length <= minTicks) return Array.from({ length }, (_, index) => index);
+
+  const ticks = Array.from({ length: minTicks }, (_, index) =>
+    Math.round((index * (length - 1)) / (minTicks - 1)),
+  );
+  return Array.from(new Set(ticks));
+}
 
 type Params = {
   currency?: AssetDetailCurrencyProps;
@@ -128,20 +163,93 @@ export function useBalanceGraphViewModel({
     handleOpenReceiveDrawer();
   }, [handleOpenReceiveDrawer, currency?.id]);
 
-  const series = useMemo<LineChartSeries[]>(() => {
+  const { series, timestamps } = useMemo(() => {
     const points = chartData?.[range] ?? [];
-    return [
-      {
-        id: "asset-detail-price",
-        data: points.map(([, value]) => value),
-        label: "Price",
-        // `stroke` is required by the Series type but is overridden by the
-        // shared LineChart from the `color` prop.
-        stroke: "",
-      },
-    ];
+    const data: number[] = [];
+    const tsList: number[] = [];
+    points.forEach(([timestamp, value]) => {
+      data.push(value);
+      tsList.push(timestamp);
+    });
+    return {
+      series: [
+        {
+          id: "asset-detail-price",
+          data,
+          label: "Price",
+          // `stroke` is required by the Series type but is overridden by the
+          // shared LineChart from the `color` prop.
+          stroke: "",
+        },
+      ] satisfies LineChartSeries[],
+      timestamps: tsList,
+    };
   }, [chartData, range]);
   const chartColor = resolveLineChartColorFromPercentChange(priceChangePercentage);
+
+  const formatValue = useCallback<LineChartValueFormatter>(
+    value =>
+      formatPrice(counterValueUnit, new BigNumber(value).times(10 ** counterValueUnit.magnitude), {
+        showCode: true,
+        locale,
+      }),
+    [counterValueUnit, locale],
+  );
+
+  // Mirror desktop's `hourFormat` / `dayFormat`: intraday shows the time, longer
+  // ranges show the full numeric day/month/year (e.g. "5/29/2026").
+  const dateFormatters = useMemo(
+    () => ({
+      hour: new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "numeric" }),
+      day: new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+      }),
+    }),
+    [locale],
+  );
+  const formatDate = useCallback(
+    (date: Date) => (range === "1d" ? dateFormatters.hour : dateFormatters.day).format(date),
+    [range, dateFormatters],
+  );
+
+  const tooltipTitle = useCallback<LineChartTooltipTitle>(
+    dataIndex => {
+      const timestamp = timestamps[dataIndex];
+      if (timestamp == null) return undefined;
+      return formatDate(new Date(timestamp));
+    },
+    [timestamps, formatDate],
+  );
+
+  const xAxis = useMemo<LineChartXAxisConfig>(
+    () => ({
+      showLine: false,
+      ticks: getEvenlySpacedTicks(
+        timestamps.length,
+        range === "1d" ? MIN_X_AXIS_TICKS_1D : MIN_X_AXIS_TICKS,
+      ),
+      tickLabelFormatter: value => {
+        const timestamp = timestamps[Number(value)];
+        return timestamp == null ? "" : formatDate(new Date(timestamp));
+      },
+    }),
+    [timestamps, formatDate, range],
+  );
+
+  const yAxis = useMemo<LineChartYAxisConfig>(
+    () => ({
+      domain: ({ min, max }) => {
+        const valueRange = max - min || Math.abs(max) || 1;
+        return {
+          min: min - valueRange * Y_AXIS_PADDING_BOTTOM_RATIO,
+          max: max + valueRange * Y_AXIS_PADDING_TOP_RATIO,
+        };
+      },
+    }),
+    [],
+  );
 
   return {
     price: price ?? 0,
@@ -159,5 +267,11 @@ export function useBalanceGraphViewModel({
     isLoading: isLoading || isChartLoading,
     series,
     chartColor,
+    formatValue,
+    tooltipTitle,
+    showXAxis: true,
+    showYAxis: false,
+    xAxis,
+    yAxis,
   };
 }

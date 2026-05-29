@@ -1,8 +1,21 @@
 import { useCallback, useMemo } from "react";
 import { useTheme } from "@ledgerhq/lumen-ui-rnative/styles";
 import { DEFAULT_LINE_CHART_HEIGHT } from "./constants";
-import type { LineChartProps, LineChartRangeOption, LineChartSeries } from "./types";
+import type {
+  LineChartPointMarker,
+  LineChartProps,
+  LineChartRangeOption,
+  LineChartScrubberPositionChange,
+  LineChartSeries,
+  LineChartTooltipTitle,
+  LineChartValueFormatter,
+  LineChartXAxisConfig,
+  LineChartYAxisConfig,
+} from "./types";
 import { resolveLineChartStroke } from "./utils/resolveLineChartStroke";
+import { getExtremaPointMarkers } from "./utils/getExtremaPointMarkers";
+
+const defaultFormatValue: LineChartValueFormatter = value => String(value);
 
 export type LineChartViewModelResult<TRange extends string = string> = Readonly<{
   chartSeries: LineChartSeries[];
@@ -13,6 +26,16 @@ export type LineChartViewModelResult<TRange extends string = string> = Readonly<
   height: number;
   isLoading: boolean;
   testID?: string;
+  points: LineChartPointMarker[];
+  enableScrubber: boolean;
+  formatValue: LineChartValueFormatter;
+  tooltipTitle?: LineChartTooltipTitle;
+  onScrubberPositionChange?: LineChartScrubberPositionChange;
+  showArea: boolean;
+  showXAxis: boolean;
+  showYAxis: boolean;
+  xAxis?: LineChartXAxisConfig;
+  yAxis?: LineChartYAxisConfig;
 }>;
 
 export function useLineChartViewModel<TRange extends string>({
@@ -26,6 +49,16 @@ export function useLineChartViewModel<TRange extends string>({
   height = DEFAULT_LINE_CHART_HEIGHT,
   isLoading = false,
   testID,
+  points,
+  enableScrubber = true,
+  formatValue = defaultFormatValue,
+  tooltipTitle,
+  onScrubberPositionChange,
+  showArea = true,
+  showXAxis = true,
+  showYAxis = true,
+  xAxis,
+  yAxis,
 }: LineChartProps<TRange>): LineChartViewModelResult<TRange> {
   const { theme } = useTheme();
 
@@ -35,6 +68,11 @@ export function useLineChartViewModel<TRange extends string>({
   );
 
   const chartSeries = useMemo(() => series.map(entry => ({ ...entry, stroke })), [series, stroke]);
+
+  const resolvedPoints = useMemo(
+    () => points ?? getExtremaPointMarkers(chartSeries),
+    [points, chartSeries],
+  );
 
   const handleSelectedChange = useCallback(
     (value: string) => {
@@ -53,5 +91,15 @@ export function useLineChartViewModel<TRange extends string>({
     height,
     isLoading,
     testID,
+    points: resolvedPoints,
+    enableScrubber,
+    formatValue,
+    tooltipTitle,
+    onScrubberPositionChange,
+    showArea,
+    showXAxis,
+    showYAxis,
+    xAxis,
+    yAxis,
   };
 }

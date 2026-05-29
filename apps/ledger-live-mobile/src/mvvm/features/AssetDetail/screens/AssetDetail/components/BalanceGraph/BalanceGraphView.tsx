@@ -6,7 +6,14 @@ import { ArrowDown } from "@ledgerhq/lumen-ui-rnative/symbols";
 import { useTranslation } from "~/context/Locale";
 import { TrendSection } from "LLM/components/TrendSection";
 import { LineChart } from "LLM/components/LineChart";
-import type { LineChartColor, LineChartSeries } from "LLM/components/LineChart";
+import type {
+  LineChartColor,
+  LineChartSeries,
+  LineChartTooltipTitle,
+  LineChartValueFormatter,
+  LineChartXAxisConfig,
+  LineChartYAxisConfig,
+} from "LLM/components/LineChart";
 import { ASSET_DETAIL_TEST_IDS } from "LLM/features/AssetDetail/testIds";
 import type { RangeKey } from "../../utils/rangeMapping";
 
@@ -28,6 +35,12 @@ type Props = Readonly<{
   isLoading: boolean;
   series: LineChartSeries[];
   chartColor: LineChartColor;
+  formatValue: LineChartValueFormatter;
+  tooltipTitle: LineChartTooltipTitle;
+  showXAxis: boolean;
+  showYAxis: boolean;
+  xAxis: LineChartXAxisConfig;
+  yAxis: LineChartYAxisConfig;
 }>;
 
 export function BalanceGraphView({
@@ -46,6 +59,12 @@ export function BalanceGraphView({
   isLoading,
   series,
   chartColor,
+  formatValue,
+  tooltipTitle,
+  showXAxis,
+  showYAxis,
+  xAxis,
+  yAxis,
 }: Props) {
   const { t } = useTranslation();
 
@@ -85,6 +104,12 @@ export function BalanceGraphView({
         isRangeValue={isRangeValue}
         color={chartColor}
         isLoading={isLoading}
+        formatValue={formatValue}
+        tooltipTitle={tooltipTitle}
+        showXAxis={showXAxis}
+        showYAxis={showYAxis}
+        xAxis={xAxis}
+        yAxis={yAxis}
         accessibilityLabel={t("assetDetail.balanceGraph.timeframeSelector")}
         testID={ASSET_DETAIL_TEST_IDS.chart}
       />

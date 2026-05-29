@@ -397,6 +397,55 @@ describe("useBalanceGraphViewModel", () => {
     });
   });
 
+  describe("chart formatting & axes", () => {
+    it("formats a chart value as a counter-value price string", () => {
+      const { result } = renderVM();
+
+      expect(result.current.formatValue(100)).toContain("100");
+    });
+
+    it("builds a tooltip title from the timestamp at the given index", () => {
+      const { result } = renderVM();
+
+      // 1d chart data timestamps are [1, 2, 3].
+      const title = result.current.tooltipTitle(0);
+      expect(typeof title).toBe("string");
+      expect(title).not.toBe("");
+    });
+
+    it("returns undefined tooltip title for an out-of-range index", () => {
+      const { result } = renderVM();
+
+      expect(result.current.tooltipTitle(99)).toBeUndefined();
+    });
+
+    it("renders the x-axis and keeps the y-axis hidden", () => {
+      const { result } = renderVM();
+
+      expect(result.current.showXAxis).toBe(true);
+      expect(result.current.showYAxis).toBe(false);
+    });
+
+    it("exposes evenly spaced x-axis ticks covering every point when data is short", () => {
+      const { result } = renderVM();
+
+      // 1d has 3 points (<= min ticks) → one tick per point.
+      expect(result.current.xAxis.ticks).toEqual([0, 1, 2]);
+    });
+
+    it("pads the y-axis domain asymmetrically (more headroom at the bottom)", () => {
+      const { result } = renderVM();
+
+      const domain = result.current.yAxis.domain;
+      expect(typeof domain).toBe("function");
+      // @ts-expect-error domain is the function form here.
+      const padded = domain({ min: 0, max: 100 });
+      expect(padded.min).toBeLessThan(0);
+      expect(padded.max).toBeGreaterThan(100);
+      expect(Math.abs(padded.min)).toBeGreaterThan(padded.max - 100);
+    });
+  });
+
   describe("isLoading", () => {
     it("reflects the fetching state of useCurrencyData", () => {
       mockCurrency({ data: undefined, isFetching: true });

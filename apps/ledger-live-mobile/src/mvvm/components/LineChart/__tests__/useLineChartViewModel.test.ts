@@ -119,4 +119,37 @@ describe("useLineChartViewModel", () => {
 
     expect(result.current.height).toBe(120);
   });
+
+  it("enables the scrubber, area and axes by default with a String value formatter", () => {
+    const { result } = renderHook(() => useLineChartViewModel(buildProps()));
+
+    expect(result.current.enableScrubber).toBe(true);
+    expect(result.current.showArea).toBe(true);
+    expect(result.current.showXAxis).toBe(true);
+    expect(result.current.showYAxis).toBe(true);
+    expect(result.current.formatValue(42)).toBe("42");
+  });
+
+  it("defaults points to the high/low extrema of the primary series", () => {
+    // MOCK_SERIES data is [1, 2, 3] → min at index 0, max at index 2.
+    const { result } = renderHook(() => useLineChartViewModel(buildProps()));
+
+    expect(result.current.points).toEqual([
+      { index: 2, value: 3, color: "success", labelPosition: "top" },
+      { index: 0, value: 1, color: "error", labelPosition: "bottom" },
+    ]);
+  });
+
+  it("renders no extrema markers when points is explicitly empty", () => {
+    const { result } = renderHook(() => useLineChartViewModel(buildProps({ points: [] })));
+
+    expect(result.current.points).toEqual([]);
+  });
+
+  it("forwards explicit points untouched", () => {
+    const points = [{ index: 1, value: 2, color: "muted" as const }];
+    const { result } = renderHook(() => useLineChartViewModel(buildProps({ points })));
+
+    expect(result.current.points).toEqual(points);
+  });
 });
