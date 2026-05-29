@@ -64,7 +64,7 @@ const Base = styled.div`
   flex: 1;
 `;
 
-const TxId = styled.div`
+const TxId = styled(Tabbable)`
   flex: 1;
   cursor: pointer;
 `;
