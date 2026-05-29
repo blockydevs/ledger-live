@@ -10,7 +10,6 @@ export {
   getUnbondingPeriodDays,
   getMaxRedelegations,
   hasUnbondingPeriod,
-  getCachedValidators,
   prefetchValidators,
   clearValidatorsCache,
 } from "./validators";
