@@ -39,6 +39,7 @@ jest.mock("./utils", () => ({
 }));
 
 describe("getBlockV2", () => {
+  const configOrCurrencyId = "hedera";
   const mockBlockInfo: BlockInfo = {
     height: 100,
     hash: "mock_hash",
@@ -66,7 +67,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result).toEqual({
       info: mockBlockInfo,
@@ -78,7 +79,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([]);
 
-    await getBlockV2(42);
+    await getBlockV2({ configOrCurrencyId, height: 42 });
 
     expect(getDateRangeFromBlockHeight).toHaveBeenCalledWith(42);
     expect(getBlockInfo).toHaveBeenCalledWith(42);
@@ -115,7 +116,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].feesPayer).toBe("0.0.999");
   });
@@ -138,7 +139,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
     const payerOperation = result.transactions[0].operations.find(op => op.address === "0.0.23");
 
     expect(result.transactions[0].feesPayer).toBe("0.0.23");
@@ -172,7 +173,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
     const senderOperation = result.transactions[0].operations.find(op => op.address === "0.0.999");
 
     expect(senderOperation).toMatchObject({
@@ -207,7 +208,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].operations).toEqual([
       {
@@ -281,7 +282,7 @@ describe("getBlockV2", () => {
     ]);
     (enrichERC20Transfers as jest.Mock).mockReturnValue([mockEnrichedERC20Transfer]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].operations).toEqual([
       {
@@ -359,7 +360,7 @@ describe("getBlockV2", () => {
     ]);
     (enrichERC20Transfers as jest.Mock).mockReturnValue([mockEnrichedERC20Transfer]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions).toEqual([expect.objectContaining({ hash: sharedHash })]);
   });
@@ -408,7 +409,7 @@ describe("getBlockV2", () => {
     ]);
     (enrichERC20Transfers as jest.Mock).mockReturnValue([mockEnrichedERC20Transfer]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions).toHaveLength(1);
     expect(result.transactions[0].operations).toEqual([
@@ -481,7 +482,7 @@ describe("getBlockV2", () => {
     ]);
     (enrichERC20Transfers as jest.Mock).mockReturnValue([mockEnrichedERC20Transfer]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
     const operations = result.transactions[0]?.operations;
     const erc20Operations = operations?.filter(
       op => op.type === "transfer" && op.asset.type === "erc20",
@@ -505,7 +506,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].failed).toBe(true);
   });
@@ -533,10 +534,14 @@ describe("getBlockV2", () => {
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
     (analyzeStakingOperation as jest.Mock).mockResolvedValue(mockStakingAnalysis);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(analyzeStakingOperation).toHaveBeenCalledTimes(1);
-    expect(analyzeStakingOperation).toHaveBeenCalledWith("0.0.999", mockTx);
+    expect(analyzeStakingOperation).toHaveBeenCalledWith({
+      configOrCurrencyId,
+      address: "0.0.999",
+      mirrorTx: mockTx,
+    });
     expect(result.transactions[0].operations).toHaveLength(1);
     expect(result.transactions[0].operations[0]).toEqual({
       type: "other",
@@ -570,7 +575,7 @@ describe("getBlockV2", () => {
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
     (analyzeStakingOperation as jest.Mock).mockResolvedValue(mockStakingAnalysis);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].operations[0]).toEqual({
       type: "other",
@@ -604,7 +609,7 @@ describe("getBlockV2", () => {
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
     (analyzeStakingOperation as jest.Mock).mockResolvedValue(mockStakingAnalysis);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].operations).toEqual([
       {
@@ -671,7 +676,7 @@ describe("getBlockV2", () => {
     (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].operations).toEqual([
       {
@@ -745,7 +750,7 @@ describe("getBlockV2", () => {
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
     (analyzeStakingOperation as jest.Mock).mockResolvedValue(null);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result.transactions[0].operations).toEqual([
       {
@@ -772,7 +777,9 @@ describe("getBlockV2", () => {
 
     (getDateRangeFromBlockHeight as jest.Mock).mockReturnValue(futureRange);
 
-    await expect(getBlockV2(999)).rejects.toThrow("Block 999 is not available yet");
+    await expect(getBlockV2({ configOrCurrencyId, height: 999 })).rejects.toThrow(
+      "Block 999 is not available yet",
+    );
     expect(getBlockInfo).not.toHaveBeenCalled();
     expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
   });
@@ -786,7 +793,9 @@ describe("getBlockV2", () => {
 
     (getDateRangeFromBlockHeight as jest.Mock).mockReturnValue(overlappingRange);
 
-    await expect(getBlockV2(998)).rejects.toThrow("Block 998 is not available yet");
+    await expect(getBlockV2({ configOrCurrencyId, height: 998 })).rejects.toThrow(
+      "Block 998 is not available yet",
+    );
     expect(getBlockInfo).not.toHaveBeenCalled();
     expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
   });
@@ -801,7 +810,7 @@ describe("getBlockV2", () => {
     (getDateRangeFromBlockHeight as jest.Mock).mockReturnValue(finalizedRange);
     (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([]);
 
-    const result = await getBlockV2(100);
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
     expect(result).toEqual({
       info: mockBlockInfo,
@@ -822,7 +831,7 @@ describe("getBlockV2", () => {
       endTimestampNs,
     );
 
-    await expect(getBlockV2(blockHeight)).rejects.toThrow(
+    await expect(getBlockV2({ configOrCurrencyId, height: blockHeight })).rejects.toThrow(
       `Block ${blockHeight} has no ERC20 synced yet (${endTimestampNs})`,
     );
     expect(getBlockInfo).not.toHaveBeenCalled();

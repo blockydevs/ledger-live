@@ -1,7 +1,9 @@
 import { apiClient } from "../network/api";
+import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getStakes } from "./getStakes";
 
 describe("getStakes", () => {
+  const mockCurrency = getMockedCurrency();
   const mockAddress = "0.0.123456";
   const mockGetAccount = jest.spyOn(apiClient, "getAccount");
   const mockGetNode = jest.spyOn(apiClient, "getNode");
@@ -21,7 +23,7 @@ describe("getStakes", () => {
       staked_node_id: null,
     });
 
-    const result = await getStakes(mockAddress);
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
 
     expect(result.items).toEqual([]);
     expect(mockGetAccount).toHaveBeenCalledTimes(1);
@@ -44,7 +46,7 @@ describe("getStakes", () => {
       staked_node_id: -1,
     });
 
-    const result = await getStakes(mockAddress);
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
 
     expect(result.items).toEqual([
       {
@@ -82,7 +84,7 @@ describe("getStakes", () => {
 
     mockGetNode.mockResolvedValue(null);
 
-    const result = await getStakes(mockAddress);
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
 
     expect(mockGetNode).toHaveBeenCalledTimes(1);
     expect(mockGetNode).toHaveBeenCalledWith(stakedNodeId);
@@ -130,7 +132,7 @@ describe("getStakes", () => {
       reward_rate_start: 0,
     });
 
-    const result = await getStakes(mockAddress);
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
 
     expect(mockGetNode).toHaveBeenCalledWith(nodeId);
     expect(result.items).toEqual([
@@ -175,7 +177,7 @@ describe("getStakes", () => {
       reward_rate_start: 0,
     });
 
-    const result = await getStakes(mockAddress);
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
 
     expect(result.items[0].details?.overstaked).toBe(true);
   });

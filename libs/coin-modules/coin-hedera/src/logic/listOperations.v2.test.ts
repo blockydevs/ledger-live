@@ -92,7 +92,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -148,7 +148,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -211,7 +211,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -301,7 +301,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -391,7 +391,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -454,7 +454,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -489,7 +489,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -543,7 +543,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [mockMirrorToken],
@@ -594,7 +594,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -623,7 +623,7 @@ describe("listOperationsV2", () => {
       limit: customLimit,
       order: customOrder,
       cursor: lastPagingToken,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -670,7 +670,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       mirrorTokens: [],
       erc20Tokens: [],
       fetchAllPages: true,
@@ -710,7 +710,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       mirrorTokens: [],
       erc20Tokens: [],
       fetchAllPages: true,
@@ -752,7 +752,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       mirrorTokens: [],
       erc20Tokens: [],
       fetchAllPages: true,
@@ -833,7 +833,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -896,7 +896,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -951,7 +951,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1009,7 +1009,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1072,7 +1072,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1141,7 +1141,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1194,7 +1194,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1234,7 +1234,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1273,7 +1273,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1343,7 +1343,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1413,7 +1413,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1470,7 +1470,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1545,7 +1545,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],
@@ -1581,7 +1581,7 @@ describe("listOperationsV2", () => {
     const result = await listOperations({
       limit: mockLimit,
       order: mockOrder,
-      currency: mockCurrency,
+      currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
       evmAddress: mockMirrorAccount.evm_address,
       mirrorTokens: [],

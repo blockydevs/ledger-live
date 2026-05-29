@@ -11,7 +11,7 @@ import {
 import type { FeeEstimation, TransactionIntent } from "@ledgerhq/coin-module-framework/api/index";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
-import type { HederaConfig } from "../config";
+import type { HederaCoinConfig } from "../config";
 import {
   DEFAULT_GAS_LIMIT,
   HEDERA_TRANSACTION_MODES,
@@ -20,7 +20,7 @@ import {
 import { rpcClient } from "../network/rpc";
 import { createTransactionId, toEVMAddress } from "../network/utils";
 import type { HederaMemo, HederaTxData } from "../types";
-import { hasSpecificIntentData, serializeTransaction } from "./utils";
+import { hasSpecificIntentData, resolveConfig, serializeTransaction } from "./utils";
 
 interface BuilderOperator {
   accountId: string;
@@ -67,9 +67,11 @@ interface BuilderUpdateAccountTransaction extends BuilderCommonTransactionFields
 }
 
 async function buildUnsignedCoinTransaction({
+  config: _,
   account,
   transaction,
 }: {
+  config: HederaCoinConfig;
   account: BuilderOperator;
   transaction: BuilderCoinTransferTransaction;
 }): Promise<TransferTransaction> {
@@ -91,9 +93,11 @@ async function buildUnsignedCoinTransaction({
 }
 
 async function buildUnsignedHTSTokenTransaction({
+  config: _,
   account,
   transaction,
 }: {
+  config: HederaCoinConfig;
   account: BuilderOperator;
   transaction: BuilderHTSTokenTransferTransaction;
 }): Promise<TransferTransaction> {
@@ -115,12 +119,17 @@ async function buildUnsignedHTSTokenTransaction({
 }
 
 async function buildUnsignedERC20TokenTransaction({
+  config,
   transaction,
 }: {
   transaction: BuilderERC20TokenTransferTransaction;
+  config: HederaCoinConfig;
 }): Promise<ContractExecuteTransaction> {
   const contractId = ContractId.fromEvmAddress(0, 0, transaction.tokenAddress);
-  const recipientEvmAddress = await toEVMAddress(transaction.recipient);
+  const recipientEvmAddress = await toEVMAddress({
+    configOrCurrencyId: config,
+    accountId: transaction.recipient,
+  });
   invariant(recipientEvmAddress, `hedera: EVM address is missing ${transaction.recipient}`);
   const gas = transaction.gasLimit.toNumber();
 
@@ -146,9 +155,11 @@ async function buildUnsignedERC20TokenTransaction({
 }
 
 async function buildTokenAssociateTransaction({
+  config: _,
   account,
   transaction,
 }: {
+  config: HederaCoinConfig;
   account: BuilderOperator;
   transaction: BuilderTokenAssociateTransaction;
 }): Promise<TokenAssociateTransaction> {
@@ -169,9 +180,11 @@ async function buildTokenAssociateTransaction({
 }
 
 async function buildUnsignedUpdateAccountTransaction({
+  config: _,
   account,
   transaction,
 }: {
+  config: HederaCoinConfig;
   account: BuilderOperator;
   transaction: BuilderUpdateAccountTransaction;
 }): Promise<AccountUpdateTransaction> {
@@ -209,15 +222,15 @@ function isStakingMode(type: string): type is BuilderUpdateAccountTransaction["t
 export async function craftTransaction({
   txIntent,
   customFees,
-  config,
+  configOrCurrencyId,
 }: {
   txIntent: TransactionIntent<HederaMemo, HederaTxData>;
   customFees?: FeeEstimation;
-  config: HederaConfig;
+  configOrCurrencyId: HederaCoinConfig | string;
 }) {
   const account = { accountId: txIntent.sender };
   const maxFee = customFees ? new BigNumber(customFees.value.toString()) : undefined;
-
+  const config = resolveConfig(configOrCurrencyId);
   const transactionId = await createTransactionId(account.accountId, config);
 
   let tx;
@@ -227,6 +240,7 @@ export async function craftTransaction({
     invariant("assetReference" in txIntent.asset, "hedera: assetReference is missing");
 
     tx = await buildTokenAssociateTransaction({
+      config,
       account,
       transaction: {
         type: txIntent.type,
@@ -242,6 +256,7 @@ export async function craftTransaction({
     const amount = new BigNumber(txIntent.amount.toString());
 
     tx = await buildUnsignedHTSTokenTransaction({
+      config,
       account,
       transaction: {
         type: txIntent.type,
@@ -262,6 +277,7 @@ export async function craftTransaction({
       : DEFAULT_GAS_LIMIT;
 
     tx = await buildUnsignedERC20TokenTransaction({
+      config,
       transaction: {
         type: txIntent.type,
         transactionId,
@@ -279,6 +295,7 @@ export async function craftTransaction({
       : undefined;
 
     tx = await buildUnsignedUpdateAccountTransaction({
+      config,
       account,
       transaction: {
         type: txIntent.type,
@@ -294,6 +311,7 @@ export async function craftTransaction({
     const amount = new BigNumber(txIntent.amount.toString());
 
     tx = await buildUnsignedCoinTransaction({
+      config,
       account,
       transaction: {
         type: HEDERA_TRANSACTION_MODES.Send,

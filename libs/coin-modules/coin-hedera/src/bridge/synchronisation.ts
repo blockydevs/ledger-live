@@ -47,13 +47,15 @@ const getAccountShapeV2 = async ({
   initialAccount: HederaAccount | undefined;
   blacklistedTokenIds: string[] | undefined;
 }): Promise<Partial<HederaAccount>> => {
+  const config = resolveConfig(currency.id);
+
   // get current account balance and tokens
   // tokens are fetched with separate requests to get "created_timestamp" for each token
   // based on this, ASSOCIATE_TOKEN operations can be connected with tokens
   const [mirrorAccount, mirrorTokens, erc20Tokens] = await Promise.all([
     apiClient.getAccount(address),
     apiClient.getAccountTokens(address),
-    getERC20BalancesForAccountV2(address),
+    getERC20BalancesForAccountV2({ configOrCurrencyId: config, address }),
   ]);
 
   const accountBalance = new BigNumber(mirrorAccount.balance.balance);
@@ -75,7 +77,7 @@ const getAccountShapeV2 = async ({
   }
 
   const latestAccountOperations = await listOperationsV2({
-    currency,
+    currencyId: currency.id,
     address,
     evmAddress,
     mirrorTokens,
@@ -144,7 +146,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   const { currency, derivationMode, address, initialAccount } = info;
   const config = resolveConfig(currency.id);
   invariant(address, "hedera: address is expected");
-  const evmAddress = await toEVMAddress(address);
+  const evmAddress = await toEVMAddress({ configOrCurrencyId: config, accountId: address });
   invariant(evmAddress, `hedera: evm address is missing for ${address}`);
 
   const liveAccountId = encodeAccountId({
@@ -172,7 +174,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   const [mirrorAccount, mirrorTokens, erc20TokenBalances] = await Promise.all([
     apiClient.getAccount(address),
     apiClient.getAccountTokens(address),
-    getERC20BalancesForAccount(evmAddress),
+    getERC20BalancesForAccount({ configOrCurrencyId: config, evmAccountId: evmAddress }),
   ]);
 
   const accountBalance = new BigNumber(mirrorAccount.balance.balance);
@@ -206,7 +208,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
 
   const [latestAccountOperations, erc20Transactions] = await Promise.all([
     listOperations({
-      currency,
+      currencyId: currency.id,
       address,
       mirrorTokens,
       cursor: latestOperationTimestamp?.toString(),
@@ -216,6 +218,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
       useSyntheticBlocks: false,
     }),
     thirdwebClient.getERC20TransactionsForAccount({
+      configOrCurrencyId: config,
       address,
       contractAddresses: erc20TokenBalances.map(token => token.token.contractAddress),
       since: erc20LatestOperationTimestamp,
@@ -254,6 +257,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
   // 6. sub accounts must get erc20 tokens and erc20 operations in addition to hts tokens and hts operations
   // 7. postSync must remove pending operations that are already confirmed as erc20 operations
   const { updatedOperations, newERC20TokenOperations } = await integrateERC20Operations({
+    currencyId: currency.id,
     ledgerAccountId: liveAccountId,
     address,
     allOperations: operations,

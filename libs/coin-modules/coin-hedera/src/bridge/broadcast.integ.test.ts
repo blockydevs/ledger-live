@@ -1,9 +1,19 @@
 import { AccountId, Hbar, PrivateKey, TransactionId, TransferTransaction } from "@hashgraph/sdk";
+import { broadcast } from "./broadcast";
+import hederaCoinConfig from "../config";
 import { serializeTransaction } from "../logic/utils";
 import { rpcClient } from "../network/rpc";
-import { broadcast } from "./broadcast";
+import { getMockedAccount } from "../test/fixtures/account.fixture";
+import { getMockedConfig } from "../test/fixtures/config.fixture";
 
 describe("Broadcast", () => {
+  const account = getMockedAccount();
+  const coinConfig = getMockedConfig();
+
+  beforeAll(() => {
+    hederaCoinConfig.setCoinConfig(() => coinConfig);
+  });
+
   afterAll(async () => {
     await rpcClient._resetInstance();
   });
@@ -24,6 +34,7 @@ describe("Broadcast", () => {
 
     await expect(
       broadcast({
+        account,
         signedOperation: {
           signature: txHex,
           operation: { id: "integ", hash: "", extra: {} },
