@@ -50,6 +50,7 @@ export function useMarketStatsViewModel(currencyData: MarketDataSectionCurrencyD
         key: "market_cap",
         label: t("market.marketList.marketCap"),
         value: marketCap,
+        tooltip: t("assetDetails.marketCapTooltip"),
       },
       {
         key: "market_rank",
@@ -60,16 +61,19 @@ export function useMarketStatsViewModel(currencyData: MarketDataSectionCurrencyD
         key: "circulating_supply",
         label: t("market.detailsPage.circulatingSupply"),
         value: circulating,
+        tooltip: t("assetDetails.circulatingSupplyTooltip"),
       },
       {
         key: "max_supply",
         label: t("market.detailsPage.maxSupply"),
         value: maxSupply,
+        tooltip: t("assetDetails.maxSupplyTooltip"),
       },
       {
         key: "trading_volume_24h",
         label: t("assetDetails.tradingVolume24h"),
         value: volume24h,
+        tooltip: t("assetDetails.tradingVolume24hTooltip"),
       },
     ];
   }, [

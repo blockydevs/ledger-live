@@ -43,7 +43,7 @@ export function MarketStatsView({ rows, showSkeleton, sectionTitle, sectionToolt
         ) : (
           <div className="flex flex-col gap-8">
             {rows.map(row => (
-              <StatRow key={row.key} label={row.label} value={row.value} />
+              <StatRow key={row.key} label={row.label} value={row.value} tooltip={row.tooltip} />
             ))}
           </div>
         )}
