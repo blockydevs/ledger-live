@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "~/context/hooks";
 import { flattenAccountsSelector } from "~/reducers/accounts";
-import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature } from "@features/platform-feature-flags";
 import {
   usePostOnboardingHubState,
   usePostOnboardingPortfolioWidgetVisibility,

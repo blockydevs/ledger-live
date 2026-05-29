@@ -1,6 +1,7 @@
 import { getRemoteConfig } from "@react-native-firebase/remote-config";
 import camelCase from "lodash/camelCase";
-import { DEFAULT_FEATURES, formatDefaultFeatures } from "@ledgerhq/live-common/featureFlags/index";
+import { formatDefaultFeatures } from "@ledgerhq/live-common/featureFlags/index";
+import { FEATURE_FLAGS_DEFAULTS } from "@shared/feature-flags";
 import type { PartialFeatures } from "@shared/feature-flags";
 
 type Subscriber = (event: { fetchedAt: number }) => void;
@@ -18,7 +19,7 @@ const readyPromise: Promise<void> = new Promise(resolve => {
 
 /**
  * One-shot setup: applies `minimumFetchIntervalMillis: 0` and seeds defaults
- * from {@link DEFAULT_FEATURES}. Awaited at the start of every
+ * from {@link FEATURE_FLAGS_DEFAULTS}. Awaited at the start of every
  * {@link fetchRemoteFlags} so the first fetch always honors defaults even when
  * the middleware fires immediately at store creation.
  */
@@ -26,7 +27,7 @@ function setup(): Promise<void> {
   if (!setupPromise) {
     setupPromise = Promise.all([
       rc.setConfigSettings({ minimumFetchIntervalMillis: 0 }),
-      rc.setDefaults(formatDefaultFeatures(DEFAULT_FEATURES)),
+      rc.setDefaults(formatDefaultFeatures(FEATURE_FLAGS_DEFAULTS)),
     ]).then(() => undefined);
   }
   return setupPromise;
