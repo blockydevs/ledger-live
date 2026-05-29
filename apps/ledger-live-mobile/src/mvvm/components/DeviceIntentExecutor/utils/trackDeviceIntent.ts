@@ -1,6 +1,7 @@
 import type { TransportIdentifier } from "@ledgerhq/device-management-kit";
 import { rnHidTransportIdentifier } from "@ledgerhq/device-transport-kit-react-native-hid";
 import type { DeviceModelId } from "@ledgerhq/types-devices";
+import type { KnownDevice } from "@ledgerhq/live-dmk-shared";
 import { ConnectionErrorTypes, DiscoveryErrorTypes } from "@ledgerhq/live-dmk-mobile";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
@@ -129,11 +130,12 @@ export const trackDeviceflowAborted = (params: { sourceFlow: SourceFlow }): void
 
 export const trackDeviceSelected = (params: {
   sourceFlow: SourceFlow;
-  modelId: DeviceModelId;
+  device: KnownDevice;
 }): void => {
   track("device_selected", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
-    modelId: params.modelId,
+    modelId: params.device.deviceModelId,
+    transport: params.device.transport === rnHidTransportIdentifier ? "usb" : "ble",
   });
 };
 

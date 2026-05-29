@@ -199,18 +199,24 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
   });
 
   describe("trackDeviceSelected", () => {
-    describe("Given a sourceFlow and modelId", () => {
+    describe("Given a sourceFlow and a known device", () => {
       describe("When called", () => {
-        it("Then tracks device_selected with the Layer B properties", () => {
+        it("Then tracks device_selected with the modelId and transport derived from the device", () => {
           trackDeviceSelected({
             sourceFlow: "receive",
-            modelId: DeviceModelId.nanoS,
+            device: {
+              id: "device-id",
+              name: "Ledger Nano S",
+              deviceModelId: DeviceModelId.nanoS,
+              transport: TEST_BLE_TRANSPORT,
+            },
           });
 
           expect(mockedTrack).toHaveBeenCalledWith("device_selected", {
             ...layerABaseProperties,
             sourceFlow: "receive",
             modelId: DeviceModelId.nanoS,
+            transport: "ble",
           });
         });
       });

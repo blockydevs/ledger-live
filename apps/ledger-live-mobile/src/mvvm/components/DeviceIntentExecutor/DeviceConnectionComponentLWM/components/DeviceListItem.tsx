@@ -28,10 +28,7 @@ export function DeviceListItem({ device }: Readonly<DeviceListItemProps>): React
   const DeviceIcon = getDeviceSymbolByModelId(device.knownDevice.deviceModelId);
   const isAvailable = device.type === "available";
   const handleSelect = () => {
-    trackDeviceSelected({
-      sourceFlow,
-      modelId: device.knownDevice.deviceModelId,
-    });
+    trackDeviceSelected({ sourceFlow, device: device.knownDevice });
     device.onSelect();
   };
 

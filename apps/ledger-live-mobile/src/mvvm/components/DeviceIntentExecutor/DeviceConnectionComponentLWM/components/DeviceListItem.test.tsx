@@ -120,6 +120,7 @@ describe("DeviceListItem", () => {
       source: TEST_SOURCE,
       deviceUxV2: true,
       modelId: DeviceModelId.stax,
+      transport: "ble",
     });
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
