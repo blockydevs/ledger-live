@@ -152,8 +152,6 @@ async function init() {
     TransportNodeHid = require("@ledgerhq/hw-transport-node-hid").default;
   } catch (e) {
     if (isMissingNativeBinding(e)) {
-      // HID is optional when targeting Speculos over TCP; skip its registration
-      // instead of crashing, and only hint when HID is actually needed.
       if (!SPECULOS_APDU_PORT) printDeviceDepsHint();
       return;
     }
