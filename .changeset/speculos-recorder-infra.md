@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/live-dmk-speculos": patch
-"@ledgerhq/ledger-key-ring-protocol": patch
+"@ledgerhq/live-dmk-speculos": minor
+"@ledgerhq/ledger-key-ring-protocol": minor
 ---
 
 Repair the speculos e2e recording pipeline:

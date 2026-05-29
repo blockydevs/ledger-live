@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/live-common": patch
-"@ledgerhq/devices": patch
+"@ledgerhq/live-common": minor
+"@ledgerhq/devices": minor
 ---
 
 correct app memory prediction
