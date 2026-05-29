@@ -33,6 +33,7 @@ export function WaitingForSelectedDeviceState({
       <TrackScreen
         category={PAGE_CONNECT_DEVICE.WaitingForSelectedDevice}
         sourceFlow={sourceFlow}
+        modelId={state.device.deviceModelId}
         deviceUxV2
       />
       <DeviceActionContent
