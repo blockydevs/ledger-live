@@ -43,23 +43,54 @@ export async function rawOperationsToOperations(
     "change_trust",
   ];
 
-  const ops = await Promise.all(
-    operations
-      .filter(operation => {
-        return (
-          operation.from === addr ||
-          operation.to === addr ||
-          operation.funder === addr ||
-          operation.account === addr ||
-          operation.trustor === addr ||
-          operation.source_account === addr
-        );
-      })
-      .filter(operation => supportedOperationTypes.includes(operation.type))
-      .map(operation => formatOperation(operation, accountId, addr, minHeight)),
+  // First pass: per raw op, format it when it passes the address+type filters.
+  // Other raw ops produce `undefined`, but their slot is preserved so we can
+  // later position fee-only rows at the index of the original raw op.
+  const formatted = await Promise.all(
+    operations.map(operation => {
+      const involvesAddress =
+        operation.from === addr ||
+        operation.to === addr ||
+        operation.funder === addr ||
+        operation.account === addr ||
+        operation.trustor === addr ||
+        operation.source_account === addr;
+      if (!involvesAddress) return undefined;
+      if (!supportedOperationTypes.includes(operation.type)) return undefined;
+      return formatOperation(operation, accountId, addr, minHeight);
+    }),
   );
 
-  return ops.filter(op => op !== undefined) as Operation[];
+  // Stellar transactions whose fee is already carried by at least one surfaced
+  // Operation. We never emit a redundant fee row for these.
+  const txHashesAlreadySurfaced = new Set(
+    formatted.filter((op): op is Operation => op !== undefined).map(op => op.tx.hash),
+  );
+
+  // Second pass: for every Stellar tx the address actually paid the fee on but
+  // that produced no surfaced Operation (e.g. `create_claimable_balance`-only,
+  // `liquidity_pool_deposit`-only, `set_options`-only, `bump_sequence`-only,
+  // ...), emit a single fee-only Operation so its `fee_charged` is not silently
+  // dropped from the operations list. We slot it at the position of the first
+  // raw op of that tx in the input order to preserve the page's descending order.
+  const feeOnlyEmitted = new Set<string>();
+  const feeOnly = await Promise.all(
+    operations.map(operation => {
+      if (txHashesAlreadySurfaced.has(operation.transaction_hash)) return undefined;
+      if (feeOnlyEmitted.has(operation.transaction_hash)) return undefined;
+      feeOnlyEmitted.add(operation.transaction_hash);
+      return formatFeeOnlyOperation(operation, accountId, addr, minHeight);
+    }),
+  );
+
+  const result: Operation[] = [];
+  for (let i = 0; i < operations.length; i++) {
+    const feeOp = feeOnly[i];
+    if (feeOp) result.push(feeOp);
+    const op = formatted[i];
+    if (op) result.push(op);
+  }
+  return result;
 }
 
 async function formatOperation(
@@ -76,39 +107,7 @@ async function formatOperation(
   const type = getOperationType(rawOperation, addr);
   const value = getValue(rawOperation, transaction, type);
   const recipients = getRecipients(rawOperation);
-
-  let memo: StellarMemo | undefined = undefined;
-  switch (transaction.memo_type) {
-    case "none":
-      memo = { type: "NO_MEMO" };
-      break;
-    case "id":
-      if (transaction.memo) {
-        memo = { type: "MEMO_ID", value: transaction.memo };
-      }
-      break;
-    case "text":
-      if (transaction.memo) {
-        memo = { type: "MEMO_TEXT", value: transaction.memo };
-      }
-      break;
-    case "return":
-      if (transaction.memo) {
-        memo = {
-          type: "MEMO_RETURN",
-          value: Buffer.from(transaction.memo, "base64").toString("hex"),
-        };
-      }
-      break;
-    case "hash":
-      if (transaction.memo) {
-        memo = {
-          type: "MEMO_HASH",
-          value: Buffer.from(transaction.memo, "base64").toString("hex"),
-        };
-      }
-      break;
-  }
+  const memo = decodeMemo(transaction);
 
   const operation: Operation = {
     id: `${accountId}-${rawOperation.transaction_hash}-${type}`,
@@ -155,6 +154,94 @@ async function formatOperation(
   };
 
   return operation;
+}
+
+/**
+ * Emit a single fee-only Operation that carries `fee_charged` for a Stellar
+ * transaction the address paid for but which produced no other surfaced
+ * Operation. The Operation is marked `type: "FEES"` so the downstream
+ * generic-coin-framework adapter renders it as a fee entry with
+ * `value = 0 + fees` and `fee = fees`, matching the on-chain XLM debit.
+ */
+async function formatFeeOnlyOperation(
+  rawOperation: RawOperation,
+  accountId: string,
+  addr: string,
+  minHeight: number,
+): Promise<Operation | undefined> {
+  const transaction = await rawOperation.transaction();
+
+  if (transaction.ledger_attr < minHeight) return undefined;
+
+  // For non-fee-bump transactions Horizon sets `fee_account === source_account`;
+  // for fee-bump transactions it is the outer fee payer. Only emit a fee row
+  // when the address we are listing is the actual payer of the network fee.
+  const feePayer = transaction.fee_account ?? transaction.source_account;
+  if (feePayer !== addr) return undefined;
+
+  const { hash: blockHash, closed_at: blockTime } = await transaction.ledger();
+  const memo = decodeMemo(transaction);
+
+  return {
+    id: `${accountId}-${rawOperation.transaction_hash}-FEES`,
+    value: 0n,
+    type: "FEES",
+    senders: [feePayer],
+    recipients: [],
+    tx: {
+      hash: rawOperation.transaction_hash,
+      block: {
+        hash: blockHash,
+        time: new Date(blockTime),
+        height: transaction.ledger_attr,
+      },
+      fees: BigInt(transaction.fee_charged),
+      date: new Date(rawOperation.created_at),
+      failed: !rawOperation.transaction_successful,
+      ...(transaction.fee_account ? { feesPayer: transaction.fee_account } : {}),
+    },
+    asset: { type: "native" },
+    details: {
+      pagingToken: rawOperation.paging_token,
+      assetCode: undefined,
+      assetIssuer: undefined,
+      assetAmount: undefined,
+      ledgerOpType: "FEES",
+      blockTime: new Date(blockTime),
+      index: rawOperation.id,
+      memo,
+      sequence: new BigNumber(transaction.source_account_sequence).isNaN()
+        ? undefined
+        : new BigNumber(transaction.source_account_sequence).toString(),
+    },
+  };
+}
+
+function decodeMemo(transaction: Horizon.ServerApi.TransactionRecord): StellarMemo | undefined {
+  switch (transaction.memo_type) {
+    case "none":
+      return { type: "NO_MEMO" };
+    case "id":
+      return transaction.memo ? { type: "MEMO_ID", value: transaction.memo } : undefined;
+    case "text":
+      return transaction.memo ? { type: "MEMO_TEXT", value: transaction.memo } : undefined;
+    case "return":
+      return transaction.memo
+        ? {
+            type: "MEMO_RETURN",
+            value: Buffer.from(transaction.memo, "base64").toString("hex"),
+          }
+        : undefined;
+    case "hash":
+      return transaction.memo
+        ? {
+            type: "MEMO_HASH",
+            value: Buffer.from(transaction.memo, "base64").toString("hex"),
+          }
+        : undefined;
+    default:
+      return undefined;
+  }
 }
 
 function getRecipients(operation: RawOperation): string[] {
