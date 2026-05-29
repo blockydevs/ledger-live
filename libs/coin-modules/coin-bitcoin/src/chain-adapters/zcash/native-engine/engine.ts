@@ -124,6 +124,10 @@ export async function startSyncJob(
 
   const allTransactions: ShieldedTransactionRaw[] = [];
   const allSpentKnownNullifiers: string[] = [];
+  // Accumulate nullifiers across chunks so that a note received in chunk N
+  // can be detected as spent in chunk N+1. Start with the caller-provided
+  // nullifiers (from previous sync cycles) and grow as new notes are found.
+  const accumulatedNullifiers: Set<string> = new Set(knownNullifiers ?? []);
   let processedBlocks = 0;
   let chunkStart = startBlockHeight;
 
@@ -142,7 +146,7 @@ export async function startSyncJob(
         viewingKey,
         chunkStart,
         chunkEnd,
-        ...(knownNullifiers?.length && { knownNullifiers }),
+        ...(accumulatedNullifiers.size > 0 && { knownNullifiers: [...accumulatedNullifiers] }),
       },
       isCancelled,
       onActiveStream,
@@ -156,6 +160,13 @@ export async function startSyncJob(
     processedBlocks += blocksScanned;
     for (const tx of transactions) {
       allTransactions.push(mapNativeTx(tx));
+      // Collect nullifiers from incoming/internal Orchard notes discovered
+      // in this chunk so the next chunk can detect them as spent.
+      for (const note of tx.orchardNotes ?? []) {
+        if (note.nullifier && note.transferType !== "outgoing") {
+          accumulatedNullifiers.add(note.nullifier);
+        }
+      }
     }
     allSpentKnownNullifiers.push(...spentKnownNullifiers);
 

@@ -177,6 +177,15 @@ const zcashChainAdapter: ChainAdapter = {
       ? estimateMaxSpendableAmount(notes, tx.transferType)
       : tx.amount;
 
+    if (effectiveAmount.lte(0)) {
+      const { zcashFee: _, changeAmount: __, ...rest } = tx;
+      return Promise.resolve({
+        ...rest,
+        amount: effectiveAmount,
+        selectedNotes: [],
+      } as ZcashTransaction);
+    }
+
     const result = selectNotes(notes, effectiveAmount, tx.transferType);
     if (!result) {
       // Destructure to strip stale zcashFee/changeAmount from a prior prepare

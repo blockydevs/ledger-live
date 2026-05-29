@@ -76,8 +76,8 @@ catalogs:
       specifier: 0.3.0
       version: 0.3.0
     '@ledgerhq/zcash-utils':
-      specifier: 0.3.0
-      version: 0.3.0
+      specifier: 0.3.1
+      version: 0.3.1
     '@playwright/test':
       specifier: 1.53.0
       version: 1.53.0
@@ -1070,7 +1070,7 @@ importers:
         version: link:../../libs/wallet-pnl
       '@ledgerhq/zcash-utils':
         specifier: 'catalog:'
-        version: 0.3.0
+        version: 0.3.1
       '@lottiefiles/dotlottie-react':
         specifier: 0.17.13
         version: 0.17.13(react@19.0.0)
@@ -4042,7 +4042,7 @@ importers:
         version: link:../../ledgerjs/packages/types-live
       '@ledgerhq/zcash-utils':
         specifier: 'catalog:'
-        version: 0.3.0
+        version: 0.3.1
       '@noble/curves':
         specifier: ^1.9.7
         version: 1.9.7
@@ -17318,8 +17318,8 @@ packages:
   '@ledgerhq/wallet-api-simulator@2.2.1':
     resolution: {integrity: sha512-9qMekBnJev3TYFqDvbSZB7B10KfHAqRHZCMY0Z21zMCDUukEjd4DxyeKVoiW+n8R+qNIe84UOWHfCVZWcJg7vA==}
 
-  '@ledgerhq/zcash-utils@0.3.0':
-    resolution: {integrity: sha512-117MuahRQ1us1XaNClcUSVIHm2aSK71S7RYLedVwcSLvvvhpkbWBUQ96PImBCT8Mvrf5DXHnCZz4vCD8YhTEWg==}
+  '@ledgerhq/zcash-utils@0.3.1':
+    resolution: {integrity: sha512-D731BiH9jhcN8av22hB1yZGRvjmIUmo1l2h4jb3/C9W6cAsRvciT+Qcg34XdgVuMm5SJFNvhk6+We8vK00E57w==}
 
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
@@ -21282,7 +21282,7 @@ packages:
       metro-react-native-babel-preset: '*'
       react: 19.0.0
       react-dom: 19.0.0
-      webpack: ^5.89.0
+      webpack: '*'
     peerDependenciesMeta:
       '@react-native/babel-preset':
         optional: true
@@ -23562,7 +23562,7 @@ packages:
     resolution: {integrity: sha512-/FQM1EDkTsf63Ub2C6O7GuYFDsSXUwsaZDurV0np41ocwq0jthUAYCmhBX9f+KwlaCgIuWyr/4WlUQUBfKfZog==}
     engines: {node: '>=6'}
     peerDependencies:
-      rxjs: ^5.5.10
+      rxjs: '*'
       zenObservable: '*'
     peerDependenciesMeta:
       rxjs:
@@ -45098,7 +45098,7 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@ledgerhq/zcash-utils@0.3.0': {}
+  '@ledgerhq/zcash-utils@0.3.1': {}
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 

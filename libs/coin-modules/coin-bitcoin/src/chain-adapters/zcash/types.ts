@@ -39,45 +39,35 @@ export type ZCashClientArgs = {
 
 export type ZcashSyncState = "disabled" | "ready" | "running" | "stopped" | "complete" | "outdated";
 
-export type DecryptedOutputRaw = {
+/** Orchard spending fields shared across note types. */
+type SpendingFields = {
+  nullifier?: string; // 64-char hex (32 bytes)
+  rho?: string; // 64-char hex (32 bytes)
+  rseed?: string; // 64-char hex (32 bytes)
+  cmx?: string; // 64-char hex (32 bytes)
+  position?: string; // decimal string (avoids f64 precision loss)
+  recipient?: string; // 86-char hex (43 bytes)
+};
+
+export type DecryptedOutputRaw = SpendingFields & {
   memo: string;
   transfer_type: string;
   amount: string; // zatoshis
-  // Spending fields (optional — absent for pre-upgrade syncs)
-  nullifier?: string; // 64-char hex
-  rho?: string; // 64-char hex
-  rseed?: string; // 64-char hex
-  cmx?: string; // 64-char hex
-  position?: string; // decimal string (avoids f64 precision loss)
-  recipient?: string; // 86-char hex
   is_spent?: boolean;
 };
 
-export type DecryptedOutput = {
+export type DecryptedOutput = SpendingFields & {
   memo: string;
   transfer_type: string;
   amount: BigNumber; // zatoshis
-  // Spending fields
-  nullifier?: string;
-  rho?: string;
-  rseed?: string;
-  cmx?: string;
-  position?: string;
-  recipient?: string;
   isSpent?: boolean;
 };
 
-/** An unspent Orchard note eligible for spending. */
-export type SpendableNote = {
+/** An unspent Orchard note eligible for spending (all spending fields required). */
+export type SpendableNote = Required<SpendingFields> & {
   txid: string;
   outputIndex: number;
-  nullifier: string;
   amount: BigNumber;
-  rho: string;
-  rseed: string;
-  cmx: string;
-  position: string;
-  recipient: string;
 };
 
 export type DecryptedTransaction = {

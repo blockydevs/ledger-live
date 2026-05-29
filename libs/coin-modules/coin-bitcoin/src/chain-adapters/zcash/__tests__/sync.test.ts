@@ -56,7 +56,7 @@ describe("reduceShieldedSyncResult", () => {
       processedBlocks: 0,
       remainingBlocks: 0,
     };
-    const info = createMockInfo();
+    const info = createMockInfo({ balance: new BigNumber(890) });
 
     const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
 
@@ -64,6 +64,7 @@ describe("reduceShieldedSyncResult", () => {
       processedOperations: [],
       accountUpdate: {
         blockHeight: 5000,
+        // balance = transparent(890) + orchard(0) = 890
         balance: new BigNumber(890),
       },
     });
@@ -973,6 +974,210 @@ describe("reduceShieldedSyncResult", () => {
 
     // Same expected balance: 2,490,000
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(2_490_000));
+  });
+
+  it("rescan deduplicates persisted transactions — stale isSpent=false copy must not inflate balance", () => {
+    // Scenario: TX1 was stored with isSpent=false in a previous sync.
+    // A full rescan finds TX1 again (now isSpent=true) plus TX2.
+    // Without deduplication, both copies of TX1 end up in allShieldedTx
+    // and the stale isSpent=false copy inflates the balance.
+    const NF1 = "aa".repeat(32);
+
+    const tx1Stale: ShieldedTransaction = {
+      id: "tx1-receive",
+      hex: "00",
+      blockHeight: 100,
+      blockHash: "hash-100",
+      timestamp: 1700000000,
+      fee: new BigNumber(0),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(100_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: NF1,
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    // Accumulated state from previous sync: TX1 stored with isSpent=false
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: {
+        operations: [] as BtcOperation[],
+        privateInfo: {
+          orchardBalance: new BigNumber(100_000),
+          saplingBalance: new BigNumber(0),
+          syncState: "running" as const,
+          ufvk: "uview1key",
+          birthday: null,
+          lastSyncTimestamp: null,
+          lastProcessedBlock: null,
+          transactions: [tx1Stale],
+          progress: 0,
+          estimatedTimeRemaining: { hours: 0, minutes: 0 },
+        },
+      } as Partial<ZcashAccount>,
+    };
+
+    // Full rescan finds TX1 (now isSpent=true) and TX2
+    const tx1Fresh: ShieldedTransaction = {
+      ...tx1Stale,
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(100_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: true,
+            nullifier: NF1,
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    const tx2: ShieldedTransaction = {
+      id: "tx2-send",
+      hex: "00",
+      blockHeight: 200,
+      blockHash: "hash-200",
+      timestamp: 1700001000,
+      fee: new BigNumber(10_000),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(10_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: "bb".repeat(32),
+          },
+          {
+            amount: new BigNumber(80_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: "cc".repeat(32),
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    const result: ShieldedSyncResult = {
+      transactions: [tx1Fresh, tx2],
+      lastProcessedBlock: 200,
+      processedBlocks: 200,
+      remainingBlocks: 0,
+    };
+
+    const info = createMockInfo({ balance: new BigNumber(0) });
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // TX1 must appear exactly once (the fresh version with isSpent=true)
+    const txIds = output.accountUpdate.privateInfo?.transactions?.map(t => t.id) ?? [];
+    expect(txIds.filter(id => id === "tx1-receive")).toHaveLength(1);
+
+    // The surviving TX1 must be the fresh one (isSpent=true)
+    const storedTx1 = output.accountUpdate.privateInfo?.transactions?.find(
+      t => t.id === "tx1-receive",
+    );
+    expect(storedTx1?.decryptedData?.orchard_outputs[0].isSpent).toBe(true);
+
+    // Balance = unspent notes only:
+    // TX1: 100k isSpent=true → excluded
+    // TX2.note1: 10k → included
+    // TX2.note2: 80k → included
+    // Total = 90,000 (NOT 190,000 which would happen with the duplicate)
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(90_000));
+  });
+
+  it("rescan with all-new transactions does not lose persisted transactions from other block ranges", () => {
+    // TX-old is persisted from a previous scan and NOT re-scanned (different block range).
+    // TX-new is found in the current scan. TX-old must be preserved.
+    const txOld: ShieldedTransaction = {
+      id: "tx-old",
+      hex: "00",
+      blockHeight: 50,
+      blockHash: "hash-50",
+      timestamp: 1699000000,
+      fee: new BigNumber(0),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(200_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+            nullifier: "dd".repeat(32),
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    const accumulated = {
+      processedOperations: [] as ShieldedTransaction[],
+      accountUpdate: {
+        operations: [] as BtcOperation[],
+        privateInfo: {
+          orchardBalance: new BigNumber(200_000),
+          saplingBalance: new BigNumber(0),
+          syncState: "running" as const,
+          ufvk: "uview1key",
+          birthday: null,
+          lastSyncTimestamp: null,
+          lastProcessedBlock: 100,
+          transactions: [txOld],
+          progress: 0,
+          estimatedTimeRemaining: { hours: 0, minutes: 0 },
+        },
+      } as Partial<ZcashAccount>,
+    };
+
+    const txNew: ShieldedTransaction = {
+      id: "tx-new",
+      hex: "00",
+      blockHeight: 200,
+      blockHash: "hash-200",
+      timestamp: 1700001000,
+      fee: new BigNumber(0),
+      decryptedData: {
+        orchard_outputs: [
+          {
+            amount: new BigNumber(50_000),
+            memo: "",
+            transfer_type: "incoming",
+            isSpent: false,
+          },
+        ],
+        sapling_outputs: [],
+      },
+    };
+
+    const result: ShieldedSyncResult = {
+      transactions: [txNew],
+      lastProcessedBlock: 200,
+      processedBlocks: 100,
+      remainingBlocks: 0,
+    };
+
+    const info = createMockInfo({ balance: new BigNumber(0) });
+    const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
+
+    // Both transactions must be present
+    const txIds = output.accountUpdate.privateInfo?.transactions?.map(t => t.id) ?? [];
+    expect(txIds).toContain("tx-old");
+    expect(txIds).toContain("tx-new");
+    expect(txIds).toHaveLength(2);
+
+    // Balance = 200k + 50k
+    expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(250_000));
   });
 });
 

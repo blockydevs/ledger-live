@@ -6,8 +6,11 @@ export const ZIP317_MARGINAL_FEE = 5_000; // per logical action
 export const ZIP317_GRACE_ACTIONS = 2;
 /** Minimum fee (grace actions * marginal fee). */
 export const ZIP317_MINIMUM_FEE = ZIP317_GRACE_ACTIONS * ZIP317_MARGINAL_FEE; // 10_000
-/** Change below this threshold is absorbed into the fee (avoids near-unspendable dust notes). */
-export const DUST_THRESHOLD = ZIP317_MARGINAL_FEE; // 5_000
+/** Change below this threshold is absorbed into the fee (avoids near-unspendable dust notes).
+ * Set to marginal fee: spending a dust note costs at least one action (5k zats). */
+const DUST_THRESHOLD = ZIP317_MARGINAL_FEE;
+/** Maximum fee iteration rounds before giving up. */
+const MAX_ITERATIONS = 5;
 
 /**
  * Compute ZIP-317 fee for a given number of logical actions.
@@ -67,7 +70,6 @@ export function selectNotes(
 
   // Iterative fee resolution (converges in <= 3 rounds for practical sizes)
   let fee = computeZip317Fee(ZIP317_GRACE_ACTIONS); // initial estimate: 2-action minimum
-  const MAX_ITERATIONS = 5;
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
     const target = amount.plus(fee);
@@ -96,7 +98,7 @@ export function selectNotes(
     const logicalActions = computeLogicalActions(spendCount, outputCount, transferType);
     const newFee = computeZip317Fee(logicalActions);
 
-    if (newFee.eq(fee) || newFee.lt(fee)) {
+    if (newFee.lte(fee)) {
       // Fee converged (or dust absorption made fee exceed the computed minimum)
       return { selectedNotes: selected, fee, changeAmount, totalInput };
     }

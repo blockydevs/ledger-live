@@ -173,8 +173,14 @@ export function reduceShieldedSyncResult(
   const mergedOperations = mergeOps(currentOperations, newOperations);
   const operations = removeReplaced(mergedOperations as BtcOperation[]);
 
+  // Deduplicate: when a block range is re-scanned (e.g. after a state reset),
+  // the same transaction may already exist in the persisted list. Keep only the
+  // freshly-scanned version (which carries the up-to-date `isSpent` flag).
+  const newIds = new Set(newTransactions.map(tx => tx.id));
   const allShieldedTx: ShieldedTransaction[] = [
-    ...(accumulated.accountUpdate.privateInfo?.transactions ?? []),
+    ...(accumulated.accountUpdate.privateInfo?.transactions ?? []).filter(
+      tx => !newIds.has(tx.id),
+    ),
     ...newTransactions,
   ];
 
