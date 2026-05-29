@@ -66,7 +66,6 @@ export function OperationDetails({ route }: OperationDetailsParamList) {
   const getProviderExplorerUrl = () => {
     switch (provider.toLowerCase()) {
       case "swapsxyz":
-        return `https://scan.swaps.xyz/transactions/${swapId}`;
       case "moonpay_trade":
         return `https://scan.swaps.xyz/transactions/${swapId}`;
       case "okx":
