@@ -1,6 +1,5 @@
 import type { CoinModuleLoader, FamilySetup, ValidateAddressFn } from "./types";
 
-// Hand-maintained: one entry per coin family. See FUTURE.md for the async evolution plan.
 export const coinModuleLoaders: CoinModuleLoader[] = [
   {
     family: "aleo",
