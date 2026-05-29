@@ -1,5 +1,4 @@
 import { FEATURE_FLAGS_DEFAULTS } from "@shared/feature-flags";
-// Stays on types-live: this helper is fed to FirebaseFeatureFlagsProvider (LIVE-30413).
 import { FeatureId, Feature, Features } from "@ledgerhq/types-live";
 
 /* getFeature provides a basic behavior to mock how we retrieve feature flags values

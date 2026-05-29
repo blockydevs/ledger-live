@@ -14,15 +14,7 @@ describe("Add account from modal", () => {
         noah: {
           enabled: false,
         },
-        // The portfolio asset list assertions in this spec use `assetItem-${name}`
-        // testIDs that only the Wallet 4.0 categorized assets view (`assetSection`)
-        // renders (via `WalletAssetsView` → `SectionListContent` → `AssetListItem`).
-        // On develop, the legacy Context-driven `useFeature` happened to read
-        // Firebase remote (which has these on in CI) before the bridge override
-        // flushed live-common defaults (which have `assetSection: false`), so the
-        // test passed. The Redux-backed `useFeature` resolves deterministically
-        // and never sees the Firebase flicker, so we have to pin Wallet 4.0
-        // + assetSection on here.
+        // `assetItem-${name}` testIDs only render under Wallet 4.0 + assetSection.
         lwmWallet40: { enabled: true, params: { assetSection: true } },
       },
       knownDevices: [knownDevice],
