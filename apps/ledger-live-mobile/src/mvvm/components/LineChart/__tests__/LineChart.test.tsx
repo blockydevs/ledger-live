@@ -76,4 +76,22 @@ describe("LineChart", () => {
     expect(onRangeChange).toHaveBeenCalledWith("1w");
     expect(isRange("1w")).toBe(true);
   });
+
+  it("renders with the scrubber, extrema markers and axes enabled without crashing", () => {
+    renderLineChart({
+      enableScrubber: true,
+      formatValue: value => `$${value}`,
+      tooltipTitle: () => "May 29",
+      showXAxis: true,
+      showYAxis: false,
+    });
+
+    expect(screen.getByTestId("line-chart")).toBeOnTheScreen();
+  });
+
+  it("renders without a scrubber when enableScrubber is false", () => {
+    renderLineChart({ enableScrubber: false });
+
+    expect(screen.getByTestId("line-chart")).toBeOnTheScreen();
+  });
 });
