@@ -54,27 +54,56 @@ describe("staking/validators", () => {
           method: "GET",
         }),
       );
-      expect(first).toEqual([
-        expect.objectContaining({
-          validatorAddress: "seivaloper1abc",
-          name: "John",
-          commission: 0.05,
-          tokens: "100",
-          votingPower: 0,
-          estimatedYearlyRewardsRate: 0,
-        }),
-        expect.objectContaining({
-          validatorAddress: "seivaloper1def",
-          name: "Doe",
-          commission: 1,
-          tokens: "999",
-          votingPower: 1,
-          estimatedYearlyRewardsRate: 0,
-        }),
-      ]);
+      expect(first).toEqual({
+        items: [
+          expect.objectContaining({
+            validatorAddress: "seivaloper1abc",
+            name: "John",
+            commission: 0.05,
+            tokens: "100",
+            votingPower: 0,
+            estimatedYearlyRewardsRate: 0,
+          }),
+          expect.objectContaining({
+            validatorAddress: "seivaloper1def",
+            name: "Doe",
+            commission: 1,
+            tokens: "999",
+            votingPower: 1,
+            estimatedYearlyRewardsRate: 0,
+          }),
+        ],
+        next: undefined,
+      });
 
       expect(await getValidators("sei_evm")).toEqual(first);
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
+    });
+
+    it("caches each cursor page under a separate key", async () => {
+      mockedNetwork.mockResolvedValue(cosmosValidatorsPayload);
+
+      await getValidators("sei_evm");
+      await getValidators("sei_evm", "5");
+      expect(mockedNetwork).toHaveBeenCalledTimes(2);
+
+      await getValidators("sei_evm");
+      await getValidators("sei_evm", "5");
+      expect(mockedNetwork).toHaveBeenCalledTimes(2);
+    });
+
+    it("clearValidatorsCache(currencyId) evicts every cached page of that currency", async () => {
+      mockedNetwork.mockResolvedValue(cosmosValidatorsPayload);
+
+      await getValidators("sei_evm");
+      await getValidators("sei_evm", "5");
+      expect(mockedNetwork).toHaveBeenCalledTimes(2);
+
+      clearValidatorsCache("sei_evm");
+
+      await getValidators("sei_evm");
+      await getValidators("sei_evm", "5");
+      expect(mockedNetwork).toHaveBeenCalledTimes(4);
     });
 
     it("returns cached data without a second network call while fresh", async () => {
@@ -104,17 +133,8 @@ describe("staking/validators", () => {
       expect(mockedNetwork).toHaveBeenCalledTimes(2);
     });
 
-    it("bypasses cache when apiConfig is passed explicitly", async () => {
-      mockedNetwork.mockResolvedValue(cosmosValidatorsPayload);
-
-      await getValidators("sei_evm");
-      await getValidators("sei_evm", { baseUrl: "https://x", validatorsEndpoint: "/y" });
-
-      expect(mockedNetwork).toHaveBeenCalledTimes(2);
-    });
-
-    it("returns [] for currencies without a validator API", async () => {
-      expect(await getValidators("ethereum")).toEqual([]);
+    it("returns an empty page for currencies without a validator API", async () => {
+      expect(await getValidators("ethereum")).toEqual({ items: [], next: undefined });
       expect(mockedNetwork).not.toHaveBeenCalled();
     });
 
@@ -133,10 +153,13 @@ describe("staking/validators", () => {
 
       const second = await getValidators("sei_evm");
 
-      expect(second).toEqual([
-        expect.objectContaining({ validatorAddress: "seivaloper1abc" }),
-        expect.objectContaining({ validatorAddress: "seivaloper1def" }),
-      ]);
+      expect(second).toEqual({
+        items: [
+          expect.objectContaining({ validatorAddress: "seivaloper1abc" }),
+          expect.objectContaining({ validatorAddress: "seivaloper1def" }),
+        ],
+        next: undefined,
+      });
       expect(mockedNetwork).toHaveBeenCalledTimes(2);
 
       releaseFirst(cosmosValidatorsPayload);

@@ -1,14 +1,14 @@
 import network from "@ledgerhq/live-network";
 import { makeLRUCache } from "@ledgerhq/live-network/cache";
-import type { Page, Validator } from "@ledgerhq/coin-module-framework/api/index";
+import type { Cursor, Page, Validator } from "@ledgerhq/coin-module-framework/api/index";
 import type { StakingValidatorItem } from "@ledgerhq/types-live";
 import { STAKING_CONTRACTS } from "./contracts";
 
 export type ValidatorApi = {
-  fetchValidators: (config: {
-    baseUrl: string;
-    validatorsEndpoint: string;
-  }) => Promise<StakingValidatorItem[]>;
+  fetchValidators: (
+    currencyId: string,
+    cursor?: Cursor,
+  ) => Promise<Page<StakingValidatorItem>>;
 };
 
 type CosmosValidatorDescription = {
@@ -36,10 +36,14 @@ const CACHE_MAX_AGE_MS = 30 * 1000;
 
 type CosmosValidatorsResponse = { validators: CosmosValidator[] };
 
+// Sei's REST endpoint returns the whole validator set in one response, so it
+// ignores the cursor and always reports `next: undefined` (single page).
 const seiValidatorApi: ValidatorApi = {
-  fetchValidators: async config => {
-    const { baseUrl, validatorsEndpoint } = config;
-    if (!baseUrl) return [];
+  fetchValidators: async (currencyId): Promise<Page<StakingValidatorItem>> => {
+    const apiConfig = STAKING_CONTRACTS[currencyId]?.apiConfig;
+    if (!apiConfig?.baseUrl) return { items: [], next: undefined };
+
+    const { baseUrl, validatorsEndpoint } = apiConfig;
 
     try {
       const { data } = await network<CosmosValidatorsResponse>({
@@ -47,26 +51,26 @@ const seiValidatorApi: ValidatorApi = {
         method: "GET",
       });
 
-      return Array.isArray(data?.validators)
+      const items: StakingValidatorItem[] = Array.isArray(data?.validators)
         ? data.validators
             .filter((v): v is CosmosValidator => typeof v?.operator_address === "string")
-            .map(
-              (v, index): StakingValidatorItem => ({
-                validatorAddress: v.operator_address,
-                name: v.description?.moniker ?? v.operator_address,
-                commission: Number.parseFloat(v.commission?.commission_rates?.rate ?? "0"),
-                tokens: v.tokens ?? "0",
-                votingPower: index,
-                estimatedYearlyRewardsRate: 0,
-              }),
-            )
+            .map((v, index) => ({
+              validatorAddress: v.operator_address,
+              name: v.description?.moniker ?? v.operator_address,
+              commission: Number.parseFloat(v.commission?.commission_rates?.rate ?? "0"),
+              tokens: v.tokens ?? "0",
+              votingPower: index,
+              estimatedYearlyRewardsRate: 0,
+            }))
         : [];
+
+      return { items, next: undefined };
     } catch (error) {
       console.error("Failed to fetch SEI validators", {
         error: error instanceof Error ? error.message : String(error),
         baseUrl,
       });
-      return [];
+      return { items: [], next: undefined };
     }
   },
 };
@@ -82,48 +86,73 @@ export const getValidatorApi = (currencyId: string): ValidatorApi | undefined =>
 
 const resolveValidators = async (
   currencyId: string,
-  apiConfig?: { baseUrl: string; validatorsEndpoint: string },
-): Promise<StakingValidatorItem[]> => {
+  cursor?: Cursor,
+): Promise<Page<StakingValidatorItem>> => {
   const api = getValidatorApi(currencyId);
-  const config = apiConfig ?? STAKING_CONTRACTS[currencyId]?.apiConfig;
-  if (!api || !config) return [];
-  return api.fetchValidators(config);
+  if (!api) return { items: [], next: undefined };
+  return api.fetchValidators(currencyId, cursor);
 };
 
-// Single LRU cache keyed by currencyId. Because makeLRUCache stores the pending
+// One cache key per page, so each page of a paginated chain (e.g. Monad) is
+// cached and deduplicated independently. Because makeLRUCache stores the pending
 // promise, concurrent callers (e.g. Info modal + Delegate modal opening in quick
 // succession) share one in-flight fetch — no separate request-deduplication map needed.
+const pageKey = (currencyId: string, cursor?: Cursor): string => `${currencyId}-${cursor ?? ""}`;
+
 const validatorsCache = makeLRUCache(
-  (currencyId: string) => resolveValidators(currencyId),
-  (currencyId: string) => currencyId,
+  (currencyId: string, cursor?: Cursor) => resolveValidators(currencyId, cursor),
+  (currencyId: string, cursor?: Cursor) => pageKey(currencyId, cursor),
   { max: 50, ttl: CACHE_MAX_AGE_MS },
 );
 
+// makeLRUCache exposes no key enumeration, so we track the page keys we've issued
+// to support clearing every page of a single currency (keys are `currencyId-cursor`).
+const issuedKeys = new Set<string>();
+
 export const clearValidatorsCache = (currencyId?: string): void => {
-  if (currencyId) {
-    validatorsCache.clear(currencyId);
-  } else {
+  if (!currencyId) {
     validatorsCache.reset();
+    issuedKeys.clear();
+    return;
+  }
+
+  // Evict every cached page of this currency (the `-` delimiter keeps e.g.
+  // "monad" from matching "monad2").
+  for (const key of issuedKeys) {
+    if (key.startsWith(`${currencyId}-`)) {
+      validatorsCache.clear(key);
+      issuedKeys.delete(key);
+    }
   }
 };
 
 export const getValidators = async (
   currencyId: string,
-  apiConfig?: { baseUrl: string; validatorsEndpoint: string },
-): Promise<StakingValidatorItem[]> => {
-  // Explicit apiConfig bypasses the cache (callers opt out on purpose, e.g. tests).
-  if (apiConfig) return resolveValidators(currencyId, apiConfig);
+  cursor?: Cursor,
+): Promise<Page<StakingValidatorItem>> => {
+  const key = pageKey(currencyId, cursor);
+  issuedKeys.add(key);
 
-  const data = await validatorsCache(currencyId);
-  // Never keep an empty list cached, so a transient empty response is retried next time.
-  if (data.length === 0) validatorsCache.clear(currencyId);
-  return data;
+  try {
+    const page = await validatorsCache(currencyId, cursor);
+    // Never keep an empty page cached, so a transient empty response is retried next time.
+    if (page.items.length === 0) {
+      validatorsCache.clear(key);
+      issuedKeys.delete(key);
+    }
+    return page;
+  } catch (error) {
+    // makeLRUCache already evicted the rejected entry; keep issuedKeys in sync.
+    issuedKeys.delete(key);
+    throw error;
+  }
 };
 
 /**
  * Fire-and-forget warm-up of the validators cache. Called before the user
  * reaches the validator selection step so the list appears instantly. A fresh
  * cache entry already returns without a network call, so repeated calls are cheap.
+ * Only the first page is warmed; subsequent pages are fetched lazily by the hook.
  */
 export const prefetchValidators = (currencyId: string): void => {
   void getValidators(currencyId).catch(() => {
@@ -154,16 +183,19 @@ const toValidatorBalance = (tokens: string): bigint => {
   }
 };
 
-export const getValidatorsPage = async (currencyId: string): Promise<Page<Validator>> => {
-  const items = await getValidators(currencyId);
+export const getValidatorsPage = async (
+  currencyId: string,
+  cursor?: Cursor,
+): Promise<Page<Validator>> => {
+  const page = await getValidators(currencyId, cursor);
   return {
-    items: items.map(v => ({
+    items: page.items.map(v => ({
       address: v.validatorAddress,
       name: v.name,
       balance: toValidatorBalance(v.tokens),
       commissionRate: v.commission.toString(),
       apy: v.estimatedYearlyRewardsRate,
     })),
-    next: undefined,
+    next: page.next,
   };
 };
