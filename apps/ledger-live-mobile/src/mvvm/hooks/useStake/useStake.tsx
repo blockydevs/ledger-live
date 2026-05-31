@@ -88,6 +88,7 @@ export function useStake() {
     account: Account | TokenAccount | AccountLike,
     walletState: WalletState,
     parentAccount?: Account,
+    cryptoAssetId?: string,
   ) =>
     | {
         screen: NavigatorName.Earn;
@@ -111,6 +112,7 @@ export function useStake() {
       account: Account | TokenAccount | AccountLike,
       walletState: WalletState,
       parentAccount?: Account,
+      cryptoAssetId?: string,
     ) => {
       const walletApiAccount = accountToWalletAPIAccount(walletState, account, parentAccount);
       const parentWalletApiAccountId = parentAccount
@@ -187,6 +189,7 @@ export function useStake() {
               ledgerAccountId: account.id,
               walletAccountId: walletApiAccount.id,
               customDappURL: customDappURL ?? undefined,
+              ...(cryptoAssetId ? { cryptoAssetId } : {}),
             },
           },
         };

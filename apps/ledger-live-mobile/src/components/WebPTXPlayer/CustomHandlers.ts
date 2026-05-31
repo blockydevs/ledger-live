@@ -274,10 +274,9 @@ export function useCustomExchangeHandlers({
           navigation.goBack();
           return { success: true };
         } else if (action === "redirect-provider") {
-          const { accountId: walletAccountId } = request.params || {};
+          const { accountId: walletAccountId, currencyId } = request.params || {};
 
           if (walletAccountId) {
-            // If we have a specific account, go directly to the stake flow for that account
             const accountId = getAccountIdFromWalletAccountId(walletAccountId);
             const account = accounts.find(acc => acc.id === accountId);
 
@@ -286,13 +285,12 @@ export function useCustomExchangeHandlers({
                 ? getParentAccount(account, accounts)
                 : undefined;
 
-              // Go directly to stake flow for this specific account
-              goToAccountStakeFlow(account, parentAccount);
+              goToAccountStakeFlow(account, parentAccount, currencyId);
               return { success: true };
             }
           }
 
-          // If no account specified or not found, open the general stake drawer
+          // No account specified or not found — open the general stake drawer
           handleOpenStakeDrawer();
 
           return { success: true };
