@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import BigNumber from "bignumber.js";
 import type { Account, AccountLike, TokenAccount } from "@ledgerhq/types-live";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import type { Transaction as CeloTransaction } from "@ledgerhq/live-common/families/celo/types";
@@ -54,7 +53,7 @@ function CeloFeeCurrencyPluginInner({
     () =>
       (mainAccount.subAccounts ?? [])
         .filter((sub): sub is TokenAccount => sub.type === "TokenAccount")
-        .filter(sub => new BigNumber(sub.balance).gt(0))
+        .filter(sub => sub.balance.gt(0))
         .filter(sub => FEE_CURRENCY_BY_CONTRACT.has(sub.token.contractAddress.toLowerCase()))
         .map(sub => ({
           ...sub,
@@ -67,18 +66,22 @@ function CeloFeeCurrencyPluginInner({
 
   const selectedId = transaction.feeCurrencyAccountId ?? NATIVE_CELO_ID;
 
-  useEffect(() => {
-    if (!transaction.feeCurrencyAccountId) return;
-    if (mainAccount.subAccounts === undefined) return;
-    const stillSelectable = tokenOptions.some(t => t.id === transaction.feeCurrencyAccountId);
-    if (stillSelectable) return;
+  const resetFeeCurrency = useCallback(() => {
     transactionActions.updateTransaction(tx => ({
       ...tx,
       feeCurrency: null,
       feeCurrencyUnwrapped: null,
       feeCurrencyAccountId: null,
     }));
-  }, [transaction.feeCurrencyAccountId, mainAccount.subAccounts, tokenOptions, transactionActions]);
+  }, [transactionActions]);
+
+  useEffect(() => {
+    if (!transaction.feeCurrencyAccountId) return;
+    if (mainAccount.subAccounts === undefined) return;
+    const stillSelectable = tokenOptions.some(t => t.id === transaction.feeCurrencyAccountId);
+    if (stillSelectable) return;
+    resetFeeCurrency();
+  }, [transaction.feeCurrencyAccountId, mainAccount.subAccounts, tokenOptions, resetFeeCurrency]);
 
   const selectedLabel = useMemo(() => {
     if (!transaction.feeCurrencyAccountId) return FEE_CURRENCY_OPTIONS[0].name;
@@ -98,12 +101,7 @@ function CeloFeeCurrencyPluginInner({
   const onValueChange = useCallback(
     (id: string) => {
       if (id === NATIVE_CELO_ID) {
-        transactionActions.updateTransaction(tx => ({
-          ...tx,
-          feeCurrency: null,
-          feeCurrencyUnwrapped: null,
-          feeCurrencyAccountId: null,
-        }));
+        resetFeeCurrency();
         return;
       }
 
@@ -124,7 +122,7 @@ function CeloFeeCurrencyPluginInner({
         feeCurrencyAccountId: tokenAccount.id,
       }));
     },
-    [tokenOptions, transactionActions],
+    [tokenOptions, transactionActions, resetFeeCurrency],
   );
 
   return (

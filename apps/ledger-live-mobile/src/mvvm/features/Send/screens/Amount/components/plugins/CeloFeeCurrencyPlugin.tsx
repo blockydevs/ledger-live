@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
-import BigNumber from "bignumber.js";
 import { useTranslation } from "~/context/Locale";
 import { useTheme } from "@react-navigation/native";
 import { Icons, Text } from "@ledgerhq/native-ui";
@@ -69,7 +68,7 @@ function CeloFeeCurrencyPluginInner({
     () =>
       (mainAccount.subAccounts ?? [])
         .filter((sub): sub is TokenAccount => sub.type === "TokenAccount")
-        .filter(sub => new BigNumber(sub.balance).gt(0))
+        .filter(sub => sub.balance.gt(0))
         .filter(sub => FEE_CURRENCY_BY_CONTRACT.has(sub.token.contractAddress.toLowerCase()))
         .map(sub => ({
           ...sub,
