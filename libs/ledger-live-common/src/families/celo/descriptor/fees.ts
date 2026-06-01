@@ -1,4 +1,5 @@
 import type { CustomFeeInputDescriptor, FeeDescriptor } from "../../../bridge/descriptor/types";
+import type { Transaction as CeloTransaction } from "../types";
 import { BigNumber } from "bignumber.js";
 
 const GWEI_DIVISOR = new BigNumber(10).pow(9);
@@ -84,4 +85,6 @@ export const fees: FeeDescriptor = {
       return patch;
     },
   },
+  getFeeCurrencyAccountId: transaction =>
+    (transaction as CeloTransaction).feeCurrencyAccountId ?? null,
 };

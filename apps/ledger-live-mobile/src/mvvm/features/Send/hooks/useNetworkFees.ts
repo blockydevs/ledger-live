@@ -60,8 +60,7 @@ export function useNetworkFees({
   const accountUnit = useMaybeAccountUnit(mainAccount) ?? accountCurrency.units[0];
   const fiatUnit = counterValueCurrency.units[0];
 
-  const feeCurrencyAccountId =
-    transaction.family === "celo" ? (transaction.feeCurrencyAccountId ?? null) : null;
+  const feeCurrencyAccountId = sendFeatures.getFeeCurrencyAccountId(accountCurrency, transaction);
 
   const feeCurrencySubAccount = useMemo<TokenAccount | null>(() => {
     if (!feeCurrencyAccountId) return null;

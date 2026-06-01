@@ -9,11 +9,6 @@ import {
   type SendFlowStep,
   type SendFlowBusinessContext,
 } from "@ledgerhq/live-common/flows/send/types";
-import {
-  getAccountCurrency,
-  getMainAccount,
-} from "@ledgerhq/ledger-wallet-framework/account/helpers";
-import { sendFeatures } from "@ledgerhq/live-common/bridge/descriptor/send/features";
 import type { SendStepConfig } from "../types";
 import { SendHeader } from "./SendHeader";
 import { AnimatedHeight } from "./AnimatedHeight";
@@ -27,7 +22,7 @@ type SendFlowLayoutProps = Readonly<{
 
 export function SendFlowLayout({ isOpen, onClose }: SendFlowLayoutProps) {
   const wizard = useFlowWizard<SendFlowStep, SendFlowBusinessContext, SendStepConfig>();
-  const { state } = useSendFlowData();
+  const { state, uiConfig } = useSendFlowData();
 
   const currentStepConfig = wizard.currentStepConfig;
   const StepComponent = wizard.currentStepRenderer;
@@ -50,15 +45,8 @@ export function SendFlowLayout({ isOpen, onClose }: SendFlowLayoutProps) {
     [onClose, wizard.currentStep, sendFlowTrackingProperties],
   );
 
-  const accountCurrency = useMemo(() => {
-    if (!state.account.account) return undefined;
-    return getAccountCurrency(
-      getMainAccount(state.account.account, state.account.parentAccount ?? undefined),
-    );
-  }, [state.account.account, state.account.parentAccount]);
   const hasAmountPlugins =
-    wizard.currentStep === SEND_FLOW_STEP.AMOUNT &&
-    sendFeatures.getAmountPlugins(accountCurrency).length > 0;
+    wizard.currentStep === SEND_FLOW_STEP.AMOUNT && uiConfig.hasAmountPlugins;
 
   const dialogHeight = hasAmountPlugins ? "fixed" : (currentStepConfig?.height ?? "fixed");
 

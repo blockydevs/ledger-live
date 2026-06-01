@@ -108,6 +108,7 @@ function buildParams(overrides?: {
     hasFeePresets: false,
     hasCustomFees: false,
     hasCoinControl: false,
+    hasAmountPlugins: false,
     ...overrides?.uiConfig,
   };
   const transactionActions: SendFlowTransactionActions = {
@@ -152,6 +153,10 @@ describe("useNetworkFees", () => {
       })),
     });
     sendFeatures.shouldEstimateFeePresetsWithBridge = jest.fn(() => false);
+    sendFeatures.getFeeCurrencyAccountId = jest.fn(
+      (_currency: unknown, transaction: { feeCurrencyAccountId?: string | null }) =>
+        transaction?.feeCurrencyAccountId ?? null,
+    );
     mockUseFeePresetOptions.mockReturnValue(defaultPresetOptions);
     mockUseFeePresetFiatValues.mockReturnValue(defaultFiatValues);
     useCalculate.mockReturnValue(undefined);

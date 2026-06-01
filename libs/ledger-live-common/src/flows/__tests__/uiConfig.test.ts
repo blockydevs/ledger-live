@@ -16,6 +16,7 @@ jest.mock("../../bridge/descriptor/send/features", () => ({
     hasFeePresets: jest.fn(),
     hasCustomFees: jest.fn(),
     hasCoinControl: jest.fn(),
+    getAmountPlugins: jest.fn(() => []),
   },
 }));
 
@@ -95,6 +96,7 @@ describe("getSendUiConfig", () => {
         hasFeePresets: true,
         hasCustomFees: true,
         hasCoinControl: true,
+        hasAmountPlugins: false,
       });
     });
   });
@@ -126,6 +128,7 @@ describe("getSendUiConfig", () => {
         hasFeePresets: true,
         hasCustomFees: true,
         hasCoinControl: false,
+        hasAmountPlugins: false,
       });
     });
   });
@@ -159,6 +162,7 @@ describe("getSendUiConfig", () => {
         hasFeePresets: false,
         hasCustomFees: true,
         hasCoinControl: false,
+        hasAmountPlugins: false,
       });
     });
   });
@@ -175,6 +179,7 @@ describe("getSendUiConfig", () => {
         hasFeePresets: false,
         hasCustomFees: false,
         hasCoinControl: false,
+        hasAmountPlugins: false,
       });
     });
   });
