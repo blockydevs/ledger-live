@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { ContinueOnDevice } from "@ledgerhq/native-ui";
 import { DeviceModelId } from "@ledgerhq/types-devices";
-import ContinueOnStax from "../assets/ContinueOnStax";
-import ContinueOnEuropa from "../assets/ContinueOnEuropa";
-import ContinueOnApex from "../assets/ContinueOnApex";
+import ContinueOnStax from "../../assets/ContinueOnStax";
+import ContinueOnEuropa from "../../assets/ContinueOnEuropa";
+import ContinueOnApex from "../../assets/ContinueOnApex";
 import { IconType } from "@ledgerhq/native-ui/components/Icon/type";
 
 const ContinueOnDeviceWithAnim: React.FC<{
