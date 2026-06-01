@@ -1,4 +1,4 @@
-import type { AuthorizationStatus } from "@react-native-firebase/messaging";
+import { AuthorizationStatus } from "@react-native-firebase/messaging";
 import type { NotificationsSettings } from "~/reducers/types";
 
 export type NotificationCategory = Exclude<
