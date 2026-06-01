@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { AssetDetailView } from "./AssetDetailView";
+import { ScrubbedPriceProvider } from "./context/ScrubbedPriceContext";
 import { useAssetDetailViewModel } from "./hooks/useAssetDetailViewModel";
 
 const AssetDetail = () => {
@@ -15,7 +16,11 @@ const AssetDetail = () => {
     );
   }
 
-  return <AssetDetailView viewModel={viewModel} />;
+  return (
+    <ScrubbedPriceProvider>
+      <AssetDetailView viewModel={viewModel} />
+    </ScrubbedPriceProvider>
+  );
 };
 
 export default AssetDetail;

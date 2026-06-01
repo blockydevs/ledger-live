@@ -1,5 +1,6 @@
 import React from "react";
 import { LineChart as LumenLineChart } from "@ledgerhq/lumen-ui-react-visualization";
+import { LUMEN_CHART_OVERFLOW_MARGIN } from "./constants";
 import { LineChartLoading } from "./LineChartLoading";
 import { LineChartError } from "./LineChartError";
 import { LineChartPoints } from "./LineChartPoints";
@@ -24,6 +25,7 @@ export type LineChartPlotContentProps = Readonly<{
   enableScrubber: boolean;
   formatValue: LineChartValueFormatter;
   tooltipTitle?: LineChartTooltipTitle;
+  showScrubberTooltip: boolean;
   onScrubberPositionChange?: LineChartScrubberPositionChange;
   showArea: boolean;
   showXAxis: boolean;
@@ -42,6 +44,7 @@ export function LineChartPlotContent({
   enableScrubber,
   formatValue,
   tooltipTitle,
+  showScrubberTooltip,
   onScrubberPositionChange,
   showArea,
   showXAxis,
@@ -58,7 +61,11 @@ export function LineChartPlotContent({
   }
 
   return (
-    <div data-testid="line-chart-plot" className="w-full min-w-0">
+    <div
+      data-testid="line-chart-plot"
+      className="w-full min-w-0"
+      style={{ paddingTop: LUMEN_CHART_OVERFLOW_MARGIN }}
+    >
       <LumenLineChart
         series={chartSeries}
         height={height}
@@ -77,6 +84,7 @@ export function LineChartPlotContent({
             series={chartSeries}
             formatValue={formatValue}
             tooltipTitle={tooltipTitle}
+            showTooltip={showScrubberTooltip}
           />
         )}
       </LumenLineChart>

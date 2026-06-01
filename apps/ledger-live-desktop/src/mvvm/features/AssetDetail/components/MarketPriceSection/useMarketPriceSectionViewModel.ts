@@ -16,6 +16,8 @@ import {
   resolveTrendPercentAndVariant,
 } from "./utils";
 import { resolveAssetDetailSectionLoading } from "../../utils/resolveAssetDetailSectionLoading";
+import { useAssetChartDateFormatter } from "../../hooks/useAssetChartDateFormatter";
+import { useScrubbedPrice } from "../../context/ScrubbedPriceContext";
 
 type UseMarketPriceSectionViewModelProps = Readonly<{
   distributionItem?: DistributionItem;
@@ -37,6 +39,8 @@ type UseMarketPriceSectionViewModelResult = Readonly<{
   showSkeleton: boolean;
   hasPriceData: boolean;
   hasVariationData: boolean;
+  isScrubbing: boolean;
+  scrubbedDateLabel?: string;
 }>;
 
 const RANGE_I18N_KEY: Record<LineChartRange, string> = {
@@ -103,11 +107,15 @@ export function useMarketPriceSectionViewModel({
     trendVariant,
   });
 
+  const { selection } = useScrubbedPrice();
+  const isScrubbing = selection != null;
+  const formatDate = useAssetChartDateFormatter(selectedRange);
+
   return {
     shouldRenderSection,
     title: t("assetDetails.marketPrice"),
     rangeLabel: t(RANGE_I18N_KEY[selectedRange]),
-    priceValue: hasPriceData ? data?.price : undefined,
+    priceValue: isScrubbing ? selection.price : hasPriceData ? data?.price : undefined,
     priceFormatter,
     variationText,
     percentageText,
@@ -115,6 +123,8 @@ export function useMarketPriceSectionViewModel({
     showSkeleton,
     hasPriceData,
     hasVariationData,
+    isScrubbing,
+    scrubbedDateLabel: isScrubbing ? formatDate(selection.timestamp) : undefined,
   };
 }
 

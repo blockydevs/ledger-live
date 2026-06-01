@@ -19,6 +19,7 @@ export function LineChartView({
   enableScrubber,
   formatValue,
   tooltipTitle,
+  showScrubberTooltip,
   onScrubberPositionChange,
   showArea,
   showXAxis,
@@ -38,6 +39,7 @@ export function LineChartView({
         enableScrubber={enableScrubber}
         formatValue={formatValue}
         tooltipTitle={tooltipTitle}
+        showScrubberTooltip={showScrubberTooltip}
         onScrubberPositionChange={onScrubberPositionChange}
         showArea={showArea}
         showXAxis={showXAxis}

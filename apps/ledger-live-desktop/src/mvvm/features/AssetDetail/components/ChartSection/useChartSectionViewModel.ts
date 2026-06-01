@@ -8,18 +8,20 @@ import {
   resolveLineChartColorFromPercentChange,
   type LineChartColor,
   type LineChartRange,
+  type LineChartScrubberPositionChange,
   type LineChartSeries,
   type LineChartTooltipTitle,
   type LineChartValueFormatter,
   type LineChartXAxisConfig,
   type LineChartYAxisConfig,
 } from "LLD/components/LineChart";
-import { dayFormat, hourFormat, useDateFormatter } from "~/renderer/hooks/useDateFormatter";
 import { counterValueCurrencySelector, localeSelector } from "~/renderer/reducers/settings";
 import {
   clampDayChangePercentPointsNearZero,
   getPriceChangeKeyForRange,
 } from "../MarketPriceSection/utils";
+import { useAssetChartDateFormatter } from "../../hooks/useAssetChartDateFormatter";
+import { useScrubbedPrice } from "../../context/ScrubbedPriceContext";
 
 const MIN_X_AXIS_TICKS = 5;
 const MIN_X_AXIS_TICKS_1D = 8;
@@ -64,6 +66,7 @@ export type ChartSectionViewModelResult = Readonly<{
   isError: boolean;
   formatValue: LineChartValueFormatter;
   tooltipTitle: LineChartTooltipTitle;
+  onScrubberPositionChange: LineChartScrubberPositionChange;
   showXAxis: boolean;
   showYAxis: boolean;
   xAxis: LineChartXAxisConfig;
@@ -127,15 +130,13 @@ export function useChartSectionViewModel({
     [fiatUnit, locale],
   );
 
-  const formatDay = useDateFormatter(dayFormat);
-  const formatHour = useDateFormatter(hourFormat);
-  const formatDate = selectedRange === "1d" ? formatHour : formatDay;
+  const formatDate = useAssetChartDateFormatter(selectedRange);
 
   const tooltipTitle = useCallback<LineChartTooltipTitle>(
     dataIndex => {
       const timestamp = timestamps[dataIndex];
       if (timestamp == null) return undefined;
-      return formatDate(new Date(timestamp));
+      return formatDate(timestamp);
     },
     [timestamps, formatDate],
   );
@@ -149,7 +150,7 @@ export function useChartSectionViewModel({
       ),
       tickLabelFormatter: value => {
         const timestamp = timestamps[Number(value)];
-        return timestamp == null ? "" : formatDate(new Date(timestamp));
+        return timestamp == null ? "" : formatDate(timestamp);
       },
     }),
     [timestamps, formatDate, selectedRange],
@@ -168,15 +169,36 @@ export function useChartSectionViewModel({
     [],
   );
 
+  const { setSelection } = useScrubbedPrice();
+
+  const onScrubberPositionChange = useCallback<LineChartScrubberPositionChange>(
+    index => {
+      if (index == null) return setSelection(undefined);
+      const price = series[0]?.data[index];
+      const timestamp = timestamps[index];
+      setSelection(Number.isFinite(price) && timestamp != null ? { price, timestamp } : undefined);
+    },
+    [series, timestamps, setSelection],
+  );
+
+  const handleRangeChange = useCallback(
+    (range: LineChartRange) => {
+      setSelection(undefined);
+      onRangeChange(range);
+    },
+    [onRangeChange, setSelection],
+  );
+
   return {
     series,
     selectedRange,
-    onRangeChange,
+    onRangeChange: handleRangeChange,
     color,
     isLoading,
     isError,
     formatValue,
     tooltipTitle,
+    onScrubberPositionChange,
     showXAxis: true,
     showYAxis: false,
     xAxis,

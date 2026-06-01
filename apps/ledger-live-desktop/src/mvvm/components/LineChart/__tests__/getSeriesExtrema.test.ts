@@ -56,8 +56,8 @@ describe("getExtremaPointMarkers", () => {
 
   it("emits a top success max marker and a bottom error min marker", () => {
     expect(getExtremaPointMarkers(makeSeries([3, 1, 4, 9, 2]))).toEqual([
-      { index: 3, value: 9, color: "success", labelPosition: "top" },
-      { index: 1, value: 1, color: "error", labelPosition: "bottom" },
+      { index: 3, value: 9, color: "success", labelPosition: "top", hidePoint: true },
+      { index: 1, value: 1, color: "error", labelPosition: "bottom", hidePoint: true },
     ]);
   });
 });

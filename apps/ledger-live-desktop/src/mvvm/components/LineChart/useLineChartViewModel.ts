@@ -34,6 +34,7 @@ export type LineChartViewModelResult = Readonly<{
   enableScrubber: boolean;
   formatValue: LineChartValueFormatter;
   tooltipTitle?: LineChartTooltipTitle;
+  showScrubberTooltip: boolean;
   onScrubberPositionChange?: LineChartScrubberPositionChange;
   showArea: boolean;
   showXAxis: boolean;
@@ -55,6 +56,7 @@ export function useLineChartViewModel({
   enableScrubber = true,
   formatValue = defaultFormatValue,
   tooltipTitle,
+  showScrubberTooltip = true,
   onScrubberPositionChange,
   showArea = true,
   showXAxis = true,
@@ -105,6 +107,7 @@ export function useLineChartViewModel({
     enableScrubber,
     formatValue,
     tooltipTitle,
+    showScrubberTooltip,
     onScrubberPositionChange,
     showArea,
     showXAxis,

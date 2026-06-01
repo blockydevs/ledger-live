@@ -24,6 +24,7 @@ const defaultProps: LineChartPlotContentProps = {
   points: [],
   enableScrubber: true,
   formatValue: value => `$${value}`,
+  showScrubberTooltip: true,
   showArea: true,
   showXAxis: true,
   showYAxis: true,
