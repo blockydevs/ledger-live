@@ -1,5 +1,7 @@
-import { renderHook } from "tests/testSetup";
+import { act, renderHook } from "tests/testSetup";
 import { createMockMarketCurrencyData } from "@ledgerhq/live-common/market/utils/fixtures";
+import { track } from "~/renderer/analytics/segment";
+import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
 import type { MarketDataSectionCurrencyData } from "../hooks/useMarketDataSectionCurrencyData";
 import { useMarketStatsViewModel } from "../MarketStats/hooks/useMarketStatsViewModel";
 import { usePricePerformanceViewModel } from "../PricePerformance/hooks/usePricePerformanceViewModel";
@@ -46,6 +48,26 @@ describe("useMarketStatsViewModel", () => {
     );
 
     expect(result.current.showSkeleton).toBe(false);
+  });
+
+  it("tracks market_stat_definition when a stat tooltip opens", () => {
+    const { result } = renderHook(
+      () => useMarketStatsViewModel(buildCurrencyData({ ledgerCurrencyId: "bitcoin" })),
+      hookOptions(),
+    );
+
+    act(() => result.current.onTooltipOpen("circulating_supply", true));
+
+    expect(track).toHaveBeenCalledWith("button_clicked", {
+      button: "market_stat_definition",
+      currency: "bitcoin",
+      type: "circulating_supply",
+      page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+    });
+
+    jest.mocked(track).mockClear();
+    act(() => result.current.onTooltipOpen("circulating_supply", false));
+    expect(track).not.toHaveBeenCalled();
   });
 
   it("formats market rank with a sharp sign when CoinGecko rank is positive", () => {

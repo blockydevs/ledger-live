@@ -14,7 +14,6 @@ import { getAccountsSidebarPath } from "LLD/components/SideBar/utils";
 import { useOpenAssetFlow } from "LLD/features/ModularDialog/hooks/useOpenAssetFlow";
 import { MAD_SOURCE_PAGES } from "LLD/features/ModularDialog/analytics/modularDialog.types";
 import { track } from "~/renderer/analytics/segment";
-import { getDefaultAccountName } from "@ledgerhq/live-wallet/accountName";
 import { buildMainAccountByIdMap } from "@ledgerhq/asset-aggregation/assetDistribution/index";
 import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
 import { MAX_ADDRESSES_PREVIEW } from "../constants";
@@ -45,6 +44,11 @@ export function useAddressListViewModel(distributionItem: DistributionItem) {
   const [isAllAddressesDialogOpen, setIsAllAddressesDialogOpen] = useState(false);
 
   const onSeeAll = () => {
+    track("button_clicked", {
+      button: "see_all_addresses",
+      currency: distributionItem.currency.id,
+      page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+    });
     setIsAllAddressesDialogOpen(true);
   };
 
@@ -60,17 +64,23 @@ export function useAddressListViewModel(distributionItem: DistributionItem) {
   const onAddAddress = () => {
     track("button_clicked", {
       button: "add_account",
+      currency: distributionItem.currency.id,
       page: ASSET_DETAIL_TRACKING_PAGE_NAME,
     });
     openAddAccountFlow(distributionItem.currency);
   };
 
   const onAccountClick = (account: AccountLike, parentAccount?: Account | null) => {
+    const mainAccount =
+      account.type === "TokenAccount"
+        ? parentAccount ?? lookupParentAccount(account.parentId)
+        : account;
     setTrackingSource(ASSET_DETAIL_TRACKING_PAGE_NAME);
-    track("account_clicked", {
+    track("button_clicked", {
+      button: "Account",
+      currency: distributionItem.currency.id,
+      chain: mainAccount ? getAccountCurrency(mainAccount).id : getAccountCurrency(account).id,
       page: ASSET_DETAIL_TRACKING_PAGE_NAME,
-      currency: getAccountCurrency(account).name,
-      account: getDefaultAccountName(account),
     });
     if (account.type === "TokenAccount" && !parentAccount) {
       navigate(getAccountsSidebarPath(shouldDisplayAssetSection));

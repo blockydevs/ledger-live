@@ -3,6 +3,8 @@ import BigNumber from "bignumber.js";
 import type { AssetMarketData } from "@ledgerhq/asset-detail";
 import { useAssetChartData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
 import { formatPrice } from "@ledgerhq/live-currency-format";
+import { track } from "~/renderer/analytics/segment";
+import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
 import { useSelector } from "LLD/hooks/redux";
 import {
   resolveLineChartColorFromPercentChange,
@@ -52,6 +54,7 @@ function getEvenlySpacedTicks(length: number, minTicks: number): number[] {
 type UseChartSectionViewModelProps = Readonly<{
   marketData: AssetMarketData;
   ledgerId?: string;
+  currencyId?: string;
   isDistributionLoading: boolean;
   selectedRange: LineChartRange;
   onRangeChange: (range: LineChartRange) => void;
@@ -76,6 +79,7 @@ export type ChartSectionViewModelResult = Readonly<{
 export function useChartSectionViewModel({
   marketData,
   ledgerId,
+  currencyId,
   selectedRange,
   onRangeChange,
 }: UseChartSectionViewModelProps): ChartSectionViewModelResult {
@@ -183,10 +187,19 @@ export function useChartSectionViewModel({
 
   const handleRangeChange = useCallback(
     (range: LineChartRange) => {
+      if (range === selectedRange) return;
       setSelection(undefined);
       onRangeChange(range);
+      if (currencyId) {
+        track("button_clicked", {
+          button: "timeframe",
+          timeframe: range,
+          page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+          currency: currencyId,
+        });
+      }
     },
-    [onRangeChange, setSelection],
+    [currencyId, selectedRange, onRangeChange, setSelection],
   );
 
   return {
