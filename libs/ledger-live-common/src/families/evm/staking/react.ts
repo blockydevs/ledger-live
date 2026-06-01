@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  getValidators,
-  getCachedValidators,
-  mapDelegations,
-} from "@ledgerhq/coin-evm/staking/index";
+import { getValidators, mapDelegations } from "@ledgerhq/coin-evm/staking/index";
 import type { StakingValidatorItem } from "@ledgerhq/types-live";
 import type { StakingAccount, StakingMappedDelegation } from "./types";
 import { getAccountCurrency } from "../../../account";
@@ -34,20 +30,19 @@ export function useEvmStakingValidators(
   currencyId: string,
   searchInput?: string,
 ): EvmStakingValidatorsState {
-  // Seed from the in-memory cache (populated by a previous mount or prefetch).
-  // Single read avoids redundant work and inconsistent TTL boundary at init.
-  const [fetchState, setFetchState] = useState<FetchState>(() => {
-    const cached = getCachedValidators(currencyId);
-    return { items: cached ?? [], loading: !cached, error: null };
+  const [fetchState, setFetchState] = useState<FetchState>({
+    items: [],
+    loading: true,
+    error: null,
   });
 
   useEffect(() => {
     // guards against stale resolutions when currencyId changes
     let cancelled = false;
 
-    const cached = getCachedValidators(currencyId);
-    setFetchState({ items: cached ?? [], loading: !cached, error: null });
+    setFetchState({ items: [], loading: true, error: null });
 
+    // A warm LRU entry resolves on the next microtask, so the loading state is momentary.
     getValidators(currencyId)
       .then(items => {
         if (cancelled) return;
