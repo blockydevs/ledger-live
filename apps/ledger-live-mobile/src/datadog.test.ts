@@ -1,5 +1,5 @@
 import { DdLogs } from "@datadog/mobile-react-native";
-import { broadcastLogger } from "./datadog";
+import { broadcastLogger, customErrorEventMapper } from "./datadog";
 
 jest.mock("@datadog/mobile-react-native", () => ({
   DdLogs: { info: jest.fn(), error: jest.fn() },
@@ -10,6 +10,33 @@ jest.mock("@datadog/mobile-react-native", () => ({
 jest.mock("@datadog/mobile-react-navigation", () => ({}));
 jest.mock("./const", () => ({ ScreenName: {} }));
 jest.mock("./utils/datadogUtils", () => ({ buildFeatureFlagTags: jest.fn(() => ({})) }));
+
+describe("customErrorEventMapper", () => {
+  const mapError = customErrorEventMapper(false);
+
+  it("drops Braze content cards sync failures", () => {
+    expect(
+      mapError({
+        message: "BrazeKit.ContentCards.Error.syncFailure",
+        stacktrace: "",
+      } as Parameters<typeof mapError>[0]),
+    ).toBeNull();
+  });
+
+  it("keeps unrelated errors", () => {
+    const event = {
+      message: "Something went wrong",
+      stacktrace: "",
+      context: {},
+    } as Parameters<typeof mapError>[0];
+
+    expect(mapError(event)).toEqual(
+      expect.objectContaining({
+        message: "Something went wrong",
+      }),
+    );
+  });
+});
 
 describe("broadcastLogger", () => {
   it("calls DdLogs.info with correct parameters on success event", () => {
