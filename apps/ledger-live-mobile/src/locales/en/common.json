@@ -8146,19 +8146,19 @@
         "tooltip": "The average price you paid for this asset through Ledger Wallet, including everything you’ve bought or received from other wallets. This is used to track your profit or loss."
       },
       "drawer": {
-        "title": "Asset profit and loss",
-        "description": "A summary of how this asset has performed in your portfolio.",
+        "title": "Profit and loss",
+        "description": "Your asset performance broken down into estimated unrealised and realised returns.",
         "estimatedReturn": {
-          "title": "Estimated return",
+          "title": "Unrealised return",
           "description": "The estimated profit or loss if sold at current price."
         },
         "realisedReturn": {
           "title": "Realised return",
-          "description": "Profit or loss confirmed from previous sale, send, or swap."
+          "description": "Profit or loss estimated from previous sale, send or swap."
         },
         "totalReturn": {
           "title": "Total return",
-          "description": "The sum of estimated and realised returns."
+          "description": "The sum of estimated unrealised and realised returns."
         }
       }
     },
@@ -9135,10 +9135,10 @@
       }
     },
     "addresses": {
-      "title": "Addresses",
+      "title": "Accounts",
       "addAccount": "Add",
       "seeAll": "See all",
-      "empty": "No addresses yet. Tap Add to get started."
+      "empty": "No accounts yet. Tap Add to get started."
     },
     "marketStats": {
       "title": "Market stats",
@@ -9151,7 +9151,8 @@
       "marketCapTooltip": "The total value of all coins in circulation. Think of it as the crypto's total worth on the market.",
       "tradingVolume": "24h trading volume",
       "tradingVolumeTooltip": "The total amount traded in the last 24 hours.",
-      "error": "Unable to load market stats"
+      "error": "Unable to load market stats",
+      "disclaimer": "Market stats sourced from CoinGecko"
     },
     "pricePerformance": {
       "title": "Price performance",
@@ -9586,7 +9587,8 @@
   },
   "fearAndGreed": {
     "title": "Mood index",
-    "description": "Shows overall market sentiment from 0 to 100, based on trends and activity. Use it to understand how the market is behaving: lower values indicate fear, higher values indicate greed.",
+    "description": "Shows overall market sentiment from 0 to 100, based notably on volatility, market momentum and social trends. Lower values indicate fear, higher values indicate greed.",
+    "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
     "levels": {
       "fearPlus": "Fear+",
       "fear": "Fear",

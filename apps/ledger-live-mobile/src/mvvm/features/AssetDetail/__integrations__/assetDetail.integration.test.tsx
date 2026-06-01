@@ -164,7 +164,7 @@ describe("AssetDetail screen layout", () => {
 
     await waitFor(() => expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.addresses)).toBeVisible());
     const section = screen.getByTestId(ASSET_DETAIL_TEST_IDS.addresses);
-    expect(within(section).getByText("Addresses")).toBeVisible();
+    expect(within(section).getByText("Accounts")).toBeVisible();
     expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.addAccount)).toBeVisible();
     expect(screen.getByText("Add")).toBeVisible();
   });

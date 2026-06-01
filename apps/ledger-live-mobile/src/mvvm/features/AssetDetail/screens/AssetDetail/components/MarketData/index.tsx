@@ -1,6 +1,7 @@
 import React from "react";
-import { Box } from "@ledgerhq/lumen-ui-rnative";
+import { Box, DescriptionItem, DescriptionItemLabel } from "@ledgerhq/lumen-ui-rnative";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
+import { useTranslation } from "~/context/Locale";
 import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
 import { MarketStats } from "../MarketStats";
 import { PricePerformance } from "../PricePerformance";
@@ -13,6 +14,7 @@ type Props = Readonly<{
 }>;
 
 export function MarketData({ currency, marketApiId, knownLedgerIds, knownMarketId }: Props) {
+  const { t } = useTranslation();
   return (
     <Box lx={containerStyle}>
       <MarketStats
@@ -27,10 +29,13 @@ export function MarketData({ currency, marketApiId, knownLedgerIds, knownMarketI
         knownLedgerIds={knownLedgerIds}
         knownMarketId={knownMarketId}
       />
+      <DescriptionItem>
+        <DescriptionItemLabel>{t("assetDetail.marketStats.disclaimer")}</DescriptionItemLabel>
+      </DescriptionItem>
     </Box>
   );
 }
 
 const containerStyle: LumenViewStyle = {
-  gap: "s32",
+  gap: "s16",
 };
