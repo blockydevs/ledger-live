@@ -12,11 +12,19 @@ export type PnlDetailProps = {
   title: string;
   description: string;
   items: PnlDetailItem[];
+  disclaimer: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export const PnlDetail = ({ title, description, items, open, onOpenChange }: PnlDetailProps) => (
+export const PnlDetail = ({
+  title,
+  description,
+  items,
+  disclaimer,
+  open,
+  onOpenChange,
+}: PnlDetailProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent>
       <DialogHeader
@@ -29,6 +37,7 @@ export const PnlDetail = ({ title, description, items, open, onOpenChange }: Pnl
         {items.map(item => (
           <PnLinfoDetail key={item.title} {...item} />
         ))}
+        <p className="body-4 text-muted mt-8">{disclaimer}</p>
       </DialogBody>
     </DialogContent>
   </Dialog>
