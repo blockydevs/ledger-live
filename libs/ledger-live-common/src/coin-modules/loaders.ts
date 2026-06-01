@@ -60,7 +60,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
   },
   {
     family: "casper",
-    loadSetup: () => import("../families/casper/setup.js") as object as Promise<FamilySetup>,
+    loadSetup: () => import("../families/casper/setup.js"),
     loadTransaction: () => import("@ledgerhq/coin-casper/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
       import("@ledgerhq/coin-casper/deviceTransactionConfig").then(m => m.default),
@@ -113,7 +113,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
   },
   {
     family: "filecoin",
-    loadSetup: () => import("../families/filecoin/setup.js") as object as Promise<FamilySetup>,
+    loadSetup: () => import("../families/filecoin/setup.js"),
     loadTransaction: () => import("@ledgerhq/coin-filecoin/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
       import("@ledgerhq/coin-filecoin/deviceTransactionConfig").then(m => m.default),
@@ -136,8 +136,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
   },
   {
     family: "internet_computer",
-    loadSetup: () =>
-      import("../families/internet_computer/setup.js") as object as Promise<FamilySetup>,
+    loadSetup: () => import("../families/internet_computer/setup.js"),
     loadTransaction: () =>
       import("@ledgerhq/coin-internet_computer/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
@@ -203,7 +202,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
   },
   {
     family: "stacks",
-    loadSetup: () => import("../families/stacks/setup.js") as object as Promise<FamilySetup>,
+    loadSetup: () => import("../families/stacks/setup.js"),
     loadTransaction: () => import("@ledgerhq/coin-stacks/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
       import("@ledgerhq/coin-stacks/deviceTransactionConfig").then(m => m.default),
@@ -246,7 +245,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
   },
   {
     family: "ton",
-    loadSetup: () => import("../families/ton/setup.js") as object as Promise<FamilySetup>,
+    loadSetup: () => import("../families/ton/setup.js"),
     loadTransaction: () => import("@ledgerhq/coin-ton/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
       import("@ledgerhq/coin-ton/deviceTransactionConfig").then(m => m.default),
