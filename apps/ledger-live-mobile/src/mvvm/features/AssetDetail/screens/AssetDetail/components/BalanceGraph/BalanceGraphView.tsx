@@ -8,6 +8,7 @@ import { TrendSection } from "LLM/components/TrendSection";
 import { LineChart } from "LLM/components/LineChart";
 import type {
   LineChartColor,
+  LineChartScrubberPositionChange,
   LineChartSeries,
   LineChartTooltipTitle,
   LineChartValueFormatter,
@@ -37,11 +38,78 @@ type Props = Readonly<{
   chartColor: LineChartColor;
   formatValue: LineChartValueFormatter;
   tooltipTitle: LineChartTooltipTitle;
+  onScrubberPositionChange: LineChartScrubberPositionChange;
+  isScrubbing: boolean;
+  scrubbedDateLabel: string | undefined;
   showXAxis: boolean;
   showYAxis: boolean;
   xAxis: LineChartXAxisConfig;
   yAxis: LineChartYAxisConfig;
 }>;
+
+type ChartProps = Readonly<{
+  series: LineChartSeries[];
+  selectedRange: RangeKey;
+  onRangeChange: (value: RangeKey) => void;
+  ranges: Range[];
+  isRangeValue: (value: string) => value is RangeKey;
+  chartColor: LineChartColor;
+  isLoading: boolean;
+  formatValue: LineChartValueFormatter;
+  tooltipTitle: LineChartTooltipTitle;
+  onScrubberPositionChange: LineChartScrubberPositionChange;
+  showXAxis: boolean;
+  showYAxis: boolean;
+  xAxis: LineChartXAxisConfig;
+  yAxis: LineChartYAxisConfig;
+  accessibilityLabel: string;
+}>;
+
+/**
+ * Memoized chart subtree. The market-price header re-renders on every scrub
+ * frame; wrapping the chart keeps its (already memoized) props stable so the
+ * Lumen chart + scrubber are not re-rendered mid-gesture.
+ */
+const BalanceGraphChart = React.memo(function BalanceGraphChart({
+  series,
+  selectedRange,
+  onRangeChange,
+  ranges,
+  isRangeValue,
+  chartColor,
+  isLoading,
+  formatValue,
+  tooltipTitle,
+  onScrubberPositionChange,
+  showXAxis,
+  showYAxis,
+  xAxis,
+  yAxis,
+  accessibilityLabel,
+}: ChartProps) {
+  return (
+    <LineChart<RangeKey>
+      series={series}
+      selectedRange={selectedRange}
+      onRangeChange={onRangeChange}
+      ranges={ranges}
+      isRangeValue={isRangeValue}
+      color={chartColor}
+      isLoading={isLoading}
+      formatValue={formatValue}
+      tooltipTitle={tooltipTitle}
+      onScrubberPositionChange={onScrubberPositionChange}
+      showScrubberTooltip={false}
+      showXAxis={showXAxis}
+      showYAxis={showYAxis}
+      xAxis={xAxis}
+      yAxis={yAxis}
+      accessibilityLabel={accessibilityLabel}
+      testID={ASSET_DETAIL_TEST_IDS.chart}
+      height={275}
+    />
+  );
+});
 
 export function BalanceGraphView({
   price,
@@ -61,6 +129,9 @@ export function BalanceGraphView({
   chartColor,
   formatValue,
   tooltipTitle,
+  onScrubberPositionChange,
+  isScrubbing,
+  scrubbedDateLabel,
   showXAxis,
   showYAxis,
   xAxis,
@@ -81,40 +152,47 @@ export function BalanceGraphView({
             {t("assetDetail.balanceGraph.marketPrice")}
           </Text>
 
-          {hasMarketData && (
+          {(hasMarketData || isScrubbing) && (
             <>
               <AmountDisplay
                 value={price}
                 formatter={priceFormatter}
+                animate={!isScrubbing}
                 testID={ASSET_DETAIL_TEST_IDS.marketPrice}
               />
 
-              <TrendSection
-                percentage={priceChangePercentage}
-                formattedChange={formattedPriceChange}
-                timeLabel={rangeTimeLabel}
-              />
+              {isScrubbing ? (
+                <Text typography="body2" lx={{ color: "muted" }}>
+                  {scrubbedDateLabel}
+                </Text>
+              ) : (
+                <TrendSection
+                  percentage={priceChangePercentage}
+                  formattedChange={formattedPriceChange}
+                  timeLabel={rangeTimeLabel}
+                />
+              )}
             </>
           )}
         </Box>
       )}
 
-      <LineChart<RangeKey>
+      <BalanceGraphChart
         series={series}
         selectedRange={selectedRange}
         onRangeChange={onRangeChange}
         ranges={ranges}
         isRangeValue={isRangeValue}
-        color={chartColor}
+        chartColor={chartColor}
         isLoading={isLoading}
         formatValue={formatValue}
         tooltipTitle={tooltipTitle}
+        onScrubberPositionChange={onScrubberPositionChange}
         showXAxis={showXAxis}
         showYAxis={showYAxis}
         xAxis={xAxis}
         yAxis={yAxis}
         accessibilityLabel={t("assetDetail.balanceGraph.timeframeSelector")}
-        testID={ASSET_DETAIL_TEST_IDS.chart}
       />
 
       {showReceive && (

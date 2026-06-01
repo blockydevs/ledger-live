@@ -24,6 +24,7 @@ export function LineChartView<TRange extends string>({
   testID,
   points,
   enableScrubber,
+  showScrubberTooltip,
   formatValue,
   tooltipTitle,
   onScrubberPositionChange,
@@ -55,6 +56,7 @@ export function LineChartView<TRange extends string>({
               series={chartSeries}
               formatValue={formatValue}
               tooltipTitle={tooltipTitle}
+              showTooltip={showScrubberTooltip}
             />
           )}
         </LumenLineChart>
