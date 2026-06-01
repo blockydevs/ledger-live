@@ -216,3 +216,59 @@ export async function releaseSpeculosDeviceCI(runId: string) {
     console.warn(`Failed to release remote Speculos ${runId}:`, sanitizeError(error));
   }
 }
+
+/**
+ * Fetches Speculos pod stderr from Speculinho (GET /logs/{run_id}).
+ * Call while the instance is still up (before POST /release).
+ */
+export async function fetchSpeculinhoLogs(runId: string): Promise<string> {
+  const speculinhoUrl = getSpeculinhoBaseUrl();
+  if (!speculinhoUrl) {
+    return "[speculosCI] SPECULINHO_URL is not set; cannot fetch Speculinho logs.";
+  }
+
+  const url = `${speculinhoUrl}/logs/${encodeURIComponent(runId)}`;
+  try {
+    const res = await axios.get<string>(url, {
+      responseType: "text",
+      timeout: 10_000,
+      validateStatus: () => true,
+    });
+
+    if (res.status === 200 && typeof res.data === "string") {
+      return res.data;
+    }
+
+    const body = typeof res.data === "string" ? res.data : JSON.stringify(res.data ?? "");
+    return `[speculosCI] Speculinho GET /logs/${runId} returned HTTP ${res.status}${body ? `\n${body}` : ""}`;
+  } catch (error: unknown) {
+    return `[speculosCI] Speculinho GET /logs failed: ${sanitizeError(error).message}`;
+  }
+}
+
+/**
+ * Fetches Speculinho pod status (GET /status/{run_id}).
+ * Useful as extra debug on failure — surfaces pod state (Running / CrashLoopBackOff / …) and any kube-side error.
+ */
+export async function fetchSpeculinhoStatus(runId: string): Promise<string> {
+  const speculinhoUrl = getSpeculinhoBaseUrl();
+  if (!speculinhoUrl) {
+    return "[speculosCI] SPECULINHO_URL is not set; cannot fetch Speculinho status.";
+  }
+
+  const url = `${speculinhoUrl}/status/${encodeURIComponent(runId)}`;
+  try {
+    const res = await axios.get(url, {
+      timeout: 10_000,
+      validateStatus: () => true,
+    });
+
+    const body = typeof res.data === "string" ? res.data : JSON.stringify(res.data ?? "", null, 2);
+    if (res.status === 200) {
+      return body;
+    }
+    return `[speculosCI] Speculinho GET /status/${runId} returned HTTP ${res.status}${body ? `\n${body}` : ""}`;
+  } catch (error: unknown) {
+    return `[speculosCI] Speculinho GET /status failed: ${sanitizeError(error).message}`;
+  }
+}
