@@ -11,7 +11,7 @@ import ShelleyTypeAddress from "@stricahq/typhonjs/dist/address/ShelleyTypeAddre
 import bech32 from "bech32";
 import BigNumber from "bignumber.js";
 import groupBy from "lodash/groupBy";
-import { APITransaction } from "./api/api-types";
+import { APITransaction, HashType } from "./api/api-types";
 import {
   CARDANO_COIN_TYPE,
   CARDANO_PURPOSE,
@@ -349,4 +349,83 @@ export function isProtocolParamsValid(pp: ProtocolParams): boolean {
     pp.utxoCostPerByte,
   ];
   return paramsRequiredCheck.every(isValidNumString);
+}
+
+export function getRewardAddress(stakeKey: string, networkId: number): TyphonAddress.RewardAddress {
+  return new TyphonAddress.RewardAddress(networkId, {
+    // Use Typhon's own HashType when constructing a Typhon address (don't rely on
+    // the api-types enum sharing the same numeric values).
+    type: TyphonTypes.HashType.ADDRESS,
+    hash: Buffer.from(stakeKey, "hex"),
+  });
+}
+
+export function findStakeRegistration(
+  tx: APITransaction,
+  stakeKey: string,
+  networkId: number,
+  stakeKeyDeposit: string,
+): string | undefined {
+  // Pre-Conway stake registrations use the protocol-level deposit; the amount is
+  // not carried on the certificate, so it's sourced from network protocol params.
+  if (tx.certificate.stakeRegistrations?.length) {
+    const match = tx.certificate.stakeRegistrations.find(
+      c => c.stakeCredential.type === HashType.ADDRESS && c.stakeCredential.key === stakeKey,
+    );
+    if (match) {
+      return stakeKeyDeposit;
+    }
+  }
+
+  // Conway era stake registrations
+  if (tx.certificate.stakeRegsConway?.length) {
+    const stakeAddress = getRewardAddress(stakeKey, networkId);
+    const match = tx.certificate.stakeRegsConway.find(w => stakeAddress.getHex() === w.stakeHex);
+    if (match) {
+      return match.deposit;
+    }
+  }
+
+  return undefined;
+}
+
+export function findStakeDeRegistration(
+  tx: APITransaction,
+  stakeKey: string,
+  networkId: number,
+  stakeKeyDeposit: string,
+): string | undefined {
+  // Pre-Conway de-registrations refund the protocol-level deposit (equal to the
+  // original registration deposit), sourced from network protocol params.
+  if (tx.certificate.stakeDeRegistrations?.length) {
+    const match = tx.certificate.stakeDeRegistrations.find(
+      c => c.stakeCredential.type === HashType.ADDRESS && c.stakeCredential.key === stakeKey,
+    );
+    if (match) {
+      return stakeKeyDeposit;
+    }
+  }
+
+  // Conway era stake de-registrations
+  if (tx.certificate.stakeDeRegsConway?.length) {
+    const stakeAddress = getRewardAddress(stakeKey, networkId);
+    const match = tx.certificate.stakeDeRegsConway.find(w => stakeAddress.getHex() === w.stakeHex);
+    if (match) {
+      return match.deposit;
+    }
+  }
+
+  return undefined;
+}
+
+export function findWithdrawal(tx: APITransaction, stakeKey: string): string | undefined {
+  if (!tx.withdrawals?.length) {
+    return undefined;
+  }
+
+  const match = tx.withdrawals.find(
+    w => w.stakeCredential.type === HashType.ADDRESS && w.stakeCredential.key === stakeKey,
+  );
+
+  return match?.amount;
 }

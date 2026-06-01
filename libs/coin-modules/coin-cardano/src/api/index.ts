@@ -24,10 +24,10 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
 import { broadcast } from "../logic/broadcast";
 import { lastBlock } from "../logic/lastBlock";
+import { listOperations } from "../logic/listOperations";
 
 export function createApi(config: CardanoConfig, currencyId: string): CoinModuleApi<StringMemo> {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
-
   const currency = getCryptoCurrencyById(currencyId);
 
   return {
@@ -44,12 +44,8 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
     getBalance: (_address: string, _options?: BalanceOptions): Promise<Balance[]> => {
       throw new Error("getBalance is not supported");
     },
-    listOperations: (
-      _address: string,
-      _options: ListOperationsOptions,
-    ): Promise<Page<Operation>> => {
-      throw new Error("listOperations is not supported");
-    },
+    listOperations: (address: string, options: ListOperationsOptions): Promise<Page<Operation>> =>
+      listOperations(currency, address, options),
     getStakes: (_address: string, _cursor?: Cursor): Promise<Page<Stake>> => {
       throw new Error("getStakes is not supported");
     },
