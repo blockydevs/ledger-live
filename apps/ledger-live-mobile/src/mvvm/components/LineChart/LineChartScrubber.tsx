@@ -11,9 +11,16 @@ type LineChartScrubberProps = Readonly<{
   series: LineChartSeries[];
   formatValue: LineChartValueFormatter;
   tooltipTitle?: LineChartTooltipTitle;
+  /** Renders the floating tooltip. Beacons/line still render when false. @default true */
+  showTooltip?: boolean;
 }>;
 
-export function LineChartScrubber({ series, formatValue, tooltipTitle }: LineChartScrubberProps) {
+export function LineChartScrubber({
+  series,
+  formatValue,
+  tooltipTitle,
+  showTooltip = true,
+}: LineChartScrubberProps) {
   const buildTooltip = useCallback(
     (dataIndex: number): ScrubberTooltipContent => {
       const items = series
@@ -27,5 +34,5 @@ export function LineChartScrubber({ series, formatValue, tooltipTitle }: LineCha
     [series, formatValue, tooltipTitle],
   );
 
-  return <Scrubber showBeacons tooltip={buildTooltip} />;
+  return <Scrubber showBeacons tooltip={showTooltip ? buildTooltip : undefined} />;
 }

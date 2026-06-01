@@ -51,6 +51,8 @@ export type LineChartProps<TRange extends string = string> = Readonly<{
   points?: LineChartPointMarker[];
   /** Enables touch scrubbing with a tooltip. @default true */
   enableScrubber?: boolean;
+  /** Shows the floating tooltip while scrubbing. @default true */
+  showScrubberTooltip?: boolean;
   /** Formats numeric values for point labels and the scrubber tooltip. @default String */
   formatValue?: LineChartValueFormatter;
   /** Returns the tooltip title for the given data index (e.g. a formatted date). */

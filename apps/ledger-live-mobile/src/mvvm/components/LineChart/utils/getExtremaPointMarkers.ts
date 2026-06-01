@@ -12,12 +12,14 @@ export function getExtremaPointMarkers(series: LineChartSeries[]): LineChartPoin
       value: extrema.max.value,
       color: LINE_CHART_EXTREMA_COLORS.max,
       labelPosition: "top",
+      hidePoint: true,
     },
     {
       index: extrema.min.index,
       value: extrema.min.value,
       color: LINE_CHART_EXTREMA_COLORS.min,
       labelPosition: "bottom",
+      hidePoint: true,
     },
   ];
 }
