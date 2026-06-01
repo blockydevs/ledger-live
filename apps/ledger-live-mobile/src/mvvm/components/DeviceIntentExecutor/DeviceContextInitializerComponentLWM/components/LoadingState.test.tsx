@@ -33,8 +33,11 @@ describe("LoadingState", () => {
     jest.clearAllMocks();
   });
 
-  it("GIVEN the loading state WHEN rendering THEN it renders the loading title", () => {
+  afterEach(() => {
     jest.useRealTimers();
+  });
+
+  it("GIVEN the loading state WHEN rendering THEN it renders the loading title", () => {
     renderState();
 
     expect(screen.getByText("Loading")).toBeVisible();
@@ -49,7 +52,6 @@ describe("LoadingState", () => {
     });
 
     expect(mockedTrackScreen).not.toHaveBeenCalled();
-    jest.useRealTimers();
   });
 
   it("GIVEN the loading state WHEN rendering for 250ms THEN it fires the page event with sourceFlow and modelId", () => {
@@ -69,6 +71,5 @@ describe("LoadingState", () => {
       }),
       undefined,
     );
-    jest.useRealTimers();
   });
 });
