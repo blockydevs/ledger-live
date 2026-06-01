@@ -50,6 +50,8 @@ export type LineChartProps = Readonly<{
   formatValue?: LineChartValueFormatter;
   /** Returns the tooltip title for the given data index (e.g. a formatted date). */
   tooltipTitle?: LineChartTooltipTitle;
+  /** Renders the scrubber tooltip on hover/scrub. @default true */
+  showScrubberTooltip?: boolean;
   onScrubberPositionChange?: LineChartScrubberPositionChange;
   /** Fills the area under the line. @default true */
   showArea?: boolean;

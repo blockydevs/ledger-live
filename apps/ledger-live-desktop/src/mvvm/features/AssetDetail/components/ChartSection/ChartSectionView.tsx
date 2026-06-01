@@ -4,7 +4,7 @@ import type { ChartSectionViewModelResult } from "./useChartSectionViewModel";
 
 type ChartSectionViewProps = Readonly<ChartSectionViewModelResult>;
 
-export function ChartSectionView({
+function ChartSectionViewComponent({
   series,
   selectedRange,
   onRangeChange,
@@ -13,6 +13,7 @@ export function ChartSectionView({
   isError,
   formatValue,
   tooltipTitle,
+  onScrubberPositionChange,
   showXAxis,
   showYAxis,
   xAxis,
@@ -25,10 +26,13 @@ export function ChartSectionView({
         selectedRange={selectedRange}
         onRangeChange={onRangeChange}
         color={color}
+        height={325}
         isLoading={isLoading}
         isError={isError}
         formatValue={formatValue}
         tooltipTitle={tooltipTitle}
+        showScrubberTooltip={false}
+        onScrubberPositionChange={onScrubberPositionChange}
         showXAxis={showXAxis}
         showYAxis={showYAxis}
         xAxis={xAxis}
@@ -37,3 +41,5 @@ export function ChartSectionView({
     </div>
   );
 }
+
+export const ChartSectionView = React.memo(ChartSectionViewComponent);

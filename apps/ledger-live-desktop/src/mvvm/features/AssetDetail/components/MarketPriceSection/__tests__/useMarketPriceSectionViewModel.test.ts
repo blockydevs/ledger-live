@@ -1,8 +1,13 @@
+import React from "react";
 import type { AssetMarketData } from "@ledgerhq/asset-detail";
 import { createMockMarketCurrencyData } from "@ledgerhq/live-common/market/utils/fixtures";
 import { KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
 import { renderHook } from "tests/testSetup";
 import { useMarketPriceSectionViewModel } from "../useMarketPriceSectionViewModel";
+import {
+  ScrubbedPriceContext,
+  type ScrubSelection,
+} from "../../../context/ScrubbedPriceContext";
 
 const baseMarketCurrencyData = createMockMarketCurrencyData();
 
@@ -17,6 +22,15 @@ const marketData: AssetMarketData = {
     },
   }),
 };
+
+const makeScrubWrapper = (selection: ScrubSelection | undefined) =>
+  function ScrubWrapper({ children }: { children: React.ReactNode }) {
+    return React.createElement(
+      ScrubbedPriceContext.Provider,
+      { value: { selection, setSelection: () => {} } },
+      children,
+    );
+  };
 
 describe("useMarketPriceSectionViewModel", () => {
   it("shows day change percentage and fiat variation in discreet mode", () => {
@@ -39,5 +53,61 @@ describe("useMarketPriceSectionViewModel", () => {
     expect(result.current.variationText).toMatch(/^\+/);
     expect(result.current.variationText).not.toBe("—");
     expect(result.current.variationText).not.toBe("***");
+  });
+
+  it("uses the live price and no scrubbed date when not scrubbing", () => {
+    const { result } = renderHook(
+      () =>
+        useMarketPriceSectionViewModel({
+          ledgerId: "bitcoin",
+          marketData,
+          isDistributionLoading: false,
+          selectedRange: "1d",
+        }),
+      { initialState: { settings: { counterValue: "USD", locale: "en-US" } } },
+    );
+
+    expect(result.current.isScrubbing).toBe(false);
+    expect(result.current.priceValue).toBe(100);
+    expect(result.current.scrubbedDateLabel).toBeUndefined();
+  });
+
+  it("prefers the scrubbed price and exposes the formatted scrubbed date while scrubbing", () => {
+    const { result } = renderHook(
+      () =>
+        useMarketPriceSectionViewModel({
+          ledgerId: "bitcoin",
+          marketData,
+          isDistributionLoading: false,
+          selectedRange: "1y",
+        }),
+      {
+        initialState: { settings: { counterValue: "USD", locale: "en-US" } },
+        wrapper: makeScrubWrapper({ price: 250, timestamp: Date.UTC(2024, 0, 2) }),
+      },
+    );
+
+    expect(result.current.isScrubbing).toBe(true);
+    expect(result.current.priceValue).toBe(250);
+    expect(result.current.scrubbedDateLabel).toContain("2024");
+  });
+
+  it("treats a scrubbed price of 0 as scrubbing (not a missing value)", () => {
+    const { result } = renderHook(
+      () =>
+        useMarketPriceSectionViewModel({
+          ledgerId: "bitcoin",
+          marketData,
+          isDistributionLoading: false,
+          selectedRange: "1d",
+        }),
+      {
+        initialState: { settings: { counterValue: "USD", locale: "en-US" } },
+        wrapper: makeScrubWrapper({ price: 0, timestamp: Date.UTC(2024, 0, 2) }),
+      },
+    );
+
+    expect(result.current.isScrubbing).toBe(true);
+    expect(result.current.priceValue).toBe(0);
   });
 });
