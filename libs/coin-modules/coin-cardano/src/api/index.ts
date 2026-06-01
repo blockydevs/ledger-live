@@ -24,6 +24,7 @@ import { rejectBalanceOptions } from "@ledgerhq/coin-module-framework/api/getBal
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
 import { broadcast } from "../logic/broadcast";
+import { craftTransaction } from "../logic/craftTransaction";
 import { getBalance } from "../logic/getBalance";
 import { getValidators } from "../logic/getValidators";
 import { lastBlock } from "../logic/lastBlock";
@@ -54,11 +55,9 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
       throw new Error("getRewards is not supported");
     },
     craftTransaction: (
-      _transactionIntent: TransactionIntent<StringMemo>,
-      _customFees?: FeeEstimation,
-    ): Promise<CraftedTransaction> => {
-      throw new Error("craftTransaction is not supported");
-    },
+      transactionIntent: TransactionIntent<StringMemo>,
+      customFees?: FeeEstimation,
+    ): Promise<CraftedTransaction> => craftTransaction(currency, transactionIntent, customFees),
     craftRawTransaction: (
       _transaction: string,
       _sender: string,
