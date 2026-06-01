@@ -356,4 +356,75 @@ describe("useStake()", () => {
       }),
     );
   });
+
+  it("explicit cryptoAssetId argument is used in earn navigation params when no queryParam value exists", async () => {
+    const { result } = renderHook(() => useStake(), {
+      overrideInitialState: withFlagOverrides({
+        stakePrograms: {
+          ...feature_stake_programs_json,
+          params: {
+            ...feature_stake_programs_json.params,
+            redirects: {
+              ...feature_stake_programs_json.params.redirects,
+              "ethereum/erc20/usds_stablecoin_0xdc035d45d973e3ec169d2276ddab16f1e407384f": {
+                platform: "earn",
+                name: "Earn",
+                queryParams: { intent: "deposit" }, // no cryptoAssetId in queryParams
+              },
+            },
+          },
+        } as unknown as Parameters<typeof withFlagOverrides>[0]["stakePrograms"],
+      }),
+    });
+
+    const explicitCryptoAssetId = "ethereum/erc20/some-token";
+
+    expect(
+      result.current.getRouteParamsForPlatformApp(
+        mockUSDSTokenAccount,
+        walletState,
+        mockEthereumAccount,
+        explicitCryptoAssetId,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        screen: "EarnNavigator",
+        params: expect.objectContaining({
+          params: expect.objectContaining({
+            cryptoAssetId: explicitCryptoAssetId,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("explicit cryptoAssetId argument overrides the one from partner queryParams", async () => {
+    const { result } = renderHook(() => useStake(), {
+      overrideInitialState: withStakePrograms,
+    });
+
+    const overriddenCryptoAssetId = "ethereum/erc20/some-other-token";
+
+    const params = result.current.getRouteParamsForPlatformApp(
+      mockUSDSTokenAccount,
+      walletState,
+      mockEthereumAccount,
+      overriddenCryptoAssetId,
+    );
+
+    expect(params).toEqual(
+      expect.objectContaining({
+        screen: "EarnNavigator",
+        params: expect.objectContaining({
+          params: expect.objectContaining({
+            cryptoAssetId: overriddenCryptoAssetId, // explicit arg wins over queryParams value
+          }),
+        }),
+      }),
+    );
+    // Verify the queryParams value is NOT present
+    expect((params as { params: { params: { cryptoAssetId: string } } }).params.params.cryptoAssetId).toBe(
+      overriddenCryptoAssetId,
+    );
+  });
 });

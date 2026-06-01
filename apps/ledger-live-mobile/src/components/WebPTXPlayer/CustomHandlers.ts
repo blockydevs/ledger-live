@@ -274,7 +274,9 @@ export function useCustomExchangeHandlers({
           navigation.goBack();
           return { success: true };
         } else if (action === "redirect-provider") {
-          const { accountId: walletAccountId, currencyId } = request.params || {};
+          const { accountId: rawAccountId, currencyId: rawCurrencyId } = request.params || {};
+          const walletAccountId = typeof rawAccountId === "string" ? rawAccountId : undefined;
+          const currencyId = typeof rawCurrencyId === "string" ? rawCurrencyId : undefined;
 
           if (walletAccountId) {
             const accountId = getAccountIdFromWalletAccountId(walletAccountId);
