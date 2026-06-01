@@ -7,6 +7,7 @@ import { previousRouteNameRef } from "~/analytics/screenRefs";
 import {
   getTrackingSubError,
   getTrackingTransport,
+  trackConnectAppButtonClicked,
   trackConnectDeviceButtonClicked,
   trackAppReady,
   trackDeviceConnected,
@@ -238,6 +239,23 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
             button: "Retry",
           });
         });
+      });
+    });
+  });
+
+  describe("trackConnectAppButtonClicked", () => {
+    it("GIVEN sourceFlow modelId and button WHEN called THEN it tracks button_clicked with the Layer B properties", () => {
+      trackConnectAppButtonClicked({
+        sourceFlow: "send",
+        modelId: DeviceModelId.stax,
+        button: "Retry",
+      });
+
+      expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+        ...layerABaseProperties,
+        sourceFlow: "send",
+        modelId: DeviceModelId.stax,
+        button: "Retry",
       });
     });
   });
