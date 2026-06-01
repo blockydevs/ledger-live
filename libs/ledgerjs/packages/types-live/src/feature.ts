@@ -390,6 +390,22 @@ export type Feature_TransactionsAlerts = Feature<{
   networks: ChainwatchNetwork[];
 }>;
 
+export type NotificationsPromptAfterActionSource =
+  | "onboarding"
+  | "send"
+  | "dapp_complete"
+  | "receive"
+  | "swap"
+  | "stake"
+  | "add_favorite_coin";
+
+export type NotificationsCategoryConfig = {
+  displayed: boolean;
+  category: string;
+  drawerPromptEnabled?: boolean;
+  drawerPromptActions?: NotificationsPromptAfterActionSource[];
+};
+
 export type Feature_SwapWalletApiPartnerList = Feature<{
   list: string[];
 }>;
@@ -479,10 +495,7 @@ export type Feature_BrazePushNotifications = Feature<{
     minutes: number;
     seconds: number;
   };
-  notificationsCategories: {
-    displayed: boolean;
-    category: string;
-  }[];
+  notificationsCategories: NotificationsCategoryConfig[];
 }>;
 
 export type Feature_ReceiveStakingFlowConfigDesktop = Feature<{
