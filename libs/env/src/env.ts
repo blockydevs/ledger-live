@@ -307,7 +307,7 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Thorest API for VeChain",
   },
-  ALEO_MAINNET_NODE_ENDPOINT: {
+  ALEO_NODE_ENDPOINT: {
     def: "https://aleo.coin.ledger.com",
     parser: stringParser,
     desc: "Aleo mainnet node URL",
@@ -316,11 +316,6 @@ const envDefinitions = {
     def: "https://aleo-backend.api.live.ledger.com/network/mainnet",
     parser: stringParser,
     desc: "Aleo mainnet SDK URL",
-  },
-  ALEO_TESTNET_NODE_ENDPOINT: {
-    def: "https://aleo.coin.ledger.com",
-    parser: stringParser,
-    desc: "Aleo testnet node URL",
   },
   ALEO_TESTNET_SDK_ENDPOINT: {
     def: "https://aleo-backend.api.live.ledger.com/network/testnet",
