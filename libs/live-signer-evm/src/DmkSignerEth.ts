@@ -38,18 +38,9 @@ export type DAError =
 
 export class DmkSignerEth implements EvmSigner {
   /**
-   * Underlying DMK {@link SignerEth} instance, wired up with Ledger's
-   * CAL context module + blind-signing reporter by the constructor.
-   *
-   * Exposed as `readonly` (rather than `private`) so consumers that
-   * need the raw step-event observables (`signTransaction(...).observable`,
-   * `signTypedData(...).observable`) — e.g. device-intent jobs driving
-   * a state machine off the intermediate `SignTransactionDAStep` /
-   * `SignTypedDataDAStateStep` values — can reuse the same fully
-   * CAL-enabled signer instead of building a bare
-   * `SignerEthBuilder({ dmk, sessionId }).build()`, which would skip
-   * the {@link ContextModuleBuilder} setup and force the device into
-   * its blind-signing fallback.
+   * CAL-wired {@link SignerEth}. Exposed as readonly so device-intent
+   * jobs can reuse the step-event observables without rebuilding a bare
+   * SignerEth (which would skip CAL and force blind signing).
    */
   readonly signer: SignerEth;
   constructor(

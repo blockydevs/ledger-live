@@ -10,6 +10,12 @@ import type BigNumber from "bignumber.js";
 export const DEX_PROVIDERS = ["uniswap", "oneinch", "velora", "okx"] as const;
 export type DexProvider = (typeof DEX_PROVIDERS)[number];
 
+const DEX_PROVIDER_SET: ReadonlySet<string> = new Set(DEX_PROVIDERS);
+
+export function isDexProvider(value: string): value is DexProvider {
+  return DEX_PROVIDER_SET.has(value);
+}
+
 /**
  * Provider-agnostic transaction blob returned by the swap-api DEX endpoints.
  * Consumers feed it straight into the EVM bridge or device-intent signer.

@@ -34,6 +34,14 @@ idle ─START──▶ signApproval ──▶ broadcastApproval ──▶ approv
   sheet between approval and swap.
 - `direct-swap` — quote already approved on a wallet-driven DEX
   provider; starts at `buildSwap`, no approval gate.
+- `permit-then-swap` — quote already approved, but the DEX requires a
+  Permit2 EIP-712 signature before the swap calldata can be built.
+- `approval-then-permit-then-swap` — 3-step classic AMM flow:
+  approve_token → sign_permit → swap.
+- `rfq-order` — RFQ flow (UniswapX, 1inch Fusion) without an approval
+  step: sign the off-chain order, submit it, poll until filled.
+- `approval-then-rfq-order` — RFQ flow gated by an approval step
+  (e.g. UniswapX with an outstanding Permit2 spender allowance).
 
 Cancellations (drawer close, Ctrl-C, abort signal) send `CANCEL` and
 reject the held promise with the supplied error.
@@ -265,11 +273,12 @@ export async function runCliSwap(args: {
   machine handles `CANCEL` in every non-terminal state and rejects the
   held promise.
 - **Result shape.** The shared `SwapFlowResult` is currently
-  `{ approvalTxHash?: string; swapTxHash?: string }`. Task 5 of the
-  productionisation plan will tighten it into a discriminated union
-  (`kind: "completed" | "approval-only" | …`); CLI consumers should
-  treat the union as additive when it lands.
-- **What's *not* in scope here.** Permit2, RFQ, USDT-revoke and non-EVM
-  flows currently surface as `skip` plans. Wire the legacy swap pipeline
+  `{ approvalTxHash?: string; swapTxHash?: string; swapId?: string; finalAmount?: string }`
+  (`swapId` / `finalAmount` are populated by the RFQ submit/poll path).
+  Task 5 of the productionisation plan will tighten it into a
+  discriminated union (`kind: "completed" | "approval-only" | …`);
+  CLI consumers should treat the union as additive when it lands.
+- **What's *not* in scope here.** USDT-revoke and non-EVM flows still
+  surface as `skip` plans. Wire the legacy swap pipeline
   ([`apps/wallet-cli/src/commands/swap/cli-swap-pipeline.ts`](../../../../../../apps/wallet-cli/src/commands/swap/cli-swap-pipeline.ts))
   for those until later tasks widen the planner.

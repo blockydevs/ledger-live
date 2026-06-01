@@ -19,7 +19,7 @@ import {
   type VeloraSwapData,
 } from "./swap-api/velora";
 import {
-  DEX_PROVIDERS,
+  isDexProvider,
   type DexBuildContext,
   type DexProvider,
   type DexProviderTransactionData,
@@ -33,10 +33,7 @@ import {
 export function isDexExecutionProvider<
   T extends { provider: string; providerType?: string },
 >(quote: T): quote is T & { provider: DexProvider } {
-  return (
-    quote.providerType === "DEX" &&
-    (DEX_PROVIDERS as readonly string[]).includes(quote.provider)
-  );
+  return quote.providerType === "DEX" && isDexProvider(quote.provider);
 }
 
 /**

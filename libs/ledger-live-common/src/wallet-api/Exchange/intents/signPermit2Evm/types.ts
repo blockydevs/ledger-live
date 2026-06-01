@@ -1,6 +1,5 @@
 import type { IntentDefinition } from "@ledgerhq/device-intent";
-import type { EIP712Message } from "@ledgerhq/types-live";
-import type { Account } from "@ledgerhq/types-live";
+import type { Account, EIP712Message } from "@ledgerhq/types-live";
 
 /**
  * Discriminated union of states emitted by {@link signPermit2EvmJob}.

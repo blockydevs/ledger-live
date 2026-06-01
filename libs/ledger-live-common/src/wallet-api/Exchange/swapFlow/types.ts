@@ -25,9 +25,8 @@ export type SwapFlowPlan =
        *
        * - `no-approval-non-dex` / `already-approved-non-dex`: quote
        *   targets a non-DEX provider that the wallet can't drive.
-       * - `rfq-not-supported`: UniswapX / 1inch-Fusion / Velora-Fusion
-       *   quotes need an off-chain order signing path that the wallet
-       *   doesn't yet implement (Task 8 Shape B).
+       * - `rfq-typed-data-missing`: RFQ quote (UniswapX / 1inch Fusion)
+       *   is missing the EIP-712 order payload we need to sign.
        * - `dex-approval-blob-missing`: DEX quote that says it needs a
        *   token approval but did not ship the matching transaction blob;
        *   we refuse to silently downgrade to a direct swap.
@@ -36,7 +35,6 @@ export type SwapFlowPlan =
       reason:
         | "no-approval-non-dex"
         | "already-approved-non-dex"
-        | "rfq-not-supported"
         | "rfq-typed-data-missing"
         | "dex-approval-blob-missing";
     }

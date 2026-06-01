@@ -6,10 +6,7 @@ import {
   hexaStringToBuffer,
   UserInteractionRequired,
 } from "@ledgerhq/device-management-kit";
-import {
-  SignTransactionDAStep,
-  type Signature,
-} from "@ledgerhq/device-signer-kit-ethereum";
+import { SignTransactionDAStep, type Signature } from "@ledgerhq/device-signer-kit-ethereum";
 import { combine } from "@ledgerhq/coin-evm/logic/combine";
 import { craftTransaction } from "@ledgerhq/coin-evm/logic/craftTransaction";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
@@ -29,6 +26,7 @@ import type { SignApprovalEvmIntentInput, SignApprovalEvmJobState } from "./type
 async function buildUnsignedApprovalTxHex(
   currency: CryptoCurrency,
   approvalTransaction: QuoteApprovalTransaction,
+  senderAddress: string,
 ): Promise<string> {
   const calldataHex = approvalTransaction.calldata.replace(/^0x/, "");
   const data = calldataHex.length > 0 ? Buffer.from(calldataHex, "hex") : Buffer.alloc(0);
@@ -39,7 +37,11 @@ async function buildUnsignedApprovalTxHex(
     transactionIntent: {
       intentType: "transaction",
       type: "send-legacy",
-      sender: approvalTransaction.from,
+      // `craftTransaction` derives the nonce from `transactionIntent.sender`
+      // (see coin-evm/logic/craftTransaction.ts). Use the signing account's
+      // address rather than the quote-blob `from` so a stale quote / account
+      // switch can't desync the nonce from the actual signer.
+      sender: senderAddress,
       recipient: approvalTransaction.to,
       amount: BigInt(approvalTransaction.value || "0"),
       asset: { type: "native" },
@@ -67,7 +69,9 @@ function runSignApproval(
   input: SignApprovalEvmIntentInput,
 ): Observable<SignApprovalEvmJobState> {
   const currency = getCryptoCurrencyById(input.currencyId);
-  return from(buildUnsignedApprovalTxHex(currency, input.approvalTransaction)).pipe(
+  return from(
+    buildUnsignedApprovalTxHex(currency, input.approvalTransaction, input.account.freshAddress),
+  ).pipe(
     switchMap(unsignedTxHex => {
       const buffer = hexaStringToBuffer(unsignedTxHex);
       if (!buffer) {
