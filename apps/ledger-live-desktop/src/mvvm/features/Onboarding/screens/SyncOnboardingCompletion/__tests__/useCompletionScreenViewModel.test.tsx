@@ -6,7 +6,7 @@ import { useRedirectToPostOnboardingCallback } from "~/renderer/hooks/useAutoRed
 import { State } from "~/renderer/reducers";
 import { Device, DeviceModelId } from "@ledgerhq/types-devices";
 import { useCompletionScreenViewModel } from "../useCompletionScreenViewModel";
-import { SettingsState } from "~/renderer/reducers/settings";
+import { AFTER_ONBOARDING_STATE, SettingsState } from "~/renderer/reducers/settings";
 
 const mockRedirectToPostOnboarding = jest.fn();
 
@@ -80,5 +80,28 @@ describe("useCompletionScreenViewModel", () => {
     });
 
     expect(mockRedirectToPostOnboarding).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to lastSeenDevice when currentDevice is null (disconnected)", () => {
+    const deviceId = DeviceModelId.stax;
+    const initialState: Partial<State> = {
+      devices: {
+        devices: [],
+        currentDevice: null,
+      },
+      settings: {
+        ...AFTER_ONBOARDING_STATE,
+        lastSeenDevice: {
+          modelId: deviceId,
+          deviceInfo: {} as never,
+          apps: [],
+        },
+      },
+    };
+
+    const { store } = renderHook(() => useCompletionScreenViewModel(), { initialState });
+
+    const { settings } = store.getState() as { settings: SettingsState };
+    expect(settings.lastOnboardedDevice).toHaveProperty("modelId", deviceId);
   });
 });
