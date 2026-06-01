@@ -14,7 +14,7 @@ interface BannerVisibilityState {
   isPostOnboardingBannerVisible: boolean;
   /** True if the Finish Onboarding widget (post-onboarding entry) should show on Portfolio */
   isFinishOnboardingWidgetVisible: boolean;
-  /** Wallet40 config: finish-onboarding portfolio block is enabled (same source as `isFinishOnboardingWidgetVisible` base flag) */
+  /** Whether the `onboardingWidget` feature flag is enabled (gates finish-onboarding portfolio layout; combined with post-onboarding eligibility for `isFinishOnboardingWidgetVisible`) */
   shouldDisplayFinishOnboardingWidget: boolean;
   /** True if the action cards carousel is visible */
   isActionCardsVisible: boolean;
