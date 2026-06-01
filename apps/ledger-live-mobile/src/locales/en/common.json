@@ -8163,27 +8163,27 @@
       }
     },
     "portfolio": {
+      "title": "Profit and loss",
       "return": {
         "title": "Unrealised return"
       },
-      "costBasis": {
-        "title": "Cost basis",
-        "tooltip": "The total amount you paid to acquire your current holdings, including fees."
+      "realised": {
+        "title": "Realised return"
       },
       "drawer": {
-        "title": "Portfolio profit and loss",
-        "description": "Your portfolio performance broken down into estimated and realised returns.",
+        "title": "Profit and loss",
+        "description": "Your portfolio performance broken down into estimated unrealised and realised return.",
         "estimatedReturn": {
-          "title": "Estimated return",
+          "title": "Unrealised return",
           "description": "The estimated profit or loss if sold at current price."
         },
         "realisedReturn": {
           "title": "Realised return",
-          "description": "Profit or loss confirmed from previous sale, send, or swap."
+          "description": "Profit or loss estimated from previous sale, send or swap."
         },
         "totalReturn": {
           "title": "Total return",
-          "description": "The sum of estimated and realised returns."
+          "description": "The sum of estimated unrealised and realised returns."
         }
       }
     }
