@@ -19,6 +19,7 @@
   "devDependencies": {
     "@testing-library/react": "catalog:",
     "@testing-library/dom": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "jest": "catalog:",
