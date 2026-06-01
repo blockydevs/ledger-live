@@ -48,13 +48,22 @@ function CeloFeeCurrencyPluginInner({
 
   const selectedName = useMemo(() => {
     if (!transaction.feeCurrencyAccountId) return FEE_CURRENCY_OPTIONS[0].name;
+    // Resolve via the contract address on the transaction itself — always present
+    // when a token fee currency is selected, so the label stays correct even while
+    // sub-accounts are still hydrating.
+    if (transaction.feeCurrencyUnwrapped) {
+      const matched = FEE_CURRENCY_BY_CONTRACT.get(
+        transaction.feeCurrencyUnwrapped.toLowerCase(),
+      );
+      if (matched) return matched.name;
+    }
     const sub = findSubAccountById(mainAccount, transaction.feeCurrencyAccountId);
     if (sub?.type !== "TokenAccount") return FEE_CURRENCY_OPTIONS[0].name;
     return (
       FEE_CURRENCY_BY_CONTRACT.get(sub.token.contractAddress.toLowerCase())?.name ??
       FEE_CURRENCY_OPTIONS[0].name
     );
-  }, [transaction.feeCurrencyAccountId, mainAccount]);
+  }, [transaction.feeCurrencyAccountId, transaction.feeCurrencyUnwrapped, mainAccount]);
 
   const tokenOptions: (TokenAccount & { feeCurrencyName: string })[] = useMemo(
     () =>

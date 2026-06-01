@@ -262,6 +262,30 @@ describe("CeloFeeCurrencyPlugin (mvvm)", () => {
     expect(mockUpdateTransaction).not.toHaveBeenCalled();
   });
 
+  it("shows the token label while sub-accounts are unhydrated when feeCurrencyUnwrapped is set", () => {
+    const accountUnhydrated: CeloAccount = {
+      ...mockCeloAccount,
+      subAccounts: undefined as never,
+    };
+
+    render(
+      <CeloFeeCurrencyPlugin
+        account={accountUnhydrated as never}
+        parentAccount={null}
+        transaction={
+          {
+            ...baseTransaction,
+            feeCurrencyAccountId: "usdc-sub-account-id",
+            feeCurrencyUnwrapped: usdcContractAddress,
+          } as never
+        }
+        transactionActions={transactionActions}
+      />,
+    );
+
+    expect(screen.getByText("USDC")).toBeDefined();
+  });
+
   it("falls back to CELO label when feeCurrencyAccountId points to an unknown contract", () => {
     const account: CeloAccount = { ...mockCeloAccount, subAccounts: [unknownTokenSubAccount] };
 
