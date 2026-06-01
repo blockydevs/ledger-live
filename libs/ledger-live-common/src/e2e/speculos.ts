@@ -457,10 +457,10 @@ export async function startSpeculos(
   if (!isSpeculosRemote) {
     invariant(COINAPPS, "COINAPPS is not set");
     const assertElfExists = (n: string, v: string) => {
-      const fullPath = path.join(COINAPPS!, conventionalAppSubpath(model, firmware, n, v));
+      const fullPath = path.join(COINAPPS, conventionalAppSubpath(model, firmware, n, v));
       invariant(existsSync(fullPath), "%s: app binary not found at %s", testName, fullPath);
     };
-    assertElfExists(appName, appVersion!);
+    assertElfExists(appName, appVersion);
     dependencies?.forEach(dep => {
       assertElfExists(dep.name, dep.appVersion);
     });
@@ -470,8 +470,8 @@ export async function startSpeculos(
     model,
     firmware,
     appName,
-    appVersion: appVersion!,
-    seed: SEED!,
+    appVersion: appVersion,
+    seed: SEED,
     coinapps: COINAPPS ?? "",
     dependencies,
     onSpeculosDeviceCreated,

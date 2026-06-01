@@ -141,6 +141,28 @@ function formatAcquireFailure(status: number, data: unknown): string {
   return `Speculinho POST /acquire failed with HTTP ${status}${body ? `: ${body}` : ""}`;
 }
 
+/**
+ * Error thrown when Speculinho `/acquire` fails.
+ * Carries the `run_id` so we can still fetch `/status` and `/logs`.
+ */
+export class SpeculinhoAcquireError extends Error {
+  readonly runId: string;
+  constructor(message: string, runId: string) {
+    super(message);
+    this.name = "SpeculinhoAcquireError";
+    this.runId = runId;
+  }
+}
+
+export function getSpeculinhoRunIdFromError(error: unknown): string | undefined {
+  if (error instanceof SpeculinhoAcquireError) return error.runId;
+  if (error && typeof error === "object" && "runId" in error) {
+    const { runId } = error as { runId?: unknown };
+    if (typeof runId === "string" && runId) return runId;
+  }
+  return undefined;
+}
+
 export async function createSpeculosDeviceCI(
   deviceParams: DeviceParams,
 ): Promise<SpeculosDevice | undefined> {
@@ -188,11 +210,12 @@ export async function createSpeculosDeviceCI(
       continue;
     }
 
-    throw new Error(formatAcquireFailure(res.status, res.data));
+    throw new SpeculinhoAcquireError(formatAcquireFailure(res.status, res.data), runId);
   }
 
-  throw new Error(
+  throw new SpeculinhoAcquireError(
     `[speculosCI] Speculinho /acquire failed after retries (run_id collisions). Last run_id: ${runId}`,
+    runId,
   );
 }
 
