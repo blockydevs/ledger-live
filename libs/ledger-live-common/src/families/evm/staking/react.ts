@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getValidators, mapDelegations } from "@ledgerhq/coin-evm/staking/index";
+import type { Cursor } from "@ledgerhq/coin-module-framework/api/index";
 import type { StakingValidatorItem } from "@ledgerhq/types-live";
 import type { StakingAccount, StakingMappedDelegation } from "./types";
 import { getAccountCurrency } from "../../../account";
@@ -42,23 +43,33 @@ export function useEvmStakingValidators(
 
     setFetchState({ items: [], loading: true, error: null });
 
-    // A warm LRU entry resolves on the next microtask, so the loading state is momentary.
-    getValidators(currencyId)
-      .then(items => {
-        if (cancelled) return;
-        setFetchState(s => ({ ...s, items }));
-      })
-      .catch(err => {
+    // Walk every page: keep fetching while the API hands back a cursor. Items are
+    // appended progressively so the list grows as pages arrive (a warm LRU entry
+    // resolves on the next microtask, so for single-page chains this is momentary).
+    const getAllValidators = async () => {
+      try {
+        const items: StakingValidatorItem[] = [];
+        let cursor: Cursor | undefined;
+
+        do {
+          const result = await getValidators(currencyId, cursor);
+          if (cancelled) return;
+
+          items.push(...result.items);
+          cursor = result.next;
+          setFetchState({ items: [...items], loading: typeof cursor === "string", error: null });
+        } while (typeof cursor === "string");
+      } catch (err) {
         if (cancelled) return;
         setFetchState(s => ({
           ...s,
+          loading: false,
           error: err instanceof Error ? err : new Error(String(err)),
         }));
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setFetchState(s => ({ ...s, loading: false }));
-      });
+      }
+    };
+
+    void getAllValidators();
 
     return () => {
       cancelled = true;

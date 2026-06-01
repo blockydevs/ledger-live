@@ -4,6 +4,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import BigNumber from "bignumber.js";
 import type { Unit } from "@ledgerhq/types-cryptoassets";
+import type { Page } from "@ledgerhq/coin-module-framework/api/index";
 import type { StakingValidatorItem, StakingAccount, StakingDelegation } from "@ledgerhq/types-live";
 import * as stakingIndex from "@ledgerhq/coin-evm/staking/index";
 import * as accountModule from "../../../account";
@@ -63,7 +64,7 @@ describe("useEvmStakingValidators", () => {
   });
 
   it("should filter out 100% commission validators, sort by total stake desc, and finish loading", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const { result } = renderHook(() => useEvmStakingValidators("sei_evm"));
 
@@ -72,38 +73,56 @@ describe("useEvmStakingValidators", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(mockedGetValidators).toHaveBeenCalledWith("sei_evm");
+    expect(mockedGetValidators).toHaveBeenCalledWith("sei_evm", undefined);
     expect(result.current.error).toBeNull();
     expect(result.current.validators.map(v => v.validatorAddress)).toEqual(["addr-c", "addr-a"]);
   });
 
+  it("should walk every page until the cursor is exhausted and merge the results", async () => {
+    mockedGetValidators
+      .mockResolvedValueOnce({ items: [sampleValidators[0]], next: "1" })
+      .mockResolvedValueOnce({ items: [sampleValidators[2]], next: undefined });
+
+    const { result } = renderHook(() => useEvmStakingValidators("sei_evm"));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(mockedGetValidators).toHaveBeenCalledTimes(2);
+    expect(mockedGetValidators).toHaveBeenNthCalledWith(1, "sei_evm", undefined);
+    expect(mockedGetValidators).toHaveBeenNthCalledWith(2, "sei_evm", "1");
+    expect(result.current.validators.map(v => v.validatorAddress)).toEqual(["addr-c", "addr-a"]);
+  });
+
   it("should sort validators by token amount in descending order", async () => {
-    mockedGetValidators.mockResolvedValue([
-      {
-        validatorAddress: "addr-small",
-        name: "Small",
-        commission: 0.05,
-        tokens: "999",
-        votingPower: 1,
-        estimatedYearlyRewardsRate: 0,
-      },
-      {
-        validatorAddress: "addr-huge",
-        name: "Huge",
-        commission: 0.05,
-        tokens: "1000000000000000000000",
-        votingPower: 3,
-        estimatedYearlyRewardsRate: 0,
-      },
-      {
-        validatorAddress: "addr-mid",
-        name: "Mid",
-        commission: 0.05,
-        tokens: "1500",
-        votingPower: 2,
-        estimatedYearlyRewardsRate: 0,
-      },
-    ]);
+    mockedGetValidators.mockResolvedValue({
+      items: [
+        {
+          validatorAddress: "addr-small",
+          name: "Small",
+          commission: 0.05,
+          tokens: "999",
+          votingPower: 1,
+          estimatedYearlyRewardsRate: 0,
+        },
+        {
+          validatorAddress: "addr-huge",
+          name: "Huge",
+          commission: 0.05,
+          tokens: "1000000000000000000000",
+          votingPower: 3,
+          estimatedYearlyRewardsRate: 0,
+        },
+        {
+          validatorAddress: "addr-mid",
+          name: "Mid",
+          commission: 0.05,
+          tokens: "1500",
+          votingPower: 2,
+          estimatedYearlyRewardsRate: 0,
+        },
+      ],
+      next: undefined,
+    });
 
     const { result } = renderHook(() => useEvmStakingValidators("sei_evm"));
 
@@ -138,7 +157,7 @@ describe("useEvmStakingValidators", () => {
   });
 
   it("should narrow validators by case-insensitive name search", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const { result, rerender } = renderHook(
       ({ search }: { search?: string }) => useEvmStakingValidators("sei_evm", search),
@@ -191,13 +210,13 @@ describe("useEvmStakingValidators", () => {
     ];
 
     // sei_evm resolves after celo to simulate a slow first request.
-    let resolveSei!: (v: StakingValidatorItem[]) => void;
-    const seiPromise = new Promise<StakingValidatorItem[]>(res => {
+    let resolveSei!: (v: Page<StakingValidatorItem>) => void;
+    const seiPromise = new Promise<Page<StakingValidatorItem>>(res => {
       resolveSei = res;
     });
 
     mockedGetValidators.mockImplementation(currencyId =>
-      currencyId === "sei_evm" ? seiPromise : Promise.resolve(celoValidators),
+      currencyId === "sei_evm" ? seiPromise : Promise.resolve({ items: celoValidators, next: undefined }),
     );
 
     const { result, rerender } = renderHook(
@@ -214,7 +233,7 @@ describe("useEvmStakingValidators", () => {
     expect(result.current.validators.map(v => v.validatorAddress)).toEqual(["celo-addr"]);
 
     // Now let the stale sei_evm request resolve — state must not change.
-    resolveSei(seiValidators);
+    resolveSei({ items: seiValidators, next: undefined });
     await Promise.resolve();
     await Promise.resolve();
 
@@ -236,7 +255,7 @@ describe("useEvmFamilyPreloadData", () => {
   });
 
   it("should return validators once loaded", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const { result } = renderHook(() => useEvmFamilyPreloadData("sei_evm"));
 
@@ -254,7 +273,7 @@ describe("useEvmFamilyPreloadData", () => {
   });
 
   it("should not expose loading or error fields", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const { result } = renderHook(() => useEvmFamilyPreloadData("sei_evm"));
 
@@ -274,7 +293,7 @@ describe("useEvmFamilyMappedDelegations", () => {
   });
 
   it("should return mapped delegations enriched with matching validator and rank", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const delegations: StakingDelegation[] = [
       {
@@ -299,7 +318,7 @@ describe("useEvmFamilyMappedDelegations", () => {
   });
 
   it("should set validator to undefined when no matching validator is found", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const delegations: StakingDelegation[] = [
       {
@@ -320,7 +339,7 @@ describe("useEvmFamilyMappedDelegations", () => {
   });
 
   it("should return an empty array when account has no delegations", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const account = makeAccount([]);
 
@@ -332,7 +351,7 @@ describe("useEvmFamilyMappedDelegations", () => {
   });
 
   it("should return an empty array when stakingResources is absent", async () => {
-    mockedGetValidators.mockResolvedValue(sampleValidators);
+    mockedGetValidators.mockResolvedValue({ items: sampleValidators, next: undefined });
 
     const account = {
       currency: { id: "sei_evm" },
