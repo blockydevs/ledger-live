@@ -89,7 +89,9 @@ export async function fetchRemoteFlags(): Promise<PartialFeatures> {
     const all = rc.getAll();
     const flags: PartialFeatures = {};
     for (const [key, value] of Object.entries(all)) {
-      const featureId = FIREBASE_KEY_TO_FEATURE_ID[key];
+      // `lodash.snakeCase` always lowercases — match it on the read side so any
+      // case drift in Firebase admin entries still resolves to the canonical id.
+      const featureId = FIREBASE_KEY_TO_FEATURE_ID[key.toLowerCase()];
       if (!featureId) continue;
       try {
         flags[featureId] = JSON.parse(value.asString());

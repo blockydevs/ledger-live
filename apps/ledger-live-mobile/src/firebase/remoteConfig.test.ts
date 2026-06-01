@@ -77,6 +77,21 @@ describe("fetchRemoteFlags", () => {
     });
   });
 
+  it("matches Firebase keys case-insensitively", async () => {
+    mockGetAll.mockReturnValue({
+      Feature_Counter_Value: value(JSON.stringify({ enabled: true })),
+      FEATURE_LWM_WALLET_40: value(JSON.stringify({ enabled: true })),
+    });
+
+    const { fetchRemoteFlags } = await loadModule();
+    const result = await fetchRemoteFlags();
+
+    expect(result).toEqual({
+      counterValue: { enabled: true },
+      lwmWallet40: { enabled: true },
+    });
+  });
+
   it("silently drops keys whose value is not valid JSON", async () => {
     mockGetAll.mockReturnValue({
       feature_counter_value: value(JSON.stringify({ enabled: true })),
