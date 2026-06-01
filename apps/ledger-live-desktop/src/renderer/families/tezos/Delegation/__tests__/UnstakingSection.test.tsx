@@ -1,6 +1,6 @@
 import React from "react";
 import BigNumber from "bignumber.js";
-import { render, screen } from "tests/testSetup";
+import { fireEvent, render, screen } from "tests/testSetup";
 import {
   getCryptoCurrencyById,
   setSupportedCurrencies,
@@ -11,6 +11,7 @@ import type { StakingPosition, TezosAccount } from "@ledgerhq/live-common/famili
 import { useBaker } from "@ledgerhq/live-common/families/tezos/react";
 import type { TezosStakingInfo } from "@ledgerhq/live-common/families/tezos/react";
 import { openURL } from "~/renderer/linking";
+import { disableGlobalTab, enableGlobalTab } from "~/config/global-tab";
 import UnstakingSection from "../UnstakingSection";
 
 jest.mock("@ledgerhq/live-common/families/tezos/react", () => ({
@@ -78,6 +79,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.useRealTimers();
+  disableGlobalTab();
 });
 
 describe("Delegation/UnstakingSection (tezos)", () => {
@@ -165,6 +167,25 @@ describe("Delegation/UnstakingSection (tezos)", () => {
 
     const link = screen.getByText(shortAddressPreview(hash));
     await user.click(link);
+    expect(openURL).toHaveBeenCalledWith(expect.stringContaining(hash));
+  });
+
+  it("activates the tx id link via keyboard (Enter) when focused", () => {
+    enableGlobalTab(); // focus state + Enter activation are gated on the global-tab flag
+    const createdAt = new Date(MOCK_NOW - 24 * 60 * 60 * 1000);
+    const hash = "ooYzaV6d1VTZdogvxLdZ7smPGBBPFpktCJMJeYp74givEBhZmAF";
+    const accountWithOp = {
+      ...account,
+      operations: [{ type: "UNSTAKE", date: createdAt, hash }],
+    } as unknown as TezosAccount;
+    const info = makeInfo([makePending("1", 50_000_000, 24)]);
+    render(<UnstakingSection account={accountWithOp} info={info} />);
+
+    const tabbable = screen.getByText(shortAddressPreview(hash)).closest('[tabindex="0"]');
+    expect(tabbable).not.toBeNull();
+    fireEvent.focus(tabbable as Element);
+    fireEvent.keyDown(tabbable as Element, { key: "Enter" });
+
     expect(openURL).toHaveBeenCalledWith(expect.stringContaining(hash));
   });
 });

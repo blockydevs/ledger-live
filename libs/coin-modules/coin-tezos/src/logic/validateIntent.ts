@@ -217,6 +217,7 @@ function calculateAmounts(
     const amount = computeMaxStakeAmount(
       BigInt(senderInfo.balance),
       BigInt(senderInfo.stakedBalance ?? 0),
+      BigInt(senderInfo.unstakedBalance ?? 0),
       estimatedFees,
     );
     return { amount, totalSpent: amount + estimatedFees };
@@ -249,15 +250,16 @@ function calculateAmounts(
 }
 
 /**
- * Validates balance coverage for the transaction
+ * Coverage check against the spendable (liquid) balance. Tezos `balance` includes staked +
+ * unstaked-frozen funds that cannot pay fees/transfers, so callers must pass the spendable
+ * portion (total minus staked minus unstaked), never the raw total.
  */
 function validateBalanceCoverage(
-  senderInfo: APIUserAccount,
+  spendableBalance: bigint,
   totalSpent: bigint,
 ): Record<string, Error> {
   const errors: Record<string, Error> = {};
-  const accountBalance = BigInt(senderInfo.balance);
-  if (totalSpent > accountBalance) {
+  if (totalSpent > spendableBalance) {
     errors.amount = new NotEnoughBalance();
   }
   return errors;
@@ -339,6 +341,9 @@ async function fetchTokenBalanceForSendMax(intent: TransactionIntent): Promise<b
   return row ? BigInt(row.balance) : 0n;
 }
 
+// Coverage is checked against live account state fetched from TzKT below (senderInfo), not the
+// framework-provided balances: the app's synced spendableBalance can lag between consecutive
+// operations, while the fresh fetch matches what fee/send-max estimation and the modal banner use.
 export async function validateIntent(intent: TransactionIntent): Promise<TransactionValidation> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -394,7 +399,12 @@ export async function validateIntent(intent: TransactionIntent): Promise<Transac
       errors.amount = new NotEnoughBalanceToDelegate();
     }
 
-    const balanceErrors = validateBalanceCoverage(senderInfo, totalSpent);
+    const { spendable } = partitionNativeBalance(
+      BigInt(senderInfo.balance),
+      BigInt(senderInfo.stakedBalance ?? 0),
+      BigInt(senderInfo.unstakedBalance ?? 0),
+    );
+    const balanceErrors = validateBalanceCoverage(spendable, totalSpent);
     Object.assign(errors, balanceErrors);
   } catch (e) {
     errors.estimation = e as Error;

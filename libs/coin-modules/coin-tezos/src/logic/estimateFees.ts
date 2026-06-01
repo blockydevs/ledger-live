@@ -200,6 +200,7 @@ export async function estimateFees({
       estimation.amount = computeMaxStakeAmount(
         BigInt(account.balance),
         account.stakedBalance ?? 0n,
+        account.unstakedBalance ?? 0n,
         BigInt(mainOpFee) + revealFee,
       );
     } else {

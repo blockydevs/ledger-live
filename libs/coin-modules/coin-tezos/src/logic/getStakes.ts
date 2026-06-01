@@ -67,6 +67,9 @@ export function buildStakesForAccount(
 ): Stake[] {
   const balance = BigInt(account.balance ?? 0);
   const stakedBalance = BigInt(account.stakedBalance ?? 0);
+  // Account-level unstaked total (the source validateIntent's gate uses), not the summed per-request
+  // positions below — so spendable stays gate-consistent even if a request is dropped or its fetch fails.
+  const unstakedBalance = BigInt(account.unstakedBalance ?? 0);
   const delegateAddress = account.delegate?.address;
 
   const unstakeStakes: Stake[] = [];
@@ -74,7 +77,6 @@ export function buildStakesForAccount(
     const stake = unstakeRequestToStake(address, req);
     if (stake) unstakeStakes.push(stake);
   }
-  const unstakedTotal = unstakeStakes.reduce((sum, s) => sum + s.amount, 0n);
 
   const stakes: Stake[] = [];
 
@@ -82,19 +84,15 @@ export function buildStakesForAccount(
     const { spendable: delegated, locked } = partitionNativeBalance(
       balance,
       stakedBalance,
-      unstakedTotal,
+      unstakedBalance,
     );
-    if (locked < stakedBalance + unstakedTotal) {
-      log(
-        "coin:tezos",
-        "buildStakesForAccount: balance < stakedBalance + unstaked, clamping to 0",
-        {
-          address,
-          balance: balance.toString(),
-          stakedBalance: stakedBalance.toString(),
-          unstakedTotal: unstakedTotal.toString(),
-        },
-      );
+    if (locked < stakedBalance + unstakedBalance) {
+      log("coin:tezos", "buildStakesForAccount: balance < staked + unstaked, clamping to 0", {
+        address,
+        balance: balance.toString(),
+        stakedBalance: stakedBalance.toString(),
+        unstakedBalance: unstakedBalance.toString(),
+      });
     }
     stakes.push({
       uid: `${STAKING_UID_PREFIX.delegation}${address}`,

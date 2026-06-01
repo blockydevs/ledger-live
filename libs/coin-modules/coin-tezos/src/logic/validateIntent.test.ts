@@ -382,6 +382,38 @@ describe("validateIntent", () => {
       expect(result.amount).toBe(4_000_000n - 1000n - STAKE_USE_ALL_RESERVE_MUTEZ);
     });
 
+    it("excludes unstaked-frozen funds when stake useAllAmount falls back to balance computation", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({
+          balance: 5_000_000,
+          stakedBalance: 1_000_000,
+          unstakedBalance: 500_000,
+          delegate: { alias: "baker", address: validRecipient, active: true },
+          delegationLevel: 1,
+        }),
+      );
+      // No `amount` field => estimatedAmount is undefined, exercising the fallback path.
+      mockEstimateFees.mockResolvedValueOnce({
+        fees: 1000n,
+        gasLimit: 10000n,
+        storageLimit: 0n,
+        estimatedFees: 1000n,
+      });
+
+      const result = await validateIntent({
+        intentType: "staking",
+        asset: { type: "native" },
+        type: "stake",
+        sender: senderAddress,
+        recipient: "",
+        amount: 0n,
+        useAllAmount: true,
+      });
+
+      expect(result.errors.amount).toBeUndefined();
+      expect(result.amount).toBe(3_500_000n - 1000n - STAKE_USE_ALL_RESERVE_MUTEZ);
+    });
+
     it("should return TezosNotEnoughStaked when unstake has no staked balance", async () => {
       mockGetAccountByAddress.mockResolvedValue(makeUserAccount({ stakedBalance: 0 }));
 
@@ -539,6 +571,80 @@ describe("validateIntent", () => {
 
       expect(result.errors.amount).toBeUndefined();
       expect(result.amount).toBe(amount);
+    });
+
+    it("returns NotEnoughBalance when funds are staked/frozen and spendable can't cover fees", async () => {
+      // balance includes the staked funds (total > fees), but spendable (total - staked) is 0
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({ balance: 5_000_000, stakedBalance: 5_000_000 }),
+      );
+
+      const result = await validateIntent({
+        intentType: "staking",
+        asset: { type: "native" },
+        type: "undelegate",
+        sender: senderAddress,
+        recipient: "",
+        amount: 0n,
+      });
+
+      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+    });
+
+    it("passes delegate when spendable covers fees despite most funds being staked", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({ balance: 5_000_000, stakedBalance: 4_000_000 }),
+      );
+
+      const result = await validateIntent({
+        intentType: "staking",
+        asset: { type: "native" },
+        type: "delegate",
+        sender: senderAddress,
+        recipient: validRecipient,
+        amount: 0n,
+      });
+
+      expect(result.errors.amount).toBeUndefined();
+    });
+
+    it("passes a send that spends exactly the spendable balance (totalSpent === spendable boundary)", async () => {
+      // spendable = balance - staked = 1_000_000; amount (999_000) + mocked fees (1_000) lands exactly
+      // on it. The coverage check is strictly-greater, so the boundary must NOT error.
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({ balance: 2_000_000, stakedBalance: 1_000_000 }),
+      );
+
+      const result = await validateIntent({
+        intentType: "transaction",
+        asset: { type: "native" },
+        type: "send",
+        sender: senderAddress,
+        recipient: validRecipient,
+        amount: 999_000n,
+      });
+
+      expect(result.errors.amount).toBeUndefined();
+      expect(result.totalSpent).toBe(1_000_000n);
+    });
+
+    it("returns NotEnoughBalance for a send when unstaked-frozen funds leave too little liquid", async () => {
+      // Reproduces the consecutive-send failure: unstaked funds are pending withdrawal (frozen),
+      // so liquid spendable is only 220 mutez — far below amount + fees.
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({ balance: 300_322, unstakedBalance: 300_102 }),
+      );
+
+      const result = await validateIntent({
+        intentType: "transaction",
+        asset: { type: "native" },
+        type: "send",
+        sender: senderAddress,
+        recipient: validRecipient,
+        amount: 100n,
+      });
+
+      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
     });
   });
 
