@@ -1,7 +1,7 @@
 export const COPY = {
   rowTitle: "Generic awareness modal (QA)",
   rowDesc:
-    "Build carousel or feature intro content cards, choose app start or banner/deeplink trigger, preview the modal, and clear QA cards from the store.",
+    "Build carousel, feature intro, or prompt content cards, choose app start or banner/deeplink trigger, preview the modal, and clear QA cards from the store.",
   open: "Open",
   back: "Back",
   title: "Generic awareness modal — QA",
@@ -21,6 +21,7 @@ export const COPY = {
   copiedDeeplink: "Copied",
   carouselSlides: "Carousel slides",
   featureIntroMain: "Main content card",
+  promptMain: "Prompt content",
   featureIntroItems: "List items",
   addSlide: "Add slide",
   removeSlide: "Remove slide",

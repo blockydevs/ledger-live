@@ -180,6 +180,8 @@ function buildPromptBrazeCard(
         imageUrl: values.imageUrl,
         primaryButtonLabel: values.primaryButtonLabel,
         primaryButtonLink: values.primaryButtonLink,
+        secondaryButtonLabel: values.secondaryButtonLabel,
+        secondaryButtonLink: values.secondaryButtonLink,
       },
     },
   ];
