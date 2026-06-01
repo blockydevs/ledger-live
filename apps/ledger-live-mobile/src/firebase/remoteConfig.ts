@@ -1,8 +1,16 @@
 import { getRemoteConfig } from "@react-native-firebase/remote-config";
-import camelCase from "lodash/camelCase";
+import snakeCase from "lodash/snakeCase";
 import { formatDefaultFeatures } from "@ledgerhq/live-common/featureFlags/index";
-import { FEATURE_FLAGS_DEFAULTS } from "@shared/feature-flags";
-import type { PartialFeatures } from "@shared/feature-flags";
+import { FEATURE_FLAGS_DEFAULTS, FeatureIdSchema } from "@shared/feature-flags";
+import type { FeatureId, PartialFeatures } from "@shared/feature-flags";
+
+// Precomputed inverse of live-common's `formatToFirebaseFeatureId` (`feature_${snakeCase(id)}`).
+// `lodash.camelCase(snakeCase(id))` is not a clean round-trip for FeatureIds with digits
+// or consecutive uppercase letters (e.g. `llmAccountListUI` → `llm_account_list_ui` →
+// `llmAccountListUi`), which silently drops the flag at the slice boundary.
+const FIREBASE_KEY_TO_FEATURE_ID: Record<string, FeatureId> = Object.fromEntries(
+  FeatureIdSchema.options.map(id => [`feature_${snakeCase(id)}`, id]),
+);
 
 type Subscriber = (event: { fetchedAt: number }) => void;
 
@@ -69,21 +77,20 @@ export function whenReady(): Promise<void> {
  * stays in sync, and exposed via {@link subscribeToRemoteFlags} so legacy
  * consumers hydrate from the same payload at the same tick.
  *
- * Filters out `config_*` keys (owned by `LiveConfig`), strips the `feature_`
- * prefix, camelCases the remainder, and JSON-parses each value. Malformed JSON
- * values are dropped silently — at worst the slice falls back to defaults for
- * that key. Unknown feature IDs are dropped at runtime inside `resolveAll`, so
- * the closing cast to {@link PartialFeatures} is safe.
+ * Maps each known Firebase key (`feature_${snakeCase(id)}`) back to its canonical
+ * FeatureId via {@link FIREBASE_KEY_TO_FEATURE_ID}, then JSON-parses each value.
+ * Unknown keys (`config_*`, stray entries) and malformed JSON are dropped
+ * silently — at worst the slice falls back to defaults for that flag.
  */
 export async function fetchRemoteFlags(): Promise<PartialFeatures> {
   try {
     await setup();
     await rc.fetchAndActivate();
     const all = rc.getAll();
-    const flags: Record<string, unknown> = {};
+    const flags: PartialFeatures = {};
     for (const [key, value] of Object.entries(all)) {
-      if (!key.startsWith("feature_")) continue;
-      const featureId = camelCase(key.slice("feature_".length));
+      const featureId = FIREBASE_KEY_TO_FEATURE_ID[key];
+      if (!featureId) continue;
       try {
         flags[featureId] = JSON.parse(value.asString());
       } catch {
@@ -93,7 +100,7 @@ export async function fetchRemoteFlags(): Promise<PartialFeatures> {
     const fetchedAt = Date.now();
     lastFetchedAt = fetchedAt;
     subscribers.forEach(callback => callback({ fetchedAt }));
-    return flags as PartialFeatures;
+    return flags;
   } finally {
     resolveReady?.();
     resolveReady = null;
