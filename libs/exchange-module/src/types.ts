@@ -118,10 +118,10 @@ export type QuotesInput = {
   amount: string;
   sendAccountId: string;
   receiveAccountId: string;
-  sendAddress?: string;
-  receiveAddress?: string;
-  sendCurrencyId?: string;
-  receiveCurrencyId?: string;
+  sendAddress: string;
+  receiveAddress: string;
+  sendCurrencyId: string;
+  receiveCurrencyId: string;
   networkFeesCurrencyId?: string;
   slippage?: number;
   uniswapOrderType?: UniswapOrderType;
@@ -140,24 +140,9 @@ export type TradeMethod = "fixed" | "float";
 
 export type ProviderTypes = "DEX" | "CEX";
 
-export enum QuoteWarningCodes {
-  HIGH_VALUE_LOSS = "highValueLoss",
-  NANO_S_PROVIDER_INCOMPATIBILITY = "nanoSProviderIncompatibility",
-  UNREALISTIC_QUOTE = "unrealisticQuote",
-  UNKNOWN_RECEIVE_FIAT_PRICE = "unknownReceiveFiatPrice",
-}
+export type QuoteWarning = { code: "unrealisticQuote"; gainPercent: number };
 
-export type QuoteWarning =
-  | { code: QuoteWarningCodes.HIGH_VALUE_LOSS; lossPercent: number }
-  | { code: QuoteWarningCodes.NANO_S_PROVIDER_INCOMPATIBILITY; provider: string }
-  | { code: QuoteWarningCodes.UNREALISTIC_QUOTE; gainPercent: number }
-  | { code: QuoteWarningCodes.UNKNOWN_RECEIVE_FIAT_PRICE };
-
-export enum QuoteErrorCodes {
-  NOT_ENOUGH_BALANCE_FOR_FEES = "notEnoughBalanceForFees",
-}
-
-export type QuoteError = { code: QuoteErrorCodes.NOT_ENOUGH_BALANCE_FOR_FEES };
+export type QuoteError = "notEnoughBalanceForFees";
 
 export type ProviderDetails = {
   name: string;
@@ -170,7 +155,6 @@ export type ProviderDetails = {
 
 export type QuoteNetworkFees = {
   currencyId: string;
-  value?: number;
   gasLimit?: string;
 };
 
@@ -241,13 +225,17 @@ export type QuotePermit2Types = {
 /**
  * Partial Permit2 typed-data payload. UniswapX populates `values`; 1inch-fusion
  * populates `message`. Consumers must tolerate missing fields.
+ *
+ * `primaryType` is widened to a free-form string: classic AMM Permit2 quotes
+ * use `"PermitSingle"`, UniswapX RFQ orders use `"PermitWitnessTransferFrom"`,
+ * and 1inch-fusion forwards its provider-supplied primary type as-is.
  */
 export type QuotePermit2Message = {
   values?: QuotePermit2Single;
   message?: QuotePermit2Single;
   domain?: QuotePermit2Domain;
   types?: QuotePermit2Types;
-  primaryType?: "PermitSingle";
+  primaryType?: string;
 };
 
 /**
@@ -324,14 +312,57 @@ export type Quote = {
   provider: string;
   providerDetails: ProviderDetails;
   quoteDetails: QuoteDetails;
-  warnings: QuoteWarning[];
-  errors: QuoteError[];
+  warning: QuoteWarning | null;
+  error: QuoteError | null;
   /**
    * Optional wallet-formatted display strings. Additive field:
    * producers that cannot format (no locale / counter-value fiat context)
    * omit it, and consumers must handle `undefined`.
    */
   formatted?: FormattedQuoteValues;
+  /**
+   * Provider-specific opaque blob forwarded verbatim to the swap-api DEX
+   * endpoints (e.g. Uniswap spreads it into the swap body, Velora reads
+   * `priceRoute` from it, OKX uses it whole). Consumers outside the DEX
+   * builders should not interpret this field.
+   */
+  customFields?: Record<string, unknown>;
+};
+
+/**
+ * Parameters for the new device-intent-based swap entry point
+ * (`custom.swap`). Currently only the EVM token-approval step is wired on
+ * the wallet side; the submit-swap and broadcast-swap steps will reuse the
+ * same input shape as they come online.
+ */
+export type CustomSwapParams = {
+  /** Quote selected by the live app (from `custom.exchange.getQuotes`). */
+  quote: Quote;
+  /** Wallet-API account id of the sending account. */
+  fromAccountId: string;
+  /** Wallet-API account id of the receiving account. */
+  toAccountId: string;
+  /** Provider name (e.g. `"uniswap"`). */
+  provider: string;
+};
+
+/**
+ * Result of `custom.swap`. Fields are additive: classic AMM swaps populate
+ * `approvalTxHash` / `swapTxHash`; RFQ swaps additionally populate
+ * `swapId`, `finalAmount`, and `rfqStatus` once the partner-submitted
+ * order resolves.
+ */
+export type CustomSwapResult = {
+  /** Hash of the broadcast-and-confirmed approval transaction, when one was needed. */
+  approvalTxHash?: string;
+  /** Hash of the broadcast-and-confirmed swap transaction, when the swap step ran. */
+  swapTxHash?: string;
+  /** Partner-side swap id returned by the RFQ submit/status endpoints. */
+  swapId?: string;
+  /** Final filled amount reported by the RFQ status endpoint, when available. */
+  finalAmount?: string;
+  /** Terminal RFQ status reported by the swap-api `/swap/status` endpoint. */
+  rfqStatus?: "finished" | "refunded";
 };
 
 /** Error rows returned next to quotes (swap API error objects). */
@@ -343,40 +374,7 @@ export type QuoteProviderError = {
   parameter: { [key: string]: string };
 };
 
-/**
- * Digested global state attached to {@link GetQuotesResponse.errors}.
- * Discriminated by `code`; multiple variants can stack (e.g. `noQuotes`
- * alongside `amountTooLow`). Empty array means "nothing to surface".
- *
- * Producers live wallet-side; this is the contract consumers read.
- */
-export enum QuotesErrorCodes {
-  NO_QUOTES = "noQuotes",
-  QUOTE_INPUT_RESOLUTION_FAILED = "quoteInputResolutionFailed",
-  AMOUNT_TOO_LOW = "amountTooLow",
-  AMOUNT_TOO_HIGH = "amountTooHigh",
-}
-
-export type QuotesError =
-  | { code: QuotesErrorCodes.NO_QUOTES }
-  | { code: QuotesErrorCodes.QUOTE_INPUT_RESOLUTION_FAILED }
-  | { code: QuotesErrorCodes.AMOUNT_TOO_LOW; minAmount: string }
-  | { code: QuotesErrorCodes.AMOUNT_TOO_HIGH; maxAmount: string };
-
 export type GetQuotesResponse = {
   quotes: Quote[];
-  /**
-   * Per-provider rejection rows from the aggregator. Each row is one
-   * provider declining to quote with a reason (e.g. `amount_off_limits`).
-   * Pure pass-through of the aggregator response — the wallet does not
-   * digest these into globals here, that lives in {@link errors}.
-   */
-  providerErrors: QuoteProviderError[];
-  /**
-   * Digested global state for the whole batch (e.g. `noQuotes` when no
-   * successful quotes came back, `amountTooLow` / `amountTooHigh` when
-   * every provider rejected on amount bounds). Empty array when there is
-   * nothing to surface.
-   */
-  errors: QuotesError[];
+  errors: QuoteProviderError[];
 };
