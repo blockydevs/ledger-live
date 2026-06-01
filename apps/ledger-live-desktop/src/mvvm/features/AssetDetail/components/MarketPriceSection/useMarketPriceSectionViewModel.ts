@@ -47,7 +47,9 @@ const RANGE_I18N_KEY: Record<LineChartRange, string> = {
   "1d": "assetDetails.day",
   "1w": "assetDetails.week",
   "1m": "assetDetails.month",
+  "6m": "assetDetails.sixMonths",
   "1y": "assetDetails.year",
+  "5y": "assetDetails.fiveYears",
   all: "assetDetails.allTime",
 };
 
@@ -85,37 +87,52 @@ export function useMarketPriceSectionViewModel({
     [fiatUnit, locale],
   );
 
-  const hasVariationData = hasPriceData && normalizedPercentage != null && variationFiat != null;
-  const variationText = hasVariationData
-    ? formatSignedFiatVariation(variationFiat, fiatUnit, locale)
-    : "—";
+  const { selection } = useScrubbedPrice();
+  const isScrubbing = selection != null;
 
-  const valueChange: ValueChange = useMemo(
-    () => ({
-      percentage: hasVariationData ? normalizedPercentage / 100 : 0,
-      value: 0,
-    }),
-    [hasVariationData, normalizedPercentage],
-  );
+  const hasVariationData = hasPriceData && normalizedPercentage != null && variationFiat != null;
+  // While scrubbing, the trend reflects the change from the start of the range to the scrubbed point.
+  const hasVariation = isScrubbing || hasVariationData;
+  let variationText = "—";
+  if (isScrubbing) {
+    variationText = formatSignedFiatVariation(selection.variationFiat, fiatUnit, locale);
+  } else if (hasVariationData) {
+    variationText = formatSignedFiatVariation(variationFiat, fiatUnit, locale);
+  }
+
+  const valueChange: ValueChange = useMemo(() => {
+    let percentage = 0;
+    if (isScrubbing) {
+      percentage = selection.percentage;
+    } else if (hasVariationData) {
+      percentage = normalizedPercentage / 100;
+    }
+    return { percentage, value: 0 };
+  }, [isScrubbing, selection, hasVariationData, normalizedPercentage]);
   const { percentageText: trendPercentageText, variant: trendVariant } = useTrendViewModel({
     valueChange,
     useDiscreetMasking: false,
   });
   const { percentageText, variationVariant } = resolveTrendPercentAndVariant({
-    hasVariationData,
+    hasVariationData: hasVariation,
     trendPercentageText,
     trendVariant,
   });
 
-  const { selection } = useScrubbedPrice();
-  const isScrubbing = selection != null;
   const formatDate = useAssetChartDateFormatter(selectedRange);
+
+  let priceValue: number | undefined;
+  if (isScrubbing) {
+    priceValue = selection.price;
+  } else if (hasPriceData) {
+    priceValue = data?.price;
+  }
 
   return {
     shouldRenderSection,
     title: t("assetDetails.marketPrice"),
     rangeLabel: t(RANGE_I18N_KEY[selectedRange]),
-    priceValue: isScrubbing ? selection.price : hasPriceData ? data?.price : undefined,
+    priceValue,
     priceFormatter,
     variationText,
     percentageText,
