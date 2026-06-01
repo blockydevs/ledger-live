@@ -48,6 +48,14 @@ const mockSolanaCurrency: CryptoCurrency = {
   family: "solana",
 } as unknown as CryptoCurrency;
 
+const mockCeloCurrency: CryptoCurrency = {
+  type: "CryptoCurrency",
+  id: "celo",
+  name: "Celo",
+  ticker: "CELO",
+  family: "celo",
+} as unknown as CryptoCurrency;
+
 describe("getSendUiConfig", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -164,6 +172,49 @@ describe("getSendUiConfig", () => {
         hasCoinControl: false,
         hasAmountPlugins: false,
       });
+    });
+  });
+
+  describe("for a coin with Amount plugins (e.g. Celo)", () => {
+    it("returns hasAmountPlugins: true when the descriptor advertises plugins", () => {
+      mockedGetSendDescriptor.mockReturnValue({
+        inputs: {},
+        fees: { hasPresets: false, hasCustom: true },
+      });
+      mockedSendFeatures.hasMemo.mockReturnValue(false);
+      mockedSendFeatures.getMemoMaxLength.mockReturnValue(undefined);
+      mockedSendFeatures.getMemoMaxValue.mockReturnValue(undefined);
+      mockedSendFeatures.getMemoOptions.mockReturnValue(undefined);
+      mockedSendFeatures.supportsDomain.mockReturnValue(false);
+      mockedSendFeatures.hasFeePresets.mockReturnValue(false);
+      mockedSendFeatures.hasCustomFees.mockReturnValue(true);
+      mockedSendFeatures.hasCoinControl.mockReturnValue(false);
+      mockedSendFeatures.getAmountPlugins.mockReturnValue(["celoFeeCurrency"]);
+
+      const result = getSendUiConfig(mockCeloCurrency);
+
+      expect(result.hasAmountPlugins).toBe(true);
+      expect(mockedSendFeatures.getAmountPlugins).toHaveBeenCalledWith(mockCeloCurrency);
+    });
+
+    it("returns hasAmountPlugins: false when the descriptor advertises no plugins", () => {
+      mockedGetSendDescriptor.mockReturnValue({
+        inputs: {},
+        fees: { hasPresets: false, hasCustom: true },
+      });
+      mockedSendFeatures.hasMemo.mockReturnValue(false);
+      mockedSendFeatures.getMemoMaxLength.mockReturnValue(undefined);
+      mockedSendFeatures.getMemoMaxValue.mockReturnValue(undefined);
+      mockedSendFeatures.getMemoOptions.mockReturnValue(undefined);
+      mockedSendFeatures.supportsDomain.mockReturnValue(false);
+      mockedSendFeatures.hasFeePresets.mockReturnValue(false);
+      mockedSendFeatures.hasCustomFees.mockReturnValue(true);
+      mockedSendFeatures.hasCoinControl.mockReturnValue(false);
+      mockedSendFeatures.getAmountPlugins.mockReturnValue([]);
+
+      const result = getSendUiConfig(mockCeloCurrency);
+
+      expect(result.hasAmountPlugins).toBe(false);
     });
   });
 
