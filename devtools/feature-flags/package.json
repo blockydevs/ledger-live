@@ -20,6 +20,7 @@
     "@testing-library/react": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "jest": "catalog:",
@@ -28,9 +29,15 @@
     "typescript": "catalog:",
     "@swc/jest": "catalog:",
     "@swc/core": "catalog:",
-    "jest-environment-jsdom": "catalog:"
+    "jest-environment-jsdom": "catalog:",
+    "@ledgerhq/lumen-ui-react": "catalog:",
+    "@ledgerhq/lumen-design-core": "catalog:",
+    "@radix-ui/react-switch": "catalog:"
   },
   "peerDependencies": {
-    "react": ">=19"
+    "react": ">=19",
+    "@ledgerhq/lumen-design-core": "catalog:",
+    "@ledgerhq/lumen-ui-react": "catalog:",
+    "@radix-ui/react-switch": "catalog:"
   }
 }
