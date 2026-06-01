@@ -5188,6 +5188,16 @@
       "customLockScreen": "Custom lock-screen assets",
       "customLockScreenDesc": "Debug custom lock-screen graphical assets",
       "customLockScreenCTA": "Launch",
+      "coinConfig": {
+        "title": "Coin configs used in Ledger Wallet",
+        "desc": "Override per-currency config (rpc, explorer, gas…) for local debugging. Only valid JSON will be accepted. Overrides persist across relaunches; use \"Restore all\" to clear them.",
+        "search": "Search a config key (e.g. config_currency_ethereum)",
+        "hint": "Defaults show `config_currency_*` keys. Search to see every LiveConfig key. Overrides are deep-merged on top of the default + remote value for object configs.",
+        "restore": "Restore",
+        "override": "Override",
+        "restoreAll": "Restore all coin configs",
+        "overriddenLocally": "overridden locally"
+      },
       "featureFlagsTitle": "Defined feature flags used in Ledger Wallet",
       "featureFlagsDesc": "Overridden values will be reset if the app is relaunched. Only valid JSON strings will be accepted.",
       "featureFlagsEdit": "Edit",
