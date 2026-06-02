@@ -28,6 +28,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
           setOverride={setOverride}
           display={getFlagDisplayState(selectedFlagId)}
           onClose={clearSelection}
+          clearOverride={() => setOverride(selectedFlagId, undefined)}
         />
       )}
       <div>
