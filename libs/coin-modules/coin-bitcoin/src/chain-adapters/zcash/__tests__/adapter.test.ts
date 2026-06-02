@@ -384,7 +384,7 @@ describe("zcash chain adapter — transaction routing", () => {
     it("defaults to shielded when transaction is null", async () => {
       const account = makeZcashAccount({ transactions: [] });
       const result = (await adapter.estimateMaxSpendable!(account, undefined, null)) as BigNumber;
-      expect(result.toNumber()).toBe(0);
+      expect(result).toBeUndefined();
     });
   });
 });

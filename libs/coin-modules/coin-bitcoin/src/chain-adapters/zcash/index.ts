@@ -132,7 +132,8 @@ const zcashChainAdapter: ChainAdapter = {
     } else {
       // Verify selected notes actually cover the spend (consistency check)
       const selectedTotal = tx.selectedNotes.reduce(
-        (sum, n) => sum.plus(n.amount), new BigNumber(0),
+        (sum, n) => sum.plus(n.amount),
+        new BigNumber(0),
       );
       if (selectedTotal.lt(totalSpent)) {
         errors.amount = new Error("Selected notes do not cover amount + fee");
@@ -156,7 +157,7 @@ const zcashChainAdapter: ChainAdapter = {
   ) {
     const zcashAccount = account as ZcashAccount;
     const tx = transaction as ZcashTransaction | null | undefined;
-    const transferType = tx?.transferType ?? "shielded";
+    const transferType = tx?.transferType ?? "transparent";
     if (transferType !== "shielded" && transferType !== "shielded-to-transparent") return undefined;
 
     const notes = collectSpendableNotes(zcashAccount.privateInfo?.transactions ?? []);
