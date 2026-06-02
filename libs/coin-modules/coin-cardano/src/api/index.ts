@@ -30,6 +30,7 @@ import { getBalance } from "../logic/getBalance";
 import { getValidators } from "../logic/getValidators";
 import { lastBlock } from "../logic/lastBlock";
 import { listOperations } from "../logic/listOperations";
+import { validateIntent } from "../logic/validateIntent";
 
 export function createApi(config: CardanoConfig, currencyId: string): CoinModuleApi<StringMemo> {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
@@ -77,14 +78,14 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
     broadcast: (tx: string, broadcastConfig?: BroadcastConfig): Promise<string> =>
       broadcast(currency, { signature: tx, broadcastConfig }),
     validateIntent: (
-      _transactionIntent: TransactionIntent<StringMemo>,
-      _balances: Balance[],
-      _customFees?: FeeEstimation,
-    ): Promise<TransactionValidation> => {
-      throw new Error("validateIntent is not supported");
-    },
+      transactionIntent: TransactionIntent<StringMemo>,
+      balances: Balance[],
+      customFees?: FeeEstimation,
+    ): Promise<TransactionValidation> =>
+      validateIntent(currency, transactionIntent, balances, customFees),
+    // Cardano is UTXO-based: no per-account sequence/nonce to advance.
     getNextSequence: (_address: string): Promise<bigint> => {
-      throw new Error("getNextSequence is not supported");
+      throw new Error("getNextSequence is not applicable for Cardano");
     },
     validateAddress: (
       _address: string,
