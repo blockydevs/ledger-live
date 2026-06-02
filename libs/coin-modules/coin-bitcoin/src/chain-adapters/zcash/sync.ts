@@ -13,6 +13,7 @@ import type { BtcOperation } from "../../types";
 import { removeReplaced } from "../../synchronisation";
 import type { ZcashAccount } from "./types";
 import { convertShieldedTransactionsToOperations, computeBalanceFromNotes } from "./operations";
+import { computeZcashBalance, getTransparentBalance } from "./balance";
 
 // ─── Zcash native sync (formerly familyConfig.ts) ───────────────────────────
 
@@ -124,6 +125,10 @@ export function reduceShieldedSyncResult(
   const processedIds = new Set(accumulated.processedOperations.map(tx => tx.id));
   const newTransactions = result.transactions.filter(tx => !processedIds.has(tx.id));
 
+  // Transparent balance comes from the transparent sync's UTXOs (stable source),
+  // so we can recompute the transparent + private total here without double-counting.
+  const transparentBalance = getTransparentBalance(info.initialAccount?.bitcoinResources?.utxos);
+
   if (newTransactions.length === 0) {
     const totalBlocks = result.processedBlocks + result.remainingBlocks;
     // Even without new transactions, spentKnownNullifiers may mark existing notes as spent.
@@ -145,10 +150,18 @@ export function reduceShieldedSyncResult(
         };
       });
     }
+    const orchardBalance =
+      spentNfs.length > 0
+        ? computeBalanceFromNotes(updatedTransactions)
+        : existingPrivateInfo.orchardBalance;
     return {
       ...accumulated,
       accountUpdate: {
         ...accumulated.accountUpdate,
+        balance: computeZcashBalance(transparentBalance, {
+          orchardBalance,
+          saplingBalance: existingPrivateInfo.saplingBalance,
+        }),
         blockHeight: result.lastProcessedBlock ?? accumulated.accountUpdate.blockHeight ?? 0,
         privateInfo: {
           ...existingPrivateInfo,
@@ -158,10 +171,7 @@ export function reduceShieldedSyncResult(
           lastProcessedBlock: result.lastProcessedBlock ?? null,
           lastSyncTimestamp: Date.now(),
           transactions: updatedTransactions,
-          orchardBalance:
-            spentNfs.length > 0
-              ? computeBalanceFromNotes(updatedTransactions)
-              : existingPrivateInfo.orchardBalance,
+          orchardBalance,
         },
       },
     };
@@ -245,6 +255,7 @@ export function reduceShieldedSyncResult(
     processedOperations: [...result.transactions],
     accountUpdate: {
       ...accumulated.accountUpdate,
+      balance: computeZcashBalance(transparentBalance, { orchardBalance, saplingBalance }),
       operations,
       operationsCount: missingOpsCount + operations.length,
       blockHeight: result.lastProcessedBlock ?? info.initialAccount?.blockHeight ?? 0,

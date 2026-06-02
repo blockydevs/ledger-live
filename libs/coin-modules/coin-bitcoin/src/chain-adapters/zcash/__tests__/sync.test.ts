@@ -36,14 +36,27 @@ beforeEach(() => {
 });
 
 describe("reduceShieldedSyncResult", () => {
-  const createMockInfo = (overrides?: Partial<ZcashAccount>): any => ({
-    currency: getCryptoCurrencyById("zcash"),
-    address: "zs1test",
-    index: 0,
-    derivationPath: "44'/133'/0'/0'",
-    derivationMode: 0,
-    initialAccount: overrides || undefined,
-  });
+  const createMockInfo = (overrides?: Partial<ZcashAccount>): any => {
+    // `account.balance` now holds the transparent + private total. The transparent
+    // portion is derived from the account's UTXOs, so back the provided `balance`
+    // override with a single matching UTXO to represent the transparent balance.
+    const transparent = overrides?.balance ?? new BigNumber(0);
+    return {
+      currency: getCryptoCurrencyById("zcash"),
+      address: "zs1test",
+      index: 0,
+      derivationPath: "44'/133'/0'/0'",
+      derivationMode: 0,
+      initialAccount: overrides
+        ? {
+            ...overrides,
+            bitcoinResources: overrides.bitcoinResources ?? {
+              utxos: transparent.gt(0) ? [{ value: transparent }] : [],
+            },
+          }
+        : undefined,
+    };
+  };
 
   it("should return accumulated with blockHeight when no new transactions", () => {
     const accumulated = {
@@ -131,7 +144,7 @@ describe("reduceShieldedSyncResult", () => {
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(0));
   });
 
-  it("should never set balance or spendableBalance on the accountUpdate when processing shielded transactions", () => {
+  it("should set balance to transparent + private and leave spendableBalance unset when processing shielded transactions", () => {
     const incomingTx: ShieldedTransaction = {
       id: "tx1",
       hex: "00",
@@ -160,7 +173,8 @@ describe("reduceShieldedSyncResult", () => {
 
     const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
 
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(100000) + orchard(50000) = 150000; spendableBalance left to jsHelpers
+    expect(output.accountUpdate.balance).toEqual(new BigNumber(150000));
     expect(output.accountUpdate).not.toHaveProperty("spendableBalance");
   });
 
@@ -311,7 +325,8 @@ describe("reduceShieldedSyncResult", () => {
     const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
 
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(incomingAmount);
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(100000) + orchard(5000)
+    expect(output.accountUpdate.balance).toEqual(initialBalance.plus(incomingAmount));
     expect(output.accountUpdate).not.toHaveProperty("spendableBalance");
   });
 
@@ -378,7 +393,8 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(chunk1.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(4000));
-    expect(chunk1.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(10000) + orchard(4000)
+    expect(chunk1.accountUpdate.balance).toEqual(new BigNumber(14000));
 
     const chunk2 = reduceShieldedSyncResult(
       chunk1,
@@ -392,7 +408,8 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(chunk2.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(4500));
-    expect(chunk2.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(10000) + orchard(4500)
+    expect(chunk2.accountUpdate.balance).toEqual(new BigNumber(14500));
   });
 
   it("should populate privateInfo in accountUpdate", () => {
@@ -511,7 +528,8 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(1000));
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(100000) + orchard(1000)
+    expect(output.accountUpdate.balance).toEqual(new BigNumber(101000));
   });
 
   it("should compute private deltas for both orchard and sapling notes (LIVE-27917)", () => {
@@ -539,7 +557,8 @@ describe("reduceShieldedSyncResult", () => {
     );
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(5000));
     expect(output.accountUpdate.privateInfo?.saplingBalance).toEqual(new BigNumber(0));
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(0) + orchard(5000)
+    expect(output.accountUpdate.balance).toEqual(new BigNumber(5000));
   });
 
   it("should credit orchard balance for a transparent→shielded (shielding) tx without touching the transparent balance", () => {
@@ -564,7 +583,8 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(9000));
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(50000) + orchard(9000)
+    expect(output.accountUpdate.balance).toEqual(new BigNumber(59000));
   });
 
   it("should debit orchard balance for a shielded→transparent (deshielding) tx without touching the transparent balance", () => {
@@ -589,7 +609,8 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(0));
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(50000) + orchard(0)
+    expect(output.accountUpdate.balance).toEqual(new BigNumber(50000));
   });
 
   it("should debit orchard balance for a shielded→shielded (Orchard→Orchard) outgoing tx without touching the transparent balance", () => {
@@ -615,7 +636,8 @@ describe("reduceShieldedSyncResult", () => {
       "acc-1",
     );
     expect(output.accountUpdate.privateInfo?.orchardBalance).toEqual(new BigNumber(1000));
-    expect(output.accountUpdate).not.toHaveProperty("balance");
+    // balance = transparent(100000) + orchard(1000)
+    expect(output.accountUpdate.balance).toEqual(new BigNumber(101000));
   });
 
   it("should filter out already processed operations by blockHash", () => {
@@ -646,10 +668,11 @@ describe("reduceShieldedSyncResult", () => {
       processedBlocks: 0,
       remainingBlocks: 0,
     };
-    const info = createMockInfo();
+    const info = createMockInfo({ balance: new BigNumber(700) });
 
     const output = reduceShieldedSyncResult(accumulated, result, info, "acc-1");
 
+    // balance = transparent(700) + orchard(0)
     expect(output).toMatchObject({
       processedOperations: [tx],
       accountUpdate: {

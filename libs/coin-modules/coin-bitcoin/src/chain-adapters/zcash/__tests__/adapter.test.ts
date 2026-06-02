@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { Account } from "@ledgerhq/types-live";
-import type { TransactionStatus } from "../../../types";
+import type { BitcoinAccount, TransactionStatus } from "../../../types";
 import type { SignerContext } from "../../../signer";
 import type {
   ZcashTransferType,
@@ -327,6 +327,25 @@ describe("zcash chain adapter — transaction routing", () => {
 
       expect(result.estimatedFees.toNumber()).toBe(10_000);
       expect(result.totalSpent.toNumber()).toBe(110_000);
+    });
+  });
+
+  // ── computeTransparentBalance ──────────────────────────────────────
+
+  describe("computeTransparentBalance", () => {
+    it("returns transparent + private (orchard + sapling)", () => {
+      const account = makeZcashAccount({
+        orchardBalance: new BigNumber(5_000),
+        saplingBalance: new BigNumber(2_000),
+      }) as unknown as BitcoinAccount;
+      const result = adapter.computeTransparentBalance!(account, new BigNumber(10_000));
+      expect(result).toEqual(new BigNumber(17_000));
+    });
+
+    it("returns the transparent balance when there is no privateInfo", () => {
+      const account = { currency: { id: "zcash" } } as unknown as BitcoinAccount;
+      const result = adapter.computeTransparentBalance!(account, new BigNumber(10_000));
+      expect(result).toEqual(new BigNumber(10_000));
     });
   });
 

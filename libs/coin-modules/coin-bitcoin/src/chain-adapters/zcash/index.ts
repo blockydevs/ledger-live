@@ -13,6 +13,8 @@ import { buildExtraSyncObservable } from "./sync";
 import { collectSpendableNotes } from "./operations";
 import { selectNotes, estimateMaxSpendableAmount, ZIP317_MINIMUM_FEE } from "./coin-selection";
 import { composeXpub } from "./xpub";
+import { computeZcashBalance } from "./balance";
+import type { BitcoinAccount } from "../../types";
 
 type DmkTransport = {
   dmk: ConstructorParameters<typeof DmkSignerZcash>[0];
@@ -48,6 +50,10 @@ const zcashChainAdapter: ChainAdapter = {
   // ── Sync ────────────────────────────────────────────────────────────
 
   buildExtraSyncObservable,
+
+  computeTransparentBalance(account: BitcoinAccount | undefined, transparentBalance: BigNumber) {
+    return computeZcashBalance(transparentBalance, (account as ZcashAccount | undefined)?.privateInfo);
+  },
 
   assignToAccountRaw(account: Account, accountRaw: AccountRaw) {
     const zcashAccount = account as ZcashAccount;
