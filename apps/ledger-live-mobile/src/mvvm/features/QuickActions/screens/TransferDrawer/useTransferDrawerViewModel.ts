@@ -91,10 +91,21 @@ export const useTransferDrawerViewModel = ({
       page: sourceScreenName,
     });
     closeDrawer();
-    navigation.navigate(NavigatorName.SendFunds, {
-      screen: ScreenName.SendCoin,
-    });
-  }, [closeDrawer, navigation, sourceScreenName]);
+    // When opened from an asset, filter the account list to that asset.
+    // `currencyIds` covers every network of a multi-network asset (e.g. USDT on
+    // Ethereum + Tron), which a single `selectedCurrency` cannot. Without a
+    // currency (generic transfer entry) we keep the unfiltered list.
+    if (currency) {
+      navigation.navigate(NavigatorName.SendFunds, {
+        screen: ScreenName.SendCoin,
+        params: { selectedCurrency: currency, currencyIds: ledgerIds },
+      });
+    } else {
+      navigation.navigate(NavigatorName.SendFunds, {
+        screen: ScreenName.SendCoin,
+      });
+    }
+  }, [closeDrawer, navigation, sourceScreenName, currency, ledgerIds]);
 
   const handleBankTransferPress = useCallback(() => {
     track("button_clicked", {
