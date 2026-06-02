@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Account, AccountLike, DistributionItem } from "@ledgerhq/types-live";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
@@ -16,11 +16,13 @@ import { MAD_SOURCE_PAGES } from "LLD/features/ModularDialog/analytics/modularDi
 import { track } from "~/renderer/analytics/segment";
 import { buildMainAccountByIdMap } from "@ledgerhq/asset-aggregation/assetDistribution/index";
 import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
+import { buildNavigationBackState } from "LLD/utils/navigationBackPath";
 import { MAX_ADDRESSES_PREVIEW } from "../constants";
 
 export function useAddressListViewModel(distributionItem: DistributionItem) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { pathname: assetDetailPath } = useLocation();
   const { shouldDisplayAssetSection } = useWalletFeaturesConfig("desktop");
   const comparator = useSortAccountsComparator();
   const nestedAccounts = useSelector(accountsSelector);
@@ -88,6 +90,7 @@ export function useAddressListViewModel(distributionItem: DistributionItem) {
     }
     navigate(
       getAccountUrl(account.id, account.type === "TokenAccount" ? parentAccount?.id : undefined),
+      buildNavigationBackState("accountBackPath", assetDetailPath),
     );
   };
 
