@@ -354,8 +354,8 @@ export async function performTransparentSync(
   // into `account.balance` via their chain adapter; others use the transparent
   // balance as-is.
   const adapter = getChainAdapter(currency.id);
-  const balance = adapter.computeTransparentBalance
-    ? adapter.computeTransparentBalance(initialAccount, transparentBalance)
+  const balance = adapter.computeAccountBalance
+    ? adapter.computeAccountBalance(initialAccount, transparentBalance)
     : transparentBalance;
 
   return {

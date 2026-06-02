@@ -330,21 +330,21 @@ describe("zcash chain adapter — transaction routing", () => {
     });
   });
 
-  // ── computeTransparentBalance ──────────────────────────────────────
+  // ── computeAccountBalance ──────────────────────────────────────
 
-  describe("computeTransparentBalance", () => {
+  describe("computeAccountBalance", () => {
     it("returns transparent + private (orchard + sapling)", () => {
       const account = makeZcashAccount({
         orchardBalance: new BigNumber(5_000),
         saplingBalance: new BigNumber(2_000),
       }) as unknown as BitcoinAccount;
-      const result = adapter.computeTransparentBalance!(account, new BigNumber(10_000));
+      const result = adapter.computeAccountBalance!(account, new BigNumber(10_000));
       expect(result).toEqual(new BigNumber(17_000));
     });
 
     it("returns the transparent balance when there is no privateInfo", () => {
       const account = { currency: { id: "zcash" } } as unknown as BitcoinAccount;
-      const result = adapter.computeTransparentBalance!(account, new BigNumber(10_000));
+      const result = adapter.computeAccountBalance!(account, new BigNumber(10_000));
       expect(result).toEqual(new BigNumber(10_000));
     });
   });

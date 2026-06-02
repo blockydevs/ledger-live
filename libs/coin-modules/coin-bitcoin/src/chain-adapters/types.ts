@@ -38,7 +38,7 @@ export interface ChainAdapter {
    * off-transparent funds (e.g. Zcash shielded notes) to produce the account
    * balance. Omit to use the transparent balance unchanged.
    */
-  computeTransparentBalance?(
+  computeAccountBalance?(
     account: BitcoinAccount | undefined,
     transparentBalance: BigNumber,
   ): BigNumber;
