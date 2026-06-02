@@ -1,12 +1,18 @@
-import type { TransportIdentifier } from "@ledgerhq/device-management-kit";
+import {
+  type ConnectedDevice,
+  DeviceModelId as DMKDeviceModelId,
+  type TransportIdentifier,
+} from "@ledgerhq/device-management-kit";
 import { rnHidTransportIdentifier } from "@ledgerhq/device-transport-kit-react-native-hid";
 import { ConnectionErrorTypes, DiscoveryErrorTypes } from "@ledgerhq/live-dmk-mobile";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
 import {
+  getConnectedDeviceTrackingProperties,
   getTrackingSubError,
   getTrackingTransport,
+  PAGE_DEVICE_ACTION,
   trackConnectAppButtonClicked,
   trackConnectDeviceButtonClicked,
   trackAppReady,
@@ -29,7 +35,15 @@ jest.mock("~/analytics", () => {
 
 const mockedTrack = jest.mocked(track);
 const TEST_SOURCE = "Portfolio";
-const TEST_BLE_TRANSPORT = "RN_BLE" as TransportIdentifier;
+const TEST_BLE_TRANSPORT: TransportIdentifier = "RN_BLE";
+const connectedDevice: ConnectedDevice = {
+  id: "device-id",
+  name: "Ledger Stax",
+  modelId: DMKDeviceModelId.STAX,
+  sessionId: "session-id",
+  type: "BLE",
+  transport: "ble",
+};
 
 const layerABaseProperties = {
   source: TEST_SOURCE,
@@ -195,6 +209,35 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
           expect(getTrackingTransport(TEST_BLE_TRANSPORT)).toBe("ble");
           expect(getTrackingTransport(undefined)).toBeUndefined();
         });
+      });
+    });
+  });
+
+  describe("getConnectedDeviceTrackingProperties", () => {
+    it("GIVEN a connected device WHEN called THEN it maps DMK model and transport to tracking values", () => {
+      const usbDevice: ConnectedDevice = {
+        ...connectedDevice,
+        modelId: DMKDeviceModelId.NANO_X,
+        type: "USB",
+      };
+
+      expect(getConnectedDeviceTrackingProperties(connectedDevice)).toEqual({
+        modelId: DeviceModelId.stax,
+        transport: "ble",
+      });
+      expect(getConnectedDeviceTrackingProperties(usbDevice)).toEqual({
+        modelId: DeviceModelId.nanoX,
+        transport: "usb",
+      });
+    });
+  });
+
+  describe("PAGE_DEVICE_ACTION", () => {
+    it("GIVEN generic DIE error pages THEN it exposes the expected page event names", () => {
+      expect(PAGE_DEVICE_ACTION).toEqual({
+        Disconnected: "Device Action - Disconnected",
+        UnknownIntentError: "Device Action - Unknown Intent Error",
+        InvalidState: "Device Action - Invalid State",
       });
     });
   });

@@ -86,6 +86,7 @@ const makeConnectionResult = (
 // the SM, so the values just need to exist to satisfy the union.
 const TEST_CONNECTION_RESULT = makeBaseConnectionResult();
 const TEST_EXTRACTED_CONTEXT = makeExtractedContext();
+const TEST_DEVICE = TEST_CONNECTION_RESULT.connectedDevice;
 
 type TestProps = DeviceIntentExecutorProps<
   unknown,
@@ -619,7 +620,10 @@ describe("useDeviceIntentExecutor — integration smoke tests (real SM)", () => 
       });
 
       // The second (latest) callback should be called, not the first
-      expect(secondCallback).toHaveBeenCalledWith({ type: "deviceDisconnected" });
+      expect(secondCallback).toHaveBeenCalledWith({
+        type: "deviceDisconnected",
+        device: connectionResult.connectedDevice,
+      });
     });
 
     it("WHEN onUserCancel prop changes between renders THEN onClose forwards to the latest callback", () => {
@@ -779,7 +783,7 @@ describe("useDeviceIntentExecutor — unit (mocked SM)", () => {
       const { result, sm, listeners } = renderWithMockSM();
 
       act(() => {
-        listeners.onExecutorStateChanged({ type: "deviceDisconnected" });
+        listeners.onExecutorStateChanged({ type: "deviceDisconnected", device: TEST_DEVICE });
       });
 
       act(() => {
@@ -869,7 +873,7 @@ describe("useDeviceIntentExecutor — unit (mocked SM)", () => {
       });
 
       act(() => {
-        listeners.onExecutorStateChanged({ type: "deviceDisconnected" });
+        listeners.onExecutorStateChanged({ type: "deviceDisconnected", device: TEST_DEVICE });
       });
 
       inPhase(result.current, "deviceDisconnected");
@@ -959,11 +963,17 @@ describe("useDeviceIntentExecutor — unit (mocked SM)", () => {
       rerender({ p: { ...props, onExecutorStateChanged: secondCallback } });
 
       act(() => {
-        listeners.onExecutorStateChanged({ type: "deviceDisconnected" });
+        listeners.onExecutorStateChanged({ type: "deviceDisconnected", device: TEST_DEVICE });
       });
 
-      expect(secondCallback).toHaveBeenCalledWith({ type: "deviceDisconnected" });
-      expect(firstCallback).not.toHaveBeenCalledWith({ type: "deviceDisconnected" });
+      expect(secondCallback).toHaveBeenCalledWith({
+        type: "deviceDisconnected",
+        device: TEST_DEVICE,
+      });
+      expect(firstCallback).not.toHaveBeenCalledWith({
+        type: "deviceDisconnected",
+        device: TEST_DEVICE,
+      });
     });
   });
 
@@ -1107,7 +1117,7 @@ describe("useDeviceIntentExecutor — unit (mocked SM)", () => {
       expect(onUserCancel).toHaveBeenCalledTimes(1);
 
       act(() => {
-        listeners.onExecutorStateChanged({ type: "deviceDisconnected" });
+        listeners.onExecutorStateChanged({ type: "deviceDisconnected", device: TEST_DEVICE });
       });
       inPhase(result.current, "deviceDisconnected").onClose();
       expect(onUserCancel).toHaveBeenCalledTimes(2);

@@ -1,7 +1,7 @@
-import type { TransportIdentifier } from "@ledgerhq/device-management-kit";
+import type { ConnectedDevice, TransportIdentifier } from "@ledgerhq/device-management-kit";
 import { rnHidTransportIdentifier } from "@ledgerhq/device-transport-kit-react-native-hid";
 import type { DeviceModelId } from "@ledgerhq/types-devices";
-import type { KnownDevice } from "@ledgerhq/live-dmk-shared";
+import { dmkToLedgerDeviceIdMap, type KnownDevice } from "@ledgerhq/live-dmk-shared";
 import { ConnectionErrorTypes, DiscoveryErrorTypes } from "@ledgerhq/live-dmk-mobile";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
@@ -50,6 +50,12 @@ export const PAGE_CONNECT_APP = {
   WrongDeviceForAccount: "Connect App - Wrong Device For Account",
   OutOfStorage: "Connect App - Out Of Storage",
   Error: "Connect App - Error",
+} as const;
+
+export const PAGE_DEVICE_ACTION = {
+  Disconnected: "Device Action - Disconnected",
+  UnknownIntentError: "Device Action - Unknown Intent Error",
+  InvalidState: "Device Action - Invalid State",
 } as const;
 
 /**
@@ -104,6 +110,11 @@ export const getTrackingTransport = (
   if (!transportId) return undefined;
   return transportId === rnHidTransportIdentifier ? "usb" : "ble";
 };
+
+export const getConnectedDeviceTrackingProperties = (device: ConnectedDevice) => ({
+  modelId: dmkToLedgerDeviceIdMap[device.modelId],
+  transport: device.type === "USB" ? "usb" : "ble",
+});
 
 export const getTrackingSubError = (errorType: ConnectDeviceErrorType): string =>
   TRACKING_SUB_ERRORS[errorType];
