@@ -936,19 +936,156 @@ jobs:
           name: "android-ui-e2e-smoke-artifacts"
           path: e2e/mobile/artifacts
 
+  detox-ui-e2e-ios:
+    name: "iOS UI E2E Smoke Tests"
+    continue-on-error: true
+    needs: [build-ios, determine-builds]
+    runs-on: ["${{ inputs.macos-specificity-runner-label }}", macOS, ARM64]
+    timeout-minutes: 80
+    env:
+      NODE_OPTIONS: "--max-old-space-size=8192"
+      LANG: en_US.UTF-8
+      LANGUAGE: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      IOS_SIMULATOR_DEVICE: iPhone 15
+      SPECULOS_IMAGE_TAG: ghcr.io/ledgerhq/speculos:latest
+      SPECULOS_DEVICE: nanoX
+    outputs:
+      status: ${{ steps.detox.outcome }}
+      artifact: ${{ steps.test-artifacts.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          repository: LedgerHQ/ledger-live
+          persist-credentials: false
+
+      - name: setup caches
+        id: setup-caches
+        uses: LedgerHQ/ledger-live/tools/actions/composites/setup-caches@develop
+        with:
+          skip-pod-cache: "true"
+          skip-pnpm-cache: "true"
+          use-mise: true
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          cache-develop-role-arn: ${{ secrets.AWS_CACHE_OIDC_ROLE_ARN_DEVELOP }}
+          cache-branch-role-arn: ${{ secrets.AWS_CACHE_OIDC_ROLE_ARN_BRANCH }}
+          nx-key: ${{ secrets.NX_KEY }}
+          accountId: ${{ secrets.AWS_ACCOUNT_ID_PROD }}
+          roleName: ${{ secrets.AWS_CACHE_ROLE_NAME }}
+          region: ${{ secrets.AWS_CACHE_REGION }}
+
+      - uses: nick-fields/retry@v3
+        name: install dependencies
+        id: install-dependencies
+        with:
+          max_attempts: 2
+          timeout_minutes: 15
+          command: pnpm i --filter="live-mobile..." --filter="@ledgerhq/dummy-*-app..." --filter="ledger-live" --filter="ledger-live-mobile-e2e-tests" --filter="live-cli*..." --no-frozen-lockfile --unsafe-perm --ignore-scripts
+          new_command_on_retry: rm -rf ~/.cocoapods/ && pnpm clean && pnpm i --filter="live-mobile..." --filter="@ledgerhq/dummy-*-app..." --filter="ledger-live" --filter="ledger-live-mobile-e2e-tests" --filter="live-cli*..." --no-frozen-lockfile --unsafe-perm --ignore-scripts
+
+      # Warm simulators before Detox; worker_count matches the iOS Simulator … N names in detox.config.js.
+      - name: Boot iOS Simulators in Background
+        uses: LedgerHQ/ledger-live/tools/actions/composites/boot-ios-simulators-background@develop
+        with:
+          worker_count: 3
+          artifacts_root: e2e/mobile/artifacts
+
+      - name: Detox Post Install
+        run: node node_modules/detox/scripts/postinstall.js
+        working-directory: apps/ledger-live-mobile
+
+      - name: Download Native Build
+        uses: LedgerHQ/ledger-live/tools/actions/composites/cache/download@develop
+        with:
+          endpoint: ${{ secrets.S3_DIRECTCONNECT_ENDPOINT }}
+          key: ${{ needs.determine-builds.outputs.ios_native_key }}
+          accessKey: ${{ env.AWS_ACCESS_KEY_ID }}
+          secretKey: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          sessionToken: ${{ env.AWS_SESSION_TOKEN}}
+          bucket: ${{ env.cache-bucket }}
+          region: ${{ secrets.AWS_CACHE_REGION }}
+
+      - name: Download JS Build
+        uses: LedgerHQ/ledger-live/tools/actions/composites/cache/download@develop
+        with:
+          endpoint: ${{ secrets.S3_DIRECTCONNECT_ENDPOINT }}
+          key: ${{ needs.determine-builds.outputs.ios_js_key }}
+          accessKey: ${{ env.AWS_ACCESS_KEY_ID }}
+          secretKey: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          sessionToken: ${{ env.AWS_SESSION_TOKEN}}
+          bucket: ${{ env.cache-bucket }}
+          region: ${{ secrets.AWS_CACHE_REGION }}
+
+      - name: Copy JS build
+        run: |
+          cp apps/ledger-live-mobile/main.jsbundle ${{ env.IOS_JSBUNDLE_PATH }}
+          cp apps/ledger-live-mobile/main.jsbundle ${{ env.IOS_NATIVE_PATH }}/main.jsbundle
+
+      - name: Build CLI
+        uses: LedgerHQ/ledger-live/tools/actions/composites/nx-step@develop
+        with:
+          command: pnpm exec nx run @ledgerhq/live-cli:build
+          disable_cache: ${{ inputs.disable-nx-cache || false }}
+
+      - name: Set DISABLE_TRANSACTION_BROADCAST
+        uses: LedgerHQ/ledger-live/tools/actions/composites/setup-e2e-env@develop
+        with:
+          enable_broadcast: false
+          build_type: testing
+
+      - name: Get smoke test files
+        id: smoke-files
+        run: |
+          SMOKE_FILES=$(node apps/ledger-live-mobile/scripts/shard-tests.mjs "@smoke" "e2e/mobile")
+          if [ -z "$SMOKE_FILES" ]; then
+            echo "No smoke test files found — skipping smoke tests"
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "SHARD_TEST_FILES<<EOF" >> $GITHUB_ENV
+            echo "$SMOKE_FILES" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "Smoke test files: $SMOKE_FILES"
+          fi
+
+      - name: Run iOS Tests - Smoke Tests
+        if: steps.smoke-files.outputs.has_tests == 'true'
+        id: detox
+        timeout-minutes: 45
+        env:
+          SEED: ${{ secrets.SEED_QAA_B2C }}
+          SPECULINHO_URL: ${{ secrets.SPECULINHO_URL }}
+          INPUT_E2E: "true"
+          REMOTE_SPECULOS: "true"
+          INPUTS_TEST_FILTER: "@smoke"
+        run: |
+          pnpm mobile e2e:ci -p ios -t \
+            --e2e \
+            $SHARD_TEST_FILES \
+            --outputFile=artifacts/e2e-test-results-ios-smoke.json
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: ${{ !cancelled() || steps.detox.outcome == 'cancelled' }}
+        id: "test-artifacts"
+        with:
+          name: "ios-ui-e2e-smoke-artifacts"
+          path: e2e/mobile/artifacts
+
   allure-report-mobile-ui-e2e-smoke:
     name: "Allure Report - Mobile UI E2E Smoke (iOS + Android)"
     runs-on: [ledger-live-medium]
-    needs: [detox-ui-e2e-android]
-    if: ${{ !cancelled() && needs.detox-ui-e2e-android.outputs.artifact }}
+    needs: [detox-ui-e2e-ios, detox-ui-e2e-android]
+    if: ${{ !cancelled() && (needs.detox-ui-e2e-ios.outputs.artifact || needs.detox-ui-e2e-android.outputs.artifact) }}
     outputs:
       report-url: ${{ steps.upload.outputs.report-url }}
     steps:
-      - name: Download Allure results (Android)
+      - name: Download Allure results (iOS + Android)
         uses: actions/download-artifact@v4
         with:
           path: mobile-ui-e2e-smoke-artifacts
-          pattern: android-ui-e2e-smoke-artifacts
+          pattern: "*-ui-e2e-smoke-artifacts"
           merge-multiple: true
 
       - name: Publish report on Allure Server
