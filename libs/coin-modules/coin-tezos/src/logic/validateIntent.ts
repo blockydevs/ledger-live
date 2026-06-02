@@ -160,11 +160,7 @@ function mapTaquitoErrors(taquitoError: string, intentType: string): Record<stri
   const errors: Record<string, Error> = {};
 
   if (taquitoError.endsWith("balance_too_low") || taquitoError.endsWith("subtraction_underflow")) {
-    if (intentType === "stake") {
-      errors.amount = new NotEnoughBalanceToDelegate();
-    } else {
-      errors.amount = new NotEnoughBalance();
-    }
+    errors.amount = new NotEnoughBalance();
   } else if (taquitoError.endsWith("staking.too_much_unstaked")) {
     errors.amount = new TezosNotEnoughStaked();
   } else if (taquitoError.endsWith("contract.must_be_delegated_to_stake")) {
@@ -174,7 +170,8 @@ function mapTaquitoErrors(taquitoError: string, intentType: string): Record<stri
     // rejects it. Surfaces for both `delegate` and `stake` intents as "already delegated".
     errors.recipient = new InvalidAddressBecauseAlreadyDelegated();
   } else if (taquitoError.includes("empty_implicit_contract")) {
-    errors.amount = new NotEnoughBalanceToDelegate();
+    errors.amount =
+      intentType === "stake" ? new NotEnoughBalance() : new NotEnoughBalanceToDelegate();
   } else if (taquitoError.includes("script_rejected")) {
     errors.amount = new NotEnoughBalance();
   } else {
@@ -250,9 +247,8 @@ function calculateAmounts(
 }
 
 /**
- * Coverage check against the spendable (liquid) balance. Tezos `balance` includes staked +
- * unstaked-frozen funds that cannot pay fees/transfers, so callers must pass the spendable
- * portion (total minus staked minus unstaked), never the raw total.
+ * Tezos `balance` includes staked + unstaked-frozen funds that can't pay fees/transfers, so the
+ * caller must pass the spendable portion (total minus both), not the raw total.
  */
 function validateBalanceCoverage(
   spendableBalance: bigint,
@@ -341,9 +337,8 @@ async function fetchTokenBalanceForSendMax(intent: TransactionIntent): Promise<b
   return row ? BigInt(row.balance) : 0n;
 }
 
-// Coverage is checked against live account state fetched from TzKT below (senderInfo), not the
-// framework-provided balances: the app's synced spendableBalance can lag between consecutive
-// operations, while the fresh fetch matches what fee/send-max estimation and the modal banner use.
+// Coverage is checked against live TzKT state (senderInfo) below, not the framework-provided
+// balances: the synced spendableBalance can lag between consecutive operations.
 export async function validateIntent(intent: TransactionIntent): Promise<TransactionValidation> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -396,7 +391,7 @@ export async function validateIntent(intent: TransactionIntent): Promise<Transac
     totalSpent = amounts.totalSpent;
 
     if (intent.type === "stake" && intent.useAllAmount && amount === 0n && !errors.amount) {
-      errors.amount = new NotEnoughBalanceToDelegate();
+      errors.amount = new NotEnoughBalance();
     }
 
     const { spendable } = partitionNativeBalance(

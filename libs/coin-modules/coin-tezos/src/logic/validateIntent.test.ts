@@ -322,7 +322,7 @@ describe("validateIntent", () => {
       expect(result.amount).toBe(4_500_000n);
     });
 
-    it("should return NotEnoughBalanceToDelegate when stake useAllAmount resolves max to 0n", async () => {
+    it("should return NotEnoughBalance when stake useAllAmount resolves max to 0n", async () => {
       mockGetAccountByAddress.mockResolvedValue(
         makeUserAccount({
           delegate: { alias: "baker", address: validRecipient, active: true },
@@ -347,7 +347,7 @@ describe("validateIntent", () => {
         useAllAmount: true,
       });
 
-      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalanceToDelegate);
+      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
       expect(result.amount).toBe(0n);
     });
 
@@ -748,7 +748,7 @@ describe("validateIntent", () => {
       expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
     });
 
-    it("maps balance_too_low to NotEnoughBalanceToDelegate for stake", async () => {
+    it("maps balance_too_low to NotEnoughBalance for stake", async () => {
       mockGetAccountByAddress.mockResolvedValue(
         makeUserAccount({
           delegate: { alias: "baker", address: validRecipient, active: true },
@@ -773,7 +773,7 @@ describe("validateIntent", () => {
         amount: 1n,
       });
 
-      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalanceToDelegate);
+      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
     });
 
     it("maps subtraction_underflow to NotEnoughBalance for non-stake", async () => {
@@ -872,6 +872,34 @@ describe("validateIntent", () => {
       });
 
       expect(result.errors.amount).toBeInstanceOf(NotEnoughBalanceToDelegate);
+    });
+
+    it("maps empty_implicit_contract to NotEnoughBalance for stake", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeUserAccount({
+          delegate: { alias: "baker", address: validRecipient, active: true },
+          delegationLevel: 1,
+        }),
+      );
+
+      mockEstimateFees.mockResolvedValue({
+        fees: 0n,
+        gasLimit: 0n,
+        storageLimit: 0n,
+        estimatedFees: 500n,
+        taquitoError: "proto.empty_implicit_contract",
+      });
+
+      const result = await validateIntent({
+        intentType: "staking",
+        asset: { type: "native" },
+        type: "stake",
+        sender: senderAddress,
+        recipient: "",
+        amount: 1n,
+      });
+
+      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
     });
 
     it("maps staking.too_much_unstaked to TezosNotEnoughStaked for unstake", async () => {
