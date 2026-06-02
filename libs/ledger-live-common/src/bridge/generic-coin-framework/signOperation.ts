@@ -63,6 +63,7 @@ export const genericSignOperation =
             type: transaction.type,
             sponsored: transaction.sponsored,
             valAddress: transaction?.valAddress || "",
+            valId: transaction?.valId,
             dstValAddress: transaction?.dstValAddress || "",
           };
           // TODO Remove the call to `validateIntent` https://ledgerhq.atlassian.net/browse/LIVE-22227

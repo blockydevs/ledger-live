@@ -32,6 +32,7 @@ export function genericGetTransactionStatus(
       type: transaction.type,
       sponsored: transaction.sponsored,
       valAddress: transaction.valAddress,
+      valId: transaction.valId,
       dstValAddress: transaction.dstValAddress,
     };
 
