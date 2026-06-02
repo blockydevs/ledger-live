@@ -37,6 +37,8 @@ export type PnlDrawerViewModel = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  pageName?: string;
+  source?: string;
 };
 
 export type PnlViewModel = {

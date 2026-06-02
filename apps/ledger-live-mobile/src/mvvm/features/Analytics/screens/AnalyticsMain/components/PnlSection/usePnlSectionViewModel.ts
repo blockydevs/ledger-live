@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { BigNumber } from "bignumber.js";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { usePortfolioPnL } from "@ledgerhq/wallet-pnl/hooks";
@@ -10,7 +10,10 @@ import { useCountervaluesState } from "~/reducers/countervalues";
 import { counterValueCurrencySelector, discreetModeSelector } from "~/reducers/settings";
 import { buildReturnCard } from "LLM/features/Pnl/builders/buildReturnCard";
 import { buildPnlDetail } from "LLM/features/Pnl/builders/buildPnlDetail";
+import { PNL_BUTTON, PNL_DETAIL_PAGE } from "LLM/features/Pnl/const";
 import type { PnlSectionViewModel } from "./types";
+import { track } from "~/analytics";
+import { ANALYTICS_PAGE } from "../../../../const";
 
 const ZERO = new BigNumber(0);
 const EMPTY_ACCOUNTS: Parameters<typeof usePortfolioPnL>[0] = [];
@@ -31,6 +34,22 @@ export function usePnlSectionViewModel(): PnlSectionViewModel {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const drawerOpenGuardRef = useRef(false);
+
+  const handleCloseDrawer = useCallback(() => {
+    drawerOpenGuardRef.current = false;
+    closeDrawer();
+  }, [closeDrawer]);
+
+  const handleOpenDrawer = useCallback(() => {
+    if (drawerOpenGuardRef.current) return;
+    drawerOpenGuardRef.current = true;
+    openDrawer();
+    track("button_clicked", {
+      button: PNL_BUTTON,
+      page: ANALYTICS_PAGE,
+    });
+  }, [openDrawer]);
 
   const formatFiat = useCallback(
     (value: BigNumber, alwaysShowSign?: boolean) =>
@@ -83,14 +102,16 @@ export function usePnlSectionViewModel(): PnlSectionViewModel {
     title: t("pnl.portfolio.title"),
     unrealised,
     realised,
-    openDrawer,
+    openDrawer: handleOpenDrawer,
     drawer: {
       isOpen: isDrawerOpen,
-      onClose: closeDrawer,
+      onClose: handleCloseDrawer,
       title: detail.title,
       description: detail.description,
       items: detail.items,
       footer: t("pnl.disclaimer"),
+      pageName: PNL_DETAIL_PAGE,
+      source: ANALYTICS_PAGE,
     },
   };
 }

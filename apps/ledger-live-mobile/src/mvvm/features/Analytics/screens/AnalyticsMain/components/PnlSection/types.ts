@@ -15,5 +15,7 @@ export type PnlSectionViewModel = {
     description: string;
     items: PnlDetailItem[];
     footer: string;
+    pageName: string;
+    source: string;
   };
 };
