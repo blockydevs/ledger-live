@@ -206,7 +206,7 @@ export class SwapPage extends WebViewAppPage {
 
     for (const providerName of providersWithoutKYC) {
       const provider = Object.values(SwapProvider).find(p => p.uiName === providerName);
-      if (provider) {
+      if (provider && !provider.app) {
         const providerLocator = webview
           .locator(this.specificQuoteCardProviderName(provider.name))
           .first();
