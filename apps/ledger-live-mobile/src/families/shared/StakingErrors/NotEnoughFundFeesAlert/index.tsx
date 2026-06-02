@@ -103,7 +103,7 @@ const NotEnoughFundFeesAlert: React.FC<Props> = ({ account }) => {
         accountId: account.id,
       },
     });
-  }, [account.id, currency, navigation, shouldDisplayWallet40MainNav, track]);
+  }, [account.id, currency, navigation, shouldDisplayWallet40MainNav]);
 
   const ctasSupported = useMemo(() => {
     const ctas = [];
