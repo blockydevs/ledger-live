@@ -1,14 +1,19 @@
-import { act } from "react";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
-import { genAccount } from "@ledgerhq/live-common/mock/account";
+import { genMockAccount } from "@ledgerhq/live-common/mock/account";
+import type { Account } from "@ledgerhq/types-live";
 import * as walletPnlHooks from "@ledgerhq/wallet-pnl/hooks";
-import { renderHook, withFlagOverrides } from "@tests/test-renderer";
+import { act, renderHook, withFlagOverrides } from "@tests/test-renderer";
+import { track } from "~/analytics";
 import { State } from "~/reducers/types";
+import { PNL_BUTTON, PNL_DETAIL_PAGE } from "LLM/features/Pnl/const";
+import { ANALYTICS_PAGE } from "../../../../../const";
 import { usePnlSectionViewModel } from "../usePnlSectionViewModel";
 
-const btcAccount = genAccount("btc-1", {
-  currency: getCryptoCurrencyById("bitcoin"),
-  operationsSize: 0,
+const btc = getCryptoCurrencyById("bitcoin");
+let btcAccount: Account;
+
+beforeAll(async () => {
+  btcAccount = await genMockAccount("btc-1", { currency: btc, operationsSize: 0 });
 });
 
 const withAccounts = (state: State): State => ({
@@ -126,6 +131,57 @@ describe("usePnlSectionViewModel", () => {
       for (const item of result.current.drawer.items) {
         expect(item.value).not.toContain("***");
       }
+    });
+  });
+
+  describe("tracking", () => {
+    const mockedTrack = jest.mocked(track);
+
+    beforeEach(() => mockedTrack.mockClear());
+
+    it("fires a button_clicked track event when the drawer opens", () => {
+      const { result } = renderHook(() => usePnlSectionViewModel(), {
+        overrideInitialState: withPnl(true),
+      });
+
+      act(() => result.current.openDrawer());
+
+      expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+        button: PNL_BUTTON,
+        page: ANALYTICS_PAGE,
+      });
+    });
+
+    it("does not fire track again when openDrawer is called twice without closing", () => {
+      const { result } = renderHook(() => usePnlSectionViewModel(), {
+        overrideInitialState: withPnl(true),
+      });
+
+      act(() => result.current.openDrawer());
+      act(() => result.current.openDrawer());
+
+      expect(mockedTrack).toHaveBeenCalledTimes(1);
+    });
+
+    it("fires track again after close → reopen", () => {
+      const { result } = renderHook(() => usePnlSectionViewModel(), {
+        overrideInitialState: withPnl(true),
+      });
+
+      act(() => result.current.openDrawer());
+      act(() => result.current.drawer.onClose());
+      act(() => result.current.openDrawer());
+
+      expect(mockedTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it("exposes pageName and source on the drawer", () => {
+      const { result } = renderHook(() => usePnlSectionViewModel(), {
+        overrideInitialState: withPnl(true),
+      });
+
+      expect(result.current.drawer.pageName).toBe(PNL_DETAIL_PAGE);
+      expect(result.current.drawer.source).toBe(ANALYTICS_PAGE);
     });
   });
 
