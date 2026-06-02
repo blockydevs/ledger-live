@@ -10,7 +10,7 @@ import { setExchangeDependencies } from "@ledgerhq/live-common/e2e/speculos";
 import { Swap } from "@ledgerhq/live-common/e2e/models/Swap";
 import { addTmsLink } from "tests/utils/allureUtils";
 import { getDescription } from "tests/utils/customJsonReporter";
-import { Provider } from "@ledgerhq/live-common/e2e/enum/Provider";
+import { SwapProvider } from "@ledgerhq/live-common/e2e/enum/Provider";
 import { setupEnv, performSwapUntilQuoteSelectionStep } from "tests/utils/swapUtils";
 import { getEnv } from "@ledgerhq/live-env";
 import { overrideNetworkPayload } from "tests/utils/networkUtils";
@@ -315,7 +315,7 @@ test.describe("Swap history", () => {
   const swapHistory = {
     swap: new Swap(Account.SOL_1, Account.ETH_1, "0.07"),
     xrayTicket: "B2CQA-604",
-    provider: Provider.EXODUS,
+    provider: SwapProvider.EXODUS,
     swapId: "wQ90NrWdvJz5dA4",
     addressFrom: Addresses.SWAP_HISTORY_SOL_FROM,
     addressTo: Addresses.SWAP_HISTORY_ETH_TO,
