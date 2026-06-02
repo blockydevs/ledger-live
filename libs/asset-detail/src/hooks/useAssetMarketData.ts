@@ -50,7 +50,10 @@ export function useAssetMarketData({
       version,
       isStaging,
     },
-    { skip: !effectiveLedgerIds?.length },
+    {
+      skip: !effectiveLedgerIds?.length,
+      pollingInterval: REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH,
+    },
   );
 
   const dadaMarket = effectiveLedgerIds?.[0]
