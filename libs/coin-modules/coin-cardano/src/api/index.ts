@@ -23,6 +23,7 @@ import type {
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
 import { broadcast } from "../logic/broadcast";
+import { lastBlock } from "../logic/lastBlock";
 
 export function createApi(config: CardanoConfig, currencyId: string): CoinModuleApi<StringMemo> {
   coinConfig.setCoinConfig(() => ({ ...config, status: { type: "active" } }));
@@ -30,9 +31,7 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
   const currency = getCryptoCurrencyById(currencyId);
 
   return {
-    lastBlock: (): Promise<BlockInfo> => {
-      throw new Error("lastBlock is not supported");
-    },
+    lastBlock: (): Promise<BlockInfo> => lastBlock(currency),
     getBlockInfo: (_height: number): Promise<BlockInfo> => {
       throw new Error("getBlockInfo is not supported");
     },
