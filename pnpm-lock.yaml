@@ -3758,6 +3758,9 @@ importers:
       '@ledgerhq/types-live':
         specifier: workspace:^
         version: link:../ledgerjs/packages/types-live
+      '@rslib/core':
+        specifier: 'catalog:'
+        version: 0.19.3(typescript@6.0.2)
       '@swc/core':
         specifier: 'catalog:'
         version: 1.15.11
@@ -23610,7 +23613,7 @@ packages:
     resolution: {integrity: sha512-/FQM1EDkTsf63Ub2C6O7GuYFDsSXUwsaZDurV0np41ocwq0jthUAYCmhBX9f+KwlaCgIuWyr/4WlUQUBfKfZog==}
     engines: {node: '>=6'}
     peerDependencies:
-      rxjs: ^5.5.10
+      rxjs: '*'
       zenObservable: '*'
     peerDependenciesMeta:
       rxjs:
