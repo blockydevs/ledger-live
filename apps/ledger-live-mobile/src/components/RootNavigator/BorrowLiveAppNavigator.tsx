@@ -10,6 +10,7 @@ import { BorrowLiveAppNavigatorParamList } from "./types/BorrowLiveAppNavigator"
 import { BorrowLiveAppWrapper } from "LLM/features/Borrow";
 import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-api/Borrow/types";
 import type { DefaultAccountSwapParamList } from "~/screens/Swap/types";
+import { navigateToSwapTab } from "~/screens/Swap/navigation/navigateToSwapTab";
 import type { BaseComposite, BaseNavigation, StackNavigatorProps } from "./types/helpers";
 
 const Stack = createNativeStackNavigator<BorrowLiveAppNavigatorParamList>();
@@ -63,20 +64,7 @@ const Borrow = (props: NavigationProps) => {
         fromPath: ScreenName.Borrow,
       };
 
-      if (shouldDisplayWallet40MainNav) {
-        baseNavigation.navigate(NavigatorName.Main, {
-          screen: NavigatorName.Swap,
-          params: {
-            screen: ScreenName.SwapTab,
-            params,
-          },
-        });
-      } else {
-        baseNavigation.navigate(NavigatorName.Swap, {
-          screen: ScreenName.SwapTab,
-          params,
-        });
-      }
+      navigateToSwapTab({ navigation: baseNavigation, shouldDisplayWallet40MainNav, params });
     },
     [baseNavigation, shouldDisplayWallet40MainNav],
   );
