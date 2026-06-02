@@ -108,8 +108,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
       ),
     loadSigner: () =>
       import("../bridge/generic-coin-framework/families/evm/signer.js").then(m => m.default),
-    loadBridgeExtensions: () =>
-      import("../families/evm/bridgeExtensions.js").then(m => m.default),
+    loadBridgeExtensions: () => import("../families/evm/bridgeExtensions.js").then(m => m.default),
   },
   {
     family: "filecoin",
@@ -257,8 +256,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadDeviceTxConfig: () =>
       import("@ledgerhq/coin-tron/deviceTransactionConfig").then(m => m.default),
     loadMockBridge: () => import("../families/tron/bridge/mock.js").then(m => m.default),
-    loadBridgeExtensions: () =>
-      import("../families/tron/bridgeExtensions.js").then(m => m.default),
+    loadBridgeExtensions: () => import("../families/tron/bridgeExtensions.js").then(m => m.default),
   },
   {
     family: "vechain",
@@ -280,7 +278,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadPlatformAdapter: () => import("../families/xrp/platformAdapter.js").then(m => m.default),
     loadMockBridge: () => import("../families/xrp/bridge/mock.js").then(m => m.default),
     loadValidateAddress: () =>
-      import("@ledgerhq/coin-xrp/logic/validateAddress").then(
+      import("@ledgerhq/coin-xrp/api/validateAddress").then(
         ({ validateAddress }): ValidateAddressFn => validateAddress,
       ),
     loadSigner: () =>

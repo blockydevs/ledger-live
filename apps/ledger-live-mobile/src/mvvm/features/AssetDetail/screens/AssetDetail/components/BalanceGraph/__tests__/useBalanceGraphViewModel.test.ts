@@ -320,6 +320,33 @@ describe("useBalanceGraphViewModel", () => {
       });
       expect(handleOpenReceiveDrawer).toHaveBeenCalledTimes(1);
     });
+
+    it("forwards the parent-provided ledgerIds list to useOpenReceiveDrawer", () => {
+      const ledgerIds = ["ethereum", "optimism", "arbitrum", "base"];
+
+      renderHook(() =>
+        useBalanceGraphViewModel({
+          currency: mockBtcCryptoCurrency,
+          hideReceive: false,
+          ledgerIds,
+        }),
+      );
+
+      expect(mockUseOpenReceiveDrawer).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: mockBtcCryptoCurrency, currencyIds: ledgerIds }),
+      );
+    });
+
+    it("falls back to the locally derived ledgerIds when no list is threaded down", () => {
+      renderHook(() => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }));
+
+      expect(mockUseOpenReceiveDrawer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currency: mockBtcCryptoCurrency,
+          currencyIds: expect.any(Array),
+        }),
+      );
+    });
   });
 
   describe("ranges", () => {
@@ -443,6 +470,77 @@ describe("useBalanceGraphViewModel", () => {
       expect(padded.min).toBeLessThan(0);
       expect(padded.max).toBeGreaterThan(100);
       expect(Math.abs(padded.min)).toBeGreaterThan(padded.max - 100);
+    });
+  });
+
+  describe("scrubbing", () => {
+    it("drives the price and date from the hovered point and flags isScrubbing", () => {
+      const { result } = renderVM();
+
+      // 1d series data is [100, 110, 120] with timestamps [1, 2, 3].
+      act(() => result.current.onScrubberPositionChange(1));
+
+      expect(result.current.isScrubbing).toBe(true);
+      expect(result.current.price).toBe(110);
+      expect(typeof result.current.scrubbedDateLabel).toBe("string");
+      expect(result.current.scrubbedDateLabel).not.toBe("");
+    });
+
+    it("reverts to the live price and clears the date when scrubbing ends", () => {
+      const { result } = renderVM();
+
+      act(() => result.current.onScrubberPositionChange(2));
+      expect(result.current.price).toBe(120);
+
+      act(() => result.current.onScrubberPositionChange(undefined));
+
+      expect(result.current.isScrubbing).toBe(false);
+      expect(result.current.price).toBe(50000);
+      expect(result.current.scrubbedDateLabel).toBeUndefined();
+    });
+
+    it("ignores an out-of-range index (no scrub)", () => {
+      const { result } = renderVM();
+
+      act(() => result.current.onScrubberPositionChange(99));
+
+      expect(result.current.isScrubbing).toBe(false);
+      expect(result.current.price).toBe(50000);
+    });
+
+    it("ignores a non-finite value at the hovered index", () => {
+      mockChart({ data: { ...CHART_DATA_BY_RANGE, "1d": [[1, NaN]] } });
+
+      const { result } = renderVM();
+
+      act(() => result.current.onScrubberPositionChange(0));
+
+      expect(result.current.isScrubbing).toBe(false);
+      expect(result.current.price).toBe(50000);
+    });
+
+    it("shows a 0 price / 0 timestamp point instead of swallowing it", () => {
+      mockChart({ data: { ...CHART_DATA_BY_RANGE, "1d": [[0, 0]] } });
+
+      const { result } = renderVM();
+
+      act(() => result.current.onScrubberPositionChange(0));
+
+      expect(result.current.isScrubbing).toBe(true);
+      expect(result.current.price).toBe(0);
+      expect(result.current.scrubbedDateLabel).toBeDefined();
+    });
+
+    it("clears the selection when the range changes mid-scrub", () => {
+      const { result } = renderVM();
+
+      act(() => result.current.onScrubberPositionChange(1));
+      expect(result.current.isScrubbing).toBe(true);
+
+      act(() => result.current.onRangeChange("1w"));
+
+      expect(result.current.isScrubbing).toBe(false);
+      expect(result.current.price).toBe(50000);
     });
   });
 

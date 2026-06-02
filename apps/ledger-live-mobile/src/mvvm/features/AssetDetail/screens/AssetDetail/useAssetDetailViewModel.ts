@@ -14,6 +14,7 @@ import type { AssetDetailNavigatorParamsList } from "../../types";
 import { useIsBuyAvailable, useSecondaryButtonType } from "./components/Footer/useFooterViewModel";
 import { useAssetCoinOptionsViewModel } from "./components/CoinOptions/useAssetCoinOptionsViewModel";
 import { useAssetMarketData } from "./hooks/useAssetMarketData";
+import { useReceiveNetworkLedgerIds } from "./hooks/useReceiveNetworkLedgerIds";
 
 type Route = StackNavigatorProps<AssetDetailNavigatorParamsList, ScreenName.AssetDetail>["route"];
 
@@ -57,7 +58,22 @@ export function useAssetDetailViewModel() {
   const accounts = useSelector(shallowAccountsSelector);
   const walletHasFunds = useMemo(() => accounts.some(a => a.balance.gt(0)), [accounts]);
   const showFallbackBanner = !hasFooter && walletHasFunds && !!currency;
-  const { marketId } = useAssetMarketData({ marketApiId, knownLedgerIds, knownMarketId });
+  const { marketId, ledgerIds, marketCurrency } = useAssetMarketData({
+    marketApiId,
+    knownLedgerIds,
+    knownMarketId,
+  });
+  // Tokens (e.g. USDT/USDC) collapse to a single ledger id here because CoinGecko
+  // does not expose their multi-network list. Expand it from DADA so the receive
+  // drawer can offer every network, including ones not held yet. The market ticker
+  // is the fallback for not-held assets, where `currency` may be unresolved.
+  const receiveLedgerIds = useReceiveNetworkLedgerIds({
+    metaCurrencyId: distributionItem?.metaCurrencyId,
+    marketApiId,
+    ticker: currency?.ticker ?? marketCurrency?.ticker,
+    currencyId: currency?.id,
+    fallbackLedgerIds: ledgerIds,
+  });
   const coinOptions = useAssetCoinOptionsViewModel({ currency, currencyId, marketId });
 
   return {
@@ -74,5 +90,6 @@ export function useAssetDetailViewModel() {
     showFallbackBanner,
     coinOptions,
     isLoading,
+    ledgerIds: receiveLedgerIds,
   };
 }

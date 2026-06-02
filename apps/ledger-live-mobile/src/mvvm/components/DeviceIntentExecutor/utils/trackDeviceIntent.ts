@@ -31,6 +31,43 @@ export const CONNECT_DEVICE_BUTTON = {
   GetHelp: "Get Help",
 } as const;
 
+export const PAGE_CONNECT_APP = {
+  Loading: "Connect App - Loading",
+  InstallingApp: "Connect App - Installing App",
+  UnlockDevice: "Connect App - Unlock Device",
+  AllowSecureConnection: "Connect App - Allow Secure Connection",
+  ConfirmOpenApp: "Connect App - Confirm Open App",
+  DeviceDeprecatedWarning: "Connect App - Device Deprecated Warning",
+  OutdatedAppWarning: "Connect App - Outdated App Warning",
+  DeviceLocked: "Connect App - Device Locked",
+  UserRefused: "Connect App - User Refused",
+  DeviceBusy: "Connect App - Device Busy",
+  DeviceNotOnboarded: "Connect App - Device Not Onboarded",
+  UnsupportedFirmware: "Connect App - Unsupported Firmware",
+  UnsupportedApplication: "Connect App - Unsupported Application",
+  UnsupportedFeature: "Connect App - Unsupported Feature",
+  DeviceDeprecatedBlocking: "Connect App - Device Deprecated Blocking",
+  WrongDeviceForAccount: "Connect App - Wrong Device For Account",
+  OutOfStorage: "Connect App - Out Of Storage",
+  Error: "Connect App - Error",
+} as const;
+
+/**
+ * Canonical, locale-independent `button` values for Connect App `button_clicked`
+ * events. The displayed CTA label stays localized; analytics receives these stable
+ * strings so the property is not fragmented across languages.
+ */
+export const CONNECT_APP_BUTTON = {
+  Continue: "Continue",
+  Cancel: "Cancel",
+  Retry: "Retry",
+  Close: "Close",
+  SetUpDevice: "Set Up Device",
+  UpdateFirmware: "Update Firmware",
+  ContactLedgerSupport: "Contact Ledger Support",
+  ManageApps: "Manage Apps",
+} as const;
+
 export type TrackingTransport = "ble" | "usb";
 type ConnectDeviceErrorType = ConnectionErrorTypes | DiscoveryErrorTypes;
 
@@ -145,6 +182,18 @@ export const trackConnectDeviceButtonClicked = (params: {
 }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
+    button: params.button,
+  });
+};
+
+export const trackConnectAppButtonClicked = (params: {
+  sourceFlow: SourceFlow;
+  modelId: DeviceModelId;
+  button: string;
+}): void => {
+  track("button_clicked", {
+    ...getDeviceUxV2BaseProperties(params.sourceFlow),
+    modelId: params.modelId,
     button: params.button,
   });
 };

@@ -96,7 +96,7 @@ describe("getEstimatedFees", () => {
     const gasPriceTinybars = new BigNumber(900);
     const transferAmount = BigInt(1000000);
 
-    (apiClient.getAccount as jest.Mock).mockImplementation(address => ({
+    (apiClient.getAccount as jest.Mock).mockImplementation(({ address }) => ({
       address,
       evm_address: "0x0000000000000000000000000000000000012345",
     }));

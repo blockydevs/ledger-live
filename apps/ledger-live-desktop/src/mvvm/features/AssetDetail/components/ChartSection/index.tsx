@@ -7,6 +7,7 @@ import { useChartSectionViewModel } from "./useChartSectionViewModel";
 type ChartSectionProps = Readonly<{
   marketData: AssetMarketData;
   ledgerId?: string;
+  currencyId?: string;
   isDistributionLoading: boolean;
   selectedRange: LineChartRange;
   onRangeChange: (range: LineChartRange) => void;

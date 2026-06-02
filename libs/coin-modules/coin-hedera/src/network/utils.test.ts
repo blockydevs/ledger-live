@@ -45,6 +45,9 @@ import {
 
 jest.mock("./api");
 jest.mock("./hgraph");
+jest.mock("./rpc", () => ({
+  rpcClient: require("../test/fixtures/rpc.fixture").getMockedRpcClient(),
+}));
 
 describe("network utils", () => {
   const defaultConfig = getMockedConfig();

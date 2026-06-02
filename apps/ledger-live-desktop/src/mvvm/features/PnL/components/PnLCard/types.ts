@@ -1,14 +1,16 @@
-import type { TriangleUp, TriangleDown } from "@ledgerhq/lumen-ui-react/symbols";
+import type { PnlTrend } from "@ledgerhq/wallet-pnl";
 
-type TrendIconConfig = {
-  Icon: typeof TriangleUp | typeof TriangleDown;
-  className: string;
+type TrendCard = {
+  trend: PnlTrend;
 };
 
-type InteractiveCard = {
+type InteractiveCard = TrendCard & {
   type: "interactive";
-  trendIcon: TrendIconConfig;
   onClick: () => void;
+};
+
+type DisplayCard = TrendCard & {
+  type: "display";
 };
 
 type InfoCard = {
@@ -20,6 +22,6 @@ type PnLCardProps = {
   id: string;
   title: string;
   value: string;
-} & (InteractiveCard | InfoCard);
+} & (InteractiveCard | DisplayCard | InfoCard);
 
-export type { InteractiveCard, InfoCard, PnLCardProps, TrendIconConfig };
+export type { DisplayCard, InteractiveCard, InfoCard, PnLCardProps };

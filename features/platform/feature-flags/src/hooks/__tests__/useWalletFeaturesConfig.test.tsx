@@ -16,10 +16,7 @@ const PLATFORMS: [WalletPlatform, "lwdWallet40" | "lwmWallet40"][] = [
 
 type FlagValue = { enabled: boolean; params?: Wallet40Params };
 
-function renderWalletFeaturesConfig(
-  platform: WalletPlatform,
-  flagValue?: FlagValue,
-) {
+function renderWalletFeaturesConfig(platform: WalletPlatform, flagValue?: FlagValue) {
   const flagKey = FEATURE_FLAG_KEYS[platform];
   const resolved: Features = {
     ...FEATURE_FLAGS_DEFAULTS,
@@ -53,6 +50,7 @@ const makeConfig = (
   shouldDisplayMyWallet: value,
   shouldDisplayAggregatedAssets: value,
   shouldDisplayPnl: value,
+  shouldDisplayAssetDiscoverability: value,
   shouldDisplayEarnUpselling: value,
   shouldDisplayEarnSimulator: value,
   ...overrides,
@@ -74,6 +72,7 @@ const makeParams = (value: boolean): Wallet40Params => ({
   aggregatedAssets: value,
   myWallet: value,
   pnl: value,
+  assetDiscoverability: value,
   earnUpselling: value,
   earnSimulator: value,
 });
@@ -159,6 +158,5 @@ describe("useWalletFeaturesConfig hook", () => {
         expectConfig(result, { ...ENABLED_NO_PARAMS_CONFIG, shouldDisplayMarketBanner: true });
       });
     });
-
   });
 });

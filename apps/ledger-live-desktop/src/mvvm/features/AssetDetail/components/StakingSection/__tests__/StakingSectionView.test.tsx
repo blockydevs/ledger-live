@@ -13,6 +13,7 @@ const baseViewModel: StakingSectionViewModelResult = {
   earnBannerActionLabel: "Go to Earn",
   onEarnBannerPress: jest.fn(),
   onEarnDepositPress: jest.fn(),
+  onAvailableBalanceTooltipOpen: jest.fn(),
 };
 
 describe("StakingSectionView", () => {

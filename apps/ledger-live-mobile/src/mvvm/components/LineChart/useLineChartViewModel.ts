@@ -28,6 +28,7 @@ export type LineChartViewModelResult<TRange extends string = string> = Readonly<
   testID?: string;
   points: LineChartPointMarker[];
   enableScrubber: boolean;
+  showScrubberTooltip: boolean;
   formatValue: LineChartValueFormatter;
   tooltipTitle?: LineChartTooltipTitle;
   onScrubberPositionChange?: LineChartScrubberPositionChange;
@@ -51,6 +52,7 @@ export function useLineChartViewModel<TRange extends string>({
   testID,
   points,
   enableScrubber = true,
+  showScrubberTooltip = true,
   formatValue = defaultFormatValue,
   tooltipTitle,
   onScrubberPositionChange,
@@ -93,6 +95,7 @@ export function useLineChartViewModel<TRange extends string>({
     testID,
     points: resolvedPoints,
     enableScrubber,
+    showScrubberTooltip,
     formatValue,
     tooltipTitle,
     onScrubberPositionChange,

@@ -39,9 +39,12 @@ const createStakingFetcher = (
 
 export const STAKING_CONFIG: Record<string, StakingStrategy> = {
   sei_evm: {
-    fetcher: createStakingFetcher(
-      async (config, currency) => await getValidators(currency.id, config.apiConfig),
-    ),
+    // Sei returns its whole validator set in a single page, so the first page's
+    // items are the complete list.
+    fetcher: createStakingFetcher(async (_config, currency) => {
+      const { items } = await getValidators(currency.id);
+      return items;
+    }),
   },
   celo: {
     fetcher: createStakingFetcher(async config => [

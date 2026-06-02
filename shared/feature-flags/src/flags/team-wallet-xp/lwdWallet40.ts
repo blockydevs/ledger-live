@@ -17,6 +17,7 @@ export const lwdWallet40 = flagWith(
     aggregatedAssets: z.boolean(),
     myWallet: z.boolean(),
     pnl: z.boolean(),
+    assetDiscoverability: z.boolean(),
     earnUpselling: z.boolean().optional(),
     earnSimulator: z.boolean().optional(),
   },
@@ -37,6 +38,7 @@ export const lwdWallet40 = flagWith(
       aggregatedAssets: false,
       myWallet: false,
       pnl: false,
+      assetDiscoverability: false,
     },
   },
 );

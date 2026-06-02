@@ -19,6 +19,7 @@ export function StakingSectionView({
   earnBannerActionLabel,
   onEarnBannerPress,
   onEarnDepositPress,
+  onAvailableBalanceTooltipOpen,
 }: StakingSectionViewProps) {
   if (state.type === "hidden") return null;
 
@@ -58,7 +59,7 @@ export function StakingSectionView({
         title={
           <div className="flex items-center gap-4 text-muted">
             <span className="body-3">{availableBalanceLabel}</span>
-            <Tooltip>
+            <Tooltip onOpenChange={onAvailableBalanceTooltipOpen}>
               <TooltipTrigger asChild>
                 <span className="inline-flex cursor-help">
                   <Information size={16} />

@@ -124,10 +124,19 @@ describe("useLineChartViewModel", () => {
     const { result } = renderHook(() => useLineChartViewModel(buildProps()));
 
     expect(result.current.enableScrubber).toBe(true);
+    expect(result.current.showScrubberTooltip).toBe(true);
     expect(result.current.showArea).toBe(true);
     expect(result.current.showXAxis).toBe(true);
     expect(result.current.showYAxis).toBe(true);
     expect(result.current.formatValue(42)).toBe("42");
+  });
+
+  it("forwards an explicit showScrubberTooltip=false", () => {
+    const { result } = renderHook(() =>
+      useLineChartViewModel(buildProps({ showScrubberTooltip: false })),
+    );
+
+    expect(result.current.showScrubberTooltip).toBe(false);
   });
 
   it("defaults points to the high/low extrema of the primary series", () => {
@@ -135,8 +144,8 @@ describe("useLineChartViewModel", () => {
     const { result } = renderHook(() => useLineChartViewModel(buildProps()));
 
     expect(result.current.points).toEqual([
-      { index: 2, value: 3, color: "success", labelPosition: "top" },
-      { index: 0, value: 1, color: "error", labelPosition: "bottom" },
+      { index: 2, value: 3, color: "success", labelPosition: "top", hidePoint: true },
+      { index: 0, value: 1, color: "error", labelPosition: "bottom", hidePoint: true },
     ]);
   });
 

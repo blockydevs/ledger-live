@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import BigNumber from "bignumber.js";
 import type { AssetDetailCurrencyProps } from "LLM/features/AssetDetail/types";
 import type { FormattedValue } from "@ledgerhq/lumen-ui-rnative";
@@ -17,6 +17,7 @@ import { useTranslation, useLocale } from "~/context/Locale";
 import { useOpenReceiveDrawer } from "LLM/features/Receive";
 import {
   resolveLineChartColorFromPercentChange,
+  type LineChartScrubberPositionChange,
   type LineChartSeries,
   type LineChartTooltipTitle,
   type LineChartValueFormatter,
@@ -57,12 +58,20 @@ function getEvenlySpacedTicks(length: number, minTicks: number): number[] {
   return Array.from(new Set(ticks));
 }
 
+/**
+ * Hovered chart point while scrubbing. Holds raw values only (formatting stays
+ * in the view model); shaped as an object so more fields (e.g. variation) can be
+ * added later without touching the scrub plumbing.
+ */
+type ScrubSelection = Readonly<{ price: number; timestamp: number }>;
+
 type Params = {
   currency?: AssetDetailCurrencyProps;
   marketApiId?: string;
   knownLedgerIds?: readonly string[];
   knownMarketId?: string;
   hideReceive?: boolean;
+  ledgerIds?: string[];
 };
 
 export function useBalanceGraphViewModel({
@@ -71,18 +80,29 @@ export function useBalanceGraphViewModel({
   knownLedgerIds,
   knownMarketId,
   hideReceive,
+  ledgerIds,
 }: Params) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterValueUnit = counterValueCurrency.units[0];
-  const { marketCurrency, counterCurrency, isLoading } = useAssetMarketData({
+  const {
+    marketCurrency,
+    counterCurrency,
+    isLoading,
+    ledgerIds: derivedLedgerIds,
+  } = useAssetMarketData({
     marketApiId,
     knownLedgerIds,
     knownMarketId,
   });
+  // Prefer ledgerIds explicitly threaded down by the parent (which has the
+  // distribution item's `marketId` and resolves tokens correctly). Fall back
+  // to the locally derived list when used standalone (e.g. unit tests).
+  const effectiveLedgerIds = ledgerIds ?? derivedLedgerIds;
 
   const [range, setRange] = useState<RangeKey>("1d");
+  const [selection, setSelection] = useState<ScrubSelection | undefined>(undefined);
 
   const id =
     knownLedgerIds?.[0] ?? marketCurrency?.ledgerIds?.[0] ?? marketCurrency?.id ?? marketApiId;
@@ -104,6 +124,7 @@ export function useBalanceGraphViewModel({
   const onRangeChange = useCallback(
     (value: RangeKey) => {
       if (value === range) return;
+      setSelection(undefined);
       setRange(value);
       track("button_clicked", {
         button: "timeframe",
@@ -151,6 +172,7 @@ export function useBalanceGraphViewModel({
 
   const { handleOpenReceiveDrawer } = useOpenReceiveDrawer({
     currency,
+    currencyIds: effectiveLedgerIds,
     sourceScreenName: "Asset Detail",
   });
 
@@ -185,6 +207,28 @@ export function useBalanceGraphViewModel({
       timestamps: tsList,
     };
   }, [chartData, range]);
+  const prices = series[0].data;
+  const onScrubberPositionChange = useCallback<LineChartScrubberPositionChange>(
+    index => {
+      if (index == null) return setSelection(undefined);
+      const scrubPrice = prices[index];
+      const timestamp = timestamps[index];
+      setSelection(
+        Number.isFinite(scrubPrice) && timestamp != null
+          ? { price: scrubPrice, timestamp }
+          : undefined,
+      );
+    },
+    [prices, timestamps],
+  );
+
+  useEffect(() => {
+    setSelection(undefined);
+  }, [id]);
+
+  const isScrubbing = selection != null;
+  const displayedPrice = selection?.price ?? price ?? 0;
+
   const chartColor = resolveLineChartColorFromPercentChange(priceChangePercentage);
 
   const formatValue = useCallback<LineChartValueFormatter>(
@@ -213,6 +257,9 @@ export function useBalanceGraphViewModel({
     (date: Date) => (range === "1d" ? dateFormatters.hour : dateFormatters.day).format(date),
     [range, dateFormatters],
   );
+
+  const scrubbedDateLabel =
+    selection != null ? formatDate(new Date(selection.timestamp)) : undefined;
 
   const tooltipTitle = useCallback<LineChartTooltipTitle>(
     dataIndex => {
@@ -252,7 +299,7 @@ export function useBalanceGraphViewModel({
   );
 
   return {
-    price: price ?? 0,
+    price: displayedPrice,
     priceFormatter,
     hasMarketData: price != null,
     priceChangePercentage: priceChangePercentage ?? 0,
@@ -269,6 +316,9 @@ export function useBalanceGraphViewModel({
     chartColor,
     formatValue,
     tooltipTitle,
+    onScrubberPositionChange,
+    isScrubbing,
+    scrubbedDateLabel,
     showXAxis: true,
     showYAxis: false,
     xAxis,

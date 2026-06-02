@@ -35,66 +35,45 @@ const withPnl = (enabled: boolean) =>
   );
 
 describe("usePnlSectionViewModel", () => {
-  it("keeps both drawers closed by default", () => {
+  it("keeps the detail drawer closed by default", () => {
     const { result } = renderHook(() => usePnlSectionViewModel(), {
       overrideInitialState: withPnl(true),
     });
 
-    expect(result.current.pnlDrawer.isOpen).toBe(false);
-    expect(result.current.secondaryDrawer.isOpen).toBe(false);
+    expect(result.current.drawer.isOpen).toBe(false);
   });
 
-  it("opens the PnL drawer when the unrealised card press handler runs", () => {
+  it("opens the detail drawer when the title press handler runs", () => {
     const { result } = renderHook(() => usePnlSectionViewModel(), {
       overrideInitialState: withPnl(true),
     });
 
-    act(() => result.current.unrealised.onPress());
+    act(() => result.current.openDrawer());
 
-    expect(result.current.pnlDrawer.isOpen).toBe(true);
-    expect(result.current.secondaryDrawer.isOpen).toBe(false);
+    expect(result.current.drawer.isOpen).toBe(true);
   });
 
-  it("opens the secondary drawer when the secondary card press handler runs", () => {
+  it("closes the detail drawer when its onClose runs", () => {
     const { result } = renderHook(() => usePnlSectionViewModel(), {
       overrideInitialState: withPnl(true),
     });
 
-    act(() => result.current.secondary.onPress());
+    act(() => result.current.openDrawer());
+    expect(result.current.drawer.isOpen).toBe(true);
 
-    expect(result.current.pnlDrawer.isOpen).toBe(false);
-    expect(result.current.secondaryDrawer.isOpen).toBe(true);
+    act(() => result.current.drawer.onClose());
+    expect(result.current.drawer.isOpen).toBe(false);
   });
 
-  it("closes the open drawer when its onClose runs", () => {
+  it("exposes an unrealised and a realised return card", () => {
     const { result } = renderHook(() => usePnlSectionViewModel(), {
       overrideInitialState: withPnl(true),
     });
 
-    act(() => result.current.unrealised.onPress());
-    expect(result.current.pnlDrawer.isOpen).toBe(true);
-
-    act(() => result.current.pnlDrawer.onClose());
-    expect(result.current.pnlDrawer.isOpen).toBe(false);
-
-    act(() => result.current.secondary.onPress());
-    expect(result.current.secondaryDrawer.isOpen).toBe(true);
-
-    act(() => result.current.secondaryDrawer.onClose());
-    expect(result.current.secondaryDrawer.isOpen).toBe(false);
-  });
-
-  it("opening one drawer closes the other (single-drawer state machine)", () => {
-    const { result } = renderHook(() => usePnlSectionViewModel(), {
-      overrideInitialState: withPnl(true),
-    });
-
-    act(() => result.current.unrealised.onPress());
-    expect(result.current.pnlDrawer.isOpen).toBe(true);
-
-    act(() => result.current.secondary.onPress());
-    expect(result.current.pnlDrawer.isOpen).toBe(false);
-    expect(result.current.secondaryDrawer.isOpen).toBe(true);
+    expect(result.current.unrealised.title).toBe("Unrealised return");
+    expect(result.current.realised.title).toBe("Realised return");
+    expect(result.current.unrealised.value).toBeTruthy();
+    expect(result.current.realised.value).toBeTruthy();
   });
 
   describe("rendering gate", () => {
@@ -124,7 +103,7 @@ describe("usePnlSectionViewModel", () => {
       });
 
       expect(result.current.unrealised.value).toContain("***");
-      expect(result.current.secondary.value).toContain("***");
+      expect(result.current.realised.value).toContain("***");
     });
 
     it("masks every drawer item value when discreet mode is on", () => {
@@ -132,7 +111,7 @@ describe("usePnlSectionViewModel", () => {
         overrideInitialState: compose(withPnl(true), withDiscreet(true)),
       });
 
-      for (const item of result.current.pnlDrawer.items) {
+      for (const item of result.current.drawer.items) {
         expect(item.value).toContain("***");
       }
     });
@@ -143,8 +122,8 @@ describe("usePnlSectionViewModel", () => {
       });
 
       expect(result.current.unrealised.value).not.toContain("***");
-      expect(result.current.secondary.value).not.toContain("***");
-      for (const item of result.current.pnlDrawer.items) {
+      expect(result.current.realised.value).not.toContain("***");
+      for (const item of result.current.drawer.items) {
         expect(item.value).not.toContain("***");
       }
     });
@@ -182,7 +161,7 @@ describe("usePnlSectionViewModel", () => {
       expect((accountsArg as unknown[]).length).toBeGreaterThan(0);
     });
 
-    it("falls back to a zero cost basis when usePortfolioPnL returns an empty object", () => {
+    it("falls back to zero returns when usePortfolioPnL returns an empty object", () => {
       // @ts-expect-error mockReturnValue expects a PortfolioPnL, but we're returning an empty object
       spy.mockReturnValue({});
 
@@ -190,7 +169,8 @@ describe("usePnlSectionViewModel", () => {
         overrideInitialState: withPnl(true),
       });
 
-      expect(result.current.secondary.value).toMatch(/0(?:[.,]00)?/);
+      expect(result.current.unrealised.value).toMatch(/0(?:[.,]00)?/);
+      expect(result.current.realised.value).toMatch(/0(?:[.,]00)?/);
     });
   });
 });
