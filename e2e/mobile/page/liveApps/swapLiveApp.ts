@@ -26,7 +26,8 @@ export default class SwapLiveAppPage {
   incompatibilityBannerPartnerId = "incompatibility-banner-partner";
   swapMainContainerCssSelector = "main";
   swapMainContainerWebElement = getWebElementByCssSelector(this.swapMainContainerCssSelector);
-  swapMaxToggle = "mobile-keyboard-percentage-max";
+  percentageToggle = (percent: "25%" | "50%" | "75%" | "max") =>
+    `mobile-keyboard-percentage-${percent}`;
   switchButton = "to-account-switch-accounts";
   lnsUnsupportedBannerPattern =
     /Ledger Nano S[\s\S]*(not supported|unsupported|does not support|not compatible)/i;
@@ -45,10 +46,15 @@ export default class SwapLiveAppPage {
 
   @Step("Expect swap live app page")
   async expectSwapLiveApp() {
-    await waitWebElementByTestId(this.fromSelector);
-    await detoxExpect(getWebElementByTestId(this.fromSelector)).toExist();
-    await detoxExpect(getWebElementByTestId(this.toSelector)).toExist();
-    await detoxExpect(getWebElementByTestId(this.quotesButtonDisabled)).toExist();
+    const required = [
+      this.fromSelector,
+      this.toSelector,
+      ...(["max", "75%", "50%", "25%"] as const).map(this.percentageToggle),
+    ];
+    for (const testId of required) {
+      await waitWebElementByTestId(testId);
+      await detoxExpect(getWebElementByTestId(testId)).toExist();
+    }
   }
 
   @Step("Expect swap live app form")
@@ -333,7 +339,7 @@ export default class SwapLiveAppPage {
 
   @Step("Click on swap max")
   async clickSwapMax() {
-    await tapWebElementByTestId(this.swapMaxToggle);
+    await tapWebElementByTestId(this.percentageToggle("max"));
     await waitForWebElementToMatchRegex(app.swapLiveApp.toAmountInput, floatNumberRegex);
   }
 
