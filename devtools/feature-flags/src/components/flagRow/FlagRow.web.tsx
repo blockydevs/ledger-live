@@ -1,6 +1,7 @@
 import { Switch } from "@ledgerhq/lumen-ui-react";
 import type { FeatureFlagsToolProps, FlagDisplayState } from "../../types";
 import { FlagEnableIndicator } from "../flagEnableIndicator/FlagEnableIndicator";
+import { cn } from "@ledgerhq/lumen-utils-shared";
 
 interface FlagRowProps {
   readonly display: FlagDisplayState;
@@ -11,7 +12,10 @@ export function FlagRow({ display, setOverride }: FlagRowProps) {
   const { id, resolved, isOverridden } = display;
   return (
     <div
-      className={`flex justify-between p-8 transition-colors duration-150 ${isOverridden ? "bg-active-subtle hover:bg-active-subtle-hover" : "hover:bg-muted-hover"}`}
+      className={cn(
+        "flex justify-between p-8 transition-colors duration-150",
+        isOverridden ? "bg-active-subtle hover:bg-active-subtle-hover" : "hover:bg-muted-hover",
+      )}
     >
       <div className="flex gap-16 items-center">
         <div className="max-sm:hidden">

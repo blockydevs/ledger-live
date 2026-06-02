@@ -21,7 +21,7 @@ module.exports = {
   modulePaths: ["<rootDir>"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   transformIgnorePatterns: [
-    "node_modules/.pnpm/(?!(@ledgerhq\\+lumen-ui-react|@ledgerhq\\+lumen-design-core))",
+    "node_modules/.pnpm/(?!(@ledgerhq\\+lumen-ui-react|@ledgerhq\\+lumen-design-core|@ledgerhq\\+lumen-utils-shared))",
   ],
   coverageReporters: ["json", ["lcov", { file: "lcov.info", projectRoot: "../../" }], "text"],
   reporters: [
