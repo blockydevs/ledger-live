@@ -154,9 +154,8 @@ export const StepValidatorFooter = ({
   transitionTo,
 }: StepProps) => {
   if (!account) return null;
-  // Gate progression on a checked, error-free status so the delegation can't be signed when the
-  // spendable balance can't cover its fee (mirrors DelegateFlowModal's pre-device summary gate).
-  const blockingError = Object.values(status.errors)[0];
+  // Block Continue when status has a blocking error, e.g. spendable can't cover the fee.
+  const blockingError = status.errors.amount ?? Object.values(status.errors)[0];
   const canNext = !bridgePending && !blockingError && !!transaction?.recipient;
   return (
     <Box horizontal alignItems="center" justifyContent="flex-end" flow={2} grow>

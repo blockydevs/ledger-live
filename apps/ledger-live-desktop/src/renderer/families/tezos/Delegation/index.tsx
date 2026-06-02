@@ -96,6 +96,8 @@ const Delegation = ({ account, parentAccount }: Props) => {
 
   return (
     <>
+      {stakingEnabled && info.isStaked && <StakingSection account={account} info={info} />}
+      {stakingEnabled && info.hasUnstaking && <UnstakingSection account={account} info={info} />}
       <TableContainer mb={6}>
         <TableHeader
           title={t("delegation.header")}
@@ -157,8 +159,6 @@ const Delegation = ({ account, parentAccount }: Props) => {
           </Wrapper>
         )}
       </TableContainer>
-      {stakingEnabled && info.isStaked && <StakingSection account={account} info={info} />}
-      {stakingEnabled && info.hasUnstaking && <UnstakingSection account={account} info={info} />}
     </>
   );
 };
