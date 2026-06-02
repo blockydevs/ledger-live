@@ -38,6 +38,8 @@ export const lwmWallet40 = flagWith(
       myWallet: false,
       pnl: false,
       assetDiscoverability: false,
+      earnUpselling: false,
+      earnSimulator: false,
     },
   },
 );

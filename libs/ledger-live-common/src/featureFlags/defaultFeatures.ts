@@ -849,6 +849,8 @@ export const DEFAULT_FEATURES: Features = {
       myWallet: false,
       pnl: false,
       assetDiscoverability: false,
+      earnUpselling: false,
+      earnSimulator: false,
     },
   },
   lwdWallet40: {
@@ -870,6 +872,8 @@ export const DEFAULT_FEATURES: Features = {
       myWallet: false,
       pnl: false,
       assetDiscoverability: false,
+      earnUpselling: false,
+      earnSimulator: false,
     },
   },
   addressPoisoningOperationsFilter: {
