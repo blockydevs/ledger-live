@@ -475,6 +475,10 @@ describe("AssetDetail integration", () => {
 
         const priceSection = screen.getByTestId(TEST_ID.MARKET_PRICE_SECTION);
         const livePrice = screen.getByTestId(TEST_ID.MARKET_PRICE).textContent;
+        const livePercent = screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT).textContent;
+        const liveFiatVariation = screen.getByTestId(
+          TEST_ID.MARKET_PRICE_FIAT_VARIATION,
+        ).textContent;
         expect(within(priceSection).getByText("1 day")).toBeVisible();
 
         const chartSection = screen.getByTestId(TEST_ID.CHART_SECTION);
@@ -484,13 +488,17 @@ describe("AssetDetail integration", () => {
 
         // While scrubbing, the trailing range label is replaced by the hovered
         // point's date, the displayed price tracks the scrubbed value, and the
-        // % / fiat variation are hidden.
+        // % / fiat variation reflect the change from the range start.
         await waitFor(() => {
           expect(within(priceSection).queryByText("1 day")).not.toBeInTheDocument();
           expect(screen.getByTestId(TEST_ID.MARKET_PRICE).textContent).not.toBe(livePrice);
         });
-        expect(screen.queryByTestId(TEST_ID.MARKET_PRICE_PERCENT)).not.toBeInTheDocument();
-        expect(screen.queryByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION)).not.toBeInTheDocument();
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT)).toBeVisible();
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION)).toBeVisible();
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT).textContent).not.toBe(livePercent);
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION).textContent).not.toBe(
+          liveFiatVariation,
+        );
 
         fireEvent.mouseLeave(chart);
 
@@ -499,9 +507,11 @@ describe("AssetDetail integration", () => {
         await waitFor(() => {
           expect(within(priceSection).getByText("1 day")).toBeVisible();
           expect(screen.getByTestId(TEST_ID.MARKET_PRICE).textContent).toBe(livePrice);
+          expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT).textContent).toBe(livePercent);
+          expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION).textContent).toBe(
+            liveFiatVariation,
+          );
         });
-        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT)).toBeVisible();
-        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION)).toBeVisible();
       });
     });
 

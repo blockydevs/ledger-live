@@ -63,7 +63,7 @@ describe("MarketPriceSectionView", () => {
     expect(screen.getByText("1 day")).toBeVisible();
   });
 
-  it("disables the amount animation, hides the % and variation, and shows the scrubbed date while scrubbing", () => {
+  it("disables the amount animation, shows scrub variation metrics, and shows the scrubbed date while scrubbing", () => {
     render(
       <MarketPriceSectionView
         {...baseViewModel}
@@ -78,9 +78,9 @@ describe("MarketPriceSectionView", () => {
     expect(amount).toHaveAttribute("data-animate", "false");
     expect(screen.getByText("Jan 1, 2024")).toBeVisible();
     expect(screen.queryByText("1 day")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("asset-detail-market-price-percent")).not.toBeInTheDocument();
-    expect(
-      screen.queryByTestId("asset-detail-market-price-fiat-variation"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("asset-detail-market-price-percent")).toHaveTextContent("+1.80%");
+    expect(screen.getByTestId("asset-detail-market-price-fiat-variation")).toHaveTextContent(
+      "$0.22",
+    );
   });
 });

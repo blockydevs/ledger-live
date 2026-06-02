@@ -4,10 +4,7 @@ import { createMockMarketCurrencyData } from "@ledgerhq/live-common/market/utils
 import { KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
 import { renderHook } from "tests/testSetup";
 import { useMarketPriceSectionViewModel } from "../useMarketPriceSectionViewModel";
-import {
-  ScrubbedPriceContext,
-  type ScrubSelection,
-} from "../../../context/ScrubbedPriceContext";
+import { ScrubbedPriceContext, type ScrubSelection } from "../../../context/ScrubbedPriceContext";
 
 const baseMarketCurrencyData = createMockMarketCurrencyData();
 
@@ -83,7 +80,12 @@ describe("useMarketPriceSectionViewModel", () => {
         }),
       {
         initialState: { settings: { counterValue: "USD", locale: "en-US" } },
-        wrapper: makeScrubWrapper({ price: 250, timestamp: Date.UTC(2024, 0, 2) }),
+        wrapper: makeScrubWrapper({
+          price: 250,
+          timestamp: Date.UTC(2024, 0, 2),
+          percentage: 1.5,
+          variationFiat: 150,
+        }),
       },
     );
 
@@ -103,11 +105,61 @@ describe("useMarketPriceSectionViewModel", () => {
         }),
       {
         initialState: { settings: { counterValue: "USD", locale: "en-US" } },
-        wrapper: makeScrubWrapper({ price: 0, timestamp: Date.UTC(2024, 0, 2) }),
+        wrapper: makeScrubWrapper({
+          price: 0,
+          timestamp: Date.UTC(2024, 0, 2),
+          percentage: -0.5,
+          variationFiat: -50,
+        }),
       },
     );
 
     expect(result.current.isScrubbing).toBe(true);
     expect(result.current.priceValue).toBe(0);
+  });
+
+  it("shows em dashes for variation when price data is missing", () => {
+    const { result } = renderHook(
+      () =>
+        useMarketPriceSectionViewModel({
+          ledgerId: "bitcoin",
+          marketData: {
+            ...marketData,
+            marketCurrencyData: createMockMarketCurrencyData({ price: undefined }),
+          },
+          isDistributionLoading: false,
+          selectedRange: "1d",
+        }),
+      { initialState: { settings: { counterValue: "USD", locale: "en-US" } } },
+    );
+
+    expect(result.current.hasPriceData).toBe(false);
+    expect(result.current.priceValue).toBeUndefined();
+    expect(result.current.variationText).toBe("—");
+    expect(result.current.percentageText).toBe("—");
+  });
+
+  it("uses scrubbed fiat variation and percentage while scrubbing", () => {
+    const { result } = renderHook(
+      () =>
+        useMarketPriceSectionViewModel({
+          ledgerId: "bitcoin",
+          marketData,
+          isDistributionLoading: false,
+          selectedRange: "1d",
+        }),
+      {
+        initialState: { settings: { counterValue: "USD", locale: "en-US" } },
+        wrapper: makeScrubWrapper({
+          price: 120,
+          timestamp: Date.UTC(2024, 5, 1),
+          percentage: 0.2,
+          variationFiat: 20,
+        }),
+      },
+    );
+
+    expect(result.current.variationText).toMatch(/^\+/);
+    expect(result.current.percentageText).toBe("+20.00%");
   });
 });
