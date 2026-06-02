@@ -66,7 +66,13 @@ describe("FearAndGreed Integration", () => {
 
       expect(
         screen.getByText(
-          /Shows overall market sentiment from 0 to 100, based on trends and activity. Use it to understand how the market is behaving: lower values indicate fear, higher values indicate greed./i,
+          /Shows overall market sentiment from 0 to 100, based notably on volatility, market momentum and social trends. Lower values indicate fear, higher values indicate greed./i,
+        ),
+      ).toBeVisible();
+
+      expect(
+        screen.getByText(
+          /Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only./i,
         ),
       ).toBeVisible();
     });

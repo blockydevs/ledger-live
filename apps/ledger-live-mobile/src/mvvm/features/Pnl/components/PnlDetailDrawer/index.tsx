@@ -37,7 +37,7 @@ export function PnlDetailDrawer({
           ))}
         </Box>
         {footer ? (
-          <Text typography="body4" lx={{ color: "muted", marginTop: "s16" }}>
+          <Text typography="body4" lx={{ color: "muted", marginTop: "s20" }}>
             {footer}
           </Text>
         ) : null}
