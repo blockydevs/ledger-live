@@ -717,8 +717,17 @@ jobs:
           distribution: "zulu"
           java-version: "17"
 
+      - name: Remove preinstalled cmdline-tools (force pinned install)
+        shell: bash
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/.android/sdk}}"
+          if [ -d "$SDK/cmdline-tools" ]; then
+            echo "Removing $SDK/cmdline-tools so pinned cmdline-tools are not skipped."
+            rm -rf "$SDK/cmdline-tools" 2>/dev/null || sudo rm -rf "$SDK/cmdline-tools"
+          fi
+
       - name: setup Android SDK
-        uses: android-actions/setup-android@v3.2.2
+        uses: android-actions/setup-android@v4.0.1
         with:
           packages: "tools platform-tools"
 
@@ -921,7 +930,7 @@ jobs:
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        if: ${{ !cancelled() || steps.detox.outcome == 'cancelled' }}
+        if: ${{ steps.smoke-files.outputs.has_tests == 'true' && (!cancelled() || steps.detox.outcome == 'cancelled') }}
         id: "test-artifacts"
         with:
           name: "android-ui-e2e-smoke-artifacts"
@@ -1058,7 +1067,7 @@ jobs:
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        if: ${{ !cancelled() || steps.detox.outcome == 'cancelled' }}
+        if: ${{ steps.smoke-files.outputs.has_tests == 'true' && (!cancelled() || steps.detox.outcome == 'cancelled') }}
         id: "test-artifacts"
         with:
           name: "ios-ui-e2e-smoke-artifacts"
@@ -1066,6 +1075,7 @@ jobs:
 
   allure-report-mobile-ui-e2e-smoke:
     name: "Allure Report - Mobile UI E2E Smoke (iOS + Android)"
+    continue-on-error: true
     runs-on: [ledger-live-medium]
     needs: [detox-ui-e2e-ios, detox-ui-e2e-android]
     if: ${{ !cancelled() && (needs.detox-ui-e2e-ios.outputs.artifact || needs.detox-ui-e2e-android.outputs.artifact) }}
