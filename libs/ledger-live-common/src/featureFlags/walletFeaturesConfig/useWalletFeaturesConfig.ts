@@ -47,6 +47,7 @@ export const useWalletFeaturesConfig = (platform: WalletPlatform): WalletFeature
       shouldDisplayAggregatedAssets: isEnabled && Boolean(params?.aggregatedAssets),
       shouldDisplayMyWallet: isEnabled && Boolean(params?.myWallet),
       shouldDisplayPnl: isEnabled && Boolean(params?.pnl),
+      shouldDisplayAssetDiscoverability: isEnabled && Boolean(params?.assetDiscoverability),
       shouldDisplayFinishOnboardingWidget:
         isEnabled &&
         Boolean(params && "finishOnboardingWidget" in params && params.finishOnboardingWidget),

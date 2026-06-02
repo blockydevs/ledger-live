@@ -16,6 +16,7 @@ export type Wallet40Params = {
   readonly aggregatedAssets?: boolean;
   readonly myWallet?: boolean;
   readonly pnl?: boolean;
+  readonly assetDiscoverability?: boolean;
   readonly finishOnboardingWidget?: boolean;
   readonly earnUpselling?: boolean;
   readonly earnSimulator?: boolean;
@@ -60,6 +61,8 @@ export interface WalletFeaturesConfig {
   readonly shouldDisplayMyWallet: boolean;
   /** Whether to show the PNL component */
   readonly shouldDisplayPnl: boolean;
+  /** Whether to show the Asset Discoverability feature */
+  readonly shouldDisplayAssetDiscoverability: boolean;
   /** Whether to show the Finish Onboarding widget on Portfolio (desktop / lwdWallet40) */
   readonly shouldDisplayFinishOnboardingWidget: boolean;
   /** Whether to show the Earn Upselling component */
