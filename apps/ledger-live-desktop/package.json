@@ -267,7 +267,7 @@
     "react-test-renderer": "catalog:",
     "serve-handler": "6.1.5",
     "storybook": "catalog:",
-    "storybook-react-rsbuild": "3.2.2",
+    "storybook-react-rsbuild": "catalog:",
     "tailwindcss": "catalog:",
     "ts-node": "10.9.2",
     "typescript": "catalog:",
