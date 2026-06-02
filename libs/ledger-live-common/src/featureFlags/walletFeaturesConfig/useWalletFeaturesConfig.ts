@@ -48,9 +48,6 @@ export const useWalletFeaturesConfig = (platform: WalletPlatform): WalletFeature
       shouldDisplayMyWallet: isEnabled && Boolean(params?.myWallet),
       shouldDisplayPnl: isEnabled && Boolean(params?.pnl),
       shouldDisplayAssetDiscoverability: isEnabled && Boolean(params?.assetDiscoverability),
-      shouldDisplayFinishOnboardingWidget:
-        isEnabled &&
-        Boolean(params && "finishOnboardingWidget" in params && params.finishOnboardingWidget),
       shouldDisplayEarnUpselling:
         isEnabled && Boolean(params && "earnUpselling" in params && params.earnUpselling),
       shouldDisplayEarnSimulator:

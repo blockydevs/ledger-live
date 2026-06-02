@@ -41,7 +41,6 @@ export function useWalletFeaturesConfig(platform: WalletPlatform): WalletFeature
       shouldDisplayMyWallet: isEnabled && Boolean(params?.myWallet),
       shouldDisplayPnl: isEnabled && Boolean(params?.pnl),
       shouldDisplayAssetDiscoverability: isEnabled && Boolean(params?.assetDiscoverability),
-      shouldDisplayFinishOnboardingWidget: isEnabled && Boolean(params?.finishOnboardingWidget),
       shouldDisplayEarnUpselling: isEnabled && Boolean(params?.earnUpselling),
       shouldDisplayEarnSimulator: isEnabled && Boolean(params?.earnSimulator),
     };
@@ -103,8 +102,6 @@ export interface WalletFeaturesConfig {
   readonly shouldDisplayPnl: boolean;
   /** Whether to show the Asset Discoverability feature */
   readonly shouldDisplayAssetDiscoverability: boolean;
-  /** Whether to show the Finish Onboarding widget on Portfolio (desktop / lwdWallet40) */
-  readonly shouldDisplayFinishOnboardingWidget: boolean;
   /** Whether to show the Earn Upselling component */
   readonly shouldDisplayEarnUpselling: boolean;
   /** Whether to show the Earn Simulator component */

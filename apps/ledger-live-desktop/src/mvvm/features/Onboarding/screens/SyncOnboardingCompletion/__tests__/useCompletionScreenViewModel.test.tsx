@@ -61,15 +61,12 @@ describe("useCompletionScreenViewModel", () => {
     }),
   );
 
-  it("should redirect via useRedirectToPostOnboardingCallback when Wallet40 finish widget is enabled", () => {
+  it("should redirect via useRedirectToPostOnboardingCallback when onboarding widget is enabled", () => {
     const deviceId = DeviceModelId.stax;
     const initialState = {
       ...getInitialState(deviceId),
       ...withFlagOverrides({
-        lwdWallet40: {
-          enabled: true,
-          params: { finishOnboardingWidget: true },
-        },
+        onboardingWidget: { enabled: true },
       }),
     };
 

@@ -870,7 +870,6 @@ export const DEFAULT_FEATURES: Features = {
       myWallet: false,
       pnl: false,
       assetDiscoverability: false,
-      finishOnboardingWidget: false,
     },
   },
   addressPoisoningOperationsFilter: {

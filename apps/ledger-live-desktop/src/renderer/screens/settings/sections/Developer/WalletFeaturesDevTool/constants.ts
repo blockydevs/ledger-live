@@ -19,7 +19,6 @@ export const WALLET_FEATURES_PARAMS = [
   { key: "aggregatedAssets", label: "Aggregated Assets" },
   { key: "myWallet", label: "My Wallet" },
   { key: "assetDiscoverability", label: "Asset Discoverability" },
-  { key: "finishOnboardingWidget", label: "Finish Onboarding Widget" },
   { key: "pnl", label: "PnL" },
 ] as const;
 
