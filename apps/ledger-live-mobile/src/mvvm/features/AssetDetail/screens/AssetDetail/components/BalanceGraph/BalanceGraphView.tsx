@@ -171,6 +171,7 @@ export function BalanceGraphView({
                 value={price}
                 formatter={priceFormatter}
                 animate={!isScrubbing}
+                size="md"
                 testID={ASSET_DETAIL_TEST_IDS.marketPrice}
               />
 
