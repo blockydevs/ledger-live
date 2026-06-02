@@ -320,6 +320,33 @@ describe("useBalanceGraphViewModel", () => {
       });
       expect(handleOpenReceiveDrawer).toHaveBeenCalledTimes(1);
     });
+
+    it("forwards the parent-provided ledgerIds list to useOpenReceiveDrawer", () => {
+      const ledgerIds = ["ethereum", "optimism", "arbitrum", "base"];
+
+      renderHook(() =>
+        useBalanceGraphViewModel({
+          currency: mockBtcCryptoCurrency,
+          hideReceive: false,
+          ledgerIds,
+        }),
+      );
+
+      expect(mockUseOpenReceiveDrawer).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: mockBtcCryptoCurrency, currencyIds: ledgerIds }),
+      );
+    });
+
+    it("falls back to the locally derived ledgerIds when no list is threaded down", () => {
+      renderHook(() => useBalanceGraphViewModel({ currency: mockBtcCryptoCurrency }));
+
+      expect(mockUseOpenReceiveDrawer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currency: mockBtcCryptoCurrency,
+          currencyIds: expect.any(Array),
+        }),
+      );
+    });
   });
 
   describe("ranges", () => {

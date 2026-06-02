@@ -34,6 +34,7 @@ type Props = Readonly<{
   showFallbackBanner: boolean;
   coinOptions: AssetCoinOptionsViewModel;
   isLoading: boolean;
+  ledgerIds: string[];
 }>;
 
 export function AssetDetailView({
@@ -50,6 +51,7 @@ export function AssetDetailView({
   showFallbackBanner,
   coinOptions,
   isLoading,
+  ledgerIds,
 }: Props) {
   const { bottom } = useSafeAreaInsets();
   const scrollPaddingBottom = useMemo(
@@ -73,6 +75,7 @@ export function AssetDetailView({
             knownLedgerIds={knownLedgerIds}
             knownMarketId={knownMarketId}
             hideReceive={hideReceiveInBalanceGraph}
+            ledgerIds={ledgerIds}
           />
           <BalanceDetails
             currency={currency}
@@ -98,8 +101,8 @@ export function AssetDetailView({
           <FallbackBanner show={showFallbackBanner} />
         </Box>
       </ScrollView>
-      <Footer currency={currency} />
-      <TransferDrawer currency={currency} />
+      <Footer currency={currency} ledgerIds={ledgerIds} />
+      <TransferDrawer currency={currency} ledgerIds={ledgerIds} />
       <AssetCoinOptionsSheetView
         isOpen={coinOptions.isCoinOptionsSheetOpen}
         onClose={coinOptions.closeCoinOptions}

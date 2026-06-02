@@ -126,4 +126,24 @@ describe("useAssetMarketData", () => {
       expect(result.current.isLoading).toBe(false);
     });
   });
+
+  describe("ledgerIds", () => {
+    it("returns [] when no known ledger ids are provided", () => {
+      const { result } = renderHook(() => useAssetMarketData({}));
+
+      expect(result.current.ledgerIds).toEqual([]);
+    });
+
+    it("falls back to knownLedgerIds while market data has not resolved yet", () => {
+      const { result } = renderHook(() =>
+        useAssetMarketData({
+          marketApiId: mockBtcCryptoCurrency.id,
+          knownLedgerIds: [mockBtcCryptoCurrency.id],
+        }),
+      );
+
+      expect(result.current.marketCurrency).toBeUndefined();
+      expect(result.current.ledgerIds).toEqual([mockBtcCryptoCurrency.id]);
+    });
+  });
 });
