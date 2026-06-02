@@ -4,7 +4,7 @@ on:
   workflow_call:
     outputs:
       coverage_generated:
-        value: ${{ jobs.codecheck.outputs.coverage_generated }}
+        value: ${{ jobs.unit-tests.outputs.coverage_generated }}
 
   workflow_dispatch:
     inputs:
@@ -35,11 +35,8 @@ jobs:
     env:
       NODE_OPTIONS: "--max-old-space-size=7168"
       FORCE_COLOR: 3
-      CI_OS: ledger-live-linux-16CPU-64RAM
-      JEST_MAX_WORKERS: "75%"
-    runs-on: [ledger-live-linux-16CPU-64RAM]
-    outputs:
-      coverage_generated: ${{ contains(steps.generate_coverage.outcome, 'success') }}
+      CI_OS: ubuntu-22.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -75,6 +72,35 @@ jobs:
         shell: bash
       - name: Run code checkers
         run: pnpm exec nx run live-mobile:typecheck
+
+  unit-tests:
+    name: "Mobile Unit Tests"
+    env:
+      NODE_OPTIONS: "--max-old-space-size=7168"
+      FORCE_COLOR: 3
+      CI_OS: ledger-live-linux-16CPU-64RAM
+      JEST_MAX_WORKERS: "75%"
+    runs-on: [ledger-live-linux-16CPU-64RAM]
+    outputs:
+      coverage_generated: ${{ contains(steps.generate_coverage.outcome, 'success') }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Setup the caches
+        uses: LedgerHQ/ledger-live/tools/actions/composites/setup-caches@develop
+        id: setup-caches
+        with:
+          use-mise: true
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          cache-develop-role-arn: ${{ secrets.AWS_CACHE_OIDC_ROLE_ARN_DEVELOP }}
+          cache-branch-role-arn: ${{ secrets.AWS_CACHE_OIDC_ROLE_ARN_BRANCH }}
+          nx-key: ${{ secrets.NX_KEY }}
+          accountId: ${{ secrets.AWS_ACCOUNT_ID_PROD }}
+          roleName: ${{ secrets.AWS_CACHE_ROLE_NAME }}
+          region: ${{ secrets.AWS_CACHE_REGION }}
+      - name: Install dependencies
+        run: pnpm i --filter="live-mobile..." --filter="ledger-live" --no-frozen-lockfile --unsafe-perm
       - name: Run unit tests
         shell: bash
         run: |
