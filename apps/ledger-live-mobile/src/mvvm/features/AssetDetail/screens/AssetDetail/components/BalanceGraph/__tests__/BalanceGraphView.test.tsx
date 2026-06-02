@@ -22,6 +22,7 @@ jest.mock("LLM/components/LineChart", () => ({
 // Override AmountDisplay to expose the `animate` prop (the real one renders an
 // odometer that is awkward to assert against).
 let mockAmountDisplayAnimate: boolean | undefined;
+let mockAmountDisplaySize: "sm" | "md" | undefined;
 jest.mock("@ledgerhq/lumen-ui-rnative", () => {
   const actual = jest.requireActual("@ledgerhq/lumen-ui-rnative");
   const ReactActual = jest.requireActual("react");
@@ -31,13 +32,16 @@ jest.mock("@ledgerhq/lumen-ui-rnative", () => {
     AmountDisplay: ({
       value,
       animate,
+      size,
       testID,
     }: {
       value: number;
       animate?: boolean;
+      size?: "sm" | "md";
       testID?: string;
     }) => {
       mockAmountDisplayAnimate = animate;
+      mockAmountDisplaySize = size;
       return ReactActual.createElement(Text, { testID }, String(value));
     },
   };
@@ -96,6 +100,7 @@ const buildProps = (overrides: Partial<ViewProps> = {}): ViewProps => ({
 describe("BalanceGraphView", () => {
   beforeEach(() => {
     mockAmountDisplayAnimate = undefined;
+    mockAmountDisplaySize = undefined;
     for (const key of Object.keys(mockLineChartProps)) delete mockLineChartProps[key];
   });
 
@@ -112,6 +117,7 @@ describe("BalanceGraphView", () => {
       render(<BalanceGraphView {...buildProps()} />);
 
       expect(mockAmountDisplayAnimate).toBe(true);
+      expect(mockAmountDisplaySize).toBe("md");
       expect(screen.getByText("Today")).toBeVisible();
       expect(screen.getByText("2.35%")).toBeVisible();
       expect(screen.getByText("+$1,000.00")).toBeVisible();
