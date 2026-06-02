@@ -26,7 +26,7 @@ export default class SwapLiveAppPage {
   incompatibilityBannerPartnerId = "incompatibility-banner-partner";
   swapMainContainerCssSelector = "main";
   swapMainContainerWebElement = getWebElementByCssSelector(this.swapMainContainerCssSelector);
-  swapMaxToggle = "from-account-max-toggle";
+  swapMaxToggle = "mobile-keyboard-percentage-max";
   switchButton = "to-account-switch-accounts";
   lnsUnsupportedBannerPattern =
     /Ledger Nano S[\s\S]*(not supported|unsupported|does not support|not compatible)/i;
