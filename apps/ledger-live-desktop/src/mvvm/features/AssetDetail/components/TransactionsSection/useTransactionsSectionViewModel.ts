@@ -13,6 +13,7 @@ import {
   filterOperationTableItemsByAllowedAccountIds,
   filterTopLevelAccountsByAllowedAccountIds,
 } from "LLD/features/History/utils/accountScopeForHistory";
+import { buildNavigationBackState } from "LLD/utils/navigationBackPath";
 import type { HistoryTable, OperationRow } from "LLD/features/History/types";
 
 const RECENT_TRANSACTIONS_COUNT = 3;
@@ -58,19 +59,22 @@ export function useTransactionsSectionViewModel(
 
   const table = useHistoryTable(recentItems);
 
-  const onRowClick = useCallback((row: OperationRow) => {
-    const { operation, account, parentAccount } = row.original;
-    track("transaction_clicked", {
-      transaction: operation.type,
-      page: ASSET_DETAIL_TRACKING_PAGE_NAME,
-      currency: distributionItem.currency.id,
-    });
-    setDrawer(OperationDetails, {
-      operationId: operation.id,
-      accountId: account.id,
-      parentId: parentAccount?.id,
-    });
-  }, [distributionItem.currency.id]);
+  const onRowClick = useCallback(
+    (row: OperationRow) => {
+      const { operation, account, parentAccount } = row.original;
+      track("transaction_clicked", {
+        transaction: operation.type,
+        page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+        currency: distributionItem.currency.id,
+      });
+      setDrawer(OperationDetails, {
+        operationId: operation.id,
+        accountId: account.id,
+        parentId: parentAccount?.id,
+      });
+    },
+    [distributionItem.currency.id],
+  );
 
   const onSeeAll = useCallback(() => {
     track("button_clicked", {
@@ -79,9 +83,10 @@ export function useTransactionsSectionViewModel(
       page: ASSET_DETAIL_TRACKING_PAGE_NAME,
     });
     const query = distributionItem.accounts.map(a => a.id).join(",");
-    navigate(`/history?accountIds=${encodeURIComponent(query)}`, {
-      state: { historyBackPath: assetDetailPath },
-    });
+    navigate(
+      `/history?accountIds=${encodeURIComponent(query)}`,
+      buildNavigationBackState("historyBackPath", assetDetailPath),
+    );
   }, [assetDetailPath, distributionItem.accounts, distributionItem.currency.id, navigate]);
 
   return {
