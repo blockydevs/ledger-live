@@ -30,13 +30,19 @@ export type SwapFlowPlan =
        * - `dex-approval-blob-missing`: DEX quote that says it needs a
        *   token approval but did not ship the matching transaction blob;
        *   we refuse to silently downgrade to a direct swap.
+       * - `usdt-revoke-needed`: USDT-on-Ethereum quote on a provider
+       *   that requires the stale ERC-20 allowance to be revoked to 0
+       *   before a higher approval can be set. The wallet-side flow
+       *   cannot yet prepend the revoke step, so we hand the quote
+       *   back to the live-app's classic swap path.
        */
       kind: "skip";
       reason:
         | "no-approval-non-dex"
         | "already-approved-non-dex"
         | "rfq-typed-data-missing"
-        | "dex-approval-blob-missing";
+        | "dex-approval-blob-missing"
+        | "usdt-revoke-needed";
     }
   | {
       /**
@@ -140,6 +146,18 @@ export type PlanSwapFlowInput = {
   fromCurrencyId: string | undefined;
   /** Crypto-currency or token id of the receive account, when resolvable. */
   toCurrencyId: string | undefined;
+  /**
+   * Ticker of the send currency (e.g. `"USDT"`). Pre-resolved by the
+   * caller so the planner can flag the USDT-on-Ethereum revoke edge
+   * case without taking a `findTokenById` dependency.
+   */
+  fromCurrencyTicker?: string;
+  /**
+   * Parent crypto-currency id of the send currency when it is a token
+   * (e.g. `"ethereum"` for ERC-20s). Pre-resolved by the caller for the
+   * same reason as {@link fromCurrencyTicker}.
+   */
+  fromCurrencyParentId?: string;
   /** Default DEX gas-limit fallback applied when the provider omits one. */
   defaultGasLimit: string;
   /** DEX gas-limit safety multiplier (`buildSwapPlan()` callers know it). */

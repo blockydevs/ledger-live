@@ -27,7 +27,17 @@ idle ─START──▶ signApproval ──▶ broadcastApproval ──▶ approv
 
 `planSwapFlow()` decides which entry path the machine takes:
 
-- `skip` — nothing for the wallet to do, resolves with `{}`.
+- `skip` — nothing for the wallet to do, resolves with `{}`. The
+  `reason` field tells the caller why we stepped out:
+  - `no-approval-non-dex` / `already-approved-non-dex` — quote targets
+    a non-DEX provider that the wallet can't drive.
+  - `rfq-typed-data-missing` — RFQ quote (UniswapX / 1inch Fusion)
+    omits the EIP-712 order payload we need to sign.
+  - `dex-approval-blob-missing` — DEX quote says it needs an approval
+    but did not ship the matching transaction blob.
+  - `usdt-revoke-needed` — USDT-on-Ethereum quote on a provider that
+    needs the stale allowance revoked to 0 first; wallet-side does not
+    yet drive the revoke step.
 - `approval-only` — sign + broadcast approval, resolves with the
   approval hash (used when the quote is non-DEX but needs an approval).
 - `approval-then-swap` — full happy path with the user-gated success

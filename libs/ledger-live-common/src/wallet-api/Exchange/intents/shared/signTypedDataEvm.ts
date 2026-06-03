@@ -1,13 +1,11 @@
 import { defer, of, type Observable } from "rxjs";
 import { catchError, filter, finalize, map } from "rxjs/operators";
+import { Signature as EthersSignature } from "ethers";
 import {
   DeviceActionStatus,
   UserInteractionRequired,
 } from "@ledgerhq/device-management-kit";
-import {
-  SignTypedDataDAStateStep,
-  type Signature,
-} from "@ledgerhq/device-signer-kit-ethereum";
+import { SignTypedDataDAStateStep } from "@ledgerhq/device-signer-kit-ethereum";
 import type { DeviceConnectionResult } from "@ledgerhq/device-intent";
 import type { EIP712Message } from "@ledgerhq/types-live";
 import { DmkSignerEth } from "@ledgerhq/live-signer-evm";
@@ -25,20 +23,6 @@ export type SignTypedDataEvmRunState =
   | { type: "signing" }
   | { type: "signed"; signatureHex: string }
   | { type: "failed"; error: Error };
-
-/**
- * Serialise a DMK `Signature` ({ r, s, v }) into the canonical 65-byte
- * EVM signature hex string (`0x` + r + s + v) that downstream consumers
- * (Permit2 spenders, partner RFQ submit endpoints) expect. Mirrors what
- * `walletAPI.message.sign` returns in the live-app (`Buffer.toString("hex")`
- * already concatenates the same r||s||v bytes).
- */
-export function serializeSignature(signature: Signature): string {
-  const r = signature.r.startsWith("0x") ? signature.r.slice(2) : signature.r;
-  const s = signature.s.startsWith("0x") ? signature.s.slice(2) : signature.s;
-  const v = signature.v.toString(16).padStart(2, "0");
-  return `0x${r}${s}${v}`;
-}
 
 /**
  * Run an EIP-712 typed-data signing flow through the production CAL-wired
@@ -80,9 +64,14 @@ export function runSignTypedDataEvm(
           };
         }
         if (state.status === DeviceActionStatus.Completed) {
+          // ethers handles every `v` encoding DMK might emit (EIP-2098
+          // y-parity 0/1, recovery id 27/28, EIP-155 chain-prefixed)
+          // and emits the canonical 65-byte hex Permit2 / partner RFQ
+          // submit endpoints expect. Matches the helper used in
+          // `coin-evm/src/hw-signMessage.ts`.
           return {
             type: "signed",
-            signatureHex: serializeSignature(state.output),
+            signatureHex: EthersSignature.from(state.output).serialized,
           };
         }
         if (state.status === DeviceActionStatus.Pending) {

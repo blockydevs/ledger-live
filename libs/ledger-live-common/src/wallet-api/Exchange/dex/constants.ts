@@ -7,5 +7,5 @@
  * scope for the mobile POC; once that lands these constants will be
  * replaced by an injected config.
  */
-export const DEFAULT_DEX_GAS_LIMIT_MULTIPLIER = 1.5;
+export const DEFAULT_DEX_GAS_LIMIT_MULTIPLIER = 1.3;
 export const DEFAULT_DEX_GAS_LIMIT = "3000000";

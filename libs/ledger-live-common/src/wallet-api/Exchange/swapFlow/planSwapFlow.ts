@@ -13,6 +13,23 @@ import type {
 import type { PlanSwapFlowInput, SwapFlowPlan } from "./types";
 
 /**
+ * Providers known to require the USDT-on-Ethereum revoke-to-0 dance
+ * before a non-zero allowance can be set. Mirrors
+ * `apps/live-app/src/utils/revoke.ts#PROVIDERS_THAT_NEED_REVOKING`.
+ */
+const PROVIDERS_THAT_NEED_USDT_REVOKE: ReadonlySet<string> = new Set([
+  "thorswap",
+  "lifi",
+  "oneinchfusion",
+  "oneinch",
+  "velora",
+  "okx",
+]);
+
+/** USDT-ERC20 atomic decimals (used to atomise the quote's `sendAmount`). */
+const USDT_DECIMALS = 6;
+
+/**
  * Mirrors the swap-live-app approval predicate used by both the CTA and
  * `_stepMachine`:
  *   `isTokenApprovalRequired && tokenAllowance && !tokenAllowance.isApproved`
@@ -69,18 +86,19 @@ function getApprovalTransaction(
  * those run an `approval-then-rfq-order` plan rather than the classic
  * `approval-then-swap` AMM path (mirrors live-app `determineFlowSteps`
  * which only short-circuits on `executionFlowType === "rfq"`).
+ *
+ * `oneinchfusion` is always RFQ regardless of `customFields` shape — the
+ * live-app classifies it the same way (see `quoteHelpers#computeLiquiditySource`).
+ * If the typed-data payload is missing at execution time `buildRfqPlan`
+ * surfaces a `rfq-typed-data-missing` skip rather than misrouting into a
+ * non-RFQ branch.
  */
 function getRfqProvider(quote: Quote): RfqProvider | null {
   if (quote.providerDetails?.isUniswapX === true) {
     return "uniswapx";
   }
   if (quote.provider === "oneinchfusion") {
-    const cf = quote.customFields as
-      | { quoteResponse?: unknown }
-      | undefined;
-    if (cf?.quoteResponse) {
-      return "oneinchfusion";
-    }
+    return "oneinchfusion";
   }
   return null;
 }
@@ -160,6 +178,43 @@ function buildRfqPlan(
 }
 
 /**
+ * Detects the USDT-on-Ethereum revoke edge case. Mirrors the live-app
+ * predicate (`apps/live-app/src/utils/revoke.ts#isUSDTRevokeNeeded`):
+ * for the providers in {@link PROVIDERS_THAT_NEED_USDT_REVOKE}, a USDT
+ * allowance that is non-zero but smaller than the swap amount must
+ * first be revoked to 0 before a new approval can be set, because
+ * USDT's ERC-20 implementation reverts a non-zero `approve` over an
+ * existing non-zero allowance.
+ *
+ * Wallet-side does not yet prepend a `revoke` device-intent step, so
+ * we surface this as a `skip` reason and let the live-app fall back
+ * to its classic swap path (which handles the revoke flow today).
+ */
+function needsUsdtRevoke(
+  quote: Quote,
+  fromCurrencyTicker: string | undefined,
+  fromCurrencyParentId: string | undefined,
+): boolean {
+  if (!PROVIDERS_THAT_NEED_USDT_REVOKE.has(quote.provider)) return false;
+  if (fromCurrencyTicker !== "USDT") return false;
+  if (fromCurrencyParentId !== "ethereum") return false;
+
+  const tokenAllowance = quote.quoteDetails.tokenAllowance;
+  if (!tokenAllowance) return false;
+  if (tokenAllowance.isApproved) return false;
+  const approvedAmount = new BigNumber(tokenAllowance.approvedAmount ?? 0);
+  if (approvedAmount.isZero()) return false;
+
+  // `sendAmount` is in display units (e.g. `350` USDT); atomise it
+  // before comparing against the on-chain allowance (atomic units).
+  const sendAmountAtomic = new BigNumber(
+    quote.quoteDetails.sendAmount,
+  ).shiftedBy(USDT_DECIMALS);
+
+  return sendAmountAtomic.gt(approvedAmount);
+}
+
+/**
  * Pure planner: takes a quote + already-resolved account context and
  * returns the wallet-side device-intent phases that should run.
  *
@@ -176,6 +231,12 @@ function buildRfqPlan(
  */
 export function planSwapFlow(input: PlanSwapFlowInput): SwapFlowPlan {
   const { quote } = input;
+
+  if (
+    needsUsdtRevoke(quote, input.fromCurrencyTicker, input.fromCurrencyParentId)
+  ) {
+    return { kind: "skip", reason: "usdt-revoke-needed" };
+  }
 
   const approvalTransaction = getApprovalTransaction(quote);
   const rfqProvider = getRfqProvider(quote);

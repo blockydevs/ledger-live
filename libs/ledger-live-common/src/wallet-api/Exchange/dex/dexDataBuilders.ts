@@ -171,7 +171,7 @@ async function buildVeloraTransactionData(
 async function buildOkxTransactionData(
   ctx: DexBuildContext,
 ): Promise<DexProviderTransactionData> {
-  const { customFields } = ctx;
+  const { customFields, gasLimitMultiplier, defaultGasLimit } = ctx;
 
   const response = await getOkxTransaction({ customFields });
 
@@ -182,7 +182,11 @@ async function buildOkxTransactionData(
       to: response.to,
       data: response.data,
       value: String(response.value),
-      gasLimit: String(response.gasLimit),
+      gasLimit: getAdjustedGasLimit(
+        response.gasLimit,
+        gasLimitMultiplier,
+        defaultGasLimit,
+      ),
     },
   };
 }

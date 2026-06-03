@@ -45,6 +45,8 @@ function makeQuote(overrides: {
   permitTypedData?: QuotePermit2Message | null;
   permitOrderHash?: string;
   customFields?: Record<string, unknown>;
+  approvedAmount?: string;
+  sendAmount?: number;
 } = {}): Quote {
   const {
     provider = "uniswap",
@@ -56,6 +58,8 @@ function makeQuote(overrides: {
     permitTypedData = null,
     permitOrderHash,
     customFields,
+    approvedAmount,
+    sendAmount = 1,
   } = overrides;
 
   const permitData =
@@ -78,7 +82,7 @@ function makeQuote(overrides: {
     },
     quoteDetails: {
       type: "float",
-      sendAmount: 1,
+      sendAmount,
       receiveAmount: 1,
       gasLess: false,
       networkFees: { currencyId: "ethereum" },
@@ -91,6 +95,7 @@ function makeQuote(overrides: {
       tokenAllowance: isTokenApprovalRequired
         ? {
             isApproved,
+            approvedAmount,
             approvalTransaction: hasApprovalBlob ? APPROVAL_TX : undefined,
           }
         : undefined,
@@ -337,6 +342,41 @@ describe("planSwapFlow", () => {
       });
     });
 
+    it("skips with `rfq-typed-data-missing` for oneinchfusion quotes that omit typed data", () => {
+      const result = plan(
+        makeQuote({
+          provider: "oneinchfusion",
+          providerType: "DEX",
+        }),
+      );
+      expect(result).toEqual({
+        kind: "skip",
+        reason: "rfq-typed-data-missing",
+      });
+    });
+
+    it("classifies oneinchfusion as RFQ even without a `quoteResponse` customField", () => {
+      const oneInchTypedData: QuotePermit2Message = {
+        ...RFQ_TYPED_DATA,
+        message: RFQ_TYPED_DATA.values,
+        values: undefined,
+        primaryType: "Order",
+      };
+      const result = plan(
+        makeQuote({
+          provider: "oneinchfusion",
+          providerType: "DEX",
+          permitTypedData: oneInchTypedData,
+          permitOrderHash: "0xfeed",
+        }),
+      );
+      expect(result.kind).toBe("rfq-order");
+      if (result.kind === "rfq-order") {
+        expect(result.rfqProvider).toBe("oneinchfusion");
+        expect(result.precomputedOrderId).toBe("0xfeed");
+      }
+    });
+
     it("uses the network-fee currency id as the status-polling network", () => {
       const result = plan(
         makeQuote({
@@ -394,6 +434,106 @@ describe("planSwapFlow", () => {
         kind: "skip",
         reason: "already-approved-non-dex",
       });
+    });
+  });
+
+  describe("USDT-revoke edge case", () => {
+    // 350 USDT (display units); allowance below atomises to less than the
+    // 350_000_000 atomic units of the swap amount.
+    const usdtQuote = (provider: string) =>
+      makeQuote({
+        provider,
+        providerType: "DEX",
+        isTokenApprovalRequired: true,
+        isApproved: false,
+        approvedAmount: "1",
+        sendAmount: 350,
+      });
+
+    const USDT_INPUT = {
+      fromCurrencyTicker: "USDT",
+      fromCurrencyParentId: "ethereum",
+    };
+
+    it.each(["thorswap", "lifi", "oneinchfusion", "oneinch", "velora", "okx"])(
+      "skips with `usdt-revoke-needed` for %s when allowance < swap amount",
+      provider => {
+        const result = planSwapFlow({
+          quote: usdtQuote(provider),
+          ...BASE_INPUT,
+          ...USDT_INPUT,
+        });
+        expect(result).toEqual({ kind: "skip", reason: "usdt-revoke-needed" });
+      },
+    );
+
+    it("does not flag the revoke case for unrelated providers (e.g. uniswap)", () => {
+      const result = planSwapFlow({
+        quote: usdtQuote("uniswap"),
+        ...BASE_INPUT,
+        ...USDT_INPUT,
+      });
+      expect(result.kind).not.toBe("skip");
+    });
+
+    it("does not flag the revoke case when the send currency is not USDT", () => {
+      const result = planSwapFlow({
+        quote: usdtQuote("okx"),
+        ...BASE_INPUT,
+        fromCurrencyTicker: "USDC",
+        fromCurrencyParentId: "ethereum",
+      });
+      expect(result.kind).not.toBe("skip");
+    });
+
+    it("does not flag the revoke case when USDT lives on a non-Ethereum chain", () => {
+      const result = planSwapFlow({
+        quote: usdtQuote("okx"),
+        ...BASE_INPUT,
+        fromCurrencyTicker: "USDT",
+        fromCurrencyParentId: "polygon",
+      });
+      expect(result.kind).not.toBe("skip");
+    });
+
+    it("does not flag the revoke case when the existing allowance is zero", () => {
+      const result = planSwapFlow({
+        quote: makeQuote({
+          provider: "okx",
+          providerType: "DEX",
+          isTokenApprovalRequired: true,
+          isApproved: false,
+          approvedAmount: "0",
+          sendAmount: 350,
+        }),
+        ...BASE_INPUT,
+        ...USDT_INPUT,
+      });
+      expect(result.kind).not.toBe("skip");
+    });
+
+    it("does not flag the revoke case when the existing allowance covers the swap amount", () => {
+      const result = planSwapFlow({
+        quote: makeQuote({
+          provider: "okx",
+          providerType: "DEX",
+          isTokenApprovalRequired: true,
+          isApproved: false,
+          approvedAmount: "350000000", // 350 USDT atomised (6 decimals)
+          sendAmount: 350,
+        }),
+        ...BASE_INPUT,
+        ...USDT_INPUT,
+      });
+      expect(result.kind).not.toBe("skip");
+    });
+
+    it("does not flag the revoke case when the caller did not pre-resolve the currency", () => {
+      const result = planSwapFlow({
+        quote: usdtQuote("okx"),
+        ...BASE_INPUT,
+      });
+      expect(result.kind).not.toBe("skip");
     });
   });
 });

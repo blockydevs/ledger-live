@@ -14,6 +14,8 @@ resulting signature into the DEX builder's `buildContext.permitSignature`;
 the RFQ path signs an off-chain EIP-712 order then submits and polls it
 against the partner's swap-api endpoints. The planner refuses to silently
 downgrade to a direct swap when a DEX quote claims approval is required
-but ships no approval blob (`reason: "dex-approval-blob-missing"`), and
+but ships no approval blob (`reason: "dex-approval-blob-missing"`),
 skip-guards RFQ quotes that are missing the EIP-712 payload we need to
-sign (`reason: "rfq-typed-data-missing"`).
+sign (`reason: "rfq-typed-data-missing"`), and surfaces the
+USDT-on-Ethereum revoke edge case as `reason: "usdt-revoke-needed"` so
+hosts can fall back to the legacy swap pipeline for that flow.
