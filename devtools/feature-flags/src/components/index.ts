@@ -5,3 +5,4 @@ export { FlagList } from "./flagList/FlagList";
 export { FlagEnableIndicator } from "./flagEnableIndicator/FlagEnableIndicator";
 export { FlagListHeader } from "./flagListHeader/FlagListHeader";
 export { Sidebar } from "./sidebar/Sidebar";
+export { FlagJsonEditor } from "./flagJsonEditor/flagJsonEditor";
