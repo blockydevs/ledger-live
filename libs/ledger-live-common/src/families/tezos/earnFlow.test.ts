@@ -1,4 +1,4 @@
-import { getTezosEarnFlow, type TezosEarnFlowInput } from "../earnFlow";
+import { getTezosEarnFlow, type TezosEarnFlowInput } from "./earnFlow";
 
 const input = (over: Partial<TezosEarnFlowInput> = {}): TezosEarnFlowInput => ({
   isEmpty: false,

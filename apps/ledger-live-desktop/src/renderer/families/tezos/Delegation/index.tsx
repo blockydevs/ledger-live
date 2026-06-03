@@ -17,7 +17,7 @@ import Header from "./Header";
 import Row from "./Row";
 import StakingSection from "./StakingSection";
 import UnstakingSection from "./UnstakingSection";
-import { getTezosEarnFlow } from "../earnFlow";
+import { getTezosEarnFlow } from "@ledgerhq/live-common/families/tezos/earnFlow";
 import { StepId } from "../DelegateFlowModal/types";
 import TableContainer, { TableHeader } from "~/renderer/components/TableContainer";
 import type { Delegation, TezosAccount } from "@ledgerhq/live-common/families/tezos/types";
