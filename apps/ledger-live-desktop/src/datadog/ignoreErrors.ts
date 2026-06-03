@@ -89,6 +89,7 @@ export const IGNORE_ERROR_MESSAGES: (string | RegExp)[] = [
   "was reached for request with last error",
   "530 undefined",
   "524 undefined",
+  "Memory Warning",
   "Missing or invalid topic field",
   "Bad status on response: 503",
   "Render frame was disposed before WebFrameMain could be accessed",
