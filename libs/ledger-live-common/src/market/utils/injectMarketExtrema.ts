@@ -56,7 +56,9 @@ export function injectMarketExtrema(
 ): ChartDataPoint[] {
   if (points.length === 0) return points.slice();
 
-  const result = points.map(point => [...point] as ChartDataPoint);
+  // Shallow copy is enough: insertSorted only inserts new tuples or replaces a
+  // colliding one, it never mutates an existing tuple in place.
+  const result = points.slice();
 
   const athTs = toTimestamp(athDate);
   if (ath != null && Number.isFinite(ath) && ath > 0 && athTs != null) {
