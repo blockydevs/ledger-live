@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useCurrencyById } from "@ledgerhq/cryptoassets/hooks";
+import useEnv from "@ledgerhq/live-common/hooks/useEnv";
 import { useRoute } from "@react-navigation/native";
 import type { StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import { ScreenName } from "~/const";
@@ -22,7 +23,12 @@ export function useAssetDetailViewModel() {
   const route = useRoute<Route>();
   const { currencyId, source, marketState } = route.params;
 
-  const distribution = useDistribution({ groupBy: "asset" });
+  const hideEmptyTokenAccount = useEnv("HIDE_EMPTY_TOKEN_ACCOUNTS");
+  const distribution = useDistribution({
+    groupBy: "asset",
+    showEmptyAccounts: true,
+    hideEmptyTokenAccount,
+  });
   const distributionItem = useMemo(
     () => resolveDistributionItem({ routeAssetId: currencyId, marketState, distribution }),
     [currencyId, marketState, distribution],

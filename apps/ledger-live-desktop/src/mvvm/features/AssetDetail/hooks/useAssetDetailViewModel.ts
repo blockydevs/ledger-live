@@ -8,7 +8,10 @@ import {
 import type { LineChartRange } from "LLD/components/LineChart";
 import { useSelector } from "LLD/hooks/redux";
 import { useDistribution } from "~/renderer/actions/general";
-import { counterValueCurrencySelector } from "~/renderer/reducers/settings";
+import {
+  counterValueCurrencySelector,
+  hideEmptyTokenAccountsSelector,
+} from "~/renderer/reducers/settings";
 import { decodeRouteParam } from "../utils/decodeRouteParam";
 import {
   resolveAssetMarketInputs,
@@ -19,7 +22,12 @@ import { type AssetDetailViewModel } from "../types";
 export function useAssetDetailViewModel(): AssetDetailViewModel {
   const { "*": routeAssetId } = useParams<{ "*": string }>();
   const location = useLocation();
-  const distribution = useDistribution({ groupBy: "asset" });
+  const hideEmptyTokenAccount = useSelector(hideEmptyTokenAccountsSelector);
+  const distribution = useDistribution({
+    groupBy: "asset",
+    showEmptyAccounts: true,
+    hideEmptyTokenAccount,
+  });
   const counterCurrency = useSelector(counterValueCurrencySelector).ticker.toLowerCase();
   const [selectedRange, setSelectedRange] = useState<LineChartRange>("1d");
 

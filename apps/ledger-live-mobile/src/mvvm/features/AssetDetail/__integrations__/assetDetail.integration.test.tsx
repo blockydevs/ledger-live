@@ -201,6 +201,39 @@ describe("AssetDetail screen layout", () => {
     expect(within(header).getByText("(8)")).toBeVisible();
   });
 
+  describe("empty accounts", () => {
+    it("renders the addresses section when only an empty account exists", async () => {
+      render(
+        <AssetDetailTestNavigator />,
+        withAccounts([{ seed: "bitcoin-empty-0", currencyId: "bitcoin", balance: 0 }]),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.addresses)).toBeVisible(),
+      );
+    });
+
+    it("includes empty accounts alongside funded ones in the addresses count", async () => {
+      render(
+        <AssetDetailTestNavigator />,
+        withAccounts([
+          { seed: "bitcoin-funded-0", currencyId: "bitcoin", balance: 100_000_000 },
+          { seed: "bitcoin-funded-1", currencyId: "bitcoin", balance: 100_000_000 },
+          { seed: "bitcoin-funded-2", currencyId: "bitcoin", balance: 100_000_000 },
+          { seed: "bitcoin-empty-0", currencyId: "bitcoin", balance: 0 },
+          { seed: "bitcoin-empty-1", currencyId: "bitcoin", balance: 0 },
+          { seed: "bitcoin-empty-2", currencyId: "bitcoin", balance: 0 },
+        ]),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByTestId(ASSET_DETAIL_TEST_IDS.addresses)).toBeVisible(),
+      );
+      const header = screen.getByTestId(ASSET_DETAIL_TEST_IDS.addressesHeader);
+      expect(within(header).getByText("(6)")).toBeVisible();
+    });
+  });
+
   it("hides the transactions section when there are no operations", () => {
     render(<AssetDetailTestNavigator />, withBtcAccounts(2, 0));
 
