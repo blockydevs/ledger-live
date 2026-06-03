@@ -3,10 +3,10 @@ import { useWindowDimensions } from "react-native";
 
 const HORIZONTAL_PADDING = 16;
 const CARD_GAP = 8;
-const HIGHLIGHT_CARD_COUNT = 4;
 
 export type MarketScreenHighlightCard = {
   key: string;
+  type: "fearAndGreed";
 };
 
 export type MarketScreenViewModel = {
@@ -27,9 +27,7 @@ export function useMarketScreenViewModel(): MarketScreenViewModel {
       cardWidth,
       cardGap: CARD_GAP,
       snapToInterval: cardWidth + CARD_GAP,
-      highlightCards: Array.from({ length: HIGHLIGHT_CARD_COUNT }, (_, index) => ({
-        key: `market-highlight-${index}`,
-      })),
+      highlightCards: [{ key: "market-highlight-fear-and-greed", type: "fearAndGreed" }],
     };
   }, [width]);
 }

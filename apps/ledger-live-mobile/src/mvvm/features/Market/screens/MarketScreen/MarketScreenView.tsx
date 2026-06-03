@@ -4,13 +4,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Box } from "@ledgerhq/lumen-ui-rnative";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
 import { TrackScreen } from "~/analytics";
+import { FearAndGreed } from "LLM/components/FearAndGreed";
 import { MARKET_SCREEN_TEST_IDS } from "./testIds";
 import type { MarketScreenHighlightCard, MarketScreenViewModel } from "./useMarketScreenViewModel";
 
 const HORIZONTAL_PADDING = 16;
 const CARD_GAP = 8;
 const SECTION_GAP = 24;
-const HIGHLIGHT_CARD_HEIGHT = 160;
 const LIST_PLACEHOLDER_HEIGHT = 320;
 const SEARCH_BAR_HEIGHT = 48;
 
@@ -28,9 +28,12 @@ export function MarketScreenView({ cardWidth, snapToInterval, highlightCards }: 
       <Box
         key={item.key}
         testID={MARKET_SCREEN_TEST_IDS.highlightCard}
-        lx={highlightCardStyle}
-        style={{ width: cardWidth, height: HIGHLIGHT_CARD_HEIGHT }}
-      />
+        style={{ width: cardWidth }}
+      >
+        {item.type === "fearAndGreed" ? (
+          <FearAndGreed appearance="expanded" width={cardWidth} />
+        ) : null}
+      </Box>
     ),
     [cardWidth],
   );
@@ -81,11 +84,6 @@ const searchBarSize = { height: SEARCH_BAR_HEIGHT };
 const contentStyle: LumenViewStyle = {
   paddingTop: "s24",
   gap: "s24",
-};
-
-const highlightCardStyle: LumenViewStyle = {
-  backgroundColor: "accent",
-  borderRadius: "md",
 };
 
 const listStyle: LumenViewStyle = {
