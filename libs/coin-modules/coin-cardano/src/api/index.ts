@@ -25,6 +25,7 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
 import { broadcast } from "../logic/broadcast";
 import { craftTransaction } from "../logic/craftTransaction";
+import { estimateFees } from "../logic/estimateFees";
 import { getBalance } from "../logic/getBalance";
 import { getValidators } from "../logic/getValidators";
 import { lastBlock } from "../logic/lastBlock";
@@ -67,11 +68,9 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
       throw new Error("craftRawTransaction is not supported");
     },
     estimateFees: (
-      _transactionIntent: TransactionIntent<StringMemo>,
+      transactionIntent: TransactionIntent<StringMemo>,
       _customFeesParameters?: FeeEstimation["parameters"],
-    ): Promise<FeeEstimation> => {
-      throw new Error("estimateFees is not supported");
-    },
+    ): Promise<FeeEstimation> => estimateFees(currency, transactionIntent),
     combine: (_tx: string, _signature: string, _pubkey?: string): string => {
       throw new Error("combine is not supported");
     },
