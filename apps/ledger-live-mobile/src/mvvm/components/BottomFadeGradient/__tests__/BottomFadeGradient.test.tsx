@@ -5,8 +5,7 @@ import { ledgerLiveThemes } from "@ledgerhq/lumen-design-core";
 import { rgba } from "@ledgerhq/native-ui/styles/helpers";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { BottomFadeGradient, GRADIENT_LOCATIONS } from "../index";
-import { GRADIENT_HEIGHT } from "LLM/features/OperationsHistory/const";
+import { BottomFadeGradient, GRADIENT_HEIGHT, GRADIENT_LOCATIONS } from "../index";
 
 const TEST_ID = "bottom-fade-gradient";
 
