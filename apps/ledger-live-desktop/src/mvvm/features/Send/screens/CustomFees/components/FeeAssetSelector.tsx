@@ -31,19 +31,21 @@ function FeeAssetSelectorComponent({
 
   return (
     <Menu>
-      <MenuTrigger asChild>
-        <ListItem className="cursor-pointer" data-testid="send-fee-asset-select">
-          <ListItemLeading>
-            <ListItemContent>
-              <ListItemTitle>{payFeesInLabel}</ListItemTitle>
-            </ListItemContent>
-          </ListItemLeading>
-          <ListItemTrailing>
-            <span className="body-2-semi-bold text-base">{selectedOption?.ticker ?? ""}</span>
-            <ChevronRight size={16} />
-          </ListItemTrailing>
-        </ListItem>
-      </MenuTrigger>
+      <MenuTrigger
+        render={
+          <ListItem className="cursor-pointer" data-testid="send-fee-asset-select">
+            <ListItemLeading>
+              <ListItemContent>
+                <ListItemTitle>{payFeesInLabel}</ListItemTitle>
+              </ListItemContent>
+            </ListItemLeading>
+            <ListItemTrailing>
+              <span className="body-2-semi-bold text-base">{selectedOption?.ticker ?? ""}</span>
+              <ChevronRight size={16} />
+            </ListItemTrailing>
+          </ListItem>
+        }
+      />
       <MenuContent side="bottom" align="end">
         <MenuRadioGroup value={selectedId} onValueChange={onChange}>
           {options.map(option => (

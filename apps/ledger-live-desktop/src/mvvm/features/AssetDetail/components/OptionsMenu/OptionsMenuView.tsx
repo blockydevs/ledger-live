@@ -28,16 +28,18 @@ export function OptionsMenuView({ viewModel }: OptionsMenuViewProps) {
 
   return (
     <Menu>
-      <MenuTrigger asChild>
-        <IconButton
-          appearance="gray"
-          size="sm"
-          icon={MoreVertical}
-          aria-label={optionsAriaLabel}
-          data-testid="asset-detail-header-options-trigger"
-          className="mr-4"
-        />
-      </MenuTrigger>
+      <MenuTrigger
+        render={
+          <IconButton
+            appearance="gray"
+            size="sm"
+            icon={MoreVertical}
+            aria-label={optionsAriaLabel}
+            data-testid="asset-detail-header-options-trigger"
+            className="mr-4"
+          />
+        }
+      />
       <MenuContent className="w-full min-w-200" side="bottom" align="end">
         <MenuItem
           disabled={!isStarEnabled}
