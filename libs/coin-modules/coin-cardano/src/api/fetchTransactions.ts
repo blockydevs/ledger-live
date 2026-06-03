@@ -51,9 +51,11 @@ export async function getAllTransactionsByKeys(
     const res = await fetchTransactionsPage(paymentKeys, pageNo, blockHeight, currency);
     transactions.push(...res.transactions);
     latestBlockHeight = Math.max(res.blockHeight, latestBlockHeight);
-    // A short page (or no advertised limit) means there are no further pages. The limit guard
-    // also avoids an unbounded loop if the API ever returns limit 0.
-    if (res.limit <= 0 || res.transactions.length < res.limit) break;
+    // A short page (or no advertised limit) means there are no further pages. `limit` comes from
+    // an untyped network response, so coerce it: a missing/non-numeric/non-positive limit ends
+    // the loop rather than letting `length < undefined` (always false) run it unbounded.
+    const limit = Number(res.limit);
+    if (!Number.isFinite(limit) || limit <= 0 || res.transactions.length < limit) break;
     pageNo += 1;
   }
 

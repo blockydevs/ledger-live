@@ -7,7 +7,7 @@ const mockNetwork = jest.mocked(network);
 
 const currency = getCryptoCurrencyById("cardano");
 
-function page(hashes: string[], limit: number, blockHeight = 0) {
+function page(hashes: string[], limit: number | string, blockHeight = 0) {
   return {
     data: { transactions: hashes.map(hash => ({ hash })), limit, blockHeight },
   } as never;
@@ -42,5 +42,42 @@ describe("getAllTransactionsByKeys", () => {
     expect(res.transactions).toHaveLength(1);
     expect(res.blockHeight).toBe(3);
     expect(mockNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops when the response omits limit entirely (untyped response, avoids unbounded loop)", async () => {
+    mockNetwork.mockResolvedValueOnce({
+      data: { transactions: [{ hash: "a" }], blockHeight: 3 },
+    } as never);
+
+    const res = await getAllTransactionsByKeys(["k"], 0, currency);
+
+    expect(res.transactions).toHaveLength(1);
+    expect(mockNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { label: "negative", limit: -1 },
+    { label: "non-numeric string", limit: "NaN" },
+  ])(
+    "stops after one page when limit is non-positive or non-numeric ($label)",
+    async ({ limit }) => {
+      mockNetwork.mockResolvedValueOnce(page(["a"], limit, 3));
+
+      const res = await getAllTransactionsByKeys(["k"], 0, currency);
+
+      expect(res.transactions).toHaveLength(1);
+      expect(mockNetwork).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("coerces a numeric-string limit and keeps paginating until a short page", async () => {
+    mockNetwork
+      .mockResolvedValueOnce(page(["a", "b"], "2", 1)) // full page (length 2 == limit "2") -> continue
+      .mockResolvedValueOnce(page(["c"], "2", 2)); // short page -> stop
+
+    const res = await getAllTransactionsByKeys(["k"], 0, currency);
+
+    expect(res.transactions.map(t => t.hash)).toEqual(["a", "b", "c"]);
+    expect(mockNetwork).toHaveBeenCalledTimes(2);
   });
 });

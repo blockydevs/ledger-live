@@ -12,16 +12,14 @@ import { APITransaction } from "../api/api-types";
 import { getAllTransactionsByKeys } from "../api/fetchTransactions";
 import { getDelegationInfo } from "../api/getDelegationInfo";
 import { fetchNetworkInfo } from "../api/getNetworkInfo";
+import { calculateMinAdaForTokens, computeAdaBalance, mergeTokens } from "../logic";
+import { CardanoDelegation } from "../types";
 import {
-  calculateMinAdaForTokens,
-  computeAdaBalance,
   EMPTY_CREDENTIAL_KEY,
   extractPaymentKeyFromAddress,
   extractStakeKeyFromAddress,
   isByronAddress,
-  mergeTokens,
-} from "../logic";
-import { CardanoDelegation } from "../types";
+} from "../utils";
 
 const NATIVE_ASSET: AssetInfo = { type: "native", name: "ADA" };
 

@@ -4,7 +4,7 @@ import { APITransaction } from "../api/api-types";
 import { getAllTransactionsByKeys } from "../api/fetchTransactions";
 import { getDelegationInfo } from "../api/getDelegationInfo";
 import { fetchNetworkInfo } from "../api/getNetworkInfo";
-import { extractPaymentKeyFromAddress } from "../logic";
+import { extractPaymentKeyFromAddress } from "../utils";
 import { getBalance } from "./getBalance";
 
 jest.mock("../api/fetchTransactions");
