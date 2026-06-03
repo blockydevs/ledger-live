@@ -16,18 +16,12 @@ export type MarketScreenViewModel = {
   highlightCards: MarketScreenHighlightCard[];
 };
 
-/**
- * View model for the empty Market screen shell.
- *
- * Card sizing follows the design spec: two cards plus a peek of the third must
- * fit within the horizontal padding, so the width is half of the available row
- * minus half of the inter-card gap.
- */
 export function useMarketScreenViewModel(): MarketScreenViewModel {
   const { width } = useWindowDimensions();
 
   return useMemo(() => {
-    const cardWidth = (width - HORIZONTAL_PADDING * 2) / 2 - CARD_GAP;
+    const availableWidth = width - HORIZONTAL_PADDING * 2;
+    const cardWidth = availableWidth / 2 - CARD_GAP;
 
     return {
       cardWidth,

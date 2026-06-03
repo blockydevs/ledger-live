@@ -1,14 +1,11 @@
 import * as React from "react";
 import { renderWithReactQuery, screen, waitFor, withFlagOverrides } from "@tests/test-renderer";
-import { server, http, HttpResponse } from "@tests/server";
-import { MOCK_MARKET_PERFORMERS } from "@ledgerhq/live-common/market/utils/fixtures";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import { ScreenName } from "~/const";
 import MarketNavigator from "../Navigator";
+import MarketWalletTabNavigator from "../WalletTabNavigator";
 import { MARKET_SCREEN_TEST_IDS } from "../screens/MarketScreen/testIds";
-
-const COUNTERVALUES_API = "https://countervalues.live.ledger.com";
 
 const Stack = createNativeStackNavigator<BaseNavigatorStackParamList>();
 
@@ -23,12 +20,6 @@ const enableAssetDiscoverability = withFlagOverrides({
 });
 
 describe("Market screen navigator switch", () => {
-  beforeEach(() => {
-    server.use(
-      http.get(`${COUNTERVALUES_API}/v3/markets`, () => HttpResponse.json(MOCK_MARKET_PERFORMERS)),
-    );
-  });
-
   it("should render MarketList when asset discoverability is off", async () => {
     renderWithReactQuery(<NavigatorWrapper />);
 
@@ -50,6 +41,17 @@ describe("Market screen navigator switch", () => {
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.highlights)).toBeVisible();
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.list)).toBeVisible();
     expect(screen.getAllByTestId(MARKET_SCREEN_TEST_IDS.highlightCard).length).toBeGreaterThan(0);
+    expect(screen.queryByTestId("market-list")).toBeNull();
+  });
+
+  it("should render the new MarketScreen from the wallet tab navigator when asset discoverability is on", async () => {
+    renderWithReactQuery(<MarketWalletTabNavigator />, {
+      overrideInitialState: enableAssetDiscoverability,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.screen)).toBeVisible();
+    });
     expect(screen.queryByTestId("market-list")).toBeNull();
   });
 });

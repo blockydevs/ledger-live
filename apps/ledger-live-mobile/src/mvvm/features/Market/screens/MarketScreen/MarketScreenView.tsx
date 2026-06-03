@@ -37,15 +37,13 @@ export function MarketScreenView({ cardWidth, snapToInterval, highlightCards }: 
 
   return (
     <Box testID={MARKET_SCREEN_TEST_IDS.screen} lx={screenStyle}>
-      <TrackScreen category="Market" />
-      {/* Block 1: sticky search bar placeholder, kept outside the ScrollView so it stays visible. */}
+      <TrackScreen category="Page" name="Market" access />
       <Box testID={MARKET_SCREEN_TEST_IDS.searchBar} lx={searchBarStyle} style={searchBarSize} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottom + SECTION_GAP }}
       >
         <Box lx={contentStyle}>
-          {/* Block 2: horizontal carousel of placeholder cards (~2 cards + a peek of the third). */}
           <FlatList
             horizontal
             testID={MARKET_SCREEN_TEST_IDS.highlights}
@@ -60,7 +58,6 @@ export function MarketScreenView({ cardWidth, snapToInterval, highlightCards }: 
             disableIntervalMomentum
             contentContainerStyle={{ paddingHorizontal: HORIZONTAL_PADDING }}
           />
-          {/* Block 3: placeholder for the upcoming market list. */}
           <Box testID={MARKET_SCREEN_TEST_IDS.list} lx={listStyle} style={listSize} />
         </Box>
       </ScrollView>
