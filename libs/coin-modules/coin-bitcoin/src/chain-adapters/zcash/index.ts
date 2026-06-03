@@ -13,6 +13,8 @@ import { buildExtraSyncObservable } from "./sync";
 import { collectSpendableNotes } from "./operations";
 import { selectNotes, estimateMaxSpendableAmount, ZIP317_MINIMUM_FEE } from "./coin-selection";
 import { composeXpub } from "./xpub";
+import { computeZcashBalance } from "./balance";
+import type { BitcoinAccount } from "../../types";
 
 type DmkTransport = {
   dmk: ConstructorParameters<typeof DmkSignerZcash>[0];
@@ -48,6 +50,13 @@ const zcashChainAdapter: ChainAdapter = {
   // ── Sync ────────────────────────────────────────────────────────────
 
   buildExtraSyncObservable,
+
+  computeAccountBalance(account: BitcoinAccount | undefined, transparentBalance: BigNumber) {
+    return computeZcashBalance(
+      transparentBalance,
+      (account as ZcashAccount | undefined)?.privateInfo,
+    );
+  },
 
   assignToAccountRaw(account: Account, accountRaw: AccountRaw) {
     const zcashAccount = account as ZcashAccount;
@@ -132,7 +141,8 @@ const zcashChainAdapter: ChainAdapter = {
     } else {
       // Verify selected notes actually cover the spend (consistency check)
       const selectedTotal = tx.selectedNotes.reduce(
-        (sum, n) => sum.plus(n.amount), new BigNumber(0),
+        (sum, n) => sum.plus(n.amount),
+        new BigNumber(0),
       );
       if (selectedTotal.lt(totalSpent)) {
         errors.amount = new Error("Selected notes do not cover amount + fee");
