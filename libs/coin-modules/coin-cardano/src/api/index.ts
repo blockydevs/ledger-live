@@ -25,6 +25,7 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
 import { broadcast } from "../logic/broadcast";
 import { getBalance } from "../logic/getBalance";
+import { getValidators } from "../logic/getValidators";
 import { lastBlock } from "../logic/lastBlock";
 import { listOperations } from "../logic/listOperations";
 
@@ -40,9 +41,8 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
     getBlock: (_height: number): Promise<Block> => {
       throw new Error("getBlock is not supported");
     },
-    getValidators: (_cursor?: Cursor): Promise<Page<Validator>> => {
-      throw new Error("getValidators is not supported");
-    },
+    // cursor ignored: Cardano returns every pool in one page (see getValidators).
+    getValidators: (_cursor?: Cursor): Promise<Page<Validator>> => getValidators(currency),
     getBalance: (address: string, options?: BalanceOptions): Promise<Balance[]> =>
       rejectBalanceOptions(() => getBalance(currency, address), options),
     listOperations: (address: string, options: ListOperationsOptions): Promise<Page<Operation>> =>
