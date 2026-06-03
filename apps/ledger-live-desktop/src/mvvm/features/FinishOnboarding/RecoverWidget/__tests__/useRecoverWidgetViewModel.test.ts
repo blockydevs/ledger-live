@@ -16,12 +16,7 @@ jest.mock("~/renderer/store", () => ({
 }));
 
 jest.mock("@ledgerhq/live-common/postOnboarding/hooks/index");
-// Mock only useFeature: the FeatureFlagsContextBridge in testSetup reads useWalletFeaturesConfig,
-// which must stay real (a full auto-mock returns undefined and crashes the bridge on render).
-jest.mock("@features/platform-feature-flags", () => ({
-  ...jest.requireActual("@features/platform-feature-flags"),
-  useFeature: jest.fn(),
-}));
+jest.mock("@features/platform-feature-flags");
 jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
   useUpsellPath: jest.fn(),
 }));
