@@ -56,12 +56,20 @@ import { fetchTrustchain } from "./actions/trustchain";
 import { setupRecentAddressesStore } from "./recentAddresses";
 import { startAnalytics } from "./analytics/segment";
 import { initIdentities } from "~/renderer/helpers/identities";
-import { setAllOverrides, setBannerVisible } from "@shared/feature-flags";
+import {
+  setAllOverrides,
+  setBannerVisible,
+  selectFeature,
+  selectRemoteFlagsReady,
+} from "@shared/feature-flags";
 import {
   setAllCoinConfigOverrides,
   sanitizePersistedOverrides,
 } from "~/renderer/reducers/coinConfigOverrides";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
+import { installLiveConfigProvider } from "~/firebase/remoteConfig";
+import { setAnalyticsFeatureFlagMethod } from "~/renderer/analytics/segment";
+import { FeatureId } from "@ledgerhq/types-live";
 import { initHistory } from "~/renderer/reducers/history";
 
 const rootNode = document.getElementById("react-root");
@@ -133,6 +141,17 @@ async function init() {
   setupListeners(store.dispatch);
   setupRecentAddressesStore(store);
   setupCryptoAssetsStore(store);
+
+  // Feature flags: install the LiveConfig provider (serves non-feature `config_*` keys) and
+  // point analytics at the Redux slice. The middleware (wired at store creation) drives the
+  // remote-flags fetch; boot waits on its first result via `whenReady()` below.
+  installLiveConfigProvider();
+  setAnalyticsFeatureFlagMethod(
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    ((key: FeatureId) => selectFeature(store.getState(), key) ?? null) as Parameters<
+      typeof setAnalyticsFeatureFlagMethod
+    >[0],
+  );
 
   // Hydrate persisted crypto assets tokens from app.json
   // Cross-caching is automatic: tokens are cached under both ID and address lookups
@@ -278,6 +297,21 @@ async function init() {
   }
 
   const initialCountervalues = await getKey("app", "countervalues");
+
+  // Gate the app on the feature-flags slice being ready. The middleware dispatches
+  // `remoteFlagsReady` after the first remote fetch settles AND its values are synced into the
+  // slice — and unconditionally, so a Firebase outage still releases the gate. This guarantees
+  // resolved flags are in the store before the first render.
+  await new Promise<void>(resolve => {
+    if (selectRemoteFlagsReady(store.getState())) return resolve();
+    const unsubscribe = store.subscribe(() => {
+      if (selectRemoteFlagsReady(store.getState())) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
+
   r(<ReactRoot store={store} language={language} initialCountervalues={initialCountervalues} />);
 
   const postOnboardingState = await getKey("app", "postOnboarding");
