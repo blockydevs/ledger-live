@@ -38,6 +38,20 @@ export function LineChartView<TRange extends string>({
   yAxis,
   rangeSelectorTrailing,
 }: Props<TRange>) {
+  const segmentedControl = (
+    <SegmentedControl
+      selectedValue={selectedRange}
+      onSelectedChange={handleSelectedChange}
+      accessibilityLabel={accessibilityLabel}
+    >
+      {ranges.map(({ value, label }) => (
+        <SegmentedControlButton key={value} value={value}>
+          {label}
+        </SegmentedControlButton>
+      ))}
+    </SegmentedControl>
+  );
+
   return (
     <Box lx={containerStyle} testID={testID}>
       {isLoading ? (
@@ -71,33 +85,11 @@ export function LineChartView<TRange extends string>({
 
       {rangeSelectorTrailing ? (
         <Box lx={rangeSelectorRowStyle}>
-          <Box lx={rangeSelectorControlStyle}>
-            <SegmentedControl
-              selectedValue={selectedRange}
-              onSelectedChange={handleSelectedChange}
-              accessibilityLabel={accessibilityLabel}
-            >
-              {ranges.map(({ value, label }) => (
-                <SegmentedControlButton key={value} value={value}>
-                  {label}
-                </SegmentedControlButton>
-              ))}
-            </SegmentedControl>
-          </Box>
+          <Box lx={rangeSelectorControlStyle}>{segmentedControl}</Box>
           {rangeSelectorTrailing}
         </Box>
       ) : (
-        <SegmentedControl
-          selectedValue={selectedRange}
-          onSelectedChange={handleSelectedChange}
-          accessibilityLabel={accessibilityLabel}
-        >
-          {ranges.map(({ value, label }) => (
-            <SegmentedControlButton key={value} value={value}>
-              {label}
-            </SegmentedControlButton>
-          ))}
-        </SegmentedControl>
+        segmentedControl
       )}
     </Box>
   );

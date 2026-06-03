@@ -57,7 +57,7 @@ const handlers: ReducerMap<MarketState, MarketPayload> = {
   [MarketStateActionTypes.MARKET_IMPORT]: (state, action) => ({
     ...state,
     marketFilterByStarredCurrencies:
-      (action as Action<MarketImportPayload>).payload.marketFilterByStarredCurrencies ||
+      (action as Action<MarketImportPayload>).payload.marketFilterByStarredCurrencies ??
       state.marketFilterByStarredCurrencies,
     hideTransactionsOnChart:
       (action as Action<MarketImportPayload>).payload.hideTransactionsOnChart ??
