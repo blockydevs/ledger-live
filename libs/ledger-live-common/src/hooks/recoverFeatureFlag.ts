@@ -5,9 +5,15 @@ import {
   Feature_ProtectServicesMobile,
 } from "@ledgerhq/types-live";
 
+// Matches a `protect-<env>` segment (e.g. `protect-prod`, `protect-staging`,
+// `protect-lumen-preprod`). Used to substitute the env placeholder in a URI
+// with the active `protectId` from the feature flag, so changing `protectId`
+// alone is enough to switch every templated URI to a different Recover env.
+const PROTECT_ID_SEGMENT_REGEX = /protect-[a-z0-9-]+/g;
+
 export function useReplacedURI(uri?: string, id?: string): string | undefined {
   return useMemo(() => {
-    return uri && id ? uri.replace(/protect-(simu|local-dev|staging)/, id) : undefined;
+    return uri && id ? uri.replace(PROTECT_ID_SEGMENT_REGEX, id) : undefined;
   }, [id, uri]);
 }
 
@@ -18,7 +24,7 @@ function usePath(servicesConfig: Feature<unknown> | null, uri?: string) {
 }
 
 export function usePostOnboardingURI(
-  servicesConfig: Feature_ProtectServicesDesktop | Feature_ProtectServicesMobile | null,
+  servicesConfig: Feature_ProtectServicesMobile | null,
 ): string | undefined {
   const uri = servicesConfig?.params?.onboardingRestore?.postOnboardingURI;
   const id = servicesConfig?.params?.protectId;
