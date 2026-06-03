@@ -9,7 +9,6 @@ const compatibleDeviceSchema = z.object({
 
 const restoreInfoDrawerSchema = z.object({
   enabled: z.boolean(),
-  manualStepsURI: z.string(),
   supportLinkURI: z.string(),
 });
 
@@ -19,8 +18,6 @@ const onboardingRestoreSchema = z.object({
 });
 
 const managerStatesNewSchema = z.object({
-  learnMoreURI: z.string(),
-  alreadySubscribedURI: z.string(),
   quickAccessURI: z.string(),
   alreadyOnboardedURI: z.string(),
 });
@@ -36,7 +33,6 @@ const accountSchema = z.object({
 export const protectServicesMobile = flagWith(
   {
     deeplink: z.string(),
-    ledgerliveStorageState: z.boolean(),
     bannerSubscriptionNotification: z.boolean(),
     compatibleDevices: z.array(compatibleDeviceSchema),
     onboardingRestore: onboardingRestoreSchema,
@@ -47,7 +43,6 @@ export const protectServicesMobile = flagWith(
   {
     enabled: false,
     params: {
-      ledgerliveStorageState: false,
       bannerSubscriptionNotification: false,
       deeplink: "",
       compatibleDevices: [],
@@ -57,10 +52,6 @@ export const protectServicesMobile = flagWith(
       },
       managerStatesData: {
         NEW: {
-          learnMoreURI:
-            "ledgerlive://recover/protect-simu?redirectTo=upsell&source=llm-onboarding-24&ajs_prop_source=llm-onboarding-24&ajs_prop_campaign=recover-launch",
-          alreadySubscribedURI:
-            "ledgerlive://recover/protect-simu?redirectTo=login&source=llm-onboarding-24&ajs_prop_source=llm-onboarding-24&ajs_prop_campaign=recover-launch",
           quickAccessURI:
             "ledgerlive://recover/protect-simu?redirectTo=upsell&source=llm-navbar-quick-access&ajs_prop_source=llm-navbar-quick-access&ajs_prop_campaign=recover-launch",
           alreadyOnboardedURI:
@@ -72,7 +63,6 @@ export const protectServicesMobile = flagWith(
           "ledgerlive://recover/protect-simu?redirectTo=restore&source=llm-restore-24&ajs_prop_source=llm-restore-24&ajs_prop_campaign=recover-launch",
         restoreInfoDrawer: {
           enabled: true,
-          manualStepsURI: "https://support.ledger.com/article/360013349800-zd",
           supportLinkURI: "https://support.ledger.com",
         },
       },

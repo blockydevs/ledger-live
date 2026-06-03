@@ -222,8 +222,6 @@ export const DEFAULT_FEATURES: Features = {
     params: {
       openWithDevTools: false,
       availableOnDesktop: false,
-      isNew: false,
-      ledgerliveStorageState: false,
       bannerSubscriptionNotification: false,
       account: {
         homeURI:
@@ -232,23 +230,12 @@ export const DEFAULT_FEATURES: Features = {
       compatibleDevices: [],
       discoverTheBenefitsLink: "https://www.ledger.com/recover",
       onboardingCompleted: {
-        alreadySubscribedURI: "ledgerlive://recover/protect-simu?redirectTo=login",
         alreadyDeviceSeededURI:
           "ledgerlive://recover/protect-simu?redirectTo=upsell&source=lld-pairing&ajs_recover_source=lld-pairing&ajs_recover_campaign=recover-launch",
         upsellURI:
           "ledgerlive://recover/protect-simu?redirectTo=upsell&source=lld-onboarding-24&ajs_recover_source=lld-onboarding-24&ajs_recover_campaign=recover-launch",
         restore24URI:
           "ledgerlive://recover/protect-simu?redirectTo=upsell&source=lld-restore-24&ajs_recover_source=lld-restore-24&ajs_recover_campaign=recover-launch",
-      },
-      onboardingRestore: {
-        postOnboardingURI:
-          "ledgerlive://recover/protect-simu?redirectTo=restore&source=lld-restore",
-        restoreInfoDrawer: {
-          enabled: true,
-          manualStepsURI: "https://support.ledger.com/article/360013349800-zd",
-
-          supportLinkURI: "https://support.ledger.com",
-        },
       },
       openRecoverFromSidebar: true,
       protectId: "protect-simu",
@@ -383,7 +370,6 @@ export const DEFAULT_FEATURES: Features = {
   protectServicesMobile: {
     enabled: false,
     params: {
-      ledgerliveStorageState: false,
       bannerSubscriptionNotification: false,
       deeplink: "",
       compatibleDevices: [],
@@ -393,10 +379,6 @@ export const DEFAULT_FEATURES: Features = {
       },
       managerStatesData: {
         NEW: {
-          learnMoreURI:
-            "ledgerlive://recover/protect-simu?redirectTo=upsell&source=llm-onboarding-24&ajs_prop_source=llm-onboarding-24&ajs_prop_campaign=recover-launch",
-          alreadySubscribedURI:
-            "ledgerlive://recover/protect-simu?redirectTo=login&source=llm-onboarding-24&ajs_prop_source=llm-onboarding-24&ajs_prop_campaign=recover-launch",
           quickAccessURI:
             "ledgerlive://recover/protect-simu?redirectTo=upsell&source=llm-navbar-quick-access&ajs_prop_source=llm-navbar-quick-access&ajs_prop_campaign=recover-launch",
           alreadyOnboardedURI:
@@ -408,7 +390,6 @@ export const DEFAULT_FEATURES: Features = {
           "ledgerlive://recover/protect-simu?redirectTo=restore&source=llm-restore-24&ajs_prop_source=llm-restore-24&ajs_prop_campaign=recover-launch",
         restoreInfoDrawer: {
           enabled: true,
-          manualStepsURI: "https://support.ledger.com/article/360013349800-zd",
           supportLinkURI: "https://support.ledger.com",
         },
       },
