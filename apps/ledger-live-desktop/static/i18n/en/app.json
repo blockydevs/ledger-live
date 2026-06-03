@@ -9070,10 +9070,10 @@
     },
     "totalBalance": "Total balance",
     "marketPrice": "Market price",
-    "addresses": "Addresses",
+    "addresses": "Accounts",
     "addressesDialog": {
-      "title": "Addresses",
-      "description": "All your addresses holding {{ticker}}."
+      "title": "Accounts",
+      "description": "All your accounts holding {{ticker}}."
     },
     "add": "Add",
     "notFound": "Asset distribution item not found.",
