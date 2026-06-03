@@ -172,7 +172,6 @@ export function useTezosStakingInfo(account: AccountLike): TezosStakingInfo {
     const stakedBalance = stakePos?.amount ?? ZERO;
     const unstakedBalance = sumAmounts(pendingPositions);
     const unstakedFinalizable = sumAmounts(finalizablePositions);
-    // spendableBalance already nets out staked + unstaked-frozen funds (computed in coin-tezos getBalance).
     const availableBalance = account.spendableBalance;
     const delegateAddress = delegationPos?.delegate ?? delegation?.address;
 

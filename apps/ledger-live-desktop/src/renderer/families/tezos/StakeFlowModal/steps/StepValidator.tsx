@@ -154,7 +154,6 @@ export const StepValidatorFooter = ({
   transitionTo,
 }: StepProps) => {
   if (!account) return null;
-  // Block Continue when status has a blocking error, e.g. spendable can't cover the fee.
   const blockingError = status.errors.amount ?? Object.values(status.errors)[0];
   const canNext = !bridgePending && !blockingError && !!transaction?.recipient;
   return (
