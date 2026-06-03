@@ -63,7 +63,7 @@ export function FeePresetMenuItems({
       {hasCustom ? (
         <MenuItem
           data-testid="send-custom-fees-menu-item"
-          onSelect={() => {
+          onClick={() => {
             onSelectCustomFees?.();
           }}
         >
@@ -73,7 +73,7 @@ export function FeePresetMenuItems({
       {hasCoinControl ? (
         <MenuItem
           data-testid="send-coin-control-fees-menu-item"
-          onSelect={() => {
+          onClick={() => {
             onSelectCoinControl?.();
           }}
         >

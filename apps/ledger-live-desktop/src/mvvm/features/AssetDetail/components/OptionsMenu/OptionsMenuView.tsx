@@ -43,7 +43,7 @@ export function OptionsMenuView({ viewModel }: OptionsMenuViewProps) {
       <MenuContent className="w-full min-w-200" side="bottom" align="end">
         <MenuItem
           disabled={!isStarEnabled}
-          onSelect={() => {
+          onClick={() => {
             onToggleStar();
           }}
         >
@@ -58,7 +58,7 @@ export function OptionsMenuView({ viewModel }: OptionsMenuViewProps) {
         </MenuItem>
         {isHideFromPortfolioEnabled && (
           <MenuItem
-            onSelect={() => {
+            onClick={() => {
               if (isHiddenFromPortfolio) {
                 onShowInPortfolio();
               } else {

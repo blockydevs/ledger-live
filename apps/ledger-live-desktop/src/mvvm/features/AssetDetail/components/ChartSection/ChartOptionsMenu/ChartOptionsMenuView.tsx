@@ -25,7 +25,7 @@ export function ChartOptionsMenuView({ viewModel }: ChartOptionsMenuViewProps) {
       />
       <MenuContent className="w-full min-w-200" side="bottom" align="end">
         <MenuItem
-          onSelect={() => {
+          onClick={() => {
             onToggle();
           }}
           data-testid="asset-detail-chart-options-toggle-transactions"
