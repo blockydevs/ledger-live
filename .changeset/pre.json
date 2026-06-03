@@ -183,6 +183,7 @@
   },
   "changesets": [
     "soft-clouds-load",
-    "spicy-dapps-inject"
+    "spicy-dapps-inject",
+    "zcash-nu62-branchid-fix"
   ]
 }
