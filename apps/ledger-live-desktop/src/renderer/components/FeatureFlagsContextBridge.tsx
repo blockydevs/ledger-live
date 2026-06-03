@@ -4,7 +4,6 @@ import { FeatureFlagsProvider } from "@ledgerhq/live-common/featureFlags/index";
 import { Feature, FeatureId } from "@ledgerhq/types-live";
 import {
   FeatureIdSchema,
-  selectFeature,
   setOverride,
   setAllOverrides,
   type WithFeatureFlags,
@@ -24,9 +23,13 @@ export const FeatureFlagsContextBridge = ({ children }: React.PropsWithChildren)
     useWalletFeaturesConfig("desktop");
 
   const getFeature = useCallback(
-    (key: FeatureId): Feature | null =>
+    (key: FeatureId): Feature | null => {
+      const parsed = FeatureIdSchema.safeParse(key);
+      if (!parsed.success) return null;
+      // Cast bridges the slice's Feature to live-common's types-live Feature.
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      (resolved[key as keyof typeof resolved] ?? null) as Feature | null,
+      return (resolved[parsed.data] ?? null) as Feature | null;
+    },
     [resolved],
   );
 

@@ -208,12 +208,19 @@ const warnOnConfigMismatch = async () => {
  * trigger Firebase side effects.
  */
 export function installLiveConfigProvider(): void {
-  const rc = getRemoteConfigSingleton();
-  LiveConfig.setProvider(
-    new FirebaseRemoteConfigProvider({
-      getValue: (key: string) => getValue(rc, key),
-    }),
-  );
+  try {
+    const rc = getRemoteConfigSingleton();
+    LiveConfig.setProvider(
+      new FirebaseRemoteConfigProvider({
+        getValue: (key: string) => getValue(rc, key),
+      }),
+    );
+  } catch (error) {
+    // Match the legacy provider: a Firebase init failure must not crash boot.
+    // `config_*` keys then fall back to their LiveConfig defaults.
+    console.error(`Failed to initialize Firebase SDK: ${error}`);
+    return;
+  }
   warnOnConfigMismatch().catch(() => {
     // The dev-only config check is best-effort.
   });
