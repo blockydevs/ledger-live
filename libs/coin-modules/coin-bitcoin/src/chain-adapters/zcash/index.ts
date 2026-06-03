@@ -166,7 +166,7 @@ const zcashChainAdapter: ChainAdapter = {
   ) {
     const zcashAccount = account as ZcashAccount;
     const tx = transaction as ZcashTransaction | null | undefined;
-    const transferType = tx?.transferType ?? "shielded";
+    const transferType = tx?.transferType ?? "transparent";
     if (transferType !== "shielded" && transferType !== "shielded-to-transparent") return undefined;
 
     const notes = collectSpendableNotes(zcashAccount.privateInfo?.transactions ?? []);
