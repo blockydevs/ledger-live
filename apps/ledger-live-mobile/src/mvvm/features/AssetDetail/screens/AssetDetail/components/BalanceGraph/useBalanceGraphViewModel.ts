@@ -48,6 +48,7 @@ import {
 } from "./utils/getTransactionPointMarkers";
 import { buildTransactionPointMarker } from "./utils/buildTransactionPointMarker";
 import { downsampleChartPoints } from "./utils/downsampleChartPoints";
+import { injectMarketExtrema } from "@ledgerhq/live-common/market/utils/injectMarketExtrema";
 
 // Upper bound on operations pulled for the chart's transaction dots. The chart only
 // marks operations inside the visible window, so this just caps the lookback; raise it
@@ -167,8 +168,23 @@ export function useBalanceGraphViewModel({
     [counterValueUnit, locale],
   );
 
+  // Extract the all-time extrema as stable primitives: marketCurrency is a new
+  // object on every market poll (athDate/atlDate are fresh Date instances), so
+  // depending on it would re-run the series pipeline on each price refresh.
+  const ath = marketCurrency?.ath;
+  const atl = marketCurrency?.atl;
+  const athTime = marketCurrency?.athDate?.getTime();
+  const atlTime = marketCurrency?.atlDate?.getTime();
+
   const { series, timestamps } = useMemo(() => {
-    const points = chartData?.[range] ?? [];
+    const rawPoints = chartData?.[range] ?? [];
+    // On the "all" range, anchor the graph's high/low markers to the market
+    // all-time high/low so they match the stats table (see LIVE-31732). Injected
+    // before downsampling, which preserves the series min/max.
+    const points =
+      range === "all"
+        ? injectMarketExtrema(rawPoints, { ath, athDate: athTime, atl, atlDate: atlTime })
+        : rawPoints;
     const rawValues: number[] = [];
     const rawTimestamps: number[] = [];
     points.forEach(([timestamp, value]) => {
@@ -193,7 +209,7 @@ export function useBalanceGraphViewModel({
       ] satisfies LineChartSeries[],
       timestamps: tsList,
     };
-  }, [chartData, range]);
+  }, [chartData, range, ath, atl, athTime, atlTime]);
   const prices = series[0].data;
 
   const priceChangePercentage = useMemo(() => {

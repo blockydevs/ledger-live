@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { AssetMarketData } from "@ledgerhq/asset-detail";
 import type { DistributionItem } from "@ledgerhq/types-live";
 import { useAssetChartData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
+import { injectMarketExtrema } from "@ledgerhq/live-common/market/utils/injectMarketExtrema";
 import { formatPrice } from "@ledgerhq/live-currency-format";
 import { track } from "~/renderer/analytics/segment";
 import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
@@ -123,8 +124,23 @@ export function useChartSectionViewModel({
     isError,
   } = useAssetChartData({ id, counterCurrency, range: selectedRange }, { skip: !id });
 
+  // Extract the all-time extrema as stable primitives: marketCurrencyData is a
+  // new object on every market poll (athDate/atlDate are fresh Date instances),
+  // so depending on it would re-run the series pipeline on each price refresh.
+  const marketCurrencyData = marketData.marketCurrencyData;
+  const ath = marketCurrencyData?.ath;
+  const atl = marketCurrencyData?.atl;
+  const athTime = marketCurrencyData?.athDate?.getTime();
+  const atlTime = marketCurrencyData?.atlDate?.getTime();
+
   const { series, timestamps } = useMemo(() => {
-    const points = chartData?.[selectedRange] ?? [];
+    const rawPoints = chartData?.[selectedRange] ?? [];
+    // On the "all" range, anchor the graph's high/low markers to the market
+    // all-time high/low so they match the stats table (see LIVE-31732).
+    const points =
+      selectedRange === "all"
+        ? injectMarketExtrema(rawPoints, { ath, athDate: athTime, atl, atlDate: atlTime })
+        : rawPoints;
     const data: number[] = [];
     const tsList: number[] = [];
     points.forEach(([timestamp, value]) => {
@@ -143,7 +159,7 @@ export function useChartSectionViewModel({
       ] satisfies LineChartSeries[],
       timestamps: tsList,
     };
-  }, [chartData, selectedRange]);
+  }, [chartData, selectedRange, ath, atl, athTime, atlTime]);
 
   const priceChangeKey = getPriceChangeKeyForRange(selectedRange);
   const rangePercentage = marketData.marketCurrencyData?.priceChangePercentage?.[priceChangeKey];
