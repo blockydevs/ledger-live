@@ -1,37 +1,59 @@
 import { useCallback, useMemo } from "react";
 import BigNumber from "bignumber.js";
+import { useTranslation } from "react-i18next";
 import type { AssetMarketData } from "@ledgerhq/asset-detail";
+import type { DistributionItem } from "@ledgerhq/types-live";
 import { useAssetChartData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
 import { formatPrice } from "@ledgerhq/live-currency-format";
+import { track } from "~/renderer/analytics/segment";
+import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
+import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
+import { useCountervaluesState } from "@ledgerhq/live-countervalues-react";
+import { calculate } from "@ledgerhq/live-countervalues/logic";
 import { useSelector } from "LLD/hooks/redux";
 import {
+  getExtremaPointMarkers,
   resolveLineChartColorFromPercentChange,
   type LineChartColor,
+  type LineChartPointMarker,
   type LineChartRange,
+  type LineChartScrubberPositionChange,
   type LineChartSeries,
   type LineChartTooltipTitle,
   type LineChartValueFormatter,
   type LineChartXAxisConfig,
   type LineChartYAxisConfig,
 } from "LLD/components/LineChart";
-import { dayFormat, hourFormat, useDateFormatter } from "~/renderer/hooks/useDateFormatter";
-import { counterValueCurrencySelector, localeSelector } from "~/renderer/reducers/settings";
+import { accountsSelector } from "~/renderer/reducers/accounts";
+import {
+  counterValueCurrencySelector,
+  discreetModeSelector,
+  localeSelector,
+} from "~/renderer/reducers/settings";
+import { useHistoryOperationItemsForRootAccounts } from "LLD/features/History/hooks/useHistoryOperationItemsForRootAccounts";
+import {
+  filterOperationTableItemsByAllowedAccountIds,
+  filterTopLevelAccountsByAllowedAccountIds,
+} from "LLD/features/History/utils/accountScopeForHistory";
 import {
   clampDayChangePercentPointsNearZero,
   getPriceChangeKeyForRange,
+  getScrubVariation,
 } from "../MarketPriceSection/utils";
+import { useAssetChartDateFormatter } from "../../hooks/useAssetChartDateFormatter";
+import { useScrubbedPrice } from "../../context/ScrubbedPriceContext";
+import {
+  groupTransactionsByChartIndex,
+  type TransactionInput,
+} from "./utils/getTransactionPointMarkers";
+import { buildTransactionPointMarker } from "./utils/buildTransactionPointMarker";
 
 const MIN_X_AXIS_TICKS = 5;
 const MIN_X_AXIS_TICKS_1D = 8;
 
-/**
- * Asymmetric padding added to the y-axis domain (as a ratio of the value range).
- * Most of it sits at the bottom to lift the lowest point off the x-axis so its
- * "below" label clears the x-axis tick labels, while the top stays nearly tight
- * so the line keeps its amplitude and does not look flat.
- */
-const Y_AXIS_PADDING_BOTTOM_RATIO = 0.12;
-const Y_AXIS_PADDING_TOP_RATIO = 0.04;
+const CHART_BASE_HEIGHT = 240;
+const Y_AXIS_OFFSET_BOTTOM_PX = 50;
+const CHART_HEIGHT = CHART_BASE_HEIGHT + Y_AXIS_OFFSET_BOTTOM_PX;
 
 /**
  * Returns evenly spaced data indices (always including the first and last point)
@@ -50,13 +72,16 @@ function getEvenlySpacedTicks(length: number, minTicks: number): number[] {
 type UseChartSectionViewModelProps = Readonly<{
   marketData: AssetMarketData;
   ledgerId?: string;
+  currencyId?: string;
   isDistributionLoading: boolean;
   selectedRange: LineChartRange;
   onRangeChange: (range: LineChartRange) => void;
+  distributionItem?: DistributionItem;
 }>;
 
 export type ChartSectionViewModelResult = Readonly<{
   series: LineChartSeries[];
+  height: number;
   selectedRange: LineChartRange;
   onRangeChange: (range: LineChartRange) => void;
   color: LineChartColor;
@@ -64,22 +89,30 @@ export type ChartSectionViewModelResult = Readonly<{
   isError: boolean;
   formatValue: LineChartValueFormatter;
   tooltipTitle: LineChartTooltipTitle;
+  onScrubberPositionChange: LineChartScrubberPositionChange;
   showXAxis: boolean;
   showYAxis: boolean;
   xAxis: LineChartXAxisConfig;
   yAxis: LineChartYAxisConfig;
+  points: LineChartPointMarker[];
 }>;
 
 export function useChartSectionViewModel({
   marketData,
   ledgerId,
+  currencyId,
   selectedRange,
   onRangeChange,
+  distributionItem,
 }: UseChartSectionViewModelProps): ChartSectionViewModelResult {
+  const { t } = useTranslation();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterCurrency = counterValueCurrency.ticker.toLowerCase();
   const fiatUnit = counterValueCurrency.units[0];
   const locale = useSelector(localeSelector);
+  const discreet = useSelector(discreetModeSelector);
+  const allAccounts = useSelector(accountsSelector);
+  const countervaluesState = useCountervaluesState();
 
   const id =
     ledgerId ?? marketData.marketCurrencyData?.ledgerIds?.[0] ?? marketData.marketCurrencyData?.id;
@@ -118,6 +151,61 @@ export function useChartSectionViewModel({
     clampDayChangePercentPointsNearZero(rangePercentage),
   );
 
+  const accountIds = useMemo(
+    () => new Set((distributionItem?.accounts ?? []).map(account => account.id)),
+    [distributionItem?.accounts],
+  );
+
+  const rootAccounts = useMemo(
+    () =>
+      accountIds.size === 0
+        ? []
+        : filterTopLevelAccountsByAllowedAccountIds(allAccounts, accountIds),
+    [allAccounts, accountIds],
+  );
+
+  const operationItemsFromRoots = useHistoryOperationItemsForRootAccounts(rootAccounts);
+
+  const transactions = useMemo<TransactionInput[]>(() => {
+    const items = filterOperationTableItemsByAllowedAccountIds(operationItemsFromRoots, accountIds);
+    return items.map(item => {
+      const countervalue = calculate(countervaluesState, {
+        from: item.currency,
+        to: counterValueCurrency,
+        value: item.amount.abs().toNumber(),
+        date: item.date,
+        disableRounding: true,
+      });
+      return {
+        dateMs: item.date.getTime(),
+        direction: item.amount.isNegative() ? "out" : "in",
+        fiat: typeof countervalue === "number" ? countervalue : null,
+      };
+    });
+  }, [operationItemsFromRoots, accountIds, countervaluesState, counterValueCurrency]);
+
+  const formatFiat = useCallback(
+    (value: number) =>
+      formatCurrencyUnit(fiatUnit, new BigNumber(value), { showCode: true, locale, discreet }),
+    [fiatUnit, locale, discreet],
+  );
+
+  const points = useMemo<LineChartPointMarker[]>(() => {
+    const extremaMarkers = getExtremaPointMarkers(series);
+
+    const groups = groupTransactionsByChartIndex({
+      timestamps,
+      values: series[0]?.data ?? [],
+      transactions,
+    });
+
+    const transactionMarkers = groups.map(group =>
+      buildTransactionPointMarker(group, t, formatFiat),
+    );
+
+    return [...extremaMarkers, ...transactionMarkers];
+  }, [series, timestamps, transactions, formatFiat, t]);
+
   const formatValue = useCallback<LineChartValueFormatter>(
     value =>
       formatPrice(fiatUnit, new BigNumber(value).times(10 ** fiatUnit.magnitude), {
@@ -127,15 +215,13 @@ export function useChartSectionViewModel({
     [fiatUnit, locale],
   );
 
-  const formatDay = useDateFormatter(dayFormat);
-  const formatHour = useDateFormatter(hourFormat);
-  const formatDate = selectedRange === "1d" ? formatHour : formatDay;
+  const formatDate = useAssetChartDateFormatter(selectedRange);
 
   const tooltipTitle = useCallback<LineChartTooltipTitle>(
     dataIndex => {
       const timestamp = timestamps[dataIndex];
       if (timestamp == null) return undefined;
-      return formatDate(new Date(timestamp));
+      return formatDate(timestamp);
     },
     [timestamps, formatDate],
   );
@@ -149,7 +235,7 @@ export function useChartSectionViewModel({
       ),
       tickLabelFormatter: value => {
         const timestamp = timestamps[Number(value)];
-        return timestamp == null ? "" : formatDate(new Date(timestamp));
+        return timestamp == null ? "" : formatDate(timestamp);
       },
     }),
     [timestamps, formatDate, selectedRange],
@@ -159,27 +245,65 @@ export function useChartSectionViewModel({
     () => ({
       domain: ({ min, max }) => {
         const range = max - min || Math.abs(max) || 1;
+        const valuePerPx = range / CHART_BASE_HEIGHT;
         return {
-          min: min - range * Y_AXIS_PADDING_BOTTOM_RATIO,
-          max: max + range * Y_AXIS_PADDING_TOP_RATIO,
+          min: min - Y_AXIS_OFFSET_BOTTOM_PX * valuePerPx,
+          max,
         };
       },
     }),
     [],
   );
 
+  const { setSelection } = useScrubbedPrice();
+
+  const onScrubberPositionChange = useCallback<LineChartScrubberPositionChange>(
+    index => {
+      if (index == null) return setSelection(undefined);
+      const price = series[0]?.data[index];
+      const baselinePrice = series[0]?.data[0];
+      const timestamp = timestamps[index];
+      if (!Number.isFinite(price) || !Number.isFinite(baselinePrice) || timestamp == null) {
+        return setSelection(undefined);
+      }
+      const { percentage, variationFiat } = getScrubVariation(baselinePrice, price);
+      setSelection({ price, timestamp, percentage, variationFiat });
+    },
+    [series, timestamps, setSelection],
+  );
+
+  const handleRangeChange = useCallback(
+    (range: LineChartRange) => {
+      if (range === selectedRange) return;
+      setSelection(undefined);
+      onRangeChange(range);
+      if (currencyId) {
+        track("button_clicked", {
+          button: "timeframe",
+          timeframe: range,
+          page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+          currency: currencyId,
+        });
+      }
+    },
+    [currencyId, selectedRange, onRangeChange, setSelection],
+  );
+
   return {
     series,
+    height: CHART_HEIGHT,
     selectedRange,
-    onRangeChange,
+    onRangeChange: handleRangeChange,
     color,
     isLoading,
     isError,
     formatValue,
     tooltipTitle,
-    showXAxis: true,
+    onScrubberPositionChange,
+    showXAxis: false,
     showYAxis: false,
     xAxis,
     yAxis,
+    points,
   };
 }

@@ -1,7 +1,7 @@
 import { Account } from "./enum/Account";
 import { sanitizeError } from "./index";
 import axios, { AxiosRequestConfig } from "axios";
-import { Provider } from "./enum/Provider";
+import { SwapProvider } from "./enum/Provider";
 
 // Target a sensible USD amount that works for most pairs
 const FALLBACK_TARGET_USD = 50;
@@ -125,7 +125,7 @@ export async function getMinimumSwapAmount(
   }
 }
 
-export function pickRotatingProvider(eligibleProviders: Provider[]): Provider {
+export function pickRotatingProvider(eligibleProviders: SwapProvider[]): SwapProvider {
   if (eligibleProviders.length === 0) {
     throw new Error("[pickRotatingProvider] - eligibleProviders is empty");
   }

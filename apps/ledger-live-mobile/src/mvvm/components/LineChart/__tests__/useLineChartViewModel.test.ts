@@ -124,10 +124,19 @@ describe("useLineChartViewModel", () => {
     const { result } = renderHook(() => useLineChartViewModel(buildProps()));
 
     expect(result.current.enableScrubber).toBe(true);
+    expect(result.current.showScrubberTooltip).toBe(true);
     expect(result.current.showArea).toBe(true);
     expect(result.current.showXAxis).toBe(true);
     expect(result.current.showYAxis).toBe(true);
     expect(result.current.formatValue(42)).toBe("42");
+  });
+
+  it("forwards an explicit showScrubberTooltip=false", () => {
+    const { result } = renderHook(() =>
+      useLineChartViewModel(buildProps({ showScrubberTooltip: false })),
+    );
+
+    expect(result.current.showScrubberTooltip).toBe(false);
   });
 
   it("defaults points to the high/low extrema of the primary series", () => {
@@ -135,8 +144,8 @@ describe("useLineChartViewModel", () => {
     const { result } = renderHook(() => useLineChartViewModel(buildProps()));
 
     expect(result.current.points).toEqual([
-      { index: 2, value: 3, color: "success", labelPosition: "top" },
-      { index: 0, value: 1, color: "error", labelPosition: "bottom" },
+      { index: 2, value: 3, color: "success", labelPosition: "top", hidePoint: true },
+      { index: 0, value: 1, color: "error", labelPosition: "bottom", hidePoint: true },
     ]);
   });
 
@@ -151,5 +160,28 @@ describe("useLineChartViewModel", () => {
     const { result } = renderHook(() => useLineChartViewModel(buildProps({ points })));
 
     expect(result.current.points).toEqual(points);
+  });
+
+  it("defaults pointTooltipsOnly to false and exposes an empty pointTooltips map", () => {
+    const { result } = renderHook(() => useLineChartViewModel(buildProps()));
+
+    expect(result.current.pointTooltipsOnly).toBe(false);
+    expect(result.current.showScrubberBeacons).toBe(true);
+    expect(result.current.pointTooltips.size).toBe(0);
+  });
+
+  it("derives pointTooltips keyed by index from markers that carry a tooltip", () => {
+    const tooltip = { rows: [{ label: "Received", value: "$5" }] };
+    const points = [
+      { index: 0, value: 1, color: "muted" as const },
+      { index: 2, value: 3, color: "success" as const, tooltip },
+    ];
+    const { result } = renderHook(() =>
+      useLineChartViewModel(buildProps({ points, pointTooltipsOnly: true })),
+    );
+
+    expect(result.current.pointTooltipsOnly).toBe(true);
+    expect(result.current.pointTooltips.size).toBe(1);
+    expect(result.current.pointTooltips.get(2)).toEqual(tooltip);
   });
 });

@@ -1,6 +1,9 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { track } from "~/renderer/analytics/segment";
+import { ASSET_DETAIL_TRACKING_PAGE_NAME } from "LLD/features/AssetDetail/constants";
 import counterValueFormatter from "@ledgerhq/live-common/market/utils/countervalueFormatter";
+import { resolveMaxSupplyDisplay } from "@ledgerhq/asset-detail";
 import type { MarketDataSectionCurrencyData } from "../../hooks/useMarketDataSectionCurrencyData";
 import type { MarketStatRow } from "../../types";
 
@@ -8,7 +11,7 @@ const MISSING = "-";
 
 export function useMarketStatsViewModel(currencyData: MarketDataSectionCurrencyData) {
   const { t } = useTranslation();
-  const { data, showSkeleton, counterCurrency, locale } = currencyData;
+  const { data, showSkeleton, counterCurrency, locale, ledgerCurrencyId } = currencyData;
 
   const sectionTitle = t("assetDetails.marketStats");
   const sectionTooltip = t("assetDetails.marketStatsTooltip");
@@ -28,11 +31,11 @@ export function useMarketStatsViewModel(currencyData: MarketDataSectionCurrencyD
       ticker: data?.ticker,
     });
 
-    const maxSupply = counterValueFormatter({
-      value: data?.maxSupply,
-      locale,
-      shorten: true,
-      ticker: data?.ticker,
+    const maxSupply = resolveMaxSupplyDisplay({
+      maxSupply: data?.maxSupply,
+      circulatingSupply: data?.circulatingSupply,
+      formatValue: value =>
+        counterValueFormatter({ value, locale, shorten: true, ticker: data?.ticker }),
     });
 
     const volume24h = counterValueFormatter({
@@ -88,11 +91,26 @@ export function useMarketStatsViewModel(currencyData: MarketDataSectionCurrencyD
     t,
   ]);
 
+  const onTooltipOpen = useCallback(
+    (statType: string, open: boolean) => {
+      if (open && ledgerCurrencyId) {
+        track("button_clicked", {
+          button: "market_stat_definition",
+          currency: ledgerCurrencyId,
+          type: statType,
+          page: ASSET_DETAIL_TRACKING_PAGE_NAME,
+        });
+      }
+    },
+    [ledgerCurrencyId],
+  );
+
   return {
     rows,
     showSkeleton,
     sectionTitle,
     sectionTooltip,
+    onTooltipOpen,
   };
 }
 

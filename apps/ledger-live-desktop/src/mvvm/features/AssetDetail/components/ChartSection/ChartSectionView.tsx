@@ -4,8 +4,9 @@ import type { ChartSectionViewModelResult } from "./useChartSectionViewModel";
 
 type ChartSectionViewProps = Readonly<ChartSectionViewModelResult>;
 
-export function ChartSectionView({
+function ChartSectionViewComponent({
   series,
+  height,
   selectedRange,
   onRangeChange,
   color,
@@ -13,10 +14,12 @@ export function ChartSectionView({
   isError,
   formatValue,
   tooltipTitle,
+  onScrubberPositionChange,
   showXAxis,
   showYAxis,
   xAxis,
   yAxis,
+  points,
 }: ChartSectionViewProps) {
   return (
     <div className="w-full min-w-0" data-testid="asset-detail-chart-section">
@@ -25,15 +28,22 @@ export function ChartSectionView({
         selectedRange={selectedRange}
         onRangeChange={onRangeChange}
         color={color}
+        height={height}
         isLoading={isLoading}
         isError={isError}
         formatValue={formatValue}
         tooltipTitle={tooltipTitle}
+        showScrubberTooltip={true}
+        pointTooltipsOnly={true}
+        onScrubberPositionChange={onScrubberPositionChange}
         showXAxis={showXAxis}
         showYAxis={showYAxis}
         xAxis={xAxis}
         yAxis={yAxis}
+        points={points}
       />
     </div>
   );
 }
+
+export const ChartSectionView = React.memo(ChartSectionViewComponent);

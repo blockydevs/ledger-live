@@ -1909,6 +1909,14 @@
         }
       }
     },
+    "counterfeitWarning": {
+      "title": "Before you start",
+      "body": "We recommend buying from <ledgerCom>Ledger.com</ledgerCom> or our <resellerLink>official reseller network</resellerLink>. This helps ensure your device is genuine and ready to use.",
+      "cta": {
+        "primary": "Continue setup",
+        "secondary": "Learn more"
+      }
+    },
     "stepNewDevice": {
       "0": {
         "label": "Basics",
@@ -3199,7 +3207,6 @@
     },
     "availableBalance": "Available balance",
     "availableBalanceTooltip": "Funds you can use right now.",
-
     "claimableRewards": "Claimable rewards",
     "totalSupplied": "Amount deposited",
     "tronFrozen": "Frozen",
@@ -6601,6 +6608,16 @@
       "status": "Status",
       "unstaking": "Unstaking",
       "available": "Available"
+    },
+    "account": {
+      "availableBalanceTooltip": "Funds you can use right now.",
+      "delegatedAssetsTooltip": "XTZ delegated to a baker. Funds remain in your wallet and can be sent at any time.",
+      "stakedAssets": "Staked assets",
+      "stakedAssetsTooltip": "XTZ locked under your baker. Unstake to make them withdrawable after ~4 days.",
+      "pendingWithdrawable": "Pending withdrawable",
+      "pendingWithdrawableTooltip": "XTZ currently unstaking. Available for withdrawal in ~4 days.",
+      "withdrawableAssets": "Withdrawable assets",
+      "withdrawableAssetsTooltip": "XTZ that finished the unstaking period and is ready to be withdrawn."
     }
   },
   "evm": {
@@ -6658,7 +6675,8 @@
             "warning": {
               "description": "Choose your validator wisely: Part of your delegated assets may be irrevocably lost if the validator does not behave appropriately."
             },
-            "cta": "Continue"
+            "cta": "Continue",
+            "seiAssociationWarning": "Your Sei account has not yet been linked on-chain. Delegation will fail until your account has its first outbound transaction confirmed on-chain. Send a small amount of SEI to any address first, wait for confirmation, then come back to delegate."
           },
           "validator": {
             "validators": "Validators",
@@ -8037,6 +8055,7 @@
   },
   "market": {
     "title": "Market",
+    "exploreTitle": "Explore the market",
     "filters": {
       "sort": "Sort",
       "filter": "Filter",
@@ -8136,44 +8155,44 @@
         "tooltip": "The average price you paid for this asset through Ledger Wallet, including everything you’ve bought or received from other wallets. This is used to track your profit or loss."
       },
       "drawer": {
-        "title": "Asset profit and loss",
-        "description": "A summary of how this asset has performed in your portfolio.",
+        "title": "Profit and loss",
+        "description": "Your asset performance broken down into estimated unrealised and realised returns.",
         "estimatedReturn": {
-          "title": "Estimated return",
+          "title": "Unrealised return",
           "description": "The estimated profit or loss if sold at current price."
         },
         "realisedReturn": {
           "title": "Realised return",
-          "description": "Profit or loss confirmed from previous sale, send, or swap."
+          "description": "Profit or loss estimated from previous sale, send or swap."
         },
         "totalReturn": {
           "title": "Total return",
-          "description": "The sum of estimated and realised returns."
+          "description": "The sum of estimated unrealised and realised returns."
         }
       }
     },
     "portfolio": {
+      "title": "Profit and loss",
       "return": {
         "title": "Unrealised return"
       },
-      "costBasis": {
-        "title": "Cost basis",
-        "tooltip": "The total amount you paid to acquire your current holdings, including fees."
+      "realised": {
+        "title": "Realised return"
       },
       "drawer": {
-        "title": "Portfolio profit and loss",
-        "description": "Your portfolio performance broken down into estimated and realised returns.",
+        "title": "Profit and loss",
+        "description": "Your portfolio performance broken down into estimated unrealised and realised return.",
         "estimatedReturn": {
-          "title": "Estimated return",
+          "title": "Unrealised return",
           "description": "The estimated profit or loss if sold at current price."
         },
         "realisedReturn": {
           "title": "Realised return",
-          "description": "Profit or loss confirmed from previous sale, send, or swap."
+          "description": "Profit or loss estimated from previous sale, send or swap."
         },
         "totalReturn": {
           "title": "Total return",
-          "description": "The sum of estimated and realised returns."
+          "description": "The sum of estimated unrealised and realised returns."
         }
       }
     }
@@ -9103,23 +9122,32 @@
       "marketPrice": "Market price",
       "timeframeSelector": "Timeframe",
       "timeLabel": {
-        "1d": "1 day",
+        "1d": "24 hours",
         "1w": "1 week",
         "1m": "1 month",
-        "1y": "1 year"
+        "6m": "6 months",
+        "1y": "1 year",
+        "all": "All time"
       },
       "range": {
         "1d": "1D",
         "1w": "1W",
         "1m": "1M",
-        "1y": "1Y"
+        "6m": "6M",
+        "1y": "1Y",
+        "all": "ALL"
+      },
+      "chart": {
+        "received": "Received",
+        "sent": "Sent",
+        "transactionsCount": "{{count}} transactions"
       }
     },
     "addresses": {
-      "title": "Addresses",
+      "title": "Accounts",
       "addAccount": "Add",
       "seeAll": "See all",
-      "empty": "No addresses yet. Tap Add to get started."
+      "empty": "No accounts yet. Tap Add to get started."
     },
     "marketStats": {
       "title": "Market stats",
@@ -9132,7 +9160,8 @@
       "marketCapTooltip": "The total value of all coins in circulation. Think of it as the crypto's total worth on the market.",
       "tradingVolume": "24h trading volume",
       "tradingVolumeTooltip": "The total amount traded in the last 24 hours.",
-      "error": "Unable to load market stats"
+      "error": "Unable to load market stats",
+      "disclaimer": "Market stats sourced from CoinGecko"
     },
     "pricePerformance": {
       "title": "Price performance",
@@ -9567,13 +9596,14 @@
   },
   "fearAndGreed": {
     "title": "Mood index",
-    "description": "Shows overall market sentiment from 0 to 100, based on trends and activity. Use it to understand how the market is behaving: lower values indicate fear, higher values indicate greed.",
+    "description": "Shows overall market sentiment from 0 to 100, based notably on volatility, market momentum and social trends. Lower values indicate fear, higher values indicate greed.",
+    "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
     "levels": {
+      "fearPlus": "Fear+",
       "fear": "Fear",
-      "cautious": "Cautious",
       "neutral": "Neutral",
-      "optimistic": "Optimistic",
-      "greedy": "Greedy"
+      "greed": "Greed",
+      "greedPlus": "Greed+"
     },
     "tileTitle": "Mood"
   },

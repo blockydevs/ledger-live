@@ -10,8 +10,8 @@ import { TrackScreen } from "~/analytics";
 import { SeedOriginType } from "@ledgerhq/types-live";
 import BackgroundBlue from "../assets/BackgroundBlue";
 import BackgroundRed from "../assets/BackgroundRed";
-import ContinueOnDeviceWithAnim from "~/screens/SyncOnboarding/TwoStepStepper/ContinueOnDeviceWithAnim";
-import SeedCompanionStep from "~/screens/SyncOnboarding/TwoStepStepper/SeedCompanionStep";
+import ContinueOnDeviceWithAnim from "../components/ContinueOnDeviceWithAnim";
+import SeedCompanionStep from "../components/SeedCompanionStep";
 import {
   SeedPathStatus,
   FirstStepCompanionStepKey,

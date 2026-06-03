@@ -9,6 +9,7 @@ import { useTransferDrawerViewModel } from "./useTransferDrawerViewModel";
 
 type Props = Readonly<{
   currency?: CryptoOrTokenCurrency;
+  ledgerIds?: string[];
 }>;
 
 /**
@@ -19,9 +20,10 @@ type Props = Readonly<{
  * - Send crypto: Navigates to send flow
  * - Bank transfer: Navigates to buy flow for stablecoin purchases
  */
-export const TransferDrawer = ({ currency }: Props = {}) => {
+export const TransferDrawer = ({ currency, ledgerIds }: Props = {}) => {
   const { isOpen, title, actions, handleClose, bottomInset } = useTransferDrawerViewModel({
     currency,
+    ledgerIds,
   });
   const { isEnabled } = useWalletFeaturesConfig("mobile");
 

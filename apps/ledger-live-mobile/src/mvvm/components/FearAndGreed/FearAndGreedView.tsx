@@ -39,6 +39,9 @@ export const FearAndGreedView = ({
             <Text typography="body1" lx={{ color: "base" }}>
               {t("fearAndGreed.description")}
             </Text>
+            <Text typography="body4" lx={{ color: "muted", marginTop: "s16" }}>
+              {t("fearAndGreed.disclaimer")}
+            </Text>
           </BottomSheetView>
         </QueuedDrawerBottomSheet>
       </>
@@ -57,6 +60,9 @@ export const FearAndGreedView = ({
           <FearAndGreedTitle />
           <Text typography="body1" lx={{ color: "base" }}>
             {t("fearAndGreed.description")}
+          </Text>
+          <Text typography="body4" lx={{ color: "muted", marginTop: "s20" }}>
+            {t("fearAndGreed.disclaimer")}
           </Text>
         </GorhomBottomSheetView>
       </QueuedDrawerGorhom>

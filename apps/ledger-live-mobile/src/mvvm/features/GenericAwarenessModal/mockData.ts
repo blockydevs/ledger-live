@@ -158,4 +158,6 @@ export const promptMockData: GenericAwarenessModalPrompt = {
   subtitle: "Open the feature from Ledger Wallet whenever you need it.",
   primaryButtonLabel: "Learn more",
   primaryButtonLink: "https://www.ledger.com",
+  secondaryButtonLabel: "Buy your Ledger device",
+  secondaryButtonLink: "ledgerlive://buy",
 };

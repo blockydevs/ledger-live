@@ -113,6 +113,7 @@ export type SwapLiveError = {
 // Swap quotes (`custom.exchange.getQuotes`). Internal HTTP shapes live in ledger-live-common only.
 
 export type UniswapOrderType = "classic" | "uniswapxv2" | "all";
+export type QuotesAppPlatform = "lld" | "llm-ios" | "llm-android" | "unknown";
 
 export type QuotesInput = {
   amount: string;
@@ -381,9 +382,14 @@ export type CustomSwapResult = {
   rfqStatus?: "finished" | "refunded";
 };
 
+export enum ProviderErrorCodes {
+  AMOUNT_OFF_LIMITS = "amount_off_limits",
+  FAILED_TO_GET_QUOTE_ERROR = "failed_to_get_quote_error",
+}
+
 /** Error rows returned next to quotes (swap API error objects). */
 export type QuoteProviderError = {
-  code: string;
+  code: ProviderErrorCodes | (string & {});
   type: TradeMethod;
   provider: string;
   message: string;
@@ -398,17 +404,34 @@ export type QuoteProviderError = {
  * Producers live wallet-side; this is the contract consumers read.
  */
 export enum QuotesErrorCodes {
+  AMOUNT_TOO_HIGH = "amountTooHigh",
+  AMOUNT_TOO_LOW = "amountTooLow",
+  LEDGER_LIVE_VERSION_INCOMPATIBILITY = "ledgerLiveVersionIncompatibility",
   NO_QUOTES = "noQuotes",
   QUOTE_INPUT_RESOLUTION_FAILED = "quoteInputResolutionFailed",
-  AMOUNT_TOO_LOW = "amountTooLow",
-  AMOUNT_TOO_HIGH = "amountTooHigh",
 }
 
 export type QuotesError =
   | { code: QuotesErrorCodes.NO_QUOTES }
   | { code: QuotesErrorCodes.QUOTE_INPUT_RESOLUTION_FAILED }
   | { code: QuotesErrorCodes.AMOUNT_TOO_LOW; minAmount: string }
-  | { code: QuotesErrorCodes.AMOUNT_TOO_HIGH; maxAmount: string };
+  | { code: QuotesErrorCodes.AMOUNT_TOO_HIGH; maxAmount: string }
+  | {
+      code: QuotesErrorCodes.LEDGER_LIVE_VERSION_INCOMPATIBILITY;
+      currencyId: string;
+      platform: QuotesAppPlatform;
+      currentVersion: string;
+      requiredVersion: string;
+    };
+
+export enum QuotesWarningCodes {
+  NANO_S_CURRENCY_INCOMPATIBILITY = "nanoSCurrencyIncompatibility",
+}
+
+export type QuotesWarning = {
+  code: QuotesWarningCodes.NANO_S_CURRENCY_INCOMPATIBILITY;
+  currencyId: string;
+};
 
 export type GetQuotesResponse = {
   quotes: Quote[];
@@ -419,6 +442,11 @@ export type GetQuotesResponse = {
    * digest these into globals here, that lives in {@link errors}.
    */
   providerErrors: QuoteProviderError[];
+  /**
+   * Digested global warnings for the whole batch. Empty array when there is
+   * nothing to surface.
+   */
+  warnings: QuotesWarning[];
   /**
    * Digested global state for the whole batch (e.g. `noQuotes` when no
    * successful quotes came back, `amountTooLow` / `amountTooHigh` when

@@ -23,7 +23,11 @@ export function LineChartView<TRange extends string>({
   isLoading,
   testID,
   points,
+  pointTooltips,
   enableScrubber,
+  showScrubberTooltip,
+  showScrubberBeacons,
+  pointTooltipsOnly,
   formatValue,
   tooltipTitle,
   onScrubberPositionChange,
@@ -55,6 +59,10 @@ export function LineChartView<TRange extends string>({
               series={chartSeries}
               formatValue={formatValue}
               tooltipTitle={tooltipTitle}
+              showTooltip={showScrubberTooltip}
+              showBeacons={showScrubberBeacons}
+              pointTooltips={pointTooltips}
+              pointTooltipsOnly={pointTooltipsOnly}
             />
           )}
         </LumenLineChart>
@@ -76,5 +84,5 @@ export function LineChartView<TRange extends string>({
 }
 
 const containerStyle: LumenViewStyle = {
-  gap: "s32",
+  gap: "s24",
 };

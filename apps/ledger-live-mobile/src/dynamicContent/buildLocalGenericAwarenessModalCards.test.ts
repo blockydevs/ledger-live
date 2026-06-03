@@ -133,6 +133,8 @@ describe("buildLocalGenericAwarenessModalCards", () => {
       imageUrl: "https://example.com/prompt.png",
       primaryButtonLabel: "Learn more",
       primaryButtonLink: "https://example.com",
+      secondaryButtonLabel: "Maybe later",
+      secondaryButtonLink: "ledgerlive://myledger",
     };
 
     const rawCards = buildLocalGenericAwarenessModalBrazeCards(values);
@@ -148,6 +150,8 @@ describe("buildLocalGenericAwarenessModalCards", () => {
       imageUrl: "https://example.com/prompt.png",
       primaryButtonLabel: "Learn more",
       primaryButtonLink: "https://example.com",
+      secondaryButtonLabel: "Maybe later",
+      secondaryButtonLink: "ledgerlive://myledger",
     });
     expect(rawCards[0].extras).not.toHaveProperty("index");
     expect(rawCards[0].extras).not.toHaveProperty("role");
@@ -161,6 +165,8 @@ describe("buildLocalGenericAwarenessModalCards", () => {
         imageUrl: "https://example.com/prompt.png",
         primaryButtonLabel: "Learn more",
         primaryButtonLink: "https://example.com",
+        secondaryButtonLabel: "Maybe later",
+        secondaryButtonLink: "ledgerlive://myledger",
       },
     ]);
   });

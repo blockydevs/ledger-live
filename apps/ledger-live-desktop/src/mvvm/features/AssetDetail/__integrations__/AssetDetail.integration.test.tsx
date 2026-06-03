@@ -1,6 +1,7 @@
 import React from "react";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import {
+  fireEvent,
   render,
   renderWithMockedCounterValuesProvider,
   screen,
@@ -442,11 +443,11 @@ describe("AssetDetail integration", () => {
         });
 
         expect(within(section).queryByTestId("y-axis")).not.toBeInTheDocument();
-        expect(within(section).getByTestId("x-axis")).toBeVisible();
+        expect(within(section).queryByTestId("x-axis")).not.toBeInTheDocument();
         expect(within(section).getAllByTestId("point-group")).toHaveLength(2);
       });
 
-      it("shows the scrubber tooltip when hovering the chart", async () => {
+      it("shows the scrubber without a tooltip when hovering the chart", async () => {
         mockMarket.withData(MarketMockedResponse.bitcoinDetail);
         setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
 
@@ -459,7 +460,57 @@ describe("AssetDetail integration", () => {
 
         await waitFor(() => {
           expect(within(section).getByTestId("scrubber")).toBeVisible();
-          expect(within(section).getByTestId("chart-tooltip")).toBeVisible();
+        });
+        // The scrubbed price/date is surfaced in the market price section instead.
+        expect(within(section).queryByTestId("chart-tooltip")).not.toBeInTheDocument();
+      });
+
+      it("drives the market price section from the scrubbed point and reverts on leave", async () => {
+        mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+        setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+        renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+        await waitForMarketPriceSectionShowsQuote();
+
+        const priceSection = screen.getByTestId(TEST_ID.MARKET_PRICE_SECTION);
+        const livePrice = screen.getByTestId(TEST_ID.MARKET_PRICE).textContent;
+        const livePercent = screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT).textContent;
+        const liveFiatVariation = screen.getByTestId(
+          TEST_ID.MARKET_PRICE_FIAT_VARIATION,
+        ).textContent;
+        expect(within(priceSection).getByText("1 day")).toBeVisible();
+
+        const chartSection = screen.getByTestId(TEST_ID.CHART_SECTION);
+        const chart = await waitFor(() => within(chartSection).getByTestId("chart-svg"));
+
+        hoverChartSvg(chart);
+
+        // While scrubbing, the trailing range label is replaced by the hovered
+        // point's date, the displayed price tracks the scrubbed value, and the
+        // % / fiat variation reflect the change from the range start.
+        await waitFor(() => {
+          expect(within(priceSection).queryByText("1 day")).not.toBeInTheDocument();
+          expect(screen.getByTestId(TEST_ID.MARKET_PRICE).textContent).not.toBe(livePrice);
+        });
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT)).toBeVisible();
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION)).toBeVisible();
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT).textContent).not.toBe(livePercent);
+        expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION).textContent).not.toBe(
+          liveFiatVariation,
+        );
+
+        fireEvent.mouseLeave(chart);
+
+        // Leaving the chart reverts to the live price, range label and variation.
+        // The amount re-enables its animation on revert, so wait for it to settle.
+        await waitFor(() => {
+          expect(within(priceSection).getByText("1 day")).toBeVisible();
+          expect(screen.getByTestId(TEST_ID.MARKET_PRICE).textContent).toBe(livePrice);
+          expect(screen.getByTestId(TEST_ID.MARKET_PRICE_PERCENT).textContent).toBe(livePercent);
+          expect(screen.getByTestId(TEST_ID.MARKET_PRICE_FIAT_VARIATION).textContent).toBe(
+            liveFiatVariation,
+          );
         });
       });
     });

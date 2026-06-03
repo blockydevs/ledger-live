@@ -8,6 +8,8 @@ import { TrendSection } from "LLM/components/TrendSection";
 import { LineChart } from "LLM/components/LineChart";
 import type {
   LineChartColor,
+  LineChartPointMarker,
+  LineChartScrubberPositionChange,
   LineChartSeries,
   LineChartTooltipTitle,
   LineChartValueFormatter,
@@ -17,6 +19,9 @@ import type {
 import { ASSET_DETAIL_TEST_IDS } from "LLM/features/AssetDetail/testIds";
 import type { RangeKey } from "../../utils/rangeMapping";
 
+/** Figma asset-detail chart height (343 × 208). Width follows the screen inset. */
+export const ASSET_DETAIL_CHART_HEIGHT = 208;
+
 type Range = Readonly<{ label: string; value: RangeKey }>;
 
 type Props = Readonly<{
@@ -25,7 +30,7 @@ type Props = Readonly<{
   hasMarketData: boolean;
   priceChangePercentage: number;
   formattedPriceChange: string | undefined;
-  rangeTimeLabel: string;
+  timeLabel: string | undefined;
   ranges: Range[];
   selectedRange: RangeKey;
   onRangeChange: (value: RangeKey) => void;
@@ -35,13 +40,88 @@ type Props = Readonly<{
   isLoading: boolean;
   series: LineChartSeries[];
   chartColor: LineChartColor;
+  points: LineChartPointMarker[];
+  pointTooltipsOnly: boolean;
   formatValue: LineChartValueFormatter;
   tooltipTitle: LineChartTooltipTitle;
+  onScrubberPositionChange: LineChartScrubberPositionChange;
+  isScrubbing: boolean;
   showXAxis: boolean;
   showYAxis: boolean;
   xAxis: LineChartXAxisConfig;
   yAxis: LineChartYAxisConfig;
 }>;
+
+type ChartProps = Readonly<{
+  series: LineChartSeries[];
+  selectedRange: RangeKey;
+  onRangeChange: (value: RangeKey) => void;
+  ranges: Range[];
+  isRangeValue: (value: string) => value is RangeKey;
+  chartColor: LineChartColor;
+  isLoading: boolean;
+  points: LineChartPointMarker[];
+  pointTooltipsOnly: boolean;
+  formatValue: LineChartValueFormatter;
+  tooltipTitle: LineChartTooltipTitle;
+  onScrubberPositionChange: LineChartScrubberPositionChange;
+  showXAxis: boolean;
+  showYAxis: boolean;
+  xAxis: LineChartXAxisConfig;
+  yAxis: LineChartYAxisConfig;
+  accessibilityLabel: string;
+}>;
+
+/**
+ * Memoized chart subtree. The market-price header re-renders on every scrub
+ * frame; wrapping the chart keeps its (already memoized) props stable so the
+ * Lumen chart + scrubber are not re-rendered mid-gesture.
+ */
+const BalanceGraphChart = React.memo(function BalanceGraphChart({
+  series,
+  selectedRange,
+  onRangeChange,
+  ranges,
+  isRangeValue,
+  chartColor,
+  isLoading,
+  points,
+  pointTooltipsOnly,
+  formatValue,
+  tooltipTitle,
+  onScrubberPositionChange,
+  showXAxis,
+  showYAxis,
+  xAxis,
+  yAxis,
+  accessibilityLabel,
+}: ChartProps) {
+  return (
+    <LineChart<RangeKey>
+      series={series}
+      selectedRange={selectedRange}
+      onRangeChange={onRangeChange}
+      ranges={ranges}
+      isRangeValue={isRangeValue}
+      color={chartColor}
+      isLoading={isLoading}
+      points={points}
+      formatValue={formatValue}
+      tooltipTitle={tooltipTitle}
+      onScrubberPositionChange={onScrubberPositionChange}
+      showScrubberTooltip
+      showScrubberBeacons={false}
+      pointTooltipsOnly={pointTooltipsOnly}
+      showXAxis={showXAxis}
+      showYAxis={showYAxis}
+      xAxis={xAxis}
+      yAxis={yAxis}
+      accessibilityLabel={accessibilityLabel}
+      testID={ASSET_DETAIL_TEST_IDS.chart}
+      height={ASSET_DETAIL_CHART_HEIGHT}
+    />
+  );
+});
 
 export function BalanceGraphView({
   price,
@@ -49,7 +129,7 @@ export function BalanceGraphView({
   hasMarketData,
   priceChangePercentage,
   formattedPriceChange,
-  rangeTimeLabel,
+  timeLabel,
   ranges,
   selectedRange,
   onRangeChange,
@@ -59,8 +139,12 @@ export function BalanceGraphView({
   isLoading,
   series,
   chartColor,
+  points,
+  pointTooltipsOnly,
   formatValue,
   tooltipTitle,
+  onScrubberPositionChange,
+  isScrubbing,
   showXAxis,
   showYAxis,
   xAxis,
@@ -81,40 +165,44 @@ export function BalanceGraphView({
             {t("assetDetail.balanceGraph.marketPrice")}
           </Text>
 
-          {hasMarketData && (
+          {(hasMarketData || isScrubbing) && (
             <>
               <AmountDisplay
                 value={price}
                 formatter={priceFormatter}
+                animate={!isScrubbing}
+                size="md"
                 testID={ASSET_DETAIL_TEST_IDS.marketPrice}
               />
 
               <TrendSection
                 percentage={priceChangePercentage}
                 formattedChange={formattedPriceChange}
-                timeLabel={rangeTimeLabel}
+                timeLabel={timeLabel}
               />
             </>
           )}
         </Box>
       )}
 
-      <LineChart<RangeKey>
+      <BalanceGraphChart
         series={series}
         selectedRange={selectedRange}
         onRangeChange={onRangeChange}
         ranges={ranges}
         isRangeValue={isRangeValue}
-        color={chartColor}
+        chartColor={chartColor}
         isLoading={isLoading}
+        points={points}
+        pointTooltipsOnly={pointTooltipsOnly}
         formatValue={formatValue}
         tooltipTitle={tooltipTitle}
+        onScrubberPositionChange={onScrubberPositionChange}
         showXAxis={showXAxis}
         showYAxis={showYAxis}
         xAxis={xAxis}
         yAxis={yAxis}
         accessibilityLabel={t("assetDetail.balanceGraph.timeframeSelector")}
-        testID={ASSET_DETAIL_TEST_IDS.chart}
       />
 
       {showReceive && (
@@ -136,7 +224,7 @@ export function BalanceGraphView({
 }
 
 const containerStyle: LumenViewStyle = {
-  gap: "s16",
+  gap: "s24",
 };
 
 const headerStyle: LumenViewStyle = {

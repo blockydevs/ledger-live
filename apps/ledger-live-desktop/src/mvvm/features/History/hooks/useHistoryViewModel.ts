@@ -1,4 +1,3 @@
-import { useLocation, useNavigate } from "react-router";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDispatch } from "LLD/hooks/redux";
 import { markOperationsAsSeen } from "~/renderer/reducers/history";
@@ -11,6 +10,7 @@ import { useHistoryVirtualization } from "./useHistoryVirtualization";
 import type { HistoryTable, OperationRow, VirtualItem } from "../types";
 import { track } from "~/renderer/analytics/segment";
 import { parseHistoryBackPath } from "../utils/historyLocationState";
+import { usePopNavigationBack } from "LLD/utils/usePopNavigationBack";
 
 export type HistoryViewModel = {
   showBackButton: boolean;
@@ -27,8 +27,6 @@ export type HistoryViewModel = {
 
 export function useHistoryViewModel(): HistoryViewModel {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     return () => {
@@ -36,16 +34,7 @@ export function useHistoryViewModel(): HistoryViewModel {
     };
   }, [dispatch]);
 
-  const showBackButton = useMemo(
-    () => parseHistoryBackPath(location.state) !== undefined,
-    [location.state],
-  );
-
-  const navigateBack = useCallback(() => {
-    // Pop the history stack; do not navigate(backPath) — that pushes a duplicate entry
-    // and traps users between asset detail and tx history on the next back press.
-    navigate(-1);
-  }, [navigate]);
+  const { showBackButton, navigateBack } = usePopNavigationBack(parseHistoryBackPath);
 
   const operations = useHistoryOperations();
   const table = useHistoryTable(operations);
