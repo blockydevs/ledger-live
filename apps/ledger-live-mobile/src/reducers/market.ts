@@ -4,6 +4,7 @@ import {
   MarketSetCurrentPagePayload,
   MarketSetMarketFilterByStarredCurrenciesPayload,
   MarketSetMarketRequestParamsPayload,
+  MarketSetHideTransactionsOnChartPayload,
   MarketStateActionTypes,
   MarketPayload,
   MarketImportPayload,
@@ -25,6 +26,7 @@ export const INITIAL_STATE: MarketState = {
   },
   marketFilterByStarredCurrencies: false,
   marketCurrentPage: 1,
+  hideTransactionsOnChart: false,
 };
 
 const handlers: ReducerMap<MarketState, MarketPayload> = {
@@ -47,11 +49,19 @@ const handlers: ReducerMap<MarketState, MarketPayload> = {
     marketCurrentPage: (action as Action<MarketSetCurrentPagePayload>).payload,
   }),
 
+  [MarketStateActionTypes.MARKET_SET_HIDE_TRANSACTIONS_ON_CHART]: (state, action) => ({
+    ...state,
+    hideTransactionsOnChart: (action as Action<MarketSetHideTransactionsOnChartPayload>).payload,
+  }),
+
   [MarketStateActionTypes.MARKET_IMPORT]: (state, action) => ({
     ...state,
     marketFilterByStarredCurrencies:
       (action as Action<MarketImportPayload>).payload.marketFilterByStarredCurrencies ||
       state.marketFilterByStarredCurrencies,
+    hideTransactionsOnChart:
+      (action as Action<MarketImportPayload>).payload.hideTransactionsOnChart ??
+      state.hideTransactionsOnChart,
 
     marketParams: {
       ...state.marketParams,
@@ -69,6 +79,8 @@ export const marketParamsSelector = (state: State) => state.market.marketParams;
 export const marketFilterByStarredCurrenciesSelector = (state: State) =>
   state.market.marketFilterByStarredCurrencies;
 export const marketCurrentPageSelector = (state: State) => state.market.marketCurrentPage;
+export const hideTransactionsOnChartSelector = (state: State) =>
+  state.market.hideTransactionsOnChart === true;
 export const exportMarketSelector = (s: State) => s.market;
 // Exporting reducer
 
