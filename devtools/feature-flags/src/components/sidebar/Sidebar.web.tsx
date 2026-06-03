@@ -38,7 +38,7 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
   };
 
   return (
-    <div>
+    <div data-testid="feature-flags-sidebar">
       <DarkenScreen onClick={onClose} />
       <div className="w-[45vw] h-full flex-col flex bg-canvas absolute right-0 top-0 border-l border-muted-subtle-transparent z-51">
         <SidebarTop
