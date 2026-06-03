@@ -20,6 +20,7 @@ import {
   getAccountName,
   getBlock,
   getBlockWithTransactions,
+  getChainParameters,
   getContractUserEnergyRatioConsumption,
   getDelegatedResource,
   getLastBlock,
@@ -32,6 +33,7 @@ import {
   hydrateSuperRepresentatives,
   legacyUnfreezeTronTransaction,
   post,
+  triggerConstantContract,
   unDelegateResourceTransaction,
   unfreezeTronTransaction,
   validateAddress,
@@ -899,5 +901,114 @@ describe("claimRewardTronTransaction", () => {
     expect(mockedNetwork).toHaveBeenCalledWith(
       expect.objectContaining({ url: expect.stringContaining("/wallet/withdrawbalance") }),
     );
+  });
+});
+
+describe("getChainParameters", () => {
+  beforeEach(() => {
+    getChainParameters.reset();
+  });
+
+  const fullParams = {
+    chainParameter: [
+      { key: "getEnergyFee", value: 100 },
+      { key: "getTransactionFee", value: 1000 },
+      { key: "getCreateAccountFee", value: 100_000 },
+      { key: "getCreateNewAccountFeeInSystemContract", value: 1_000_000 },
+      { key: "getMaintenanceTimeInterval", value: 21_600_000 },
+    ],
+  };
+
+  it("parses the four governance-voted parameters used for fee estimation", async () => {
+    mockedNetwork.mockResolvedValueOnce(mockResponse(fullParams));
+
+    const params = await getChainParameters();
+
+    expect(params).toEqual({
+      energyFee: 100,
+      transactionFee: 1000,
+      createAccountFee: 100_000,
+      createNewAccountFeeInSystemContract: 1_000_000,
+    });
+  });
+
+  it("falls back to hardcoded values for missing keys", async () => {
+    mockedNetwork.mockResolvedValueOnce(
+      mockResponse({
+        chainParameter: [
+          { key: "getTransactionFee", value: 1000 },
+          { key: "getCreateAccountFee" }, // value omitted
+        ],
+      }),
+    );
+
+    const params = await getChainParameters();
+
+    expect(params.transactionFee).toBe(1000);
+    expect(params.energyFee).toBe(100); // fallback
+    expect(params.createAccountFee).toBe(100_000); // fallback
+    expect(params.createNewAccountFeeInSystemContract).toBe(1_000_000); // fallback
+  });
+
+  it("caches the result across calls (no second HTTP request)", async () => {
+    mockedNetwork.mockResolvedValueOnce(mockResponse(fullParams));
+
+    await getChainParameters();
+    await getChainParameters();
+    await getChainParameters();
+
+    expect(mockedNetwork).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("triggerConstantContract", () => {
+  const okResponse = {
+    result: { result: true },
+    energy_used: 14_170,
+    constant_result: ["0".repeat(64)],
+  };
+  const revertResponse = {
+    result: { result: false, code: "REVERT", message: "transfer amount exceeds balance" },
+    energy_used: 0,
+  };
+
+  it("forwards parameters and returns the parsed response on success", async () => {
+    mockedNetwork.mockResolvedValueOnce(mockResponse(okResponse));
+
+    const response = await triggerConstantContract({
+      ownerAddress: senderHex,
+      contractAddress: recipientHex,
+      functionSelector: "transfer(address,uint256)",
+      parameter: "deadbeef",
+    });
+
+    expect(mockedNetwork).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: "POST",
+        url: expect.stringContaining("/wallet/triggerconstantcontract"),
+        data: {
+          owner_address: senderHex,
+          contract_address: recipientHex,
+          function_selector: "transfer(address,uint256)",
+          parameter: "deadbeef",
+        },
+      }),
+    );
+    expect(response.energy_used).toBe(14_170);
+    expect(response.result?.result).toBe(true);
+  });
+
+  it("returns the revert payload without throwing (caller decides what to do)", async () => {
+    mockedNetwork.mockResolvedValueOnce(mockResponse(revertResponse));
+
+    const response = await triggerConstantContract({
+      ownerAddress: senderHex,
+      contractAddress: recipientHex,
+      functionSelector: "transfer(address,uint256)",
+      parameter: "deadbeef",
+    });
+
+    expect(response.result?.result).toBe(false);
+    expect(response.result?.code).toBe("REVERT");
   });
 });
