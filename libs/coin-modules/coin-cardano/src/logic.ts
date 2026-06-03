@@ -15,6 +15,7 @@ import groupBy from "lodash/groupBy";
 import { APITransaction, HashType } from "./api/api-types";
 import {
   CARDANO_COIN_TYPE,
+  CARDANO_MAX_SUPPLY,
   CARDANO_PURPOSE,
   MEMO_LABEL,
   STAKING_ADDRESS_INDEX,
@@ -511,4 +512,56 @@ export function findWithdrawal(tx: APITransaction, stakeKey: string): string | u
   );
 
   return match?.amount;
+}
+
+/**
+ * Minimum ADA that must back a UTXO carrying the given token bundle (Babbage per-byte rule).
+ * Returns 0 when there are no tokens. `address` is only used to size the output; pass any
+ * address that will hold the bundle. Shared by account sync and the CoinModule balance path
+ * so the min-UTXO computation can't drift between them.
+ */
+export function calculateMinAdaForTokens(
+  address: string,
+  tokens: TyphonTypes.Token[],
+  utxoCostPerByte: string | number,
+): BigNumber {
+  if (!tokens.length) return new BigNumber(0);
+  return TyphonUtils.calculateMinUtxoAmountBabbage(
+    {
+      address: TyphonUtils.getAddressFromString(address),
+      amount: new BigNumber(CARDANO_MAX_SUPPLY),
+      tokens,
+    },
+    new BigNumber(utxoCostPerByte),
+  );
+}
+
+/**
+ * Native ADA balance split, shared by account sync and the CoinModule balance path so the
+ * spendable math is defined in one place:
+ *
+ * - `total` = on-chain UTXO ADA plus claimable rewards.
+ * - `spendable` = UTXO ADA minus the min-ADA locked behind held tokens, plus rewards **only**
+ *   when the stake key is delegated to a dRep (Conway rule: rewards aren't withdrawable
+ *   otherwise). Never negative.
+ *
+ * The non-spendable ("locked") portion is `total - spendable`.
+ */
+export function computeAdaBalance({
+  utxosSum,
+  minAdaForTokens,
+  rewards,
+  delegatedToDRep,
+}: {
+  utxosSum: BigNumber;
+  minAdaForTokens: BigNumber;
+  rewards: BigNumber;
+  delegatedToDRep: boolean;
+}): { total: BigNumber; spendable: BigNumber } {
+  const total = utxosSum.plus(rewards);
+  let spendable = BigNumber.max(0, utxosSum.minus(minAdaForTokens));
+  if (delegatedToDRep) {
+    spendable = spendable.plus(rewards);
+  }
+  return { total, spendable };
 }

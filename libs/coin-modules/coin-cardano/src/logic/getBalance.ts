@@ -6,14 +6,15 @@ import type {
   StakeState,
 } from "@ledgerhq/coin-module-framework/api/index";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
-import { utils as TyphonUtils, types as TyphonTypes } from "@stricahq/typhonjs";
+import { types as TyphonTypes } from "@stricahq/typhonjs";
 import BigNumber from "bignumber.js";
 import { APITransaction } from "../api/api-types";
 import { getDelegationInfo } from "../api/getDelegationInfo";
 import { fetchNetworkInfo } from "../api/getNetworkInfo";
 import { fetchAllTransactionsByPaymentKey } from "../api/getTransactionsByPaymentKey";
-import { CARDANO_MAX_SUPPLY } from "../constants";
 import {
+  calculateMinAdaForTokens,
+  computeAdaBalance,
   EMPTY_CREDENTIAL_KEY,
   extractPaymentKeyFromAddress,
   extractStakeKeyFromAddress,
@@ -69,14 +70,7 @@ async function computeMinAdaForTokens(
   tokens: TyphonTypes.Token[],
 ): Promise<BigNumber> {
   const { protocolParams } = await fetchNetworkInfo(currency);
-  return TyphonUtils.calculateMinUtxoAmountBabbage(
-    {
-      address: TyphonUtils.getAddressFromString(address),
-      amount: new BigNumber(CARDANO_MAX_SUPPLY),
-      tokens,
-    },
-    new BigNumber(protocolParams.utxoCostPerByte),
-  );
+  return calculateMinAdaForTokens(address, tokens, protocolParams.utxoCostPerByte);
 }
 
 /**
@@ -158,15 +152,19 @@ export async function getBalance(currency: CryptoCurrency, address: string): Pro
 
   const rewards = delegation?.rewards ?? new BigNumber(0);
 
-  // Non-spendable part: min-ADA backing the held tokens + unwithdrawn rewards (which are
-  // not directly spendable unless the account is delegated to a dRep). Mirrors the legacy
-  // synchronisation's spendableBalance computation.
+  // total / spendable share one definition with account sync (computeAdaBalance): the locked
+  // (non-spendable) part is min-ADA backing the held tokens plus rewards that aren't yet
+  // withdrawable (no dRep delegation). Only fetch network info for min-ADA when tokens exist.
   const minAdaForTokens = tokens.length
     ? await computeMinAdaForTokens(currency, address, tokens)
     : new BigNumber(0);
-  const lockedRewards = delegation?.dRepHex ? new BigNumber(0) : rewards;
-  const nativeValue = utxosSum.plus(rewards);
-  const locked = BigNumber.min(minAdaForTokens.plus(lockedRewards), nativeValue);
+  const { total: nativeValue, spendable } = computeAdaBalance({
+    utxosSum,
+    minAdaForTokens,
+    rewards,
+    delegatedToDRep: !!delegation?.dRepHex,
+  });
+  const locked = nativeValue.minus(spendable);
 
   const balances: Balance[] = [
     {
