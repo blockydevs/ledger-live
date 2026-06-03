@@ -15,7 +15,15 @@ export interface SidebarProps {
 }
 
 export function Sidebar({ setOverride, display, onClose, clearOverride }: SidebarProps) {
-  const { overrideWithJson, currentJsonFlag, setCurrentJsonFlag, isJsonValid } = useJsonEditor({
+  const {
+    overrideWithJson,
+    currentJsonFlag,
+    setCurrentJsonFlag,
+    isJsonValid,
+    diffJson,
+    diffTarget,
+    setDiffTarget,
+  } = useJsonEditor({
     id: display.id,
     resolved: display.resolved,
     setOverride,
@@ -37,6 +45,9 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
               value={currentJsonFlag}
               onChange={setCurrentJsonFlag}
               isValidJson={isJsonValid}
+              diffJson={diffJson}
+              diffTarget={diffTarget}
+              setDiffTarget={setDiffTarget}
             />
           </div>
         </div>

@@ -5,4 +5,4 @@ export type { FeatureFlagsFiltersState, FeatureFlagsFiltersInput } from "./useFe
 export { useFlagSelection } from "./useFlagSelection";
 export type { FlagSelectionState } from "./useFlagSelection";
 export { useJsonEditor } from "./useJsonEditor";
-export type { JsonEditorPropsState, JsonEditorProps } from "./useJsonEditor";
+export type { JsonEditorPropsState, JsonEditorProps, DiffTarget } from "./useJsonEditor";
