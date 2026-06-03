@@ -8,6 +8,7 @@ import {
   EMPTY_CREDENTIAL_KEY,
   extractPaymentKeyFromAddress,
   extractStakeKeyFromAddress,
+  isByronAddress,
   normalizeAddress,
   safeBigInt,
   safeDate,
@@ -15,6 +16,8 @@ import {
 
 const PAYMENT_HASH = "11".repeat(28);
 const STAKE_HASH = "22".repeat(28);
+// Real mainnet Byron-era (legacy) address.
+const BYRON_ADDRESS = "Ae2tdPwUPEZFBgKrLT9pn8JPJVbefcL4kuznpQxQpxKfTVuHJ9gLAmxKk4w";
 
 const baseAddress = new TyphonAddress.BaseAddress(
   TyphonTypes.NetworkId.MAINNET,
@@ -91,6 +94,26 @@ describe("normalizeAddress", () => {
     } finally {
       spy.mockRestore();
     }
+  });
+});
+
+describe("EMPTY_CREDENTIAL_KEY", () => {
+  it("is a 28-byte (56 hex char) sentinel, matching a real credential-hash length", () => {
+    expect(EMPTY_CREDENTIAL_KEY).toHaveLength(56);
+  });
+});
+
+describe("isByronAddress", () => {
+  it("returns true for a Byron-era address", () => {
+    expect(isByronAddress(BYRON_ADDRESS)).toBe(true);
+  });
+
+  it("returns false for a Shelley base address", () => {
+    expect(isByronAddress(baseAddress.getBech32())).toBe(false);
+  });
+
+  it("returns false for an unparseable address", () => {
+    expect(isByronAddress("not-an-address")).toBe(false);
   });
 });
 

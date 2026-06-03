@@ -17,8 +17,9 @@ import { getDelegationInfo } from "./api/getDelegationInfo";
 import { fetchNetworkInfo } from "./api/getNetworkInfo";
 import { getTransactions } from "./api/getTransactions";
 import { buildSubAccounts } from "./buildSubAccounts";
-import { CARDANO_MAX_SUPPLY } from "./constants";
 import {
+  calculateMinAdaForTokens,
+  computeAdaBalance,
   findStakeDeRegistration,
   findStakeRegistration,
   findWithdrawal,
@@ -150,18 +151,17 @@ export const makeGetAccountShape =
     const cardanoNetworkInfo = await fetchNetworkInfo(currency);
     const delegationInfo = await getDelegationInfo(currency, stakeCredential.key);
 
-    const totalBalance = delegationInfo?.rewards ? utxosSum.plus(delegationInfo.rewards) : utxosSum;
-
-    const minAdaForTokens = tokenBalance.length
-      ? TyphonUtils.calculateMinUtxoAmountBabbage(
-          {
-            address: TyphonUtils.getAddressFromString(freshAddresses[0].address),
-            amount: new BigNumber(CARDANO_MAX_SUPPLY),
-            tokens: tokenBalance,
-          },
-          new BigNumber(cardanoNetworkInfo.protocolParams.utxoCostPerByte),
-        )
-      : new BigNumber(0);
+    const minAdaForTokens = calculateMinAdaForTokens(
+      freshAddresses[0].address,
+      tokenBalance,
+      cardanoNetworkInfo.protocolParams.utxoCostPerByte,
+    );
+    const { total: totalBalance, spendable: spendableBalance } = computeAdaBalance({
+      utxosSum,
+      minAdaForTokens,
+      rewards: delegationInfo?.rewards ?? new BigNumber(0),
+      delegatedToDRep: !!delegationInfo?.dRepHex,
+    });
 
     const newOperations = newTransactions.map(t =>
       mapTxToAccountOperation(
@@ -176,12 +176,6 @@ export const makeGetAccountShape =
     );
 
     const operations = mergeOps(Object.values(stableOperationsByIds), newOperations);
-
-    let spendableBalance = BigNumber.max(0, utxosSum.minus(minAdaForTokens));
-    if (delegationInfo?.dRepHex && delegationInfo?.rewards) {
-      // if account is delegated to a dRep, include rewards in spendable balance
-      spendableBalance = spendableBalance.plus(delegationInfo.rewards);
-    }
 
     return {
       id: accountId,

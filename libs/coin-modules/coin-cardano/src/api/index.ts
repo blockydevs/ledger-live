@@ -20,9 +20,11 @@ import type {
   Validator,
   AddressValidationCurrencyParameters,
 } from "@ledgerhq/coin-module-framework/api/index";
+import { rejectBalanceOptions } from "@ledgerhq/coin-module-framework/api/getBalance/rejectBalanceOptions";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import coinConfig, { type CardanoConfig } from "../config";
 import { broadcast } from "../logic/broadcast";
+import { getBalance } from "../logic/getBalance";
 import { lastBlock } from "../logic/lastBlock";
 import { listOperations } from "../logic/listOperations";
 
@@ -41,9 +43,8 @@ export function createApi(config: CardanoConfig, currencyId: string): CoinModule
     getValidators: (_cursor?: Cursor): Promise<Page<Validator>> => {
       throw new Error("getValidators is not supported");
     },
-    getBalance: (_address: string, _options?: BalanceOptions): Promise<Balance[]> => {
-      throw new Error("getBalance is not supported");
-    },
+    getBalance: (address: string, options?: BalanceOptions): Promise<Balance[]> =>
+      rejectBalanceOptions(() => getBalance(currency, address), options),
     listOperations: (address: string, options: ListOperationsOptions): Promise<Page<Operation>> =>
       listOperations(currency, address, options),
     getStakes: (_address: string, _cursor?: Cursor): Promise<Page<Stake>> => {
