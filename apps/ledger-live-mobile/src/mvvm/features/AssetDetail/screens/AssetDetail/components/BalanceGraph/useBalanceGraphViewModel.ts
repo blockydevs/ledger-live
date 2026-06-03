@@ -58,6 +58,9 @@ const TRANSACTION_DOTS_MAX_OPERATIONS = 1000;
 
 const MIN_X_AXIS_TICKS = 5;
 const MIN_X_AXIS_TICKS_1D = 8;
+// Keep formatter mapping aligned with desktop. Mobile currently surfaces
+// 1d/1w/1m/1y/all, but we keep 6m in the formatter bucket for parity.
+const HOVER_RANGE_WITH_TIME_AND_DATE: ReadonlySet<string> = new Set(["1w", "1m", "6m"]);
 
 /**
  * Asymmetric padding added to the y-axis domain (as a ratio of the value range).
@@ -307,8 +310,8 @@ export function useBalanceGraphViewModel({
     [counterValueUnit, locale],
   );
 
-  // Mirror desktop's `hourFormat` / `dayFormat`: intraday shows the time, longer
-  // ranges show the full numeric day/month/year (e.g. "5/29/2026").
+  // Keep chart axis/tooltip formatting compact: intraday shows time, longer
+  // ranges show date only. Header hover format has a separate formatter below.
   const dateFormatters = useMemo(
     () => ({
       hour: new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "numeric" }),
@@ -325,8 +328,32 @@ export function useBalanceGraphViewModel({
     [range, dateFormatters],
   );
 
+  const hoverDateFormatters = useMemo(
+    () => ({
+      time: dateFormatters.hour,
+      date: dateFormatters.day,
+      dateTime: new Intl.DateTimeFormat(locale, {
+        hour: "numeric",
+        minute: "numeric",
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+      }),
+    }),
+    [dateFormatters.hour, dateFormatters.day, locale],
+  );
+  const formatHoverDate = useCallback(
+    (date: Date) => {
+      if (range === "1d") return hoverDateFormatters.time.format(date);
+      if (HOVER_RANGE_WITH_TIME_AND_DATE.has(range))
+        return hoverDateFormatters.dateTime.format(date);
+      return hoverDateFormatters.date.format(date);
+    },
+    [range, hoverDateFormatters],
+  );
+
   const scrubbedDateLabel =
-    selection != null ? formatDate(new Date(selection.timestamp)) : undefined;
+    selection != null ? formatHoverDate(new Date(selection.timestamp)) : undefined;
 
   // While scrubbing, the trend reflects the change from the start of the selected
   // range up to the scrubbed point (the line color stays tied to the range below).
