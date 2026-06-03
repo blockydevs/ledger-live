@@ -1,5 +1,11 @@
 # live-mobile
 
+## 4.7.0-next.2
+
+### Minor Changes
+
+- [#18115](https://github.com/LedgerHQ/ledger-live/pull/18115) [`5e821b6`](https://github.com/LedgerHQ/ledger-live/commit/5e821b6dce443ba75c986e5d868668538b6a302b) Thanks [@dilaouid](https://github.com/dilaouid)! - Fix duplicate transaction broadcast in the send flow. The broadcast was triggered from a render prop, so any re-render of the device action result state re-submitted the same signed transaction (e.g. Hedera DUPLICATE_TRANSACTION). The broadcast now fires only once per device-action result.
+
 ## 4.7.0-next.1
 
 ### Minor Changes
