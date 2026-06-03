@@ -1,10 +1,9 @@
 import { Button } from "@ledgerhq/lumen-ui-react";
 
 export interface SidebarFooterProps {
-  onClose: () => void;
-  onApplyOverride: () => void;
-  overrideDisabled: boolean;
-  currentJsonFlag: string;
+  readonly onClose: () => void;
+  readonly onApplyOverride: () => void;
+  readonly overrideDisabled: boolean;
 }
 
 export function SidebarFooter({ onClose, onApplyOverride, overrideDisabled }: SidebarFooterProps) {

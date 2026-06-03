@@ -20,6 +20,7 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
     currentJsonFlag,
     setCurrentJsonFlag,
     isJsonValid,
+    applyDisabled,
     diffJson,
     diffTarget,
     setDiffTarget,
@@ -64,8 +65,7 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
           <SidebarFooter
             onClose={onClose}
             onApplyOverride={overrideWithJson}
-            overrideDisabled={!isJsonValid}
-            currentJsonFlag={currentJsonFlag}
+            overrideDisabled={applyDisabled}
           />
         </div>
       </div>

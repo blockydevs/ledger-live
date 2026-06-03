@@ -17,6 +17,7 @@ export interface JsonEditorPropsState {
   overrideWithJson: () => void;
   resetJson: () => void;
   isJsonValid: boolean;
+  applyDisabled: boolean;
   toggleFeatureFlag: (enabled: boolean) => void;
 }
 
@@ -31,29 +32,31 @@ export function useJsonEditor({
   resolved,
   setOverride,
 }: JsonEditorProps): JsonEditorPropsState {
-  const betterJson = JSON.stringify(resolved, null, JSON_INDENT);
-  const [currentJsonFlag, setCurrentJsonFlag] = useState(betterJson);
-  const [diffTarget, setDiffTarget] = useState<DiffTarget>("resolved");
+  const [draft, setDraft] = useState<string | null>(null);
+  const [diffTarget, setDiffTarget] = useState<DiffTarget>("default");
 
-  const overrideWithJson = () => {
+  const currentJsonFlag = draft ?? JSON.stringify(resolved, null, JSON_INDENT);
+
+  const parsed = (() => {
     try {
-      const parsed = JSON.parse(currentJsonFlag);
-      setOverride(id, parsed);
-    } catch (error) {
-      console.error("Invalid JSON", error);
-    }
-  };
-  // Clears the editor draft back to the resolved value. Does not touch the
-  // Redux override — that's clearOverride's job.
-  const resetJson = () => setCurrentJsonFlag(betterJson);
-  const isJsonValid = (() => {
-    try {
-      JSON.parse(currentJsonFlag);
-      return true;
+      return JSON.parse(currentJsonFlag);
     } catch {
-      return false;
+      return undefined;
     }
   })();
+
+  const isJsonValid = parsed !== undefined;
+
+  const overrideWithJson = () => {
+    if (parsed === undefined) {
+      console.error("Invalid JSON", currentJsonFlag);
+      return;
+    }
+    setOverride(id, parsed);
+    setDraft(null);
+  };
+
+  const resetJson = () => setDraft(null);
 
   // The diff baseline (left side). "resolved" is the current resolved value
   // (override included); "default" is the registered schema default — the
@@ -64,18 +67,12 @@ export function useJsonEditor({
   const baseJson = JSON.stringify(base, null, JSON_INDENT);
   const diffJson = diffJsonLines(baseJson, currentJsonFlag);
 
-  // Single entry point for the enabled switch: applies the override live (same
-  // behaviour as the flag-list switch) and keeps the editor draft in sync —
-  // both driven from the same `enabled` value, so they can't drift. Falls back
-  // to the resolved value when the draft isn't currently valid JSON.
+  const applyDisabled = parsed === undefined || JSON.stringify(parsed) === JSON.stringify(resolved);
+
   const toggleFeatureFlag = (enabled: boolean) => {
     setOverride(id, { ...resolved, enabled });
-    try {
-      const parsed = JSON.parse(currentJsonFlag);
-      setCurrentJsonFlag(JSON.stringify({ ...parsed, enabled }, null, JSON_INDENT));
-    } catch {
-      setCurrentJsonFlag(JSON.stringify({ ...resolved, enabled }, null, JSON_INDENT));
-    }
+    const next = parsed === undefined ? { ...resolved, enabled } : { ...parsed, enabled };
+    setDraft(JSON.stringify(next, null, JSON_INDENT));
   };
 
   return {
@@ -83,10 +80,11 @@ export function useJsonEditor({
     diffJson,
     diffTarget,
     setDiffTarget,
-    setCurrentJsonFlag,
+    setCurrentJsonFlag: setDraft,
     overrideWithJson,
     resetJson,
     isJsonValid,
+    applyDisabled,
     toggleFeatureFlag,
   };
 }
