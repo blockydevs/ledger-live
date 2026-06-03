@@ -300,7 +300,7 @@ export function useChartSectionViewModel({
     formatValue,
     tooltipTitle,
     onScrubberPositionChange,
-    showXAxis: true,
+    showXAxis: false,
     showYAxis: false,
     xAxis,
     yAxis,
