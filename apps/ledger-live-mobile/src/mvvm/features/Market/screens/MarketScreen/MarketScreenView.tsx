@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Box } from "@ledgerhq/lumen-ui-rnative";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
 import { TrackScreen } from "~/analytics";
+import { AltcoinSeason } from "LLM/components/AltcoinSeason";
 import { FearAndGreed } from "LLM/components/FearAndGreed";
 import { MARKET_SCREEN_TEST_IDS } from "./testIds";
 import type { MarketScreenHighlightCard, MarketScreenViewModel } from "./useMarketScreenViewModel";
@@ -33,6 +34,7 @@ export function MarketScreenView({ cardWidth, snapToInterval, highlightCards }: 
         {item.type === "fearAndGreed" ? (
           <FearAndGreed appearance="expanded" width={cardWidth} />
         ) : null}
+        {item.type === "altcoinSeason" ? <AltcoinSeason width={cardWidth} /> : null}
       </Box>
     ),
     [cardWidth],
