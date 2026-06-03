@@ -4,66 +4,42 @@ import type { Device } from "@ledgerhq/live-common/hw/actions/types";
 import { ParamListBase, RouteProp } from "@react-navigation/native";
 import { ScreenName } from "~/const";
 
-export type TezosDelegationFlowParamList = {
-  [ScreenName.TezosEarnRewards]: {
+export type TezosStakeFlowParamList = {
+  [ScreenName.TezosStakeAmount]: {
     accountId: string;
     parentId?: string;
     source?: RouteProp<ParamListBase, ScreenName>;
   };
-  [ScreenName.DelegationStarted]: {
-    accountId: string;
-    parentId?: string;
-    source?: RouteProp<ParamListBase, ScreenName>;
-  };
-  [ScreenName.DelegationSummary]: {
-    mode?: "delegate" | "undelegate";
-    stakeAfter?: boolean;
-    accountId: string;
-    parentId?: string;
-    transaction?: Transaction;
-    status?: TransactionStatus;
-    source?: RouteProp<ParamListBase, ScreenName>;
-  };
-  [ScreenName.DelegationSelectValidator]: {
+  [ScreenName.TezosStakeSelectDevice]: {
+    device?: Device;
     accountId: string;
     parentId?: string;
     transaction: Transaction;
     status: TransactionStatus;
     source?: RouteProp<ParamListBase, ScreenName>;
   };
-  [ScreenName.DelegationConnectDevice]: {
+  [ScreenName.TezosStakeConnectDevice]: {
     device: Device;
     accountId: string;
     parentId?: string;
-    transaction?: Transaction;
-    status?: TransactionStatus;
+    transaction: Transaction;
+    status: TransactionStatus;
     appName?: string;
     selectDeviceLink?: boolean;
-    stakeAfter?: boolean;
     onSuccess?: (payload: unknown) => void;
     onError?: (error: Error) => void;
     analyticsPropertyFlow?: string;
     source?: RouteProp<ParamListBase, ScreenName>;
   };
-  [ScreenName.DelegationSelectDevice]: {
-    device?: Device;
-    parentId?: string;
-    accountId: string;
-    stakeAfter?: boolean;
-    transaction: Transaction;
-    status: TransactionStatus;
-    source?: RouteProp<ParamListBase, ScreenName>;
-  };
-  [ScreenName.DelegationValidationSuccess]: {
+  [ScreenName.TezosStakeValidationSuccess]: {
     accountId: string;
     parentId?: string;
     deviceId: string;
     transaction: Transaction;
     result: Operation;
-    stakeAfter?: boolean;
     source?: RouteProp<ParamListBase, ScreenName>;
   };
-  [ScreenName.DelegationValidationError]: {
+  [ScreenName.TezosStakeValidationError]: {
     accountId: string;
     parentId?: string;
     deviceId: string;
