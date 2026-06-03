@@ -1,16 +1,21 @@
 import { Switch, Button } from "@ledgerhq/lumen-ui-react";
-import type { FeatureId, Features } from "@shared/feature-flags";
+import type { FeatureId } from "@shared/feature-flags";
 import { FlagDisplayState } from "../../../";
 import { Close } from "@ledgerhq/lumen-ui-react/symbols";
 
 export interface SidebarTopProps {
   readonly display: FlagDisplayState;
-  readonly setOverride: <T extends FeatureId>(key: T, value: Features[T] | undefined) => void;
   readonly onClose?: () => void;
   readonly clearOverride: (key: FeatureId) => void;
+  readonly toggleFeatureFlag: (enabled: boolean) => void;
 }
 
-export function SidebarTop({ display, setOverride, onClose, clearOverride }: SidebarTopProps) {
+export function SidebarTop({
+  display,
+  onClose,
+  clearOverride,
+  toggleFeatureFlag,
+}: SidebarTopProps) {
   const { id, resolved, isOverridden } = display;
   return (
     <div className="p-16">
@@ -27,10 +32,7 @@ export function SidebarTop({ display, setOverride, onClose, clearOverride }: Sid
       </div>
       <div className="flex flex-auto items-center gap-16">
         <div className="flex gap-8 items-center w-full bg-canvas-muted p-16 rounded-md mt-4">
-          <Switch
-            selected={resolved.enabled}
-            onChange={selected => setOverride(id, { ...resolved, enabled: selected })}
-          />
+          <Switch selected={resolved.enabled} onChange={toggleFeatureFlag} />
           <div className="flex flex-col">
             <span className="body-2 ">{resolved.enabled ? "Enabled" : "Disabled"}</span>
             <span className="body-4 text-muted"> Local Override takes priority</span>

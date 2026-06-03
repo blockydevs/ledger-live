@@ -23,20 +23,28 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
     diffJson,
     diffTarget,
     setDiffTarget,
+    resetJson,
+    toggleFeatureFlag,
   } = useJsonEditor({
     id: display.id,
     resolved: display.resolved,
     setOverride,
   });
+
+  const handleRestore = () => {
+    clearOverride(display.id);
+    resetJson();
+  };
+
   return (
     <div>
       <DarkenScreen onClick={onClose} />
       <div className="w-[45vw] h-full flex-col flex bg-canvas absolute right-0 top-0 border-l border-muted-subtle-transparent z-51">
         <SidebarTop
           display={display}
-          setOverride={setOverride}
           onClose={onClose}
-          clearOverride={clearOverride}
+          clearOverride={handleRestore}
+          toggleFeatureFlag={toggleFeatureFlag}
         />
         <Divider />
         <div className="flex-1 overflow-auto">
