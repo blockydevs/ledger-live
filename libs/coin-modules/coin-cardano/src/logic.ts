@@ -540,7 +540,8 @@ export function calculateMinAdaForTokens(
  * Native ADA balance split, shared by account sync and the CoinModule balance path so the
  * spendable math is defined in one place:
  *
- * - `total` = on-chain UTXO ADA plus claimable rewards.
+ * - `total` = on-chain UTXO ADA plus accrued staking rewards (counted whether or not they
+ *   are currently withdrawable).
  * - `spendable` = UTXO ADA minus the min-ADA locked behind held tokens, plus rewards **only**
  *   when the stake key is delegated to a dRep (Conway rule: rewards aren't withdrawable
  *   otherwise). Never negative.
