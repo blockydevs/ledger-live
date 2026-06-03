@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { flagWith } from "../../define";
 
-const compatibleDeviceSchema = z.object({
-  available: z.boolean(),
-  comingSoon: z.boolean(),
-  name: z.string(),
-});
-
 const restoreInfoDrawerSchema = z.object({
   enabled: z.boolean(),
   supportLinkURI: z.string(),
@@ -34,7 +28,6 @@ export const protectServicesMobile = flagWith(
   {
     deeplink: z.string(),
     bannerSubscriptionNotification: z.boolean(),
-    compatibleDevices: z.array(compatibleDeviceSchema),
     onboardingRestore: onboardingRestoreSchema,
     managerStatesData: managerStatesDataSchema,
     account: accountSchema,
@@ -45,7 +38,6 @@ export const protectServicesMobile = flagWith(
     params: {
       bannerSubscriptionNotification: false,
       deeplink: "",
-      compatibleDevices: [],
       account: {
         homeURI:
           "ledgerlive://recover/protect-simu?source=llm-myledger-access-card&ajs_prop_source=llm-myledger-access-card&ajs_prop_campaign=recover-launch",

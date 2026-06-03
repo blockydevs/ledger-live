@@ -517,16 +517,9 @@ export type Feature_NewsfeedPage = Feature<{
   whitelistedLocales: string[];
 }>;
 
-export type CompatibleDevice = {
-  available: boolean;
-  comingSoon: boolean;
-  name: string;
-};
-
 export type Feature_ProtectServicesMobile = Feature<{
   deeplink: string;
   bannerSubscriptionNotification: boolean;
-  compatibleDevices: CompatibleDevice[];
   onboardingRestore: {
     restoreInfoDrawer: {
       enabled: boolean;
@@ -552,7 +545,6 @@ export type Feature_ProtectServicesDesktop = Feature<{
   openRecoverFromSidebar: boolean;
   discoverTheBenefitsLink: string;
   bannerSubscriptionNotification: boolean;
-  compatibleDevices: CompatibleDevice[];
   onboardingCompleted: {
     upsellURI: string;
     restore24URI: string;

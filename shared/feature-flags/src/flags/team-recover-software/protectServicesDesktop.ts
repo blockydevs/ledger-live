@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { flagWith } from "../../define";
 
-const compatibleDeviceSchema = z.object({
-  available: z.boolean(),
-  comingSoon: z.boolean(),
-  name: z.string(),
-});
-
 const onboardingCompletedSchema = z.object({
   upsellURI: z.string(),
   restore24URI: z.string(),
@@ -24,7 +18,6 @@ export const protectServicesDesktop = flagWith(
     openRecoverFromSidebar: z.boolean(),
     discoverTheBenefitsLink: z.string(),
     bannerSubscriptionNotification: z.boolean(),
-    compatibleDevices: z.array(compatibleDeviceSchema),
     onboardingCompleted: onboardingCompletedSchema,
     account: accountSchema,
     protectId: z.string(),
@@ -39,7 +32,6 @@ export const protectServicesDesktop = flagWith(
         homeURI:
           "ledgerlive://recover/protect-simu?source=lld-sidebar-navigation&ajs_recover_source=lld-sidebar-navigation&ajs_recover_campaign=recover-launch",
       },
-      compatibleDevices: [],
       discoverTheBenefitsLink: "https://www.ledger.com/recover",
       onboardingCompleted: {
         alreadyDeviceSeededURI:
