@@ -46,7 +46,7 @@ function FeeAssetSelectorComponent({
           </ListItem>
         }
       />
-      <MenuContent side="bottom" align="end">
+      <MenuContent className="pointer-events-auto" side="bottom" align="end">
         <MenuRadioGroup value={selectedId} onValueChange={onChange}>
           {options.map(option => (
             <MenuRadioItem

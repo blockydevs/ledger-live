@@ -3,6 +3,7 @@ import {
   Menu,
   MenuTrigger,
   MenuContent,
+  MenuGroup,
   MenuLabel,
   TooltipTrigger,
   TooltipContent,
@@ -165,7 +166,7 @@ export function NetworkFeesMenu({ display, selection, presets, actions }: Networ
           render={
             <button
               type="button"
-              className="flex items-center gap-8 transition-colors hover:opacity-70"
+              className="flex items-center gap-8 transition-colors hover:opacity-70  cursor-pointer"
               data-testid="send-network-fees-menu-trigger"
             >
               <span className="body-3 text-base">
@@ -175,19 +176,21 @@ export function NetworkFeesMenu({ display, selection, presets, actions }: Networ
             </button>
           }
         />
-        <MenuContent className="w-256" side="top">
-          <MenuLabel>{feesLabel}</MenuLabel>
-          <FeePresetMenuItems
-            hasPresets={hasPresets}
-            hasCustom={hasCustom}
-            hasCoinControl={showCoinControlMenuItem}
-            selectedStrategy={selectedStrategy}
-            onSelectStrategy={onSelectStrategy}
-            onSelectCustomFees={onSelectCustomFees}
-            onSelectCoinControl={onSelectCoinControl}
-            feeOptionsWithFiat={feeOptionsWithFiat}
-            shouldShowFeeRateLegend={shouldShowFeeRateLegend}
-          />
+        <MenuContent className="pointer-events-auto w-256" side="top">
+          <MenuGroup>
+            <MenuLabel>{feesLabel}</MenuLabel>
+            <FeePresetMenuItems
+              hasPresets={hasPresets}
+              hasCustom={hasCustom}
+              hasCoinControl={showCoinControlMenuItem}
+              selectedStrategy={selectedStrategy}
+              onSelectStrategy={onSelectStrategy}
+              onSelectCustomFees={onSelectCustomFees}
+              onSelectCoinControl={onSelectCoinControl}
+              feeOptionsWithFiat={feeOptionsWithFiat}
+              shouldShowFeeRateLegend={shouldShowFeeRateLegend}
+            />
+          </MenuGroup>
         </MenuContent>
       </Menu>
     </div>
