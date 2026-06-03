@@ -15,6 +15,7 @@ import { extractSeiDelegation, getCeloAmount, getSeiDelegationAmount } from "../
 import { encodeStakingData, decodeStakingResult } from "./encoder";
 import { buildTransactionParams } from "./operations";
 import { getValidators } from "./validators";
+import { fetchMonadStakes } from "./validators/monad";
 
 /**
  * Generic staking fetcher that adapts to different blockchain requirements
@@ -56,6 +57,9 @@ export const STAKING_CONFIG: Record<string, StakingStrategy> = {
         estimatedYearlyRewardsRate: 0,
       },
     ]),
+  },
+  monad: {
+    fetcher: fetchMonadStakes,
   },
 };
 

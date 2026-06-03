@@ -172,7 +172,7 @@ const Delegation = ({ account }: { account: StakingAccount }) => {
             <Header />
             {mappedDelegations.map(delegation => (
               <Row
-                key={delegation.validatorAddress}
+                key={`${delegation.validatorAddress}-${delegation.status}`}
                 account={account}
                 delegation={delegation}
                 onManageAction={onRedirect}
