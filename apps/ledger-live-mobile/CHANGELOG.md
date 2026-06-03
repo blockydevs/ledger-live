@@ -1,5 +1,11 @@
 # live-mobile
 
+## 4.7.0-next.1
+
+### Minor Changes
+
+- [#18127](https://github.com/LedgerHQ/ledger-live/pull/18127) [`4c79279`](https://github.com/LedgerHQ/ledger-live/commit/4c792795fa136a55c3ee2e1c3ad9bcc749bc03d1) Thanks [@dilaouid](https://github.com/dilaouid)! - Stabilize Wallet API E2E webview text reads by waiting for test elements before reading text, avoiding flaky failures when the dummy app result renders asynchronously.
+
 ## 4.7.0-next.0
 
 ### Minor Changes
