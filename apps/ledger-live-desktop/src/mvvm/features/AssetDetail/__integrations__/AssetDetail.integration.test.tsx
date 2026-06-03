@@ -443,7 +443,7 @@ describe("AssetDetail integration", () => {
         });
 
         expect(within(section).queryByTestId("y-axis")).not.toBeInTheDocument();
-        expect(within(section).getByTestId("x-axis")).toBeVisible();
+        expect(within(section).queryByTestId("x-axis")).not.toBeInTheDocument();
         expect(within(section).getAllByTestId("point-group")).toHaveLength(2);
       });
 
