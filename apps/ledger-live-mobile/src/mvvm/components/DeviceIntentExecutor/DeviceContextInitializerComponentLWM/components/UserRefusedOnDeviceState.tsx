@@ -23,11 +23,21 @@ export function UserRefusedOnDeviceState({
   const modelId = device.modelId;
 
   const handleClose = () => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.Close });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      page: PAGE_CONNECT_APP.UserRefused,
+      modelId,
+      button: CONNECT_APP_BUTTON.Close,
+    });
     onCancel();
   };
   const handleRetry = () => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.Retry });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      page: PAGE_CONNECT_APP.UserRefused,
+      modelId,
+      button: CONNECT_APP_BUTTON.Retry,
+    });
     state.retry();
   };
 

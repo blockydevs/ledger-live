@@ -3,6 +3,7 @@ import { DeviceModelId } from "@ledgerhq/types-devices";
 import { FinalStateType, type EnsureAppReadyState } from "@ledgerhq/live-dmk-shared";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
+import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useFinalErrorViewModel } from "./useFinalErrorViewModel";
 import type { InitializerDevice } from "../../types";
@@ -74,6 +75,7 @@ describe("useFinalErrorViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.Error,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Contact Ledger Support",
@@ -93,6 +95,7 @@ describe("useFinalErrorViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.Error,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Close",

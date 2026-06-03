@@ -90,6 +90,7 @@ describe("RetryableDeviceLockedState", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.DeviceLocked,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Retry",

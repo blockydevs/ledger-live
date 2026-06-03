@@ -94,13 +94,14 @@ describe("DeviceBusyState", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.DeviceBusy,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Retry",
     });
   });
 
-  it("GIVEN the device busy state WHEN pressing Cancel operation THEN it tracks the canonical button value", async () => {
+  it("GIVEN the device busy state WHEN pressing Cancel operation THEN it tracks Close", async () => {
     const { user } = renderState();
 
     await user.press(screen.getByText("Cancel operation"));
@@ -108,9 +109,10 @@ describe("DeviceBusyState", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.DeviceBusy,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
-      button: "Cancel",
+      button: "Close",
     });
   });
 });

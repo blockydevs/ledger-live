@@ -60,13 +60,17 @@ export function DiscoveryErrorState({
     />
   );
 
-  const retryCta = (labelKey: string): InfoStateCta | undefined => {
+  const retryCta = (labelKey: string, trackButtonName: string): InfoStateCta | undefined => {
     if (!state.retry) return undefined;
     const label = t(labelKey);
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
+        trackConnectDeviceButtonClicked({
+          sourceFlow,
+          page: PAGE_CONNECT_DEVICE.DiscoveryError,
+          button: trackButtonName,
+        });
         state.retry?.();
       },
     };
@@ -79,6 +83,7 @@ export function DiscoveryErrorState({
       onPress: () => {
         trackConnectDeviceButtonClicked({
           sourceFlow,
+          page: PAGE_CONNECT_DEVICE.DiscoveryError,
           button: CONNECT_DEVICE_BUTTON.ContinueWithUsb,
         });
         state.ignore();
@@ -93,6 +98,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.bluetoothPermissionDeniedPromptable.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothPermissionDeniedPromptable.cta.retry`,
+        CONNECT_DEVICE_BUTTON.AllowBluetooth,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothPermissionDeniedPromptable.cta.ignore`,
@@ -104,6 +110,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.bluetoothPermissionDeniedManualSettings.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothPermissionDeniedManualSettings.cta.retry`,
+        CONNECT_DEVICE_BUTTON.OpenSettings,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothPermissionDeniedManualSettings.cta.ignore`,
@@ -115,6 +122,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.cta.platform.${platform}.retry`,
+        CONNECT_DEVICE_BUTTON.OpenSettings,
       ),
       secondaryCta:
         platform === "android"
@@ -129,6 +137,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.cta.retry`,
+        CONNECT_DEVICE_BUTTON.TurnOnBluetooth,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.cta.ignore`,
@@ -140,6 +149,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.cta.platform.${platform}.retry`,
+        CONNECT_DEVICE_BUTTON.OpenSettings,
       ),
       secondaryCta:
         platform === "android"
@@ -165,6 +175,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.cta.retry`,
+        CONNECT_DEVICE_BUTTON.AllowLocation,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.cta.ignore`,
@@ -176,6 +187,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.cta.retry`,
+        CONNECT_DEVICE_BUTTON.OpenSettings,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.cta.ignore`,
@@ -187,6 +199,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.cta.retry`,
+        CONNECT_DEVICE_BUTTON.TurnOnLocation,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.cta.ignore`,
@@ -198,6 +211,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.cta.retry`,
+        CONNECT_DEVICE_BUTTON.OpenSettings,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.cta.ignore`,
@@ -209,6 +223,7 @@ export function DiscoveryErrorState({
       description: `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.description`,
       primaryCta: retryCta(
         `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.cta.retry`,
+        CONNECT_DEVICE_BUTTON.Retry,
       ),
       secondaryCta: ignoreCta(
         `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.cta.ignore`,
@@ -218,7 +233,10 @@ export function DiscoveryErrorState({
       preset: "error",
       title: `${discoveryErrorTranslationBaseKey}.unknown.title`,
       description: `${discoveryErrorTranslationBaseKey}.unknown.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.unknown.cta.retry`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.unknown.cta.retry`,
+        CONNECT_DEVICE_BUTTON.Retry,
+      ),
     },
     [DiscoveryErrorTypes.BluetoothStateUnknownCheckOnly]: {
       title: `${discoveryErrorTranslationBaseKey}.bluetoothStateUnknownCheckOnly.title`,

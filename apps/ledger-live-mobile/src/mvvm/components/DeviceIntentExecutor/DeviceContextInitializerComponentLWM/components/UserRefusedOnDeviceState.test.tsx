@@ -93,6 +93,7 @@ describe("UserRefusedOnDeviceState", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.UserRefused,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Close",
@@ -107,6 +108,7 @@ describe("UserRefusedOnDeviceState", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.UserRefused,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Retry",

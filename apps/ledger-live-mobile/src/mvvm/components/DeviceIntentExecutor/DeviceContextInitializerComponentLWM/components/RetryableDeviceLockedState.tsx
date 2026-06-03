@@ -21,7 +21,12 @@ export function RetryableDeviceLockedState({
   const modelId = device.modelId;
 
   const handleRetry = () => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.Retry });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      page: PAGE_CONNECT_APP.DeviceLocked,
+      modelId,
+      button: CONNECT_APP_BUTTON.Retry,
+    });
     state.retry();
   };
 

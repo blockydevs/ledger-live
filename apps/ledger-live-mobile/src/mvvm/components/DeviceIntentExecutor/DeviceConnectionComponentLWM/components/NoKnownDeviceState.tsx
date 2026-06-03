@@ -24,12 +24,17 @@ export function NoKnownDeviceState({
   const handleConnectLedgerDevice = () => {
     trackConnectDeviceButtonClicked({
       sourceFlow,
-      button: CONNECT_DEVICE_BUTTON.ConnectLedgerDevice,
+      page: PAGE_CONNECT_DEVICE.NoKnownDevice,
+      button: CONNECT_DEVICE_BUTTON.ConnectDevice,
     });
     onConnectLedgerDevice();
   };
   const handleBuyLedgerDevice = () => {
-    trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.NoLedgerDevice });
+    trackConnectDeviceButtonClicked({
+      sourceFlow,
+      page: PAGE_CONNECT_DEVICE.NoKnownDevice,
+      button: CONNECT_DEVICE_BUTTON.BuyDevice,
+    });
     onBuyLedgerDevice();
   };
 

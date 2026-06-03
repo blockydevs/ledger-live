@@ -2,7 +2,11 @@ import { useCallback } from "react";
 import type { InitializerDevice } from "../../types";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import type { SourceFlow } from "../../../utils/SourceFlowContext";
-import { CONNECT_APP_BUTTON, trackConnectAppButtonClicked } from "../../../utils/trackDeviceIntent";
+import {
+  CONNECT_APP_BUTTON,
+  PAGE_CONNECT_APP,
+  trackConnectAppButtonClicked,
+} from "../../../utils/trackDeviceIntent";
 
 type Params = Readonly<{
   device: InitializerDevice;
@@ -14,7 +18,12 @@ export function useDeviceNotOnboardedViewModel({ device, sourceFlow }: Params) {
   const modelId = device.modelId;
 
   const onSetupDevice = useCallback(() => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.SetUpDevice });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      page: PAGE_CONNECT_APP.DeviceNotOnboarded,
+      modelId,
+      button: CONNECT_APP_BUTTON.SetUpDevice,
+    });
     openOnboarding();
   }, [openOnboarding, sourceFlow, modelId]);
 

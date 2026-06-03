@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@tests/test-renderer";
-import { TrackScreen } from "~/analytics";
+import { TrackScreen, track } from "~/analytics";
+import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { SourceFlowProvider } from "../utils/SourceFlowContext";
 import { PAGE_DEVICE_ACTION } from "../utils/trackDeviceIntent";
 import { InvalidOperation } from "./InvalidOperation";
@@ -10,10 +11,13 @@ jest.mock("~/analytics", () => {
   return {
     ...actual,
     TrackScreen: jest.fn(() => null),
+    track: jest.fn(),
   };
 });
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
+const mockedTrack = jest.mocked(track);
+const TEST_SOURCE = "Portfolio";
 
 function renderState(props: Partial<React.ComponentProps<typeof InvalidOperation>> = {}) {
   return render(
@@ -26,6 +30,7 @@ function renderState(props: Partial<React.ComponentProps<typeof InvalidOperation
 describe("InvalidOperation", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   it("renders title, description and the primary Close CTA", () => {
@@ -48,6 +53,13 @@ describe("InvalidOperation", () => {
 
     await user.press(screen.getByText("Close"));
 
+    expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+      sourceFlow: "my_ledger",
+      source: TEST_SOURCE,
+      page: PAGE_DEVICE_ACTION.InvalidState,
+      deviceUxV2: true,
+      button: "Close",
+    });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

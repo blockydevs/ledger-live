@@ -1,9 +1,9 @@
 import React from "react";
 import { render, screen } from "@tests/test-renderer";
-import type { TransportIdentifier } from "@ledgerhq/device-management-kit";
 import {
   ConnectDeviceUIStateTypes,
   DiscoveryErrorTypes,
+  rnBleTransportIdentifier,
   type ConnectDeviceUIState,
   type DiscoveryError,
 } from "@ledgerhq/live-dmk-mobile";
@@ -106,16 +106,92 @@ const errorCases = [
   },
 ] as const;
 
-function makeDiscoveryError(type: DiscoveryErrorTypes): DiscoveryError {
-  if (type === DiscoveryErrorTypes.Unknown) {
-    return { type };
-  }
+const primaryCtaButtonCases = [
+  {
+    type: DiscoveryErrorTypes.BluetoothPermissionDeniedPromptable,
+    label: "Allow",
+    button: "Allow Bluetooth",
+  },
+  {
+    type: DiscoveryErrorTypes.BluetoothPermissionDeniedManualSettings,
+    label: "I enabled it, try again",
+    button: "Open Settings",
+  },
+  {
+    type: DiscoveryErrorTypes.BluetoothPermissionUnauthorizedManualSettings,
+    label: "I enabled it, try again",
+    button: "Open Settings",
+  },
+  {
+    type: DiscoveryErrorTypes.BluetoothDisabledPromptable,
+    label: "Turn on Bluetooth",
+    button: "Turn On Bluetooth",
+  },
+  {
+    type: DiscoveryErrorTypes.BluetoothDisabledManualAction,
+    label: "I enabled Bluetooth, try again",
+    button: "Open Settings",
+  },
+  {
+    type: DiscoveryErrorTypes.LocationPermissionDeniedPromptable,
+    label: "Allow",
+    button: "Allow Location",
+  },
+  {
+    type: DiscoveryErrorTypes.LocationPermissionDeniedManualSettings,
+    label: "I enabled it, try again",
+    button: "Open Settings",
+  },
+  {
+    type: DiscoveryErrorTypes.LocationDisabledPromptable,
+    label: "Turn on Location",
+    button: "Turn On Location",
+  },
+  {
+    type: DiscoveryErrorTypes.LocationDisabledManualAction,
+    label: "I enabled Location, try again",
+    button: "Open Settings",
+  },
+  {
+    type: DiscoveryErrorTypes.LocationServicePermissionMissing,
+    label: "Try again",
+    button: "Retry",
+  },
+  {
+    type: DiscoveryErrorTypes.Unknown,
+    label: "Try again",
+    button: "Retry",
+  },
+] as const;
 
-  return {
-    type,
-    transportId: "ble" as TransportIdentifier,
+function makeDiscoveryError(type: DiscoveryErrorTypes): DiscoveryError {
+  const resolvable: {
+    transportId: typeof rnBleTransportIdentifier;
+    resolution: { type: "none" };
+  } = {
+    transportId: rnBleTransportIdentifier,
     resolution: { type: "none" },
-  } as DiscoveryError;
+  };
+
+  switch (type) {
+    case DiscoveryErrorTypes.BluetoothPermissionDeniedPromptable:
+    case DiscoveryErrorTypes.BluetoothPermissionDeniedManualSettings:
+      return { ...resolvable, type, permissions: [] };
+    case DiscoveryErrorTypes.LocationPermissionDeniedPromptable:
+    case DiscoveryErrorTypes.LocationPermissionDeniedManualSettings:
+      return { ...resolvable, type, permission: "location" };
+    case DiscoveryErrorTypes.BluetoothPermissionUnauthorizedManualSettings:
+    case DiscoveryErrorTypes.BluetoothDisabledPromptable:
+    case DiscoveryErrorTypes.BluetoothDisabledManualAction:
+    case DiscoveryErrorTypes.BluetoothStateUnknownCheckOnly:
+    case DiscoveryErrorTypes.BluetoothUnsupported:
+    case DiscoveryErrorTypes.LocationDisabledPromptable:
+    case DiscoveryErrorTypes.LocationDisabledManualAction:
+    case DiscoveryErrorTypes.LocationServicePermissionMissing:
+      return { ...resolvable, type };
+    case DiscoveryErrorTypes.Unknown:
+      return { type };
+  }
 }
 
 function renderState({
@@ -247,26 +323,32 @@ describe("DiscoveryErrorState", () => {
     expect(mockedTrackScreen.mock.calls[0]?.[0]).not.toHaveProperty("transport");
   });
 
-  it("GIVEN a retry CTA WHEN it is pressed THEN it tracks button_clicked", async () => {
-    // GIVEN
-    const retry = jest.fn();
-    const { user } = renderState({
-      type: DiscoveryErrorTypes.BluetoothPermissionDeniedPromptable,
-      retry,
-    });
+  it.each(primaryCtaButtonCases)(
+    "GIVEN a $type primary CTA WHEN it is pressed THEN it tracks the canonical button value",
+    async ({ type, label, button }) => {
+      // GIVEN
+      const retry = jest.fn();
+      const { user } = renderState({
+        type,
+        retry,
+      });
 
-    // WHEN
-    await user.press(screen.getByText("Allow"));
+      // WHEN
+      const cta = screen.getAllByText(label).at(-1);
+      if (!cta) throw new Error(`Missing CTA: ${label}`);
+      await user.press(cta);
 
-    // THEN
-    expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
-      sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      deviceUxV2: true,
-      button: "Retry",
-    });
-    expect(retry).toHaveBeenCalledTimes(1);
-  });
+      // THEN
+      expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+        sourceFlow: "my_ledger",
+        source: TEST_SOURCE,
+        page: PAGE_CONNECT_DEVICE.DiscoveryError,
+        deviceUxV2: true,
+        button,
+      });
+      expect(retry).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it("GIVEN an ignore CTA WHEN it is pressed THEN it tracks button_clicked", async () => {
     // GIVEN
@@ -281,6 +363,7 @@ describe("DiscoveryErrorState", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_DEVICE.DiscoveryError,
       deviceUxV2: true,
       button: "Continue with USB",
     });

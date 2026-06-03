@@ -79,7 +79,11 @@ export function ConnectionErrorState({
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
+        trackConnectDeviceButtonClicked({
+          sourceFlow,
+          page: PAGE_CONNECT_DEVICE.ConnectionError,
+          button: CONNECT_DEVICE_BUTTON.Retry,
+        });
         state.retry();
       },
     };
@@ -90,7 +94,11 @@ export function ConnectionErrorState({
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.GetHelp });
+        trackConnectDeviceButtonClicked({
+          sourceFlow,
+          page: PAGE_CONNECT_DEVICE.ConnectionError,
+          button: CONNECT_DEVICE_BUTTON.GetHelp,
+        });
         Linking.openURL(url).catch(() => undefined);
       },
     };
@@ -137,11 +145,19 @@ export function ConnectionErrorState({
           helpLabel={helpLabel}
           retryLabel={retryLabel}
           onHelp={() => {
-            trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.GetHelp });
+            trackConnectDeviceButtonClicked({
+              sourceFlow,
+              page: PAGE_CONNECT_DEVICE.ConnectionError,
+              button: CONNECT_DEVICE_BUTTON.GetHelp,
+            });
             Linking.openURL(bleForgetDeviceUrl).catch(() => undefined);
           }}
           onRetry={() => {
-            trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
+            trackConnectDeviceButtonClicked({
+              sourceFlow,
+              page: PAGE_CONNECT_DEVICE.ConnectionError,
+              button: CONNECT_DEVICE_BUTTON.Retry,
+            });
             state.retry();
           }}
         />

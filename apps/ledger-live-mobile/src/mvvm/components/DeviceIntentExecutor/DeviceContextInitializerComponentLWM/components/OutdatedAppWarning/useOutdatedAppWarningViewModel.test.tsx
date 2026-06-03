@@ -6,6 +6,7 @@ import {
 } from "@ledgerhq/live-dmk-shared";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
+import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useOutdatedAppWarningViewModel } from "./useOutdatedAppWarningViewModel";
 import type { InitializerDevice } from "../../types";
@@ -80,6 +81,7 @@ describe("useOutdatedAppWarningViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.OutdatedAppWarning,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Manage Apps",
@@ -99,6 +101,7 @@ describe("useOutdatedAppWarningViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.OutdatedAppWarning,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Continue",

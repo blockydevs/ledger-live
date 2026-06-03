@@ -19,15 +19,18 @@ export const PAGE_CONNECT_DEVICE = {
 /**
  * Canonical, locale-independent `button` values for Connect Device `button_clicked`
  * events. The displayed CTA label stays localized; analytics receives these stable
- * strings so the property is not fragmented across languages. The error screen is
- * already disambiguated by the `subError` property, so primary retry/allow CTAs
- * collapse to a single `Retry` value.
+ * strings so the property is not fragmented across languages.
  */
 export const CONNECT_DEVICE_BUTTON = {
-  ConnectLedgerDevice: "Connect Ledger Device",
-  NoLedgerDevice: "I Don't Have A Ledger Device",
+  ConnectDevice: "Connect Device",
+  BuyDevice: "Buy Device",
   Retry: "Retry",
   ContinueWithUsb: "Continue with USB",
+  OpenSettings: "Open Settings",
+  AllowBluetooth: "Allow Bluetooth",
+  TurnOnBluetooth: "Turn On Bluetooth",
+  AllowLocation: "Allow Location",
+  TurnOnLocation: "Turn On Location",
   GetHelp: "Get Help",
 } as const;
 
@@ -71,11 +74,21 @@ export const CONNECT_APP_BUTTON = {
   SetUpDevice: "Set Up Device",
   UpdateFirmware: "Update Firmware",
   ContactLedgerSupport: "Contact Ledger Support",
+  LearnMore: "Learn More",
+  DiscoverUpgradeProgram: "Discover Upgrade Program",
   ManageApps: "Manage Apps",
+} as const;
+
+export const DEVICE_ACTION_BUTTON = {
+  Retry: CONNECT_APP_BUTTON.Retry,
+  Close: CONNECT_APP_BUTTON.Close,
 } as const;
 
 export type TrackingTransport = "ble" | "usb";
 type ConnectDeviceErrorType = ConnectionErrorTypes | DiscoveryErrorTypes;
+type ConnectDevicePage = (typeof PAGE_CONNECT_DEVICE)[keyof typeof PAGE_CONNECT_DEVICE];
+type ConnectAppPage = (typeof PAGE_CONNECT_APP)[keyof typeof PAGE_CONNECT_APP];
+type DeviceActionPage = (typeof PAGE_DEVICE_ACTION)[keyof typeof PAGE_DEVICE_ACTION];
 
 const TRACKING_SUB_ERRORS: Record<ConnectDeviceErrorType, string> = {
   [DiscoveryErrorTypes.BluetoothPermissionDeniedPromptable]: "BluetoothPermissionDeniedPromptable",
@@ -111,7 +124,9 @@ export const getTrackingTransport = (
   return transportId === rnHidTransportIdentifier ? "usb" : "ble";
 };
 
-export const getConnectedDeviceTrackingProperties = (device: ConnectedDevice) => ({
+export const getConnectedDeviceTrackingProperties = (
+  device: ConnectedDevice,
+): { modelId: DeviceModelId; transport: TrackingTransport } => ({
   modelId: dmkToLedgerDeviceIdMap[device.modelId],
   transport: device.type === "USB" ? "usb" : "ble",
 });
@@ -189,22 +204,42 @@ export const trackDeviceSelected = (params: {
 
 export const trackConnectDeviceButtonClicked = (params: {
   sourceFlow: SourceFlow;
+  page: ConnectDevicePage;
   button: string;
 }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
+    page: params.page,
     button: params.button,
   });
 };
 
 export const trackConnectAppButtonClicked = (params: {
   sourceFlow: SourceFlow;
+  page: ConnectAppPage;
   modelId: DeviceModelId;
   button: string;
 }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
+    page: params.page,
     modelId: params.modelId,
     button: params.button,
+  });
+};
+
+export const trackDeviceActionButtonClicked = (params: {
+  sourceFlow: SourceFlow;
+  page: DeviceActionPage;
+  button: string;
+  modelId?: DeviceModelId;
+  transport?: TrackingTransport;
+}): void => {
+  track("button_clicked", {
+    ...getDeviceUxV2BaseProperties(params.sourceFlow),
+    page: params.page,
+    button: params.button,
+    ...(params.modelId ? { modelId: params.modelId } : {}),
+    ...(params.transport ? { transport: params.transport } : {}),
   });
 };

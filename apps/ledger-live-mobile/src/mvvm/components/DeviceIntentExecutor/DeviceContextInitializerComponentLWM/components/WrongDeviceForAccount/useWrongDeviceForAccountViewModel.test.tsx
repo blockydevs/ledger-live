@@ -2,6 +2,7 @@ import { act, renderHook } from "@tests/test-renderer";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
+import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useWrongDeviceForAccountViewModel } from "./useWrongDeviceForAccountViewModel";
 import type { InitializerDevice } from "../../types";
@@ -68,6 +69,7 @@ describe("useWrongDeviceForAccountViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.WrongDeviceForAccount,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Close",
@@ -87,6 +89,7 @@ describe("useWrongDeviceForAccountViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.WrongDeviceForAccount,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Contact Ledger Support",

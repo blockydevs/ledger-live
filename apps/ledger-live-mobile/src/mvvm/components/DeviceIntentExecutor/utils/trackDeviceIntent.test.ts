@@ -9,10 +9,14 @@ import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
 import {
+  DEVICE_ACTION_BUTTON,
   getConnectedDeviceTrackingProperties,
   getTrackingSubError,
   getTrackingTransport,
+  PAGE_CONNECT_APP,
+  PAGE_CONNECT_DEVICE,
   PAGE_DEVICE_ACTION,
+  trackDeviceActionButtonClicked,
   trackConnectAppButtonClicked,
   trackConnectDeviceButtonClicked,
   trackAppReady,
@@ -268,17 +272,19 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
   });
 
   describe("trackConnectDeviceButtonClicked", () => {
-    describe("Given a sourceFlow and button", () => {
+    describe("Given a sourceFlow, page and button", () => {
       describe("When called", () => {
         it("Then tracks button_clicked with the Layer B properties", () => {
           trackConnectDeviceButtonClicked({
             sourceFlow: "send",
+            page: PAGE_CONNECT_DEVICE.DiscoveryError,
             button: "Retry",
           });
 
           expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
             ...layerABaseProperties,
             sourceFlow: "send",
+            page: PAGE_CONNECT_DEVICE.DiscoveryError,
             button: "Retry",
           });
         });
@@ -287,9 +293,10 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
   });
 
   describe("trackConnectAppButtonClicked", () => {
-    it("GIVEN sourceFlow modelId and button WHEN called THEN it tracks button_clicked with the Layer B properties", () => {
+    it("GIVEN sourceFlow page modelId and button WHEN called THEN it tracks button_clicked with the Layer B properties", () => {
       trackConnectAppButtonClicked({
         sourceFlow: "send",
+        page: PAGE_CONNECT_APP.DeviceBusy,
         modelId: DeviceModelId.stax,
         button: "Retry",
       });
@@ -297,8 +304,30 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
       expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
         ...layerABaseProperties,
         sourceFlow: "send",
+        page: PAGE_CONNECT_APP.DeviceBusy,
         modelId: DeviceModelId.stax,
         button: "Retry",
+      });
+    });
+  });
+
+  describe("trackDeviceActionButtonClicked", () => {
+    it("GIVEN sourceFlow page button and device properties WHEN called THEN it tracks button_clicked with the Device Action properties", () => {
+      trackDeviceActionButtonClicked({
+        sourceFlow: "send",
+        page: PAGE_DEVICE_ACTION.Disconnected,
+        button: DEVICE_ACTION_BUTTON.Close,
+        modelId: DeviceModelId.stax,
+        transport: "ble",
+      });
+
+      expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+        ...layerABaseProperties,
+        sourceFlow: "send",
+        page: PAGE_DEVICE_ACTION.Disconnected,
+        button: DEVICE_ACTION_BUTTON.Close,
+        modelId: DeviceModelId.stax,
+        transport: "ble",
       });
     });
   });

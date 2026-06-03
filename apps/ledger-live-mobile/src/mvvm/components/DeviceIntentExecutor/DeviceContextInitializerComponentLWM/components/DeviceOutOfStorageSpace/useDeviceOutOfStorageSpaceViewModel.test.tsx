@@ -3,6 +3,7 @@ import { DeviceModelId } from "@ledgerhq/types-devices";
 import { BlockingStateType, type EnsureAppReadyState } from "@ledgerhq/live-dmk-shared";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
+import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useDeviceOutOfStorageSpaceViewModel } from "./useDeviceOutOfStorageSpaceViewModel";
 import type { InitializerDevice } from "../../types";
@@ -72,6 +73,7 @@ describe("useDeviceOutOfStorageSpaceViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.OutOfStorage,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Manage Apps",

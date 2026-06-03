@@ -2,6 +2,7 @@ import { act, renderHook } from "@tests/test-renderer";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { previousRouteNameRef } from "~/analytics/screenRefs";
+import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useUnsupportedFirmwareVersionViewModel } from "./useUnsupportedFirmwareVersionViewModel";
 import type { InitializerDevice } from "../../types";
@@ -76,6 +77,7 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.UnsupportedFirmware,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Update Firmware",
@@ -83,7 +85,7 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
     expect(openMyLedgerFirmwareUpdate).toHaveBeenCalledTimes(1);
   });
 
-  it("GIVEN a device WHEN cancelling THEN it tracks Cancel and forwards to onCancel", () => {
+  it("GIVEN a device WHEN cancelling THEN it tracks Close and forwards to onCancel", () => {
     const { result } = renderHook(() =>
       useUnsupportedFirmwareVersionViewModel({
         device,
@@ -99,9 +101,10 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
       source: TEST_SOURCE,
+      page: PAGE_CONNECT_APP.UnsupportedFirmware,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
-      button: "Cancel",
+      button: "Close",
     });
     expect(onCancel).toHaveBeenCalledTimes(1);
   });

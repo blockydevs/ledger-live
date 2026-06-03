@@ -3,7 +3,11 @@ import type { BlockingStateType, EnsureAppReadyState } from "@ledgerhq/live-dmk-
 import type { InitializerDevice } from "../../types";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import type { SourceFlow } from "../../../utils/SourceFlowContext";
-import { CONNECT_APP_BUTTON, trackConnectAppButtonClicked } from "../../../utils/trackDeviceIntent";
+import {
+  CONNECT_APP_BUTTON,
+  PAGE_CONNECT_APP,
+  trackConnectAppButtonClicked,
+} from "../../../utils/trackDeviceIntent";
 
 type DeviceOutOfStorageSpaceState = Extract<
   EnsureAppReadyState,
@@ -21,7 +25,12 @@ export function useDeviceOutOfStorageSpaceViewModel({ state, device, sourceFlow 
   const modelId = device.modelId;
   const searchQuery = useMemo(() => state.appNames.join(", "), [state.appNames]);
   const onOpenMyLedger = useCallback(() => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.ManageApps });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      page: PAGE_CONNECT_APP.OutOfStorage,
+      modelId,
+      button: CONNECT_APP_BUTTON.ManageApps,
+    });
     openMyLedger(searchQuery);
   }, [openMyLedger, searchQuery, sourceFlow, modelId]);
 
