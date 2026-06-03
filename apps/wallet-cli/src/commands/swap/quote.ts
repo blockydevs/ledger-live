@@ -41,34 +41,18 @@ async function assertWalletCliSwapCurrencyId(id: string, role: "from" | "to"): P
   );
 }
 
-type SwapAddressFlags = {
-  accountFlag: "--from-account" | "--to-account";
-  addressFlag: "--from-fresh-address" | "--to-fresh-address";
-};
+async function resolveSwapAccountAddress(
+  wallet: WalletAdapter,
+  accountInput: string,
+): Promise<string> {
+  const v1 = await resolveAccountDescriptorV1(accountInput);
+  if (v1.type === "address") {
+    return v1.address;
+  }
 
-const createSwapAddressResolver = (wallet: WalletAdapter) => {
-  return async (
-    directAddress: string | undefined,
-    accountInput: string | undefined,
-    { addressFlag, accountFlag }: SwapAddressFlags,
-  ): Promise<string> => {
-    if (directAddress) {
-      return directAddress;
-    }
-
-    if (!accountInput) {
-      throw new Error(`Missing ${addressFlag}. Use ${addressFlag} or ${accountFlag}.`);
-    }
-
-    const v1 = await resolveAccountDescriptorV1(accountInput);
-    if (v1.type === "address") {
-      return v1.address;
-    }
-
-    const descriptor = await resolveAccountDescriptor(accountInput);
-    return wallet.getFreshAddress(descriptor);
-  };
-};
+  const descriptor = await resolveAccountDescriptor(accountInput);
+  return wallet.getFreshAddress(descriptor);
+}
 
 export default defineCommand({
   name: "quote",
@@ -82,16 +66,10 @@ export default defineCommand({
       description: "Destination currency ID",
       short: "t",
     }),
-    "from-fresh-address": option(z.string().min(1).optional(), {
-      description: "Source account fresh receive address (alternative to --from-account)",
-    }),
-    "to-fresh-address": option(z.string().min(1).optional(), {
-      description: "Destination account fresh receive address (alternative to --to-account)",
-    }),
-    "from-account": option(z.string().min(1).optional(), {
+    "from-account": option(z.string().min(1, "Source account is required"), {
       description: "Source account session label (used to resolve fresh address)",
     }),
-    "to-account": option(z.string().min(1).optional(), {
+    "to-account": option(z.string().min(1, "Destination account is required"), {
       description: "Destination account session label (used to resolve fresh address)",
     }),
     amount: option(z.string().min(1, "Amount is required"), {
@@ -109,18 +87,9 @@ export default defineCommand({
       await assertWalletCliSwapCurrencyId(flags.to, "to");
 
       const wallet = new WalletAdapter();
-      const resolveSwapAddress = createSwapAddressResolver(wallet);
 
-      const sendAddress = await resolveSwapAddress(
-        flags["from-fresh-address"],
-        flags["from-account"],
-        { addressFlag: "--from-fresh-address", accountFlag: "--from-account" },
-      );
-      const receiveAddress = await resolveSwapAddress(
-        flags["to-fresh-address"],
-        flags["to-account"],
-        { addressFlag: "--to-fresh-address", accountFlag: "--to-account" },
-      );
+      const sendAddress = await resolveSwapAccountAddress(wallet, flags["from-account"]);
+      const receiveAddress = await resolveSwapAccountAddress(wallet, flags["to-account"]);
 
       const s = out.spin("Fetching swap quotes…");
       const result = await getQuotes(
