@@ -17,6 +17,7 @@ import {
 import { useSelector } from "~/context/hooks";
 import { accountsSelector, flattenAccountsSelector } from "~/reducers/accounts";
 import { counterValueCurrencySelector, discreetModeSelector } from "~/reducers/settings";
+import { hideTransactionsOnChartSelector } from "~/reducers/market";
 import { useCountervaluesState } from "~/reducers/countervalues";
 import { useOperationsV1 } from "~/screens/Analytics/Operations/useOperationsV1";
 import { track } from "~/analytics";
@@ -392,6 +393,7 @@ export function useBalanceGraphViewModel({
   // transactions it represents, mirroring the Transactions section's scoping.
   const allAccounts = useSelector(accountsSelector);
   const discreet = useSelector(discreetModeSelector);
+  const hideTransactionsOnChart = useSelector(hideTransactionsOnChartSelector);
   // Read through a ref so countervalue polling (which swaps the state reference on
   // every tick) does not invalidate the `transactions` memo and force the memoized
   // chart to re-render. Historical fiat is treated as stable; if rates land after the
@@ -497,10 +499,12 @@ export function useBalanceGraphViewModel({
 
   const points = useMemo<LineChartPointMarker[]>(() => {
     const extrema = getExtremaPointMarkers(series);
-    if (transactions.length === 0 || timestamps.length < 2) return extrema;
+    // The user can hide transaction markers from the price chart (persisted setting).
+    if (hideTransactionsOnChart || transactions.length === 0 || timestamps.length < 2)
+      return extrema;
     const groups = groupTransactionsByChartIndex({ timestamps, values: prices, transactions });
     return [...extrema, ...groups.map(group => buildTransactionPointMarker(group, t, formatFiat))];
-  }, [series, transactions, timestamps, prices, t, formatFiat]);
+  }, [series, transactions, timestamps, prices, t, formatFiat, hideTransactionsOnChart]);
 
   return {
     price: displayedPrice,
@@ -528,5 +532,6 @@ export function useBalanceGraphViewModel({
     showYAxis: false,
     xAxis,
     yAxis,
+    currencyId: currency?.id,
   };
 }

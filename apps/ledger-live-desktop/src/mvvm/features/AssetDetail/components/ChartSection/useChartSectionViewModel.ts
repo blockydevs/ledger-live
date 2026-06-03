@@ -31,6 +31,7 @@ import {
   discreetModeSelector,
   localeSelector,
 } from "~/renderer/reducers/settings";
+import { hideTransactionsOnChartSelector } from "~/renderer/reducers/market";
 import { useHistoryOperationItemsForRootAccounts } from "LLD/features/History/hooks/useHistoryOperationItemsForRootAccounts";
 import {
   filterOperationTableItemsByAllowedAccountIds,
@@ -96,6 +97,7 @@ export type ChartSectionViewModelResult = Readonly<{
   xAxis: LineChartXAxisConfig;
   yAxis: LineChartYAxisConfig;
   points: LineChartPointMarker[];
+  currencyId?: string;
 }>;
 
 export function useChartSectionViewModel({
@@ -112,6 +114,7 @@ export function useChartSectionViewModel({
   const fiatUnit = counterValueCurrency.units[0];
   const locale = useSelector(localeSelector);
   const discreet = useSelector(discreetModeSelector);
+  const hideTransactionsOnChart = useSelector(hideTransactionsOnChartSelector);
   const allAccounts = useSelector(accountsSelector);
   const countervaluesState = useCountervaluesState();
 
@@ -209,6 +212,8 @@ export function useChartSectionViewModel({
   const points = useMemo<LineChartPointMarker[]>(() => {
     const extremaMarkers = getExtremaPointMarkers(series);
 
+    if (hideTransactionsOnChart) return extremaMarkers;
+
     const groups = groupTransactionsByChartIndex({
       timestamps,
       values: series[0]?.data ?? [],
@@ -220,7 +225,7 @@ export function useChartSectionViewModel({
     );
 
     return [...extremaMarkers, ...transactionMarkers];
-  }, [series, timestamps, transactions, formatFiat, t]);
+  }, [series, timestamps, transactions, formatFiat, t, hideTransactionsOnChart]);
 
   const formatValue = useCallback<LineChartValueFormatter>(
     value =>
@@ -321,5 +326,6 @@ export function useChartSectionViewModel({
     xAxis,
     yAxis,
     points,
+    currencyId,
   };
 }
