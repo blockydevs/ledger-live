@@ -53,10 +53,6 @@ const CHART_DATA_BY_RANGE: Record<RangeKey, Array<[number, number]>> = {
     [2, 210],
   ],
   "1m": [[1, 300]],
-  "6m": [
-    [1, 350],
-    [2, 385],
-  ],
   "1y": [
     [1, 400],
     [2, 410],
@@ -362,7 +358,7 @@ describe("useBalanceGraphViewModel", () => {
       const { result } = renderVM();
 
       const values = result.current.ranges.map(r => r.value);
-      expect(values).toEqual(["1d", "1w", "1m", "6m", "1y", "all"]);
+      expect(values).toEqual(["1d", "1w", "1m", "1y", "all"]);
     });
 
     it("exposes a runtime guard that accepts only known range keys", () => {
