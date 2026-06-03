@@ -9,9 +9,9 @@ import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import { types as TyphonTypes } from "@stricahq/typhonjs";
 import BigNumber from "bignumber.js";
 import { APITransaction } from "../api/api-types";
+import { getAllTransactionsByKeys } from "../api/fetchTransactions";
 import { getDelegationInfo } from "../api/getDelegationInfo";
 import { fetchNetworkInfo } from "../api/getNetworkInfo";
-import { fetchAllTransactionsByPaymentKey } from "../api/getTransactionsByPaymentKey";
 import {
   calculateMinAdaForTokens,
   computeAdaBalance,
@@ -138,11 +138,13 @@ export async function getBalance(currency: CryptoCurrency, address: string): Pro
   const stakeKey = extractStakeKeyFromAddress(address);
 
   // The transaction-history fetch (for UTXOs) and the delegation fetch are independent network
-  // calls, so run them in parallel — the history pagination can be sizeable.
-  const [transactions, delegation] = await Promise.all([
+  // calls, so run them in parallel — the history pagination can be sizeable. blockHeight 0
+  // fetches the full history; getAllTransactionsByKeys is the shared pagination primitive (also
+  // used by account sync), so the termination rule can't drift.
+  const [{ transactions }, delegation] = await Promise.all([
     paymentKey === EMPTY_CREDENTIAL_KEY
-      ? Promise.resolve<APITransaction[]>([])
-      : fetchAllTransactionsByPaymentKey(paymentKey, currency),
+      ? Promise.resolve<{ transactions: APITransaction[] }>({ transactions: [] })
+      : getAllTransactionsByKeys([paymentKey], 0, currency),
     stakeKey ? getDelegationInfo(currency, stakeKey) : Promise.resolve(undefined),
   ]);
 

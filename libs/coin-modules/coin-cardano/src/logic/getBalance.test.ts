@@ -1,19 +1,23 @@
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import BigNumber from "bignumber.js";
 import { APITransaction } from "../api/api-types";
+import { getAllTransactionsByKeys } from "../api/fetchTransactions";
 import { getDelegationInfo } from "../api/getDelegationInfo";
 import { fetchNetworkInfo } from "../api/getNetworkInfo";
-import { fetchAllTransactionsByPaymentKey } from "../api/getTransactionsByPaymentKey";
 import { extractPaymentKeyFromAddress } from "../logic";
 import { getBalance } from "./getBalance";
 
-jest.mock("../api/getTransactionsByPaymentKey");
+jest.mock("../api/fetchTransactions");
 jest.mock("../api/getDelegationInfo");
 jest.mock("../api/getNetworkInfo");
 
-const mockFetchTxs = jest.mocked(fetchAllTransactionsByPaymentKey);
+const mockFetchTxs = jest.mocked(getAllTransactionsByKeys);
 const mockGetDelegation = jest.mocked(getDelegationInfo);
 const mockFetchNetworkInfo = jest.mocked(fetchNetworkInfo);
+
+// getAllTransactionsByKeys returns the paginated result shape; getBalance only reads the
+// transaction list, so wrap a plain list with a dummy blockHeight in the tests.
+const paged = (transactions: APITransaction[]) => ({ transactions, blockHeight: 1 });
 
 const currency = getCryptoCurrencyById("cardano");
 // Real mainnet base address; extraction (Typhon) runs for real against it.
@@ -50,34 +54,38 @@ beforeEach(() => {
 
 describe("getBalance", () => {
   it("returns the native UTXO sum for the address's payment key", async () => {
-    mockFetchTxs.mockResolvedValue([
-      makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000"), output(OTHER_KEY, "9999")] }),
-    ]);
+    mockFetchTxs.mockResolvedValue(
+      paged([
+        makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000"), output(OTHER_KEY, "9999")] }),
+      ]),
+    );
 
     const [native] = await getBalance(currency, ADDRESS);
 
-    expect(mockFetchTxs).toHaveBeenCalledWith(PAYMENT_KEY, currency);
+    expect(mockFetchTxs).toHaveBeenCalledWith([PAYMENT_KEY], 0, currency);
     expect(native).toEqual({ value: 5000000n, asset: { type: "native", name: "ADA" }, locked: 0n });
   });
 
   it("excludes outputs later spent as inputs", async () => {
-    mockFetchTxs.mockResolvedValue([
-      makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] }),
-      makeTx({
-        hash: "b",
-        inputs: [
-          {
-            txId: "a",
-            index: 0,
-            address: ADDRESS,
-            value: "5000000",
-            paymentKey: PAYMENT_KEY,
-            tokens: [],
-          },
-        ],
-        outputs: [output(PAYMENT_KEY, "3000000")],
-      }),
-    ]);
+    mockFetchTxs.mockResolvedValue(
+      paged([
+        makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] }),
+        makeTx({
+          hash: "b",
+          inputs: [
+            {
+              txId: "a",
+              index: 0,
+              address: ADDRESS,
+              value: "5000000",
+              paymentKey: PAYMENT_KEY,
+              tokens: [],
+            },
+          ],
+          outputs: [output(PAYMENT_KEY, "3000000")],
+        }),
+      ]),
+    );
 
     const [native] = await getBalance(currency, ADDRESS);
 
@@ -88,14 +96,16 @@ describe("getBalance", () => {
     mockFetchNetworkInfo.mockResolvedValue({
       protocolParams: { utxoCostPerByte: "4310" },
     } as never);
-    mockFetchTxs.mockResolvedValue([
-      makeTx({
-        hash: "a",
-        outputs: [
-          output(PAYMENT_KEY, "5000000", [{ policyId: "pol1", assetName: "abcd", value: "100" }]),
-        ],
-      }),
-    ]);
+    mockFetchTxs.mockResolvedValue(
+      paged([
+        makeTx({
+          hash: "a",
+          outputs: [
+            output(PAYMENT_KEY, "5000000", [{ policyId: "pol1", assetName: "abcd", value: "100" }]),
+          ],
+        }),
+      ]),
+    );
 
     const balances = await getBalance(currency, ADDRESS);
     const token = balances.find(b => b.asset.type === "token");
@@ -110,9 +120,9 @@ describe("getBalance", () => {
   });
 
   it("maps a delegation to a separate stake balance (deposit + rewards)", async () => {
-    mockFetchTxs.mockResolvedValue([
-      makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] }),
-    ]);
+    mockFetchTxs.mockResolvedValue(
+      paged([makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] })]),
+    );
     mockGetDelegation.mockResolvedValue({
       status: true,
       deposit: "2000000",
@@ -146,9 +156,9 @@ describe("getBalance", () => {
   });
 
   it("advertises claim_reward and unlocks rewards once delegated to a dRep", async () => {
-    mockFetchTxs.mockResolvedValue([
-      makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] }),
-    ]);
+    mockFetchTxs.mockResolvedValue(
+      paged([makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] })]),
+    );
     mockGetDelegation.mockResolvedValue({
       status: true,
       deposit: "2000000",
@@ -168,9 +178,9 @@ describe("getBalance", () => {
   });
 
   it("omits the stake balance when there is no staking position", async () => {
-    mockFetchTxs.mockResolvedValue([
-      makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] }),
-    ]);
+    mockFetchTxs.mockResolvedValue(
+      paged([makeTx({ hash: "a", outputs: [output(PAYMENT_KEY, "5000000")] })]),
+    );
     mockGetDelegation.mockResolvedValue(undefined);
 
     const balances = await getBalance(currency, ADDRESS);
