@@ -161,6 +161,7 @@ describe("useAssetDetailViewModel", () => {
       expect(vm.displayTicker).toBe(btc.ticker);
       expect(vm.ledgerCurrency).toBe(btc);
       expect(vm.ledgerId).toBe(btc.id);
+      expect(vm.ledgerIds).toEqual([btc.id]);
     });
 
     it("falls back to marketCurrencyData for name/ticker in discovery mode", async () => {

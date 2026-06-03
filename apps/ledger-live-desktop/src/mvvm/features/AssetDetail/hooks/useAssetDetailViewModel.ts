@@ -41,7 +41,13 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
     [distributionItem, marketState, decodedAssetId],
   );
 
-  const { marketCurrencyData, marketId, ledgerCurrencyFromDada, isLoading } = useAssetMarketData({
+  const {
+    marketCurrencyData,
+    marketId,
+    ledgerCurrencyFromDada,
+    ledgerIds: assetMarketLedgerIds,
+    isLoading,
+  } = useAssetMarketData({
     marketApiId,
     knownLedgerIds,
     counterCurrency,
@@ -53,6 +59,11 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
   const marketFallback = resolveAssetDetailMarketInfo(marketCurrencyData, marketState);
 
   const ledgerCurrency = distributionItem?.currency ?? ledgerCurrencyFromDada;
+  const ledgerIds = useMemo(() => {
+    if (assetMarketLedgerIds?.length) return assetMarketLedgerIds;
+    if (marketCurrencyData?.ledgerIds?.length) return marketCurrencyData.ledgerIds;
+    return knownLedgerIds ? [...knownLedgerIds] : [];
+  }, [assetMarketLedgerIds, marketCurrencyData?.ledgerIds, knownLedgerIds]);
 
   if (distributionItem || marketFallback) {
     return {
@@ -61,6 +72,7 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
       marketData: { marketCurrencyData, marketId, isLoading },
       isDistributionLoading: distribution.isLoading,
       ledgerCurrency,
+      ledgerIds,
       displayName: ledgerCurrency?.name ?? marketFallback?.name ?? "",
       displayTicker: (ledgerCurrency?.ticker ?? marketFallback?.ticker ?? "").toUpperCase(),
       ledgerId: ledgerCurrency?.id ?? marketFallback?.ledgerIds?.[0],
@@ -76,6 +88,7 @@ export function useAssetDetailViewModel(): AssetDetailViewModel {
       marketData: { marketCurrencyData, marketId, isLoading },
       isDistributionLoading: distribution.isLoading,
       ledgerCurrency,
+      ledgerIds,
       displayName: ledgerCurrency?.name ?? "",
       displayTicker: (ledgerCurrency?.ticker ?? "").toUpperCase(),
       ledgerId: ledgerCurrency?.id ?? decodedAssetId,
