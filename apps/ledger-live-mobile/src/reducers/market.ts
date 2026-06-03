@@ -1,5 +1,13 @@
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { Action, ReducerMap, handleActions } from "redux-actions";
-import { MarketState, State } from "./types";
+import {
+  MarketListCategory,
+  MarketListConfigState,
+  MarketListSorting,
+  MarketListTimeframe,
+  MarketState,
+  State,
+} from "./types";
 import {
   MarketSetCurrentPagePayload,
   MarketSetMarketFilterByStarredCurrenciesPayload,
@@ -13,6 +21,7 @@ import { Order } from "@ledgerhq/live-common/market/utils/types";
 
 export const LIMIT = 20;
 
+/** @legacy MarketList (v3) state — will be removed when MarketList is dropped. Use marketListConfigSlice for v4. */
 export const INITIAL_STATE: MarketState = {
   marketParams: {
     range: "24h",
@@ -29,6 +38,7 @@ export const INITIAL_STATE: MarketState = {
   hideTransactionsOnChart: false,
 };
 
+/** @legacy MarketList (v3) handlers — will be removed when MarketList is dropped. Use marketListConfigSlice for v4. */
 const handlers: ReducerMap<MarketState, MarketPayload> = {
   [MarketStateActionTypes.SET_MARKET_REQUEST_PARAMS]: (state, action) => ({
     ...state,
@@ -85,3 +95,59 @@ export const exportMarketSelector = (s: State) => s.market;
 // Exporting reducer
 
 export default handleActions<MarketState, MarketPayload>(handlers, INITIAL_STATE);
+
+/**
+ * V4 asset list config — shared between MarketScreen and modularAssetDrawer.
+ * Gated by llmAssetDiscoverability. Persisted as a user preference (never reset).
+ */
+export const MARKET_LIST_CONFIG_INITIAL_STATE: MarketListConfigState = {
+  sorting: "marketCap",
+  timeframe: "1D",
+  network: undefined,
+  category: "all",
+};
+
+const marketListConfigSlice = createSlice({
+  name: "marketListConfig",
+  initialState: MARKET_LIST_CONFIG_INITIAL_STATE,
+  reducers: {
+    setMarketListSorting: (state, action: PayloadAction<MarketListSorting>) => {
+      state.sorting = action.payload;
+    },
+    setMarketListTimeframe: (state, action: PayloadAction<MarketListTimeframe>) => {
+      state.timeframe = action.payload;
+    },
+    setMarketListNetwork: (state, action: PayloadAction<string | undefined>) => {
+      state.network = action.payload;
+    },
+    setMarketListCategory: (state, action: PayloadAction<MarketListCategory>) => {
+      state.category = action.payload;
+    },
+    importMarketListConfig: (_state, action: PayloadAction<MarketListConfigState>) => ({
+      ...MARKET_LIST_CONFIG_INITIAL_STATE,
+      ...action.payload,
+    }),
+  },
+});
+
+export const {
+  setMarketListSorting,
+  setMarketListTimeframe,
+  setMarketListNetwork,
+  setMarketListCategory,
+  importMarketListConfig,
+} = marketListConfigSlice.actions;
+
+export const selectMarketListSorting = (state: State): MarketListSorting =>
+  state.marketListConfig.sorting;
+export const selectMarketListTimeframe = (state: State): MarketListTimeframe =>
+  state.marketListConfig.timeframe;
+export const selectMarketListNetwork = (state: State): string | undefined =>
+  state.marketListConfig.network;
+export const selectMarketListCategory = (state: State): MarketListCategory =>
+  state.marketListConfig.category;
+
+export const exportMarketListConfigSelector = (state: State): MarketListConfigState =>
+  state.marketListConfig;
+
+export const marketListConfigReducer = marketListConfigSlice.reducer;
