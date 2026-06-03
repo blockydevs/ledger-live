@@ -1,5 +1,11 @@
 # @ledgerhq/hw-app-btc
 
+## 11.1.0-next.1
+
+### Minor Changes
+
+- [#18180](https://github.com/LedgerHQ/ledger-live/pull/18180) [`d1792fb`](https://github.com/LedgerHQ/ledger-live/commit/d1792fb26fa22c042bee8098e2fe9fc39feafc0a) Thanks [@cted-ledger](https://github.com/cted-ledger)! - Fix Zcash consensus branch ID by adding NU6.2 activation height
+
 ## 11.0.1-next.0
 
 ### Patch Changes

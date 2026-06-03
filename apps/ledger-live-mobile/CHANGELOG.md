@@ -1,5 +1,11 @@
 # live-mobile
 
+## 4.7.0-next.3
+
+### Minor Changes
+
+- [#18180](https://github.com/LedgerHQ/ledger-live/pull/18180) [`85afdeb`](https://github.com/LedgerHQ/ledger-live/commit/85afdeb10ab594c15763dcae2db3fcf3676e5c40) Thanks [@cted-ledger](https://github.com/cted-ledger)! - Fix Zcash consensus branch ID by adding NU6.2 activation height
+
 ## 4.7.0-next.2
 
 ### Minor Changes
