@@ -6,7 +6,7 @@ import {
   setSupportedCurrencies,
 } from "@ledgerhq/live-common/currencies/index";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
-import { NotEnoughBalance } from "@ledgerhq/errors";
+import { InvalidAddress, NotEnoughBalance } from "@ledgerhq/errors";
 import type { TezosAccount, Transaction } from "@ledgerhq/live-common/families/tezos/types";
 import type { StepProps } from "../types";
 
@@ -182,6 +182,26 @@ describe("StakeFlowModal/StepValidatorFooter", () => {
     const props = withRecipient({
       status: {
         errors: { amount: new NotEnoughBalance() },
+        warnings: {},
+        estimatedFees: new BigNumber(0),
+        amount: new BigNumber(0),
+        totalSpent: new BigNumber(0),
+      } as unknown as StepProps["status"],
+    });
+    act(() => {
+      render(<StepValidatorFooter {...props} />);
+    });
+    expect(screen.getByRole("button")).toBeDisabled();
+    act(() => {
+      fireEvent.click(screen.getByRole("button"));
+    });
+    expect(props.transitionTo).not.toHaveBeenCalled();
+  });
+
+  it("disables Continue when the only blocking error is not an amount error", () => {
+    const props = withRecipient({
+      status: {
+        errors: { recipient: new InvalidAddress() },
         warnings: {},
         estimatedFees: new BigNumber(0),
         amount: new BigNumber(0),
