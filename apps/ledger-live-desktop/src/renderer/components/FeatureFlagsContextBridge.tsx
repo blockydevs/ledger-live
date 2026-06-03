@@ -36,15 +36,19 @@ export const FeatureFlagsContextBridge = ({ children }: React.PropsWithChildren)
 
   const overrideFeature = useCallback(
     (key: FeatureId, value: Feature): void => {
+      const parsed = FeatureIdSchema.safeParse(key);
+      if (!parsed.success) return;
       const { overriddenByEnv, ...pureValue } = value; // eslint-disable-line
-      dispatch(setOverride({ key, value: { ...pureValue, overridesRemote: true } }));
+      dispatch(setOverride({ key: parsed.data, value: { ...pureValue, overridesRemote: true } }));
     },
     [dispatch],
   );
 
   const resetFeature = useCallback(
     (key: FeatureId): void => {
-      dispatch(setOverride({ key, value: undefined }));
+      const parsed = FeatureIdSchema.safeParse(key);
+      if (!parsed.success) return;
+      dispatch(setOverride({ key: parsed.data, value: undefined }));
     },
     [dispatch],
   );

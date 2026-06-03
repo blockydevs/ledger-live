@@ -144,7 +144,7 @@ async function init() {
 
   // Feature flags: install the LiveConfig provider (serves non-feature `config_*` keys) and
   // point analytics at the Redux slice. The middleware (wired at store creation) drives the
-  // remote-flags fetch; boot waits on its first result via `whenReady()` below.
+  // remote-flags fetch; boot waits on `selectRemoteFlagsReady` below.
   installLiveConfigProvider();
   setAnalyticsFeatureFlagMethod(
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -303,13 +303,16 @@ async function init() {
   // slice — and unconditionally, so a Firebase outage still releases the gate. This guarantees
   // resolved flags are in the store before the first render.
   await new Promise<void>(resolve => {
-    if (selectRemoteFlagsReady(store.getState())) return resolve();
-    const unsubscribe = store.subscribe(() => {
-      if (selectRemoteFlagsReady(store.getState())) {
-        unsubscribe();
-        resolve();
-      }
-    });
+    let unsubscribe = () => {};
+    const check = () => {
+      if (!selectRemoteFlagsReady(store.getState())) return;
+      unsubscribe();
+      resolve();
+    };
+    // Subscribe before the first check so a `remoteFlagsReady` dispatch can never slip through
+    // the gap between checking and subscribing.
+    unsubscribe = store.subscribe(check);
+    check();
   });
 
   r(<ReactRoot store={store} language={language} initialCountervalues={initialCountervalues} />);
