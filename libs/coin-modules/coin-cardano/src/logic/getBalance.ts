@@ -87,8 +87,8 @@ function buildStake(
   const rewards = delegation.rewards ?? new BigNumber(0);
   if (!delegation.status && rewards.lte(0)) return undefined;
 
-  const amountDeposited = BigInt(new BigNumber(delegation.deposit || 0).toFixed());
-  const amountRewarded = BigInt(rewards.toFixed());
+  const amountDeposited = BigInt(new BigNumber(delegation.deposit || 0).toFixed(0));
+  const amountRewarded = BigInt(rewards.toFixed(0));
   const state: StakeState = delegation.status ? "active" : "inactive";
   // Rewards can only be withdrawn once the account is delegated to a dRep (Conway rule;
   // the tx builder refuses a withdrawal otherwise). Don't advertise an action that can't
@@ -168,9 +168,9 @@ export async function getBalance(currency: CryptoCurrency, address: string): Pro
 
   const balances: Balance[] = [
     {
-      value: BigInt(nativeValue.toFixed()),
+      value: BigInt(nativeValue.toFixed(0)),
       asset: NATIVE_ASSET,
-      locked: BigInt(locked.toFixed()),
+      locked: BigInt(locked.toFixed(0)),
     },
   ];
 
@@ -181,7 +181,7 @@ export async function getBalance(currency: CryptoCurrency, address: string): Pro
 
   for (const token of tokens) {
     balances.push({
-      value: BigInt(token.amount.toFixed()),
+      value: BigInt(token.amount.toFixed(0)),
       asset: {
         // Cardano's canonical token asset id: policyId (28 bytes) concatenated with the asset
         // name, no separator (mirrors getTokenAssetId in buildSubAccounts). Keeps the reference

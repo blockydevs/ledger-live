@@ -11,7 +11,9 @@ async function fetchTransactionsPage(
   currency: CryptoCurrency,
 ): Promise<{
   pageNo: number;
-  limit: number;
+  // Untyped network response: limit may be missing or non-numeric. Callers must coerce the
+  // value (as getAllTransactionsByKeys does) rather than trust a `number`.
+  limit?: unknown;
   blockHeight: number;
   transactions: Array<APITransaction>;
 }> {
