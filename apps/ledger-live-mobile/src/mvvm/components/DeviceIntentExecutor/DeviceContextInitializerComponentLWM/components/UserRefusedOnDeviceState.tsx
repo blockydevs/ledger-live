@@ -25,7 +25,6 @@ export function UserRefusedOnDeviceState({
   const handleClose = () => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.UserRefused,
       modelId,
       button: CONNECT_APP_BUTTON.Close,
     });
@@ -34,7 +33,6 @@ export function UserRefusedOnDeviceState({
   const handleRetry = () => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.UserRefused,
       modelId,
       button: CONNECT_APP_BUTTON.Retry,
     });
@@ -47,6 +45,7 @@ export function UserRefusedOnDeviceState({
         category={PAGE_CONNECT_APP.UserRefused}
         sourceFlow={sourceFlow}
         modelId={modelId}
+        refreshSource
         deviceUxV2
       />
       <InfoState

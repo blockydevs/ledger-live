@@ -1,8 +1,6 @@
 import { act, renderHook } from "@tests/test-renderer";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
-import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useUnsupportedFirmwareVersionViewModel } from "./useUnsupportedFirmwareVersionViewModel";
 import type { InitializerDevice } from "../../types";
@@ -19,7 +17,6 @@ jest.mock("../../hooks/useInitializerActions");
 
 const mockedTrack = jest.mocked(track);
 const mockedUseInitializerActions = jest.mocked(useInitializerActions);
-const TEST_SOURCE = "Portfolio";
 const SOURCE_FLOW = "my_ledger";
 const openMyLedgerFirmwareUpdate = jest.fn();
 const onCancel = jest.fn();
@@ -35,7 +32,6 @@ const device: InitializerDevice = {
 describe("useUnsupportedFirmwareVersionViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    previousRouteNameRef.current = TEST_SOURCE;
     mockedUseInitializerActions.mockReturnValue({
       openMyLedger: jest.fn(),
       openMyLedgerFirmwareUpdate,
@@ -76,8 +72,6 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.UnsupportedFirmware,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Update Firmware",
@@ -100,8 +94,6 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.UnsupportedFirmware,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Close",

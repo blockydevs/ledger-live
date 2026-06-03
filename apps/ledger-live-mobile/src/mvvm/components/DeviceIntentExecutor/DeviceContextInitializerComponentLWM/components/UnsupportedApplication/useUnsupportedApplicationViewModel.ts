@@ -4,7 +4,6 @@ import { useInitializerActions } from "../../hooks/useInitializerActions";
 import type { SourceFlow } from "../../../utils/SourceFlowContext";
 import {
   CONNECT_APP_BUTTON,
-  PAGE_CONNECT_APP,
   trackConnectAppButtonClicked,
 } from "../../../utils/trackDeviceIntent";
 
@@ -20,7 +19,6 @@ export function useUnsupportedApplicationViewModel({ device, sourceFlow }: Param
   const onContactSupport = useCallback(() => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.UnsupportedApplication,
       modelId,
       button: CONNECT_APP_BUTTON.ContactLedgerSupport,
     });

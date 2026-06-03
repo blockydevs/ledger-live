@@ -2,8 +2,6 @@ import { act, renderHook } from "@tests/test-renderer";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { BlockingStateType, type EnsureAppReadyState } from "@ledgerhq/live-dmk-shared";
 import { track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
-import { PAGE_CONNECT_APP } from "../../../utils/trackDeviceIntent";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import { useDeviceOutOfStorageSpaceViewModel } from "./useDeviceOutOfStorageSpaceViewModel";
 import type { InitializerDevice } from "../../types";
@@ -20,7 +18,6 @@ jest.mock("../../hooks/useInitializerActions");
 
 const mockedTrack = jest.mocked(track);
 const mockedUseInitializerActions = jest.mocked(useInitializerActions);
-const TEST_SOURCE = "Portfolio";
 const SOURCE_FLOW = "my_ledger";
 const openMyLedger = jest.fn();
 
@@ -40,7 +37,6 @@ const state = {
 describe("useDeviceOutOfStorageSpaceViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    previousRouteNameRef.current = TEST_SOURCE;
     mockedUseInitializerActions.mockReturnValue({
       openMyLedger,
       openMyLedgerFirmwareUpdate: jest.fn(),
@@ -72,8 +68,6 @@ describe("useDeviceOutOfStorageSpaceViewModel", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.OutOfStorage,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Manage Apps",

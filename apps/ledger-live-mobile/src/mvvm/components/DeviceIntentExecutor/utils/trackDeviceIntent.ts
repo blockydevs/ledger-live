@@ -4,7 +4,7 @@ import type { DeviceModelId } from "@ledgerhq/types-devices";
 import { dmkToLedgerDeviceIdMap, type KnownDevice } from "@ledgerhq/live-dmk-shared";
 import { ConnectionErrorTypes, DiscoveryErrorTypes } from "@ledgerhq/live-dmk-mobile";
 import { track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
+import { currentRouteNameRef } from "~/analytics/screenRefs";
 import type { SourceFlow } from "./SourceFlowContext";
 
 export const PAGE_CONNECT_DEVICE = {
@@ -86,9 +86,6 @@ export const DEVICE_ACTION_BUTTON = {
 
 export type TrackingTransport = "ble" | "usb";
 type ConnectDeviceErrorType = ConnectionErrorTypes | DiscoveryErrorTypes;
-type ConnectDevicePage = (typeof PAGE_CONNECT_DEVICE)[keyof typeof PAGE_CONNECT_DEVICE];
-type ConnectAppPage = (typeof PAGE_CONNECT_APP)[keyof typeof PAGE_CONNECT_APP];
-type DeviceActionPage = (typeof PAGE_DEVICE_ACTION)[keyof typeof PAGE_DEVICE_ACTION];
 
 const TRACKING_SUB_ERRORS: Record<ConnectDeviceErrorType, string> = {
   [DiscoveryErrorTypes.BluetoothPermissionDeniedPromptable]: "BluetoothPermissionDeniedPromptable",
@@ -111,9 +108,24 @@ const TRACKING_SUB_ERRORS: Record<ConnectDeviceErrorType, string> = {
   [ConnectionErrorTypes.BlePairingPeerRemovedPairing]: "BlePairingPeerRemovedPairing",
 };
 
+const DEVICEFLOW_FAILED_CLOSE_PAGES = new Set<string>([
+  PAGE_CONNECT_DEVICE.DiscoveryError,
+  PAGE_CONNECT_DEVICE.ConnectionError,
+  PAGE_CONNECT_APP.DeviceNotOnboarded,
+  PAGE_CONNECT_APP.UnsupportedFirmware,
+  PAGE_CONNECT_APP.UnsupportedApplication,
+  PAGE_CONNECT_APP.UnsupportedFeature,
+  PAGE_CONNECT_APP.DeviceDeprecatedBlocking,
+  PAGE_CONNECT_APP.WrongDeviceForAccount,
+  PAGE_CONNECT_APP.OutOfStorage,
+  PAGE_CONNECT_APP.Error,
+  PAGE_DEVICE_ACTION.Disconnected,
+  PAGE_DEVICE_ACTION.UnknownIntentError,
+  PAGE_DEVICE_ACTION.InvalidState,
+]);
+
 export const getDeviceUxV2BaseProperties = (sourceFlow: SourceFlow) => ({
   sourceFlow,
-  source: previousRouteNameRef.current,
   deviceUxV2: true,
 });
 
@@ -191,6 +203,20 @@ export const trackDeviceflowAborted = (params: { sourceFlow: SourceFlow }): void
   track("deviceflow_aborted", getDeviceUxV2BaseProperties(params.sourceFlow));
 };
 
+export const trackDeviceflowFailed = (params: { sourceFlow: SourceFlow }): void => {
+  track("deviceflow_failed", getDeviceUxV2BaseProperties(params.sourceFlow));
+};
+
+export const trackDeviceflowCanceled = (params: { sourceFlow: SourceFlow }): void => {
+  const currentPage = currentRouteNameRef.current;
+  if (currentPage && DEVICEFLOW_FAILED_CLOSE_PAGES.has(currentPage)) {
+    trackDeviceflowFailed(params);
+    return;
+  }
+
+  trackDeviceflowAborted(params);
+};
+
 export const trackDeviceSelected = (params: {
   sourceFlow: SourceFlow;
   device: KnownDevice;
@@ -204,25 +230,21 @@ export const trackDeviceSelected = (params: {
 
 export const trackConnectDeviceButtonClicked = (params: {
   sourceFlow: SourceFlow;
-  page: ConnectDevicePage;
   button: string;
 }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
-    page: params.page,
     button: params.button,
   });
 };
 
 export const trackConnectAppButtonClicked = (params: {
   sourceFlow: SourceFlow;
-  page: ConnectAppPage;
   modelId: DeviceModelId;
   button: string;
 }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
-    page: params.page,
     modelId: params.modelId,
     button: params.button,
   });
@@ -230,14 +252,12 @@ export const trackConnectAppButtonClicked = (params: {
 
 export const trackDeviceActionButtonClicked = (params: {
   sourceFlow: SourceFlow;
-  page: DeviceActionPage;
   button: string;
   modelId?: DeviceModelId;
   transport?: TrackingTransport;
 }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
-    page: params.page,
     button: params.button,
     ...(params.modelId ? { modelId: params.modelId } : {}),
     ...(params.transport ? { transport: params.transport } : {}),

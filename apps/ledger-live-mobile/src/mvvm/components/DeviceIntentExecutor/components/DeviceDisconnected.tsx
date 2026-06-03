@@ -21,7 +21,6 @@ export const DeviceDisconnected: DeviceDisconnectedComponent = ({ device, onRetr
   const handleRetry = () => {
     trackDeviceActionButtonClicked({
       sourceFlow,
-      page: PAGE_DEVICE_ACTION.Disconnected,
       button: DEVICE_ACTION_BUTTON.Retry,
       modelId,
       transport,
@@ -31,7 +30,6 @@ export const DeviceDisconnected: DeviceDisconnectedComponent = ({ device, onRetr
   const handleClose = () => {
     trackDeviceActionButtonClicked({
       sourceFlow,
-      page: PAGE_DEVICE_ACTION.Disconnected,
       button: DEVICE_ACTION_BUTTON.Close,
       modelId,
       transport,
@@ -46,6 +44,7 @@ export const DeviceDisconnected: DeviceDisconnectedComponent = ({ device, onRetr
         sourceFlow={sourceFlow}
         modelId={modelId}
         transport={transport}
+        refreshSource
         deviceUxV2
       />
       <InfoState

@@ -33,7 +33,6 @@ export const InvalidOperation: InvalidOperationComponent = ({ onClose }) => {
   const handleClose = () => {
     trackDeviceActionButtonClicked({
       sourceFlow,
-      page: PAGE_DEVICE_ACTION.InvalidState,
       button: DEVICE_ACTION_BUTTON.Close,
     });
     onClose();
@@ -41,7 +40,12 @@ export const InvalidOperation: InvalidOperationComponent = ({ onClose }) => {
 
   return (
     <>
-      <TrackScreen category={PAGE_DEVICE_ACTION.InvalidState} sourceFlow={sourceFlow} deviceUxV2 />
+      <TrackScreen
+        category={PAGE_DEVICE_ACTION.InvalidState}
+        sourceFlow={sourceFlow}
+        refreshSource
+        deviceUxV2
+      />
       <InfoState
         preset="error"
         size="hug"

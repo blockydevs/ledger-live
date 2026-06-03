@@ -20,7 +20,6 @@ export function DeviceBusyState({ state, device, sourceFlow, onCancel }: DeviceB
   const handleRetry = () => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.DeviceBusy,
       modelId,
       button: CONNECT_APP_BUTTON.Retry,
     });
@@ -29,7 +28,6 @@ export function DeviceBusyState({ state, device, sourceFlow, onCancel }: DeviceB
   const handleCancel = () => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.DeviceBusy,
       modelId,
       button: CONNECT_APP_BUTTON.Close,
     });
@@ -42,6 +40,7 @@ export function DeviceBusyState({ state, device, sourceFlow, onCancel }: DeviceB
         category={PAGE_CONNECT_APP.DeviceBusy}
         sourceFlow={sourceFlow}
         modelId={modelId}
+        refreshSource
         deviceUxV2
       />
       <InfoState

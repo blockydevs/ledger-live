@@ -9,7 +9,6 @@ import {
 } from "@ledgerhq/live-dmk-mobile";
 import type { AppPlatform } from "@ledgerhq/live-common/platform/types";
 import { TrackScreen, track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { SourceFlowProvider } from "../../utils/SourceFlowContext";
 import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
 import { DiscoveryErrorState } from "./DiscoveryErrorState";
@@ -25,7 +24,6 @@ jest.mock("~/analytics", () => {
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
 const mockedTrack = jest.mocked(track);
-const TEST_SOURCE = "Connect Device - Discovery Error";
 
 type DiscoveryErrorUIState = Extract<
   ConnectDeviceUIState,
@@ -223,18 +221,27 @@ function renderState({
 describe("DiscoveryErrorState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    previousRouteNameRef.current = TEST_SOURCE;
   });
 
-  it.each(errorCases)(
-    "should render the $type error title and description",
-    ({ type, title, description }) => {
+  it.each(errorCases)("should render the $type error title", ({ type, title }) => {
+    renderState({ type });
+
+    expect(screen.getByText(title)).toBeVisible();
+  });
+
+  it.each(errorCases.filter(({ description }) => description))(
+    "GIVEN a $type error with a description WHEN rendering THEN it renders the error description",
+    ({ type, description }) => {
+      // GIVEN
+      if (!description) {
+        throw new Error("Expected error case to include a description");
+      }
+
+      // WHEN
       renderState({ type });
 
-      expect(screen.getByText(title)).toBeVisible();
-      if (description) {
-        expect(screen.getByText(description)).toBeVisible();
-      }
+      // THEN
+      expect(screen.getByText(description)).toBeVisible();
     },
   );
 
@@ -341,8 +348,6 @@ describe("DiscoveryErrorState", () => {
       // THEN
       expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
         sourceFlow: "my_ledger",
-        source: TEST_SOURCE,
-        page: PAGE_CONNECT_DEVICE.DiscoveryError,
         deviceUxV2: true,
         button,
       });
@@ -362,8 +367,6 @@ describe("DiscoveryErrorState", () => {
     // THEN
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_DEVICE.DiscoveryError,
       deviceUxV2: true,
       button: "Continue with USB",
     });

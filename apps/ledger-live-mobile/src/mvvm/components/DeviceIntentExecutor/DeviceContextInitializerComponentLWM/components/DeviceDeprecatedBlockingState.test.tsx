@@ -5,7 +5,6 @@ import { getDeviceModel } from "@ledgerhq/devices";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { BlockingStateType } from "@ledgerhq/live-dmk-shared";
 import { TrackScreen, track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { DeviceDeprecatedBlockingState } from "./DeviceDeprecatedBlockingState";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { InitializerDevice } from "../types";
@@ -21,7 +20,6 @@ jest.mock("~/analytics", () => {
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
 const mockedTrack = jest.mocked(track);
-const TEST_SOURCE = "Portfolio";
 
 const device: InitializerDevice = {
   id: "device-id",
@@ -56,7 +54,6 @@ describe("DeviceDeprecatedBlockingState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
-    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   it("GIVEN the blocking deprecation state WHEN rendering THEN it renders the error screen with the decision details", () => {
@@ -98,8 +95,6 @@ describe("DeviceDeprecatedBlockingState", () => {
     // THEN
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.DeviceDeprecatedBlocking,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Learn More",
@@ -116,8 +111,6 @@ describe("DeviceDeprecatedBlockingState", () => {
     // THEN
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.DeviceDeprecatedBlocking,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Discover Upgrade Program",

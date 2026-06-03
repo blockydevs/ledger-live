@@ -35,7 +35,6 @@ export function DeviceDeprecatedNonBlockingState({
   const handleContinue = () => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.DeviceDeprecatedWarning,
       modelId,
       button: CONNECT_APP_BUTTON.Continue,
     });
@@ -45,7 +44,6 @@ export function DeviceDeprecatedNonBlockingState({
   const handleUpgrade = () => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.DeviceDeprecatedWarning,
       modelId,
       button: CONNECT_APP_BUTTON.DiscoverUpgradeProgram,
     });
@@ -57,6 +55,7 @@ export function DeviceDeprecatedNonBlockingState({
         category={PAGE_CONNECT_APP.DeviceDeprecatedWarning}
         sourceFlow={sourceFlow}
         modelId={modelId}
+        refreshSource
         deviceUxV2
       />
       <DeviceDeprecationScreen

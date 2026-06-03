@@ -3,7 +3,6 @@ import { render, screen } from "@tests/test-renderer";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { RetryableStateType } from "@ledgerhq/live-dmk-shared";
 import { TrackScreen, track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import { DeviceBusyState } from "./DeviceBusyState";
 import type { InitializerDevice } from "../types";
@@ -19,7 +18,6 @@ jest.mock("~/analytics", () => {
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
 const mockedTrack = jest.mocked(track);
-const TEST_SOURCE = "Portfolio";
 
 const device: InitializerDevice = {
   id: "device-id",
@@ -50,7 +48,6 @@ function renderState() {
 describe("DeviceBusyState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   it("GIVEN the device busy state WHEN rendering THEN it renders the title, description and action buttons", () => {
@@ -93,8 +90,6 @@ describe("DeviceBusyState", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.DeviceBusy,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Retry",
@@ -108,8 +103,6 @@ describe("DeviceBusyState", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.DeviceBusy,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Close",

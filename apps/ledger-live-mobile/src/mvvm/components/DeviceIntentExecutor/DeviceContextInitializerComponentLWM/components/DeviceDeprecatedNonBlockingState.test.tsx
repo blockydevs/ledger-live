@@ -7,7 +7,6 @@ import {
   type DeprecationScreenKind,
 } from "@ledgerhq/live-dmk-shared";
 import { TrackScreen, track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { DeviceDeprecatedNonBlockingState } from "./DeviceDeprecatedNonBlockingState";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { InitializerDevice } from "../types";
@@ -23,7 +22,6 @@ jest.mock("~/analytics", () => {
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
 const mockedTrack = jest.mocked(track);
-const TEST_SOURCE = "Portfolio";
 
 const device: InitializerDevice = {
   id: "device-id",
@@ -89,7 +87,6 @@ describe("DeviceDeprecatedNonBlockingState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
-    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   it.each(screenSequenceCases)(
@@ -122,8 +119,6 @@ describe("DeviceDeprecatedNonBlockingState", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.DeviceDeprecatedWarning,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Continue",
@@ -138,8 +133,6 @@ describe("DeviceDeprecatedNonBlockingState", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_APP.DeviceDeprecatedWarning,
       deviceUxV2: true,
       modelId: DeviceModelId.europa,
       button: "Discover Upgrade Program",

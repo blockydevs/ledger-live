@@ -56,6 +56,7 @@ export function DiscoveryErrorState({
       sourceFlow={sourceFlow}
       {...(trackingTransport ? { transport: trackingTransport } : {})}
       subError={getTrackingSubError(state.error.type)}
+      refreshSource
       deviceUxV2
     />
   );
@@ -68,7 +69,6 @@ export function DiscoveryErrorState({
       onPress: () => {
         trackConnectDeviceButtonClicked({
           sourceFlow,
-          page: PAGE_CONNECT_DEVICE.DiscoveryError,
           button: trackButtonName,
         });
         state.retry?.();
@@ -83,7 +83,6 @@ export function DiscoveryErrorState({
       onPress: () => {
         trackConnectDeviceButtonClicked({
           sourceFlow,
-          page: PAGE_CONNECT_DEVICE.DiscoveryError,
           button: CONNECT_DEVICE_BUTTON.ContinueWithUsb,
         });
         state.ignore();

@@ -4,7 +4,6 @@ import { useInitializerActions } from "../../hooks/useInitializerActions";
 import type { SourceFlow } from "../../../utils/SourceFlowContext";
 import {
   CONNECT_APP_BUTTON,
-  PAGE_CONNECT_APP,
   trackConnectAppButtonClicked,
 } from "../../../utils/trackDeviceIntent";
 
@@ -21,7 +20,6 @@ export function useUnsupportedFirmwareVersionViewModel({ device, sourceFlow, onC
   const onUpdateLedgerOs = useCallback(() => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.UnsupportedFirmware,
       modelId,
       button: CONNECT_APP_BUTTON.UpdateFirmware,
     });
@@ -31,7 +29,6 @@ export function useUnsupportedFirmwareVersionViewModel({ device, sourceFlow, onC
   const onCancelWithTracking = useCallback(() => {
     trackConnectAppButtonClicked({
       sourceFlow,
-      page: PAGE_CONNECT_APP.UnsupportedFirmware,
       modelId,
       button: CONNECT_APP_BUTTON.Close,
     });

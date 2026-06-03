@@ -39,7 +39,6 @@ export const IntentError: ErrorComponent = ({ device, onRetry, onClose, error })
   const handleRetry = () => {
     trackDeviceActionButtonClicked({
       sourceFlow,
-      page: PAGE_DEVICE_ACTION.UnknownIntentError,
       button: DEVICE_ACTION_BUTTON.Retry,
       modelId,
       transport,
@@ -49,7 +48,6 @@ export const IntentError: ErrorComponent = ({ device, onRetry, onClose, error })
   const handleClose = () => {
     trackDeviceActionButtonClicked({
       sourceFlow,
-      page: PAGE_DEVICE_ACTION.UnknownIntentError,
       button: DEVICE_ACTION_BUTTON.Close,
       modelId,
       transport,
@@ -64,6 +62,7 @@ export const IntentError: ErrorComponent = ({ device, onRetry, onClose, error })
         sourceFlow={sourceFlow}
         modelId={modelId}
         transport={transport}
+        refreshSource
         deviceUxV2
       />
       <InfoState

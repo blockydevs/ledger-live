@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type {
   DeviceConnectionResult,
   DeviceIntentExecutorProps,
@@ -8,8 +8,9 @@ import { dmkToLedgerDeviceIdMap } from "@ledgerhq/live-dmk-shared";
 import type { DeviceModelId } from "@ledgerhq/types-devices";
 import {
   trackAppReady,
-  trackDeviceflowAborted,
+  trackDeviceflowCanceled,
   trackDeviceflowCompleted,
+  trackDeviceflowStarted,
 } from "./utils/trackDeviceIntent";
 import type { InitializerConfig } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
@@ -47,7 +48,14 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
 ): DeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps> {
   const { sourceFlow, onExecutorStateChanged, onUserCancel } = props;
 
+  const flowStartedRef = useRef(false);
   const initializationCompletedRef = useRef(false);
+
+  useEffect(() => {
+    if (flowStartedRef.current) return;
+    flowStartedRef.current = true;
+    trackDeviceflowStarted({ sourceFlow });
+  }, [sourceFlow]);
 
   const wrappedOnExecutorStateChanged = useCallback(
     (state: ExecutorState) => {
@@ -64,7 +72,7 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
 
   const wrappedOnUserCancel = useCallback(() => {
     if (!initializationCompletedRef.current) {
-      trackDeviceflowAborted({ sourceFlow });
+      trackDeviceflowCanceled({ sourceFlow });
     }
     onUserCancel();
   }, [onUserCancel, sourceFlow]);

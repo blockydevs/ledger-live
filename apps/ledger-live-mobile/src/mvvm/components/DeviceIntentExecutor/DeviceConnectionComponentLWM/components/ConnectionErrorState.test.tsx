@@ -9,7 +9,6 @@ import {
   type ConnectDeviceUIState,
 } from "@ledgerhq/live-dmk-mobile";
 import { TrackScreen, track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { urls } from "~/utils/urls";
 import { SourceFlowProvider } from "../../utils/SourceFlowContext";
 import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
@@ -26,7 +25,6 @@ jest.mock("~/analytics", () => {
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
 const mockedTrack = jest.mocked(track);
-const TEST_SOURCE = "Connect Device - Connection Error";
 
 type ConnectionErrorUIState = Extract<
   ConnectDeviceUIState,
@@ -88,21 +86,32 @@ function renderState(errorType: ConnectionErrorTypes) {
 describe("ConnectionErrorState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    previousRouteNameRef.current = TEST_SOURCE;
     jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
   });
 
   it.each(errorCases)(
-    "should render the $type error content",
-    ({ type, title, description, cta }) => {
+    "should render the $type error title and CTA",
+    ({ type, title, cta }) => {
       renderState(type);
 
       expect(screen.getByText(title)).toBeVisible();
       expect(screen.getByText(cta)).toBeVisible();
+    },
+  );
 
-      if (description) {
-        expect(screen.getByText(description)).toBeVisible();
+  it.each(errorCases.filter(({ description }) => description))(
+    "GIVEN a $type error with a description WHEN rendering THEN it renders the error description",
+    ({ type, description }) => {
+      // GIVEN
+      if (!description) {
+        throw new Error("Expected error case to include a description");
       }
+
+      // WHEN
+      renderState(type);
+
+      // THEN
+      expect(screen.getByText(description)).toBeVisible();
     },
   );
 
@@ -119,8 +128,6 @@ describe("ConnectionErrorState", () => {
 
     expect(track).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_DEVICE.ConnectionError,
       deviceUxV2: true,
       button: "Retry",
     });
@@ -134,8 +141,6 @@ describe("ConnectionErrorState", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_CONNECT_DEVICE.ConnectionError,
       deviceUxV2: true,
       button: "Get Help",
     });

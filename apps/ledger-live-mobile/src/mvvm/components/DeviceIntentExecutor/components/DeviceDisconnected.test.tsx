@@ -6,7 +6,6 @@ import {
 } from "@ledgerhq/device-management-kit";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { TrackScreen, track } from "~/analytics";
-import { previousRouteNameRef } from "~/analytics/screenRefs";
 import { SourceFlowProvider } from "../utils/SourceFlowContext";
 import { PAGE_DEVICE_ACTION } from "../utils/trackDeviceIntent";
 import { DeviceDisconnected } from "./DeviceDisconnected";
@@ -22,7 +21,6 @@ jest.mock("~/analytics", () => {
 
 const mockedTrackScreen = jest.mocked(TrackScreen);
 const mockedTrack = jest.mocked(track);
-const TEST_SOURCE = "Portfolio";
 
 const device = {
   id: "device-id",
@@ -44,7 +42,6 @@ function renderState(props: Partial<React.ComponentProps<typeof DeviceDisconnect
 describe("DeviceDisconnected", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    previousRouteNameRef.current = TEST_SOURCE;
   });
 
   it("renders title, description and the primary Retry / secondary Close CTAs", () => {
@@ -71,8 +68,6 @@ describe("DeviceDisconnected", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_DEVICE_ACTION.Disconnected,
       deviceUxV2: true,
       modelId: DeviceModelId.stax,
       transport: "ble",
@@ -92,8 +87,6 @@ describe("DeviceDisconnected", () => {
 
     expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
       sourceFlow: "my_ledger",
-      source: TEST_SOURCE,
-      page: PAGE_DEVICE_ACTION.Disconnected,
       deviceUxV2: true,
       modelId: DeviceModelId.stax,
       transport: "ble",
