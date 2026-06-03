@@ -64,7 +64,6 @@ export function createFeatureFlagsMiddleware<S = unknown>(
       );
     }
     return next => action => {
-      // Only plain actions can mutate state; thunks/functions dispatch actions that re-enter here.
       if (!isAction(action)) return next(action);
 
       if (action.type.startsWith("featureFlags/")) {
