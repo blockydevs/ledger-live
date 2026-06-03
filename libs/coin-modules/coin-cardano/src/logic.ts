@@ -202,6 +202,51 @@ export function mergeTokens(tokens: Array<TyphonTypes.Token>): Array<TyphonTypes
   }));
 }
 
+export type DerivedUtxo = {
+  txId: string;
+  index: number;
+  amount: BigNumber;
+  tokens: TyphonTypes.Token[];
+};
+
+/**
+ * Derive the unspent outputs held by a single payment credential from its transaction history:
+ * outputs paying that credential, minus those later consumed as inputs. Retains the outpoint
+ * (txId + index) needed to reference a UTXO as a transaction input — balance callers that only
+ * need the amounts can ignore it. Shared by getBalance and craftTransaction so the derivation
+ * can't drift between them.
+ *
+ * Per-address only — a Cardano account spreads funds across many payment credentials (derived
+ * from the xpub), but the single-address CoinModule path covers just the passed credential.
+ */
+export function deriveUtxos(transactions: APITransaction[], paymentKey: string): DerivedUtxo[] {
+  const spent = new Set<string>();
+  for (const tx of transactions) {
+    for (const input of tx.inputs) {
+      if (input.paymentKey === paymentKey) spent.add(`${input.txId}#${input.index}`);
+    }
+  }
+
+  const utxos: DerivedUtxo[] = [];
+  for (const tx of transactions) {
+    tx.outputs.forEach((output, index) => {
+      if (output.paymentKey !== paymentKey) return;
+      if (spent.has(`${tx.hash}#${index}`)) return;
+      utxos.push({
+        txId: tx.hash,
+        index,
+        amount: new BigNumber(output.value),
+        tokens: output.tokens.map(t => ({
+          policyId: t.policyId,
+          assetName: t.assetName,
+          amount: new BigNumber(t.value),
+        })),
+      });
+    });
+  }
+  return utxos;
+}
+
 /**
  * @param { Array<TyphonTypes.Token> } b
  * @param { Array<TyphonTypes.Token> } a

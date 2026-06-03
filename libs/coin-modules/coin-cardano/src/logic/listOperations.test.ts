@@ -14,6 +14,9 @@ const currency = getCryptoCurrencyById("cardano");
 const PAYMENT_HASH = "11".repeat(28);
 const STAKE_HASH = "22".repeat(28);
 const OTHER_PAYMENT_HASH = "33".repeat(28);
+// Realistic 28-byte (56 hex char) policy ids — the canonical Cardano asset-id shape.
+const POLICY_ID = "aa".repeat(28);
+const POLICY_ID_2 = "bb".repeat(28);
 const POOL_KEY_HASH = "a314a18528d00c5fbd067ecb4a212cf2f307c83d2c08f44a11ebebf6";
 
 function bech32BaseAddress(paymentHashHex: string, stakeHashHex: string): string {
@@ -246,7 +249,7 @@ describe("listOperations", () => {
             address: ADDRESS,
             value: "5000000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: assetNameHex, value: "100" }],
+            tokens: [{ policyId: POLICY_ID, assetName: assetNameHex, value: "100" }],
           },
         ],
       }),
@@ -256,10 +259,10 @@ describe("listOperations", () => {
 
     const tokenOp = items.find(op => op.asset.type === "token");
     expect(tokenOp).toMatchObject({
-      id: `cardano-tx-hash-1-pol1.${assetNameHex}`,
+      id: `cardano-tx-hash-1-${POLICY_ID}${assetNameHex}`,
       type: "IN",
       value: 100n,
-      asset: { type: "token", assetReference: `pol1.${assetNameHex}`, assetOwner: ADDRESS },
+      asset: { type: "token", assetReference: `${POLICY_ID}${assetNameHex}`, assetOwner: ADDRESS },
     });
     expect(tokenOp?.details).toMatchObject({ assetNameDecoded: "MYTOKEN" });
   });
@@ -274,7 +277,7 @@ describe("listOperations", () => {
             address: ADDRESS,
             value: "3000000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: "abcd", value: "50" }],
+            tokens: [{ policyId: POLICY_ID, assetName: "abcd", value: "50" }],
           },
         ],
         outputs: [
@@ -282,7 +285,7 @@ describe("listOperations", () => {
             address: ADDRESS,
             value: "2800000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: "abcd", value: "50" }],
+            tokens: [{ policyId: POLICY_ID, assetName: "abcd", value: "50" }],
           },
         ],
       }),
@@ -303,7 +306,7 @@ describe("listOperations", () => {
             address: ADDRESS,
             value: "3000000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: "abcd", value: "50" }],
+            tokens: [{ policyId: POLICY_ID, assetName: "abcd", value: "50" }],
           },
         ],
         outputs: [{ address: ADDRESS, value: "2800000", paymentKey: PAYMENT_HASH, tokens: [] }],
@@ -335,8 +338,8 @@ describe("listOperations", () => {
             value: "5000000",
             paymentKey: PAYMENT_HASH,
             tokens: [
-              { policyId: "pol1", assetName: "a1", value: "10" },
-              { policyId: "pol2", assetName: "a2", value: "20" },
+              { policyId: POLICY_ID, assetName: "a1", value: "10" },
+              { policyId: POLICY_ID_2, assetName: "a2", value: "20" },
             ],
           },
         ],
@@ -361,7 +364,7 @@ describe("listOperations", () => {
             address: ADDRESS,
             value: "1000000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: "abcd", value: "20" }],
+            tokens: [{ policyId: POLICY_ID, assetName: "abcd", value: "20" }],
           },
         ],
         outputs: [
@@ -369,13 +372,13 @@ describe("listOperations", () => {
             address: ADDRESS,
             value: "500000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: "abcd", value: "40" }],
+            tokens: [{ policyId: POLICY_ID, assetName: "abcd", value: "40" }],
           },
           {
             address: ADDRESS,
             value: "500000",
             paymentKey: PAYMENT_HASH,
-            tokens: [{ policyId: "pol1", assetName: "abcd", value: "10" }],
+            tokens: [{ policyId: POLICY_ID, assetName: "abcd", value: "10" }],
           },
         ],
       }),

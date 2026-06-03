@@ -312,7 +312,10 @@ function extractTokenOperations(
     const tokenType = isReceiving ? "IN" : "OUT";
     const tokenValue = tokenData.balance >= 0n ? tokenData.balance : -tokenData.balance;
 
-    const assetReference = `${tokenData.policyId}.${tokenData.assetName}`;
+    // Canonical Cardano asset id: policyId (56 hex) concatenated with the asset name, no
+    // separator — matches getTokenAssetId (buildSubAccounts) and getBalance, so a reference from
+    // any producer is interchangeable (e.g. feeding a listed token into craftTransaction).
+    const assetReference = `${tokenData.policyId}${tokenData.assetName}`;
 
     const assetInfo: AssetInfo = {
       type: "token",

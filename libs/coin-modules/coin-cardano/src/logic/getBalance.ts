@@ -12,7 +12,7 @@ import { APITransaction } from "../api/api-types";
 import { getAllTransactionsByKeys } from "../api/fetchTransactions";
 import { getDelegationInfo } from "../api/getDelegationInfo";
 import { fetchNetworkInfo } from "../api/getNetworkInfo";
-import { calculateMinAdaForTokens, computeAdaBalance, mergeTokens } from "../logic";
+import { calculateMinAdaForTokens, computeAdaBalance, deriveUtxos, mergeTokens } from "../logic";
 import { CardanoDelegation } from "../types";
 import {
   EMPTY_CREDENTIAL_KEY,
@@ -22,45 +22,6 @@ import {
 } from "../utils";
 
 const NATIVE_ASSET: AssetInfo = { type: "native", name: "ADA" };
-
-type AddressUtxo = { amount: BigNumber; tokens: TyphonTypes.Token[] };
-
-/**
- * Derive the unspent outputs held by a single payment credential from its transaction
- * history: outputs paying that credential, minus those later consumed as inputs.
- *
- * Per-address only — a Cardano account spreads funds across many payment credentials
- * (derived from the xpub), but the CoinModule API receives a single address with no
- * xpub, so this covers just the passed address. See module-level note in getBalance.
- */
-function computeUtxosForPaymentKey(
-  transactions: APITransaction[],
-  paymentKey: string,
-): AddressUtxo[] {
-  const spent = new Set<string>();
-  for (const tx of transactions) {
-    for (const input of tx.inputs) {
-      if (input.paymentKey === paymentKey) spent.add(`${input.txId}#${input.index}`);
-    }
-  }
-
-  const utxos: AddressUtxo[] = [];
-  for (const tx of transactions) {
-    tx.outputs.forEach((output, index) => {
-      if (output.paymentKey !== paymentKey) return;
-      if (spent.has(`${tx.hash}#${index}`)) return;
-      utxos.push({
-        amount: new BigNumber(output.value),
-        tokens: output.tokens.map(t => ({
-          policyId: t.policyId,
-          assetName: t.assetName,
-          amount: new BigNumber(t.value),
-        })),
-      });
-    });
-  }
-  return utxos;
-}
 
 async function computeMinAdaForTokens(
   currency: CryptoCurrency,
@@ -146,7 +107,7 @@ export async function getBalance(currency: CryptoCurrency, address: string): Pro
     stakeKey ? getDelegationInfo(currency, stakeKey) : Promise.resolve(undefined),
   ]);
 
-  const utxos = computeUtxosForPaymentKey(transactions, paymentKey);
+  const utxos = deriveUtxos(transactions, paymentKey);
   const utxosSum = utxos.reduce((sum, u) => sum.plus(u.amount), new BigNumber(0));
   const tokens = mergeTokens(utxos.flatMap(u => u.tokens)).filter(t => t.amount.gt(0));
 
