@@ -153,7 +153,7 @@ const warnOnConfigMismatch = async () => {
     const envFilePath = `./.env.${env}`;
     let apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId, envVars;
     try {
-      const fileContent = fs.readFileSync(envFilePath, "utf8");
+      const fileContent = await fs.promises.readFile(envFilePath, "utf8");
       envVars = parseEnvFile(fileContent);
       apiKey = envVars["FIREBASE_API_KEY"];
       authDomain = envVars["FIREBASE_AUTH_DOMAIN"];

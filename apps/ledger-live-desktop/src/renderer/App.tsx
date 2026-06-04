@@ -26,7 +26,7 @@ import { ConnectEnvsToSentry } from "~/renderer/components/ConnectEnvsToSentry";
 import { ConnectEnvsToDatadog } from "~/renderer/components/ConnectEnvsToDatadog";
 import PostOnboardingProviderWrapped from "~/renderer/components/PostOnboardingHub/logic/PostOnboardingProviderWrapped";
 import { useBraze } from "./hooks/useBraze";
-import { useResetTimeRangeOnGraphRework } from "./hooks/useResetTimeRangeOnGraphRework";
+import { useResetTimeRangeOnGraphRework } from "LLD/hooks/useResetTimeRangeOnGraphRework";
 import { CounterValuesStateRaw } from "@ledgerhq/live-countervalues/types";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
