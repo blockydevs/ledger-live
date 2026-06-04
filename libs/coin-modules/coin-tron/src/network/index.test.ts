@@ -244,6 +244,25 @@ describe("craftTrc20Transaction", () => {
     );
   });
 
+  it("uses zero fee_limit when custom fees are 0", async () => {
+    const expirationInFuture = Date.now() + 10 * 60 * 1000;
+    mockedNetwork.mockResolvedValueOnce(
+      mockResponse({ transaction: { raw_data: { expiration: expirationInFuture } } }),
+    );
+    await craftTrc20Transaction(
+      "TF5Bn4cJCT6GVeUgyCN4rBhDg42KBrpAjg",
+      recipientHex,
+      senderHex,
+      new BigNumber(100),
+      0,
+    );
+    expect(mockedNetwork).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ fee_limit: 0 }),
+      }),
+    );
+  });
+
   it("uses DEFAULT_TRC20_FEES_LIMIT when no custom fees are provided", async () => {
     const expirationInFuture = Date.now() + 10 * 60 * 1000;
     mockedNetwork.mockResolvedValueOnce(
