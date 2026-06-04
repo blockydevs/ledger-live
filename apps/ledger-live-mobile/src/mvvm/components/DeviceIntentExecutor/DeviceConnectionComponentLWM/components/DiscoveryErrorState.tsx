@@ -3,6 +3,7 @@ import {
   ConnectDeviceUIStateTypes,
   DiscoveryErrorTypes,
   type ConnectDeviceUIState,
+  type DiscoveryError,
 } from "@ledgerhq/live-dmk-mobile";
 import type { AppPlatform } from "@ledgerhq/live-common/platform/types";
 import { InfoState } from "LLM/components/InfoState";
@@ -15,6 +16,7 @@ import {
   getTrackingSubError,
   getTrackingTransport,
   PAGE_CONNECT_DEVICE,
+  setIsInTerminalConnectDeviceError,
   trackConnectDeviceButtonClicked,
 } from "../../utils/trackDeviceIntent";
 
@@ -43,6 +45,10 @@ type DiscoveryErrorViewStates = {
 const discoveryErrorTranslationBaseKey =
   "deviceIntentExecutor.connectDevice.states.discoveryError.errors";
 
+function isTerminalDiscoveryError(error: DiscoveryError): boolean {
+  return !error.resolution || error.resolution.type === "none";
+}
+
 export function DiscoveryErrorState({
   state,
   platform,
@@ -50,6 +56,12 @@ export function DiscoveryErrorState({
   const { t } = useTranslation();
   const sourceFlow = useSourceFlow();
   const trackingTransport = getTrackingTransport(state.error.transportId);
+
+  React.useEffect(() => {
+    setIsInTerminalConnectDeviceError(isTerminalDiscoveryError(state.error));
+    return () => setIsInTerminalConnectDeviceError(false);
+  }, [state.error]);
+
   const trackingScreen = (
     <TrackScreen
       category={PAGE_CONNECT_DEVICE.DiscoveryError}

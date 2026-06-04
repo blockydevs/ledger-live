@@ -9,9 +9,14 @@ import {
   type ConnectDeviceUIState,
 } from "@ledgerhq/live-dmk-mobile";
 import { TrackScreen, track } from "~/analytics";
+import { currentRouteNameRef } from "~/analytics/screenRefs";
 import { urls } from "~/utils/urls";
 import { SourceFlowProvider } from "../../utils/SourceFlowContext";
-import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
+import {
+  PAGE_CONNECT_DEVICE,
+  setIsInTerminalConnectDeviceError,
+  trackDeviceflowCanceled,
+} from "../../utils/trackDeviceIntent";
 import { ConnectionErrorState } from "./ConnectionErrorState";
 
 jest.mock("~/analytics", () => {
@@ -86,6 +91,8 @@ function renderState(errorType: ConnectionErrorTypes) {
 describe("ConnectionErrorState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setIsInTerminalConnectDeviceError(false);
+    currentRouteNameRef.current = PAGE_CONNECT_DEVICE.ConnectionError;
     jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
   });
 
@@ -163,5 +170,36 @@ describe("ConnectionErrorState", () => {
       }),
       undefined,
     );
+  });
+
+  it("GIVEN an unknown connection error WHEN cancelling THEN it tracks deviceflow_failed", () => {
+    // GIVEN
+    renderState(ConnectionErrorTypes.Unknown);
+    mockedTrack.mockClear();
+
+    // WHEN
+    trackDeviceflowCanceled({ sourceFlow: "my_ledger" });
+
+    // THEN
+    expect(mockedTrack).toHaveBeenCalledWith("deviceflow_failed", {
+      sourceFlow: "my_ledger",
+      deviceUxV2: true,
+    });
+  });
+
+  it("GIVEN a previous terminal discovery error WHEN rendering a retryable connection error and cancelling THEN it tracks deviceflow_aborted", () => {
+    // GIVEN
+    setIsInTerminalConnectDeviceError(true);
+    renderState(ConnectionErrorTypes.BlePairingRefused);
+    mockedTrack.mockClear();
+
+    // WHEN
+    trackDeviceflowCanceled({ sourceFlow: "my_ledger" });
+
+    // THEN
+    expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+      sourceFlow: "my_ledger",
+      deviceUxV2: true,
+    });
   });
 });

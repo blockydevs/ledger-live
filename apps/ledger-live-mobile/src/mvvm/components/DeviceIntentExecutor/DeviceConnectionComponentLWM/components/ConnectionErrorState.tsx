@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Linking } from "react-native";
 import {
   ConnectionErrorTypes,
@@ -16,6 +16,7 @@ import {
   getTrackingSubError,
   getTrackingTransport,
   PAGE_CONNECT_DEVICE,
+  setIsInTerminalConnectDeviceError,
   trackConnectDeviceButtonClicked,
 } from "../../utils/trackDeviceIntent";
 import { PeerRemovedPairingState } from "./PeerRemovedPairingState";
@@ -52,6 +53,10 @@ type ConnectionErrorViewStates = {
   ConnectionErrorViewState
 >;
 
+function isTerminalConnectionError(error: ConnectionError): boolean {
+  return error.type === ConnectionErrorTypes.Unknown;
+}
+
 const connectionErrorTranslationBaseKey =
   "deviceIntentExecutor.connectDevice.states.connectionError.errors";
 
@@ -63,6 +68,12 @@ export function ConnectionErrorState({
   const bleForgetDeviceUrl = useLocalizedUrl(urls.errors.BleForgetDevice);
   const pairingIssuesUrl = useLocalizedUrl(urls.pairingIssues);
   const productName = t("deviceIntentExecutor.connectDevice.common.ledgerDevice");
+
+  useEffect(() => {
+    setIsInTerminalConnectDeviceError(isTerminalConnectionError(state.error));
+    return () => setIsInTerminalConnectDeviceError(false);
+  }, [state.error]);
+
   const trackingScreen = (
     <TrackScreen
       category={PAGE_CONNECT_DEVICE.ConnectionError}

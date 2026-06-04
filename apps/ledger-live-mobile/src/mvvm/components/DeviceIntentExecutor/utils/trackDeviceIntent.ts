@@ -84,6 +84,8 @@ export const DEVICE_ACTION_BUTTON = {
   Close: CONNECT_APP_BUTTON.Close,
 } as const;
 
+let isInTerminalConnectDeviceError = false;
+
 export type TrackingTransport = "ble" | "usb";
 type ConnectDeviceErrorType = ConnectionErrorTypes | DiscoveryErrorTypes;
 
@@ -109,8 +111,6 @@ const TRACKING_SUB_ERRORS: Record<ConnectDeviceErrorType, string> = {
 };
 
 const DEVICEFLOW_FAILED_CLOSE_PAGES = new Set<string>([
-  PAGE_CONNECT_DEVICE.DiscoveryError,
-  PAGE_CONNECT_DEVICE.ConnectionError,
   PAGE_CONNECT_APP.DeviceNotOnboarded,
   PAGE_CONNECT_APP.UnsupportedFirmware,
   PAGE_CONNECT_APP.UnsupportedApplication,
@@ -128,6 +128,10 @@ export const getDeviceUxV2BaseProperties = (sourceFlow: SourceFlow) => ({
   sourceFlow,
   deviceUxV2: true,
 });
+
+export const setIsInTerminalConnectDeviceError = (value: boolean): void => {
+  isInTerminalConnectDeviceError = value;
+};
 
 export const getTrackingTransport = (
   transportId: TransportIdentifier | undefined,
@@ -209,7 +213,14 @@ export const trackDeviceflowFailed = (params: { sourceFlow: SourceFlow }): void 
 
 export const trackDeviceflowCanceled = (params: { sourceFlow: SourceFlow }): void => {
   const currentPage = currentRouteNameRef.current;
-  if (currentPage && DEVICEFLOW_FAILED_CLOSE_PAGES.has(currentPage)) {
+  const isTerminalConnectDeviceErrorPage =
+    currentPage === PAGE_CONNECT_DEVICE.DiscoveryError ||
+    currentPage === PAGE_CONNECT_DEVICE.ConnectionError;
+
+  if (
+    (isTerminalConnectDeviceErrorPage && isInTerminalConnectDeviceError) ||
+    (currentPage && DEVICEFLOW_FAILED_CLOSE_PAGES.has(currentPage))
+  ) {
     trackDeviceflowFailed(params);
     return;
   }

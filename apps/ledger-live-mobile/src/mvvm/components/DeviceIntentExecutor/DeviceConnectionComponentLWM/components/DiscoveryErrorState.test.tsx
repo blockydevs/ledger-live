@@ -9,8 +9,9 @@ import {
 } from "@ledgerhq/live-dmk-mobile";
 import type { AppPlatform } from "@ledgerhq/live-common/platform/types";
 import { TrackScreen, track } from "~/analytics";
+import { currentRouteNameRef } from "~/analytics/screenRefs";
 import { SourceFlowProvider } from "../../utils/SourceFlowContext";
-import { PAGE_CONNECT_DEVICE } from "../../utils/trackDeviceIntent";
+import { PAGE_CONNECT_DEVICE, trackDeviceflowCanceled } from "../../utils/trackDeviceIntent";
 import { DiscoveryErrorState } from "./DiscoveryErrorState";
 
 jest.mock("~/analytics", () => {
@@ -196,15 +197,17 @@ function renderState({
   type,
   retry,
   platform = "android",
+  error,
 }: {
   type: DiscoveryErrorTypes;
   retry?: DiscoveryErrorUIState["retry"];
   platform?: Exclude<AppPlatform, "desktop">;
+  error?: DiscoveryError;
 }) {
   const ignore = jest.fn();
   const state: DiscoveryErrorUIState = {
     type: ConnectDeviceUIStateTypes.DiscoveryError,
-    error: makeDiscoveryError(type),
+    error: error ?? makeDiscoveryError(type),
     retry,
     ignore,
   };
@@ -221,6 +224,7 @@ function renderState({
 describe("DiscoveryErrorState", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    currentRouteNameRef.current = PAGE_CONNECT_DEVICE.DiscoveryError;
   });
 
   it.each(errorCases)("should render the $type error title", ({ type, title }) => {
@@ -328,6 +332,74 @@ describe("DiscoveryErrorState", () => {
       undefined,
     );
     expect(mockedTrackScreen.mock.calls[0]?.[0]).not.toHaveProperty("transport");
+  });
+
+  it("GIVEN an unknown discovery error without resolution WHEN cancelling THEN it tracks deviceflow_failed", () => {
+    // GIVEN
+    renderState({ type: DiscoveryErrorTypes.Unknown });
+    mockedTrack.mockClear();
+
+    // WHEN
+    trackDeviceflowCanceled({ sourceFlow: "my_ledger" });
+
+    // THEN
+    expect(mockedTrack).toHaveBeenCalledWith("deviceflow_failed", {
+      sourceFlow: "my_ledger",
+      deviceUxV2: true,
+    });
+  });
+
+  it("GIVEN a discovery error with no recovery resolution WHEN cancelling THEN it tracks deviceflow_failed", () => {
+    // GIVEN
+    renderState({ type: DiscoveryErrorTypes.BluetoothUnsupported });
+    mockedTrack.mockClear();
+
+    // WHEN
+    trackDeviceflowCanceled({ sourceFlow: "my_ledger" });
+
+    // THEN
+    expect(mockedTrack).toHaveBeenCalledWith("deviceflow_failed", {
+      sourceFlow: "my_ledger",
+      deviceUxV2: true,
+    });
+  });
+
+  it("GIVEN a discovery error with a retryable resolution WHEN cancelling THEN it tracks deviceflow_aborted", () => {
+    // GIVEN
+    renderState({
+      type: DiscoveryErrorTypes.BluetoothDisabledPromptable,
+      error: {
+        type: DiscoveryErrorTypes.BluetoothDisabledPromptable,
+        transportId: rnBleTransportIdentifier,
+        resolution: { type: "prompt", retry: jest.fn() },
+      },
+    });
+    mockedTrack.mockClear();
+
+    // WHEN
+    trackDeviceflowCanceled({ sourceFlow: "my_ledger" });
+
+    // THEN
+    expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+      sourceFlow: "my_ledger",
+      deviceUxV2: true,
+    });
+  });
+
+  it("GIVEN a terminal discovery error unmounted WHEN cancelling THEN it tracks deviceflow_aborted", () => {
+    // GIVEN
+    const { unmount } = renderState({ type: DiscoveryErrorTypes.Unknown });
+    unmount();
+    mockedTrack.mockClear();
+
+    // WHEN
+    trackDeviceflowCanceled({ sourceFlow: "my_ledger" });
+
+    // THEN
+    expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+      sourceFlow: "my_ledger",
+      deviceUxV2: true,
+    });
   });
 
   it.each(primaryCtaButtonCases)(

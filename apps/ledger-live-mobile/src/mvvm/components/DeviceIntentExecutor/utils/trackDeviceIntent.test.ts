@@ -14,7 +14,9 @@ import {
   getTrackingSubError,
   getTrackingTransport,
   PAGE_CONNECT_APP,
+  PAGE_CONNECT_DEVICE,
   PAGE_DEVICE_ACTION,
+  setIsInTerminalConnectDeviceError,
   trackDeviceActionButtonClicked,
   trackConnectAppButtonClicked,
   trackConnectDeviceButtonClicked,
@@ -56,6 +58,7 @@ const layerABaseProperties = {
 describe("trackDeviceIntent — Layer A tracking helpers", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setIsInTerminalConnectDeviceError(false);
     currentRouteNameRef.current = "Connect Device - Connecting";
   });
 
@@ -237,6 +240,41 @@ describe("trackDeviceIntent — Layer A tracking helpers", () => {
         sourceFlow: "send",
       });
     });
+
+    it.each([PAGE_CONNECT_DEVICE.DiscoveryError, PAGE_CONNECT_DEVICE.ConnectionError])(
+      "GIVEN a non-terminal Connect Device error page %s WHEN called THEN it tracks deviceflow_aborted",
+      page => {
+        // GIVEN
+        currentRouteNameRef.current = page;
+
+        // WHEN
+        trackDeviceflowCanceled({ sourceFlow: "swap" });
+
+        // THEN
+        expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+          ...layerABaseProperties,
+          sourceFlow: "swap",
+        });
+      },
+    );
+
+    it.each([PAGE_CONNECT_DEVICE.DiscoveryError, PAGE_CONNECT_DEVICE.ConnectionError])(
+      "GIVEN a terminal Connect Device error page %s WHEN called THEN it tracks deviceflow_failed",
+      page => {
+        // GIVEN
+        currentRouteNameRef.current = page;
+        setIsInTerminalConnectDeviceError(true);
+
+        // WHEN
+        trackDeviceflowCanceled({ sourceFlow: "swap" });
+
+        // THEN
+        expect(mockedTrack).toHaveBeenCalledWith("deviceflow_failed", {
+          ...layerABaseProperties,
+          sourceFlow: "swap",
+        });
+      },
+    );
   });
 
   describe("getTrackingSubError", () => {
