@@ -1,5 +1,12 @@
 # @ledgerhq/live-dmk-desktop
 
+## 0.17.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1
+
 ## 0.17.2-next.1
 
 ### Patch Changes
@@ -16,6 +23,13 @@
   - @ledgerhq/live-env@2.37.0-next.0
   - @ledgerhq/hw-transport@6.35.3-next.0
   - @ledgerhq/live-dmk-shared@0.25.1-next.0
+
+## 0.17.2-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1-hotfix.0
 
 ## 0.17.1
 

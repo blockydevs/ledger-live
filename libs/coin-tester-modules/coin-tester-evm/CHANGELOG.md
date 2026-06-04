@@ -23,6 +23,20 @@
   - @ledgerhq/ledger-wallet-framework@2.0.0-next.0
   - @ledgerhq/coin-tester@0.20.0
 
+## 1.25.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1
+
+## 1.25.1-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1-hotfix.0
+
 ## 1.25.0
 
 ### Minor Changes

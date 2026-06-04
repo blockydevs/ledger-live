@@ -1,5 +1,12 @@
 # @ledgerhq/coin-tester-tezos
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1
+
 ## 1.0.2-next.1
 
 ### Patch Changes
@@ -19,6 +26,13 @@
   - @ledgerhq/live-env@2.37.0-next.0
   - @ledgerhq/ledger-wallet-framework@2.0.0-next.0
   - @ledgerhq/coin-tester@0.20.0
+
+## 1.0.2-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1-hotfix.0
 
 ## 1.0.1
 

@@ -25,6 +25,22 @@
   - @ledgerhq/ledger-key-ring-protocol@0.14.0-next.0
   - @ledgerhq/live-wallet@0.27.1-next.0
 
+## 0.28.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-cli@24.42.1
+  - @ledgerhq/live-common@35.0.1
+
+## 0.28.2-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-cli@24.42.1-hotfix.0
+  - @ledgerhq/live-common@35.0.1-hotfix.0
+
 ## 0.28.1
 
 ### Patch Changes

@@ -37,6 +37,20 @@
   - @ledgerhq/hw-transport-http@6.36.3-next.0
   - @devtools/shell@0.3.1-next.0
 
+## 0.42.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1
+
+## 0.42.1-hotfix.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1-hotfix.0
+
 ## 0.42.0
 
 ### Minor Changes
