@@ -47,20 +47,27 @@ function mapConnectionResult(result: DeviceConnectionResult): ConnectionTracking
 export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>(
   props: Props<JobState, Input, ExtraProps>,
 ): DeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps> {
-  const { sourceFlow, onExecutorStateChanged, onUserCancel } = props;
+  const { enabled, sourceFlow, onExecutorStateChanged, onUserCancel } = props;
 
   const flowStartedRef = useRef(false);
   const initializationCompletedRef = useRef(false);
 
   useEffect(() => {
+    if (!enabled) {
+      flowStartedRef.current = false;
+      initializationCompletedRef.current = false;
+      return;
+    }
+
     if (flowStartedRef.current) return;
     flowStartedRef.current = true;
+    initializationCompletedRef.current = false;
     trackDeviceflowStarted({ sourceFlow });
-  }, [sourceFlow]);
+  }, [enabled, sourceFlow]);
 
   const wrappedOnExecutorStateChanged = useCallback(
     (state: ExecutorState) => {
-      if (state.type === "executingIntent" && !initializationCompletedRef.current) {
+      if (enabled && state.type === "executingIntent" && !initializationCompletedRef.current) {
         initializationCompletedRef.current = true;
         const { modelId, transport } = mapConnectionResult(state.connectionResult);
         trackAppReady({ sourceFlow, modelId });
@@ -68,7 +75,7 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
       }
       onExecutorStateChanged(state);
     },
-    [onExecutorStateChanged, sourceFlow],
+    [enabled, onExecutorStateChanged, sourceFlow],
   );
 
   const wrappedOnUserCancel = useCallback(() => {

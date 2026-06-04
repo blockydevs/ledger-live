@@ -53,11 +53,16 @@ function makeProps(overrides: Partial<Props> = {}): Props {
 }
 
 function renderViewModel(initialProps?: Partial<Props>) {
-  const props = makeProps(initialProps);
+  let props = makeProps(initialProps);
   const { result, rerender, unmount } = renderHook(() =>
     useDeviceIntentExecutorLWMViewModel(props),
   );
-  return { result, rerender, unmount, props };
+  const rerenderWithProps = (overrides: Partial<Props>) => {
+    props = { ...props, ...overrides };
+    rerender(undefined);
+  };
+
+  return { result, rerender, rerenderWithProps, unmount, props };
 }
 
 // Builds the minimum DeviceConnectionResult shape that the VM reads from.
@@ -108,6 +113,31 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
         "deviceflow_started",
         { ...layerABaseProperties, sourceFlow: "swap" },
       ]);
+    });
+
+    it("WHEN the executor is disabled THEN it does not fire deviceflow_started", () => {
+      // WHEN
+      renderViewModel({ enabled: false });
+
+      // THEN
+      expect(mockedTrack).not.toHaveBeenCalledWith("deviceflow_started", expect.anything());
+    });
+  });
+
+  describe("GIVEN a disabled ViewModel", () => {
+    it("WHEN the executor is enabled THEN it fires deviceflow_started", () => {
+      // GIVEN
+      const { rerenderWithProps } = renderViewModel({ enabled: false });
+      mockedTrack.mockClear();
+
+      // WHEN
+      rerenderWithProps({ enabled: true });
+
+      // THEN
+      expect(mockedTrack).toHaveBeenCalledWith("deviceflow_started", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+      });
     });
   });
 
@@ -200,6 +230,61 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
 
       // THEN
       expect(mockedTrack).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("GIVEN a completed flow is disabled and reenabled", () => {
+    it("WHEN the executor reaches executingIntent again THEN it tracks the new flow completion", () => {
+      // GIVEN
+      const { result, rerenderWithProps } = renderViewModel();
+      act(() => {
+        result.current.wrappedProps.onExecutorStateChanged(executingIntentState());
+      });
+      rerenderWithProps({ enabled: false });
+      rerenderWithProps({ enabled: true });
+      mockedTrack.mockClear();
+
+      // WHEN
+      act(() => {
+        result.current.wrappedProps.onExecutorStateChanged(executingIntentState());
+      });
+
+      // THEN
+      expect(mockedTrack).toHaveBeenNthCalledWith(1, "app_ready", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+        modelId: DeviceModelId.stax,
+      });
+      expect(mockedTrack).toHaveBeenNthCalledWith(2, "deviceflow_completed", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+        modelId: DeviceModelId.stax,
+        transport: "ble",
+      });
+    });
+
+    it("WHEN the user cancels before executingIntent again THEN it tracks the new flow cancellation", () => {
+      // GIVEN
+      const onUserCancel = jest.fn();
+      const { result, rerenderWithProps } = renderViewModel({ onUserCancel });
+      act(() => {
+        result.current.wrappedProps.onExecutorStateChanged(executingIntentState());
+      });
+      rerenderWithProps({ enabled: false });
+      rerenderWithProps({ enabled: true });
+      mockedTrack.mockClear();
+
+      // WHEN
+      act(() => {
+        result.current.wrappedProps.onUserCancel();
+      });
+
+      // THEN
+      expect(mockedTrack).toHaveBeenCalledWith("deviceflow_aborted", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+      });
+      expect(onUserCancel).toHaveBeenCalledTimes(1);
     });
   });
 
