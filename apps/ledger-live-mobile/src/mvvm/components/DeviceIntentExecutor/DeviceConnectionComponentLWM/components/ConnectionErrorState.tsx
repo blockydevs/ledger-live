@@ -46,13 +46,18 @@ type BlePairingPeerRemovedPairingViewState = {
 };
 
 type ConnectionErrorViewStates = {
-  [ConnectionErrorTypes.BlePairingPeerRemovedPairing]: BlePairingPeerRemovedPairingViewState
-} & Record<Exclude<ConnectionErrorTypes, ConnectionErrorTypes.BlePairingPeerRemovedPairing>, ConnectionErrorViewState>;
+  [ConnectionErrorTypes.BlePairingPeerRemovedPairing]: BlePairingPeerRemovedPairingViewState;
+} & Record<
+  Exclude<ConnectionErrorTypes, ConnectionErrorTypes.BlePairingPeerRemovedPairing>,
+  ConnectionErrorViewState
+>;
 
 const connectionErrorTranslationBaseKey =
   "deviceIntentExecutor.connectDevice.states.connectionError.errors";
 
-export function ConnectionErrorState({ state }: Readonly<ConnectionErrorStateProps>): React.ReactNode {
+export function ConnectionErrorState({
+  state,
+}: Readonly<ConnectionErrorStateProps>): React.ReactNode {
   const { t } = useTranslation();
   const sourceFlow = useSourceFlow();
   const bleForgetDeviceUrl = useLocalizedUrl(urls.errors.BleForgetDevice);
@@ -105,7 +110,10 @@ export function ConnectionErrorState({ state }: Readonly<ConnectionErrorStatePro
         title: `${connectionErrorTranslationBaseKey}.unknown.tip`,
       },
       primaryCta: retryCta(`${connectionErrorTranslationBaseKey}.unknown.cta.retry`),
-      secondaryCta: helpCta(`${connectionErrorTranslationBaseKey}.unknown.cta.help`, pairingIssuesUrl),
+      secondaryCta: helpCta(
+        `${connectionErrorTranslationBaseKey}.unknown.cta.help`,
+        pairingIssuesUrl,
+      ),
     },
     [ConnectionErrorTypes.BlePairingPeerRemovedPairing]: {
       title: `${connectionErrorTranslationBaseKey}.blePairingPeerRemovedPairing.title`,

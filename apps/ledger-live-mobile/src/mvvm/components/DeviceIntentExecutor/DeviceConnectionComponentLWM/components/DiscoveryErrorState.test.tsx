@@ -47,7 +47,8 @@ const errorCases = [
   {
     type: DiscoveryErrorTypes.BluetoothPermissionUnauthorizedManualSettings,
     title: "Allow Bluetooth access",
-    description: "Ledger Wallet needs Bluetooth permission to find your device. Enable it in Settings.",
+    description:
+      "Ledger Wallet needs Bluetooth permission to find your device. Enable it in Settings.",
   },
   {
     type: DiscoveryErrorTypes.BluetoothDisabledPromptable,
@@ -89,7 +90,8 @@ const errorCases = [
   {
     type: DiscoveryErrorTypes.LocationDisabledManualAction,
     title: "Turn on Location",
-    description: "Location services are off. Turn them on from Settings → Location, then come back.",
+    description:
+      "Location services are off. Turn them on from Settings → Location, then come back.",
   },
   {
     type: DiscoveryErrorTypes.LocationServicePermissionMissing,
@@ -99,7 +101,8 @@ const errorCases = [
   {
     type: DiscoveryErrorTypes.Unknown,
     title: "Something went wrong",
-    description: "We couldn’t start the Bluetooth scan. Please try again or contact Ledger support.",
+    description:
+      "We couldn’t start the Bluetooth scan. Please try again or contact Ledger support.",
   },
 ] as const;
 

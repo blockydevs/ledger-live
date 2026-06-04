@@ -1,4 +1,8 @@
-import type { Balance, StringMemo, TransactionIntent } from "@ledgerhq/coin-module-framework/api/index";
+import type {
+  Balance,
+  StringMemo,
+  TransactionIntent,
+} from "@ledgerhq/coin-module-framework/api/index";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { validateIntent } from "./validateIntent";
 
@@ -34,7 +38,9 @@ function intent(over: Partial<TransactionIntent<StringMemo>> = {}): TransactionI
 
 describe("validateIntent", () => {
   it("validates a fundable native transfer and computes amount + totalSpent", async () => {
-    const res = await validateIntent(currency, intent(), balances(10_000_000n), { value: 1_000_000n });
+    const res = await validateIntent(currency, intent(), balances(10_000_000n), {
+      value: 1_000_000n,
+    });
 
     expect(res.errors).toEqual({});
     expect(res.estimatedFees).toBe(1_000_000n);
@@ -57,9 +63,14 @@ describe("validateIntent", () => {
   });
 
   it("flags amount + fees exceeding the spendable balance", async () => {
-    const res = await validateIntent(currency, intent({ amount: 10_000_000n }), balances(10_000_000n), {
-      value: 1_000_000n,
-    });
+    const res = await validateIntent(
+      currency,
+      intent({ amount: 10_000_000n }),
+      balances(10_000_000n),
+      {
+        value: 1_000_000n,
+      },
+    );
     expect(res.errors.amount?.name).toBe("NotEnoughBalance");
   });
 
@@ -122,9 +133,14 @@ describe("validateIntent", () => {
   });
 
   it("warns feeTooHigh on a native transfer whose fee exceeds 10% of the amount", async () => {
-    const res = await validateIntent(currency, intent({ amount: 500_000n }), balances(10_000_000n), {
-      value: 1_000_000n,
-    });
+    const res = await validateIntent(
+      currency,
+      intent({ amount: 500_000n }),
+      balances(10_000_000n),
+      {
+        value: 1_000_000n,
+      },
+    );
     expect(res.errors).toEqual({});
     expect(res.warnings.feeTooHigh?.name).toBe("FeeTooHigh");
   });

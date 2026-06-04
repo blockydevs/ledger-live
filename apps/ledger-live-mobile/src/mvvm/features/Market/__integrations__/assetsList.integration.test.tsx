@@ -9,7 +9,9 @@ import { MARKET_SCREEN_TEST_IDS } from "../screens/MarketScreen/testIds";
 const Stack = createNativeStackNavigator<BaseNavigatorStackParamList>();
 
 const NavigatorWrapper = () => (
-  <Stack.Navigator initialRouteName={ScreenName.MarketList}>{MarketNavigator({ Stack })}</Stack.Navigator>
+  <Stack.Navigator initialRouteName={ScreenName.MarketList}>
+    {MarketNavigator({ Stack })}
+  </Stack.Navigator>
 );
 
 const enableAssetDiscoverability = withFlagOverrides({

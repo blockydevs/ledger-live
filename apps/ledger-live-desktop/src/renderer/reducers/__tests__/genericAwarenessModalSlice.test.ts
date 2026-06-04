@@ -28,9 +28,7 @@ describe("filterDismissedGenericAwarenessModalContentCards", () => {
   });
 
   it("should exclude dismissed campaign ids", () => {
-    const result = filterDismissedGenericAwarenessModalContentCards(cards, [
-      "APP_START_intro",
-    ]);
+    const result = filterDismissedGenericAwarenessModalContentCards(cards, ["APP_START_intro"]);
 
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe("2");

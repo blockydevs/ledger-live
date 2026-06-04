@@ -113,66 +113,106 @@ export function DiscoveryErrorState({
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.title`,
       description: `${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.cta.platform.${platform}.retry`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.cta.platform.${platform}.retry`,
+      ),
       secondaryCta:
-        platform === "android" ? ignoreCta(`${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.cta.platform.android.ignore`) : undefined,
+        platform === "android"
+          ? ignoreCta(
+              `${discoveryErrorTranslationBaseKey}.bluetoothPermissionUnauthorizedManualSettings.cta.platform.android.ignore`,
+            )
+          : undefined,
     },
     [DiscoveryErrorTypes.BluetoothDisabledPromptable]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.title`,
       description: `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.cta.retry`),
-      secondaryCta: ignoreCta(`${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.cta.ignore`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.cta.retry`,
+      ),
+      secondaryCta: ignoreCta(
+        `${discoveryErrorTranslationBaseKey}.bluetoothDisabledPromptable.cta.ignore`,
+      ),
     },
     [DiscoveryErrorTypes.BluetoothDisabledManualAction]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.title`,
       description: `${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.cta.platform.${platform}.retry`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.cta.platform.${platform}.retry`,
+      ),
       secondaryCta:
-        platform === "android" ? ignoreCta(`${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.cta.platform.android.ignore`) : undefined,
+        platform === "android"
+          ? ignoreCta(
+              `${discoveryErrorTranslationBaseKey}.bluetoothDisabledManualAction.cta.platform.android.ignore`,
+            )
+          : undefined,
     },
     [DiscoveryErrorTypes.BluetoothUnsupported]: {
       preset: "error",
       title: `${discoveryErrorTranslationBaseKey}.bluetoothUnsupported.title`,
       description: `${discoveryErrorTranslationBaseKey}.bluetoothUnsupported.description.platform.${platform}`,
       primaryCta:
-        platform === "android" ? ignoreCta(`${discoveryErrorTranslationBaseKey}.bluetoothUnsupported.cta.platform.android.ignore`) : undefined,
+        platform === "android"
+          ? ignoreCta(
+              `${discoveryErrorTranslationBaseKey}.bluetoothUnsupported.cta.platform.android.ignore`,
+            )
+          : undefined,
     },
     [DiscoveryErrorTypes.LocationPermissionDeniedPromptable]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.title`,
       description: `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.cta.retry`),
-      secondaryCta: ignoreCta(`${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.cta.ignore`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.cta.retry`,
+      ),
+      secondaryCta: ignoreCta(
+        `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedPromptable.cta.ignore`,
+      ),
     },
     [DiscoveryErrorTypes.LocationPermissionDeniedManualSettings]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.title`,
       description: `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.cta.retry`),
-      secondaryCta: ignoreCta(`${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.cta.ignore`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.cta.retry`,
+      ),
+      secondaryCta: ignoreCta(
+        `${discoveryErrorTranslationBaseKey}.locationPermissionDeniedManualSettings.cta.ignore`,
+      ),
     },
-    [DiscoveryErrorTypes.LocationDisabledPromptable]: { 
+    [DiscoveryErrorTypes.LocationDisabledPromptable]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.title`,
       description: `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.cta.retry`),
-      secondaryCta: ignoreCta(`${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.cta.ignore`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.cta.retry`,
+      ),
+      secondaryCta: ignoreCta(
+        `${discoveryErrorTranslationBaseKey}.locationDisabledPromptable.cta.ignore`,
+      ),
     },
     [DiscoveryErrorTypes.LocationDisabledManualAction]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.title`,
       description: `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.cta.retry`),
-      secondaryCta: ignoreCta(`${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.cta.ignore`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.cta.retry`,
+      ),
+      secondaryCta: ignoreCta(
+        `${discoveryErrorTranslationBaseKey}.locationDisabledManualAction.cta.ignore`,
+      ),
     },
     [DiscoveryErrorTypes.LocationServicePermissionMissing]: {
       preset: "info",
       title: `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.title`,
       description: `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.description`,
-      primaryCta: retryCta(`${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.cta.retry`),
-      secondaryCta: ignoreCta(`${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.cta.ignore`),
+      primaryCta: retryCta(
+        `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.cta.retry`,
+      ),
+      secondaryCta: ignoreCta(
+        `${discoveryErrorTranslationBaseKey}.locationServicePermissionMissing.cta.ignore`,
+      ),
     },
     [DiscoveryErrorTypes.Unknown]: {
       preset: "error",

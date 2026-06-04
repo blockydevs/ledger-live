@@ -17,7 +17,9 @@ describe("validateIntent", () => {
       asset: { type: "native" },
     } as TransactionIntent<StringMemo>;
 
-    const res = await api.validateIntent(intent, [{ asset: { type: "native" }, value: 10_000_000n }]);
+    const res = await api.validateIntent(intent, [
+      { asset: { type: "native" }, value: 10_000_000n },
+    ]);
 
     expect(res.errors.recipient?.name).toBe("RecipientRequired");
   });

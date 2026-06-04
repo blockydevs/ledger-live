@@ -55,11 +55,7 @@ import PlatformAppProviderWrapper from "./PlatformAppProviderWrapper";
 import { DeeplinksProvider } from "~/navigation/DeeplinksProvider";
 import StyleProvider from "./StyleProvider";
 
-import {
-  setOsTheme,
-  setIsOnboardingFlow,
-  setIsPostOnboardingFlow,
-} from "~/actions/settings";
+import { setOsTheme, setIsOnboardingFlow, setIsPostOnboardingFlow } from "~/actions/settings";
 import TransactionsAlerts from "~/components/TransactionsAlerts";
 import {
   useFetchCurrencyAll,

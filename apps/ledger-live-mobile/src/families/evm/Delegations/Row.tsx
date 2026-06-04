@@ -47,12 +47,7 @@ export default function DelegationRow({ delegation, currency, onPress, isLast = 
 
       <View style={styles.nameWrapper}>
         <View style={styles.row}>
-          <Text
-            variant={"body"}
-            fontWeight={"semiBold"}
-            numberOfLines={1}
-            style={styles.name}
-          >
+          <Text variant={"body"} fontWeight={"semiBold"} numberOfLines={1} style={styles.name}>
             {validator?.name ?? validatorAddress}
           </Text>
           {status === "bonded" ? (

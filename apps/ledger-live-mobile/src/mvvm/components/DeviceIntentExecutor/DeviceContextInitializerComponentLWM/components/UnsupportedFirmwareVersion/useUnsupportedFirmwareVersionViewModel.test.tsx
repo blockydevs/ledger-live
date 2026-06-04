@@ -44,13 +44,12 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
   });
 
   it("GIVEN a device WHEN rendering THEN it exposes the view handlers", () => {
-    const { result } = renderHook(
-      () =>
-        useUnsupportedFirmwareVersionViewModel({
-          device,
-          sourceFlow: SOURCE_FLOW,
-          onCancel,
-        }),
+    const { result } = renderHook(() =>
+      useUnsupportedFirmwareVersionViewModel({
+        device,
+        sourceFlow: SOURCE_FLOW,
+        onCancel,
+      }),
     );
 
     expect(result.current).toEqual(
@@ -62,13 +61,12 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
   });
 
   it("GIVEN a device WHEN updating Ledger OS THEN it tracks Update Firmware and opens the firmware update", () => {
-    const { result } = renderHook(
-      () =>
-        useUnsupportedFirmwareVersionViewModel({
-          device,
-          sourceFlow: SOURCE_FLOW,
-          onCancel,
-        }),
+    const { result } = renderHook(() =>
+      useUnsupportedFirmwareVersionViewModel({
+        device,
+        sourceFlow: SOURCE_FLOW,
+        onCancel,
+      }),
     );
 
     act(() => {
@@ -86,13 +84,12 @@ describe("useUnsupportedFirmwareVersionViewModel", () => {
   });
 
   it("GIVEN a device WHEN cancelling THEN it tracks Cancel and forwards to onCancel", () => {
-    const { result } = renderHook(
-      () =>
-        useUnsupportedFirmwareVersionViewModel({
-          device,
-          sourceFlow: SOURCE_FLOW,
-          onCancel,
-        }),
+    const { result } = renderHook(() =>
+      useUnsupportedFirmwareVersionViewModel({
+        device,
+        sourceFlow: SOURCE_FLOW,
+        onCancel,
+      }),
     );
 
     act(() => {

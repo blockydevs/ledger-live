@@ -13,7 +13,8 @@ export enum FeatureIntroRole {
 
 export type GenericAwarenessModalLocation = "generic_awareness_modal";
 
-const GENERIC_AWARENESS_MODAL_LOCATION = "generic_awareness_modal" satisfies GenericAwarenessModalLocation;
+const GENERIC_AWARENESS_MODAL_LOCATION =
+  "generic_awareness_modal" satisfies GenericAwarenessModalLocation;
 
 export const GenericAwarenessModalCampaignIdInputSchema = z.string().trim();
 
