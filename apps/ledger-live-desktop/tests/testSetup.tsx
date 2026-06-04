@@ -230,7 +230,7 @@ function renderWithMockedCounterValuesProvider(
   return {
     store,
     i18n,
-    user: userEvent.setup(userEventOptions),
+    user: userEvent.setup({ pointerEventsCheck: 0, ...userEventOptions }),
     ...rtlRender(ui, {
       wrapper: ({ children }) => (
         <Providers
@@ -270,7 +270,7 @@ function render(ui: React.JSX.Element, options: ExtraOptions = {}): RenderReturn
   return {
     store,
     i18n,
-    user: userEvent.setup(userEventOptions),
+    user: userEvent.setup({ pointerEventsCheck: 0, ...userEventOptions }),
     ...rtlRender(ui, {
       wrapper: ({ children }) => (
         <Providers

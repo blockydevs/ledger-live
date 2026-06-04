@@ -52,6 +52,8 @@ function FeeAssetSelectorComponent({
             <MenuRadioItem
               key={option.id}
               value={option.id}
+              closeOnClick
+              className="cursor-pointer"
               data-testid={`send-fee-asset-option-${option.id}`}
             >
               {option.ticker}
