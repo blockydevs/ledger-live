@@ -227,6 +227,24 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
   });
 
   describe("GIVEN a ViewModel that has not yet completed", () => {
+    it("WHEN the user cancels THEN it tracks the Close button click", () => {
+      // GIVEN
+      const { result } = renderViewModel();
+      mockedTrack.mockClear();
+
+      // WHEN
+      act(() => {
+        result.current.wrappedProps.onUserCancel();
+      });
+
+      // THEN
+      expect(mockedTrack).toHaveBeenNthCalledWith(1, "button_clicked", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+        button: "Close",
+      });
+    });
+
     it("WHEN the user cancels from a non-blocking page THEN it fires deviceflow_aborted and forwards to the original onUserCancel", () => {
       // GIVEN
       const onUserCancel = jest.fn();

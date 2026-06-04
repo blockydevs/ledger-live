@@ -11,6 +11,7 @@ import {
   trackDeviceflowCanceled,
   trackDeviceflowCompleted,
   trackDeviceflowStarted,
+  trackDrawerCloseButtonClicked,
 } from "./utils/trackDeviceIntent";
 import type { InitializerConfig } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
@@ -71,11 +72,12 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
   );
 
   const wrappedOnUserCancel = useCallback(() => {
+    trackDrawerCloseButtonClicked({ sourceFlow });
     if (!initializationCompletedRef.current) {
       trackDeviceflowCanceled({ sourceFlow });
     }
     onUserCancel();
-  }, [onUserCancel, sourceFlow]);
+  }, [sourceFlow]);
 
   return {
     sourceFlow,

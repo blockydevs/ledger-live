@@ -263,3 +263,10 @@ export const trackDeviceActionButtonClicked = (params: {
     ...(params.transport ? { transport: params.transport } : {}),
   });
 };
+
+export const trackDrawerCloseButtonClicked = (params: { sourceFlow: SourceFlow }): void => {
+  track("button_clicked", {
+    ...getDeviceUxV2BaseProperties(params.sourceFlow),
+    button: "Close",
+  });
+};
