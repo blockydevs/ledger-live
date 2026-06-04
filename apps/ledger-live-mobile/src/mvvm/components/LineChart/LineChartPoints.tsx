@@ -31,6 +31,7 @@ export function LineChartPoints({ points, formatValue }: LineChartPointsProps) {
           hidePoint={marker.hidePoint}
           size={LINE_CHART_POINT_SIZE}
           color={resolveMarkerColor(marker.color, theme.colors.bg)}
+          magnetic
         />
       ))}
     </>
