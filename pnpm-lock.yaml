@@ -4354,6 +4354,9 @@ importers:
       '@stricahq/bip32ed25519':
         specifier: ^1.0.3
         version: 1.0.4
+      '@stricahq/cbors':
+        specifier: 1.0.2
+        version: 1.0.2
       '@stricahq/typhonjs':
         specifier: ^3.0.0
         version: 3.0.0
