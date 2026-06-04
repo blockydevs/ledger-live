@@ -1,5 +1,5 @@
 import { getRemoteABTestingAttributes } from "../remoteABTestingAnalytics";
-import type { AnalyticsFeatureFlagMethod } from "../../../analytics/types";
+import type { AnalyticsFeatureFlagMethod } from "../../types";
 
 function mockMethod(
   returnValue: { enabled: boolean; params?: Record<string, unknown> } | null,

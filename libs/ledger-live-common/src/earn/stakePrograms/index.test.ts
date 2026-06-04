@@ -1,7 +1,7 @@
-import { Feature_StakePrograms } from "@ledgerhq/types-live";
+import type { Features } from "@shared/feature-flags";
 import { stakeProgramsToEarnParam } from "./index";
 
-const feature_stake_programs_empty_json: Feature_StakePrograms = {
+const feature_stake_programs_empty_json: Features["stakePrograms"] = {
   enabled: true,
   params: {
     list: ["injective", "ethereum"],
@@ -9,7 +9,7 @@ const feature_stake_programs_empty_json: Feature_StakePrograms = {
   },
 };
 
-const feature_stake_programs_json: Feature_StakePrograms = {
+const feature_stake_programs_json: Features["stakePrograms"] = {
   enabled: true,
   params: {
     list: ["injective"],

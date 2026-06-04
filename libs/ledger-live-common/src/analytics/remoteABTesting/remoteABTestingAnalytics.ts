@@ -1,4 +1,4 @@
-import type { AnalyticsFeatureFlagMethod } from "../../analytics/types";
+import type { AnalyticsFeatureFlagMethod } from "../types";
 
 export const getRemoteABTestingAttributes = (
   analyticsFeatureFlagMethod: AnalyticsFeatureFlagMethod | null,

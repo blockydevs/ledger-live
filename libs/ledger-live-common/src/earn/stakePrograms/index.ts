@@ -1,6 +1,6 @@
-import type { Feature_StakePrograms } from "@ledgerhq/types-live";
+import type { Features } from "@shared/feature-flags";
 
-export const stakeProgramsToEarnParam = (stakePrograms: Feature_StakePrograms | null) => {
+export const stakeProgramsToEarnParam = (stakePrograms: Features["stakePrograms"] | null) => {
   const list = stakePrograms?.params?.list ?? [];
   const redirects = stakePrograms?.params?.redirects ?? {};
   const result: Record<string, string> = {};
@@ -18,7 +18,7 @@ export const stakeProgramsToEarnParam = (stakePrograms: Feature_StakePrograms | 
 type StablecoinYield = "dapp" | "api" | "inactive";
 
 export const getStablecoinYieldSetting = (
-  stakePrograms: Feature_StakePrograms | null,
+  stakePrograms: Features["stakePrograms"] | null,
 ): StablecoinYield => {
   /** Tether USDT provider is proxy for stablecoin flow rollout.  */
   const usdtProvider =
@@ -29,7 +29,7 @@ export const getStablecoinYieldSetting = (
   return !usdtProvider ? "inactive" : usdtProvider === "earn" ? "api" : "dapp";
 };
 
-export const getBitcoinYieldSetting = (stakePrograms: Feature_StakePrograms | null): string => {
+export const getBitcoinYieldSetting = (stakePrograms: Features["stakePrograms"] | null): string => {
   /** Check if Bitcoin has "earn" provider configured in redirects. */
   const bitcoinProvider =
     !stakePrograms?.enabled || !stakePrograms?.params?.redirects
@@ -43,7 +43,7 @@ export const getBitcoinYieldSetting = (stakePrograms: Feature_StakePrograms | nu
       : bitcoinProvider;
 };
 
-export const getEthDepositScreenSetting = (stakePrograms: Feature_StakePrograms | null): string => {
+export const getEthDepositScreenSetting = (stakePrograms: Features["stakePrograms"] | null): string => {
   /** Check if Ethereum has "earn" provider configured in redirects with ethDepositCohort. */
   const ethereumRedirect = stakePrograms?.enabled
     ? stakePrograms?.params?.redirects?.["ethereum"]

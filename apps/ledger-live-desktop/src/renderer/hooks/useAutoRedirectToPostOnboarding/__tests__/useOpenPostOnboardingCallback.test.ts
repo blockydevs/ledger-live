@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "tests/testSetup";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { useFeature } from "@features/platform-feature-flags";
-import { isRecoverDisplayed } from "@ledgerhq/live-common/featureFlags/index";
+import { isRecoverDisplayed } from "@ledgerhq/live-common/recover/isRecoverDisplayed";
 import { useStartPostOnboardingCallback } from "@ledgerhq/live-common/postOnboarding/hooks/useStartPostOnboardingCallback";
 import { useUpsellPath } from "@ledgerhq/live-common/hooks/recoverFeatureFlag";
 import { getStoreValue } from "~/renderer/store";

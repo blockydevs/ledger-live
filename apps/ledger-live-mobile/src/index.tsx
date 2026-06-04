@@ -112,9 +112,8 @@ checkLibs({
   Transport,
 });
 
-// Analytics resolves feature flags from the Redux slice at event time. Analytics still consumes the
-// legacy `@ledgerhq/types-live` registry, so the cast bridges the slice's `Feature` to that registry
-// until analytics migrates to `@shared/feature-flags`.
+// Analytics resolves feature flags from the Redux slice at event time. The cast adapts the concrete
+// `selectFeature` reader to the method's generic `<T>(key: T) => Features[T]` signature.
 setAnalyticsFeatureFlagMethod(
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   ((key: FeatureId) => selectFeature(store.getState(), key) ?? null) as Parameters<
