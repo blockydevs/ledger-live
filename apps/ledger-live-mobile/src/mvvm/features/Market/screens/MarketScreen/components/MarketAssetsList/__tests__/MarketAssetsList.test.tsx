@@ -3,20 +3,31 @@ import { render, screen } from "@tests/test-renderer";
 import { Box } from "@ledgerhq/lumen-ui-rnative";
 import { createMarketAssetDisplayData } from "LLM/features/Market/__tests__/helpers";
 import { MARKET_SCREEN_TEST_IDS } from "../../../testIds";
+import type { MarketCategoryTab } from "../../../useMarketCategories";
 import { MarketAssetsList } from "..";
 
 const asset = createMarketAssetDisplayData();
+
+const categoryTabs: MarketCategoryTab[] = [
+  { value: "all", labelKey: "market.assets.categories.all" },
+  { value: "stocks", labelKey: "market.assets.categories.stocks" },
+  { value: "starred", labelKey: "market.assets.categories.favorites" },
+];
 
 const defaultProps = {
   assets: [asset],
   loading: false,
   loadingMore: false,
   error: false,
+  emptyState: undefined,
+  selectedCategory: "all",
+  categoryTabs,
+  onSelectCategory: jest.fn(),
   onAssetPress: jest.fn(),
   onEndReached: jest.fn(),
   showSubheader: true,
   header: <Box testID="market-assets-list-header" />,
-};
+} satisfies React.ComponentProps<typeof MarketAssetsList>;
 
 describe("MarketAssetsList", () => {
   beforeEach(() => {
@@ -28,6 +39,7 @@ describe("MarketAssetsList", () => {
 
     expect(screen.getByTestId("market-assets-list-header")).toBeVisible();
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsSubHeader)).toBeVisible();
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
     expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible();
   });
 
@@ -38,6 +50,7 @@ describe("MarketAssetsList", () => {
 
     expect(screen.queryByTestId("market-assets-list-header")).toBeNull();
     expect(screen.queryByTestId(MARKET_SCREEN_TEST_IDS.assetsSubHeader)).toBeNull();
+    expect(screen.queryByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeNull();
   });
 
   it("should render three skeleton rows while loading", () => {
@@ -53,6 +66,13 @@ describe("MarketAssetsList", () => {
 
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsEmptySearch)).toBeVisible();
     expect(screen.getByText("No assets found")).toBeVisible();
+  });
+
+  it("should render the favorites empty state", () => {
+    render(<MarketAssetsList {...defaultProps} assets={[]} emptyState="favorites" />);
+
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsFavoritesEmptyIcon)).toBeVisible();
+    expect(screen.getByText("No favorites yet")).toBeVisible();
   });
 
   it("should render the error banner and loading-more footer", () => {
