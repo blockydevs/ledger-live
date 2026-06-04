@@ -84,6 +84,28 @@ describe("craftTransaction", () => {
     expect(result).toBe("extendedRawDataHex");
   });
 
+  it("should craft a native TRX transaction when custom fees are 0", async () => {
+    const transactionIntent: TransactionIntent = {
+      intentType: "transaction",
+      asset: { type: "native" },
+      type: "send",
+      recipient: "recipient",
+      sender: "sender",
+      amount: BigInt(1000),
+    };
+
+    (decode58Check as jest.Mock).mockImplementation(address => address);
+    (craftStandardTransaction as jest.Mock).mockResolvedValue({
+      raw_data_hex: "extendedRawDataHex",
+    });
+
+    const { transaction: result } = await craftTransaction(transactionIntent, { value: 0n });
+
+    expect(craftStandardTransaction).toHaveBeenCalled();
+    expect(craftTrc20Transaction).not.toHaveBeenCalled();
+    expect(result).toBe("extendedRawDataHex");
+  });
+
   it("should use zero custom fees when user provides 0 for crafting a TRC20 transaction", async () => {
     const customFees = 0n;
     const amount = 1000;
