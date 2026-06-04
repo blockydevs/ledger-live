@@ -95,7 +95,7 @@ pnpm --silent wallet-cli start account discover bitcoin
 pnpm --silent wallet-cli start account discover ethereum:sepolia
 ```
 
-Networks: `bitcoin` (mainnet), `ethereum:sepolia`, `bitcoin:testnet`, `solana:devnet`.
+Networks: `bitcoin` (mainnet), `ethereum`, `solana`, `ethereum:sepolia`, `bitcoin:testnet`, `solana:devnet`.
 
 ### receive
 
