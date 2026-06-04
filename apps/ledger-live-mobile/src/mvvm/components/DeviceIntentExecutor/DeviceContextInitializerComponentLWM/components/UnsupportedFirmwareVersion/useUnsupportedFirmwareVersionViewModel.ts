@@ -15,7 +15,11 @@ export function useUnsupportedFirmwareVersionViewModel({ device, sourceFlow, onC
   const modelId = device.modelId;
 
   const onUpdateLedgerOs = useCallback(() => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.UpdateFirmware });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      modelId,
+      button: CONNECT_APP_BUTTON.UpdateFirmware,
+    });
     openMyLedgerFirmwareUpdate();
   }, [openMyLedgerFirmwareUpdate, sourceFlow, modelId]);
 

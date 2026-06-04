@@ -34,10 +34,7 @@ const device: InitializerDevice = {
 const state = {
   type: BlockingStateType.DeviceOutOfStorageSpace,
   appNames: ["Ethereum", "Bitcoin"],
-} satisfies Extract<
-  EnsureAppReadyState,
-  { type: BlockingStateType.DeviceOutOfStorageSpace }
->;
+} satisfies Extract<EnsureAppReadyState, { type: BlockingStateType.DeviceOutOfStorageSpace }>;
 
 describe("useDeviceOutOfStorageSpaceViewModel", () => {
   beforeEach(() => {

@@ -9,7 +9,10 @@ type AllowSecureConnectionStateProps = BaseInitializerStateProps<
   Extract<EnsureAppReadyState, { type: DeviceInteractionRequiredType.AllowSecureConnection }>
 >;
 
-export function AllowSecureConnectionState({ device, sourceFlow }: AllowSecureConnectionStateProps) {
+export function AllowSecureConnectionState({
+  device,
+  sourceFlow,
+}: AllowSecureConnectionStateProps) {
   return (
     <>
       <TrackScreen

@@ -433,9 +433,21 @@ describe("processGenericAwarenessModalBrazeCards", () => {
   });
 
   it("should group cards by campaignId case-insensitively and preserve the first card casing", () => {
-    const firstCampaignCard = makeCard("1", { campaignId: "Campaign-A", layout: "carousel", index: "0" });
-    const secondCampaignCard = makeCard("2", { campaignId: "campaign-a", layout: "CAROUSEL", index: "1" });
-    const otherCampaignCard = makeCard("3", { campaignId: "Other", layout: "carousel", index: "0" });
+    const firstCampaignCard = makeCard("1", {
+      campaignId: "Campaign-A",
+      layout: "carousel",
+      index: "0",
+    });
+    const secondCampaignCard = makeCard("2", {
+      campaignId: "campaign-a",
+      layout: "CAROUSEL",
+      index: "1",
+    });
+    const otherCampaignCard = makeCard("3", {
+      campaignId: "Other",
+      layout: "carousel",
+      index: "0",
+    });
 
     const groupedCards = groupByCampaignId([
       firstCampaignCard,

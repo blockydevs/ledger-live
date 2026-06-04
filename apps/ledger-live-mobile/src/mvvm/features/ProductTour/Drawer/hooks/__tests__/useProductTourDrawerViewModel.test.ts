@@ -312,7 +312,6 @@ describe("useProductTourDrawerViewModel", () => {
         params: { screen: NavigatorName.WalletTab },
       });
     });
-
   });
 
   describe("feature flag changes while drawer is open", () => {

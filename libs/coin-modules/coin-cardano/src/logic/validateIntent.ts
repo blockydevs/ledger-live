@@ -65,7 +65,11 @@ export async function validateIntent(
   return { errors, warnings, estimatedFees, amount, totalSpent };
 }
 
-function validateRecipient(currency: CryptoCurrency, intent: Intent, errors: Record<string, Error>): void {
+function validateRecipient(
+  currency: CryptoCurrency,
+  intent: Intent,
+  errors: Record<string, Error>,
+): void {
   // Shelley addresses embed a network tag in the header byte (CIP-19): testnet = 0, mainnet = 1.
   const networkId = isTestnet(currency) ? 0 : 1;
   if (!intent.recipient) {
@@ -92,7 +96,10 @@ function spendableNative(balances: Balance[]): bigint {
 function tokenBalance(asset: AssetInfo, balances: Balance[]): bigint {
   const reference = "assetReference" in asset ? asset.assetReference : undefined;
   const match = balances.find(
-    b => b.asset.type !== "native" && "assetReference" in b.asset && b.asset.assetReference === reference,
+    b =>
+      b.asset.type !== "native" &&
+      "assetReference" in b.asset &&
+      b.asset.assetReference === reference,
   );
   return match?.value ?? 0n;
 }
@@ -128,7 +135,10 @@ function validateAmount(
   if (isTokenTransfer) {
     // A token output bundles its own min-ADA and fees are paid in ADA, so a token send needs both
     // enough tokens and enough native ADA — it can never be funded by the token balance alone.
-    if (amount > tokenBalance(intent.asset, balances) || estimatedFees > spendableNative(balances)) {
+    if (
+      amount > tokenBalance(intent.asset, balances) ||
+      estimatedFees > spendableNative(balances)
+    ) {
       errors.amount = new NotEnoughBalance();
     }
   } else if (amount + estimatedFees > spendableNative(balances)) {
@@ -136,7 +146,11 @@ function validateAmount(
   }
 }
 
-function checkFeeTooHigh(amount: bigint, estimatedFees: bigint, warnings: Record<string, Error>): void {
+function checkFeeTooHigh(
+  amount: bigint,
+  estimatedFees: bigint,
+  warnings: Record<string, Error>,
+): void {
   if (amount > 0n && estimatedFees * FEE_TOO_HIGH_RATIO > amount) {
     warnings.feeTooHigh = new FeeTooHigh();
   }
