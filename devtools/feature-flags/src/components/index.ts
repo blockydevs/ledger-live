@@ -7,3 +7,4 @@ export { FlagListHeader } from "./flagListHeader/FlagListHeader";
 export { Sidebar } from "./sidebar/Sidebar";
 export { FlagJsonEditor } from "./flagJsonEditor/flagJsonEditor";
 export { FlagDiffView } from "./flagDiffView/FlagDiffView.web";
+export { ToolsHeader } from "./toolsHeader/ToolsHeader";
