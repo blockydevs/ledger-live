@@ -14,11 +14,13 @@ const cards: GenericAwarenessModalContentCard[] = [
     secondaryButtonLabel: "",
     secondaryButtonLink: "",
     items: [],
+    isReady: true,
   },
   {
     layout: GenericAwarenessModalLayout.Carousel,
     id: "2",
     data: [],
+    isReady: true,
   },
 ];
 

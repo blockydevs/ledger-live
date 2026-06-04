@@ -65,6 +65,22 @@ export const GenericAwarenessModalInputIndexSchema = z
   .regex(/^\d+$/)
   .transform(value => Number.parseInt(value, 10));
 
+/** Expected number of Braze cards for a campaign (positive integer from extras). */
+export const GenericAwarenessModalCampaignCountSchema = z
+  .union([
+    z
+      .string()
+      .trim()
+      .regex(/^\d+$/)
+      .transform(value => Number.parseInt(value, 10)),
+    z.number().int().positive(),
+  ])
+  .pipe(z.number().int().positive());
+
+export const GenericAwarenessModalSlideCountSchema = GenericAwarenessModalCampaignCountSchema;
+
+export const GenericAwarenessModalItemCountSchema = GenericAwarenessModalCampaignCountSchema;
+
 export const GenericAwarenessModalCarouselSlideSchema = z.object({
   title: GenericAwarenessModalStringFieldSchema,
   subtitle: GenericAwarenessModalStringFieldSchema,
@@ -78,6 +94,7 @@ export const GenericAwarenessModalCarouselInputSchema = z.object({
   campaignId: GenericAwarenessModalCampaignIdInputSchema,
   index: GenericAwarenessModalInputIndexSchema,
   location: GenericAwarenessModalLocationInputSchema,
+  slideCount: GenericAwarenessModalSlideCountSchema,
   title: GenericAwarenessModalStringFieldSchema,
   subtitle: GenericAwarenessModalStringFieldSchema,
   imageUrl: GenericAwarenessModalStringFieldSchema,
@@ -90,6 +107,7 @@ export const GenericAwarenessModalFeatureIntroMainInputSchema = z.object({
   campaignId: GenericAwarenessModalCampaignIdInputSchema,
   role: GenericAwarenessModalFeatureIntroMainRoleInputSchema,
   location: GenericAwarenessModalLocationInputSchema,
+  itemCount: GenericAwarenessModalItemCountSchema,
   title: GenericAwarenessModalStringFieldSchema,
   subtitle: GenericAwarenessModalStringFieldSchema,
   imageUrl: GenericAwarenessModalStringFieldSchema,
@@ -105,6 +123,7 @@ export const GenericAwarenessModalFeatureIntroItemInputSchema = z.object({
   role: GenericAwarenessModalFeatureIntroItemRoleInputSchema,
   index: GenericAwarenessModalInputIndexSchema,
   location: GenericAwarenessModalLocationInputSchema,
+  itemCount: GenericAwarenessModalItemCountSchema,
   icon: GenericAwarenessModalStringFieldSchema,
   title: GenericAwarenessModalStringFieldSchema,
   subtitle: GenericAwarenessModalStringFieldSchema,
@@ -186,6 +205,8 @@ export type GenericAwarenessModalInputExtras = Partial<{
   location: GenericAwarenessModalLocation | string;
   role: FeatureIntroRole | string;
   index: GenericAwarenessModalInputIndex;
+  slideCount: z.input<typeof GenericAwarenessModalSlideCountSchema>;
+  itemCount: z.input<typeof GenericAwarenessModalItemCountSchema>;
   title: string;
   subtitle: string;
   imageUrl: string;
@@ -206,6 +227,8 @@ export type GenericAwarenessModalCarousel = {
   layout: GenericAwarenessModalLayout.Carousel;
   id: string;
   data: GenericAwarenessModalCarouselSlide[];
+  /** True when all expected Braze cards for the campaign have been received. */
+  isReady: boolean;
 };
 
 export type GenericAwarenessModalFeatureIntroItem = {
@@ -225,6 +248,8 @@ export type GenericAwarenessModalFeatureIntro = {
   secondaryButtonLabel: string;
   secondaryButtonLink: string;
   items: GenericAwarenessModalFeatureIntroItem[];
+  /** True when all expected Braze cards for the campaign have been received. */
+  isReady: boolean;
 };
 
 export type GenericAwarenessModalPrompt = {
