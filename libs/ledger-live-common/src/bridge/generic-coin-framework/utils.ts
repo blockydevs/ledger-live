@@ -114,6 +114,7 @@ type GenericCoinFrameworkTransactionIntent = TransactionIntent & {
   mode?: StakingOperation;
   valAddress?: string;
   valId?: string;
+  withdrawId?: string;
   dstValAddress?: string;
 };
 
@@ -121,7 +122,10 @@ function getDelegationIntentFields(
   delegationMode: StakingOperation | undefined,
   transaction: GenericTransaction,
 ): Partial<
-  Pick<GenericCoinFrameworkTransactionIntent, "mode" | "valAddress" | "valId" | "dstValAddress">
+  Pick<
+    GenericCoinFrameworkTransactionIntent,
+    "mode" | "valAddress" | "valId" | "dstValAddress" | "withdrawId"
+  >
 > {
   return {
     ...(delegationMode !== undefined && transaction.valAddress

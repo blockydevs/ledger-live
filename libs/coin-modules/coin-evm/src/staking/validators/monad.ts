@@ -344,6 +344,7 @@ const fetchStakeForValId = async (
   contractAddress: string,
   delegator: string,
   valId: bigint,
+  currentEpoch: bigint | null,
 ): Promise<Stake[]> => {
   const data = iface.encodeFunctionData("getDelegator", [valId, delegator]);
   const raw = await provider.call({ to: contractAddress, data });
@@ -352,7 +353,19 @@ const fetchStakeForValId = async (
 
   const [activeStake, , unclaimedRewards, deltaStake, nextDeltaStake] = decoded;
   const deltaStakes = deltaStake + nextDeltaStake;
-  if (activeStake === 0n && deltaStakes === 0n && unclaimedRewards === 0n) return [];
+
+  // Pending withdrawal requests (occupied withdrawId slots) for this (validator, delegator).
+  // Fetched even when the active/activating amounts are zero so a fully-undelegated position
+  // still surfaces its withdrawId(s) for a later `withdraw`.
+  const withdrawals = await fetchWithdrawalRequests(
+    provider,
+    iface,
+    contractAddress,
+    valId,
+    delegator,
+  );
+
+  if (activeStake === 0n && deltaStakes === 0n &&  unclaimedRewards === 0n && withdrawals.length === 0) return [];
 
   const validator = await callGetValidator(provider, iface, contractAddress, valId).catch(
     () => null,
@@ -398,6 +411,21 @@ const fetchStakeForValId = async (
   if (deltaStakes !== 0n) {
     stakes.push(makeStake("activating", deltaStakes));
   }
+  
+  for (const { withdrawId, withdrawalAmount, withdrawEpoch } of withdrawals) {
+    const completionDate = epochToDate(withdrawEpoch, currentEpoch);
+    stakes.push({
+      uid: `${contractAddress}-${valId.toString()}-${delegator}-withdraw-${withdrawId}`,
+      address: delegator,
+      ...(validatorAddress ? { delegate: validatorAddress } : {}),
+      state: "deactivating",
+      ...(completionDate ? { stateUpdatedAt: completionDate } : {}),
+      asset,
+      amount: withdrawalAmount,
+      actions: [],
+      details: { ...details, withdrawId },
+    });
+  }
   return stakes;
 };
 
@@ -417,6 +445,8 @@ export const fetchMonadStakes = async (
         const valIds = await fetchDelegatedValIds(provider, iface, ctx.contractAddress, address);
         if (valIds.length === 0) return [];
 
+        const currentEpoch = await callGetEpoch(provider, iface, ctx.contractAddress);
+
         const stakes: Stake[] = [];
         for (let i = 0; i < valIds.length; i += DETAILS_BATCH_SIZE) {
           const chunk = valIds.slice(i, i + DETAILS_BATCH_SIZE);
@@ -429,6 +459,7 @@ export const fetchMonadStakes = async (
                 ctx.contractAddress,
                 address,
                 valId,
+                currentEpoch,
               ),
             ),
           );
@@ -455,6 +486,209 @@ export const fetchMonadStakes = async (
       error: error instanceof Error ? error.message : String(error),
     });
     return [];
+  }
+};
+
+// getWithdrawalRequest returns [withdrawalAmount, accRewardPerToken, withdrawEpoch].
+type WithdrawalRequestRaw = [bigint, bigint, bigint];
+
+function isWithdrawalRequestRaw(value: unknown): value is WithdrawalRequestRaw {
+  return (
+    Array.isArray(value) &&
+    typeof value[0] === "bigint" &&
+    typeof value[1] === "bigint" &&
+    typeof value[2] === "bigint"
+  );
+}
+
+// A withdrawId slot is "in use" while it holds a pending undelegation that has not
+// yet been withdrawn. The precompile zeroes the request once `withdraw` completes,
+// so a free slot reads back all-zero. We check amount AND epoch (not amount alone)
+// so a slot is never treated as free while any field is still set.
+const isWithdrawIdInUse = (req: WithdrawalRequestRaw): boolean => {
+  const [withdrawalAmount, , withdrawEpoch] = req;
+  return withdrawalAmount !== 0n || withdrawEpoch !== 0n;
+};
+
+const MAX_WITHDRAW_ID = 255;
+
+const WITHDRAW_ID_BATCH_SIZE = 128;
+
+// The precompile exposes a withdrawal's completion epoch but no epoch-to-timestamp mapping,
+// so we project the remaining epochs onto wall-clock time. Per Monad docs an epoch lasts ~5.5h
+// (WITHDRAWAL_DELAY = 1 epoch ≈ 5.5h). Source: https://docs.monad.xyz/monad-arch/consensus/staking
+const EPOCH_DURATION_MS = 5.5 * 60 * 60 * 1000;
+
+/**
+ * Convert an epoch number into its wall-clock start date. The precompile exposes no
+ * epoch-to-timestamp mapping, so we anchor epoch 0 from the live `(currentEpoch, now)` pair and
+ * project the target epoch from there. The result is unbounded in both directions: an epoch
+ * already in the past yields a past date, a future epoch a future date — so for a completion epoch
+ * a `date <= now` check reflects withdrawability. Returns `null` when the current epoch is unknown
+ * so callers carry no (possibly misleading) date.
+ */
+const epochToDate = (epoch: bigint, currentEpoch: bigint | null): Date | null => {
+  if (currentEpoch === null) return null;
+  const epochZeroMs = Date.now() - Number(currentEpoch) * EPOCH_DURATION_MS;
+  return new Date(epochZeroMs + Number(epoch) * EPOCH_DURATION_MS);
+};
+
+type OccupiedWithdrawal = {
+  withdrawId: number;
+  withdrawalAmount: bigint;
+  withdrawEpoch: bigint;
+};
+
+/**
+ * Enumerate the occupied `withdrawId` slots for a (validator, delegator) pair — the inverse of
+ * `findFreeWithdrawId`. A slot is occupied while it holds a pending undelegation that has not
+ * yet been withdrawn (see `isWithdrawIdInUse`). Reads that fail/can't be decoded are skipped, so
+ * a transient RPC error never invents nor drops a slot.
+ */
+const fetchWithdrawalRequests = async (
+  provider: JsonRpcProvider,
+  iface: ethers.Interface,
+  contractAddress: string,
+  valId: bigint,
+  delegator: string,
+): Promise<OccupiedWithdrawal[]> => {
+  const occupied: OccupiedWithdrawal[] = [];
+
+  for (let start = 0; start <= MAX_WITHDRAW_ID; start += WITHDRAW_ID_BATCH_SIZE) {
+    const end = Math.min(start + WITHDRAW_ID_BATCH_SIZE - 1, MAX_WITHDRAW_ID);
+    const ids = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+    const settled = await Promise.allSettled(
+      ids.map(withdrawId =>
+        callGetWithdrawalRequest(provider, iface, contractAddress, valId, delegator, withdrawId),
+      ),
+    );
+
+    settled.forEach((res, i) => {
+      const withdrawId = ids[i];
+      if (res.status === "rejected") {
+        log("coin-evm/staking", "fetchWithdrawalRequests: getWithdrawalRequest call failed", {
+          valId: valId.toString(),
+          withdrawId,
+          error: res.reason instanceof Error ? res.reason.message : String(res.reason),
+        });
+        return;
+      }
+      const req = res.value;
+      if (!req || !isWithdrawIdInUse(req)) return;
+      const [withdrawalAmount, , withdrawEpoch] = req;
+      occupied.push({ withdrawId, withdrawalAmount, withdrawEpoch });
+    });
+  }
+
+  return occupied;
+};
+
+/**
+ * Find the lowest free `withdrawId` slot for an undelegation on a given validator.
+ *
+ * A slot is free when its withdrawal request reads back all-zero (no pending
+ * undelegation occupying it). Returns `null` when every slot (0–255) is occupied —
+ * the caller must then have the user `withdraw` a completed request before undelegating
+ * again — or when the chain context can't be resolved.
+ *
+ * Reads that fail/can't be decoded are treated as "unknown" and skipped, so a transient
+ * RPC error never causes an occupied slot to be reported as free.
+ */
+export const findFreeWithdrawId = async (
+  currencyId: string,
+  valId: bigint,
+  delegator: string,
+): Promise<number | null> => {
+  const ctx = resolveContext(currencyId);
+  if (!ctx) return null;
+
+  try {
+    return await withApi(
+      ctx.currency,
+      async provider => {
+        const iface = new ethers.Interface(ctx.abi);
+
+        for (let start = 0; start <= MAX_WITHDRAW_ID; start += WITHDRAW_ID_BATCH_SIZE) {
+          const end = Math.min(start + WITHDRAW_ID_BATCH_SIZE - 1, MAX_WITHDRAW_ID);
+          const ids = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+          const settled = await Promise.allSettled(
+            ids.map(withdrawId =>
+              callGetWithdrawalRequest(
+                provider,
+                iface,
+                ctx.contractAddress,
+                valId,
+                delegator,
+                withdrawId,
+              ),
+            ),
+          );
+
+          // Walk the chunk in ascending order so the lowest free slot wins.
+          for (let i = 0; i < settled.length; i++) {
+            const res = settled[i];
+            if (res.status === "rejected") {
+              log("coin-evm/staking", "findFreeWithdrawId: getWithdrawalRequest call failed", {
+                currencyId,
+                valId: valId.toString(),
+                withdrawId: ids[i],
+                error: res.reason instanceof Error ? res.reason.message : String(res.reason),
+              });
+              continue;
+            }
+            if (res.value && !isWithdrawIdInUse(res.value)) return ids[i];
+          }
+        }
+
+        return null;
+      },
+      ctx.node,
+    );
+  } catch (error) {
+    log("coin-evm/staking", "findFreeWithdrawId: lookup failed", {
+      currencyId,
+      valId: valId.toString(),
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+};
+
+const callGetWithdrawalRequest = async (
+  provider: JsonRpcProvider,
+  iface: ethers.Interface,
+  contractAddress: string,
+  valId: bigint,
+  delegator: string,
+  withdrawId: number,
+): Promise<WithdrawalRequestRaw | null> => {
+  const data = iface.encodeFunctionData("getWithdrawalRequest", [valId, delegator, withdrawId]);
+  const raw = await provider.call({ to: contractAddress, data });
+  const decoded = iface.decodeFunctionResult("getWithdrawalRequest", raw);
+  return isWithdrawalRequestRaw(decoded) ? decoded : null;
+};
+
+/**
+ * Read the chain's current epoch via the staking precompile's `getEpoch`. Returns `null` on any
+ * read/decode failure so callers treat withdrawability as "unknown" (conservatively not ready).
+ */
+export const callGetEpoch = async (
+  provider: JsonRpcProvider,
+  iface: ethers.Interface,
+  contractAddress: string,
+): Promise<bigint | null> => {
+  try {
+    const data = iface.encodeFunctionData("getEpoch", []);
+    const raw = await provider.call({ to: contractAddress, data });
+    const decoded = iface.decodeFunctionResult("getEpoch", raw);
+    return Array.isArray(decoded) && typeof decoded[0] === "bigint" ? decoded[0] : null;
+  } catch (error) {
+    log("coin-evm/staking", "callGetEpoch: getEpoch call failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
   }
 };
 
