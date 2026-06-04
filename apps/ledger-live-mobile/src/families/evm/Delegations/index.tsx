@@ -285,7 +285,7 @@ function Delegations({ account }: { account: StakingAccount }) {
     if (!delegation) return [];
     const result: DelegationDrawerActions = [];
 
-    if (canUndelegate(account)) {
+    if (canUndelegate(account, delegation)) {
       result.push({
         label: t("delegation.actions.undelegate"),
         Icon: (props: IconProps) => (
@@ -400,7 +400,7 @@ function Delegations({ account }: { account: StakingAccount }) {
             }
           />
           {delegations.map((d, i) => (
-            <View key={d.validatorAddress} style={styles.delegationsWrapper}>
+            <View key={`${d.validatorAddress}-${d.status}`} style={styles.delegationsWrapper}>
               <DelegationRow
                 delegation={d}
                 currency={currency}
