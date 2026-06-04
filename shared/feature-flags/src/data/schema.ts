@@ -52,6 +52,11 @@ export type ResolutionConfig = z.infer<typeof ResolutionConfigSchema>;
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export const FeatureIdSchema = z.enum(Object.keys(flagRegistry) as [FeatureId, ...FeatureId[]]);
 
+/** Type guard: whether a string is a registered feature flag id. */
+export function isValidFeatureId(key: string): key is FeatureId {
+  return FeatureIdSchema.safeParse(key).success;
+}
+
 /** Schema that validates a single feature flag override value. */
 export const OverrideValueSchema = FeatureSchema.extend({ params: z.unknown().optional() });
 

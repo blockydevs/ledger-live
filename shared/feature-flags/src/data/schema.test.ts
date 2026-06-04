@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
-import { FeatureFlagsStateSchema, FeatureIdSchema, FeatureSchema } from "./schema";
+import { FeatureFlagsStateSchema, FeatureIdSchema, FeatureSchema, isValidFeatureId } from "./schema";
 import { FEATURE_FLAGS_DEFAULTS } from "../constants";
 
 describe("FeatureSchema schema", () => {
@@ -86,5 +86,16 @@ describe("FeatureIdSchema", () => {
 
   it("rejects unknown flag ids", () => {
     expect(() => FeatureIdSchema.parse("nonexistent_flag_xyz")).toThrow();
+  });
+});
+
+describe("isValidFeatureId", () => {
+  it("returns true for a registered flag id", () => {
+    expect(isValidFeatureId("mockFeature")).toBe(true);
+    expect(isValidFeatureId("ptxCard")).toBe(true);
+  });
+
+  it("returns false for an unknown id", () => {
+    expect(isValidFeatureId("nonexistent_flag_xyz")).toBe(false);
   });
 });
