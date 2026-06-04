@@ -492,7 +492,7 @@ export const WalletAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
 
     const serverRef = useRef<WalletAPIServer>(undefined);
 
-    const { webviewState, webviewRef, webviewProps, handleRefresh, webviewPartition } =
+    const { webviewState, webviewRef, setWebviewRef, webviewProps, handleRefresh, webviewPartition } =
       useWebviewState(
         {
           manifest,
@@ -544,7 +544,7 @@ export const WalletAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
           <NetworkErrorScreen refresh={handleRefresh} />
         )}
         <webview
-          ref={webviewRef}
+          ref={setWebviewRef}
           /**
            * There seem to be an issue between Electron webview and styled-components
            * (and React more broadly, cf. comment below).
