@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type {
   DeviceConnectionResult,
   DeviceIntentExecutorProps,
@@ -51,11 +51,13 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
 
   const flowStartedRef = useRef(false);
   const initializationCompletedRef = useRef(false);
+  const closeTrackedRef = useRef(false);
 
   useEffect(() => {
     if (!enabled) {
       flowStartedRef.current = false;
       initializationCompletedRef.current = false;
+      closeTrackedRef.current = false;
       return;
     }
 
@@ -79,9 +81,12 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
   );
 
   const wrappedOnUserCancel = useCallback(() => {
-    trackDrawerCloseButtonClicked({ sourceFlow });
-    if (!initializationCompletedRef.current) {
-      trackDeviceflowCanceled({ sourceFlow });
+    if (!closeTrackedRef.current) {
+      closeTrackedRef.current = true;
+      trackDrawerCloseButtonClicked({ sourceFlow });
+      if (!initializationCompletedRef.current) {
+        trackDeviceflowCanceled({ sourceFlow });
+      }
     }
     onUserCancel();
   }, [onUserCancel, sourceFlow]);
