@@ -207,13 +207,3 @@ overrides:
 minimumReleaseAge: 3000
 minimumReleaseAgeExclude:
   - "@ledgerhq/*"
-  # Renovate security update: zx@8.8.5
-  - zx@8.8.5
-  # Oxc toolchain (ledger-live-desktop)
-  - oxlint
-  - oxfmt
-  # TypeScript / Node types: new releases are often younger than minimumReleaseAge
-  - typescript
-  - "@types/node"
-  # hw-app-sui 0.8.0 fixes the mega-bundle issue (published same day)
-  - "@mysten/ledgerjs-hw-app-sui"
