@@ -1,18 +1,12 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Flex, Text } from "@ledgerhq/native-ui";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ScrollView } from "react-native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 import { getDeviceModel } from "@ledgerhq/devices";
-import { Device } from "@ledgerhq/live-common/hw/actions/types";
-import { useSelector, useDispatch } from "~/context/hooks";
+import { SeedOriginType } from "@ledgerhq/types-live";
 
-import { NavigatorName, ScreenName } from "~/const";
-import HelpDrawer from "../HelpDrawer";
-import DesyncOverlay from "../DesyncOverlay";
+import { useOpenReceiveDrawer } from "LLM/features/Receive";
 
-import type { SyncOnboardingScreenProps } from "../SyncOnboardingScreenProps";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { useKeepScreenAwake } from "~/hooks/useKeepScreenAwake";
-import useTwoStepDesync from "./useTwoStepDesync";
 import {
   completeOnboarding,
   setHasOrderedNano,
@@ -20,16 +14,15 @@ import {
   setIsOnboardingFlowReceiveSuccess,
   setReadOnlyMode,
 } from "~/actions/settings";
-import FirstStepSyncOnboarding from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/components/FirstStepSyncOnboarding";
-import SecondStepSyncOnboarding from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/components/SecondStepSyncOnboarding";
-import { useTranslation } from "~/context/Locale";
-import { ScrollView } from "react-native";
-import { TrackScreen } from "~/analytics";
 import { RootNavigation } from "~/components/RootNavigator/types/helpers";
-import { SeedOriginType } from "@ledgerhq/types-live";
-import { COMPANION_STATE, CompanionStep, SEED_STATE } from "./types";
-import { useOpenReceiveDrawer } from "LLM/features/Receive";
+import { NavigatorName, ScreenName } from "~/const";
+import { useSelector, useDispatch } from "~/context/hooks";
+import { useKeepScreenAwake } from "~/hooks/useKeepScreenAwake";
 import { isOnboardingFlowReceiveSuccessSelector } from "~/reducers/settings";
+import useTwoStepDesync from "~/screens/SyncOnboarding/TwoStepStepper/useTwoStepDesync";
+
+import { COMPANION_STATE, CompanionStep, SEED_STATE } from "../../types";
+import type { UseTwoStepSyncOnboardingCompanionViewModelProps } from "./types";
 
 /*
  * Constants
@@ -37,65 +30,18 @@ import { isOnboardingFlowReceiveSuccessSelector } from "~/reducers/settings";
 
 const READY_REDIRECT_DELAY_MS = 2500;
 
-/*
- * Types
- */
-
-export type TwoStepSyncOnboardingCompanionProps = {
-  /**
-   * A `Device` object
-   */
-  device: Device;
-  /**
-   * A react-navigation instance to handle navigation once the device is ready, when there is a desync
-   * issue, and to update the react-navigation header with available languages
-   */
-  navigation: SyncOnboardingScreenProps["navigation"];
-  /**
-   * Called when the polling from the companion component has definitely lost/is desync with the device
-   */
-  onLostDevice: () => void;
-
-  /**
-   * Called when the companion is displaying an alert message that should overlay
-   * all the screen, including the header
-   */
-  onShouldHeaderBeOverlaid: (shouldBeOverlaid: boolean) => void;
-
-  /**
-   * Updates any existing delay before displaying the hiding the header below an overlay
-   */
-  updateHeaderOverlayDelay: (delayMs: number) => void;
-
-  /**
-   * Called by the companion component to force a reset of the entire sync onboarding because the device is not in a correct state anymore
-   */
-  notifyEarlySecurityCheckShouldReset: () => void;
-};
-
-/**
- * Component representing the synchronous companion step, which polls the current device state
- * to display correctly information about the onboarding to the user
- *
- * The desync alert message overlay is rendered from this component to better handle relative position
- * with the vertical timeline.
- */
-
-export const TwoStepSyncOnboardingCompanion: React.FC<TwoStepSyncOnboardingCompanionProps> = ({
+export const useTwoStepSyncOnboardingCompanionViewModel = ({
   navigation,
   device,
   updateHeaderOverlayDelay,
   onShouldHeaderBeOverlaid,
   onLostDevice,
-  notifyEarlySecurityCheckShouldReset,
-}) => {
+}: UseTwoStepSyncOnboardingCompanionViewModelProps) => {
   const baseNavigation = useNavigation<RootNavigation>();
-  const { t } = useTranslation();
   /*
    * Local State
    */
   const [companionStep, setCompanionStep] = useState<CompanionStep>(COMPANION_STATE.SETUP);
-  const [isHelpDrawerOpen, setHelpDrawerOpen] = useState<boolean>(false);
   const [isPollingOn, setIsPollingOn] = useState<boolean>(true);
   const [isInitialised, setIsInitialised] = useState<boolean>(false);
   /*
@@ -234,50 +180,15 @@ export const TwoStepSyncOnboardingCompanion: React.FC<TwoStepSyncOnboardingCompa
     }
   }, [isOnboardingFlowReceiveSuccess, handleReceiveFlowSuccess, dispatchRedux, isInitialised]);
 
-  return (
-    <>
-      <HelpDrawer isOpen={isHelpDrawerOpen} onClose={() => setHelpDrawerOpen(false)} />
-      <Flex position="relative" flex={1} px={6}>
-        <DesyncOverlay
-          isOpen={twoStepDesync.isDesyncOverlayOpen}
-          delay={twoStepDesync.desyncOverlayDisplayDelayMs}
-          productName={productName}
-        />
-        <ScrollView showsVerticalScrollIndicator={false} ref={scrollViewRef}>
-          <Flex paddingBottom={10}>
-            <Text variant="h4" fontWeight="semiBold">
-              {t("syncOnboarding.twoStepTitle")}
-            </Text>
-            <FirstStepSyncOnboarding
-              device={device}
-              productName={productName}
-              navigation={navigation}
-              onLostDevice={onLostDevice}
-              handleSeedGenerationDelay={twoStepDesync.handleSeedGenerationDelay}
-              notifyEarlySecurityCheckShouldReset={notifyEarlySecurityCheckShouldReset}
-              handlePollingError={twoStepDesync.handlePollingError}
-              handleFinishStep={(nextStep: SEED_STATE) => setCompanionStep(nextStep)}
-              isPollingOn={isPollingOn}
-              setIsPollingOn={setIsPollingOn}
-              parentRef={scrollViewRef}
-              analyticsSeedConfiguration={analyticsSeedConfiguration}
-            />
-            <SecondStepSyncOnboarding
-              companionStep={companionStep}
-              device={device}
-              handleDone={handleSecondStepFinish}
-              analyticsSeedConfiguration={analyticsSeedConfiguration}
-            />
-            {companionStep === SEED_STATE.NEW_SEED || companionStep === SEED_STATE.RESTORE ? (
-              <TrackScreen
-                category="Set up device: Secure your crypto"
-                flow="onboarding"
-                seedConfiguration={analyticsSeedConfiguration.current}
-              />
-            ) : null}
-          </Flex>
-        </ScrollView>
-      </Flex>
-    </>
-  );
+  return {
+    productName,
+    scrollViewRef,
+    analyticsSeedConfiguration,
+    companionStep,
+    setCompanionStep,
+    isPollingOn,
+    setIsPollingOn,
+    twoStepDesync,
+    handleSecondStepFinish,
+  };
 };
