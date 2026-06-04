@@ -67,9 +67,10 @@ export function useDeviceConnectionComponentLWMViewModel({
   }
 
   // Funnel-firing guards: each event fires at most once per ViewModel lifetime.
-  const firedRef = useRef<{ prompted: boolean; connecting: boolean }>({
+  const firedRef = useRef({
     prompted: false,
     connecting: false,
+    connected: false,
   });
 
   useEffect(() => {
@@ -127,7 +128,10 @@ export function useDeviceConnectionComponentLWMViewModel({
       const modelId = dmkToLedgerDeviceIdMap[result.connectedDevice.modelId];
       const transport: "ble" | "usb" = result.connectedDevice.type === "USB" ? "usb" : "ble";
 
-      trackDeviceConnected({ sourceFlow, modelId, transport });
+      if (!firedRef.current.connected) {
+        firedRef.current.connected = true;
+        trackDeviceConnected({ sourceFlow, modelId, transport });
+      }
 
       dispatch(
         setLastConnectedDevice({
