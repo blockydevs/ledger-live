@@ -3,8 +3,8 @@ import { StyleSheet } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { Box } from "@ledgerhq/lumen-ui-rnative";
 import { useBottomFadeGradientViewModel } from "./useBottomFadeGradientViewModel";
-import { GRADIENT_HEIGHT } from "LLM/features/OperationsHistory/const";
 
+export const GRADIENT_HEIGHT = 80;
 export const GRADIENT_LOCATIONS: number[] = [0, 0.35, 0.7, 1];
 
 export function BottomFadeGradient() {

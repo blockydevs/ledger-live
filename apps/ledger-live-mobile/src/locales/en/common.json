@@ -8080,7 +8080,13 @@
   },
   "market": {
     "title": "Market",
-    "exploreTitle": "Explore the market",
+    "assets": {
+      "title": "Assets",
+      "error": {
+        "title": "Couldn't load assets",
+        "description": "Something went wrong while loading the asset list. Please try again later."
+      }
+    },
     "filters": {
       "sort": "Sort",
       "filter": "Filter",
