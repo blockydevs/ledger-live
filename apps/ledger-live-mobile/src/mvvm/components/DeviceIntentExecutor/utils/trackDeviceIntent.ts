@@ -278,6 +278,6 @@ export const trackDeviceActionButtonClicked = (params: {
 export const trackDrawerCloseButtonClicked = (params: { sourceFlow: SourceFlow }): void => {
   track("button_clicked", {
     ...getDeviceUxV2BaseProperties(params.sourceFlow),
-    button: "Close",
+    button: DEVICE_ACTION_BUTTON.Close,
   });
 };

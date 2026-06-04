@@ -49,6 +49,14 @@ export function DeviceDeprecatedNonBlockingState({
     });
   };
 
+  const handleLearnMore = () => {
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      modelId,
+      button: CONNECT_APP_BUTTON.LearnMore,
+    });
+  };
+
   return (
     <>
       <TrackScreen
@@ -63,6 +71,7 @@ export function DeviceDeprecatedNonBlockingState({
         date={decision.supportEndDate}
         onContinue={handleContinue}
         onUpgrade={handleUpgrade}
+        onLearnMore={handleLearnMore}
         productName={getDeviceModel(decision.deviceModelId).productName}
         screenName={
           decision.screenSequence.includes("warning")
