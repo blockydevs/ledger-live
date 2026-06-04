@@ -70,7 +70,6 @@ export function useDeviceConnectionComponentLWMViewModel({
   const firedRef = useRef({
     prompted: false,
     connecting: false,
-    connected: false,
   });
 
   useEffect(() => {
@@ -128,10 +127,7 @@ export function useDeviceConnectionComponentLWMViewModel({
       const modelId = dmkToLedgerDeviceIdMap[result.connectedDevice.modelId];
       const transport: "ble" | "usb" = result.connectedDevice.type === "USB" ? "usb" : "ble";
 
-      if (!firedRef.current.connected) {
-        firedRef.current.connected = true;
-        trackDeviceConnected({ sourceFlow, modelId, transport });
-      }
+      trackDeviceConnected({ sourceFlow, modelId, transport });
 
       dispatch(
         setLastConnectedDevice({
