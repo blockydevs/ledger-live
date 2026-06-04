@@ -3187,6 +3187,9 @@ importers:
       '@ledgerhq/live-wallet':
         specifier: workspace:^
         version: link:../../libs/live-wallet
+      '@ledgerhq/logs':
+        specifier: workspace:^
+        version: link:../../libs/ledgerjs/packages/logs
       '@ledgerhq/types-devices':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/types-devices
