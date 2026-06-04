@@ -26,8 +26,6 @@ export type {
   QuoteApprovalTransaction,
   QuoteEstimatedNetworkFee,
   QuoteApprovalNetworkFee,
-  CustomSwapParams,
-  CustomSwapResult,
 } from "@ledgerhq/wallet-api-exchange-module";
 
 export {

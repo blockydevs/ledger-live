@@ -1,15 +1,15 @@
 import type { Account, EIP712Message } from "@ledgerhq/types-live";
-import type {
-  CustomSwapResult,
-  Quote,
-  QuoteApprovalTransaction,
-} from "../quotes/types";
+import type { CustomSwapParams, CustomSwapResult } from "@ledgerhq/wallet-api-exchange-module";
+
+import type { Quote, QuoteApprovalTransaction } from "../quotes/types";
 import type {
   DexBuildContext,
   DexProvider,
   DexTransactionData,
 } from "../dex";
 import type { RfqProvider } from "../intents/signRfqOrderEvm/rfqTypedData";
+
+export type { CustomSwapParams, CustomSwapResult };
 
 /**
  * Plan produced by {@link planSwapFlow}: tells the machine which sub-paths

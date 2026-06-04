@@ -15,6 +15,8 @@ export type {
 } from "./machine";
 export type {
   BroadcastIntentInput,
+  CustomSwapParams,
+  CustomSwapResult,
   PlanSwapFlowInput,
   SignApprovalIntentInput,
   SignPermit2IntentInput,

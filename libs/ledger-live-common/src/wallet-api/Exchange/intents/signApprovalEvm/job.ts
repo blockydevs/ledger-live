@@ -12,6 +12,7 @@ import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { DeviceConnectionResult, Job } from "@ledgerhq/device-intent";
 import { getCryptoCurrencyById } from "../../../../currencies";
 import { DmkSignerEth } from "@ledgerhq/live-signer-evm";
+import { mapDmkSignerError } from "../shared/mapDmkSignerError";
 import type { QuoteApprovalTransaction } from "../../quotes/types";
 import type { SignApprovalEvmIntentInput, SignApprovalEvmJobState } from "./types";
 
@@ -89,10 +90,9 @@ function runSignApproval(
         finalize(cancel),
         map((state): SignApprovalEvmJobState | null => {
           if (state.status === DeviceActionStatus.Error) {
-            const tag = (state.error as { _tag?: string })._tag;
             return {
               type: "failed",
-              error: tag ? new Error(tag) : new Error("Sign approval failed"),
+              error: mapDmkSignerError(state.error, "Sign approval failed"),
             };
           }
           if (state.status === DeviceActionStatus.Completed) {

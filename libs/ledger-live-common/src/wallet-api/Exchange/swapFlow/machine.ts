@@ -40,14 +40,9 @@ export type SwapFlowStartInput<TIntent, TInitInput> = {
   /** Device-init payload reused for every device-bound phase. */
   initInput: TInitInput;
   resolvers: SwapFlowResolvers;
-  /**
-   * Forwarded to the host so it can re-issue the executor props (the
-   * machine itself does not depend on this; we just keep it on context).
-   */
-  meta?: Record<string, unknown>;
   // Phantom markers so both `TIntent` and `TInitInput` contribute to the
-  // inferred input shape even when `meta` is omitted; without them TS
-  // widens these type parameters to `unknown` at the call site.
+  // inferred input shape; without them TS widens these type parameters
+  // to `unknown` at the call site.
   _intent?: TIntent;
   _initInput?: TInitInput;
 };

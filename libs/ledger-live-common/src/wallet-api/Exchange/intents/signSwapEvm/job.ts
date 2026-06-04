@@ -16,6 +16,7 @@ import type { Account } from "@ledgerhq/types-live";
 import type { DeviceConnectionResult, Job } from "@ledgerhq/device-intent";
 import { getCryptoCurrencyById } from "../../../../currencies";
 import { DmkSignerEth } from "@ledgerhq/live-signer-evm";
+import { mapDmkSignerError } from "../shared/mapDmkSignerError";
 import type { DexTransactionData } from "../../dex";
 import type { SignSwapEvmIntentInput, SignSwapEvmJobState } from "./types";
 
@@ -85,10 +86,9 @@ function runSignSwap(
         finalize(cancel),
         map((state): SignSwapEvmJobState | null => {
           if (state.status === DeviceActionStatus.Error) {
-            const tag = (state.error as { _tag?: string })._tag;
             return {
               type: "failed",
-              error: tag ? new Error(tag) : new Error("Sign swap failed"),
+              error: mapDmkSignerError(state.error, "Sign swap failed"),
             };
           }
           if (state.status === DeviceActionStatus.Completed) {

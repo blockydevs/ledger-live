@@ -9,6 +9,7 @@ import { SignTypedDataDAStateStep } from "@ledgerhq/device-signer-kit-ethereum";
 import type { DeviceConnectionResult } from "@ledgerhq/device-intent";
 import type { EIP712Message } from "@ledgerhq/types-live";
 import { DmkSignerEth } from "@ledgerhq/live-signer-evm";
+import { mapDmkSignerError } from "./mapDmkSignerError";
 
 /**
  * Discriminated union of states emitted by the shared EIP-712 typed-data
@@ -57,10 +58,9 @@ export function runSignTypedDataEvm(
       finalize(cancel),
       map((state): SignTypedDataEvmRunState | null => {
         if (state.status === DeviceActionStatus.Error) {
-          const tag = (state.error as { _tag?: string })._tag;
           return {
             type: "failed",
-            error: tag ? new Error(tag) : new Error(errorLabel),
+            error: mapDmkSignerError(state.error, errorLabel),
           };
         }
         if (state.status === DeviceActionStatus.Completed) {
