@@ -38,7 +38,6 @@ function mockMarketAssets(overrides: Partial<ReturnType<typeof useMarketAssets>>
   mockedUseMarketAssets.mockReturnValue({
     assets: [createMarketAssetDisplayData()],
     loading: false,
-    loadingMore: false,
     isError: false,
     emptyState: undefined,
     onEndReached: jest.fn(),
@@ -46,10 +45,7 @@ function mockMarketAssets(overrides: Partial<ReturnType<typeof useMarketAssets>>
   });
 }
 
-function withAssetDiscoverability(
-  enabled: boolean,
-  baseTransform?: (state: State) => State,
-) {
+function withAssetDiscoverability(enabled: boolean, baseTransform?: (state: State) => State) {
   return {
     overrideInitialState: withFlagOverrides(
       { lwmWallet40: { enabled: true, params: { assetDiscoverability: enabled } } },
@@ -57,6 +53,14 @@ function withAssetDiscoverability(
     ),
   };
 }
+
+const defaultMarketAssetsParams = {
+  search: "",
+  category: "all",
+  sorting: "marketCap",
+  timeframe: "1D",
+  starredMarketCoins: [],
+};
 
 describe("useMarketScreenViewModel", () => {
   beforeEach(() => {
@@ -76,11 +80,10 @@ describe("useMarketScreenViewModel", () => {
   });
 
   it("forwards the assets and their loading / error flags", () => {
-    mockMarketAssets({ loading: true, loadingMore: true, isError: false });
+    mockMarketAssets({ loading: true, isError: false });
     const { result } = renderHook(() => useMarketScreenViewModel());
     expect(result.current.assetsList.assets).toHaveLength(1);
     expect(result.current.assetsList.assetsLoading).toBe(true);
-    expect(result.current.assetsList.assetsLoadingMore).toBe(true);
     expect(result.current.assetsList.assetsError).toBe(false);
   });
 
@@ -105,31 +108,22 @@ describe("useMarketScreenViewModel", () => {
     jest.useFakeTimers();
     const { result } = renderHook(() => useMarketScreenViewModel());
 
-    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
-      search: "",
-      category: "all",
-      starredMarketCoins: [],
-    });
+    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith(defaultMarketAssetsParams);
 
     act(() => result.current.search.onChangeText("eth"));
 
     expect(result.current.isSearchActive).toBe(true);
     expect(result.current.assetsList.assets).toEqual([]);
     expect(result.current.assetsList.assetsLoading).toBe(true);
-    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
-      search: "",
-      category: "all",
-      starredMarketCoins: [],
-    });
+    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith(defaultMarketAssetsParams);
 
     act(() => {
       jest.advanceTimersByTime(500);
     });
 
     expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
+      ...defaultMarketAssetsParams,
       search: "eth",
-      category: "all",
-      starredMarketCoins: [],
     });
   });
 
@@ -143,9 +137,8 @@ describe("useMarketScreenViewModel", () => {
     });
 
     expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
+      ...defaultMarketAssetsParams,
       search: "btc",
-      category: "all",
-      starredMarketCoins: [],
     });
 
     act(() => result.current.search.onClear());
@@ -153,11 +146,7 @@ describe("useMarketScreenViewModel", () => {
     expect(result.current.search.value).toBe("");
     expect(result.current.isSearchActive).toBe(false);
     expect(result.current.assetsList.assets).toHaveLength(1);
-    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
-      search: "",
-      category: "all",
-      starredMarketCoins: [],
-    });
+    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith(defaultMarketAssetsParams);
   });
 
   it("forwards the selected category and starred ids to the assets hook", () => {
@@ -173,9 +162,26 @@ describe("useMarketScreenViewModel", () => {
 
     expect(result.current.assetsList.categories.selectedCategory).toBe("starred");
     expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
-      search: "",
+      ...defaultMarketAssetsParams,
       category: "starred",
       starredMarketCoins,
+    });
+  });
+
+  it("forwards sorting and timeframe filters to the assets hook", () => {
+    const { result } = renderHook(() => useMarketScreenViewModel(), {
+      overrideInitialState: (state: State): State => ({
+        ...state,
+        marketListConfig: { ...state.marketListConfig, sorting: "losers", timeframe: "30D" },
+      }),
+    });
+
+    expect(result.current.assetsList.filters.sorting).toBe("losers");
+    expect(result.current.assetsList.filters.timeframe).toBe("30D");
+    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
+      ...defaultMarketAssetsParams,
+      sorting: "losers",
+      timeframe: "30D",
     });
   });
 
@@ -190,11 +196,7 @@ describe("useMarketScreenViewModel", () => {
       page: "Market",
     });
     expect(store.getState().marketListConfig.category).toBe("all");
-    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
-      search: "",
-      category: "all",
-      starredMarketCoins: [],
-    });
+    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith(defaultMarketAssetsParams);
   });
 
   it("tracks and persists the favorites category", () => {
@@ -209,19 +211,15 @@ describe("useMarketScreenViewModel", () => {
     });
     expect(store.getState().marketListConfig.category).toBe("starred");
     expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
-      search: "",
+      ...defaultMarketAssetsParams,
       category: "starred",
-      starredMarketCoins: [],
     });
   });
 
   it("should set the market list category from a valid route param", () => {
     mockMarketListRoute("stocks");
 
-    const { store } = renderHook(
-      () => useMarketScreenViewModel(),
-      withAssetDiscoverability(true),
-    );
+    const { store } = renderHook(() => useMarketScreenViewModel(), withAssetDiscoverability(true));
 
     expect(store.getState().marketListConfig.category).toBe("stocks");
   });
@@ -229,10 +227,7 @@ describe("useMarketScreenViewModel", () => {
   it("should support the starred route category", () => {
     mockMarketListRoute("starred");
 
-    const { store } = renderHook(
-      () => useMarketScreenViewModel(),
-      withAssetDiscoverability(true),
-    );
+    const { store } = renderHook(() => useMarketScreenViewModel(), withAssetDiscoverability(true));
 
     expect(store.getState().marketListConfig.category).toBe("starred");
   });
