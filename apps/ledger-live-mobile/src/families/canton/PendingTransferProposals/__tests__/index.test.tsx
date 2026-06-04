@@ -9,11 +9,13 @@ import { ACCOUNT_XPUB, createCantonAccount, createRawProposal } from "./test-uti
 
 const unit: Unit = { code: "CANTON", magnitude: 38, name: "Canton" };
 const mockAccount = createCantonAccount();
+const getMockUnit = () => unit;
 
 const buildIncoming = (contractId = "contract-123") => {
   const { incoming } = processTransferProposals(
     [createRawProposal(contractId, "sender-address", ACCOUNT_XPUB)],
     ACCOUNT_XPUB,
+    getMockUnit,
   );
   return { grouped: groupByDay(incoming), count: incoming.length };
 };
@@ -22,6 +24,7 @@ const buildOutgoing = (contractId = "contract-456") => {
   const { outgoing } = processTransferProposals(
     [createRawProposal(contractId, ACCOUNT_XPUB, "receiver-address")],
     ACCOUNT_XPUB,
+    getMockUnit,
   );
   return { grouped: groupByDay(outgoing), count: outgoing.length };
 };

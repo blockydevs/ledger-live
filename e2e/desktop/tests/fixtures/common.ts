@@ -21,7 +21,7 @@ import { attachNetworkLogging } from "../utils/networkLogging";
 import { LWD_WALLET_40_FF_DISABLED, LWD_WALLET_40_FF_ENABLED } from "tests/utils/featureFlagUtils";
 import type { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
 import { unregisterAllTransportModules } from "@ledgerhq/live-common/hw/index";
-import { parseExtraFeatureFlags } from "../utils/featureFlagsJsonUtils";
+import { parseExtraFeatureFlags } from "@ledgerhq/live-common/e2e/featureFlagsJsonUtils";
 
 type CliCommand = (userdataPath?: string) => Observable<unknown> | Promise<unknown> | string;
 

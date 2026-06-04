@@ -344,16 +344,28 @@ const customRenderHook = <Result,>(
   hook: () => Result,
   {
     overrideInitialState: overrideInitialState = state => state,
+    innerWrapper,
     ...renderOptions
-  }: ExtraOptions = {},
+  }: ExtraOptions & {
+    /**
+     * Optional wrapper rendered INSIDE the test-renderer `Providers`. Use this
+     * to inject feature-scoped React Contexts (e.g. local providers a
+     * ViewModel hook depends on) while keeping Redux / Theme / Navigation
+     * from the test renderer.
+     */
+    innerWrapper?: React.ComponentType<{ children?: React.ReactNode }>;
+  } = {},
 ) => {
   const store = createStore({
     overrideInitialState,
   });
   const ProvidersWrapper = ({ children }: WrapperProps): React.JSX.Element => {
+    const inner = innerWrapper
+      ? React.createElement(innerWrapper, undefined, children)
+      : children;
     return (
       <Providers store={store} renderType={RenderType.HOOK}>
-        {children}
+        {inner}
       </Providers>
     );
   };

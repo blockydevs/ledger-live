@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Keyboard } from "react-native";
-import { useBottomSheetRef } from "@ledgerhq/lumen-ui-rnative";
+import { BottomSheetProps, useBottomSheetRef } from "@ledgerhq/lumen-ui-rnative";
 import { useIsFocused } from "@react-navigation/native";
 import { useSelector } from "~/context/hooks";
 import { isModalLockedSelector } from "~/reducers/appstate";
+import { bottomSheetGradientByTone } from "LLM/components/BottomSheetGradient";
+import { useBottomSheetBackgroundToneRequests } from "LLM/hooks/useBottomSheetBackgroundToneRequests";
 import { DrawerInQueue, useQueuedDrawerContext } from "./QueuedDrawersContext";
 import { logDrawer } from "./utils/logDrawer";
 
@@ -26,11 +28,15 @@ const useQueuedDrawerBottomSheet = ({
   onModalHide,
   preventBackdropClick,
 }: UseQueuedDrawerBottomSheetProps) => {
+  const { backgroundTone, backgroundContextValue } = useBottomSheetBackgroundToneRequests();
   const { addDrawerToQueue } = useQueuedDrawerContext();
   const drawerInQueueRef = useRef<DrawerInQueue | undefined>(undefined);
   const bottomSheetRef = useBottomSheetRef();
   const isFocused = useIsFocused();
   const areDrawersLocked = useSelector(isModalLockedSelector);
+  const backgroundComponent: BottomSheetProps["backgroundComponent"] = backgroundTone
+    ? bottomSheetGradientByTone[backgroundTone]
+    : undefined;
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -138,6 +144,8 @@ const useQueuedDrawerBottomSheet = ({
     handleDismiss,
     onBack,
     enablePanDownToClose: !areDrawersLocked && !preventBackdropClick,
+    backgroundContextValue,
+    backgroundComponent,
   };
 };
 

@@ -23,7 +23,7 @@ listen(log => {
 });
 
 setGlobalOnBridgeError(e => logger.critical(e));
-setDeviceMode("polling");
+setDeviceMode("event");
 setWalletAPIVersion(WALLET_API_VERSION);
 liveBlindSigningReporter.setContext({
   platform: "mobile",
@@ -123,6 +123,8 @@ setSupportedCurrencies([
   "sei_evm",
   "berachain",
   "hyperevm",
+  "arc",
+  "arc_testnet",
   "coreum",
   "injective",
   "casper",

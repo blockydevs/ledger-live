@@ -39,7 +39,11 @@ const TEST_ID = {
   MARKET_PRICE_PERCENT: "asset-detail-market-price-percent",
   MARKET_PRICE_FIAT_VARIATION: "asset-detail-market-price-fiat-variation",
   MARKET_DATA_SECTION: "asset-detail-market-data-section",
+  CHART_SECTION: "asset-detail-chart-section",
+  LINE_CHART_RANGE_DEFAULT: "line-chart-range-1D",
+  LINE_CHART_RANGE_ONE_YEAR: "line-chart-range-1Y",
   TRANSACTIONS_SECTION: "asset-detail-transactions-section",
+  ACTION_BAR: "asset-detail-action-bar",
   ACTION_BUY: "asset-detail-action-buy",
   ACTION_RECEIVE: "asset-detail-action-receive",
   ACTION_SELL: "asset-detail-action-sell",
@@ -133,6 +137,8 @@ const expectNoOwnedView = () => {
   expect(screen.queryByTestId(TEST_ID.ADDRESS_LIST)).not.toBeInTheDocument();
 };
 const expectNotFound = () => expect(screen.getByText(LABEL.NOT_FOUND)).toBeVisible();
+const expectActionBarHidden = () =>
+  expect(screen.queryByTestId(TEST_ID.ACTION_BAR)).not.toBeInTheDocument();
 
 type OwnedAsset = {
   label: string;
@@ -315,6 +321,26 @@ describe("AssetDetail integration", () => {
       expect(screen.queryByTestId(TEST_ID.EARN_DEPOSIT)).not.toBeInTheDocument();
     });
 
+    it("shows the earn banner when stakeable with a zero-balance account", async () => {
+      mockGetCanStakeCurrency.mockReturnValue(true);
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      const account = genAccount("asset-detail-staking-zero-balance", { currency: btc });
+      account.balance = new BigNumber(0);
+      account.spendableBalance = new BigNumber(0);
+      const item = buildDistributionItem({ accounts: [account], amount: 0, countervalue: 0 });
+      setupRoute("bitcoin", { bySlug: { bitcoin: item }, list: [item] });
+
+      renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.EARN_BANNER)).toBeVisible();
+        expect(screen.getByText("Earn with this asset")).toBeVisible();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.AVAILABLE_BALANCE)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(TEST_ID.EARN_DEPOSIT)).not.toBeInTheDocument();
+    });
+
     it("shows available balance and earn deposit cards when stakeable with an earn deposit", async () => {
       mockGetCanStakeCurrency.mockReturnValue(true);
       mockMarket.withData(MarketMockedResponse.bitcoinDetail);
@@ -327,12 +353,43 @@ describe("AssetDetail integration", () => {
       renderWithMockedCounterValuesProvider(<AssetDetail />);
 
       await waitFor(() => {
-        expect(screen.getByTestId(TEST_ID.STAKING_SECTION)).toBeVisible();
         expect(screen.getByTestId(TEST_ID.AVAILABLE_BALANCE)).toBeVisible();
         expect(screen.getByTestId(TEST_ID.EARN_DEPOSIT)).toBeVisible();
       });
 
       expect(screen.queryByTestId(TEST_ID.EARN_BANNER)).not.toBeInTheDocument();
+    });
+
+    describe("chart section", () => {
+      it("renders with the 1D range selected by default and switches range on click", async () => {
+        mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+        setupRoute("bitcoin", OWNED_ASSETS[0].buildDistribution());
+
+        const { user } = renderWithMockedCounterValuesProvider(<AssetDetail />);
+
+        await waitFor(() => {
+          expect(screen.getByTestId(TEST_ID.CHART_SECTION)).toBeVisible();
+        });
+
+        const defaultRange = screen.getByTestId(TEST_ID.LINE_CHART_RANGE_DEFAULT);
+        expect(defaultRange).toHaveAttribute("aria-checked", "true");
+
+        const oneYearRange = screen.getByTestId(TEST_ID.LINE_CHART_RANGE_ONE_YEAR);
+        expect(oneYearRange).toHaveAttribute("aria-checked", "false");
+
+        await user.click(oneYearRange);
+
+        await waitFor(() => {
+          expect(screen.getByTestId(TEST_ID.LINE_CHART_RANGE_ONE_YEAR)).toHaveAttribute(
+            "aria-checked",
+            "true",
+          );
+        });
+        expect(screen.getByTestId(TEST_ID.LINE_CHART_RANGE_DEFAULT)).toHaveAttribute(
+          "aria-checked",
+          "false",
+        );
+      });
     });
 
     describe("addresses see all", () => {
@@ -591,6 +648,53 @@ describe("AssetDetail integration", () => {
       },
     );
 
+    it("shows the earn banner when the asset is stakeable and not in the portfolio", async () => {
+      mockGetCanStakeCurrency.mockReturnValue(true);
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", { list: [] });
+
+      render(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.EARN_BANNER)).toBeVisible();
+        expect(screen.getByText("Earn with this asset")).toBeVisible();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.AVAILABLE_BALANCE)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(TEST_ID.EARN_DEPOSIT)).not.toBeInTheDocument();
+    });
+
+    it("shows APY in the earn banner in discovery mode when interest rate is available", async () => {
+      mockGetCanStakeCurrency.mockReturnValue(true);
+      mockUseInterestRatesByCurrencies.mockReturnValue({
+        bitcoin: { value: 0.12, type: "APY" },
+      });
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", { list: [] });
+
+      render(<AssetDetail />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId(TEST_ID.EARN_BANNER)).toBeVisible();
+        expect(screen.getByText("Earn up to 12.0% APY")).toBeVisible();
+      });
+    });
+
+    it("hides the staking section in discovery mode when the asset is not stakeable", async () => {
+      mockMarket.withData(MarketMockedResponse.bitcoinDetail);
+      setupRoute("bitcoin", { list: [] });
+
+      render(<AssetDetail />);
+
+      await waitFor(() => {
+        expectHeader();
+        expectMarketView();
+      });
+
+      expect(screen.queryByTestId(TEST_ID.STAKING_SECTION)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(TEST_ID.EARN_BANNER)).not.toBeInTheDocument();
+    });
+
     it.each(DISCOVERY_ASSETS)(
       "$label - falls back to Market API when DADA fails",
       async ({ routeId, ticker, marketResponse }) => {
@@ -630,13 +734,18 @@ describe("AssetDetail integration", () => {
     beforeEach(() => jest.useFakeTimers());
     afterEach(() => jest.useRealTimers());
 
-    it("shows skeleton while waiting for Market response", () => {
+    it("shows per-section skeletons while waiting for Market response", () => {
       mockMarket.hang();
       setupRoute("unknown-asset", { list: [] });
 
       render(<AssetDetail />);
 
-      expect(screen.queryByTestId(TEST_ID.HEADER)).not.toBeInTheDocument();
+      expect(screen.getByTestId(TEST_ID.MARKET_PRICE_SECTION)).toBeVisible();
+      expect(screen.getByTestId(TEST_ID.MARKET_DATA_SECTION)).toBeVisible();
+      expectActionBarHidden();
+      expect(screen.getByTestId("asset-detail-total-balance-skeleton")).toBeVisible();
+      expect(screen.getByTestId("asset-detail-address-list-skeleton")).toBeVisible();
+      expect(screen.getByTestId("asset-detail-transactions-skeleton")).toBeVisible();
       expect(screen.queryByText(LABEL.NOT_FOUND)).not.toBeInTheDocument();
     });
   });
@@ -659,6 +768,8 @@ describe("AssetDetail integration", () => {
 
       render(<AssetDetail />);
 
+      expectActionBarHidden();
+      expect(screen.getByTestId("asset-detail-total-balance-skeleton")).toBeVisible();
       expect(screen.queryByText(LABEL.NOT_FOUND)).not.toBeInTheDocument();
     });
   });

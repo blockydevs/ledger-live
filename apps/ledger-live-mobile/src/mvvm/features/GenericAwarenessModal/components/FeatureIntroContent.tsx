@@ -2,18 +2,30 @@ import React from "react";
 import { Box, Button, Text } from "@ledgerhq/lumen-ui-rnative";
 import * as Icons from "@ledgerhq/lumen-ui-rnative/symbols";
 import { Image, Linking } from "react-native";
-import type { FeatureIntroContent as FeatureIntroContentData } from "../types";
+import type { GenericAwarenessModalFeatureIntro } from "@ledgerhq/live-common/genericAwarenessModal";
 
 type FeatureIntroContentProps = Readonly<{
-  content: FeatureIntroContentData;
+  content: GenericAwarenessModalFeatureIntro;
   onClose: () => void;
+  onPrimaryPress: () => void;
+  onSecondaryPress: () => void;
 }>;
 
-export function FeatureIntroContent({ content, onClose }: FeatureIntroContentProps) {
+const TITLE_NUMBER_OF_LINES = 2;
+const SUBTITLE_NUMBER_OF_LINES = 3;
+const ITEM_TITLE_NUMBER_OF_LINES = 1;
+const ITEM_SUBTITLE_NUMBER_OF_LINES = 2;
+
+export function FeatureIntroContent({
+  content,
+  onClose,
+  onPrimaryPress,
+  onSecondaryPress,
+}: FeatureIntroContentProps) {
   const {
     imageUrl,
     title,
-    description,
+    subtitle,
     items,
     primaryButtonLabel,
     primaryButtonLink,
@@ -21,7 +33,9 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
     secondaryButtonLink,
   } = content;
 
-  const handleButtonPress = async (link: string) => {
+  const handleButtonPress = async (link: string, onPress: () => void) => {
+    onPress();
+
     if (link) {
       try {
         await Linking.openURL(link);
@@ -52,6 +66,7 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
           color: "base",
           marginBottom: "s2",
         }}
+        numberOfLines={TITLE_NUMBER_OF_LINES}
       >
         {title}
       </Text>
@@ -62,13 +77,14 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
           color: "muted",
           marginBottom: "s8",
         }}
+        numberOfLines={SUBTITLE_NUMBER_OF_LINES}
       >
-        {description}
+        {subtitle}
       </Text>
 
       <Box lx={{ gap: "s20", marginBottom: "s20" }}>
         {items.map(item => {
-          const Icon = Icons[item.icon] ?? Icons.Wallet;
+          const Icon = Icons[item.icon as keyof typeof Icons] ?? Icons.Wallet;
 
           return (
             <Box key={item.title} lx={{ flexDirection: "row", gap: "s16", alignItems: "center" }}>
@@ -79,11 +95,16 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
                   lx={{
                     color: "base",
                   }}
+                  numberOfLines={ITEM_TITLE_NUMBER_OF_LINES}
                 >
                   {item.title}
                 </Text>
-                <Text typography="body2" lx={{ color: "muted" }}>
-                  {item.description}
+                <Text
+                  typography="body2"
+                  lx={{ color: "muted" }}
+                  numberOfLines={ITEM_SUBTITLE_NUMBER_OF_LINES}
+                >
+                  {item.subtitle}
                 </Text>
               </Box>
             </Box>
@@ -94,14 +115,14 @@ export function FeatureIntroContent({ content, onClose }: FeatureIntroContentPro
       <Button
         appearance="base"
         size="lg"
-        onPress={() => handleButtonPress(primaryButtonLink)}
+        onPress={() => handleButtonPress(primaryButtonLink, onPrimaryPress)}
       >
         {primaryButtonLabel}
       </Button>
       <Button
         appearance="gray"
         size="lg"
-        onPress={() => handleButtonPress(secondaryButtonLink)}
+        onPress={() => handleButtonPress(secondaryButtonLink, onSecondaryPress)}
       >
         {secondaryButtonLabel}
       </Button>

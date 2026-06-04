@@ -32,8 +32,6 @@ export function useStakingSectionViewModel(distributionItem: DistributionItem) {
   const { currency, accounts } = distributionItem;
   const currencyId = currency.id;
 
-  const hasAccounts = accounts.length > 0;
-
   const { availableBalance, earnDeposit } = useMemo(
     () => computeAvailableAndEarnDeposit(accounts),
     [accounts],
@@ -51,7 +49,7 @@ export function useStakingSectionViewModel(distributionItem: DistributionItem) {
   );
 
   const state: StakingSectionState = useMemo(() => {
-    if (!hasAccounts || !isStakeable) return { type: "hidden" };
+    if (!isStakeable) return { type: "hidden" };
 
     const buildBannerState = (label: string): Extract<StakingSectionState, { type: "banner" }> => ({
       type: "banner",
@@ -90,9 +88,8 @@ export function useStakingSectionViewModel(distributionItem: DistributionItem) {
 
     return buildBannerState(t("assetDetails.staking.earnBannerDefault"));
   }, [
-    hasAccounts,
-    hasEarnDeposit,
     isStakeable,
+    hasEarnDeposit,
     distributionItem,
     availableBalance,
     earnDeposit,

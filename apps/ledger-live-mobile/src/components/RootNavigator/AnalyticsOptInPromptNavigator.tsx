@@ -13,6 +13,8 @@ import { AnalyticsOptInPromptNavigatorParamList } from "./types/AnalyticsOptInPr
 import { useRoute } from "@react-navigation/core";
 import { RootComposite, StackNavigatorProps } from "./types/helpers";
 import { BaseNavigatorStackParamList } from "./types/BaseNavigator";
+import AnalyticsConsentScreen from "LLM/features/AnalyticsConsent/screens/AnalyticsConsentScreen";
+import SetPreferences from "LLM/features/AnalyticsConsent/screens/SetPreferences";
 
 const screensByVariant = {
   [ABTestingVariants.variantA]: {
@@ -22,6 +24,10 @@ const screensByVariant = {
   [ABTestingVariants.variantB]: {
     main: AnalyticsOptInPromptMainB,
     details: AnalyticsOptInPromptDetailsB,
+  },
+  AnalyticsConsent: {
+    main: AnalyticsConsentScreen,
+    details: SetPreferences,
   },
 };
 type NavigationProps = RootComposite<
@@ -34,6 +40,7 @@ export default function AnalyticsOptInPromptNavigator() {
   const { colors } = useTheme();
   const stackNavigationConfig = useMemo(() => getStackNavigatorConfig(colors, false), [colors]);
   const llmAnalyticsOptInPromptFeature = useFeature("llmAnalyticsOptInPrompt");
+  const lwmAnalyticsConsentOnboardingFeature = useFeature("lwmAnalyticsConsentOnboarding");
   const route = useRoute<NavigationProps["route"]>();
 
   const preventBackNavigation = route.params?.params?.entryPoint === "Portfolio";
@@ -43,17 +50,25 @@ export default function AnalyticsOptInPromptNavigator() {
     ...(preventBackNavigation ? { headerLeft: () => null } : {}),
   };
 
-  const activeVariant =
+  let activeVariant: keyof typeof screensByVariant =
     llmAnalyticsOptInPromptFeature?.params?.variant === ABTestingVariants.variantB
       ? ABTestingVariants.variantB
       : ABTestingVariants.variantA;
+
+  if (lwmAnalyticsConsentOnboardingFeature?.enabled) {
+    activeVariant = "AnalyticsConsent";
+  }
 
   return (
     <Stack.Navigator screenOptions={stackNavigationConfig}>
       <Stack.Screen
         name={ScreenName.AnalyticsOptInPromptMain}
         component={screensByVariant[activeVariant].main}
-        options={navigationOptions}
+        options={
+          activeVariant === "AnalyticsConsent"
+            ? { ...navigationOptions, headerShown: false }
+            : navigationOptions
+        }
       />
       <Stack.Screen
         name={ScreenName.AnalyticsOptInPromptDetails}

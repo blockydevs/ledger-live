@@ -82,7 +82,7 @@ export function AssetDetailView({
         </Box>
       </ScrollView>
       <Footer currency={currency} />
-      <TransferDrawer />
+      <TransferDrawer currency={currency} />
       <AssetCoinOptionsSheetView
         isOpen={coinOptions.isCoinOptionsSheetOpen}
         onClose={coinOptions.closeCoinOptions}
@@ -101,5 +101,5 @@ const screenStyle: LumenViewStyle = {
 
 const contentStyle: LumenViewStyle = {
   padding: "s16",
-  gap: "s32",
+  gap: "s24",
 };

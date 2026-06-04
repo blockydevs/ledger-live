@@ -166,6 +166,10 @@ export const urls = {
         main: "https://swaps.xyz/",
         tos: "https://docs.swaps.xyz/resources/terms-of-service",
       },
+      moonpay_trade: {
+        main: "https://swaps.xyz/",
+        tos: "https://docs.swaps.xyz/resources/terms-of-service",
+      },
       oneinch: {
         main: "https://1inch.com/",
         tos: "https://1inch.com/assets/Widget_1inch.com_Terms_of_Use.pdf",

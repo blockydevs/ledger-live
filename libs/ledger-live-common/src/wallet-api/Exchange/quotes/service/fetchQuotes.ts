@@ -3,7 +3,12 @@ import axios from "axios";
 import { getSwapAPIBaseURL } from "../../../../exchange/swap";
 
 import type { GetQuotesArgs } from "../types";
+import type { ResolvedQuotesInput } from "../resolveQuotesInput";
 import type { FetchQuotesResult, RawQuote, RawQuoteError } from "./types";
+
+type FetchQuotesArgs = Omit<GetQuotesArgs, "data"> & {
+  data: ResolvedQuotesInput;
+};
 
 /**
  * Fetch the raw list of quotes from the aggregator API for a single
@@ -14,11 +19,14 @@ import type { FetchQuotesResult, RawQuote, RawQuoteError } from "./types";
  * @param counterValueCurrency - Fiat ticker (e.g. `"USD"`) the
  *   aggregator should use for quote countervalues. Sourced from the
  *   wallet's counter-value setting at the handler factory call site.
- * @returns The raw aggregator payload split into successful quotes and
- *   per-provider error entries.
+ * @returns The raw aggregator payload split into successful quotes
+ *   (`rawQuotes`) and per-provider rejection rows (`providerErrors`).
+ *   Rejection rows carry an aggregator `code` (e.g. `amount_off_limits`)
+ *   plus the provider's reason; consumers digest them into globals via
+ *   `computeQuotesErrors`.
  */
 export async function fetchQuotes(
-  args: GetQuotesArgs,
+  args: FetchQuotesArgs,
   counterValueCurrency: string,
 ): Promise<FetchQuotesResult> {
   const { providers, data: quotesInput, headers: customHeaders, signal } = args;
@@ -64,7 +72,7 @@ export async function fetchQuotes(
   const data: Array<RawQuote | RawQuoteError> = response.data ?? [];
 
   const rawQuotes = data.filter((q): q is RawQuote => !("code" in q));
-  const errors = data.filter((q): q is RawQuoteError => "code" in q);
+  const providerErrors = data.filter((q): q is RawQuoteError => "code" in q);
 
-  return { rawQuotes, errors };
+  return { rawQuotes, providerErrors };
 }

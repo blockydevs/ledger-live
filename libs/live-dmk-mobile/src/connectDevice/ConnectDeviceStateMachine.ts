@@ -175,7 +175,10 @@ const createConnectDeviceStateMachine = () =>
         });
       },
       emitConnecting: ({ context }) => {
-        context.observer.next({ type: ConnectDeviceUIStateTypes.Connecting });
+        context.observer.next({
+          type: ConnectDeviceUIStateTypes.Connecting,
+          device: context.selectedMatchedDevice!.knownDevice,
+        });
       },
       emitConnectionError: ({ context, self }) => {
         context.observer.next({

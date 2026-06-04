@@ -4,21 +4,33 @@ import { StyleSheet } from "react-native";
 import QueuedDrawerBottomSheet from "LLM/components/QueuedDrawer/QueuedDrawerBottomSheet";
 import { CarouselContent } from "./CarouselContent";
 import { FeatureIntroContent } from "./FeatureIntroContent";
-import type { GenericAwarenessModalData } from "../types";
+import type { GenericAwarenessModalContentCard } from "@ledgerhq/live-common/genericAwarenessModal";
 
-type GenericAwarenessModalDrawerProps = Readonly<{
+type GenericAwarenessModalDrawerViewProps = Readonly<{
   isOpen: boolean;
   onClose: () => void;
-  data: GenericAwarenessModalData;
+  data: GenericAwarenessModalContentCard | undefined;
   bottomInset: number;
+  onFeatureIntroPrimaryPress: () => void;
+  onFeatureIntroSecondaryPress: () => void;
+  onCarouselSlideViewed: (slideIndex: number, isLastSlide: boolean) => void;
+  onCarouselNavigationPress: (slideIndex: number, button: string, isLastSlide: boolean) => void;
+  onCarouselPrimaryPress: (slideIndex: number) => void;
+  onCarouselMalformedUrl: (slideIndex: number) => void;
 }>;
 
-export function GenericAwarenessModalDrawer({
+export function GenericAwarenessModalDrawerView({
   isOpen,
   onClose,
   data,
   bottomInset,
-}: GenericAwarenessModalDrawerProps) {
+  onFeatureIntroPrimaryPress,
+  onFeatureIntroSecondaryPress,
+  onCarouselSlideViewed,
+  onCarouselNavigationPress,
+  onCarouselPrimaryPress,
+  onCarouselMalformedUrl,
+}: GenericAwarenessModalDrawerViewProps) {
   if (!data) {
     return null;
   }
@@ -29,11 +41,27 @@ export function GenericAwarenessModalDrawer({
     if (!isOpen) return null;
 
     if (data.layout === "carousel") {
-      return <CarouselContent slides={data.content} onClose={onClose} />;
+      return (
+        <CarouselContent
+          slides={data.data}
+          onClose={onClose}
+          onSlideViewed={onCarouselSlideViewed}
+          onNavigationPress={onCarouselNavigationPress}
+          onPrimaryPress={onCarouselPrimaryPress}
+          onMalformedUrl={onCarouselMalformedUrl}
+        />
+      );
     }
 
     if (data.layout === "featureIntro") {
-      return <FeatureIntroContent content={data.content} onClose={onClose} />;
+      return (
+        <FeatureIntroContent
+          content={data}
+          onClose={onClose}
+          onPrimaryPress={onFeatureIntroPrimaryPress}
+          onSecondaryPress={onFeatureIntroSecondaryPress}
+        />
+      );
     }
 
     return null;
