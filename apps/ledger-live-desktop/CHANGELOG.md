@@ -1,5 +1,18 @@
 # ledger-live-desktop
 
+## 4.6.1
+
+### Patch Changes
+
+- [#18184](https://github.com/LedgerHQ/ledger-live/pull/18184) [`24ad6e9`](https://github.com/LedgerHQ/ledger-live/commit/24ad6e9a5e2a3bbd697a6fc421d98af5c32748b6) Thanks [@Justkant](https://github.com/Justkant)! - Allow blob sources in desktop webview CSP
+
+- [#18184](https://github.com/LedgerHQ/ledger-live/pull/18184) [`19b8ee7`](https://github.com/LedgerHQ/ledger-live/commit/19b8ee73a5084710b2fe977f662cfbd3335b07b1) Thanks [@Justkant](https://github.com/Justkant)! - Fix dapp integration breaking when a Live App's Content-Security-Policy blocks inline script injection, by evaluating the Ethereum provider in the page main world via webFrame.executeJavaScript instead of an inline <script> tag
+
+- Updated dependencies []:
+  - @ledgerhq/live-common@35.0.1
+  - @ledgerhq/asset-detail@0.3.1
+  - @ledgerhq/live-dmk-desktop@0.17.2
+
 ## 4.6.1-hotfix.1
 
 ### Patch Changes

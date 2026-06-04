@@ -1,5 +1,12 @@
 # @ledgerhq/coin-tester-bitcoin
 
+## 1.10.4
+
+### Patch Changes
+
+- Updated dependencies [[`6e54780`](https://github.com/LedgerHQ/ledger-live/commit/6e547801ec07c005861eaa68d181b83ce9d42a40)]:
+  - @ledgerhq/hw-app-btc@11.0.1
+
 ## 1.10.4-hotfix.0
 
 ### Patch Changes
