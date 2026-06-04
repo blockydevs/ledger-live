@@ -53,8 +53,8 @@ type ConnectionErrorViewStates = {
   ConnectionErrorViewState
 >;
 
-function isTerminalConnectionError(error: ConnectionError): boolean {
-  return error.type === ConnectionErrorTypes.Unknown;
+function isTerminalConnectionError(errorType: ConnectionErrorTypes): boolean {
+  return errorType === ConnectionErrorTypes.Unknown;
 }
 
 const connectionErrorTranslationBaseKey =
@@ -70,7 +70,7 @@ export function ConnectionErrorState({
   const productName = t("deviceIntentExecutor.connectDevice.common.ledgerDevice");
 
   useEffect(() => {
-    setIsInTerminalConnectDeviceError(isTerminalConnectionError(state.error));
+    setIsInTerminalConnectDeviceError(isTerminalConnectionError(state.error.type));
     return () => setIsInTerminalConnectDeviceError(false);
   }, [state.error]);
 

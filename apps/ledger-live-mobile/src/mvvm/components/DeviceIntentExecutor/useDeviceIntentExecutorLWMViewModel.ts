@@ -77,7 +77,7 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
       trackDeviceflowCanceled({ sourceFlow });
     }
     onUserCancel();
-  }, [sourceFlow]);
+  }, [onUserCancel, sourceFlow]);
 
   return {
     sourceFlow,
