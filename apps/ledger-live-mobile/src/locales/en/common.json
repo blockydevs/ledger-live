@@ -9637,6 +9637,16 @@
     },
     "tileTitle": "Mood"
   },
+  "altcoinSeason": {
+    "title": "Season",
+    "definitionTitle": "Altcoin index",
+    "description": "The Altcoin index shows how Bitcoin is performing compared to alternative cryptocurrencies. The higher the number, the better altcoins are doing compared to Bitcoin.",
+    "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
+    "levels": {
+      "bitcoin": "Bitcoin",
+      "altcoin": "Altcoin"
+    }
+  },
   "analyticsAllocation": {
     "header": {
       "main": "Analytics"

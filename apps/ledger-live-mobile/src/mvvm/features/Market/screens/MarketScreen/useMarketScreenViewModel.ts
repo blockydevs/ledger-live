@@ -6,7 +6,7 @@ const CARD_GAP = 8;
 
 export type MarketScreenHighlightCard = {
   key: string;
-  type: "fearAndGreed";
+  type: "fearAndGreed" | "altcoinSeason";
 };
 
 export type MarketScreenViewModel = {
@@ -27,7 +27,10 @@ export function useMarketScreenViewModel(): MarketScreenViewModel {
       cardWidth,
       cardGap: CARD_GAP,
       snapToInterval: cardWidth + CARD_GAP,
-      highlightCards: [{ key: "market-highlight-fear-and-greed", type: "fearAndGreed" }],
+      highlightCards: [
+        { key: "market-highlight-fear-and-greed", type: "fearAndGreed" },
+        { key: "market-highlight-altcoin-season", type: "altcoinSeason" },
+      ],
     };
   }, [width]);
 }
