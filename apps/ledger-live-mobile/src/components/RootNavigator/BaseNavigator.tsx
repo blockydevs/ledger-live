@@ -62,7 +62,9 @@ import WalletConnectLiveAppNavigator from "./WalletConnectLiveAppNavigator";
 import CustomImageNavigator from "./CustomImageNavigator";
 import PostOnboardingNavigator from "./PostOnboardingNavigator";
 import { readOnlyModeEnabledSelector } from "~/reducers/settings";
-import { hasNoAccountsSelector } from "~/reducers/accounts";
+import { hasNoAccountsSelector, accountScreenSelector } from "~/reducers/accounts";
+import { getMainAccount } from "@ledgerhq/live-common/account/index";
+import { getOperationTypeI18nKey } from "~/logic/operationTypeName";
 import { BaseNavigatorStackParamList } from "./types/BaseNavigator";
 import DeviceConnect, { deviceConnectHeaderOptions } from "~/screens/DeviceConnect";
 import PerpsSign from "LLM/features/Perps/screens/PerpsSign/PerpsSignScreen";
@@ -136,12 +138,14 @@ function OperationDetailsHeaderLeft() {
 function OperationDetailsHeaderTitle() {
   const { t } = useTranslation();
   const route = useRoute<OperationDetailsRouteProp>();
+  const { account, parentAccount } = useSelector(accountScreenSelector(route));
   const operationType = route.params?.operation?.type;
+  const family = account ? getMainAccount(account, parentAccount).currency.family : undefined;
 
   return (
     <StepHeader
       subtitle={t("operationDetails.title")}
-      title={operationType ? t(`operations.types.${operationType}`) : ""}
+      title={operationType ? t(getOperationTypeI18nKey(operationType, family)) : ""}
       testID="operationDetails-title"
     />
   );
