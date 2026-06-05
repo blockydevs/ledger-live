@@ -163,12 +163,14 @@ describe("MarketScreen assets list (Block 3)", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible();
+        expect(screen.getByTestId("marketItem-apple")).toBeVisible();
       },
       { timeout: 5000 },
     );
 
+    expect(screen.getByText("Apple")).toBeVisible();
     expect(screen.getByText("Stocks")).toBeVisible();
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
+    expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();
   });
 });
