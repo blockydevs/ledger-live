@@ -40,6 +40,7 @@ import type { EditTransactionParamList } from "../../../families/evm/EditTransac
 import type { EvmDelegationFlowParamList } from "../../../families/evm/DelegationFlow/types";
 import type { EvmUndelegationFlowParamList } from "../../../families/evm/UndelegationFlow/types";
 import type { EvmClaimRewardsFlowParamList } from "../../../families/evm/ClaimRewardsFlow/types";
+import type { EvmWithdrawFlowParamList } from "../../../families/evm/WithdrawFlow/types";
 import type { BitcoinEditTransactionParamList } from "../../../families/bitcoin/EditTransactionFlow/EditTransactionParamList";
 import type { PolkadotBondFlowParamList } from "../../../families/polkadot/BondFlow/types";
 import type { PolkadotNominateFlowParamList } from "../../../families/polkadot/NominateFlow/types";
@@ -295,6 +296,7 @@ export type BaseNavigatorStackParamList = {
   [NavigatorName.EvmDelegationFlow]: NavigatorScreenParams<EvmDelegationFlowParamList>;
   [NavigatorName.EvmUndelegationFlow]: NavigatorScreenParams<EvmUndelegationFlowParamList>;
   [NavigatorName.EvmClaimRewardsFlow]: NavigatorScreenParams<EvmClaimRewardsFlowParamList>;
+  [NavigatorName.EvmWithdrawFlow]: NavigatorScreenParams<EvmWithdrawFlowParamList>;
   [NavigatorName.EvmEditTransaction]: NavigatorScreenParams<EditTransactionParamList>;
 
   // Bitcoin edit transaction (RBF)
