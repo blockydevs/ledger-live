@@ -446,11 +446,16 @@ describe("staking/validators/monad", () => {
 
     const fetchStakes = () => fetchMonadStakes(DELEGATOR, {} as never, { id: "monad" } as never);
 
-    const encodeDelegator = (stake: bigint, deltaStake = 0n, nextDeltaStake = 0n): string =>
+    const encodeDelegator = (
+      stake: bigint,
+      deltaStake = 0n,
+      nextDeltaStake = 0n,
+      unclaimedRewards = 0n,
+    ): string =>
       monadIface.encodeFunctionResult("getDelegator", [
         stake,
         0n,
-        0n,
+        unclaimedRewards,
         deltaStake,
         nextDeltaStake,
         0n,
@@ -578,6 +583,36 @@ describe("staking/validators/monad", () => {
       expect(stakes.map(s => ({ state: s.state, amount: s.amount }))).toStrictEqual([
         { state: "active", amount: 100n },
       ]);
+    });
+
+    it("surfaces unclaimed rewards as amountRewarded on the active stake", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n]]),
+          getDelegator: () => encodeDelegator(100n, 0n, 0n, 7n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(
+        stakes.map(s => ({ state: s.state, amount: s.amount, amountRewarded: s.amountRewarded })),
+      ).toStrictEqual([{ state: "active", amount: 100n, amountRewarded: 7n }]);
+    });
+
+    it("returns an active stake with only rewards when the stake is fully undelegated", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n]]),
+          getDelegator: () => encodeDelegator(0n, 0n, 0n, 5n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(
+        stakes.map(s => ({ state: s.state, amount: s.amount, amountRewarded: s.amountRewarded })),
+      ).toStrictEqual([{ state: "active", amount: 0n, amountRewarded: 5n }]);
     });
 
     it("filters out delegations with a zero total amount", async () => {
