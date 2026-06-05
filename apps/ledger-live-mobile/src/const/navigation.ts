@@ -165,7 +165,6 @@ export enum ScreenName {
   SwapSelectCurrency = "SelectCurrency",
   SwapCustomError = "SwapCustomError",
   SwapForm = "SwapForm",
-  SwapLiveApp = "SwapLiveApp",
   SwapHistory = "SwapHistory",
   SwapLoading = "SwapLoading",
   SwapOperationDetails = "SwapOperationDetails",
