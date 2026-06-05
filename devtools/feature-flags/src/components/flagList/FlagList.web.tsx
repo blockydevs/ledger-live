@@ -11,9 +11,17 @@ import { Sidebar } from "../sidebar/Sidebar";
 import { ToolsHeader } from "../toolsHeader/ToolsHeader";
 import { useFeatureFlagsFilters } from "../../hooks";
 import { useSortFlag } from "../../hooks/useSortFlag";
+import { buildOverridesExport } from "../../utils/exportOverrides";
+import { saveFile } from "../../utils/saveFile";
 
 export const FlagList = (props: FeatureFlagsToolProps) => {
   const { overrides, setOverride, clearAllOverrides } = props;
+  const exportOverrides =
+    props.exportOverrides ??
+    (() => {
+      const { content, filename } = buildOverridesExport(overrides);
+      saveFile(content, filename);
+    });
   const { getFlagDisplayState } = useFeatureFlagsState(props);
   const { selectedFlagId, selectFlag, clearSelection } = useFlagSelection();
   const featureIds: FeatureId[] = ALL_FLAG_IDS;
@@ -39,6 +47,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
           cycleCategory={cycleCategory}
           toggleDirection={toggleDirection}
           clearAllOverrides={clearAllOverrides}
+          exportOverrides={exportOverrides}
         />
         <Divider />
         <FlagListHeader
