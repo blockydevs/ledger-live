@@ -1,11 +1,17 @@
-import { act, renderHook } from "@tests/test-renderer";
+import { useRoute } from "@react-navigation/native";
+import { act, renderHook, withFlagOverrides } from "@tests/test-renderer";
 import { track } from "~/analytics";
-import type { State } from "~/reducers/types";
 import { createMarketAssetDisplayData } from "../../../__tests__/helpers";
 import { useMarketAssets } from "../useMarketAssets";
 import { useMarketScreenViewModel } from "../useMarketScreenViewModel";
+import { ScreenName } from "~/const";
+import type { State } from "~/reducers/types";
 
 jest.mock("~/analytics", () => ({ track: jest.fn() }));
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("@react-navigation/native"),
+  useRoute: jest.fn(),
+}));
 
 const openFromMarket = jest.fn();
 jest.mock("LLM/features/AssetDetail/hooks/useAssetDetailNavigation", () => ({
@@ -18,6 +24,15 @@ jest.mock("LLM/features/AssetDetail/hooks/useAssetDetailNavigation", () => ({
 
 jest.mock("../useMarketAssets");
 const mockedUseMarketAssets = jest.mocked(useMarketAssets);
+const mockedUseRoute = jest.mocked(useRoute);
+
+function mockMarketListRoute(category?: unknown) {
+  mockedUseRoute.mockReturnValue({
+    key: ScreenName.MarketList,
+    name: ScreenName.MarketList,
+    params: category === undefined ? undefined : { category },
+  });
+}
 
 function mockMarketAssets(overrides: Partial<ReturnType<typeof useMarketAssets>> = {}) {
   mockedUseMarketAssets.mockReturnValue({
@@ -31,9 +46,22 @@ function mockMarketAssets(overrides: Partial<ReturnType<typeof useMarketAssets>>
   });
 }
 
+function withAssetDiscoverability(
+  enabled: boolean,
+  baseTransform?: (state: State) => State,
+) {
+  return {
+    overrideInitialState: withFlagOverrides(
+      { lwmWallet40: { enabled: true, params: { assetDiscoverability: enabled } } },
+      baseTransform,
+    ),
+  };
+}
+
 describe("useMarketScreenViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockMarketListRoute();
     mockMarketAssets();
   });
 
@@ -185,5 +213,67 @@ describe("useMarketScreenViewModel", () => {
       category: "starred",
       starredMarketCoins: [],
     });
+  });
+
+  it("should set the market list category from a valid route param", () => {
+    mockMarketListRoute("stocks");
+
+    const { store } = renderHook(
+      () => useMarketScreenViewModel(),
+      withAssetDiscoverability(true),
+    );
+
+    expect(store.getState().marketListConfig.category).toBe("stocks");
+  });
+
+  it("should support the starred route category", () => {
+    mockMarketListRoute("starred");
+
+    const { store } = renderHook(
+      () => useMarketScreenViewModel(),
+      withAssetDiscoverability(true),
+    );
+
+    expect(store.getState().marketListConfig.category).toBe("starred");
+  });
+
+  it("should preserve the persisted category when route category is missing", () => {
+    const { store } = renderHook(
+      () => useMarketScreenViewModel(),
+      withAssetDiscoverability(true, state => ({
+        ...state,
+        marketListConfig: { ...state.marketListConfig, category: "starred" },
+      })),
+    );
+
+    expect(store.getState().marketListConfig.category).toBe("starred");
+  });
+
+  it("should preserve the persisted category when route category is invalid", () => {
+    mockMarketListRoute("unknown");
+
+    const { store } = renderHook(
+      () => useMarketScreenViewModel(),
+      withAssetDiscoverability(true, state => ({
+        ...state,
+        marketListConfig: { ...state.marketListConfig, category: "starred" },
+      })),
+    );
+
+    expect(store.getState().marketListConfig.category).toBe("starred");
+  });
+
+  it("should ignore the route category when asset discoverability is disabled", () => {
+    mockMarketListRoute("stocks");
+
+    const { store } = renderHook(
+      () => useMarketScreenViewModel(),
+      withAssetDiscoverability(false, state => ({
+        ...state,
+        marketListConfig: { ...state.marketListConfig, category: "starred" },
+      })),
+    );
+
+    expect(store.getState().marketListConfig.category).toBe("starred");
   });
 });

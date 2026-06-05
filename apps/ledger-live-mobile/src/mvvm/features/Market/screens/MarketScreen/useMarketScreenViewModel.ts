@@ -1,11 +1,20 @@
+import { useLayoutEffect } from "react";
+import { useRoute, type RouteProp } from "@react-navigation/native";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
-import { useSelector } from "~/context/hooks";
-import { starredMarketCoinsSelector } from "~/reducers/settings";
+import type { MarketNavigatorStackParamList } from "LLM/features/Market/Navigator";
+import { parseMarketListCategory } from "LLM/features/Market/utils/marketListCategory";
 import { useMarketAssetPress } from "./useMarketAssetPress";
 import { useMarketAssets } from "./useMarketAssets";
 import { type MarketCategories, useMarketCategories } from "./useMarketCategories";
 import { useMarketHighlights, type MarketHighlights } from "./useMarketHighlights";
 import { type MarketSearch, useMarketSearch } from "./useMarketSearch";
+import { ScreenName } from "~/const";
+import { useDispatch, useSelector } from "~/context/hooks";
+import { selectMarketListCategory, setMarketListCategory } from "~/reducers/market";
+import { starredMarketCoinsSelector } from "~/reducers/settings";
+
+type MarketScreenRoute = RouteProp<MarketNavigatorStackParamList, ScreenName.MarketList>;
 
 export type { MarketHighlightCard } from "./useMarketHighlights";
 
@@ -30,6 +39,11 @@ export type MarketScreenViewModel = {
 };
 
 export function useMarketScreenViewModel(): MarketScreenViewModel {
+  const dispatch = useDispatch();
+  const route = useRoute<MarketScreenRoute>();
+  const persistedCategory = useSelector(selectMarketListCategory);
+  const { shouldDisplayAssetDiscoverability } = useWalletFeaturesConfig("mobile");
+  const routeCategory = parseMarketListCategory(route.params?.category);
   const search = useMarketSearch();
   const highlights = useMarketHighlights();
   const categories = useMarketCategories();
@@ -40,6 +54,18 @@ export function useMarketScreenViewModel(): MarketScreenViewModel {
     starredMarketCoins,
   });
   const onAssetPress = useMarketAssetPress();
+
+  useLayoutEffect(() => {
+    if (
+      !shouldDisplayAssetDiscoverability ||
+      !routeCategory ||
+      routeCategory === persistedCategory
+    ) {
+      return;
+    }
+
+    dispatch(setMarketListCategory(routeCategory));
+  }, [dispatch, persistedCategory, routeCategory, shouldDisplayAssetDiscoverability]);
 
   return {
     search: {
