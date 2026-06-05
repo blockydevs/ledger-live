@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import { useFeatureFlags } from "@features/platform-feature-flags";
+import type { Features } from "@shared/feature-flags";
 import { hubStateSelector } from "../reducer";
 import { usePostOnboardingContext } from "./usePostOnboardingContext";
 import {
@@ -23,14 +24,15 @@ jest.mock("../reducer");
 
 const mockedUseFeatureFlags = jest.mocked(useFeatureFlags);
 
-const mockedFlagsWithMockFeatureEnabled = (enabled, paramEnabled = true) => ({
-  [mockedFeatureIdToTest]: {
-    enabled,
-    params: {
-      [mockedFeatureParamIdToTest]: paramEnabled,
+const mockedFlagsWithMockFeatureEnabled = (enabled: boolean, paramEnabled = true) =>
+  ({
+    [mockedFeatureIdToTest]: {
+      enabled,
+      params: {
+        [mockedFeatureParamIdToTest]: paramEnabled,
+      },
     },
-  },
-});
+  }) as unknown as Features;
 
 const mockedUsePostOnboardingContext = jest.mocked(usePostOnboardingContext);
 
