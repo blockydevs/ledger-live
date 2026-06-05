@@ -9,6 +9,7 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import { ScreenName } from "~/const";
+import type { State } from "~/reducers/types";
 import MarketNavigator from "../Navigator";
 import { MARKET_SCREEN_TEST_IDS } from "../screens/MarketScreen/testIds";
 
@@ -23,6 +24,17 @@ const NavigatorWrapper = () => (
 const enableAssetDiscoverability = withFlagOverrides({
   lwmWallet40: { enabled: true, params: { assetDiscoverability: true } },
 });
+
+function enableFavoritesCategory(starredMarketCoins: string[] = []) {
+  return withFlagOverrides(
+    { lwmWallet40: { enabled: true, params: { assetDiscoverability: true } } },
+    (state: State): State => ({
+      ...state,
+      settings: { ...state.settings, starredMarketCoins },
+      marketListConfig: { ...state.marketListConfig, category: "starred" },
+    }),
+  );
+}
 
 function hasTestID(node: React.ReactNode, testID: string): boolean {
   if (Array.isArray(node)) return node.some(child => hasTestID(child, testID));
@@ -55,8 +67,11 @@ describe("MarketScreen assets list (Block 3)", () => {
       ),
     ).toBe(false);
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsSubHeader)).toBeVisible();
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
+    expect(screen.getByText("All")).toBeVisible();
+    expect(screen.getByText("Stocks")).toBeVisible();
+    expect(screen.getByText("Favorites")).toBeVisible();
     expect(screen.getByTestId("marketItem-ethereum")).toBeVisible();
-    // price + change columns are rendered for each row
     expect(screen.getByTestId("marketItem-bitcoin-price")).toBeVisible();
   });
 
@@ -79,6 +94,7 @@ describe("MarketScreen assets list (Block 3)", () => {
 
     expect(screen.queryByTestId(MARKET_SCREEN_TEST_IDS.highlights)).toBeNull();
     expect(screen.queryByTestId(MARKET_SCREEN_TEST_IDS.assetsSubHeader)).toBeNull();
+    expect(screen.queryByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeNull();
 
     act(() => {
       screen.getByTestId(MARKET_SCREEN_TEST_IDS.searchBar).props.onChangeText("");
@@ -88,9 +104,38 @@ describe("MarketScreen assets list (Block 3)", () => {
       () => {
         expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.highlights)).toBeVisible();
         expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsSubHeader)).toBeVisible();
+        expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
         expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible();
       },
       { timeout: 5000 },
     );
+  });
+
+  it("renders the favorites empty state when no market coin is starred", async () => {
+    renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: enableFavoritesCategory(),
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("No favorites yet")).toBeVisible();
+    });
+
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsFavoritesEmptyIcon)).toBeVisible();
+    expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();
+  });
+
+  it("renders only starred market coins in the Favorites category", async () => {
+    renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: enableFavoritesCategory(["bitcoin"]),
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible();
+      },
+      { timeout: 5000 },
+    );
+
+    expect(screen.queryByTestId("marketItem-ethereum")).toBeNull();
   });
 });

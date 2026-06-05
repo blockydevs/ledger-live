@@ -8082,6 +8082,13 @@
     "title": "Market",
     "assets": {
       "title": "Assets",
+      "emptyFavorites": "No favorites yet",
+      "categories": {
+        "accessibilityLabel": "Asset categories",
+        "all": "All",
+        "stocks": "Stocks",
+        "favorites": "Favorites"
+      },
       "error": {
         "title": "Couldn't load assets",
         "description": "Something went wrong while loading the asset list. Please try again later."

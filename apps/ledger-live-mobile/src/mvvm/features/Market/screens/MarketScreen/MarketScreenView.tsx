@@ -33,6 +33,10 @@ export function MarketScreenView({ search, highlights, assetsList, isSearchActiv
         loading={assetsList.assetsLoading}
         loadingMore={assetsList.assetsLoadingMore}
         error={assetsList.assetsError}
+        emptyState={assetsList.assetsEmptyState}
+        selectedCategory={assetsList.categories.selectedCategory}
+        categoryTabs={assetsList.categories.tabs}
+        onSelectCategory={assetsList.categories.onSelectCategory}
         onAssetPress={assetsList.onAssetPress}
         onEndReached={assetsList.onEndReached}
         showSubheader={!isSearchActive}
