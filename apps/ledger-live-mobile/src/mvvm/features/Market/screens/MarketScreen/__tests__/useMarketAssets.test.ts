@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@tests/test-renderer";
 import { useMarketData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
-import { MarketListRequestResult } from "@ledgerhq/live-common/market/utils/types";
+import { MarketListRequestResult, Order } from "@ledgerhq/live-common/market/utils/types";
 import { createMarketCurrencyData } from "../../../__tests__/helpers";
 import { useMarketAssets } from "../useMarketAssets";
 
@@ -9,6 +9,15 @@ const mockedUseMarketData = jest.mocked(useMarketData);
 
 const bitcoin = createMarketCurrencyData({ id: "bitcoin", name: "Bitcoin" });
 const ethereum = createMarketCurrencyData({ id: "ethereum", name: "Ethereum", ticker: "eth" });
+const fullMarketPage = Array.from({ length: 20 }, (_, index) =>
+  createMarketCurrencyData({ id: `asset-${index}`, name: `Asset ${index}` }),
+);
+const fullMarketPageWithDuplicate = [
+  ...Array.from({ length: 19 }, (_, index) =>
+    createMarketCurrencyData({ id: `asset-${index}`, name: `Asset ${index}` }),
+  ),
+  createMarketCurrencyData({ id: "asset-0", name: "Asset 0 duplicate" }),
+];
 
 function mockMarketData(overrides: Partial<MarketListRequestResult> = {}) {
   mockedUseMarketData.mockReturnValue({
@@ -44,19 +53,42 @@ describe("useMarketAssets", () => {
     mockMarketData({ data: [], isPending: true });
     const { result } = renderHook(() => useMarketAssets());
     expect(result.current.loading).toBe(true);
-    expect(result.current.loadingMore).toBe(false);
   });
 
-  it("reports loading-more when a new page is fetched over existing rows", () => {
-    mockMarketData({ isFetching: true });
+  it("does not request another page while the next page is fetching", () => {
+    mockMarketData({ data: fullMarketPage, isFetching: true });
     const { result } = renderHook(() => useMarketAssets());
-    expect(result.current.loading).toBe(false);
-    expect(result.current.loadingMore).toBe(true);
+
+    act(() => result.current.onEndReached());
+    expect(mockedUseMarketData).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+
+    act(() => result.current.onEndReached());
+    expect(mockedUseMarketData).not.toHaveBeenCalledWith(expect.objectContaining({ page: 3 }));
   });
 
   it("requests the next page on end reached", () => {
+    mockMarketData({ data: fullMarketPage });
     const { result } = renderHook(() => useMarketAssets());
     act(() => result.current.onEndReached());
+    expect(mockedUseMarketData).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+  });
+
+  it("does not request the next page when the current page is incomplete", () => {
+    const { result } = renderHook(() => useMarketAssets());
+
+    act(() => result.current.onEndReached());
+
+    expect(mockedUseMarketData).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+  });
+
+  it("uses the fetched item count to decide whether the next page can load", () => {
+    mockMarketData({ data: fullMarketPageWithDuplicate });
+    const { result } = renderHook(() => useMarketAssets());
+
+    expect(result.current.assets).toHaveLength(19);
+
+    act(() => result.current.onEndReached());
+
     expect(mockedUseMarketData).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
   });
 
@@ -67,6 +99,7 @@ describe("useMarketAssets", () => {
   });
 
   it("resets the page when the search query changes", async () => {
+    mockMarketData({ data: fullMarketPage });
     let search = "";
     const { result, rerender } = renderHook(() => useMarketAssets({ search }));
 
@@ -84,6 +117,28 @@ describe("useMarketAssets", () => {
     expect(mockedUseMarketData).not.toHaveBeenCalledWith(
       expect.objectContaining({ page: 2, search: "eth" }),
     );
+  });
+
+  it("maps sorting and timeframe to the market request params", () => {
+    renderHook(() => useMarketAssets({ sorting: "gainers", timeframe: "7D" }));
+
+    expect(mockedUseMarketData).toHaveBeenLastCalledWith(
+      expect.objectContaining({ order: Order.topGainers, range: "7d" }),
+    );
+  });
+
+  it("falls back to market cap sorting while volume is unavailable", () => {
+    renderHook(() => useMarketAssets({ sorting: "volume" }));
+
+    expect(mockedUseMarketData).toHaveBeenLastCalledWith(
+      expect.objectContaining({ order: Order.MarketCapDesc }),
+    );
+  });
+
+  it("maps the six-month timeframe to the market request params", () => {
+    renderHook(() => useMarketAssets({ timeframe: "6M" }));
+
+    expect(mockedUseMarketData).toHaveBeenLastCalledWith(expect.objectContaining({ range: "6m" }));
   });
 
   it("requests favorite assets with the starred ids sorted", () => {

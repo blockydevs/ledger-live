@@ -7,6 +7,7 @@ import { parseMarketListCategory } from "LLM/features/Market/utils/marketListCat
 import { useMarketAssetPress } from "./useMarketAssetPress";
 import { useMarketAssets } from "./useMarketAssets";
 import { type MarketCategories, useMarketCategories } from "./useMarketCategories";
+import { type MarketFilters, useMarketFilters } from "./useMarketFilters";
 import { useMarketHighlights, type MarketHighlights } from "./useMarketHighlights";
 import { type MarketSearch, useMarketSearch } from "./useMarketSearch";
 import { ScreenName } from "~/const";
@@ -19,14 +20,15 @@ type MarketScreenRoute = RouteProp<MarketNavigatorStackParamList, ScreenName.Mar
 export type { MarketHighlightCard } from "./useMarketHighlights";
 
 export type { MarketCategories, MarketCategoryTab } from "./useMarketCategories";
+export type { MarketFilters, MarketFilterOption } from "./useMarketFilters";
 
 export type MarketScreenAssetsList = {
   assets: MarketAssetDisplayData[];
   assetsLoading: boolean;
-  assetsLoadingMore: boolean;
   assetsError: boolean;
   assetsEmptyState: "favorites" | undefined;
   categories: MarketCategories;
+  filters: MarketFilters;
   onAssetPress: (asset: MarketAssetDisplayData) => void;
   onEndReached: () => void;
 };
@@ -47,10 +49,13 @@ export function useMarketScreenViewModel(): MarketScreenViewModel {
   const search = useMarketSearch();
   const highlights = useMarketHighlights();
   const categories = useMarketCategories();
+  const filters = useMarketFilters();
   const starredMarketCoins = useSelector(starredMarketCoinsSelector);
-  const { assets, loading, loadingMore, isError, emptyState, onEndReached } = useMarketAssets({
+  const { assets, loading, isError, emptyState, onEndReached } = useMarketAssets({
     search: search.query,
     category: categories.selectedCategory,
+    sorting: filters.sorting,
+    timeframe: filters.timeframe,
     starredMarketCoins,
   });
   const onAssetPress = useMarketAssetPress();
@@ -77,10 +82,10 @@ export function useMarketScreenViewModel(): MarketScreenViewModel {
     assetsList: {
       assets: search.isDebouncing ? [] : assets,
       assetsLoading: search.isDebouncing || loading,
-      assetsLoadingMore: loadingMore,
       assetsError: isError,
       assetsEmptyState: search.isDebouncing ? undefined : emptyState,
       categories,
+      filters,
       onAssetPress,
       onEndReached,
     },

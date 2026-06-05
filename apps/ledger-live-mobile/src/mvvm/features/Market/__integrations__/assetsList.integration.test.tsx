@@ -67,10 +67,17 @@ describe("MarketScreen assets list (Block 3)", () => {
       ),
     ).toBe(false);
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsSubHeader)).toBeVisible();
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsFilterButton)).toBeVisible();
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
-    expect(screen.getByText("All")).toBeVisible();
-    expect(screen.getByText("Stocks")).toBeVisible();
-    expect(screen.getByText("Favorites")).toBeVisible();
+    expect(
+      screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-all`),
+    ).toBeVisible();
+    expect(
+      screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-stocks`),
+    ).toBeVisible();
+    expect(
+      screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-starred`),
+    ).toBeVisible();
     expect(screen.getByTestId("marketItem-ethereum")).toBeVisible();
     expect(screen.getByTestId("marketItem-bitcoin-price")).toBeVisible();
   });
