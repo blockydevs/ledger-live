@@ -493,6 +493,31 @@ describe("staking/validators/monad", () => {
       ]);
     });
 
+    it("attaches the resolved validator name to the stake details", async () => {
+      const namedSecp = "0x034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa";
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [7n]]),
+          getDelegator: () => encodeDelegator(100n),
+          getValidator: () =>
+            encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: namedSecp }),
+        }),
+      );
+      mockedNetwork.mockResolvedValueOnce({
+        data: { name: "GalaxyDigital" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      const stakes = await fetchStakes();
+
+      expect(stakes[0].details).toStrictEqual({
+        contractAddress: PRECOMPILE,
+        validator: ethers.computeAddress(namedSecp),
+        validatorName: "GalaxyDigital",
+        validatorId: "7",
+      });
+    });
+
     it("paginates getDelegations until isDone", async () => {
       setupRpc(
         routeByName({
