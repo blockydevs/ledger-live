@@ -1,9 +1,6 @@
 import React from "react";
 import { cleanup, render, screen, waitFor } from "tests/testSetup";
-import {
-  getCryptoCurrencyById,
-  setSupportedCurrencies,
-} from "@ledgerhq/live-common/currencies/index";
+import { getCryptoCurrencyById } from "@ledgerhq/live-common/currencies/index";
 import { AccountOnboardStatus } from "@ledgerhq/coin-concordium/types";
 import { ConcordiumPairingExpiredError } from "@ledgerhq/errors";
 import { Account } from "@ledgerhq/types-live";
@@ -18,8 +15,6 @@ import {
   T,
   WAIT_OPTS,
 } from "./testUtils";
-
-setSupportedCurrencies(["concordium"]);
 
 const mockPairWalletConnect = jest.fn();
 const mockOnboardAccount = jest.fn();

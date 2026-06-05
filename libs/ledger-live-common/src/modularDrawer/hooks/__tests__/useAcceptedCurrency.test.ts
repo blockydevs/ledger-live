@@ -5,11 +5,14 @@ import { renderHook } from "@testing-library/react";
 import { useAcceptedCurrency } from "../useAcceptedCurrency";
 import { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { useCurrenciesUnderFeatureFlag } from "../useCurrenciesUnderFeatureFlag";
-import { isCurrencySupported } from "@ledgerhq/ledger-wallet-framework/currencies/support";
+import { isCurrencySupported } from "../../../coin-modules/registry";
 
 // Mock dependencies
 jest.mock("../useCurrenciesUnderFeatureFlag");
-jest.mock("@ledgerhq/ledger-wallet-framework/currencies/support");
+jest.mock("../../../coin-modules/registry", () => ({
+  ...jest.requireActual("../../../coin-modules/registry"),
+  isCurrencySupported: jest.fn(),
+}));
 
 const mockUseCurrenciesUnderFeatureFlag = useCurrenciesUnderFeatureFlag as jest.MockedFunction<
   typeof useCurrenciesUnderFeatureFlag

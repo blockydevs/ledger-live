@@ -1,14 +1,11 @@
 import React from "react";
 import { render, screen, waitFor, cleanup } from "tests/testSetup";
 import BigNumber from "bignumber.js";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/currencies/index";
 import { DeviceModelId } from "@ledgerhq/devices";
 import { server } from "tests/server";
 import DelegationFlowModal from "../index";
 import { http, HttpResponse } from "msw";
 import { getCardanoAccountFixture } from "@ledgerhq/coin-cardano/fixtures/accounts";
-
-setSupportedCurrencies(["cardano"]);
 
 const mockPools = [
   {

@@ -2,7 +2,6 @@ import React from "react";
 import BigNumber from "bignumber.js";
 import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/index";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/currencies/index";
 import type { Account, AccountLike } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { render, screen } from "@tests/test-renderer";
@@ -44,8 +43,6 @@ jest.mock("LLM/features/Send/hooks/useNewSendFlowFeature", () => ({
     getCurrencyIdFromAccount: () => "ethereum",
   }),
 }));
-
-setSupportedCurrencies(["ethereum", "polygon"]);
 
 const ethereum = getCryptoCurrencyById("ethereum");
 const polygon = getCryptoCurrencyById("polygon");

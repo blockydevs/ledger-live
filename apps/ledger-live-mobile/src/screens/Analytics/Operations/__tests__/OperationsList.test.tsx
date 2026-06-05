@@ -1,7 +1,6 @@
 import React from "react";
 import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/index";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/currencies/index";
 import BigNumber from "bignumber.js";
 import type { Account, AccountLike, TokenAccount } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
@@ -35,8 +34,6 @@ jest.mock("~/screens/Portfolio/NoOpStatePortfolio", () => {
     return <View testID="no-op-state-portfolio" />;
   };
 });
-
-setSupportedCurrencies(["ethereum"]);
 
 const ethereum = getCryptoCurrencyById("ethereum");
 const usdc = { parentCurrency: { family: "evm" } } as TokenCurrency;

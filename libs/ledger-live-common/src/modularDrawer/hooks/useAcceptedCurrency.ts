@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { CryptoCurrency, CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { isCurrencySupported } from "@ledgerhq/ledger-wallet-framework/currencies/support";
+import { isCurrencySupported } from "../../currencies";
 import { useCurrenciesUnderFeatureFlag } from "./useCurrenciesUnderFeatureFlag";
 
 /**
