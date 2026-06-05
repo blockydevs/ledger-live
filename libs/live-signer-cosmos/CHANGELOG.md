@@ -1,5 +1,14 @@
 # @ledgerhq/live-signer-cosmos
 
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/coin-cosmos@0.34.1
+  - @ledgerhq/hw-transport@6.35.3
+  - @ledgerhq/hw-app-cosmos@6.36.3
+
 ## 0.2.5-next.0
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @ledgerhq/hw-app-concordium
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/hw-transport@6.35.3
+
 ## 0.8.1-next.0
 
 ### Patch Changes

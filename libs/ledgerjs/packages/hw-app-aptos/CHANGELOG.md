@@ -1,5 +1,12 @@
 # @ledgerhq/hw-app-aptos
 
+## 6.38.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @ledgerhq/hw-transport@6.35.3
+
 ## 6.38.3-next.0
 
 ### Patch Changes
