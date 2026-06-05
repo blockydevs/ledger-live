@@ -4,17 +4,26 @@ import { useSelector, useDispatch } from "~/context/hooks";
 import { useNavigation } from "@react-navigation/core";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
 import { useFeature } from "@features/platform-feature-flags";
-import { AB_TESTING_VARIANTS } from "../types/variants";
 import {
-  notificationsModalOpenSelector,
-  notificationsDrawerSource,
-} from "~/reducers/notifications";
-import { setNotificationsModalOpen, setNotificationsDrawerSource } from "~/actions/notifications";
-import { ratingsModalOpenSelector } from "~/reducers/ratings";
-import { track } from "~/analytics";
+  setNotificationsDrawerPromptTarget,
+  setNotificationsDrawerSource,
+  setNotificationsModalOpen,
+} from "~/actions/notifications";
+import { setNotifications } from "~/actions/settings";
+import { track, updateIdentify } from "~/analytics";
 import { NavigatorName, ScreenName } from "~/const/navigation";
+import { updateUserPreferences } from "~/notifications/braze";
+import {
+  notificationsDrawerPromptTarget,
+  notificationsDrawerSource,
+  notificationsModalOpenSelector,
+} from "~/reducers/notifications";
+import { ratingsModalOpenSelector } from "~/reducers/ratings";
+import { notificationsSelector } from "~/reducers/settings";
 import { type NotificationsState } from "~/reducers/types";
-import { type DataOfUser } from "../types";
+import { type DataOfUser, type NotificationPromptTarget } from "../types";
+import { AB_TESTING_VARIANTS } from "../types/variants";
+import { isTransactionsAlertsPromptTarget } from "../utils/getNotificationsPromptCopy";
 
 type UseNotificationsDrawerParams = {
   permissionStatus:
@@ -27,7 +36,7 @@ type UseNotificationsDrawerParams = {
   shouldPromptOptInDrawerAfterAction: () => boolean;
   checkIsInactive: (lastActionAt?: number) => boolean;
   markUserAsOptIn: () => void;
-  markUserAsOptOut: () => void;
+  markUserAsOptOut: (promptTarget?: NotificationPromptTarget) => void;
   updateUserLastInactiveTime: () => void;
   requestPushNotificationsPermission: () => Promise<
     void | (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus]
@@ -53,6 +62,8 @@ export const useNotificationsDrawer = ({
   const isPushNotificationsModalOpen = useSelector(notificationsModalOpenSelector);
   const isRatingsModalOpen = useSelector(ratingsModalOpenSelector);
   const drawerSource = useSelector(notificationsDrawerSource);
+  const drawerPromptTarget = useSelector(notificationsDrawerPromptTarget);
+  const notifications = useSelector(notificationsSelector);
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -258,31 +269,49 @@ export const useNotificationsDrawer = ({
   const closeDrawer = useCallback(() => {
     dispatch(setNotificationsModalOpen(false));
     dispatch(setNotificationsDrawerSource(undefined));
+    dispatch(setNotificationsDrawerPromptTarget(undefined));
   }, [dispatch]);
 
   const handleDelayLaterPress = useCallback(() => {
+    const promptTargetAtDismiss = drawerPromptTarget;
     trackButtonClicked("maybe later");
     closeDrawer();
 
     if (drawerSource === "inactivity") {
       updateUserLastInactiveTime();
     } else {
-      markUserAsOptOut();
+      markUserAsOptOut(promptTargetAtDismiss);
     }
-  }, [trackButtonClicked, closeDrawer, markUserAsOptOut, updateUserLastInactiveTime, drawerSource]);
+  }, [
+    trackButtonClicked,
+    closeDrawer,
+    drawerPromptTarget,
+    markUserAsOptOut,
+    updateUserLastInactiveTime,
+    drawerSource,
+  ]);
 
   const handleCloseFromBackdropPress = useCallback(() => {
+    const promptTargetAtDismiss = drawerPromptTarget;
     trackButtonClicked("backdrop");
     closeDrawer();
 
     if (drawerSource === "inactivity") {
       updateUserLastInactiveTime();
     } else {
-      markUserAsOptOut();
+      markUserAsOptOut(promptTargetAtDismiss);
     }
-  }, [trackButtonClicked, closeDrawer, markUserAsOptOut, updateUserLastInactiveTime, drawerSource]);
+  }, [
+    trackButtonClicked,
+    closeDrawer,
+    drawerPromptTarget,
+    markUserAsOptOut,
+    updateUserLastInactiveTime,
+    drawerSource,
+  ]);
 
   const handleAllowNotificationsPress = useCallback(async () => {
+    const promptTargetAtDismiss = drawerPromptTarget;
     trackButtonClicked("allow notifications");
     closeDrawer();
 
@@ -290,11 +319,26 @@ export const useNotificationsDrawer = ({
       updateUserLastInactiveTime();
     }
 
+    if (isTransactionsAlertsPromptTarget(drawerPromptTarget)) {
+      dispatch(
+        setNotifications({
+          transactionsAlertsCategory: true,
+        }),
+      );
+      updateUserPreferences({
+        ...notifications,
+        transactionsAlertsCategory: true,
+      });
+      markUserAsOptIn();
+      updateIdentify();
+      return;
+    }
+
     if (permissionStatus !== AuthorizationStatus.AUTHORIZED) {
       const permission = await requestPushNotificationsPermission();
       if (permission === AuthorizationStatus.DENIED) {
         trackButtonClicked("os_notifications_deny");
-        markUserAsOptOut();
+        markUserAsOptOut(promptTargetAtDismiss);
       } else if (permission === AuthorizationStatus.AUTHORIZED) {
         trackButtonClicked("os_notifications_allow");
         markUserAsOptIn();
@@ -310,6 +354,9 @@ export const useNotificationsDrawer = ({
     trackButtonClicked,
     updateUserLastInactiveTime,
     closeDrawer,
+    drawerPromptTarget,
+    dispatch,
+    notifications,
     permissionStatus,
     areNotificationsAllowed,
     requestPushNotificationsPermission,
@@ -322,6 +369,7 @@ export const useNotificationsDrawer = ({
   return {
     isPushNotificationsModalOpen,
     drawerSource,
+    drawerPromptTarget,
     eventTimeoutRef,
     tryTriggerPushNotificationDrawerAfterAction,
     handleAllowNotificationsPress,
