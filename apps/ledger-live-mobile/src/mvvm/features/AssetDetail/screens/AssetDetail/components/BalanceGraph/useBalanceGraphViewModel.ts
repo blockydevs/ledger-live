@@ -184,17 +184,13 @@ export function useBalanceGraphViewModel({
   const { series, timestamps } = useMemo(() => {
     const rawPoints = chartData?.[range] ?? [];
     // On the "all" range, anchor the graph's high/low markers to the market
-    // all-time high/low so they match the stats table (see LIVE-31732). Injected
-    // before resampling, which preserves the series min/max.
+    // all-time high/low so they match the stats table (see LIVE-31732).
     const withExtrema =
       range === "all"
         ? injectMarketExtrema(rawPoints, { ath, athDate: athTime, atl, atlDate: atlTime })
         : rawPoints;
-    // Resample to the per-range target granularity (LIVE-31777). The market API
-    // returns equal-or-finer resolution than mobile wants, so this only coarsens
-    // the series — which also caps the points fed to the SVG path and removes the
-    // main source of render jank. Timestamps + values stay aligned so scrubber
-    // indices, x-axis ticks and markers track the rendered line.
+    // Resample to the per-range target granularity (LIVE-31777); also caps the
+    // points fed to the SVG path, which was the main source of render jank.
     const points = resampleChartPointsByInterval(withExtrema, RANGE_TARGET_INTERVAL_MS[range]);
     const data: number[] = [];
     const tsList: number[] = [];

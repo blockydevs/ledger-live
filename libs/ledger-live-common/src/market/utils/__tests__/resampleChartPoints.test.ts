@@ -30,12 +30,9 @@ describe("resampleChartPointsByInterval", () => {
   });
 
   it("coarsens an hourly series to roughly one point per target interval", () => {
-    // 49 hourly points (48h span) downsampled to a 6h target.
     const hourly = series(49, HOUR);
     const result = resampleChartPointsByInterval(hourly, 6 * HOUR);
     const spacings = result.slice(1).map((p, i) => p[0] - result[i][0]);
-    // Every kept gap is at least the target interval (extrema aside, which sit at
-    // the endpoints here so they do not create sub-interval gaps).
     expect(Math.min(...spacings)).toBeGreaterThanOrEqual(6 * HOUR);
     expect(result.length).toBeLessThan(hourly.length);
   });
@@ -85,21 +82,16 @@ describe("resampleChartPointsByInterval", () => {
 
   it("keeps every point when the target matches the native spacing, despite jitter", () => {
     // Regression (LIVE-31777): a 5min target on jittery ~5min data must not
-    // alternate 5min/10min gaps — the stride snaps to ×1 and keeps everything.
+    // alternate 5min/10min gaps.
     const fiveMin = 5 * 60_000;
     const points = jittered(50, fiveMin, 8_000);
-    const result = resampleChartPointsByInterval(points, fiveMin);
-    expect(result).toEqual(points);
+    expect(resampleChartPointsByInterval(points, fiveMin)).toEqual(points);
   });
 
   it("produces a constant stride on exact multiples, despite jitter", () => {
-    // 10min target on jittery ~5min data → exactly every other point (×2), no
-    // alternation. Comparing indices keeps it deterministic against jitter.
     const fiveMin = 5 * 60_000;
     const points = jittered(51, fiveMin, 8_000);
     const result = resampleChartPointsByInterval(points, 2 * fiveMin);
-    // Endpoints + extrema sit on even indices here, so the kept set is exactly
-    // every even index: 0, 2, 4, … 50.
     expect(result.map(p => p[1])).toEqual(points.filter((_, i) => i % 2 === 0).map(p => p[1]));
   });
 });

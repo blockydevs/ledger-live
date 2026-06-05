@@ -53,8 +53,7 @@ const CHART_DATA_BY_RANGE: Record<RangeKey, Array<[number, number]>> = {
     [Date.UTC(2024, 0, 2, 11, 0), 210],
   ],
   "1m": [[Date.UTC(2024, 0, 2, 10, 0), 300]],
-  // Spaced several days apart so the per-range resampler (3-day target on 1y)
-  // keeps every point — mirroring the daily resolution the market API serves.
+  // Days apart so the 1y resampler (3-day target) keeps every point.
   "1y": [
     [Date.UTC(2024, 0, 2, 10, 0), 400],
     [Date.UTC(2024, 0, 6, 10, 0), 410],

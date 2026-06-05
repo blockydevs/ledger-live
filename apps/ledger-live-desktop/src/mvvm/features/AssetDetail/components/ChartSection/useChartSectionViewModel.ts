@@ -58,12 +58,8 @@ const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
-/**
- * Target spacing between rendered chart points per range (LIVE-31777). The
- * market API serves equal-or-finer resolution for most ranges, so the resampler
- * only coarsens toward these targets and degrades gracefully where it cannot
- * (6m is served daily, so its 3h target falls back to the daily resolution).
- */
+// Target spacing between chart points per range (LIVE-31777). 6m is served
+// daily, so its 3h target falls back to the daily resolution.
 const RANGE_TARGET_INTERVAL_MS: Record<LineChartRange, number> = {
   "1d": 5 * MINUTE_MS,
   "1w": HOUR_MS,
@@ -160,15 +156,12 @@ export function useChartSectionViewModel({
   const { series, timestamps } = useMemo(() => {
     const rawPoints = chartData?.[selectedRange] ?? [];
     // On the "all" range, anchor the graph's high/low markers to the market
-    // all-time high/low so they match the stats table (see LIVE-31732). Injected
-    // before resampling, which preserves the series min/max.
+    // all-time high/low so they match the stats table (see LIVE-31732).
     const withExtrema =
       selectedRange === "all"
         ? injectMarketExtrema(rawPoints, { ath, athDate: athTime, atl, atlDate: atlTime })
         : rawPoints;
-    // Resample to the per-range target granularity (LIVE-31777). Timestamps and
-    // values stay aligned so scrubber indices, x-axis ticks and markers track
-    // the rendered line.
+    // Resample to the per-range target granularity (LIVE-31777).
     const points = resampleChartPointsByInterval(
       withExtrema,
       RANGE_TARGET_INTERVAL_MS[selectedRange],
