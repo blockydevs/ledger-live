@@ -9,6 +9,10 @@ describe("validateAddress", () => {
     expect(await validateAddress("TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", {})).toBe(true);
   });
 
+  it("returns true for a valid Shasta testnet address", async () => {
+    expect(await validateAddress("TPswDDCAWhJAZGdHPidFg5nEf8TkNToDX1", {})).toBe(true);
+  });
+
   it("returns false for an empty string", async () => {
     expect(await validateAddress("", {})).toBe(false);
   });
@@ -19,5 +23,9 @@ describe("validateAddress", () => {
 
   it("returns false for a Bitcoin address (wrong version byte)", async () => {
     expect(await validateAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7Divfna", {})).toBe(false);
+  });
+
+  it("returns false for a too-short Base58Check string", async () => {
+    expect(await validateAddress("TQ7pF3NTDL", {})).toBe(false);
   });
 });

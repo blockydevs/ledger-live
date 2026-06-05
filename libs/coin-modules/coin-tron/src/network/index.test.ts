@@ -36,7 +36,6 @@ import {
   triggerConstantContract,
   unDelegateResourceTransaction,
   unfreezeTronTransaction,
-  validateAddress,
   voteTronSuperRepresentatives,
   withdrawExpireUnfreezeTronTransaction,
 } from ".";
@@ -764,32 +763,6 @@ describe("getTronAccountNetwork", () => {
     expect(ni.netLimit.toNumber()).toBe(0);
     expect(ni.energyUsed.toNumber()).toBe(0);
     expect(ni.energyLimit.toNumber()).toBe(0);
-  });
-});
-
-describe("validateAddress", () => {
-  it("returns true for a valid mainnet address (incident address)", () => {
-    expect(validateAddress("TNYJQhvXQAfeFFXH5G6cV5uXrx168fnFGE")).toBe(true);
-  });
-
-  it("returns true for another valid mainnet address", () => {
-    expect(validateAddress("TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U")).toBe(true);
-  });
-
-  it("returns false for an empty string", () => {
-    expect(validateAddress("")).toBe(false);
-  });
-
-  it("returns false for a clearly invalid string", () => {
-    expect(validateAddress("notanaddress")).toBe(false);
-  });
-
-  it("returns false for a Bitcoin address (wrong version byte)", () => {
-    expect(validateAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7Divfna")).toBe(false);
-  });
-
-  it("returns false for a too-short Base58Check string", () => {
-    expect(validateAddress(senderBase58.slice(0, 10))).toBe(false);
   });
 });
 
