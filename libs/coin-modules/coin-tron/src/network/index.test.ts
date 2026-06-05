@@ -768,19 +768,28 @@ describe("getTronAccountNetwork", () => {
 });
 
 describe("validateAddress", () => {
-  it("returns true when the API confirms the address", async () => {
-    mockedNetwork.mockResolvedValueOnce(mockResponse({ result: true }));
-    await expect(validateAddress(senderBase58)).resolves.toBe(true);
+  it("returns true for a valid mainnet address (incident address)", () => {
+    expect(validateAddress("TNYJQhvXQAfeFFXH5G6cV5uXrx168fnFGE")).toBe(true);
   });
 
-  it("returns false when result is missing", async () => {
-    mockedNetwork.mockResolvedValueOnce(mockResponse({}));
-    await expect(validateAddress(senderBase58)).resolves.toBe(false);
+  it("returns true for another valid mainnet address", () => {
+    expect(validateAddress("TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U")).toBe(true);
   });
 
-  it("returns false on error and logs the failure", async () => {
-    mockedNetwork.mockRejectedValueOnce(new Error("invalid"));
-    await expect(validateAddress(senderBase58)).resolves.toBe(false);
+  it("returns false for an empty string", () => {
+    expect(validateAddress("")).toBe(false);
+  });
+
+  it("returns false for a clearly invalid string", () => {
+    expect(validateAddress("notanaddress")).toBe(false);
+  });
+
+  it("returns false for a Bitcoin address (wrong version byte)", () => {
+    expect(validateAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7Divfna")).toBe(false);
+  });
+
+  it("returns false for a too-short Base58Check string", () => {
+    expect(validateAddress(senderBase58.slice(0, 10))).toBe(false);
   });
 });
 

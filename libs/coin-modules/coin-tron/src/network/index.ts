@@ -5,6 +5,7 @@ import { hours, makeLRUCache } from "@ledgerhq/live-network/cache";
 import { log } from "@ledgerhq/logs";
 import { Account, TokenAccount } from "@ledgerhq/types-live";
 import { BigNumber } from "bignumber.js";
+import bs58check from "bs58check";
 import compact from "lodash/compact";
 import drop from "lodash/drop";
 import sumBy from "lodash/sumBy";
@@ -773,17 +774,30 @@ export const getTronAccountNetwork = async (address: string): Promise<NetworkInf
   };
 };
 
-export const validateAddress = async (address: string): Promise<boolean> => {
+const TRON_ADDRESS_VERSION_BYTE = 0x41;
+const TRON_ADDRESS_DECODED_LENGTH = 21;
+
+/**
+ * Validates a TRON address locally using Base58Check decoding.
+ *
+ * Previously this called the TronGrid API (/wallet/validateaddress),
+ * which proved unreliable — it intermittently rejected valid addresses (e.g.
+ * TNYJQhvXQAfeFFXH5G6cV5uXrx168fnFGE), causing transaction failures.
+ *
+ * A valid TRON mainnet address is a Base58Check-encoded 21-byte payload
+ * whose first byte is 0x41 (the TRON mainnet version byte). No network
+ * call is required.
+ *
+ * @see https://developers.tron.network/docs/account#address-format
+ */
+export const validateAddress = (address: string): boolean => {
   try {
-    const result = await post(`/wallet/validateaddress`, {
-      address: decode58Check(address),
-    });
-    return result.result || false;
-  } catch (e: any) {
-    // FIXME we should not silent errors!
-    log("tron-error", "validateAddress fails with " + e.message, {
-      address,
-    });
+    const decoded = bs58check.decode(address);
+    return (
+      decoded.length === TRON_ADDRESS_DECODED_LENGTH &&
+      decoded[0] === TRON_ADDRESS_VERSION_BYTE
+    );
+  } catch {
     return false;
   }
 };

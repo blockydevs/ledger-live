@@ -1,27 +1,23 @@
-import { validateAddress as networkValidateAddress } from "../network";
 import { validateAddress } from "./validateAddress";
 
-jest.mock("../network");
-
 describe("validateAddress", () => {
-  const mockedNetworkValidateAddress = jest.mocked(networkValidateAddress);
-
-  beforeEach(() => {
-    mockedNetworkValidateAddress.mockClear();
+  it("returns true for a valid mainnet address (incident address)", async () => {
+    expect(await validateAddress("TNYJQhvXQAfeFFXH5G6cV5uXrx168fnFGE", {})).toBe(true);
   });
 
-  it.each([true, false])(
-    "should call validateAddress from network and return expected value (%s)",
-    async (expectedValue: boolean) => {
-      mockedNetworkValidateAddress.mockResolvedValueOnce(expectedValue);
+  it("returns true for another valid mainnet address", async () => {
+    expect(await validateAddress("TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", {})).toBe(true);
+  });
 
-      const address = "some random address";
-      const parameters = {};
-      const result = await validateAddress(address, parameters);
-      expect(result).toEqual(expectedValue);
+  it("returns false for an empty string", async () => {
+    expect(await validateAddress("", {})).toBe(false);
+  });
 
-      expect(mockedNetworkValidateAddress).toHaveBeenCalledTimes(1);
-      expect(mockedNetworkValidateAddress).toHaveBeenCalledWith(address);
-    },
-  );
+  it("returns false for a clearly invalid string", async () => {
+    expect(await validateAddress("notanaddress", {})).toBe(false);
+  });
+
+  it("returns false for a Bitcoin address (wrong version byte)", async () => {
+    expect(await validateAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7Divfna", {})).toBe(false);
+  });
 });
