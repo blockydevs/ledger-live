@@ -12,16 +12,32 @@ import { ToolsHeader } from "../toolsHeader/ToolsHeader";
 import { useFeatureFlagsFilters } from "../../hooks";
 import { useSortFlag } from "../../hooks/useSortFlag";
 import { buildOverridesExport } from "../../utils/exportOverrides";
+import { parseOverridesImport } from "../../utils/importOverrides";
 import { saveFile } from "../../utils/saveFile";
+import { readFile } from "../../utils/readFile";
 
 export const FlagList = (props: FeatureFlagsToolProps) => {
   const { overrides, setOverride, clearAllOverrides } = props;
+
   const exportOverrides =
     props.exportOverrides ??
     (() => {
       const { content, filename } = buildOverridesExport(overrides);
       saveFile(content, filename);
     });
+
+  const importOverrides = () => {
+    readFile()
+      .then(parseOverridesImport)
+      .then(({ overrides: imported, warnings }) => {
+        console.log("Import result:", imported, warnings);
+        warnings.forEach(warning => console.warn(warning));
+        props.importOverrides(imported);
+      })
+      .catch(() => {
+        console.warn("Import cancelled or failed");
+      });
+  };
   const { getFlagDisplayState } = useFeatureFlagsState(props);
   const { selectedFlagId, selectFlag, clearSelection } = useFlagSelection();
   const featureIds: FeatureId[] = ALL_FLAG_IDS;
@@ -48,6 +64,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
           toggleDirection={toggleDirection}
           clearAllOverrides={clearAllOverrides}
           exportOverrides={exportOverrides}
+          importOverrides={importOverrides}
         />
         <Divider />
         <FlagListHeader

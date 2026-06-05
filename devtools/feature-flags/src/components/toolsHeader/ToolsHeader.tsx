@@ -41,6 +41,7 @@ export interface ToolsHeaderProps {
   toggleDirection: () => void;
   clearAllOverrides: () => void;
   exportOverrides: () => void;
+  importOverrides: () => void;
 }
 
 export function ToolsHeader({
@@ -55,6 +56,7 @@ export function ToolsHeader({
   toggleDirection,
   clearAllOverrides,
   exportOverrides,
+  importOverrides,
 }: ToolsHeaderProps) {
   return (
     // Responsive layout (viewport-based, matching the rest of the panel):
@@ -125,7 +127,7 @@ export function ToolsHeader({
         </MenuTrigger>
         <MenuContent align="end">
           <MenuItem onClick={exportOverrides}>Export flags</MenuItem>
-          <MenuItem>Import flags</MenuItem>
+          <MenuItem onClick={importOverrides}>Import flags</MenuItem>
           <MenuItem onClick={clearAllOverrides}>Reset all overrides</MenuItem>
         </MenuContent>
       </Menu>
