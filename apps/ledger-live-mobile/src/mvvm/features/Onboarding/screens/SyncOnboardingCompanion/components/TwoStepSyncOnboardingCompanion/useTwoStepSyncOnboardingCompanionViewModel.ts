@@ -19,7 +19,7 @@ import { NavigatorName, ScreenName } from "~/const";
 import { useSelector, useDispatch } from "~/context/hooks";
 import { useKeepScreenAwake } from "~/hooks/useKeepScreenAwake";
 import { isOnboardingFlowReceiveSuccessSelector } from "~/reducers/settings";
-import useTwoStepDesync from "~/screens/SyncOnboarding/TwoStepStepper/useTwoStepDesync";
+import useTwoStepDesync from "../../hooks/useTwoStepDesync";
 
 import { COMPANION_STATE, CompanionStep, SEED_STATE } from "../../types";
 import type { UseTwoStepSyncOnboardingCompanionViewModelProps } from "./types";
