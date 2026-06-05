@@ -5,7 +5,7 @@ import monadAbi from "../../abis/monad.abi.json";
 import { getCoinConfig } from "../../config";
 import { withApi } from "../../network/node/rpc.common";
 import { clearValidatorsCache, getValidators } from "./index";
-import { getValidatorAddressById } from "./monad";
+import { fetchMonadStakes, getValidatorAddressById } from "./monad";
 
 jest.mock("../../config", () => ({
   __esModule: true,
@@ -63,6 +63,8 @@ const setupRpc = (handler: CallHandler) => {
   } as unknown as ReturnType<typeof getCoinConfig>);
   mockedGetCryptoCurrencyById.mockReturnValue({
     id: "monad",
+    name: "Monad",
+    units: [{ name: "MON", code: "MON", magnitude: 18 }],
   } as unknown as ReturnType<typeof getCryptoCurrencyById>);
   const callMock = jest.fn(handler);
   mockedWithApi.mockImplementation(async (_currency, fn) =>
@@ -78,6 +80,8 @@ const setupRpc = (handler: CallHandler) => {
 const routeByName = (responses: {
   getExecutionValidatorSet?: (startIndex: bigint) => string | Error;
   getValidator?: (valId: bigint) => string | Error;
+  getDelegations?: (startValId: bigint) => string | Error;
+  getDelegator?: (valId: bigint) => string | Error;
 }): CallHandler => {
   return async ({ data }) => {
     if (!data) throw new Error("missing data");
@@ -97,6 +101,20 @@ const routeByName = (responses: {
       if (!out) throw new Error(`no response for getValidator(${valId})`);
       return out;
     }
+    if (desc.name === "getDelegations") {
+      const startValId = desc.args[1] as bigint;
+      const out = responses.getDelegations?.(startValId);
+      if (out instanceof Error) throw out;
+      if (!out) throw new Error(`no response for getDelegations(${startValId})`);
+      return out;
+    }
+    if (desc.name === "getDelegator") {
+      const valId = desc.args[0] as bigint;
+      const out = responses.getDelegator?.(valId);
+      if (out instanceof Error) throw out;
+      if (!out) throw new Error(`no response for getDelegator(${valId})`);
+      return out;
+    }
     throw new Error(`unexpected function: ${desc.name}`);
   };
 };
@@ -109,8 +127,16 @@ describe("staking/validators/monad", () => {
 
   it("fetches and maps a single page of validators from the precompile", async () => {
     const valDetails: Record<string, { stake: bigint; commission: bigint; secpPubkey: string }> = {
-      "1": { stake: 1_000n, commission: 10n ** 17n, secpPubkey: "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187" }, // 10%
-      "2": { stake: 500n, commission: 5n * 10n ** 16n, secpPubkey: "0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54" }, // 5%
+      "1": {
+        stake: 1_000n,
+        commission: 10n ** 17n,
+        secpPubkey: "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187",
+      }, // 10%
+      "2": {
+        stake: 500n,
+        commission: 5n * 10n ** 16n,
+        secpPubkey: "0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54",
+      }, // 5%
     };
 
     const callMock = setupRpc(
@@ -123,7 +149,9 @@ describe("staking/validators/monad", () => {
     expect(await getValidators("monad")).toStrictEqual({
       items: [
         {
-          validatorAddress: ethers.computeAddress("0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187"),
+          validatorAddress: ethers.computeAddress(
+            "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187",
+          ),
           validatorId: "1",
           name: "Validator 1",
           commission: 0.1,
@@ -132,7 +160,9 @@ describe("staking/validators/monad", () => {
           estimatedYearlyRewardsRate: 0,
         },
         {
-          validatorAddress: ethers.computeAddress("0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54"),
+          validatorAddress: ethers.computeAddress(
+            "0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54",
+          ),
           validatorId: "2",
           name: "Validator 2",
           commission: 0.05,
@@ -155,7 +185,12 @@ describe("staking/validators/monad", () => {
     setupRpc(
       routeByName({
         getExecutionValidatorSet: () => encodeExecValSet(true, 0, [1n]),
-        getValidator: () => encodeGetValidator({ stake: 1_000n, commission: 0n, secpPubkey: "0x03e773631152aa98da046d945f0d410d85369e19764a7f9de77fcb896defe527df" }),
+        getValidator: () =>
+          encodeGetValidator({
+            stake: 1_000n,
+            commission: 0n,
+            secpPubkey: "0x03e773631152aa98da046d945f0d410d85369e19764a7f9de77fcb896defe527df",
+          }),
       }),
     );
     // Repo filename is the lowercase secp hex without the `0x` prefix.
@@ -167,7 +202,9 @@ describe("staking/validators/monad", () => {
     const page = await getValidators("monad");
 
     expect(page.items[0]).toMatchObject({
-      validatorAddress: ethers.computeAddress("0x03e773631152aa98da046d945f0d410d85369e19764a7f9de77fcb896defe527df"),
+      validatorAddress: ethers.computeAddress(
+        "0x03e773631152aa98da046d945f0d410d85369e19764a7f9de77fcb896defe527df",
+      ),
       name: "GalaxyDigital",
     });
     expect(mockedNetwork).toHaveBeenCalledWith(
@@ -186,7 +223,11 @@ describe("staking/validators/monad", () => {
         getValidator: valId =>
           valId === 1n
             ? new Error("rpc timeout")
-            : encodeGetValidator({ stake: 42n, commission: 0n, secpPubkey: "0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54" }),
+            : encodeGetValidator({
+                stake: 42n,
+                commission: 0n,
+                secpPubkey: "0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54",
+              }),
       }),
     );
 
@@ -194,7 +235,9 @@ describe("staking/validators/monad", () => {
 
     expect(page.items).toHaveLength(1);
     expect(page.items[0]).toMatchObject({
-      validatorAddress: ethers.computeAddress("0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54"),
+      validatorAddress: ethers.computeAddress(
+        "0x0316e0861acf92dc4c0e357f73fe07263a87b65513a4b73750ab9194f9a39a6a54",
+      ),
       name: "Validator 2",
       tokens: "42",
     });
@@ -317,7 +360,9 @@ describe("staking/validators/monad", () => {
       expect(firstPage).toStrictEqual({
         items: [
           {
-            validatorAddress: ethers.computeAddress("0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187"),
+            validatorAddress: ethers.computeAddress(
+              "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187",
+            ),
             validatorId: "1",
             name: "Validator 1",
             commission: 0,
@@ -368,14 +413,15 @@ describe("staking/validators/monad", () => {
             encodeGetValidator({
               stake: 0n,
               commission: 0n,
-              secpPubkey:
-                "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187",
+              secpPubkey: "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187",
             }),
         }),
       );
 
       expect(await getValidatorAddressById("monad", 7n)).toEqual(
-        ethers.computeAddress("0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187"),
+        ethers.computeAddress(
+          "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187",
+        ),
       );
     });
 
@@ -391,6 +437,230 @@ describe("staking/validators/monad", () => {
       setupRpc(routeByName({ getValidator: () => new Error("boom") }));
 
       expect(await getValidatorAddressById("monad", 7n)).toBeNull();
+    });
+  });
+
+  describe("fetchMonadStakes", () => {
+    const DELEGATOR = "0x00000000000000000000000000000000000000aa";
+    const SECP = "0x036e44a092493800e427b2b08d3427d804348b1368ecd0a6af6510ae40ce507187";
+
+    const fetchStakes = () => fetchMonadStakes(DELEGATOR, {} as never, { id: "monad" } as never);
+
+    const encodeDelegator = (stake: bigint, deltaStake = 0n, nextDeltaStake = 0n): string =>
+      monadIface.encodeFunctionResult("getDelegator", [
+        stake,
+        0n,
+        0n,
+        deltaStake,
+        nextDeltaStake,
+        0n,
+        0n,
+      ]);
+
+    const callNames = (callMock: ReturnType<typeof setupRpc>): (string | undefined)[] =>
+      callMock.mock.calls.map(
+        ([req]) => monadIface.parseTransaction({ data: req.data ?? "0x" })?.name,
+      );
+
+    it("returns one active stake for a single delegation", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [7n]]),
+          getDelegator: () => encodeDelegator(100n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
+        }),
+      );
+
+      expect(await fetchStakes()).toStrictEqual([
+        {
+          uid: `${PRECOMPILE}-7-${DELEGATOR}-active`,
+          address: DELEGATOR,
+          delegate: ethers.computeAddress(SECP),
+          state: "active",
+          asset: {
+            type: "native",
+            name: "Monad",
+            unit: { name: "MON", code: "MON", magnitude: 18 },
+          },
+          amount: 100n,
+          actions: [],
+          details: {
+            contractAddress: PRECOMPILE,
+            validator: ethers.computeAddress(SECP),
+            validatorId: "7",
+          },
+        },
+      ]);
+    });
+
+    it("attaches the resolved validator name to the stake details", async () => {
+      const namedSecp = "0x034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa";
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [7n]]),
+          getDelegator: () => encodeDelegator(100n),
+          getValidator: () =>
+            encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: namedSecp }),
+        }),
+      );
+      mockedNetwork.mockResolvedValueOnce({
+        data: { name: "GalaxyDigital" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      const stakes = await fetchStakes();
+
+      expect(stakes[0].details).toStrictEqual({
+        contractAddress: PRECOMPILE,
+        validator: ethers.computeAddress(namedSecp),
+        validatorName: "GalaxyDigital",
+        validatorId: "7",
+      });
+    });
+
+    it("paginates getDelegations until isDone", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: startValId =>
+            startValId === 0n
+              ? monadIface.encodeFunctionResult("getDelegations", [false, 5, [1n, 2n]])
+              : monadIface.encodeFunctionResult("getDelegations", [true, 0, [3n]]),
+          getDelegator: () => encodeDelegator(10n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes.map(s => s.details?.validatorId)).toStrictEqual(["1", "2", "3"]);
+    });
+
+    it("splits a delegation into an active stake and an activating stake summing the deltas", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n]]),
+          getDelegator: () => encodeDelegator(100n, 50n, 25n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes.map(s => ({ uid: s.uid, state: s.state, amount: s.amount }))).toStrictEqual([
+        { uid: `${PRECOMPILE}-1-${DELEGATOR}-active`, state: "active", amount: 100n },
+        { uid: `${PRECOMPILE}-1-${DELEGATOR}-activating`, state: "activating", amount: 75n },
+      ]);
+    });
+
+    it("returns only an activating stake when the active stake is zero", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n]]),
+          getDelegator: () => encodeDelegator(0n, 50n, 25n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes.map(s => ({ state: s.state, amount: s.amount }))).toStrictEqual([
+        { state: "activating", amount: 75n },
+      ]);
+    });
+
+    it("returns only an active stake when there are no pending deltas", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n]]),
+          getDelegator: () => encodeDelegator(100n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes.map(s => ({ state: s.state, amount: s.amount }))).toStrictEqual([
+        { state: "active", amount: 100n },
+      ]);
+    });
+
+    it("filters out delegations with a zero total amount", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () =>
+            monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n, 2n]]),
+          getDelegator: valId => (valId === 1n ? encodeDelegator(0n) : encodeDelegator(42n)),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes.map(s => s.details?.validatorId)).toStrictEqual(["2"]);
+    });
+
+    it("returns surviving stakes when one getDelegator call fails", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () =>
+            monadIface.encodeFunctionResult("getDelegations", [true, 0, [1n, 2n]]),
+          getDelegator: valId => (valId === 1n ? new Error("rpc timeout") : encodeDelegator(42n)),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes.map(s => s.details?.validatorId)).toStrictEqual(["2"]);
+    });
+
+    it("keeps the stake amount when getValidator fails for a delegated validator", async () => {
+      setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, [9n]]),
+          getDelegator: () => encodeDelegator(77n),
+          getValidator: () => new Error("boom"),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes).toHaveLength(1);
+      expect(stakes[0]).toMatchObject({ amount: 77n, details: { validatorId: "9" } });
+      expect(stakes[0].delegate).toBeUndefined();
+    });
+
+    it("returns an empty array and makes no detail calls without delegations", async () => {
+      const callMock = setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [true, 0, []]),
+        }),
+      );
+
+      expect(await fetchStakes()).toStrictEqual([]);
+      expect(callNames(callMock)).toStrictEqual(["getDelegations"]);
+    });
+
+    it("returns an empty array when getDelegations reverts", async () => {
+      setupRpc(routeByName({ getDelegations: () => new Error("missing revert data") }));
+
+      expect(await fetchStakes()).toStrictEqual([]);
+    });
+
+    it("returns an empty array when the node config is not external", async () => {
+      mockedGetCoinConfig.mockReturnValue({
+        info: { node: { type: "ledger" } },
+      } as unknown as ReturnType<typeof getCoinConfig>);
+
+      expect(await fetchStakes()).toStrictEqual([]);
+      expect(mockedWithApi).not.toHaveBeenCalled();
+    });
+
+    it("stops paginating when nextValId does not advance", async () => {
+      const callMock = setupRpc(
+        routeByName({
+          getDelegations: () => monadIface.encodeFunctionResult("getDelegations", [false, 0, [1n]]),
+          getDelegator: () => encodeDelegator(5n),
+          getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n }),
+        }),
+      );
+
+      const stakes = await fetchStakes();
+      expect(stakes).toHaveLength(1);
+      expect(callNames(callMock).filter(name => name === "getDelegations")).toHaveLength(1);
     });
   });
 });

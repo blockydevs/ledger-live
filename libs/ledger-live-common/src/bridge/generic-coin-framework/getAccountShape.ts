@@ -405,19 +405,25 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
       const delegations: StakingDelegation[] = activeStakes.filter(hasStakeDelegate).map(b => {
         const delegated: bigint = delegatedAmountForStakingResources(b);
         const rewarded: bigint = b.stake.amountRewarded ?? 0n;
+        const validatorId = b.stake.details?.validatorId;
+        const validatorName = b.stake.details?.validatorName;
         return {
           validatorAddress: b.stake.delegate,
           amount: new BigNumber(delegated.toString()),
           pendingRewards: new BigNumber(rewarded.toString()),
-          status: "bonded" as const,
+          status: b.stake.state === "activating" ? "activating" : "bonded",
+          ...(typeof validatorId === "string" ? { validatorId } : {}),
+          ...(typeof validatorName === "string" ? { validatorName } : {}),
         };
       });
       const unbondings: StakingUnbonding[] = deactivatingStakes.filter(hasStakeDelegate).map(b => {
         const delegated: bigint = delegatedAmountForStakingResources(b);
+        const validatorName = b.stake.details?.validatorName;
         return {
           validatorAddress: b.stake.delegate,
           amount: new BigNumber(delegated.toString()),
           completionDate: b.stake.stateUpdatedAt ?? new Date(),
+          ...(typeof validatorName === "string" ? { validatorName } : {}),
         };
       });
       stakingResources = {

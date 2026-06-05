@@ -9,6 +9,12 @@ import type { LineChartRange } from "LLD/components/LineChart";
 import { useTranslation } from "react-i18next";
 import { counterValueCurrencySelector, localeSelector } from "~/renderer/reducers/settings";
 import {
+  dayAndHourFormat,
+  dayFormat,
+  hourFormat,
+  useDateFormatter,
+} from "~/renderer/hooks/useDateFormatter";
+import {
   clampDayChangePercentPointsNearZero,
   getFiatPriceVariationFromPercentChange,
   getPriceChangeKeyForRange,
@@ -16,7 +22,6 @@ import {
   resolveTrendPercentAndVariant,
 } from "./utils";
 import { resolveAssetDetailSectionLoading } from "../../utils/resolveAssetDetailSectionLoading";
-import { useAssetChartDateFormatter } from "../../hooks/useAssetChartDateFormatter";
 import { useScrubbedPrice } from "../../context/ScrubbedPriceContext";
 
 type UseMarketPriceSectionViewModelProps = Readonly<{
@@ -53,6 +58,8 @@ const RANGE_I18N_KEY: Record<LineChartRange, string> = {
   all: "assetDetails.allTime",
 };
 
+const HOVER_RANGE_WITH_TIME_AND_DATE = new Set<LineChartRange>(["1w", "1m", "6m"]);
+
 export function useMarketPriceSectionViewModel({
   distributionItem,
   ledgerId,
@@ -75,7 +82,7 @@ export function useMarketPriceSectionViewModel({
   const hasPriceData = Number.isFinite(data?.price);
   const showSkeleton = Boolean(
     marketAssetId &&
-      resolveAssetDetailSectionLoading(isDistributionLoading, marketData.isLoading, hasPriceData),
+    resolveAssetDetailSectionLoading(isDistributionLoading, marketData.isLoading, hasPriceData),
   );
   const priceChangeKey = getPriceChangeKeyForRange(selectedRange);
   const rangePercentage = data?.priceChangePercentage?.[priceChangeKey];
@@ -118,8 +125,18 @@ export function useMarketPriceSectionViewModel({
     trendPercentageText,
     trendVariant,
   });
-
-  const formatDate = useAssetChartDateFormatter(selectedRange);
+  const formatHoverTime = useDateFormatter(hourFormat);
+  const formatHoverDay = useDateFormatter(dayFormat);
+  const formatHoverDateTime = useDateFormatter(dayAndHourFormat);
+  const formatHoverDate = useCallback(
+    (ms: number) => {
+      const date = new Date(ms);
+      if (selectedRange === "1d") return formatHoverTime(date);
+      if (HOVER_RANGE_WITH_TIME_AND_DATE.has(selectedRange)) return formatHoverDateTime(date);
+      return formatHoverDay(date);
+    },
+    [formatHoverDay, formatHoverDateTime, formatHoverTime, selectedRange],
+  );
 
   let priceValue: number | undefined;
   if (isScrubbing) {
@@ -141,7 +158,7 @@ export function useMarketPriceSectionViewModel({
     hasPriceData,
     hasVariationData,
     isScrubbing,
-    scrubbedDateLabel: isScrubbing ? formatDate(selection.timestamp) : undefined,
+    scrubbedDateLabel: isScrubbing ? formatHoverDate(selection.timestamp) : undefined,
   };
 }
 
