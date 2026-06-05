@@ -67,6 +67,12 @@ jobs:
         with:
           skip_builds: true
 
+      - name: format check
+        # TODO(LIVE-31553): remove continue-on-error once format:check exists on
+        # release HEAD (~2 weeks); kept non-blocking to not break release flows.
+        continue-on-error: true
+        run: pnpm desktop format:check
+
       - name: lint
         run: pnpm desktop lint:ci
 
@@ -206,7 +212,6 @@ jobs:
           invert_filter: false
           shard_index: 1
           shard_total: 1
-          enable_wallet40: true
         env:
           SEED: ${{ secrets.SEED_QAA_B2C }}
           XRAY: false
