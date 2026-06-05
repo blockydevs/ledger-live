@@ -2,11 +2,7 @@ import type { Account, EIP712Message } from "@ledgerhq/types-live";
 import type { CustomSwapParams, CustomSwapResult } from "@ledgerhq/wallet-api-exchange-module";
 
 import type { Quote, QuoteApprovalTransaction } from "../quotes/types";
-import type {
-  DexBuildContext,
-  DexProvider,
-  DexTransactionData,
-} from "../dex";
+import type { DexBuildContext, DexProvider, DexTransactionData } from "../dex";
 import type { RfqProvider } from "../intents/signRfqOrderEvm/rfqTypedData";
 
 export type { CustomSwapParams, CustomSwapResult };
@@ -284,17 +280,19 @@ export type SwapFlowPorts<TIntent, TInitInput> = {
    * self-transition (the device stays connected so the executor doesn't
    * tear down between the signing and the submit/poll phases).
    */
-  createSubmitRfqOrderIntent: (
-    input: SubmitRfqOrderIntentInput & { initInput: TInitInput },
-  ) => { intent: TIntent; initInput: TInitInput };
+  createSubmitRfqOrderIntent: (input: SubmitRfqOrderIntentInput & { initInput: TInitInput }) => {
+    intent: TIntent;
+    initInput: TInitInput;
+  };
   /**
    * Build a broadcast intent runtime instance. The machine forwards the
    * `initInput` from the previous phase so the executor absorbs the
    * intent change as a self-transition (see device-intent README).
    */
-  createBroadcastIntent: (
-    input: BroadcastIntentInput & { initInput: TInitInput },
-  ) => { intent: TIntent; initInput: TInitInput };
+  createBroadcastIntent: (input: BroadcastIntentInput & { initInput: TInitInput }) => {
+    intent: TIntent;
+    initInput: TInitInput;
+  };
   /**
    * Async fetch of provider calldata (`buildProviderTransactionData`).
    * Returns the swap calldata blob plus the partner's hardware-wallet

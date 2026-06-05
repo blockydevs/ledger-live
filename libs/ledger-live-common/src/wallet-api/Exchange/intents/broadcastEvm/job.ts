@@ -20,7 +20,9 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function buildBroadcastObservable(input: BroadcastEvmIntentInput): Observable<BroadcastEvmJobState> {
+function buildBroadcastObservable(
+  input: BroadcastEvmIntentInput,
+): Observable<BroadcastEvmJobState> {
   return new Observable<BroadcastEvmJobState>(subscriber => {
     let cancelled = false;
 

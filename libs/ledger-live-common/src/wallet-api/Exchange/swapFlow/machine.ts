@@ -119,10 +119,7 @@ type BuildSwapInput = {
   buildContext: DexBuildContext;
 };
 
-function initialContext<TIntent, TInitInput>(): SwapFlowContext<
-  TIntent,
-  TInitInput
-> {
+function initialContext<TIntent, TInitInput>(): SwapFlowContext<TIntent, TInitInput> {
   return {
     plan: null,
     mainAccount: null,
@@ -161,14 +158,12 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
       events: {} as Evt,
     },
     actors: {
-      buildSwap: fromPromise(
-        async ({ input }: { input: BuildSwapInput }) => {
-          return ports.buildSwapTransactionData({
-            provider: input.provider,
-            context: input.buildContext,
-          });
-        },
-      ),
+      buildSwap: fromPromise(async ({ input }: { input: BuildSwapInput }) => {
+        return ports.buildSwapTransactionData({
+          provider: input.provider,
+          context: input.buildContext,
+        });
+      }),
     },
     actions: {
       acceptStart: assign(({ event }) => {
@@ -222,8 +217,7 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
         const plan = context.plan;
         if (
           !plan ||
-          (plan.kind !== "permit-then-swap" &&
-            plan.kind !== "approval-then-permit-then-swap")
+          (plan.kind !== "permit-then-swap" && plan.kind !== "approval-then-permit-then-swap")
         ) {
           return {};
         }
@@ -242,11 +236,7 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
       }),
       buildSignRfqOrderIntent: assign(({ context }) => {
         const plan = context.plan;
-        if (
-          !plan ||
-          (plan.kind !== "rfq-order" &&
-            plan.kind !== "approval-then-rfq-order")
-        ) {
+        if (!plan || (plan.kind !== "rfq-order" && plan.kind !== "approval-then-rfq-order")) {
           return {};
         }
         const account = context.mainAccount;
@@ -264,11 +254,7 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
       }),
       buildSubmitRfqOrderIntent: assign(({ context }) => {
         const plan = context.plan;
-        if (
-          !plan ||
-          (plan.kind !== "rfq-order" &&
-            plan.kind !== "approval-then-rfq-order")
-        ) {
+        if (!plan || (plan.kind !== "rfq-order" && plan.kind !== "approval-then-rfq-order")) {
           return {};
         }
         const account = context.mainAccount;
@@ -286,8 +272,10 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
           precomputedOrderId: plan.precomputedOrderId,
           network: plan.network,
         };
-        const { intent, initInput: nextInitInput } =
-          ports.createSubmitRfqOrderIntent({ ...portInput, initInput });
+        const { intent, initInput: nextInitInput } = ports.createSubmitRfqOrderIntent({
+          ...portInput,
+          initInput,
+        });
         return { currentIntent: intent, currentInitInput: nextInitInput };
       }),
       buildBroadcastIntent: assign(({ context }) => {
@@ -310,13 +298,7 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
         const derivationPath = context.derivationPath;
         const transactionData = context.swapBuildResult;
         const hwAppId = context.swapHwAppId;
-        if (
-          !account ||
-          !currencyId ||
-          !derivationPath ||
-          !transactionData ||
-          !hwAppId
-        ) {
+        if (!account || !currencyId || !derivationPath || !transactionData || !hwAppId) {
           return {};
         }
         const portInput: SignSwapIntentInput = {
@@ -365,9 +347,7 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
       storeCancelError: assign(({ event }) => {
         if (event.type !== "CANCEL") return {};
         return {
-          error:
-            event.error ??
-            new Error("Swap flow cancelled by user"),
+          error: event.error ?? new Error("Swap flow cancelled by user"),
         };
       }),
       resolveSkip: ({ context }) => {
@@ -430,14 +410,11 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
         if (event.type !== "START") return false;
         return event.input.plan.kind === "rfq-order";
       },
-      planEndsAtApproval: ({ context }) =>
-        context.plan?.kind === "approval-only",
-      planContinuesToSwap: ({ context }) =>
-        context.plan?.kind === "approval-then-swap",
+      planEndsAtApproval: ({ context }) => context.plan?.kind === "approval-only",
+      planContinuesToSwap: ({ context }) => context.plan?.kind === "approval-then-swap",
       planContinuesToPermit: ({ context }) =>
         context.plan?.kind === "approval-then-permit-then-swap",
-      planContinuesToRfqOrder: ({ context }) =>
-        context.plan?.kind === "approval-then-rfq-order",
+      planContinuesToRfqOrder: ({ context }) => context.plan?.kind === "approval-then-rfq-order",
     },
   }).createMachine({
     id: "swapFlow",
@@ -566,9 +543,7 @@ export function createSwapFlowMachine<TIntent, TInitInput>(
                 plan.kind !== "permit-then-swap" &&
                 plan.kind !== "approval-then-permit-then-swap")
             ) {
-              throw new Error(
-                "buildSwap actor invoked with an incompatible plan",
-              );
+              throw new Error("buildSwap actor invoked with an incompatible plan");
             }
             const buildContext: DexBuildContext = context.permitSignature
               ? { ...plan.buildContext, permitSignature: context.permitSignature }
