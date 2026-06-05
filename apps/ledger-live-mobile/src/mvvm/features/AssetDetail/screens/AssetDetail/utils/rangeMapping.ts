@@ -7,6 +7,26 @@ export type RangeKey = (typeof BALANCE_GRAPH_RANGES)[number];
 
 const RANGE_KEY_SET: ReadonlySet<string> = new Set(BALANCE_GRAPH_RANGES);
 
+const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+
+/**
+ * Target spacing between rendered chart points per range (LIVE-31777). Mobile
+ * uses coarser granularity than desktop for render performance. The market API
+ * serves equal-or-finer resolution for every range, so the resampler only ever
+ * coarsens toward these targets (it never adds resolution).
+ */
+export const RANGE_TARGET_INTERVAL_MS: Record<RangeKey, number> = {
+  "1d": 10 * MINUTE_MS,
+  // 2h rather than the 1.5h baseline: hourly source data cannot yield 1.5h, so
+  // we coarsen to the next clean multiple (×2).
+  "1w": 2 * HOUR_MS,
+  "1m": 6 * HOUR_MS,
+  "1y": 3 * DAY_MS,
+  all: 30 * DAY_MS,
+};
+
 export const RANGE_TO_PRICE_CHANGE_KEY: Partial<Record<RangeKey, KeysPriceChange>> = {
   "1d": KeysPriceChange.day,
   "1w": KeysPriceChange.week,
