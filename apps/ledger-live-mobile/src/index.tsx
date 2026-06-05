@@ -45,7 +45,6 @@ import SetEnvsFromSettings from "~/components/SetEnvsFromSettings";
 import ExperimentalHeader from "~/screens/Settings/Experimental/ExperimentalHeader";
 import Modals from "~/screens/Modals";
 import NavBarColorHandler from "~/components/NavBarColorHandler";
-import { FeatureFlagsContextBridge } from "~/components/FeatureFlagsContextBridge";
 import { TermsAndConditionMigrateLegacyData } from "~/logic/terms";
 import HookDynamicContentCards from "~/dynamicContent/useContentCards";
 import { ModalSystemPrimer } from "LLM/components/ModalSystemPrimer";
@@ -353,36 +352,34 @@ export default class Root extends Component {
               <HookDevTools />
               <TermsAndConditionMigrateLegacyData />
               <QueuedDrawersContextProvider>
-                <FeatureFlagsContextBridge>
-                  <I18nextProvider i18n={i18n}>
-                    <LocaleProvider>
-                      <PlatformAppProviderWrapper>
-                        <SafeAreaProvider>
-                          <ModalSystemPrimer />
-                          <StylesProvider>
-                            <StyledStatusBar />
-                            <NavBarColorHandler />
-                            <AuthPass>
-                              <GestureHandlerRootView style={styles.root}>
-                                <WaitForAppReady currencyInitialized={currencyInitialized}>
-                                  <AppProviders initialCountervalues={initialCountervalues}>
-                                    <AppGeoBlocker>
-                                      <AppVersionBlocker>
-                                        <BridgeSyncProvider>
-                                          <App />
-                                        </BridgeSyncProvider>
-                                      </AppVersionBlocker>
-                                    </AppGeoBlocker>
-                                  </AppProviders>
-                                </WaitForAppReady>
-                              </GestureHandlerRootView>
-                            </AuthPass>
-                          </StylesProvider>
-                        </SafeAreaProvider>
-                      </PlatformAppProviderWrapper>
-                    </LocaleProvider>
-                  </I18nextProvider>
-                </FeatureFlagsContextBridge>
+                <I18nextProvider i18n={i18n}>
+                  <LocaleProvider>
+                    <PlatformAppProviderWrapper>
+                      <SafeAreaProvider>
+                        <ModalSystemPrimer />
+                        <StylesProvider>
+                          <StyledStatusBar />
+                          <NavBarColorHandler />
+                          <AuthPass>
+                            <GestureHandlerRootView style={styles.root}>
+                              <WaitForAppReady currencyInitialized={currencyInitialized}>
+                                <AppProviders initialCountervalues={initialCountervalues}>
+                                  <AppGeoBlocker>
+                                    <AppVersionBlocker>
+                                      <BridgeSyncProvider>
+                                        <App />
+                                      </BridgeSyncProvider>
+                                    </AppVersionBlocker>
+                                  </AppGeoBlocker>
+                                </AppProviders>
+                              </WaitForAppReady>
+                            </GestureHandlerRootView>
+                          </AuthPass>
+                        </StylesProvider>
+                      </SafeAreaProvider>
+                    </PlatformAppProviderWrapper>
+                  </LocaleProvider>
+                </I18nextProvider>
               </QueuedDrawersContextProvider>
             </RebootProvider>
           ) : (

@@ -14,7 +14,6 @@ import StyleProvider from "~/renderer/styles/StyleProvider";
 import { UpdaterProvider } from "~/renderer/components/Updater/UpdaterContext";
 import ThrowBlock from "~/renderer/components/ThrowBlock";
 import LiveStyleSheetManager from "~/renderer/styles/LiveStyleSheetManager";
-import { FeatureFlagsContextBridge } from "~/renderer/components/FeatureFlagsContextBridge";
 import { CountervaluesBridgedProvider } from "~/renderer/components/CountervaluesProvider";
 import DrawerProvider from "~/renderer/drawers/Provider";
 import Default from "./Default";
@@ -75,34 +74,32 @@ const InnerApp = ({ initialCountervalues }: { initialCountervalues: CounterValue
             }
           }}
         >
-          <FeatureFlagsContextBridge>
-            <ConnectEnvsToSentry />
-            <ConnectEnvsToDatadog />
-            <UpdaterProvider>
-              <AppDataStorageProvider>
-                <DeviceManagementKitProvider>
-                  <CountervaluesBridgedProvider initialState={initialCountervalues}>
-                    <ToastProvider>
-                      <ServiceStatusProviderWrapper>
-                        <Router>
-                          <PostOnboardingProviderWrapped>
-                            <PlatformAppProviderWrapper>
-                              <DrawerProvider>
-                                <QueryClientProvider client={queryClient}>
-                                  <Default />
-                                  <ReactQueryDevtoolsProvider />
-                                </QueryClientProvider>
-                              </DrawerProvider>
-                            </PlatformAppProviderWrapper>
-                          </PostOnboardingProviderWrapped>
-                        </Router>
-                      </ServiceStatusProviderWrapper>
-                    </ToastProvider>
-                  </CountervaluesBridgedProvider>
-                </DeviceManagementKitProvider>
-              </AppDataStorageProvider>
-            </UpdaterProvider>
-          </FeatureFlagsContextBridge>
+          <ConnectEnvsToSentry />
+          <ConnectEnvsToDatadog />
+          <UpdaterProvider>
+            <AppDataStorageProvider>
+              <DeviceManagementKitProvider>
+                <CountervaluesBridgedProvider initialState={initialCountervalues}>
+                  <ToastProvider>
+                    <ServiceStatusProviderWrapper>
+                      <Router>
+                        <PostOnboardingProviderWrapped>
+                          <PlatformAppProviderWrapper>
+                            <DrawerProvider>
+                              <QueryClientProvider client={queryClient}>
+                                <Default />
+                                <ReactQueryDevtoolsProvider />
+                              </QueryClientProvider>
+                            </DrawerProvider>
+                          </PlatformAppProviderWrapper>
+                        </PostOnboardingProviderWrapped>
+                      </Router>
+                    </ServiceStatusProviderWrapper>
+                  </ToastProvider>
+                </CountervaluesBridgedProvider>
+              </DeviceManagementKitProvider>
+            </AppDataStorageProvider>
+          </UpdaterProvider>
         </ThrowBlock>
       </ThemeProvider>
     </StyleProvider>
