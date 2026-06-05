@@ -98,6 +98,7 @@ apps/ledger-live-desktop/src/renderer/screens/settings/sections/Developer/Wallet
 .github/workflows/notify-e2e-required-reusable.yml                  @ledgerhq/coin-integration @ledgerhq/wallet-ci
 .github/workflow-templates/bot-coin**                               @ledgerhq/coin-integration
 apps/**/families/                                                   @ledgerhq/coin-integration
+apps/ledger-live-mobile/src/components/DelegationDrawer.tsx         @ledgerhq/coin-integration
 apps/cli/src/commands/blockchain                                    @ledgerhq/coin-integration
 libs/coin-*/                                                        @ledgerhq/coin-integration
 libs/ledger-wallet-framework/                                       @ledgerhq/coin-integration
@@ -345,6 +346,7 @@ apps/ledger-live-desktop/src/mvvm/features/AnalyticsOptInPrompt/                
 apps/ledger-live-desktop/src/mvvm/features/AnalyticsConsentDialog/                             @ledgerhq/engagement
 apps/ledger-live-desktop/src/mvvm/features/FinishOnboarding/                                   @ledgerhq/engagement
 apps/ledger-live-desktop/src/renderer/screens/settings/sections/Developer/AnalyticsConsentOptInDevTool/  @ledgerhq/engagement
+apps/ledger-live-desktop/src/renderer/screens/settings/sections/Developer/GenericAwarenessModalDevTool/  @ledgerhq/engagement
 apps/ledger-live-desktop/src/mvvm/features/WalletV4Tour/                                       @ledgerhq/engagement
 apps/ledger-live-desktop/src/mvvm/features/ProductTour/                                        @ledgerhq/engagement
 apps/ledger-live-desktop/src/mvvm/features/BuyDevice/                                          @ledgerhq/engagement
@@ -364,6 +366,7 @@ apps/ledger-live-mobile/src/screens/SyncOnboarding/TwoStepStepper/              
 apps/ledger-live-mobile/src/screens/Onboarding/                                                @ledgerhq/engagement
 apps/ledger-live-mobile/src/screens/PostOnboarding/                                            @ledgerhq/engagement
 apps/ledger-live-mobile/src/screens/Settings/Debug/AnalyticsConsentQA/                         @ledgerhq/engagement
+apps/ledger-live-mobile/src/screens/Settings/Debug/ContentCards/                               @ledgerhq/engagement
 apps/ledger-live-mobile/e2e/specs/onboarding.spec.ts                                           @ledgerhq/engagement
 apps/ledger-live-mobile/e2e/specs/onboardingReadOnly.spec.ts                                   @ledgerhq/engagement
 apps/ledger-live-mobile/e2e/page/onboarding/                                                   @ledgerhq/engagement
@@ -443,8 +446,7 @@ tools/actions/composites/merge-e2e-detox-timings/                           @led
 **/jest.config*                                       @ledgerhq/platform
 **/knip.json                                          @ledgerhq/platform
 
-# CI — Turborepo & Nx
-/turbo.json                                           @ledgerhq/platform @ledgerhq/wallet-ci
+# CI — Nx
 /nx.json                                              @ledgerhq/platform @ledgerhq/wallet-ci
 
 # Platform — Agent files

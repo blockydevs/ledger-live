@@ -1,5 +1,17 @@
 import React from "react";
-import { Box, Text, Tooltip, TooltipTrigger, TooltipContent } from "@ledgerhq/lumen-ui-rnative";
+import {
+  Box,
+  Text,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  DescriptionItem,
+  DescriptionItemLeading,
+  DescriptionItemLabel,
+  DescriptionItemTrailing,
+  DescriptionItemValue,
+  InteractiveIcon,
+} from "@ledgerhq/lumen-ui-rnative";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
 import { Information } from "@ledgerhq/lumen-ui-rnative/symbols";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -47,15 +59,18 @@ export function MarketStatsView({ stats, isLoading, isError, hasData, onTooltipO
       >
         <Box lx={listStyle}>
           {stats.map(stat => (
-            <Box key={stat.key} lx={rowStyle}>
-              <Box lx={labelContainerStyle}>
-                <Text typography="body2" lx={{ color: "muted" }}>
-                  {stat.label}
-                </Text>
+            <DescriptionItem key={stat.key} size="md">
+              <DescriptionItemLeading>
+                <DescriptionItemLabel>{stat.label}</DescriptionItemLabel>
                 {stat.tooltip && (
                   <Tooltip onOpenChange={open => onTooltipOpen(stat.key, open)}>
-                    <TooltipTrigger>
-                      <Information size={16} color="muted" />
+                    <TooltipTrigger asChild>
+                      <InteractiveIcon
+                        icon={Information}
+                        size={16}
+                        iconType="stroked"
+                        accessibilityLabel={stat.tooltip.title}
+                      />
                     </TooltipTrigger>
                     <TooltipContent
                       title={stat.tooltip.title}
@@ -69,11 +84,11 @@ export function MarketStatsView({ stats, isLoading, isError, hasData, onTooltipO
                     />
                   </Tooltip>
                 )}
-              </Box>
-              <Text typography="body2SemiBold" lx={{ color: "base" }}>
-                {stat.value}
-              </Text>
-            </Box>
+              </DescriptionItemLeading>
+              <DescriptionItemTrailing>
+                <DescriptionItemValue>{stat.value}</DescriptionItemValue>
+              </DescriptionItemTrailing>
+            </DescriptionItem>
           ))}
         </Box>
       </SectionContentState>
@@ -87,16 +102,4 @@ const containerStyle: LumenViewStyle = {
 
 const listStyle: LumenViewStyle = {
   gap: "s12",
-};
-
-const rowStyle: LumenViewStyle = {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
-
-const labelContainerStyle: LumenViewStyle = {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: "s4",
 };

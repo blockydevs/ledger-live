@@ -1,7 +1,9 @@
 import { apiClient } from "../network/api";
+import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getRewards } from "./getRewards";
 
 describe("getRewards", () => {
+  const mockCurrency = getMockedCurrency();
   const mockAddress = "0.0.123456";
   const mockGetAccountTransactions = jest.spyOn(apiClient, "getAccountTransactions");
 
@@ -21,7 +23,11 @@ describe("getRewards", () => {
       nextCursor: null,
     });
 
-    const result = await getRewards(mockAddress);
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor: undefined,
+    });
 
     expect(result.items).toEqual([]);
     expect(mockGetAccountTransactions).toHaveBeenCalledTimes(1);
@@ -55,7 +61,11 @@ describe("getRewards", () => {
       nextCursor: null,
     });
 
-    const result = await getRewards(mockAddress);
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor: undefined,
+    });
 
     expect(result).toEqual({
       items: [
@@ -92,7 +102,11 @@ describe("getRewards", () => {
       nextCursor: null,
     });
 
-    const result = await getRewards(mockAddress);
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor: undefined,
+    });
 
     expect(result.items).toMatchObject([
       {
@@ -129,7 +143,11 @@ describe("getRewards", () => {
       nextCursor: null,
     });
 
-    const result = await getRewards(mockAddress);
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor: undefined,
+    });
 
     expect(result.items).toMatchObject([{ amount: BigInt(5000000) }, { amount: BigInt(3000000) }]);
   });
@@ -154,7 +172,11 @@ describe("getRewards", () => {
       nextCursor,
     });
 
-    const result = await getRewards(mockAddress, cursor);
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor,
+    });
 
     expect(result.next).toBe(nextCursor);
     expect(mockGetAccountTransactions).toHaveBeenCalledTimes(1);
@@ -184,7 +206,11 @@ describe("getRewards", () => {
       nextCursor: null,
     });
 
-    const result = await getRewards(mockAddress);
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor: undefined,
+    });
 
     expect(result.next).toBeUndefined();
   });

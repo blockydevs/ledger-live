@@ -81,6 +81,13 @@ export type StakingContractConfig = {
    * Defaults to 1n (no conversion) when omitted.
    */
   calldataAmountScale?: bigint;
+  /**
+   * Fixed reserve (in wei) subtracted from the spendable balance when computing
+   * the maximum delegation amount ("send all").  Decouples the computed amount
+   * from gas-price fluctuations between prepareTransaction and broadcast.
+   * Defaults to 0n when omitted.
+   */
+  delegationMaxAmountReserve?: bigint;
 };
 
 export type StakeCreate = {

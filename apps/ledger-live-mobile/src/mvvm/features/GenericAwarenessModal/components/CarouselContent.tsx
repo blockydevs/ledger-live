@@ -1,23 +1,34 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Slides } from "@ledgerhq/native-ui";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Slides, useSlidesContext } from "@ledgerhq/native-ui";
 import { StyleSheet } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import type { CarouselSlide } from "../types";
+import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
 import { CarouselFooterButton } from "./CarouselFooterButton";
 import { CarouselProgressIndicator } from "./CarouselProgressIndicator";
 import { CarouselSlideItem } from "./CarouselSlideItem";
 
 type CarouselContentProps = Readonly<{
-  slides: CarouselSlide[];
+  slides: GenericAwarenessModalCarouselSlide[];
   onClose: () => void;
+  onSlideViewed: (slideIndex: number, isLastSlide: boolean) => void;
+  onNavigationPress: (slideIndex: number, button: string, isLastSlide: boolean) => void;
+  onPrimaryPress: (slideIndex: number) => void;
+  onMalformedUrl: (slideIndex: number) => void;
 }>;
 
 const AnimatedGestureHandlerFlatList = Animated.createAnimatedComponent(FlatList);
 
 const DEFAULT_LINE_COUNT = 1;
 
-export function CarouselContent({ slides, onClose }: CarouselContentProps) {
+export function CarouselContent({
+  slides,
+  onClose,
+  onSlideViewed,
+  onNavigationPress,
+  onPrimaryPress,
+  onMalformedUrl,
+}: CarouselContentProps) {
   const [titleLineCounts, setTitleLineCounts] = useState<number[]>(() =>
     slides.map(() => DEFAULT_LINE_COUNT),
   );
@@ -80,10 +91,31 @@ export function CarouselContent({ slides, onClose }: CarouselContentProps) {
       </Slides.ProgressIndicator>
 
       <Slides.Footer>
-        <CarouselFooterButton slides={slides} onClose={onClose} />
+        <CarouselSlideViewedTracker onSlideViewed={onSlideViewed} />
+        <CarouselFooterButton
+          slides={slides}
+          onClose={onClose}
+          onNavigationPress={onNavigationPress}
+          onPrimaryPress={onPrimaryPress}
+          onMalformedUrl={onMalformedUrl}
+        />
       </Slides.Footer>
     </Slides>
   );
+}
+
+type CarouselSlideViewedTrackerProps = Readonly<{
+  onSlideViewed: (slideIndex: number, isLastSlide: boolean) => void;
+}>;
+
+function CarouselSlideViewedTracker({ onSlideViewed }: CarouselSlideViewedTrackerProps) {
+  const { currentIndex, totalSlides } = useSlidesContext();
+
+  useEffect(() => {
+    onSlideViewed(currentIndex, currentIndex === totalSlides - 1);
+  }, [currentIndex, onSlideViewed, totalSlides]);
+
+  return null;
 }
 
 const styles = StyleSheet.create({

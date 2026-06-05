@@ -1,11 +1,16 @@
 import React from "react";
 import { Linking } from "react-native";
 import { act, fireEvent, render, screen, waitFor } from "@tests/test-renderer";
+import { screen as analyticsScreen, track } from "~/analytics";
 import type { State } from "~/reducers/types";
 import { carouselMockData, featureIntroMockData } from "../mockData";
-import { GenericAwarenessModalDrawerView } from "../screens/GenericAwarenessModalDrawerView";
+import { GenericAwarenessModalDrawer } from "../screens/GenericAwarenessModalDrawer";
+import {
+  GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+  GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+} from "../analytics";
 
-describe("GenericAwarenessModalDrawerView", () => {
+describe("GenericAwarenessModalDrawer", () => {
   if (featureIntroMockData.layout !== "featureIntro") {
     throw new Error("Expected feature intro mock data");
   }
@@ -13,10 +18,20 @@ describe("GenericAwarenessModalDrawerView", () => {
     throw new Error("Expected carousel mock data");
   }
 
-  const featureIntroContent = featureIntroMockData.content;
-  const carouselSlides = carouselMockData.content;
+  const appStartFeatureIntroMockData = {
+    ...featureIntroMockData,
+    id: "app_start-feature-intro",
+  };
+  const genericAwarenessModalContentCards = [
+    featureIntroMockData,
+    carouselMockData,
+    appStartFeatureIntroMockData,
+  ];
+  const featureIntroContent = featureIntroMockData;
+  const carouselSlides = carouselMockData.data;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     jest.useFakeTimers();
   });
 
@@ -26,15 +41,75 @@ describe("GenericAwarenessModalDrawerView", () => {
   });
 
   const withGenericAwarenessModal =
-    (genericAwarenessModal: State["genericAwarenessModal"]) =>
+    (genericAwarenessModal: Partial<State["genericAwarenessModal"]>) =>
     (state: State): State => ({
       ...state,
-      genericAwarenessModal,
+      genericAwarenessModal: {
+        ...state.genericAwarenessModal,
+        contentCards: genericAwarenessModalContentCards,
+        ...genericAwarenessModal,
+      },
     });
+
+  it("should dismiss and remove the current app-start content card when closed", async () => {
+    const { user, store } = render(<GenericAwarenessModalDrawer />, {
+      overrideInitialState: withGenericAwarenessModal({
+        isOpen: true,
+        campaignId: appStartFeatureIntroMockData.id,
+      }),
+    });
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(screen.getByText(featureIntroContent.title)).toBeOnTheScreen();
+
+    const closeButton = screen.getByTestId("bottom-sheet-header-close-button");
+    await user.press(closeButton);
+    fireEvent(closeButton, "dismiss");
+    act(() => jest.runOnlyPendingTimers());
+
+    await waitFor(() => {
+      expect(screen.queryByText(featureIntroContent.title)).toBeNull();
+    });
+
+    const state = store.getState();
+    expect(state.genericAwarenessModal.isOpen).toBe(false);
+    expect(state.genericAwarenessModal.contentCards).not.toContainEqual(
+      appStartFeatureIntroMockData,
+    );
+    expect(state.settings.dismissedContentCards[appStartFeatureIntroMockData.id]).toEqual(
+      expect.any(Number),
+    );
+  });
+
+  it("should not dismiss and remove a campaign content card when closed", async () => {
+    const { user, store } = render(<GenericAwarenessModalDrawer />, {
+      overrideInitialState: withGenericAwarenessModal({
+        isOpen: true,
+        campaignId: featureIntroMockData.id,
+      }),
+    });
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(screen.getByText(featureIntroContent.title)).toBeOnTheScreen();
+
+    const closeButton = screen.getByTestId("bottom-sheet-header-close-button");
+    await user.press(closeButton);
+    fireEvent(closeButton, "dismiss");
+    act(() => jest.runOnlyPendingTimers());
+
+    await waitFor(() => {
+      expect(screen.queryByText(featureIntroContent.title)).toBeNull();
+    });
+
+    const state = store.getState();
+    expect(state.genericAwarenessModal.isOpen).toBe(false);
+    expect(state.genericAwarenessModal.contentCards).toContainEqual(featureIntroMockData);
+    expect(state.settings.dismissedContentCards[featureIntroMockData.id]).toBeUndefined();
+  });
 
   describe("featureIntro layout", () => {
     it("should render content and support pressing an action", async () => {
-      const { user } = render(<GenericAwarenessModalDrawerView />, {
+      const { user } = render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: featureIntroMockData.id,
@@ -43,16 +118,39 @@ describe("GenericAwarenessModalDrawerView", () => {
       act(() => jest.runOnlyPendingTimers());
 
       expect(screen.getByText(featureIntroContent.title)).toBeOnTheScreen();
-      expect(screen.getByText(featureIntroContent.description)).toBeOnTheScreen();
+      expect(screen.getByText(featureIntroContent.subtitle)).toBeOnTheScreen();
       expect(screen.getByText("Full ownership")).toBeOnTheScreen();
       expect(screen.getByText("Your private keys never leave the device.")).toBeOnTheScreen();
+      expect(screen.getByText(featureIntroContent.title)).toHaveProp("numberOfLines", 2);
+      expect(screen.getByText(featureIntroContent.subtitle)).toHaveProp("numberOfLines", 3);
+      expect(screen.getByText("Full ownership")).toHaveProp("numberOfLines", 1);
+      expect(screen.getByText("Your private keys never leave the device.")).toHaveProp(
+        "numberOfLines",
+        2,
+      );
+      expect(analyticsScreen).toHaveBeenCalledWith(
+        GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        undefined,
+        {
+          name: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+          contentId: featureIntroMockData.id,
+        },
+      );
 
       await user.press(screen.getByText("Buy your Ledger device"));
       act(() => jest.runOnlyPendingTimers());
+
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "Buy your Ledger device",
+        page: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        contentId: featureIntroMockData.id,
+        ctaPosition: "secondary",
+        link: featureIntroContent.secondaryButtonLink,
+      });
     });
 
-    it("should close the modal when the main button is pressed", async () => {
-      const { user } = render(<GenericAwarenessModalDrawerView />, {
+    it("should close the modal and track the primary CTA when the main button is pressed", async () => {
+      const { user } = render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: featureIntroMockData.id,
@@ -62,10 +160,23 @@ describe("GenericAwarenessModalDrawerView", () => {
 
       await user.press(screen.getByText("Connect"));
       act(() => jest.runOnlyPendingTimers());
+
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "Connect",
+        page: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        contentId: featureIntroMockData.id,
+        ctaPosition: "primary",
+        link: featureIntroContent.primaryButtonLink,
+      });
+      expect(track).toHaveBeenCalledWith("drawer_dismissed", {
+        drawer: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        page: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        contentId: featureIntroMockData.id,
+      });
     });
 
     it("should close the modal when the close button is pressed", async () => {
-      const { user } = render(<GenericAwarenessModalDrawerView />, {
+      const { user } = render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: featureIntroMockData.id,
@@ -78,12 +189,18 @@ describe("GenericAwarenessModalDrawerView", () => {
       await user.press(closeButton);
       fireEvent(closeButton, "dismiss");
       act(() => jest.runOnlyPendingTimers());
+
+      expect(track).toHaveBeenCalledWith("drawer_dismissed", {
+        drawer: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        page: GENERIC_AWARENESS_MODAL_FEATURE_INTRO_PAGE,
+        contentId: featureIntroMockData.id,
+      });
     });
   });
 
   describe("carousel layout", () => {
     it("should render content and support pressing an action", async () => {
-      const { user } = render(<GenericAwarenessModalDrawerView />, {
+      const { user } = render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: carouselMockData.id,
@@ -96,10 +213,33 @@ describe("GenericAwarenessModalDrawerView", () => {
 
       expect(await screen.findAllByText(carouselSlides[0].title)).not.toHaveLength(0);
       expect(screen.getAllByText(carouselSlides[0].subtitle)).not.toHaveLength(0);
+      expect(screen.getAllByText(carouselSlides[0].title)[0]).toHaveProp("numberOfLines", 1);
+      expect(screen.getAllByText(carouselSlides[0].subtitle)[0]).toHaveProp("numberOfLines", 3);
       expect(screen.getAllByText("Continue")).not.toHaveLength(0);
+      expect(analyticsScreen).toHaveBeenCalledWith(
+        GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+        undefined,
+        {
+          name: GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+          contentId: carouselMockData.id,
+          step: 1,
+          stepName: carouselSlides[0].title,
+          totalSteps: carouselSlides.length,
+        },
+      );
 
       await user.press(screen.getAllByText("Continue")[0]);
       act(() => jest.runOnlyPendingTimers());
+
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "Continue",
+        page: GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+        contentId: carouselMockData.id,
+        ctaPosition: "primary",
+        step: 1,
+        stepName: carouselSlides[0].title,
+        totalSteps: carouselSlides.length,
+      });
     });
 
     it("should open the primary http link without closing the modal when the primary button is pressed", async () => {
@@ -110,7 +250,7 @@ describe("GenericAwarenessModalDrawerView", () => {
         throw new Error("Expected first carousel slide to have a primary button");
       }
 
-      const { user } = render(<GenericAwarenessModalDrawerView />, {
+      const { user } = render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: carouselMockData.id,
@@ -128,6 +268,16 @@ describe("GenericAwarenessModalDrawerView", () => {
 
       await waitFor(() => {
         expect(openURLSpy).toHaveBeenCalledWith(primarySlide.primaryButtonLink);
+      });
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: primarySlide.primaryButtonLabel,
+        page: GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+        contentId: carouselMockData.id,
+        ctaPosition: "secondary",
+        link: primarySlide.primaryButtonLink,
+        step: 1,
+        stepName: carouselSlides[0].title,
+        totalSteps: carouselSlides.length,
       });
       act(() => jest.runOnlyPendingTimers());
 
@@ -147,7 +297,7 @@ describe("GenericAwarenessModalDrawerView", () => {
         throw new Error("Expected first two carousel slides to have different primary labels");
       }
 
-      render(<GenericAwarenessModalDrawerView />, {
+      render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: carouselMockData.id,
@@ -165,7 +315,7 @@ describe("GenericAwarenessModalDrawerView", () => {
     });
 
     it("should close the modal when the close button is pressed", async () => {
-      const { user } = render(<GenericAwarenessModalDrawerView />, {
+      const { user } = render(<GenericAwarenessModalDrawer />, {
         overrideInitialState: withGenericAwarenessModal({
           isOpen: true,
           campaignId: carouselMockData.id,
@@ -181,6 +331,15 @@ describe("GenericAwarenessModalDrawerView", () => {
       await user.press(closeButton);
       fireEvent(closeButton, "dismiss");
       act(() => jest.runOnlyPendingTimers());
+
+      expect(track).toHaveBeenCalledWith("drawer_dismissed", {
+        drawer: GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+        page: GENERIC_AWARENESS_MODAL_CAROUSEL_PAGE,
+        contentId: carouselMockData.id,
+        step: 1,
+        stepName: carouselSlides[0].title,
+        totalSteps: carouselSlides.length,
+      });
 
       await waitFor(() => {
         expect(screen.queryAllByText(carouselSlides[0].title)).toHaveLength(0);

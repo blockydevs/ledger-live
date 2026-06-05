@@ -165,6 +165,8 @@ export type CurrencyFeatures = {
   currencyAleoTestnet: DefaultFeature;
   currencyUnichain: DefaultFeature;
   currencyUnichainSepolia: DefaultFeature;
+  currencyArc: DefaultFeature;
+  currencyArcTestnet: DefaultFeature;
 };
 
 /**
@@ -309,6 +311,7 @@ export type Features = CurrencyFeatures & {
   supportDeviceApex: DefaultFeature;
   llmSyncOnboardingIncr1: DefaultFeature;
   lldSyncOnboardingIncr1: DefaultFeature;
+  onboardingWidget: DefaultFeature;
   noah: Feature_Noah;
   newSendFlow: Feature_NewSendFlow;
   zcashShielded: DefaultFeature;
@@ -319,8 +322,10 @@ export type Features = CurrencyFeatures & {
   llmOnboardingEnableSync: Feature_OnboardingEnableSync;
   lldOnboardingEnableSync: Feature_OnboardingEnableSync;
   lwdGenericAwarenessModal: DefaultFeature;
+  lwdOnboardingCounterfeitWarning: DefaultFeature;
   lwmAnalyticsConsentOnboarding: DefaultFeature;
   lwmGenericAwarenessModal: DefaultFeature;
+  lwmOnboardingCounterfeitWarning: DefaultFeature;
   lwmNotificationsOptIn: DefaultFeature;
   lwmProductTour: DefaultFeature;
   lwmWallet40: Feature_LwmWallet40;
@@ -885,10 +890,9 @@ type Feature_Wallet40_Params = {
   brazePlacement?: boolean;
   newReceiveDialog?: boolean;
   finishOnboardingWidget?: boolean;
-  onboardingWidget?: boolean;
 };
 
-export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params & { onboardingWidget: boolean }>;
+export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params>;
 export type Feature_LwdWallet40 = Feature<
   {
     newReceiveDialog: boolean;

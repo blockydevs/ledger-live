@@ -77,7 +77,7 @@ export type RawQuoteCustomFields = {
   quote?: unknown;
   priceRoute?: unknown;
   "@type"?: string;
-  quoteId?: string;
+  quoteId?: unknown;
   quoteResponse?: {
     typedData: Partial<RawPermit2Message>;
     orderHash?: string;
@@ -126,5 +126,5 @@ export type RawQuoteAPIResponse = Array<RawQuoteAPI>;
 
 export type FetchQuotesResult = {
   rawQuotes: RawQuote[];
-  errors: RawQuoteError[];
+  providerErrors: RawQuoteError[];
 };

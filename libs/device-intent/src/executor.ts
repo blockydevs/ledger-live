@@ -97,13 +97,32 @@ export interface ExecutorPlatformConfiguration<InitInput = void, InitializerConf
 /**
  * Observable state of the `DeviceIntentExecutor`, reported to the caller via
  * {@link DeviceIntentExecutorProps.onExecutorStateChanged}.
+ *
+ * States carry the data the executor has accumulated up to that point so that
+ * callers can react without keeping their own out-of-band copy:
+ * - `initializingDeviceContext` → `connectionResult` (set on `DEVICE_CONNECTED`).
+ * - `executingIntent` → `connectionResult` and `extractedContext`
+ *   (set on `DEVICE_CONNECTED` and `DEVICE_INITIALIZED` respectively).
+ * - `executingIntentError` → both, plus the original error.
  */
 export type ExecutorState =
   | { type: "connectingDevice" }
   | { type: "deviceDisconnected" }
-  | { type: "initializingDeviceContext" }
-  | { type: "executingIntent" }
-  | { type: "executingIntentError"; error: unknown }
+  | {
+      type: "initializingDeviceContext";
+      connectionResult: DeviceConnectionResult;
+    }
+  | {
+      type: "executingIntent";
+      connectionResult: DeviceConnectionResult;
+      extractedContext: DeviceExtractedContext;
+    }
+  | {
+      type: "executingIntentError";
+      error: unknown;
+      connectionResult: DeviceConnectionResult;
+      extractedContext: DeviceExtractedContext;
+    }
   | { type: "invalidOperation"; error: unknown }
   | { type: "idle" };
 
