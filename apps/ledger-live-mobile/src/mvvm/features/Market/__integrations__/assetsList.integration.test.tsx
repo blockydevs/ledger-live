@@ -13,6 +13,8 @@ import type { State } from "~/reducers/types";
 import MarketNavigator from "../Navigator";
 import { MARKET_SCREEN_TEST_IDS } from "../screens/MarketScreen/testIds";
 
+jest.mock("LLM/features/Market/screens//MarketDetail", () => () => null);
+
 const Stack = createNativeStackNavigator<BaseNavigatorStackParamList>();
 
 const NavigatorWrapper = () => (
@@ -35,6 +37,14 @@ function enableFavoritesCategory(starredMarketCoins: string[] = []) {
     }),
   );
 }
+
+const enableStocksCategory = withFlagOverrides(
+  { lwmWallet40: { enabled: true, params: { assetDiscoverability: true } } },
+  (state: State): State => ({
+    ...state,
+    marketListConfig: { ...state.marketListConfig, category: "stocks" },
+  }),
+);
 
 function hasTestID(node: React.ReactNode, testID: string): boolean {
   if (Array.isArray(node)) return node.some(child => hasTestID(child, testID));
@@ -144,5 +154,21 @@ describe("MarketScreen assets list (Block 3)", () => {
     );
 
     expect(screen.queryByTestId("marketItem-ethereum")).toBeNull();
+  });
+
+  it("renders DADA-backed rows in the Stocks category", async () => {
+    renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: enableStocksCategory,
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible();
+      },
+      { timeout: 5000 },
+    );
+
+    expect(screen.getByText("Stocks")).toBeVisible();
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
   });
 });

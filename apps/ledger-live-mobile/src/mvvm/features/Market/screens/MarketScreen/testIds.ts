@@ -8,6 +8,7 @@ export const MARKET_SCREEN_TEST_IDS = {
   assetsFilterButton: "market-screen-assets-filter-button",
   assetsCategorySwitcher: "market-screen-assets-category-switcher",
   assetsFavoritesEmptyIcon: "market-screen-assets-favorites-empty-icon",
+  assetsStocksEmpty: "market-screen-assets-stocks-empty",
   filtersDrawer: "market-screen-filters-drawer",
   filtersSortingList: "market-screen-filters-sorting-list",
   filtersTimeframeList: "market-screen-filters-timeframe-list",

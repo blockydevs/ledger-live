@@ -56,6 +56,10 @@ const defaultArgs = {
 const baseQueryArg = { product: "lld" as const, version: "1.0.0" };
 
 describe("buildAssetsQueryParams", () => {
+  it("should expose the stocks asset category", () => {
+    expect(AssetCategory.Stocks).toBe("stocks");
+  });
+
   it.each([
     {
       scenario: "standard IDs unchanged",
@@ -97,6 +101,17 @@ describe("buildAssetsQueryParams", () => {
       buildAssetsQueryParams({ ...baseQueryArg, currencyIds: [] }).currencyIds,
     ).toBeUndefined();
     expect(buildAssetsQueryParams(baseQueryArg).currencyIds).toBeUndefined();
+  });
+
+  it("should include categories and sort when provided", () => {
+    const params = buildAssetsQueryParams({
+      ...baseQueryArg,
+      categories: [AssetCategory.Stocks],
+      sort: "market-cap-rank",
+    });
+
+    expect(params.categories).toBe("stocks");
+    expect(params.sort).toBe("market-cap-rank");
   });
 });
 

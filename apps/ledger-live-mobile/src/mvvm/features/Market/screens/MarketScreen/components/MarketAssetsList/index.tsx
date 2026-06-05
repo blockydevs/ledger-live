@@ -39,7 +39,7 @@ function MarketAssetsEmptyState({
 }: Readonly<{
   loading: boolean;
   error: boolean;
-  emptyState: "favorites" | undefined;
+  emptyState: "favorites" | "stocks" | undefined;
   showEmptySearchState: boolean;
 }>) {
   const { t } = useTranslation();
@@ -76,6 +76,21 @@ function MarketAssetsEmptyState({
         />
         <Text typography="heading5SemiBold" lx={{ color: "base", textAlign: "center" }}>
           {t("market.assets.emptyFavorites")}
+        </Text>
+      </Box>
+    );
+  }
+
+  if (emptyState === "stocks") {
+    return (
+      <Box
+        lx={emptyStateStyle}
+        style={emptyStateSize}
+        testID={MARKET_SCREEN_TEST_IDS.assetsStocksEmpty}
+      >
+        <Spot appearance="icon" icon={Search} size={72} />
+        <Text typography="heading5SemiBold" lx={{ color: "base", textAlign: "center" }}>
+          {t("market.assets.emptyStocks")}
         </Text>
       </Box>
     );
@@ -144,7 +159,7 @@ type Props = Readonly<{
   assets: MarketAssetDisplayData[];
   loading: boolean;
   error: boolean;
-  emptyState: "favorites" | undefined;
+  emptyState: "favorites" | "stocks" | undefined;
   selectedCategory: MarketListCategory;
   categoryTabs: MarketCategoryTab[];
   onSelectCategory: (category: MarketListCategory) => void;

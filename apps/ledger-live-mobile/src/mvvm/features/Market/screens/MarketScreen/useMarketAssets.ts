@@ -18,6 +18,7 @@ import {
 } from "./marketListFilters";
 
 const PAGE_SIZE = 20;
+const STOCK_MARKET_FILTER = "stock";
 const EMPTY_MARKET_DATA: MarketCurrencyData[] = [];
 
 export type MarketAssetsParams = {
@@ -41,7 +42,7 @@ export interface MarketAssetsResult {
   assets: MarketAssetDisplayData[];
   loading: boolean;
   isError: boolean;
-  emptyState: "favorites" | undefined;
+  emptyState: "favorites" | "stocks" | undefined;
   onEndReached: () => void;
 }
 
@@ -60,6 +61,7 @@ export function useMarketAssets({
   const normalizedSearch = search.trim();
   const hasSearch = normalizedSearch.length > 0;
   const isFavoritesCategory = !hasSearch && category === "starred";
+  const isStocksCategory = !hasSearch && category === "stocks";
   const sortedFavoriteIds = useMemo(
     () =>
       isFavoritesCategory
@@ -111,12 +113,16 @@ export function useMarketAssets({
     liveCompatible: true,
     page: requestedPage,
     search: normalizedSearch,
+    filter: isStocksCategory ? STOCK_MARKET_FILTER : undefined,
     starred: sortedFavoriteIds,
   });
   const marketData = shouldFetchAssets ? result.data : EMPTY_MARKET_DATA;
 
   const assets = useMemo(() => {
-    const uniqueById = [...new Map(marketData.map(item => [item.id, item])).values()];
+    const filteredMarketData = isStocksCategory
+      ? marketData.filter(isStockMarketCurrency)
+      : marketData;
+    const uniqueById = [...new Map(filteredMarketData.map(item => [item.id, item])).values()];
     return uniqueById.map(item =>
       mapMarketCurrencyToDisplayData(item, {
         counterCurrency,
@@ -126,7 +132,7 @@ export function useMarketAssets({
         t,
       }),
     );
-  }, [marketData, counterCurrency, counterValueUnit, displayRange, locale, t]);
+  }, [counterCurrency, counterValueUnit, displayRange, isStocksCategory, locale, marketData, t]);
 
   const hasData = assets.length > 0;
   const canLoadMore = shouldFetchAssets && marketData.length >= page * PAGE_SIZE;
@@ -175,7 +181,26 @@ export function useMarketAssets({
     assets,
     loading,
     isError: shouldFetchAssets && result.isError,
-    emptyState: isFavoritesCategory && !hasFavoriteIds ? "favorites" : undefined,
+    emptyState:
+      isFavoritesCategory && !hasFavoriteIds
+        ? "favorites"
+        : isStocksCategory
+          ? "stocks"
+          : undefined,
     onEndReached,
   };
+}
+
+function isStockMarketCurrency(item: MarketCurrencyData): boolean {
+  const id = item.id.toLowerCase();
+  const name = item.name.toLowerCase();
+
+  return (
+    id.includes("xstock") ||
+    id.includes("tokenized-stock") ||
+    id.includes("prestocks") ||
+    name.includes("xstock") ||
+    name.includes("tokenized stock") ||
+    name.includes("prestocks")
+  );
 }
