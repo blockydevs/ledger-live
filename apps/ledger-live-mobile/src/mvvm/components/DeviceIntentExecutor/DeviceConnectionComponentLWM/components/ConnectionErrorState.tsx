@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Linking } from "react-native";
 import {
   ConnectionErrorTypes,
@@ -16,6 +16,7 @@ import {
   getTrackingSubError,
   getTrackingTransport,
   PAGE_CONNECT_DEVICE,
+  setIsInTerminalConnectDeviceError,
   trackConnectDeviceButtonClicked,
 } from "../../utils/trackDeviceIntent";
 import { PeerRemovedPairingState } from "./PeerRemovedPairingState";
@@ -52,6 +53,10 @@ type ConnectionErrorViewStates = {
   ConnectionErrorViewState
 >;
 
+function isTerminalConnectionError(errorType: ConnectionErrorTypes): boolean {
+  return errorType === ConnectionErrorTypes.Unknown;
+}
+
 const connectionErrorTranslationBaseKey =
   "deviceIntentExecutor.connectDevice.states.connectionError.errors";
 
@@ -63,6 +68,12 @@ export function ConnectionErrorState({
   const bleForgetDeviceUrl = useLocalizedUrl(urls.errors.BleForgetDevice);
   const pairingIssuesUrl = useLocalizedUrl(urls.pairingIssues);
   const productName = t("deviceIntentExecutor.connectDevice.common.ledgerDevice");
+
+  useEffect(() => {
+    setIsInTerminalConnectDeviceError(isTerminalConnectionError(state.error.type));
+    return () => setIsInTerminalConnectDeviceError(false);
+  }, [state.error]);
+
   const trackingScreen = (
     <TrackScreen
       category={PAGE_CONNECT_DEVICE.ConnectionError}
@@ -70,6 +81,7 @@ export function ConnectionErrorState({
       modelId={state.device.deviceModelId}
       transport={getTrackingTransport(state.device.transport)}
       subError={getTrackingSubError(state.error.type)}
+      refreshSource
       deviceUxV2
     />
   );
@@ -79,7 +91,10 @@ export function ConnectionErrorState({
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
+        trackConnectDeviceButtonClicked({
+          sourceFlow,
+          button: CONNECT_DEVICE_BUTTON.Retry,
+        });
         state.retry();
       },
     };
@@ -90,7 +105,10 @@ export function ConnectionErrorState({
     return {
       label,
       onPress: () => {
-        trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.GetHelp });
+        trackConnectDeviceButtonClicked({
+          sourceFlow,
+          button: CONNECT_DEVICE_BUTTON.GetHelp,
+        });
         Linking.openURL(url).catch(() => undefined);
       },
     };
@@ -137,11 +155,17 @@ export function ConnectionErrorState({
           helpLabel={helpLabel}
           retryLabel={retryLabel}
           onHelp={() => {
-            trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.GetHelp });
+            trackConnectDeviceButtonClicked({
+              sourceFlow,
+              button: CONNECT_DEVICE_BUTTON.GetHelp,
+            });
             Linking.openURL(bleForgetDeviceUrl).catch(() => undefined);
           }}
           onRetry={() => {
-            trackConnectDeviceButtonClicked({ sourceFlow, button: CONNECT_DEVICE_BUTTON.Retry });
+            trackConnectDeviceButtonClicked({
+              sourceFlow,
+              button: CONNECT_DEVICE_BUTTON.Retry,
+            });
             state.retry();
           }}
         />

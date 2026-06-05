@@ -19,6 +19,7 @@ export function AllowSecureConnectionState({
         category={PAGE_CONNECT_APP.AllowSecureConnection}
         sourceFlow={sourceFlow}
         modelId={device.modelId}
+        refreshSource
         deviceUxV2
       />
       <ContinueOnDevice

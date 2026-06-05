@@ -2,7 +2,10 @@ import { useCallback } from "react";
 import type { InitializerDevice } from "../../types";
 import { useInitializerActions } from "../../hooks/useInitializerActions";
 import type { SourceFlow } from "../../../utils/SourceFlowContext";
-import { CONNECT_APP_BUTTON, trackConnectAppButtonClicked } from "../../../utils/trackDeviceIntent";
+import {
+  CONNECT_APP_BUTTON,
+  trackConnectAppButtonClicked,
+} from "../../../utils/trackDeviceIntent";
 
 type Params = Readonly<{
   device: InitializerDevice;
@@ -24,7 +27,11 @@ export function useUnsupportedFirmwareVersionViewModel({ device, sourceFlow, onC
   }, [openMyLedgerFirmwareUpdate, sourceFlow, modelId]);
 
   const onCancelWithTracking = useCallback(() => {
-    trackConnectAppButtonClicked({ sourceFlow, modelId, button: CONNECT_APP_BUTTON.Cancel });
+    trackConnectAppButtonClicked({
+      sourceFlow,
+      modelId,
+      button: CONNECT_APP_BUTTON.Close,
+    });
     onCancel();
   }, [onCancel, sourceFlow, modelId]);
 
