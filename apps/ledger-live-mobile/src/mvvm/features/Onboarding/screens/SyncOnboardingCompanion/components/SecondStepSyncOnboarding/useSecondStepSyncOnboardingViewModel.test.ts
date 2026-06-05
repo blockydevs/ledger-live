@@ -4,7 +4,7 @@ import type { LayoutChangeEvent } from "react-native";
 import { act, renderHook, withFlagOverrides } from "@tests/test-renderer";
 import { SeedOriginType } from "@ledgerhq/types-live";
 
-import { COMPANION_STATE, SEED_STATE } from "~/screens/SyncOnboarding/TwoStepStepper/types";
+import { COMPANION_STATE, SEED_STATE } from "../../types";
 import { useSecondStepSyncOnboardingViewModel } from "./useSecondStepSyncOnboardingViewModel";
 
 const mockWithTiming = jest.fn((toValue: unknown, _config?: unknown) => toValue);
