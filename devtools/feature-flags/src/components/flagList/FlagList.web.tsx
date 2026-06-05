@@ -13,7 +13,7 @@ import { useFeatureFlagsFilters } from "../../hooks";
 import { useSortFlag } from "../../hooks/useSortFlag";
 
 export const FlagList = (props: FeatureFlagsToolProps) => {
-  const { overrides, setOverride } = props;
+  const { overrides, setOverride, clearAllOverrides } = props;
   const { getFlagDisplayState } = useFeatureFlagsState(props);
   const { selectedFlagId, selectFlag, clearSelection } = useFlagSelection();
   const featureIds: FeatureId[] = ALL_FLAG_IDS;
@@ -38,6 +38,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
           sortDirection={direction}
           cycleCategory={cycleCategory}
           toggleDirection={toggleDirection}
+          clearAllOverrides={clearAllOverrides}
         />
         <Divider />
         <FlagListHeader

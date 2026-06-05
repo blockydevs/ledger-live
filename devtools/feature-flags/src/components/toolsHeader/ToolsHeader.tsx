@@ -4,11 +4,16 @@ import {
   SegmentedControlButton,
   Button,
   InteractiveIcon,
+  Menu,
+  MenuTrigger,
+  IconButton,
+  MenuContent,
+  MenuItem,
 } from "@ledgerhq/lumen-ui-react";
 import { FILTERS } from "../../hooks/useFeatureFlagsFilters";
 import type { FlagFilter } from "../../types";
 import { Pill } from "../pill/Pill.web";
-import { FilterSort, ArrowUp, ArrowDown } from "@ledgerhq/lumen-ui-react/symbols";
+import { FilterSort, ArrowUp, ArrowDown, MoreHorizontal } from "@ledgerhq/lumen-ui-react/symbols";
 import type { SortCategory, SortDirection } from "../../hooks/useSortFlag";
 
 const FILTER_LABELS: Record<FlagFilter, string> = {
@@ -34,6 +39,7 @@ export interface ToolsHeaderProps {
   sortDirection: SortDirection;
   cycleCategory: () => void;
   toggleDirection: () => void;
+  clearAllOverrides: () => void;
 }
 
 export function ToolsHeader({
@@ -46,6 +52,7 @@ export function ToolsHeader({
   sortDirection,
   cycleCategory,
   toggleDirection,
+  clearAllOverrides,
 }: ToolsHeaderProps) {
   return (
     // Responsive layout (viewport-based, matching the rest of the panel):
@@ -110,6 +117,16 @@ export function ToolsHeader({
           onClick={toggleDirection}
         />
       </div>
+      <Menu>
+        <MenuTrigger>
+          <IconButton aria-label="Actions" size="sm" appearance="gray" icon={MoreHorizontal} />
+        </MenuTrigger>
+        <MenuContent align="end">
+          <MenuItem>Export flags</MenuItem>
+          <MenuItem>Import flags</MenuItem>
+          <MenuItem onClick={clearAllOverrides}>Reset all overrides</MenuItem>
+        </MenuContent>
+      </Menu>
     </div>
   );
 }
