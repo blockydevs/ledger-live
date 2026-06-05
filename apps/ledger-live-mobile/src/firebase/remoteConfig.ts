@@ -2,7 +2,7 @@ import { getRemoteConfig } from "@react-native-firebase/remote-config";
 import snakeCase from "lodash/snakeCase";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { FirebaseRemoteConfigProvider } from "@ledgerhq/live-config/providers/index";
-import { formatDefaultFeatures } from "@ledgerhq/live-common/featureFlags/index";
+import { formatDefaultFeatures } from "@features/platform-feature-flags";
 import { FEATURE_FLAGS_DEFAULTS, FeatureIdSchema } from "@shared/feature-flags";
 import type { FeatureId, PartialFeatures } from "@shared/feature-flags";
 

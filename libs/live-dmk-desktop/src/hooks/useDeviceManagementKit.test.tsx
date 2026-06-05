@@ -7,7 +7,7 @@ import React from "react";
 import { DeviceManagementKit } from "@ledgerhq/device-management-kit";
 import { render } from "@testing-library/react";
 
-jest.mock("@ledgerhq/live-common/featureFlags/index", () => ({
+jest.mock("@features/platform-feature-flags", () => ({
   useFeature: () => ({
     enabled: true,
   }),

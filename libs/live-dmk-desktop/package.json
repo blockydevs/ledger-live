@@ -32,6 +32,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@features/platform-feature-flags": "workspace:^",
     "@ledgerhq/device-management-kit": "catalog:",
     "@ledgerhq/device-transport-kit-web-hid": "catalog:",
     "@ledgerhq/hw-transport": "workspace:*",

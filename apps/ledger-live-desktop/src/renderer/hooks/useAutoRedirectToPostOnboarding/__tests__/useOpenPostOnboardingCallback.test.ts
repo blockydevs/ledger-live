@@ -14,8 +14,8 @@ jest.mock("~/renderer/store", () => ({
   resetStore: jest.fn(),
 }));
 
-jest.mock("@ledgerhq/live-common/featureFlags/index");
 jest.mock("@features/platform-feature-flags");
+jest.mock("@ledgerhq/live-common/recover/isRecoverDisplayed");
 jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
   useUpsellPath: jest.fn(),
 }));

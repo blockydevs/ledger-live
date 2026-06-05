@@ -11,7 +11,7 @@ import isMatch from "lodash/isMatch";
 import * as fs from "fs";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { FirebaseRemoteConfigProvider } from "@ledgerhq/live-config/providers/index";
-import { formatDefaultFeatures } from "@ledgerhq/live-common/featureFlags/index";
+import { formatDefaultFeatures } from "@features/platform-feature-flags";
 import { FEATURE_FLAGS_DEFAULTS, FeatureIdSchema } from "@shared/feature-flags";
 import type { FeatureId, PartialFeatures } from "@shared/feature-flags";
 import { getFirebaseConfig } from "~/firebase-setup";
