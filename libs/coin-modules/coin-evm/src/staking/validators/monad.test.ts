@@ -482,8 +482,6 @@ describe("staking/validators/monad", () => {
         0n,
       ]);
 
-    // getWithdrawalRequest returns [withdrawalAmount, accRewardPerToken, withdrawEpoch].
-    // A slot is occupied while amount or epoch is non-zero.
     const encodeWithdrawalRequest = (withdrawalAmount: bigint, withdrawEpoch = 1n): string =>
       monadIface.encodeFunctionResult("getWithdrawalRequest", [withdrawalAmount, 0n, withdrawEpoch]);
 
@@ -714,7 +712,6 @@ describe("staking/validators/monad", () => {
     });
 
     it("emits a deactivating stake per occupied withdrawId slot, dating its completion from the current epoch", async () => {
-      // ~5.5h per epoch, mirroring EPOCH_DURATION_MS in monad.ts.
       const EPOCH_DURATION_MS = 5.5 * 60 * 60 * 1000;
       const NOW = Date.UTC(2026, 5, 4, 12, 0, 0);
       jest.useFakeTimers().setSystemTime(NOW);
@@ -725,8 +722,6 @@ describe("staking/validators/monad", () => {
           getDelegator: () => encodeDelegator(100n),
           getValidator: () => encodeGetValidator({ stake: 0n, commission: 0n, secpPubkey: SECP }),
           getEpoch: () => encodeEpoch(5n),
-          // Slot 2 completed at epoch 3 (< 5 ⇒ already withdrawable, 2 epochs in the past);
-          // slot 5 at epoch 10 (> 5 ⇒ 5 epochs out).
           getWithdrawalRequest: (_valId, withdrawId) => {
             if (withdrawId === 2) return encodeWithdrawalRequest(40n, 3n);
             if (withdrawId === 5) return encodeWithdrawalRequest(60n, 10n);
@@ -738,7 +733,6 @@ describe("staking/validators/monad", () => {
       try {
         const stakes = await fetchStakes();
 
-        // one active + two deactivating, in ascending withdrawId order
         expect(stakes).toHaveLength(3);
         expect(stakes[0]).toMatchObject({ state: "active", amount: 100n });
 

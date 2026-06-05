@@ -6,8 +6,6 @@ import monadValidatorApi from "./monad";
 import seiValidatorApi from "./sei";
 import type { ValidatorApi } from "./types";
 
-export { findFreeWithdrawId } from "./monad";
-
 /**
  * Validators cache TTL (30s, same as Cosmos preload) so a user navigating across
  * delegation screens reads a hot cache instead of paying a network roundtrip each time.

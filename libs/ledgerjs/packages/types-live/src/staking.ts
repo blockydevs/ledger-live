@@ -45,8 +45,6 @@ export type StakingUnbonding = {
   validatorName?: string;
   amount: BigNumber;
   completionDate: Date;
-  // Monad: the 0-255 withdrawId slot identifying this pending withdrawal request for the
-  // (validator, delegator) pair, needed to later call `withdraw(withdrawId)`.
   withdrawId?: number;
 };
 

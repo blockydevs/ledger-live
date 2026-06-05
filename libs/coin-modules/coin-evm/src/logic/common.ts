@@ -12,7 +12,11 @@ import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { getNodeApi } from "../network/node";
-import { buildStakingTransactionParams, findFreeWithdrawId, STAKING_CONTRACTS } from "../staking";
+import {
+  buildStakingTransactionParams,
+  prepareStakingIntent,
+  STAKING_CONTRACTS,
+} from "../staking";
 import {
   ApiFeeData,
   ApiGasOptions,
@@ -20,38 +24,8 @@ import {
   TransactionLikeWithPreparedParams,
   TransactionTypes,
 } from "../types";
-import { isEthAddress, isStakingIntent } from "../utils";
+import { isEthAddress } from "../utils";
 import { getErc20Data } from "./getErc20Data";
-
-/**
- * Monad's `undelegate` needs a free `withdrawId` slot (0–255) per (validator, delegator)
- * pair. Callers don't know which slot is free, so when one isn't already set on the intent
- * we probe the precompile for the lowest free slot and inject it before the (synchronous)
- * calldata is built. No-op for any other chain/operation, and never overwrites a withdrawId
- * the caller explicitly provided.
- */
-async function resolveMonadWithdrawId(
-  currency: CryptoCurrency,
-  intent: TransactionIntent<MemoNotSupported, BufferTxData>,
-): Promise<TransactionIntent<MemoNotSupported, BufferTxData>> {
-  if (currency.id !== "monad" || !isStakingIntent(intent)) return intent;
-  if (intent.mode !== "undelegate" || intent.withdrawId !== undefined || !intent.valId) {
-    return intent;
-  }
-
-  const withdrawId = await findFreeWithdrawId(currency.id, BigInt(intent.valId), intent.sender);
-  if (withdrawId === null) {
-    throw new Error(
-      "No free Monad withdraw slot: all slots (0–255) are in use for this validator. " +
-        "Withdraw a completed undelegation before undelegating again.",
-    );
-  }
-
-  // Bind to the narrowed (EvmStakingIntent) type so the literal isn't checked for
-  // excess props against the wider TransactionIntent return type.
-  const enriched: typeof intent = { ...intent, withdrawId: withdrawId.toString() };
-  return enriched;
-}
 
 export function isApiGasOptions(options: unknown): options is ApiGasOptions {
   if (!options || typeof options !== "object") return false;
@@ -154,7 +128,7 @@ export async function prepareUnsignedTxParams(
       })()
     : buildStakingTransactionParams(
         currency,
-        await resolveMonadWithdrawId(currency, transactionIntent),
+        await prepareStakingIntent(currency, transactionIntent),
       );
   const gasLimit =
     typeof customFeesParameters?.gasLimit === "bigint"

@@ -354,9 +354,6 @@ const fetchStakeForValId = async (
   const [activeStake, , unclaimedRewards, deltaStake, nextDeltaStake] = decoded;
   const deltaStakes = deltaStake + nextDeltaStake;
 
-  // Pending withdrawal requests (occupied withdrawId slots) for this (validator, delegator).
-  // Fetched even when the active/activating amounts are zero so a fully-undelegated position
-  // still surfaces its withdrawId(s) for a later `withdraw`.
   const withdrawals = await fetchWithdrawalRequests(
     provider,
     iface,
@@ -501,10 +498,6 @@ function isWithdrawalRequestRaw(value: unknown): value is WithdrawalRequestRaw {
   );
 }
 
-// A withdrawId slot is "in use" while it holds a pending undelegation that has not
-// yet been withdrawn. The precompile zeroes the request once `withdraw` completes,
-// so a free slot reads back all-zero. We check amount AND epoch (not amount alone)
-// so a slot is never treated as free while any field is still set.
 const isWithdrawIdInUse = (req: WithdrawalRequestRaw): boolean => {
   const [withdrawalAmount, , withdrawEpoch] = req;
   return withdrawalAmount !== 0n || withdrawEpoch !== 0n;
@@ -519,14 +512,6 @@ const WITHDRAW_ID_BATCH_SIZE = 128;
 // (WITHDRAWAL_DELAY = 1 epoch ≈ 5.5h). Source: https://docs.monad.xyz/monad-arch/consensus/staking
 const EPOCH_DURATION_MS = 5.5 * 60 * 60 * 1000;
 
-/**
- * Convert an epoch number into its wall-clock start date. The precompile exposes no
- * epoch-to-timestamp mapping, so we anchor epoch 0 from the live `(currentEpoch, now)` pair and
- * project the target epoch from there. The result is unbounded in both directions: an epoch
- * already in the past yields a past date, a future epoch a future date — so for a completion epoch
- * a `date <= now` check reflects withdrawability. Returns `null` when the current epoch is unknown
- * so callers carry no (possibly misleading) date.
- */
 const epochToDate = (epoch: bigint, currentEpoch: bigint | null): Date | null => {
   if (currentEpoch === null) return null;
   const epochZeroMs = Date.now() - Number(currentEpoch) * EPOCH_DURATION_MS;
@@ -539,12 +524,6 @@ type OccupiedWithdrawal = {
   withdrawEpoch: bigint;
 };
 
-/**
- * Enumerate the occupied `withdrawId` slots for a (validator, delegator) pair — the inverse of
- * `findFreeWithdrawId`. A slot is occupied while it holds a pending undelegation that has not
- * yet been withdrawn (see `isWithdrawIdInUse`). Reads that fail/can't be decoded are skipped, so
- * a transient RPC error never invents nor drops a slot.
- */
 const fetchWithdrawalRequests = async (
   provider: JsonRpcProvider,
   iface: ethers.Interface,
@@ -584,18 +563,7 @@ const fetchWithdrawalRequests = async (
   return occupied;
 };
 
-/**
- * Find the lowest free `withdrawId` slot for an undelegation on a given validator.
- *
- * A slot is free when its withdrawal request reads back all-zero (no pending
- * undelegation occupying it). Returns `null` when every slot (0–255) is occupied —
- * the caller must then have the user `withdraw` a completed request before undelegating
- * again — or when the chain context can't be resolved.
- *
- * Reads that fail/can't be decoded are treated as "unknown" and skipped, so a transient
- * RPC error never causes an occupied slot to be reported as free.
- */
-export const findFreeWithdrawId = async (
+export const findFirstFreeWithdrawId = async (
   currencyId: string,
   valId: bigint,
   delegator: string,
@@ -626,11 +594,10 @@ export const findFreeWithdrawId = async (
             ),
           );
 
-          // Walk the chunk in ascending order so the lowest free slot wins.
           for (let i = 0; i < settled.length; i++) {
             const res = settled[i];
             if (res.status === "rejected") {
-              log("coin-evm/staking", "findFreeWithdrawId: getWithdrawalRequest call failed", {
+              log("coin-evm/staking", "findFirstFreeWithdrawId: getWithdrawalRequest call failed", {
                 currencyId,
                 valId: valId.toString(),
                 withdrawId: ids[i],
@@ -647,7 +614,7 @@ export const findFreeWithdrawId = async (
       ctx.node,
     );
   } catch (error) {
-    log("coin-evm/staking", "findFreeWithdrawId: lookup failed", {
+    log("coin-evm/staking", "findFirstFreeWithdrawId: lookup failed", {
       currencyId,
       valId: valId.toString(),
       error: error instanceof Error ? error.message : String(error),
@@ -670,10 +637,6 @@ const callGetWithdrawalRequest = async (
   return isWithdrawalRequestRaw(decoded) ? decoded : null;
 };
 
-/**
- * Read the chain's current epoch via the staking precompile's `getEpoch`. Returns `null` on any
- * read/decode failure so callers treat withdrawability as "unknown" (conservatively not ready).
- */
 export const callGetEpoch = async (
   provider: JsonRpcProvider,
   iface: ethers.Interface,

@@ -14,8 +14,8 @@ export {
   hasRedelegation,
   prefetchValidators,
   clearValidatorsCache,
-  findFreeWithdrawId,
 } from "./validators";
+export { prepareStakingIntent } from "./prepareIntents";
 export {
   mapDelegations,
   mapUnbondings,

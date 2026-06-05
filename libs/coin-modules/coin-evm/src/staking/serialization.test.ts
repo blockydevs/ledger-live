@@ -109,14 +109,11 @@ describe("coin-evm/staking/serialization", () => {
 
     it("roundtrips a Monad unbonding `withdrawId` (number ↔ string), omitting them when absent", () => {
       const raw = toStakingResourcesRaw(sampleResources);
-      // serialized as a string on the raw side; withdrawable stays a boolean
       expect(raw.unbondings[0]).toHaveProperty("withdrawId", "3");
 
       const back = fromStakingResourcesRaw(raw);
-      // restored as a number on the account side
       expect(back.unbondings[0].withdrawId).toBe(3);
-      
-      // unbondings without these fields don't gain the keys in either direction
+
       const noId: StakingResources = {
         ...sampleResources,
         unbondings: [
