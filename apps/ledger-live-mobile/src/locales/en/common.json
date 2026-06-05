@@ -8104,6 +8104,7 @@
     "assets": {
       "title": "Assets",
       "emptyFavorites": "No favorites yet",
+      "emptyStocks": "No stocks found",
       "categories": {
         "accessibilityLabel": "Asset categories",
         "all": "All",

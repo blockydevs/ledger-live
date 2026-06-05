@@ -104,6 +104,20 @@ describe("useMarketScreenViewModel", () => {
     });
   });
 
+  it("does not navigate to asset detail when the asset cannot be resolved", () => {
+    const { result } = renderHook(() => useMarketScreenViewModel());
+
+    act(() =>
+      result.current.assetsList.onAssetPress({
+        ...result.current.assetsList.assets[0],
+        ledgerIds: [],
+      }),
+    );
+
+    expect(track).not.toHaveBeenCalled();
+    expect(openFromMarket).not.toHaveBeenCalled();
+  });
+
   it("collapses sections immediately and debounces the asset search query", () => {
     jest.useFakeTimers();
     const { result } = renderHook(() => useMarketScreenViewModel());
@@ -185,7 +199,7 @@ describe("useMarketScreenViewModel", () => {
     });
   });
 
-  it("tracks the stocks category tap without selecting it yet", () => {
+  it("tracks and persists the stocks category", () => {
     const { result, store } = renderHook(() => useMarketScreenViewModel());
 
     act(() => result.current.assetsList.categories.onSelectCategory("stocks"));
@@ -195,8 +209,11 @@ describe("useMarketScreenViewModel", () => {
       category: "stocks",
       page: "Market",
     });
-    expect(store.getState().marketListConfig.category).toBe("all");
-    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith(defaultMarketAssetsParams);
+    expect(store.getState().marketListConfig.category).toBe("stocks");
+    expect(mockedUseMarketAssets).toHaveBeenLastCalledWith({
+      ...defaultMarketAssetsParams,
+      category: "stocks",
+    });
   });
 
   it("tracks and persists the favorites category", () => {

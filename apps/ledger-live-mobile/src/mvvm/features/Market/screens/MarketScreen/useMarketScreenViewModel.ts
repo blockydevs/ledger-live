@@ -26,7 +26,7 @@ export type MarketScreenAssetsList = {
   assets: MarketAssetDisplayData[];
   assetsLoading: boolean;
   assetsError: boolean;
-  assetsEmptyState: "favorites" | undefined;
+  assetsEmptyState: "favorites" | "stocks" | undefined;
   categories: MarketCategories;
   filters: MarketFilters;
   onAssetPress: (asset: MarketAssetDisplayData) => void;

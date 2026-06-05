@@ -90,6 +90,13 @@ describe("MarketAssetsList", () => {
     expect(screen.getByText("No favorites yet")).toBeVisible();
   });
 
+  it("should render the stocks empty state", () => {
+    render(<MarketAssetsList {...defaultProps} assets={[]} emptyState="stocks" />);
+
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsStocksEmpty)).toBeVisible();
+    expect(screen.getByText("No stocks found")).toBeVisible();
+  });
+
   it("should render the error banner", () => {
     render(<MarketAssetsList {...defaultProps} assets={[]} error />);
 
