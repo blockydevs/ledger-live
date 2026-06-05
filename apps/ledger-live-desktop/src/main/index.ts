@@ -16,7 +16,7 @@ import db from "./db";
 import { UserDataCleanup } from "./cleanupUserData";
 import debounce from "lodash/debounce";
 import sentry, { setTags } from "~/sentry/main";
-import { initDatadogMain, captureExceptionMain } from "~/datadog/main";
+import { initDatadogMain, installDatadogMainErrorHandlers } from "~/datadog/main";
 import type { SettingsState } from "~/renderer/reducers/settings";
 import {
   installExtension,
@@ -127,16 +127,7 @@ app.on("ready", async () => {
   initDatadogMain(shouldSendDatadog, {
     ...(identities?.datadogId ? { usr_id: identities.datadogId } : {}),
   }).then(ok => {
-    if (!ok) return;
-    process.on("uncaughtException", e => captureExceptionMain(e));
-    process.on("unhandledRejection", e => captureExceptionMain(e));
-    app.on("render-process-gone", (_event, _webContents, details) => {
-      if (details.reason === "clean-exit") return;
-      captureExceptionMain(new Error(`render-process-gone: ${details.reason}`), {
-        reason: details.reason,
-        exitCode: details.exitCode,
-      });
-    });
+    if (ok) installDatadogMainErrorHandlers(app);
   });
 
   // Set up transport handlers for Speculos and HTTP proxy in main process

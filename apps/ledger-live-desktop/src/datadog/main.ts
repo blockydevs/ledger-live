@@ -1,7 +1,12 @@
 import { addError, init } from "@datadog/electron-sdk";
 import anonymizer from "~/sentry/anonymizer";
 import { getOperatingSystemSupportStatus } from "~/support/os";
-import { getDatadogBuildConfig, type ShouldSendCallback } from "./config";
+import {
+  getDatadogBuildConfig,
+  rewriteAsarUrls,
+  toDatadogStackFrames,
+  type ShouldSendCallback,
+} from "./config";
 import { shouldIgnoreErrorMessage } from "./ignoreErrors";
 
 type ContextValue =
@@ -74,13 +79,17 @@ function errorMessage(err: unknown): string {
   return "";
 }
 
-// Error message and stack often contain local file paths (with usernames). Strip them.
-function anonymizeError(err: unknown): unknown {
-  if (err instanceof Error) {
-    err.message = anonymizer.filepath(err.message);
-    if (err.stack) err.stack = anonymizer.filepath(err.stack);
+// Build a sanitized copy for Datadog instead of mutating the original Error, which may also be
+// observed by Sentry/console. rewriteAsarUrls runs before anonymizer.filepath so the asar prefix
+// (including any $HOME segment) is stripped first and frames still resolve for home-dir installs.
+function sanitizeErrorForDatadog(err: unknown): unknown {
+  if (!(err instanceof Error)) return err;
+  const sanitized = new Error(anonymizer.filepath(err.message));
+  sanitized.name = err.name;
+  if (err.stack) {
+    sanitized.stack = toDatadogStackFrames(anonymizer.filepath(rewriteAsarUrls(err.stack)));
   }
-  return err;
+  return sanitized;
 }
 
 export function captureExceptionMain(err: unknown, context?: Context): void {
@@ -91,7 +100,7 @@ export function captureExceptionMain(err: unknown, context?: Context): void {
   try {
     const merged: Context = { ...globalContext, ...context };
     anonymizer.filepathRecursiveReplacer(merged);
-    addError(anonymizeError(err), { context: merged });
+    addError(sanitizeErrorForDatadog(err), { context: merged });
   } catch {
     // no-op
   }
@@ -99,4 +108,27 @@ export function captureExceptionMain(err: unknown, context?: Context): void {
 
 export function setGlobalContextMain(context: Context): void {
   globalContext = { ...globalContext, ...context };
+}
+
+type RenderProcessGoneEmitter = {
+  on(
+    event: "render-process-gone",
+    listener: (event: unknown, webContents: unknown, details: RenderProcessGoneDetails) => void,
+  ): unknown;
+};
+type RenderProcessGoneDetails = { reason: string; exitCode: number };
+
+// Forward main-process crash sources to Datadog. Call once, after initDatadogMain resolves true.
+// `app` is injected (Electron's app) to keep this unit free of an electron runtime import.
+// Renderer "clean-exit" is a normal shutdown, not a crash, so it is skipped.
+export function installDatadogMainErrorHandlers(app: RenderProcessGoneEmitter): void {
+  process.on("uncaughtException", err => captureExceptionMain(err));
+  process.on("unhandledRejection", reason => captureExceptionMain(reason));
+  app.on("render-process-gone", (_event, _webContents, details) => {
+    if (details.reason === "clean-exit") return;
+    captureExceptionMain(new Error(`render-process-gone: ${details.reason}`), {
+      reason: details.reason,
+      exitCode: details.exitCode,
+    });
+  });
 }
