@@ -1,3 +1,4 @@
+import bs58check from "bs58check";
 import { validateAddress } from "./validateAddress";
 
 describe("validateAddress", () => {
@@ -27,5 +28,25 @@ describe("validateAddress", () => {
 
   it("returns false for a too-short Base58Check string", async () => {
     expect(await validateAddress("TQ7pF3NTDL", {})).toBe(false);
+  });
+
+  it("returns false for a too-long Base58Check string", async () => {
+    expect(await validateAddress("TNYJQhvXQAfeFFXH5G6cV5uXrx168fnFGE1", {})).toBe(false);
+  });
+
+  it("returns false for an invalid Base58Check checksum", async () => {
+    expect(await validateAddress("T1YJQhvXQAfeFFXH5G6cV5uXrx168fnFGE", {})).toBe(false);
+  });
+
+  it("returns false when decoded payload has the wrong prefix byte", async () => {
+    expect(await validateAddress("TubpyjkKGq7gR3PBSD6qZpBg2tYk7MJR41", {})).toBe(false);
+  });
+
+  it("returns false when decoded payload has an unexpected length", async () => {
+    const decodeSpy = jest.spyOn(bs58check, "decode").mockReturnValue(Buffer.alloc(20, 0x41));
+
+    expect(await validateAddress("TNYJQhvXQAfeFFXH5G6cV5uXrx168fnFGE", {})).toBe(false);
+
+    decodeSpy.mockRestore();
   });
 });
