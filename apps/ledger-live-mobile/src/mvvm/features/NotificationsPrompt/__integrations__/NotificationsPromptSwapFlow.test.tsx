@@ -162,6 +162,7 @@ describe("NotificationsPrompt swap flow", () => {
           repromptDelay: null,
           dismissedCount: 0,
           skipReason: undefined,
+          drawerPromptTarget: "globalPushNotifications",
         },
       );
       await waitFor(() => {
@@ -173,6 +174,7 @@ describe("NotificationsPrompt swap flow", () => {
         button: "allow notifications",
         page: "Drawer push notification opt-in",
         source: "swap",
+        drawerPromptTarget: "globalPushNotifications",
         repromptDelay: null,
         dismissedCount: 0,
         variant: AB_TESTING_VARIANTS.B,
@@ -209,6 +211,7 @@ describe("NotificationsPrompt swap flow", () => {
           repromptDelay: null,
           dismissedCount: 0,
           skipReason: undefined,
+          drawerPromptTarget: "globalPushNotifications",
         },
       );
 
@@ -217,6 +220,7 @@ describe("NotificationsPrompt swap flow", () => {
         button: "allow notifications",
         page: "Drawer push notification opt-in",
         source: "swap",
+        drawerPromptTarget: "globalPushNotifications",
         repromptDelay: null,
         dismissedCount: 0,
         variant: AB_TESTING_VARIANTS.B,

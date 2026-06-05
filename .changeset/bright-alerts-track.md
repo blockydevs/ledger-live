@@ -2,4 +2,4 @@
 "live-mobile": minor
 ---
 
-Add transaction alerts notification drawer content and per-target opt-out dismissals
+Add transaction alerts notification drawer, per-target opt-out dismissals, and drawerPromptTarget analytics

@@ -10,7 +10,7 @@ import {
   setNotificationsModalOpen,
 } from "~/actions/notifications";
 import { setNotifications } from "~/actions/settings";
-import { track, updateIdentify } from "~/analytics";
+import { track } from "~/analytics";
 import { NavigatorName, ScreenName } from "~/const/navigation";
 import { updateUserPreferences } from "~/notifications/braze";
 import {
@@ -23,6 +23,7 @@ import { notificationsSelector } from "~/reducers/settings";
 import { type NotificationsState } from "~/reducers/types";
 import { type DataOfUser, type NotificationPromptTarget } from "../types";
 import { AB_TESTING_VARIANTS } from "../types/variants";
+import { resolveDrawerPromptTargetForAnalytics } from "../new/notificationsPromptAnalytics";
 import { isTransactionsAlertsPromptTarget } from "../utils/getNotificationsPromptCopy";
 
 type UseNotificationsDrawerParams = {
@@ -149,6 +150,9 @@ export const useNotificationsDrawer = ({
         variant: featureNewWordingNotificationsDrawer?.params?.variant,
         repromptDelay: nextRepromptDelay,
         dismissedCount: pushNotificationsDataOfUser?.dismissedOptInDrawerAtList?.length ?? 0,
+        drawerPromptTarget: shouldPrompt
+          ? resolveDrawerPromptTargetForAnalytics(undefined)
+          : undefined,
       });
 
       if (!shouldPrompt) {
@@ -252,6 +256,7 @@ export const useNotificationsDrawer = ({
         button: eventName,
         page: "Drawer push notification opt-in",
         source: drawerSource,
+        drawerPromptTarget: resolveDrawerPromptTargetForAnalytics(drawerPromptTarget),
         repromptDelay: nextRepromptDelay,
         dismissedCount: pushNotificationsDataOfUser?.dismissedOptInDrawerAtList?.length ?? 0,
         variant: canShowVariant ? featureNewWordingNotificationsDrawer?.params?.variant : undefined,
@@ -259,6 +264,7 @@ export const useNotificationsDrawer = ({
     },
     [
       drawerSource,
+      drawerPromptTarget,
       featureNewWordingNotificationsDrawer?.enabled,
       featureNewWordingNotificationsDrawer?.params?.variant,
       nextRepromptDelay,
