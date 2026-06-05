@@ -1,11 +1,14 @@
 import * as React from "react";
 import {
   act,
+  fireEvent,
   renderWithReactQuery,
   screen,
   waitFor,
   withFlagOverrides,
 } from "@tests/test-renderer";
+import { http, HttpResponse, server } from "@tests/server";
+import marketsMock from "@mocks/api/market/markets.json";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import { ScreenName } from "~/const";
@@ -38,14 +41,6 @@ function enableFavoritesCategory(starredMarketCoins: string[] = []) {
   );
 }
 
-const enableStocksCategory = withFlagOverrides(
-  { lwmWallet40: { enabled: true, params: { assetDiscoverability: true } } },
-  (state: State): State => ({
-    ...state,
-    marketListConfig: { ...state.marketListConfig, category: "stocks" },
-  }),
-);
-
 function hasTestID(node: React.ReactNode, testID: string): boolean {
   if (Array.isArray(node)) return node.some(child => hasTestID(child, testID));
   if (!React.isValidElement(node)) return false;
@@ -55,6 +50,64 @@ function hasTestID(node: React.ReactNode, testID: string): boolean {
   if (props.testID === testID) return true;
 
   return React.Children.toArray(props.children).some(child => hasTestID(child, testID));
+}
+
+function installCapturedMarketHandlers(marketRequests: string[], dadaRequests: string[]) {
+  const stockMarketsMock: typeof marketsMock = [
+    marketsMock[0],
+    {
+      ...marketsMock[0],
+      id: "tesla-xstock",
+      ledgerIds: [
+        "ethereum/erc20/tesla_xstock_0x8ad3c73f833d3f9a523ab01476625f269aeb7cf0",
+      ],
+      ticker: "tslax",
+      name: "Tesla xStock",
+      marketCapRank: 528,
+      price: 411.28,
+    },
+    {
+      ...marketsMock[0],
+      id: "rif-token",
+      ledgerIds: ["rsk/erc20/rif"],
+      ticker: "rif",
+      name: "Rootstock Infrastructure Framework",
+      marketCapRank: 412,
+      price: 0.07,
+    },
+  ];
+
+  server.use(
+    http.get("https://countervalues.live.ledger.com/v3/markets", ({ request }) => {
+      marketRequests.push(request.url);
+      const searchParams = new URL(request.url).searchParams;
+      const filter = searchParams.get("filter")?.toLowerCase();
+      const ids = searchParams.get("ids")?.split(",") ?? [];
+
+      let filteredData = marketsMock;
+      if (filter === "stock") {
+        filteredData = stockMarketsMock;
+      } else if (filter) {
+        filteredData = marketsMock.filter(({ name, ticker }) =>
+          ticker.toLowerCase().includes(filter) || name.toLowerCase().includes(filter),
+        );
+      } else if (ids.length > 0) {
+        filteredData = marketsMock.filter(({ id }) => ids.includes(id));
+      }
+
+      const page = parseInt(searchParams.get("page") || "0");
+      const pageSize = 10;
+      return HttpResponse.json(filteredData.slice(page * pageSize, (page + 1) * pageSize));
+    }),
+    http.get("https://dada.api.ledger-test.com/v1/assets", ({ request }) => {
+      dadaRequests.push(request.url);
+      return HttpResponse.json({});
+    }),
+    http.get("https://dada.api.ledger.com/v1/assets", ({ request }) => {
+      dadaRequests.push(request.url);
+      return HttpResponse.json({});
+    }),
+  );
 }
 
 describe("MarketScreen assets list (Block 3)", () => {
@@ -156,19 +209,68 @@ describe("MarketScreen assets list (Block 3)", () => {
     expect(screen.queryByTestId("marketItem-ethereum")).toBeNull();
   });
 
-  it("renders DADA-backed rows in the Stocks category", async () => {
+  it("renders CVS stock rows after selecting the Stocks category", async () => {
+    const marketRequests: string[] = [];
+    const dadaRequests: string[] = [];
+    installCapturedMarketHandlers(marketRequests, dadaRequests);
+
     renderWithReactQuery(<NavigatorWrapper />, {
-      overrideInitialState: enableStocksCategory,
+      overrideInitialState: enableAssetDiscoverability,
     });
 
     await waitFor(
       () => {
-        expect(screen.getByTestId("marketItem-apple")).toBeVisible();
+        expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible();
       },
       { timeout: 5000 },
     );
 
-    expect(screen.getByText("Apple")).toBeVisible();
+    fireEvent.press(
+      screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-stocks`),
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("marketItem-tesla-xstock")).toBeVisible();
+      },
+      { timeout: 5000 },
+    );
+
+    const stockMarketRequest = marketRequests.find(
+      url => new URL(url).searchParams.get("filter") === "stock",
+    );
+    const dadaStocksRequests = dadaRequests.filter(
+      url => new URL(url).searchParams.get("categories") === "stocks",
+    );
+
+    expect(stockMarketRequest).toBeDefined();
+    expect(dadaStocksRequests).toEqual([]);
+    expect(screen.getByText("Tesla xStock")).toBeVisible();
+    expect(screen.getByText("Stocks")).toBeVisible();
+    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
+    expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();
+    expect(screen.queryByTestId("marketItem-rif-token")).toBeNull();
+  });
+
+  it("renders CVS stock rows when the Stocks category is persisted", async () => {
+    renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: withFlagOverrides(
+        { lwmWallet40: { enabled: true, params: { assetDiscoverability: true } } },
+        (state: State): State => ({
+          ...state,
+          marketListConfig: { ...state.marketListConfig, category: "stocks" },
+        }),
+      ),
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("marketItem-tesla-xstock")).toBeVisible();
+      },
+      { timeout: 5000 },
+    );
+
+    expect(screen.getByText("Tesla xStock")).toBeVisible();
     expect(screen.getByText("Stocks")).toBeVisible();
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
     expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();

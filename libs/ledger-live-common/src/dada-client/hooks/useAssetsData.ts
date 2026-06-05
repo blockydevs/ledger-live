@@ -20,8 +20,6 @@ const emptyData = () => ({
 export function useAssetsData({
   search,
   currencyIds,
-  categories,
-  sort,
   useCase,
   areCurrenciesFiltered,
   product,
@@ -50,8 +48,6 @@ export function useAssetsData({
   } = useGetAssetsDataInfiniteQuery(
     {
       search,
-      categories,
-      sort,
       useCase,
       currencyIds: areCurrenciesFiltered ? currencyIds : undefined,
       product,

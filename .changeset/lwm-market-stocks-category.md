@@ -3,4 +3,4 @@
 "@ledgerhq/live-common": minor
 ---
 
-Add DADA-backed Stocks category to the mobile Market screen.
+Add CVS-backed Stocks category to the mobile Market screen.

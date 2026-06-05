@@ -82,8 +82,6 @@ export function buildAssetsQueryParams(
         currencyIds: queryArg.currencyIds.map(id => legacyIdToApiId(id)),
       }),
     ...(queryArg.search && { search: queryArg.search }),
-    ...(queryArg.categories?.length && { categories: queryArg.categories.join(",") }),
-    ...(queryArg.sort && { sort: queryArg.sort }),
     product: queryArg.product,
     minVersion: queryArg.version,
     ...(queryArg.includeTestNetworks && { includeTestNetworks: queryArg.includeTestNetworks }),
