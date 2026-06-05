@@ -7,12 +7,6 @@ import React from "react";
 import { DeviceManagementKit } from "@ledgerhq/device-management-kit";
 import { render } from "@testing-library/react";
 
-jest.mock("@features/platform-feature-flags", () => ({
-  useFeature: () => ({
-    enabled: true,
-  }),
-}));
-
 const TestComponent: React.FC = () => {
   const dmk = useDeviceManagementKit();
 
@@ -44,7 +38,7 @@ describe("useDeviceManagementKit", () => {
     it("provides a dmk instance to child element if enabled", async () => {
       // given
       const { getByTestId } = render(
-        <DeviceManagementKitProvider>
+        <DeviceManagementKitProvider ldmkTransportEnabled>
           <TestComponent />
         </DeviceManagementKitProvider>,
       );

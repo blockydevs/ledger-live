@@ -4,6 +4,7 @@ import { useSelector } from "LLD/hooks/redux";
 import { Store } from "redux";
 import { HashRouter as Router } from "react-router";
 import { DeviceManagementKitProvider } from "@ledgerhq/live-dmk-desktop";
+import { useFeature } from "@features/platform-feature-flags";
 import "./global.css";
 import "tippy.js/dist/tippy.css";
 import "tippy.js/animations/shift-away.css";
@@ -63,6 +64,7 @@ const InnerApp = ({ initialCountervalues }: { initialCountervalues: CounterValue
   }, [reloadEnabled]);
 
   const selectedPalette = useSelector(themeSelector) || "light";
+  const ldmkTransport = useFeature("ldmkTransport");
 
   return (
     <StyleProvider selectedPalette={selectedPalette}>
@@ -78,7 +80,7 @@ const InnerApp = ({ initialCountervalues }: { initialCountervalues: CounterValue
           <ConnectEnvsToDatadog />
           <UpdaterProvider>
             <AppDataStorageProvider>
-              <DeviceManagementKitProvider>
+              <DeviceManagementKitProvider ldmkTransportEnabled={ldmkTransport?.enabled}>
                 <CountervaluesBridgedProvider initialState={initialCountervalues}>
                   <ToastProvider>
                     <ServiceStatusProviderWrapper>
