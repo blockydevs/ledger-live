@@ -35,8 +35,6 @@ export function useFeatureFlagsFilters({
     }
   }
 
-  const sortedFlagIds = useMemo(() => [...ALL_FLAG_IDS].sort(), []);
-
   const matchesFilter = useMemo<Record<FlagFilter, (id: FeatureId) => boolean>>(
     () => ({
       all: () => true,
@@ -49,10 +47,10 @@ export function useFeatureFlagsFilters({
 
   const filteredFlagIds = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return sortedFlagIds.filter(
+    return ALL_FLAG_IDS.filter(
       id => (!q || id.toLowerCase().includes(q)) && matchesFilter[filter](id),
     );
-  }, [search, filter, matchesFilter, sortedFlagIds]);
+  }, [search, filter, matchesFilter]);
 
   // Counts reflect totals across all flags, independent of the active search and filter.
   const counts = useMemo(() => {

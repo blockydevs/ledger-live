@@ -10,6 +10,7 @@ import { Divider } from "@ledgerhq/lumen-ui-react";
 import { Sidebar } from "../sidebar/Sidebar";
 import { ToolsHeader } from "../toolsHeader/ToolsHeader";
 import { useFeatureFlagsFilters } from "../../hooks";
+import { useSortFlag } from "../../hooks/useSortFlag";
 
 export const FlagList = (props: FeatureFlagsToolProps) => {
   const { overrides, setOverride } = props;
@@ -18,6 +19,11 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
   const featureIds: FeatureId[] = ALL_FLAG_IDS;
   const { filteredFlagIds, setSearch, search, filter, setFilter, counts } =
     useFeatureFlagsFilters(props);
+  const { sortedFlagIds, category, direction, cycleCategory, toggleDirection } = useSortFlag({
+    flagIds: filteredFlagIds,
+    resolved: props.resolved,
+    overrides: props.overrides,
+  });
 
   return (
     <div>
@@ -28,6 +34,10 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
           filter={filter}
           setFilter={setFilter}
           counts={counts}
+          sortCategory={category}
+          sortDirection={direction}
+          cycleCategory={cycleCategory}
+          toggleDirection={toggleDirection}
         />
         <Divider />
         <FlagListHeader
@@ -46,7 +56,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
         />
       )}
       <div>
-        {filteredFlagIds.map(featureId => (
+        {sortedFlagIds.map(featureId => (
           <Fragment key={featureId}>
             <FlagRow
               display={getFlagDisplayState(featureId)}

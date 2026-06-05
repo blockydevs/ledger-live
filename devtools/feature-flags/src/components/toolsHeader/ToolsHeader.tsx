@@ -1,7 +1,15 @@
-import { SearchInput, SegmentedControl, SegmentedControlButton } from "@ledgerhq/lumen-ui-react";
+import {
+  SearchInput,
+  SegmentedControl,
+  SegmentedControlButton,
+  Button,
+  InteractiveIcon,
+} from "@ledgerhq/lumen-ui-react";
 import { FILTERS } from "../../hooks/useFeatureFlagsFilters";
 import type { FlagFilter } from "../../types";
 import { Pill } from "../pill/Pill.web";
+import { FilterSort, ArrowUp, ArrowDown } from "@ledgerhq/lumen-ui-react/symbols";
+import type { SortCategory, SortDirection } from "../../hooks/useSortFlag";
 
 const FILTER_LABELS: Record<FlagFilter, string> = {
   all: "All",
@@ -10,15 +18,35 @@ const FILTER_LABELS: Record<FlagFilter, string> = {
   overridden: "Overridden",
 };
 
+const SORT_CATEGORY_LABELS: Record<SortCategory, (direction: SortDirection) => string> = {
+  name: direction => (direction === "asc" ? "A→Z" : "Z→A"),
+  overridden: () => "Overridden first",
+  enabled: () => "Enabled first",
+};
+
 export interface ToolsHeaderProps {
   search: string;
   setSearch: (value: string) => void;
   filter: FlagFilter;
   setFilter: (filter: string) => void;
   counts: Record<FlagFilter, number>;
+  sortCategory: SortCategory;
+  sortDirection: SortDirection;
+  cycleCategory: () => void;
+  toggleDirection: () => void;
 }
 
-export function ToolsHeader({ search, setSearch, filter, setFilter, counts }: ToolsHeaderProps) {
+export function ToolsHeader({
+  search,
+  setSearch,
+  filter,
+  setFilter,
+  counts,
+  sortCategory,
+  sortDirection,
+  cycleCategory,
+  toggleDirection,
+}: ToolsHeaderProps) {
   return (
     // Responsive layout (viewport-based, matching the rest of the panel):
     // - lg+   : single row (search · filter · actions)
@@ -70,6 +98,18 @@ export function ToolsHeader({ search, setSearch, filter, setFilter, counts }: To
           </SegmentedControlButton>
         ))}
       </SegmentedControl>
+      <div className="flex items-center gap-4">
+        <Button appearance="no-background" size="sm" icon={FilterSort} onClick={cycleCategory}>
+          {SORT_CATEGORY_LABELS[sortCategory](sortDirection)}
+        </Button>
+        <InteractiveIcon
+          iconType="stroked"
+          icon={sortDirection === "asc" ? ArrowUp : ArrowDown}
+          size={32}
+          aria-label={sortDirection === "asc" ? "Sort ascending" : "Sort descending"}
+          onClick={toggleDirection}
+        />
+      </div>
     </div>
   );
 }
