@@ -14,6 +14,7 @@ export {
   hasRedelegation,
   prefetchValidators,
   clearValidatorsCache,
+  findFreeWithdrawId,
 } from "./validators";
 export {
   mapDelegations,
