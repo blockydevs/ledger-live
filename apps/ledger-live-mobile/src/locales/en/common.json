@@ -8898,7 +8898,8 @@
     "title": "Ledger Sync",
     "banner": {
       "title": "Your wallet isn't synced",
-      "description": "Keep your portfolio up to date"
+      "description": "Keep your portfolio up to date",
+      "cta": "Sync my wallet"
     },
     "entryPoints": {
       "simpleCta": {
