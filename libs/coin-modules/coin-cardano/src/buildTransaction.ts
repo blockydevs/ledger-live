@@ -16,6 +16,7 @@ import {
   mergeTokens,
   isProtocolParamsValid,
   isTestnet,
+  toTyphonProtocolParams,
 } from "./logic";
 import { getNetworkParameters } from "./networks";
 import {
@@ -413,20 +414,7 @@ export const buildTransaction = async (
   }
 
   const typhonTx = new TyphonTransaction({
-    protocolParams: {
-      minFeeA: new BigNumber(protocolParams.minFeeA),
-      minFeeB: new BigNumber(protocolParams.minFeeB),
-      stakeKeyDeposit: new BigNumber(protocolParams.stakeKeyDeposit),
-      lovelacePerUtxoWord: new BigNumber(protocolParams.lovelacePerUtxoWord),
-      collateralPercent: new BigNumber(protocolParams.collateralPercent),
-      priceSteps: new BigNumber(protocolParams.priceSteps),
-      priceMem: new BigNumber(protocolParams.priceMem),
-      languageView: protocolParams.languageView,
-      maxTxSize: Number(protocolParams.maxTxSize),
-      maxValueSize: Number(protocolParams.maxValueSize),
-      utxoCostPerByte: new BigNumber(protocolParams.utxoCostPerByte),
-      minFeeRefScriptCostPerByte: new BigNumber(protocolParams.minFeeRefScriptCostPerByte),
-    },
+    protocolParams: toTyphonProtocolParams(protocolParams),
   });
   const ttl = getTTL(account.currency.id);
   typhonTx.setTTL(ttl);
