@@ -102,6 +102,15 @@ describe("buildTransactionParams", () => {
       expect(params).toStrictEqual([42n]);
     });
 
+    it("builds params for claimReward operation (valId as bigint)", () => {
+      const params = buildTransactionParams("monad", "claimReward" as StakingOperation, {
+        valId: "42",
+        amount: 0n,
+      });
+
+      expect(params).toStrictEqual([42n]);
+    });
+
     it("throws when monad staking is missing valId", () => {
       expect(() => {
         buildTransactionParams("monad", "delegate" as StakingOperation, {

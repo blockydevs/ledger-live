@@ -2,7 +2,7 @@ import { ethers, type JsonRpcProvider } from "ethers";
 import network from "@ledgerhq/live-network";
 import { makeLRUCache } from "@ledgerhq/live-network/cache";
 import type { Cursor, Page } from "@ledgerhq/coin-module-framework/api/index";
-import type { AssetInfo, Stake } from "@ledgerhq/coin-module-framework/api/types";
+import type { AssetInfo, Stake, StakeState } from "@ledgerhq/coin-module-framework/api/types";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
@@ -119,6 +119,7 @@ function isDelegatorRaw(value: unknown): value is DelegatorRaw {
   return (
     Array.isArray(value) &&
     typeof value[0] === "bigint" &&
+    typeof value[2] === "bigint" &&
     typeof value[3] === "bigint" &&
     typeof value[4] === "bigint"
   );
@@ -349,9 +350,9 @@ const fetchStakeForValId = async (
   const decoded = iface.decodeFunctionResult("getDelegator", raw);
   if (!isDelegatorRaw(decoded)) return [];
 
-  const [activeStake, , , deltaStake, nextDeltaStake] = decoded;
+  const [activeStake, , unclaimedRewards, deltaStake, nextDeltaStake] = decoded;
   const deltaStakes = deltaStake + nextDeltaStake;
-  if (activeStake === 0n && deltaStakes === 0n) return [];
+  if (activeStake === 0n && deltaStakes === 0n && unclaimedRewards === 0n) return [];
 
   const validator = await callGetValidator(provider, iface, contractAddress, valId).catch(
     () => null,
@@ -378,20 +379,25 @@ const fetchStakeForValId = async (
     ...(validatorName ? { validatorName } : {}),
     validatorId: valId.toString(),
   };
-  const makeStake = (state: Stake["state"], amount: bigint): Stake => ({
+  const makeStake = (state: StakeState, amount: bigint, rewards = 0n): Stake => ({
     uid: `${contractAddress}-${valId.toString()}-${delegator}-${state}`,
     address: delegator,
     ...(validatorAddress ? { delegate: validatorAddress } : {}),
     state,
     asset,
     amount,
+    ...(rewards > 0n ? { amountRewarded: rewards } : {}),
     actions: [],
     details,
   });
 
   const stakes: Stake[] = [];
-  if (activeStake !== 0n) stakes.push(makeStake("active", activeStake));
-  if (deltaStakes !== 0n) stakes.push(makeStake("activating", deltaStakes));
+  if (activeStake !== 0n || unclaimedRewards !== 0n) {
+    stakes.push(makeStake("active", activeStake, unclaimedRewards));
+  }
+  if (deltaStakes !== 0n) {
+    stakes.push(makeStake("activating", deltaStakes));
+  }
   return stakes;
 };
 
