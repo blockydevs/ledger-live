@@ -7,6 +7,7 @@ import FearAndGreedHandlers from "./fearAndGreed";
 import ConcordiumHandlers from "./concordium";
 import BuyHandlers from "./buy";
 import SwapHandlers from "./swap";
+import LedgerSyncHandlers from "./ledgerSync";
 
 export default [
   ...MarketHandlers,
@@ -18,4 +19,5 @@ export default [
   ...FearAndGreedHandlers,
   ...BuyHandlers,
   ...SwapHandlers,
+  ...LedgerSyncHandlers,
 ];
