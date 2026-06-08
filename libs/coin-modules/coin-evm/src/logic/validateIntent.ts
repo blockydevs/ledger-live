@@ -6,6 +6,7 @@ import type {
   MemoNotSupported,
   TransactionIntent,
   TransactionValidation,
+  StakingOperation,
 } from "@ledgerhq/coin-module-framework/api/types";
 import { formatCurrencyUnit } from "@ledgerhq/coin-module-framework/currencies/formatCurrencyUnit";
 import {
@@ -30,7 +31,7 @@ import { getFeesUnit } from "@ledgerhq/ledger-wallet-framework/account/helpers";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import BigNumber from "bignumber.js";
 import { getGasTracker } from "../network/gasTracker";
-import { isNative, StakingOperation, TransactionTypes } from "../types";
+import { isNative, TransactionTypes } from "../types";
 import { STAKING_CONTRACTS } from "../staking";
 import { DEFAULT_GAS_LIMIT, isEthAddress, isStakingIntent } from "../utils";
 import {
