@@ -23,8 +23,7 @@ export function MarketCategoryBar({ categories, t }: Readonly<MarketCategoryBarP
       onSelectedChange={onSelectedChange}
       aria-label={t("market.assets.categories.accessibilityLabel")}
       data-testid="market-category-switcher"
-      className="max-w-[25%]"
-      tabLayout="fixed"
+      className="w-[50%] xl:w-[25%]"
     >
       {tabs.map(tab => (
         <SegmentedControlButton
