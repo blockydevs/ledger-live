@@ -5,14 +5,14 @@ import type { DiffLine } from "../utils/diff";
 
 const JSON_INDENT = 2;
 
-/** Selectable baselines the editor can diff the in-memory flag against. */
-export type DiffTarget = "resolved" | "default";
+/** Selectable baselines the editor can diff the edited flag against. */
+export type DiffBaseline = "resolved" | "default";
 
 export interface JsonEditorPropsState {
   currentJsonFlag: string;
   diffJson: DiffLine[];
-  diffTarget: DiffTarget;
-  setDiffTarget: (target: DiffTarget) => void;
+  diffBaseline: DiffBaseline;
+  setDiffBaseline: (baseline: DiffBaseline) => void;
   setCurrentJsonFlag: (json: string) => void;
   overrideWithJson: () => void;
   resetJson: () => void;
@@ -33,7 +33,7 @@ export function useJsonEditor({
   setOverride,
 }: JsonEditorProps): JsonEditorPropsState {
   const [draft, setDraft] = useState<string | null>(null);
-  const [diffTarget, setDiffTarget] = useState<DiffTarget>("default");
+  const [diffBaseline, setDiffBaseline] = useState<DiffBaseline>("default");
 
   const currentJsonFlag = draft ?? JSON.stringify(resolved, null, JSON_INDENT);
 
@@ -58,12 +58,7 @@ export function useJsonEditor({
 
   const resetJson = () => setDraft(null);
 
-  // The diff baseline (left side). "resolved" is the current resolved value
-  // (override included); "default" is the registered schema default — the
-  // bottom of the resolution chain. The exact "resolved without override"
-  // baseline is deferred until the slice persists it (env/remote live in the
-  // middleware and aren't reachable here).
-  const base = diffTarget === "default" ? FEATURE_FLAGS_DEFAULTS[id] : resolved;
+  const base = diffBaseline === "default" ? FEATURE_FLAGS_DEFAULTS[id] : resolved;
   const baseJson = JSON.stringify(base, null, JSON_INDENT);
   const diffJson = diffJsonLines(baseJson, currentJsonFlag);
 
@@ -78,8 +73,8 @@ export function useJsonEditor({
   return {
     currentJsonFlag,
     diffJson,
-    diffTarget,
-    setDiffTarget,
+    diffBaseline,
+    setDiffBaseline,
     setCurrentJsonFlag: setDraft,
     overrideWithJson,
     resetJson,

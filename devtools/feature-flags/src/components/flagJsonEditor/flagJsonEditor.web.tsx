@@ -3,15 +3,15 @@ import { cn } from "@ledgerhq/lumen-utils-shared";
 import { useState } from "react";
 import { DiffLine } from "../../utils";
 import { FlagDiffView } from "../flagDiffView/FlagDiffView.web";
-import type { DiffTarget } from "../../hooks";
+import type { DiffBaseline } from "../../hooks";
 
 export interface FlagJsonEditorProps {
   readonly value: string;
   readonly onChange: (next: string) => void;
   readonly isValidJson: boolean;
   readonly diffJson: DiffLine[];
-  readonly diffTarget: DiffTarget;
-  readonly setDiffTarget: (target: DiffTarget) => void;
+  readonly diffBaseline: DiffBaseline;
+  readonly setDiffBaseline: (baseline: DiffBaseline) => void;
 }
 
 export function FlagJsonEditor({
@@ -19,8 +19,8 @@ export function FlagJsonEditor({
   onChange,
   isValidJson,
   diffJson,
-  diffTarget,
-  setDiffTarget,
+  diffBaseline,
+  setDiffBaseline,
 }: FlagJsonEditorProps) {
   const [onJsonEditor, setOnJsonEditor] = useState<boolean>(true);
   return (
@@ -64,16 +64,16 @@ export function FlagJsonEditor({
             <Button
               appearance="no-background"
               size="sm"
-              className={cn({ "bg-active-subtle": diffTarget === "default" })}
-              onClick={() => setDiffTarget("default")}
+              className={cn({ "bg-active-subtle": diffBaseline === "default" })}
+              onClick={() => setDiffBaseline("default")}
             >
               Defaults
             </Button>
             <Button
               appearance="no-background"
               size="sm"
-              className={cn({ "bg-active-subtle": diffTarget === "resolved" })}
-              onClick={() => setDiffTarget("resolved")}
+              className={cn({ "bg-active-subtle": diffBaseline === "resolved" })}
+              onClick={() => setDiffBaseline("resolved")}
             >
               Resolved
             </Button>

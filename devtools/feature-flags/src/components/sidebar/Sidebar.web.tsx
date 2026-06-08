@@ -22,8 +22,8 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
     isJsonValid,
     applyDisabled,
     diffJson,
-    diffTarget,
-    setDiffTarget,
+    diffBaseline,
+    setDiffBaseline,
     resetJson,
     toggleFeatureFlag,
   } = useJsonEditor({
@@ -55,8 +55,8 @@ export function Sidebar({ setOverride, display, onClose, clearOverride }: Sideba
               onChange={setCurrentJsonFlag}
               isValidJson={isJsonValid}
               diffJson={diffJson}
-              diffTarget={diffTarget}
-              setDiffTarget={setDiffTarget}
+              diffBaseline={diffBaseline}
+              setDiffBaseline={setDiffBaseline}
             />
           </div>
         </div>

@@ -16,8 +16,8 @@ const makeProps = (overrides: Partial<FlagJsonEditorProps> = {}): FlagJsonEditor
   onChange: jest.fn(),
   isValidJson: true,
   diffJson,
-  diffTarget: "default",
-  setDiffTarget: jest.fn(),
+  diffBaseline: "default",
+  setDiffBaseline: jest.fn(),
   ...overrides,
 });
 
@@ -63,23 +63,23 @@ describe("FlagJsonEditor", () => {
       expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
-    it("calls setDiffTarget with 'resolved' when Resolved is clicked", async () => {
-      const setDiffTarget = jest.fn();
+    it("calls setDiffBaseline with 'resolved' when Resolved is clicked", async () => {
+      const setDiffBaseline = jest.fn();
       const user = userEvent.setup();
-      render(<FlagJsonEditor {...makeProps({ setDiffTarget })} />);
+      render(<FlagJsonEditor {...makeProps({ setDiffBaseline })} />);
       await user.click(screen.getByRole("button", { name: "Review Changes" }));
 
       await user.click(screen.getByRole("button", { name: "Resolved" }));
-      expect(setDiffTarget).toHaveBeenCalledWith("resolved");
+      expect(setDiffBaseline).toHaveBeenCalledWith("resolved");
     });
 
-    it("calls setDiffTarget with 'default' when Default is clicked", async () => {
-      const setDiffTarget = jest.fn();
+    it("calls setDiffBaseline with 'default' when Default is clicked", async () => {
+      const setDiffBaseline = jest.fn();
       const user = userEvent.setup();
-      render(<FlagJsonEditor {...makeProps({ setDiffTarget })} />);
+      render(<FlagJsonEditor {...makeProps({ setDiffBaseline })} />);
       await user.click(screen.getByRole("button", { name: "Review Changes" }));
       await user.click(screen.getByRole("button", { name: "Defaults" }));
-      expect(setDiffTarget).toHaveBeenCalledWith("default");
+      expect(setDiffBaseline).toHaveBeenCalledWith("default");
     });
   });
 });

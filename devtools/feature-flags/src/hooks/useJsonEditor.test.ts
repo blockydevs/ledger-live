@@ -4,12 +4,7 @@ import { useJsonEditor } from "./useJsonEditor";
 import type { JsonEditorProps } from "./useJsonEditor";
 
 const testFlagId: FeatureId = "mockFeature";
-
-// `mockFeature`'s registered default is `{ enabled: false }`. A resolved value
-// of `{ enabled: true }` makes the two diff baselines distinct so switching
-// `diffTarget` is observable.
 const resolved: Features[FeatureId] = { enabled: true };
-
 const resolvedJson = JSON.stringify(resolved, null, 2);
 
 const makeProps = (overrides: Partial<JsonEditorProps> = {}): JsonEditorProps => ({
@@ -47,32 +42,30 @@ describe("useJsonEditor", () => {
     });
   });
 
-  describe("diffTarget", () => {
+  describe("diffBaseline", () => {
     it("defaults to 'default'", () => {
       const { result } = renderHook(() => useJsonEditor(makeProps()));
-      expect(result.current.diffTarget).toBe("default");
+      expect(result.current.diffBaseline).toBe("default");
     });
 
     it("can be switched to 'resolved'", () => {
       const { result } = renderHook(() => useJsonEditor(makeProps()));
-      act(() => result.current.setDiffTarget("resolved"));
-      expect(result.current.diffTarget).toBe("resolved");
+      act(() => result.current.setDiffBaseline("resolved"));
+      expect(result.current.diffBaseline).toBe("resolved");
     });
   });
 
   describe("diffJson", () => {
-    it("diffs the current value against the registered default", () => {
+    it("highlights removed and added lines in the diff", () => {
       const { result } = renderHook(() => useJsonEditor(makeProps()));
       const expected = result.current.diffJson;
-      // Baseline is the default; current is resolved → the `enabled` line changed.
       expect(expected.some(l => l.state === "removed" && l.text.includes("false"))).toBe(true);
       expect(expected.some(l => l.state === "added" && l.text.includes("true"))).toBe(true);
     });
 
-    it("diffs the current value against resolved when targeted", () => {
+    it("resets the state of every line when the diff is resolved", () => {
       const { result } = renderHook(() => useJsonEditor(makeProps()));
-      act(() => result.current.setDiffTarget("resolved"));
-      // Current equals resolved → every line is unchanged.
+      act(() => result.current.setDiffBaseline("resolved"));
       expect(result.current.diffJson.every(l => l.state === "none")).toBe(true);
     });
   });

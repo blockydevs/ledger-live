@@ -81,8 +81,6 @@ describe("FlagRow", () => {
       expect(onSelect).toHaveBeenCalled();
     });
 
-    // The switch is a sibling of the selection button, not nested inside it,
-    // so toggling must never trigger flag selection.
     it("does not call onSelect when the switch is clicked", async () => {
       const onSelect = jest.fn();
       const user = userEvent.setup();

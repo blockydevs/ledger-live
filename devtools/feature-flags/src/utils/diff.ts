@@ -6,30 +6,21 @@ export interface DiffLine {
 }
 
 /**
- * Stringifies a value with a fixed indentation. Both diff sides must go through
- * this so the only differences that surface are real value changes, not
- * mismatched formatting. Key order is left as-is: both sides originate from the
- * same serialization, so it never drifts.
+ * Applies consistent JSON stringification for both sides of a diff.
+ *
+ * @param value - The value to stringify.
+ * @return The value stringified with a fixed indentation.
  */
 export function canonicalJson(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
 /**
- * Line-level diff of two JSON strings using the longest common subsequence.
- * Unlike a greedy forward-search, LCS resyncs correctly across the many
- * identical lines JSON produces (`{`, `},`, closing brackets, repeated values)
- * and yields a minimal edit script.
+ * Diffs two JSON strings line by line.
  *
- * @param base
- * The "from" side — the value without the local override.
- *
- * @param current
- * The "to" side — the in-memory / edited value.
- *
- * @return
- * The flattened diff: unchanged lines (`none`), lines only in `base`
- * (`removed`), and lines only in `current` (`added`), in display order.
+ * @param base - The original side of the diff.
+ * @param current - The edited side of the diff.
+ * @return Each line tagged as unchanged, removed, or added, in display order.
  */
 export function diffJsonLines(base: string, current: string): DiffLine[] {
   const a = base.split("\n");
@@ -37,12 +28,8 @@ export function diffJsonLines(base: string, current: string): DiffLine[] {
   const m = a.length;
   const n = b.length;
 
-  // Trailing whitespace is meaningless in JSON, so two lines that differ only
-  // by it count as equal. Comparison uses the trimmed form; the original text
-  // is still what gets displayed.
   const eq = (x: string, y: string) => x.trimEnd() === y.trimEnd();
 
-  // lcs[i][j] = length of the longest common subsequence of a[i:] and b[j:].
   const lcs = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
   for (let i = m - 1; i >= 0; i--) {
     for (let j = n - 1; j >= 0; j--) {
@@ -50,7 +37,6 @@ export function diffJsonLines(base: string, current: string): DiffLine[] {
     }
   }
 
-  // Backtrack into a flat, in-order list of tagged lines.
   const out: DiffLine[] = [];
   let i = 0;
   let j = 0;
