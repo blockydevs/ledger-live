@@ -47,10 +47,10 @@ describe("useDeviceManagementKit", () => {
       // then
       expect(dmkStr).toHaveTextContent(JSON.stringify(getDeviceManagementKit()));
     });
-    it("provides children if disabled", () => {
+    it("provides children if not enabled", () => {
       // given
       const { getByTestId } = render(
-        <DeviceManagementKitProvider disabled>
+        <DeviceManagementKitProvider ldmkTransportEnabled={false}>
           <TestComponent />
         </DeviceManagementKitProvider>,
       );
