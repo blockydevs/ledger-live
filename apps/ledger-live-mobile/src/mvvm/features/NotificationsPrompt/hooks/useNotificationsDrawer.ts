@@ -27,9 +27,9 @@ import { isTransactionsAlertsPromptTarget } from "../utils/getNotificationsPromp
 
 type UseNotificationsDrawerParams = {
   permissionStatus:
-    | (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus]
-    | null
-    | undefined;
+  | (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus]
+  | null
+  | undefined;
   areNotificationsAllowed: boolean | undefined;
   pushNotificationsDataOfUser: DataOfUser | null | undefined;
   nextRepromptDelay: { days?: number; hours?: number; minutes?: number } | null;
@@ -88,15 +88,15 @@ export const useNotificationsDrawer = ({
     (
       data:
         | {
-            status: "success";
-            storedUserData: DataOfUser | null;
-            osPermissionStatus: (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus];
-            areAppNotificationsEnabled: boolean;
-          }
+          status: "success";
+          storedUserData: DataOfUser | null;
+          osPermissionStatus: (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus];
+          areAppNotificationsEnabled: boolean;
+        }
         | {
-            status: "error";
-            reason: string;
-          },
+          status: "error";
+          reason: string;
+        },
     ) => {
       if (!featureBrazePushNotifications?.enabled || isRatingsModalOpen) {
         return;
@@ -319,7 +319,7 @@ export const useNotificationsDrawer = ({
       updateUserLastInactiveTime();
     }
 
-    if (isTransactionsAlertsPromptTarget(drawerPromptTarget)) {
+    if (isTransactionsAlertsPromptTarget(promptTargetAtDismiss)) {
       dispatch(
         setNotifications({
           transactionsAlertsCategory: true,
@@ -330,7 +330,6 @@ export const useNotificationsDrawer = ({
         transactionsAlertsCategory: true,
       });
       markUserAsOptIn();
-      updateIdentify();
       return;
     }
 

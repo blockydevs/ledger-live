@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
-import { AB_TESTING_VARIANTS } from "./types/variants";
+import { AB_TESTING_VARIANTS } from "../types/variants";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   renderWithReactQuery,
@@ -16,9 +16,42 @@ import { NavigatorName, ScreenName } from "~/const";
 import GlobalDrawers from "~/GlobalDrawers";
 import { track } from "~/analytics";
 import { MockedAccounts } from "LLM/features/Accounts/__integrations__/mockedAccounts";
-import { createNotificationsPromptFeatureFlags } from "./testUtils";
+import {
+  createNotificationsPromptFeatureFlags,
+  transactionsAlertsDrawerPromptCategoryConfig,
+} from "../testUtils";
+
+type AuthorizationStatusType = (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus];
+
+const mockRequestPermission = jest.fn<Promise<AuthorizationStatusType>, []>(() =>
+  Promise.resolve(AuthorizationStatus.NOT_DETERMINED),
+);
+const mockHasPermission = jest.fn<Promise<AuthorizationStatusType>, []>(() =>
+  Promise.resolve(AuthorizationStatus.NOT_DETERMINED),
+);
+
+jest.mock("@react-native-firebase/messaging", () => {
+  const AuthorizationStatus = {
+    NOT_DETERMINED: -1,
+    DENIED: 0,
+    AUTHORIZED: 1,
+    PROVISIONAL: 2,
+    EPHEMERAL: 3,
+  } as const;
+
+  return {
+    AuthorizationStatus,
+    getMessaging: jest.fn(() => ({
+      requestPermission: mockRequestPermission,
+      hasPermission: mockHasPermission,
+    })),
+  };
+});
 
 const featureFlagsForSendPrompt = createNotificationsPromptFeatureFlags();
+const featureFlagsForTransactionsAlertsSendPrompt = createNotificationsPromptFeatureFlags({
+  notificationsCategories: [transactionsAlertsDrawerPromptCategoryConfig],
+});
 
 describe("NotificationsPrompt send flow", () => {
   beforeAll(() => {
@@ -27,6 +60,8 @@ describe("NotificationsPrompt send flow", () => {
 
   beforeEach(async () => {
     jest.setSystemTime(new Date("2025-01-01T00:00:00.000Z"));
+    mockRequestPermission.mockResolvedValue(AuthorizationStatus.NOT_DETERMINED);
+    mockHasPermission.mockResolvedValue(AuthorizationStatus.NOT_DETERMINED);
     await storage.deleteAll();
   });
 
@@ -143,5 +178,43 @@ describe("NotificationsPrompt send flow", () => {
       dismissedCount: 0,
       variant: AB_TESTING_VARIANTS.B,
     });
+  });
+
+  it("should prompt the transaction alerts drawer when a globally opted-in user leaves the send success screen", async () => {
+    mockRequestPermission.mockResolvedValue(AuthorizationStatus.AUTHORIZED);
+    mockHasPermission.mockResolvedValue(AuthorizationStatus.AUTHORIZED);
+
+    const { user } = renderWithReactQuery(<SendFlowTestApp />, {
+      navigationInitialState: sendFlowNavigationState,
+      overrideInitialState: withFlagOverrides(featureFlagsForTransactionsAlertsSendPrompt, state => ({
+        ...state,
+        accounts: MockedAccounts,
+        notifications: {
+          ...state.notifications,
+          permissionStatus: AuthorizationStatus.AUTHORIZED,
+        },
+        settings: {
+          ...state.settings,
+          readOnlyModeEnabled: false,
+          notifications: {
+            ...state.settings.notifications,
+            areNotificationsAllowed: true,
+            transactionsAlertsCategory: false,
+          },
+        },
+      })),
+    });
+
+    await waitFor(() => expect(screen.getByTestId("validate-success-screen")).toBeVisible());
+
+    await user.press(screen.getByTestId("enabled-success-close-button"));
+    act(() => jest.runOnlyPendingTimers());
+
+    await waitFor(() => {
+      expect(screen.getByText(/know the status of your money/i)).toBeVisible();
+    });
+    expect(screen.getByText(/real-time alerts when your crypto is sent or received/i)).toBeVisible();
+    expect(screen.queryByText(/don't miss what matters/i)).not.toBeOnTheScreen();
+    expect(screen.getByText(/allow notifications/i)).toBeVisible();
   });
 });

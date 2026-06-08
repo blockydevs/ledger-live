@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { AB_TESTING_VARIANTS } from "./types/variants";
+import { AB_TESTING_VARIANTS } from "../types/variants";
 import {
   renderWithReactQuery,
   screen,
@@ -16,7 +16,10 @@ import { BTC_ACCOUNT } from "@ledgerhq/live-common/modularDrawer/__mocks__/accou
 import GlobalDrawers from "~/GlobalDrawers";
 import { track } from "~/analytics";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
-import { createNotificationsPromptFeatureFlags } from "./testUtils";
+import {
+  createNotificationsPromptFeatureFlags,
+  transactionsAlertsDrawerPromptCategoryConfig,
+} from "../testUtils";
 
 type AuthorizationStatusType = (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus];
 
@@ -46,6 +49,9 @@ jest.mock("@react-native-firebase/messaging", () => {
 });
 
 const featureFlagsForReceivePrompt = createNotificationsPromptFeatureFlags();
+const featureFlagsForTransactionsAlertsReceivePrompt = createNotificationsPromptFeatureFlags({
+  notificationsCategories: [transactionsAlertsDrawerPromptCategoryConfig],
+});
 
 describe("NotificationsPrompt receive flow", () => {
   beforeAll(() => {
@@ -164,5 +170,50 @@ describe("NotificationsPrompt receive flow", () => {
       dismissedCount: 0,
       variant: AB_TESTING_VARIANTS.B,
     });
+  });
+
+  it("should prompt the transaction alerts drawer when a globally opted-in user leaves the receive flow", async () => {
+    mockRequestPermission.mockResolvedValue(AuthorizationStatus.AUTHORIZED);
+    mockHasPermission.mockResolvedValue(AuthorizationStatus.AUTHORIZED);
+
+    const { user } = renderWithReactQuery(<ReceiveFlowTestApp />, {
+      navigationInitialState: receiveFlowNavigationState,
+      overrideInitialState: withFlagOverrides(featureFlagsForTransactionsAlertsReceivePrompt, state => ({
+        ...state,
+        accounts: {
+          ...state.accounts,
+          active: [BTC_ACCOUNT],
+        },
+        notifications: {
+          ...state.notifications,
+          permissionStatus: AuthorizationStatus.AUTHORIZED,
+        },
+        settings: {
+          ...state.settings,
+          readOnlyModeEnabled: true,
+          notifications: {
+            ...state.settings.notifications,
+            areNotificationsAllowed: true,
+            transactionsAlertsCategory: false,
+          },
+        },
+      })),
+    });
+
+    await user.press(await screen.findByText(/^continue$/i));
+    await waitFor(() => expect(screen.getByTestId("button-receive-confirmation")).toBeVisible());
+
+    const backButtons = screen.getAllByTestId("navigation-header-back-button");
+    await user.press(backButtons[backButtons.length - 1]);
+    await act(async () => {
+      await jest.runOnlyPendingTimersAsync();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/know the status of your money/i)).toBeVisible();
+    });
+    expect(screen.getByText(/real-time alerts when your crypto is sent or received/i)).toBeVisible();
+    expect(screen.queryByText(/don't miss what matters/i)).not.toBeOnTheScreen();
+    expect(screen.getByText(/allow notifications/i)).toBeVisible();
   });
 });
