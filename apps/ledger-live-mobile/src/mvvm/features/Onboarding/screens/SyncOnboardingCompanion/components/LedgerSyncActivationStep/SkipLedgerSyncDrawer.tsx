@@ -10,7 +10,7 @@ type Props = {
   handleClose: () => void;
   openSync: () => void;
   skipSync: () => void;
-  seedConfiguration: React.RefObject<SeedOriginType | undefined>;
+  seedConfiguration: SeedOriginType | undefined;
 };
 
 function SkipLedgerSyncDrawer({

@@ -21,9 +21,12 @@ import { useDispatch, useSelector } from "~/context/hooks";
 import { useTranslation } from "~/context/Locale";
 import { NavigatorName, ScreenName } from "~/const";
 import { hasCompletedOnboardingSelector } from "~/reducers/settings";
-import { FirstStepCompanionStepKey, SEED_STATE } from "../../types";
-import useFirstStepCompanionState from "~/screens/SyncOnboarding/TwoStepStepper/useFirstStepCompanionState";
-import useCompanionSteps from "../../hooks/useCompanionSteps";
+import {
+  FirstStepCompanionStepKey,
+  SEED_STATE,
+} from "../../types";
+import useFirstStepCompanionState from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/hooks/useFirstStepCompanionState";
+import useCompanionSteps from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/hooks/useCompanionSteps";
 import { screen } from "~/analytics";
 import { useTrackOnboardingFlow } from "~/analytics/hooks/useTrackOnboardingFlow";
 import { HOOKS_TRACKING_LOCATIONS } from "~/analytics/hooks/variables";

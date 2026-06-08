@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import {
   FirstStepCompanionStepKey,
   SeedPathStatus,
-} from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/types";
+} from "../types";
 import { SeedOriginType } from "@ledgerhq/types-live";
 
 interface UseFirstStepCompanionStateProps {
