@@ -703,6 +703,8 @@ export const DEFAULT_FEATURES: Features = {
       enableDialogDesktop: false,
     },
   },
+  lwdDeeplinkOpenHardening: DEFAULT_FEATURE,
+  lwmDeeplinkOpenHardening: DEFAULT_FEATURE,
   lldWebviewManifestDomainCheck: DEFAULT_FEATURE,
   llmWebviewManifestDomainCheck: DEFAULT_FEATURE,
   llmModularDrawer: {

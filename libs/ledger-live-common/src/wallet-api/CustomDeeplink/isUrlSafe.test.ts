@@ -1,4 +1,4 @@
-import { isUrlSafe } from "./urlSafety";
+import { isUrlSafe } from "./isUrlSafe";
 
 describe("isUrlSafe", () => {
   describe("allowed protocols", () => {
