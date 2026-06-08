@@ -32,6 +32,7 @@
     "format:check": "pnpm exec oxfmt -c ../oxc-live-libs/.oxfmtrc.json ./src --check",
     "typecheck": "tsc --noEmit --customConditions node",
     "test": "jest",
+    "check-flow": "ts-node --transpile-only scripts/checkAuthFlow.ts",
     "coverage": "jest --coverage"
   },
   "devDependencies": {
