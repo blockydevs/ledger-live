@@ -27,7 +27,7 @@ function SkipLedgerSyncDrawer({
       <TrackScreen
         category="Drawer : Skip Ledger sync confirmation"
         flow="onboarding"
-        seedConfiguration={seedConfiguration}
+        seedConfiguration={seedConfiguration.current}
       />
       <Flex maxHeight={"90%"}>
         <Flex flexDirection="column" justifyContent="center" alignItems="center" rowGap={22}>
