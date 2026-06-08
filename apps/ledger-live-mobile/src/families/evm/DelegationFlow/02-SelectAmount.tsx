@@ -33,6 +33,7 @@ import CurrencyInput from "~/components/CurrencyInput";
 import CurrencyUnitValue from "~/components/CurrencyUnitValue";
 import KeyboardView from "~/components/KeyboardView";
 import LText from "~/components/LText";
+import TranslatedError from "~/components/TranslatedError";
 import SummaryRow from "~/screens/SendFunds/SummaryRow";
 import Warning from "~/icons/Warning";
 import { ScreenName } from "~/const";
@@ -80,7 +81,6 @@ export default function SelectAmount({ navigation, route }: Props) {
   const remaining = maxSpendable.minus(amount);
   const hasErrors = Object.keys(status.errors).length > 0;
   const firstError = Object.values(status.errors)[0];
-  const firstErrorMessage = firstError instanceof Error ? firstError.message : undefined;
   const canContinue =
     !bridgePending && !bridgeError && !hasErrors && amount.gt(0) && maxSpendable.gte(amount);
   const showLockUpWarning = hasUnbondingPeriod(account.currency.id);
@@ -191,11 +191,11 @@ export default function SelectAmount({ navigation, route }: Props) {
                   </Text>
                 </Flex>
               ) : null}
-              {firstErrorMessage ? (
+              {firstError instanceof Error ? (
                 <View style={styles.errorContainer}>
                   <Warning size={16} color={colors.error.c50} />
                   <LText style={styles.errorText} color="red">
-                    {firstErrorMessage}
+                    <TranslatedError error={firstError} />
                   </LText>
                 </View>
               ) : null}
