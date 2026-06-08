@@ -2,6 +2,7 @@ import React from "react";
 import { DeviceInteractionRequiredType, type EnsureAppReadyState } from "@ledgerhq/live-dmk-shared";
 import { ContinueOnDevice } from "LLM/components/DeviceIntentExecutor/components/DeviceGenericStates/ContinueOnDevice";
 import { TrackScreen } from "~/analytics";
+import ModalLock from "~/components/ModalLock";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { BaseInitializerStateProps } from "../types";
 
@@ -15,6 +16,7 @@ export function AllowSecureConnectionState({
 }: AllowSecureConnectionStateProps) {
   return (
     <>
+      <ModalLock />
       <TrackScreen
         category={PAGE_CONNECT_APP.AllowSecureConnection}
         sourceFlow={sourceFlow}

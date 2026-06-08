@@ -2,6 +2,7 @@ import React from "react";
 import { DeviceInteractionRequiredType, type EnsureAppReadyState } from "@ledgerhq/live-dmk-shared";
 import { UnlockDevice } from "LLM/components/DeviceIntentExecutor/components/DeviceGenericStates/UnlockDevice";
 import { TrackScreen } from "~/analytics";
+import ModalLock from "~/components/ModalLock";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { BaseInitializerStateProps } from "../types";
 
@@ -12,6 +13,7 @@ type UnlockDeviceStateProps = BaseInitializerStateProps<
 export function UnlockDeviceState({ device, sourceFlow }: UnlockDeviceStateProps) {
   return (
     <>
+      <ModalLock />
       <TrackScreen
         category={PAGE_CONNECT_APP.UnlockDevice}
         sourceFlow={sourceFlow}

@@ -1,6 +1,7 @@
 import React from "react";
 import { Trans } from "~/context/Locale";
 import { TrackScreen } from "~/analytics";
+import ModalLock from "~/components/ModalLock";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { InitializerDevice } from "../types";
 import type { SourceFlow } from "../../utils/SourceFlowContext";
@@ -14,6 +15,7 @@ type InstallingAppStateProps = Readonly<{
 export function InstallingAppState({ device, sourceFlow }: InstallingAppStateProps) {
   return (
     <>
+      <ModalLock />
       <TrackScreen
         category={PAGE_CONNECT_APP.InstallingApp}
         sourceFlow={sourceFlow}
