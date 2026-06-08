@@ -812,13 +812,13 @@ export const DEFAULT_FEATURES: Features = {
   lwmNotificationsOptIn: DEFAULT_FEATURE,
   lwmProductTour: DEFAULT_FEATURE,
   lwmBackupHub: DEFAULT_FEATURE,
+  lwmQuickActionsCtasVariant: DEFAULT_FEATURE,
   lwmWallet40: {
     ...DEFAULT_FEATURE,
     params: {
       marketBanner: true,
       graphRework: true,
       quickActionCtas: true,
-      quickActionsCtasVariant: false,
       tour: true,
       mainNavigation: true,
       lazyOnboarding: true,
@@ -840,7 +840,6 @@ export const DEFAULT_FEATURES: Features = {
       marketBanner: true,
       graphRework: true,
       quickActionCtas: true,
-      quickActionsCtasVariant: false,
       mainNavigation: true,
       tour: true,
       lazyOnboarding: true,

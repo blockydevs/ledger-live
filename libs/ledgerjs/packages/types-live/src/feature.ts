@@ -331,6 +331,7 @@ export type Features = CurrencyFeatures & {
   lwmProductTour: DefaultFeature;
   lwmBackupHub: DefaultFeature;
   lwmWallet40: Feature_LwmWallet40;
+  lwmQuickActionsCtasVariant: DefaultFeature;
   lwdWallet40: Feature_LwdWallet40;
   addressPoisoningOperationsFilter: Feature_AddressPoisoningOperationsFilter;
   concordiumIdAppLinks: Feature_ConcordiumIdAppLinks;
@@ -868,7 +869,6 @@ type Feature_Wallet40_Params = {
   marketBanner: boolean;
   graphRework: boolean;
   quickActionCtas: boolean;
-  quickActionsCtasVariant: boolean;
   mainNavigation: boolean;
   tour: boolean;
   lazyOnboarding: boolean;
