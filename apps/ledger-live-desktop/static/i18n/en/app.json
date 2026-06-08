@@ -1610,12 +1610,20 @@
   "market": {
     "title": "Market",
     "topCards": {
+      "error": "Something went wrong",
       "moodIndex": {
         "title": "Mood index"
       },
       "globalMarketCap": {
         "title": "Total market cap",
         "period": "Today"
+      },
+      "altSeason": {
+        "title": "Season",
+        "levels": {
+          "bitcoin": "Bitcoin",
+          "altcoin": "Altcoin"
+        }
       }
     },
     "currency": "Currency",
@@ -8730,6 +8738,14 @@
     "dialog": {
       "title": "Total market cap",
       "content": "The total market cap represents the market capitalization of all cryptocurrencies combined.",
+      "cta": "Got it"
+    }
+  },
+  "altSeasonCard": {
+    "dialog": {
+      "title": "Altcoin index",
+      "content": "The Altcoin index shows how Bitcoin is performing compared to alternative cryptocurrencies. The higher the number, the better altcoins are doing compared to Bitcoin.",
+      "disclaimer": "Data is sourced from CoinMarketCap's Altcoin Season Index and provided for informational purposes only.",
       "cta": "Got it"
     }
   },

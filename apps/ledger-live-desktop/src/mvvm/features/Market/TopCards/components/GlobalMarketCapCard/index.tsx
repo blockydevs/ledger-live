@@ -1,4 +1,5 @@
 import React from "react";
+import { MarketTopCardError } from "../MarketTopCardError";
 import { MarketTopCardPlaceholder } from "../MarketTopCardPlaceholder";
 import { GlobalMarketCapCardView } from "./GlobalMarketCapCardView";
 import { useGlobalMarketCapViewModel } from "./hooks/useGlobalMarketCapViewModel";
@@ -11,7 +12,13 @@ export function GlobalMarketCapCard() {
   }
 
   if (isError) {
-    return null;
+    return (
+      <MarketTopCardError
+        testId="market-top-card-1"
+        titleKey="market.topCards.globalMarketCap.title"
+        hasTrailing={false}
+      />
+    );
   }
 
   return (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode, useState } from "react";
 import {
   Dialog,
   DialogTrigger,
@@ -10,23 +10,23 @@ import {
 } from "@ledgerhq/lumen-ui-react";
 import { useTranslation } from "react-i18next";
 
-export const FearAndGreedDialog = ({ children }: { children: React.ReactNode }) => {
+export const AltSeasonIndexDialog = ({ children }: { children: ReactNode }) => {
   const { t } = useTranslation();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent data-testid="fear-and-greed-dialog-content">
+      <DialogContent data-testid="alt-season-index-dialog-content">
         <DialogHeader
           density="expanded"
-          title={t("fearAndGreed.dialog.title")}
+          title={t("altSeasonCard.dialog.title")}
           onClose={() => setOpen(false)}
         />
         <DialogBody className="flex flex-col gap-24">
-          <p className="body-1 text-base">{t("fearAndGreed.dialog.content")}</p>
-          <p className="body-4 text-muted">{t("fearAndGreed.dialog.disclaimer")}</p>
+          <p className="body-1 text-base">{t("altSeasonCard.dialog.content")}</p>
+          <p className="body-4 text-muted">{t("altSeasonCard.dialog.disclaimer")}</p>
         </DialogBody>
         <DialogFooter className="justify-center">
           <Button
@@ -34,9 +34,9 @@ export const FearAndGreedDialog = ({ children }: { children: React.ReactNode }) 
             appearance="base"
             size="lg"
             onClick={() => setOpen(false)}
-            data-testid="fear-and-greed-dialog-cta"
+            data-testid="alt-season-index-dialog-cta"
           >
-            {t("fearAndGreed.dialog.cta")}
+            {t("altSeasonCard.dialog.cta")}
           </Button>
         </DialogFooter>
       </DialogContent>
