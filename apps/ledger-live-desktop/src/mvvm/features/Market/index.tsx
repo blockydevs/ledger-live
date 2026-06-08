@@ -10,6 +10,7 @@ import { useMarketListVirtualization } from "LLD/features/Market/hooks/useMarket
 import PageHeader from "LLD/components/PageHeader";
 import { useNavigate } from "react-router";
 import MarketList from "./screens/MarketList";
+import MarketTopCards from "./TopCards";
 
 const Container = styled(Flex).attrs({
   flex: "1",
@@ -129,6 +130,7 @@ export default function Market() {
           </Flex>
         </SelectBarContainer>
       </Flex>
+      <MarketTopCards />
       <MarketList {...marketData} virtualization={virtualization} />
     </Container>
   );
