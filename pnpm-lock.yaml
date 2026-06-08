@@ -16,8 +16,8 @@ catalogs:
       specifier: 30.2.0
       version: 30.2.0
     '@ledgerhq/coin-module-framework':
-      specifier: 3.2.0
-      version: 3.2.0
+      specifier: 3.3.0
+      version: 3.3.0
     '@ledgerhq/coin-xrp':
       specifier: 7.21.7
       version: 7.21.7
@@ -702,7 +702,7 @@ importers:
         version: link:../../libs/coin-modules/coin-bitcoin
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
@@ -975,7 +975,7 @@ importers:
         version: link:../../libs/coin-modules/coin-filecoin
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
         version: 2.0.4(@ledgerhq/lumen-design-core@0.1.16)(@ledgerhq/lumen-ui-react@0.1.38(@ledgerhq/lumen-design-core@0.1.16)(@radix-ui/react-checkbox@1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@radix-ui/react-dialog@1.1.15(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@radix-ui/react-slot@1.2.4(@types/react@19.0.14)(react@19.0.0))(@radix-ui/react-switch@1.2.6(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@radix-ui/react-tooltip@1.2.8(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@tanstack/react-table@8.5.11(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1628,7 +1628,7 @@ importers:
         version: link:../../libs/coin-modules/coin-filecoin
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/coin-multiversx':
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-multiversx
@@ -2358,7 +2358,7 @@ importers:
         version: link:../../libs/coin-modules/coin-evm
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/coin-solana':
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-solana
@@ -2508,7 +2508,7 @@ importers:
         version: link:../../features/platform/feature-flags
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/crypto-icons':
         specifier: 'catalog:'
         version: 2.0.4(@ledgerhq/lumen-design-core@0.1.16)(@ledgerhq/lumen-ui-react@0.1.38(@ledgerhq/lumen-design-core@0.1.16)(@radix-ui/react-checkbox@1.3.2(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@radix-ui/react-dialog@1.1.15(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@radix-ui/react-slot@1.2.4(@types/react@19.0.14)(react@19.0.0))(@radix-ui/react-switch@1.2.6(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@radix-ui/react-tooltip@1.2.8(@types/react-dom@19.0.0(@types/react@19.0.14))(@types/react@19.0.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(@tanstack/react-table@8.5.11(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(class-variance-authority@0.7.1)(clsx@2.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwind-merge@3.4.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -3758,7 +3758,7 @@ importers:
     devDependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0
+        version: 3.3.0
       '@ledgerhq/disable-network-setup':
         specifier: workspace:^
         version: link:../disable-network-setup
@@ -3800,7 +3800,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -3882,7 +3882,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -3973,7 +3973,7 @@ importers:
         version: 3.1.3(got@11.8.5)
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4070,7 +4070,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4242,7 +4242,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4327,7 +4327,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4418,7 +4418,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4509,7 +4509,7 @@ importers:
         version: link:../coin-evm
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4609,7 +4609,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/concordium-core':
         specifier: workspace:^
         version: link:../../concordium-core
@@ -4709,7 +4709,7 @@ importers:
         version: 0.12.306
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4812,7 +4812,7 @@ importers:
         version: 5.7.0
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -4936,7 +4936,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5030,7 +5030,7 @@ importers:
         version: 2.78.0
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5118,7 +5118,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5206,7 +5206,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5297,7 +5297,7 @@ importers:
         version: 1.2.0
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../../ledgerjs/packages/devices
@@ -5400,7 +5400,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5488,7 +5488,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5564,7 +5564,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5658,7 +5658,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5740,7 +5740,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5858,7 +5858,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -5970,7 +5970,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6079,7 +6079,7 @@ importers:
         version: 1.0.0-alpha.1(patch_hash=7deb6c5bd39ee007fca03da7609b2e0dee99dbb9962c3c8715edfd026da0a732)
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/errors':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/errors
@@ -6140,7 +6140,7 @@ importers:
         version: 1.0.11(graphql@16.13.2)
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6234,7 +6234,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6334,7 +6334,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6425,7 +6425,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6519,7 +6519,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
@@ -6814,7 +6814,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0
+        version: 3.3.0
       '@ledgerhq/coin-polkadot':
         specifier: workspace:^
         version: link:../../coin-modules/coin-polkadot
@@ -7806,7 +7806,7 @@ importers:
         version: link:../coin-modules/coin-mina
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/coin-multiversx':
         specifier: workspace:^
         version: link:../coin-modules/coin-multiversx
@@ -8419,7 +8419,7 @@ importers:
     dependencies:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
-        version: 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+        version: 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../ledgerjs/packages/cryptoassets
@@ -17293,8 +17293,8 @@ packages:
   '@kwsites/promise-deferred@1.1.1':
     resolution: {integrity: sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==}
 
-  '@ledgerhq/coin-module-framework@3.2.0':
-    resolution: {integrity: sha512-SNSjvLqF7GUU0F+Wa2haqhV/7YQWH/Sj4r32SWlP/DLHU9ei7CjsqOWdziUvAaqgy7pmD5hvD5jepepgPEKmRw==}
+  '@ledgerhq/coin-module-framework@3.3.0':
+    resolution: {integrity: sha512-RrraRhfhCfPw59P9e/jXw+GjBNAfQgiK7l5GXLZNkMV2GIf3gk0td1NevIo4VrM2A3u5HyZOBbHOGz1//Eja2Q==}
     peerDependencies:
       '@ledgerhq/errors': ^6.33.0
 
@@ -23949,7 +23949,7 @@ packages:
   '@xmldom/xmldom@0.7.13':
     resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version is no longer supported, please update to at least 0.8.*
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
@@ -45543,18 +45543,18 @@ snapshots:
 
   '@kwsites/promise-deferred@1.1.1': {}
 
-  '@ledgerhq/coin-module-framework@3.2.0':
+  '@ledgerhq/coin-module-framework@3.3.0':
     dependencies:
       bignumber.js: 9.1.2
 
-  '@ledgerhq/coin-module-framework@3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)':
+  '@ledgerhq/coin-module-framework@3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)':
     dependencies:
       '@ledgerhq/errors': link:libs/ledgerjs/packages/errors
       bignumber.js: 9.1.2
 
   '@ledgerhq/coin-xrp@7.21.7(@ledgerhq/errors@libs+ledgerjs+packages+errors)(@ledgerhq/live-network@libs+live-network)(@ledgerhq/logs@libs+ledgerjs+packages+logs)':
     dependencies:
-      '@ledgerhq/coin-module-framework': 3.2.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
+      '@ledgerhq/coin-module-framework': 3.3.0(@ledgerhq/errors@libs+ledgerjs+packages+errors)
       '@ledgerhq/errors': link:libs/ledgerjs/packages/errors
       '@ledgerhq/live-network': link:libs/live-network
       '@ledgerhq/logs': link:libs/ledgerjs/packages/logs
