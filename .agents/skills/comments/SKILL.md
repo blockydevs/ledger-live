@@ -50,3 +50,28 @@ virtual-store-dir-max-length=80
 android.prefab.version=2.0.0
 virtual-store-dir-max-length=80
 ```
+
+## 🙅 When comments are not necessary
+
+Use test names rather than comments to explain none-obvious details:
+
+**❌ Bad**
+
+```ts
+it("diffs the current value against resolved when targeted", () => {
+  const { result } = renderHook(() => useJsonEditor(makeProps()));
+  act(() => result.current.setDiffTarget("resolved"));
+  // Current equals resolved → every line is unchanged.
+  expect(result.current.diffJson.every(l => l.state === "none")).toBe(true);
+});
+```
+
+**✅ Good**
+
+```ts
+it("resets the state of every line when the diff is resolved", () => {
+  const { result } = renderHook(() => useJsonEditor(makeProps()));
+  act(() => result.current.setDiffTarget("resolved"));
+  expect(result.current.diffJson.every(l => l.state === "none")).toBe(true);
+});
+```
