@@ -20,8 +20,8 @@ import {
   getEmptyState,
   getMarketAssets,
   getMarketDataForDisplay,
-  getMarketFilter,
 } from "./marketAssetsHelpers";
+import { getMarketFilter } from "@ledgerhq/live-common/market/utils/category";
 import { useMarketAssetCategoryState } from "./useMarketAssetCategoryState";
 import {
   getNextPaginationState,

@@ -11,6 +11,7 @@ import PageHeader from "LLD/components/PageHeader";
 import { useNavigate } from "react-router";
 import MarketList from "./screens/MarketList";
 import MarketTopCards from "./TopCards";
+import { MarketCategoryBar } from "./components/MarketCategoryBar";
 
 const Container = styled(Flex).attrs({
   flex: "1",
@@ -45,6 +46,8 @@ export default function Market() {
     timeRanges,
     refreshRate,
     marketCurrentPage,
+    categories,
+    shouldDisplayAssetDiscoverability,
     t,
   } = marketData;
 
@@ -111,26 +114,33 @@ export default function Market() {
               }}
             />
           </Flex>
-          <Flex ml={4} mr={3}>
-            <SideDrawerFilter
-              refresh={refresh}
-              filters={{
-                starred: {
-                  toggle: toggleFilterByStarredAccounts,
-                  value: starFilterOn,
-                  disabled: !starredMarketCoins?.length,
-                },
-                liveCompatible: {
-                  toggle: toggleLiveCompatible,
-                  value: Boolean(liveCompatible),
-                },
-              }}
-              t={t}
-            />
-          </Flex>
+          {!shouldDisplayAssetDiscoverability && (
+            <Flex ml={4} mr={3}>
+              <SideDrawerFilter
+                refresh={refresh}
+                filters={{
+                  starred: {
+                    toggle: toggleFilterByStarredAccounts,
+                    value: starFilterOn,
+                    disabled: !starredMarketCoins?.length,
+                  },
+                  liveCompatible: {
+                    toggle: toggleLiveCompatible,
+                    value: Boolean(liveCompatible),
+                  },
+                }}
+                t={t}
+              />
+            </Flex>
+          )}
         </SelectBarContainer>
       </Flex>
       <MarketTopCards />
+      {shouldDisplayAssetDiscoverability && (
+        <Flex mb={3}>
+          <MarketCategoryBar categories={categories} t={t} />
+        </Flex>
+      )}
       <MarketList {...marketData} virtualization={virtualization} />
     </Container>
   );
