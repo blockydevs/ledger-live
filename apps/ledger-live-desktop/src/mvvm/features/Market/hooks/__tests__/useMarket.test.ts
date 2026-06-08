@@ -152,4 +152,56 @@ describe("useMarket", () => {
       });
     });
   });
+
+  describe("category (asset discoverability)", () => {
+    const withAssetDiscoverability = withFlagOverrides({
+      lldRefreshMarketData: { enabled: false },
+      lwdWallet40: { enabled: true, params: { assetDiscoverability: true } },
+    });
+
+    const marketStateWithCategory = (category: "all" | "starred" | "stocks") => ({
+      ...createMarketState([]),
+      category,
+    });
+
+    it("shows the favorites empty state when the starred category has no coins", () => {
+      const { result } = renderHook(() => useMarket(), {
+        initialState: {
+          ...withAssetDiscoverability,
+          settings: createSettingsState([]),
+          market: marketStateWithCategory("starred"),
+        },
+      });
+
+      expect(result.current.starFilterOn).toBe(true);
+      expect(result.current.emptyState).toBe("favorites");
+      expect(result.current.marketData).toEqual([]);
+    });
+
+    it("enables the starred filter without an empty state when favorites exist", () => {
+      const { result } = renderHook(() => useMarket(), {
+        initialState: {
+          ...withAssetDiscoverability,
+          settings: createSettingsState(["bitcoin"]),
+          market: marketStateWithCategory("starred"),
+        },
+      });
+
+      expect(result.current.starFilterOn).toBe(true);
+      expect(result.current.emptyState).toBeUndefined();
+    });
+
+    it("does not flag an empty state for the stocks category", () => {
+      const { result } = renderHook(() => useMarket(), {
+        initialState: {
+          ...withAssetDiscoverability,
+          settings: createSettingsState([]),
+          market: marketStateWithCategory("stocks"),
+        },
+      });
+
+      expect(result.current.emptyState).toBeUndefined();
+      expect(result.current.marketData).toEqual([]);
+    });
+  });
 });
