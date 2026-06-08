@@ -679,6 +679,7 @@
     "src/market/state-manager/marketApi.ts",
     "src/market/state-manager/types.ts",
     "src/market/utils/applyUsdRateToMarket.ts",
+    "src/market/utils/category.ts",
     "src/market/utils/currencyFormatter.ts",
     "src/market/utils/fixtures.ts",
     "src/market/utils/index.ts",
