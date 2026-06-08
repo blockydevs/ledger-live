@@ -99,6 +99,16 @@
     },
     {
       "type": "function",
+      "name": "getEpoch",
+      "inputs": [],
+      "outputs": [
+        { "name": "epoch", "type": "uint64", "internalType": "uint64" },
+        { "name": "inEpochDelayPeriod", "type": "bool", "internalType": "bool" }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "getWithdrawalRequest",
       "inputs": [
         { "name": "validatorId", "type": "uint64", "internalType": "uint64" },
