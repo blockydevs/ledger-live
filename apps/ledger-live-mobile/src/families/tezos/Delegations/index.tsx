@@ -217,7 +217,7 @@ export default function TezosDelegation({ account }: Props) {
       const finalizable = isFinalizablePosition(pos.uid);
       const createdMs = pos.createdAt ? new Date(pos.createdAt).getTime() : undefined;
       const msLeft = createdMs === undefined ? 0 : createdMs + UNSTAKE_DELAY_MS - Date.now();
-      const daysLeft = Math.round(msLeft / DAY_MS);
+      const daysLeft = Math.ceil(msLeft / DAY_MS);
 
       const fields: FieldType[] = [
         validatorField,
