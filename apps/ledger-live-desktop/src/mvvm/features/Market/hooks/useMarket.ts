@@ -77,6 +77,16 @@ export function useMarket() {
 
   const timeRangeValue = timeRanges.find(({ value }) => value === range);
 
+  // Full-word labels ("1 day", "1 week"…) for the Lumen Select pill (asset discoverability).
+  const timeRangeSelectOptions = useMemo(
+    () =>
+      timeRanges.map(({ value }) => ({
+        value,
+        label: t(`market.range.${rangeDataTable[value].label.replace("_label", "_fullLabel")}`),
+      })),
+    [t, timeRanges],
+  );
+
   // The backend drops the `starred` filter when the list is empty (it then returns
   // the full list), so with no favorites we must show the empty state instead.
   const isFavoritesEmpty = isStarredCategory && starredMarketCoins.length === 0;
@@ -245,6 +255,7 @@ export function useMarket() {
     emptyState,
     starredMarketCoins,
     timeRanges,
+    timeRangeSelectOptions,
     marketParams,
     marketCurrentPage,
     timeRangeValue,
