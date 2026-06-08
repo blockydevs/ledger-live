@@ -1,6 +1,7 @@
 import React from "react";
 import { MarketTopCardsSection } from "./MarketTopCardsSection";
 import { MarketTopCardPlaceholder } from "./components/MarketTopCardPlaceholder";
+import { MoodIndexCard } from "./components/MoodIndexCard";
 import { useMarketTopCardsViewModel } from "./hooks/useMarketTopCardsViewModel";
 
 function MarketTopCards() {
@@ -11,7 +12,7 @@ function MarketTopCards() {
   return (
     <MarketTopCardsSection>
       <MarketTopCardPlaceholder testId="market-top-card-1" />
-      <MarketTopCardPlaceholder testId="market-top-card-2" />
+      <MoodIndexCard />
       <MarketTopCardPlaceholder testId="market-top-card-3" />
     </MarketTopCardsSection>
   );
