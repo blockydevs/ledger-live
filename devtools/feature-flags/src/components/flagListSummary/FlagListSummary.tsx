@@ -1,16 +1,16 @@
-import { Pill } from "../pill/Pill";
+import { Pill } from "../pill/Pill.web";
 
-export interface FlagListHeaderProps {
+export interface FlagListSummaryProps {
   readonly overrideCount: number;
   readonly numberOfFlags: number;
   readonly numberOfFilteredFlags: number;
 }
 
-export function FlagListHeader({
+export function FlagListSummary({
   overrideCount,
   numberOfFlags,
   numberOfFilteredFlags,
-}: FlagListHeaderProps) {
+}: FlagListSummaryProps) {
   return (
     <div className="flex justify-between items-center p-8 bg-canvas-muted">
       <div className="flex items-center gap-2">

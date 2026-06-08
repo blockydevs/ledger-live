@@ -3,7 +3,7 @@ import type { FeatureId } from "@shared/feature-flags";
 import type { FeatureFlagsToolProps } from "../../types";
 import { FlagRow } from "../flagRow/FlagRow.web";
 import { ALL_FLAG_IDS } from "../../constants";
-import { FlagListHeader } from "../flagListHeader/FlagListHeader";
+import { FlagListSummary } from "../flagListSummary/FlagListSummary";
 import { useFeatureFlagsState } from "../../hooks/useFeatureFlagsState";
 import { useFlagSelection } from "../../hooks/useFlagSelection";
 import { Divider } from "@ledgerhq/lumen-ui-react";
@@ -67,7 +67,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
           importOverrides={importOverrides}
         />
         <Divider />
-        <FlagListHeader
+        <FlagListSummary
           overrideCount={Object.keys(overrides).length}
           numberOfFlags={featureIds.length}
           numberOfFilteredFlags={filteredFlagIds.length}
