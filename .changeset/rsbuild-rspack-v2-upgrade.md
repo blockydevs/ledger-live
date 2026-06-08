@@ -1,7 +1,7 @@
 ---
-"ledger-live-desktop": patch
-"live-mobile": patch
-"@ledgerhq/web-tools": patch
+"ledger-live-desktop": minor
+"live-mobile": minor
+"@ledgerhq/web-tools": minor
 ---
 
 chore: upgrade the Rsbuild/Rspack build stack to v2

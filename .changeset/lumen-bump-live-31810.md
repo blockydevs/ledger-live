@@ -1,6 +1,6 @@
 ---
-"ledger-live-desktop": patch
-"live-mobile": patch
+"ledger-live-desktop": minor
+"live-mobile": minor
 ---
 
 Bump Lumen design-system packages: `lumen-design-core` 0.1.16, `lumen-ui-react` 0.1.37, `lumen-ui-rnative` 0.1.38, `lumen-ui-react-visualization` 0.1.16, `lumen-ui-rnative-visualization` 0.1.15, and `crypto-icons` 2.0.4.

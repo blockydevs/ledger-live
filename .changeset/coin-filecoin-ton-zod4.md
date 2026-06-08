@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/coin-filecoin": patch
-"@ledgerhq/coin-ton": patch
+"@ledgerhq/coin-filecoin": minor
+"@ledgerhq/coin-ton": minor
 ---
 
 Move the transitive `zod` dependency from 3.x to 4.x in `coin-filecoin` and `coin-ton`.

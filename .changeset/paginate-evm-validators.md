@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/coin-evm": patch
-"@ledgerhq/live-common": patch
+"@ledgerhq/coin-evm": minor
+"@ledgerhq/live-common": minor
 ---
 
 feat(coin-evm): paginate EVM staking validators

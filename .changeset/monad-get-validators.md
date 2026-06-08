@@ -1,6 +1,6 @@
 ---
 "@ledgerhq/coin-evm": minor
-"@ledgerhq/live-common": patch
+"@ledgerhq/live-common": minor
 ---
 
 feat(coin-evm): fetch validators for `monad`

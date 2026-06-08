@@ -1,5 +1,5 @@
 ---
-"@ledgerhq/coin-tron": patch
+"@ledgerhq/coin-tron": minor
 ---
 
 fix: coin-tron disable-network-setup

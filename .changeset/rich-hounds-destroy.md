@@ -1,7 +1,7 @@
 ---
-"@ledgerhq/live-dmk-shared": patch
-"@ledgerhq/live-signer-evm": patch
-"@ledgerhq/live-signer-concordium": patch
+"@ledgerhq/live-dmk-shared": minor
+"@ledgerhq/live-signer-evm": minor
+"@ledgerhq/live-signer-concordium": minor
 ---
 
 Applied new Context-Module breaking changes

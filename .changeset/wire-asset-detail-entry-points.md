@@ -1,6 +1,6 @@
 ---
 "live-mobile": minor
-"ledger-live-desktop": patch
+"ledger-live-desktop": minor
 "@ledgerhq/asset-aggregation": minor
 ---
 

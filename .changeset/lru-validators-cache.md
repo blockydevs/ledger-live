@@ -1,6 +1,6 @@
 ---
-"@ledgerhq/coin-evm": patch
-"@ledgerhq/live-common": patch
+"@ledgerhq/coin-evm": minor
+"@ledgerhq/live-common": minor
 ---
 
 refactor(coin-evm): replace the homemade validators cache with `makeLRUCache` and drop the redundant `inFlightFetches` map

@@ -1,6 +1,6 @@
 ---
 "@ledgerhq/asset-detail": minor
-"live-mobile": patch
+"live-mobile": minor
 ---
 
 Expose resolved multi-network `ledgerIds` from `useAssetMarketData` so consumers (mobile Asset Detail → Receive flow) get the full CoinGecko list instead of the single id `marketCurrencyData.ledgerIds` collapses to when the DADA market entry wins.

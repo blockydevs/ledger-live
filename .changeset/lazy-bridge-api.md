@@ -1,5 +1,5 @@
 ---
-"@ledgerhq/live-common": patch
+"@ledgerhq/live-common": minor
 ---
 
 perf(llc): defer coin bridge loading in generic-coin-framework via async import()

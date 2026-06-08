@@ -1,5 +1,5 @@
 ---
-"ledger-live-desktop": patch
+"ledger-live-desktop": minor
 ---
 
 Fix missing scrollbars on the transaction history page: keep column headers fixed above the list and show the vertical scrollbar on the scrollable body only.
