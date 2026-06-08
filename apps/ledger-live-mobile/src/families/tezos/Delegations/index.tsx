@@ -291,15 +291,17 @@ export default function TezosDelegation({ account }: Props) {
       fields.push(transactionIdField(delegationHash));
     }
 
-    fields.push({
-      label: t("delegation.delegatedAccount"),
-      Component: (
-        <LText numberOfLines={1} semiBold ellipsizeMode="middle" style={styles.fieldValue}>
-          {accountName}
-        </LText>
-      ),
-    });
-    fields.push(durationField(selected.kind === "stake" ? stakeDays : delegationDays));
+    fields.push(
+      {
+        label: t("delegation.delegatedAccount"),
+        Component: (
+          <LText numberOfLines={1} semiBold ellipsizeMode="middle" style={styles.fieldValue}>
+            {accountName}
+          </LText>
+        ),
+      },
+      durationField(selected.kind === "stake" ? stakeDays : delegationDays),
+    );
 
     return fields;
   }, [

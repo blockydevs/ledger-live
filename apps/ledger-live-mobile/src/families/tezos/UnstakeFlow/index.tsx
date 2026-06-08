@@ -15,8 +15,29 @@ import type { TezosUnstakeFlowParamList } from "./types";
 
 const totalSteps = "3";
 
-function UnstakeFlow() {
+function StepTitle({ titleKey, currentStep }: { titleKey: string; currentStep: string }) {
   const { t } = useTranslation();
+  return (
+    <StepHeader
+      title={t(titleKey)}
+      subtitle={t("send.stepperHeader.stepRange", { currentStep, totalSteps })}
+    />
+  );
+}
+
+function AmountHeader() {
+  return <StepTitle titleKey="send.stepperHeader.selectAmount" currentStep="1" />;
+}
+
+function SelectDeviceHeader() {
+  return <StepTitle titleKey="send.stepperHeader.selectDevice" currentStep="2" />;
+}
+
+function ConnectDeviceHeader() {
+  return <StepTitle titleKey="send.stepperHeader.connectDevice" currentStep="3" />;
+}
+
+function UnstakeFlow() {
   const { colors } = useTheme();
   const stackNavigationConfig = useMemo(() => getStackNavigatorConfig(colors, true), [colors]);
   return (
@@ -32,30 +53,14 @@ function UnstakeFlow() {
         component={UnstakeAmount}
         options={{
           headerLeft: undefined,
-          headerTitle: () => (
-            <StepHeader
-              title={t("send.stepperHeader.selectAmount")}
-              subtitle={t("send.stepperHeader.stepRange", {
-                currentStep: "1",
-                totalSteps,
-              })}
-            />
-          ),
+          headerTitle: AmountHeader,
         }}
       />
       <Stack.Screen
         name={ScreenName.TezosUnstakeSelectDevice}
         component={UnstakeSelectDevice}
         options={{
-          headerTitle: () => (
-            <StepHeader
-              title={t("send.stepperHeader.selectDevice")}
-              subtitle={t("send.stepperHeader.stepRange", {
-                currentStep: "2",
-                totalSteps,
-              })}
-            />
-          ),
+          headerTitle: SelectDeviceHeader,
         }}
       />
       <Stack.Screen
@@ -64,15 +69,7 @@ function UnstakeFlow() {
         options={{
           headerLeft: undefined,
           gestureEnabled: false,
-          headerTitle: () => (
-            <StepHeader
-              title={t("send.stepperHeader.connectDevice")}
-              subtitle={t("send.stepperHeader.stepRange", {
-                currentStep: "3",
-                totalSteps,
-              })}
-            />
-          ),
+          headerTitle: ConnectDeviceHeader,
         }}
       />
       <Stack.Screen
