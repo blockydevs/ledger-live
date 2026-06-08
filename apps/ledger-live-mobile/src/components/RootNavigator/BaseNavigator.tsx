@@ -589,29 +589,7 @@ export default function BaseNavigator() {
         <Stack.Screen
           name={NavigatorName.Borrow}
           component={BorrowLiveAppNavigator}
-          options={props => {
-            return {
-              headerShown: true,
-              closable: false,
-              headerLeft: () => (
-                <NavigationHeaderBackButton
-                  onPress={nav => {
-                    nav.navigate(NavigatorName.Borrow, {
-                      screen: ScreenName.Borrow,
-                      params: {
-                        ...props.route?.params?.params,
-                        action: "go-back",
-                      },
-                    });
-                  }}
-                />
-              ),
-              headerTitle: t("borrow.title"),
-              headerRight: () => null,
-              headerStyle: { backgroundColor },
-              contentStyle: { backgroundColor },
-            };
-          }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name={NavigatorName.NoFundsFlow}
