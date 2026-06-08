@@ -4401,6 +4401,33 @@
             }
           }
         }
+      },
+      "withdraw": {
+        "cta": "Withdraw",
+        "flow": {
+          "title": "Withdraw",
+          "steps": {
+            "withdraw": {
+              "title": "Withdraw",
+              "warning": "The undelegated amount has completed its timelock and will be sent back to your available balance.",
+              "fields": {
+                "validator": "Validator"
+              }
+            },
+            "connectDevice": {
+              "title": "Device"
+            },
+            "confirmation": {
+              "title": "Confirmation",
+              "success": {
+                "title": "You have successfully withdrawn your assets.",
+                "description": "<0>{{amount}}</0> were withdrawn from <0>{{validator}}</0>",
+                "cta": "View details"
+              },
+              "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+            }
+          }
+        }
       }
     }
   },
