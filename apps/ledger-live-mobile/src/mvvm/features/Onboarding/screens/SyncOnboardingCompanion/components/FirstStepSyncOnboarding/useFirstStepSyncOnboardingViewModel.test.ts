@@ -87,13 +87,10 @@ let companion: {
   isLedgerSyncActive: boolean;
   steps: Array<unknown>;
 };
-jest.mock(
-  "LLM/features/Onboarding/screens/SyncOnboardingCompanion/hooks/useCompanionSteps",
-  () => ({
-    __esModule: true,
-    default: () => companion,
-  }),
-);
+jest.mock("../../hooks/useCompanionSteps", () => ({
+  __esModule: true,
+  default: () => companion,
+}));
 
 const withProtectServicesMobile =
   (

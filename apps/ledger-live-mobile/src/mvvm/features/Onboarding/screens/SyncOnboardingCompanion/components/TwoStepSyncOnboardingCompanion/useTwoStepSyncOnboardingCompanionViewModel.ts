@@ -6,7 +6,7 @@ import { SeedOriginType } from "@ledgerhq/types-live";
 import { useSelector, useDispatch } from "~/context/hooks";
 import { NavigatorName, ScreenName } from "~/const";
 import { useKeepScreenAwake } from "~/hooks/useKeepScreenAwake";
-import useTwoStepDesync from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/hooks/useTwoStepDesync";
+import useTwoStepDesync from "../../hooks/useTwoStepDesync";
 import {
   completeOnboarding,
   setHasOrderedNano,
@@ -124,11 +124,9 @@ export const useTwoStepSyncOnboardingCompanionViewModel = ({
   }, []);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", e => {
+    navigation.addListener("beforeRemove", e => {
       if (preventNavigation.current) e.preventDefault();
     });
-
-    return unsubscribe;
   }, [navigation]);
 
   useEffect(() => {

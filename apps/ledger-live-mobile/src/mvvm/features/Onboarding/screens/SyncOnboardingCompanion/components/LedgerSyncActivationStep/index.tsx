@@ -57,7 +57,7 @@ const View = ({
         handleClose={handleDrawerClose}
         openSync={handleSyncOpenFromDrawer}
         skipSync={handleSkip}
-        seedConfiguration={analyticsSeedConfiguration.current}
+        seedConfiguration={analyticsSeedConfiguration}
       />
     </>
   );

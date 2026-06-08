@@ -16,7 +16,7 @@ import {
   SeedPathStatus,
   FirstStepCompanionStepKey,
 } from "../types";
-import LedgerSyncActivationStep from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/components/LedgerSyncActivationStep";
+import LedgerSyncActivationStep from "../components/LedgerSyncActivationStep";
 
 const { BodyText } = VerticalTimeline;
 

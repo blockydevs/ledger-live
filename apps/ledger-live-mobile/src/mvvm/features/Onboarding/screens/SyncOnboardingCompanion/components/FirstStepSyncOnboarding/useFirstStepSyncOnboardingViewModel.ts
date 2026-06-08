@@ -25,8 +25,8 @@ import {
   FirstStepCompanionStepKey,
   SEED_STATE,
 } from "../../types";
-import useFirstStepCompanionState from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/hooks/useFirstStepCompanionState";
-import useCompanionSteps from "LLM/features/Onboarding/screens/SyncOnboardingCompanion/hooks/useCompanionSteps";
+import useFirstStepCompanionState from "../../hooks/useFirstStepCompanionState";
+import useCompanionSteps from "../../hooks/useCompanionSteps";
 import { screen } from "~/analytics";
 import { useTrackOnboardingFlow } from "~/analytics/hooks/useTrackOnboardingFlow";
 import { HOOKS_TRACKING_LOCATIONS } from "~/analytics/hooks/variables";
