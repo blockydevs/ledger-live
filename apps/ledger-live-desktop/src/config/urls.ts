@@ -210,6 +210,12 @@ export const urls = {
   buyDevice:
     "https://shop.ledger.com/pages/unlock-ledger-wallet-desktop?utm_source=ledger_wallet_desktop&utm_medium=self_referral&utm_content=onboarding-2",
   charonLearnMore: "https://shop.ledger.com/products/ledger-recovery-key",
+  backupHub: {
+    recoveryKey:
+      "https://shop.ledger.com/products/ledger-recovery-key?utm_source=lwd-backup-hub&utm_campaign=backup-hub-launch",
+    secretRecoveryPhrase:
+      "https://shop.ledger.com/products/cryptosteel-capsule-solo?utm_source=lwd-backup-hub&utm_campaign=backup-hub-launch",
+  },
 
   // Node errors
   txBroadcastErrors: {

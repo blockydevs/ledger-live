@@ -15,6 +15,8 @@ const REFER_PATH = "/refer-a-friend";
 
 const mockNavigate = jest.fn();
 const mockClose = jest.fn();
+const mockNavigateTo = jest.fn();
+const mockGoBack = jest.fn();
 
 jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
   useAccountPath: jest.fn(),
@@ -29,7 +31,9 @@ const mockUseAccountPath = jest.mocked(useAccountPath);
 const mockTrack = jest.mocked(track);
 const renderActionsList = (options?: Parameters<typeof render>[1]) =>
   render(
-    <ContextMenuContext.Provider value={{ close: mockClose }}>
+    <ContextMenuContext.Provider
+      value={{ close: mockClose, view: "menu", navigateTo: mockNavigateTo, goBack: mockGoBack }}
+    >
       <ActionsList />
     </ContextMenuContext.Provider>,
     options,
@@ -38,10 +42,8 @@ const getButton = (name: string) => screen.getByRole("button", { name });
 
 describe("ActionsList", () => {
   beforeEach(() => {
-    mockUseAccountPath.mockReturnValue(undefined);
-  });
-  afterAll(() => {
     jest.clearAllMocks();
+    mockUseAccountPath.mockReturnValue(undefined);
   });
 
   it("shows only help by default", () => {
@@ -99,6 +101,27 @@ describe("ActionsList", () => {
       button: MY_WALLET_TRACKING_BUTTON.recover,
       page: MY_WALLET_TRACKING_PAGE_NAME,
     });
+  });
+
+  it("opens the Backup Hub in the popover instead of navigating when lwdBackupHub is enabled", async () => {
+    mockUseAccountPath.mockReturnValue(RECOVER_HOME_PATH);
+
+    const { user, store } = renderActionsList({
+      initialState: withFlagOverrides({
+        protectServicesDesktop: {
+          enabled: true,
+          params: { openRecoverFromSidebar: true, protectId: "protect-id" },
+        },
+        lwdBackupHub: { enabled: true },
+      }),
+    });
+
+    await user.click(getButton(RECOVER_LABEL));
+
+    expect(mockNavigateTo).toHaveBeenCalledWith("backupHub");
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockClose).not.toHaveBeenCalled();
+    expect(store.getState().settings.hasClickedRecover).toBe(true);
   });
 
   it("persists hasClickedRecover in the store after the first recover click", async () => {

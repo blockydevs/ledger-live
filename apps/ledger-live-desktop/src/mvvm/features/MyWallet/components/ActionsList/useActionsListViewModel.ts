@@ -7,15 +7,11 @@ import {
   ShieldCheck,
   ShieldCheckNotification,
 } from "@ledgerhq/lumen-ui-react/symbols";
+import { useFeature } from "@features/platform-feature-flags";
+import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { track } from "~/renderer/analytics/segment";
 import type { Action } from "./types";
-import { useFeature } from "@features/platform-feature-flags";
-import { useAccountPath } from "@ledgerhq/live-common/hooks/recoverFeatureFlag";
-import { useDispatch, useSelector } from "LLD/hooks/redux";
-import { openModal } from "~/renderer/actions/modals";
-import { hasClickedRecoverSelector } from "~/renderer/reducers/settings";
-import { setHasClickedRecover } from "~/renderer/actions/settings";
-import { useContextMenuClose } from "../ContextMenuContext";
+import { useContextMenuClose, useContextMenuNavigation } from "../ContextMenuContext";
 import { MY_WALLET_TRACKING_BUTTON, MY_WALLET_TRACKING_PAGE_NAME } from "../../constants";
 
 export type ActionsListViewModel = {
@@ -24,14 +20,13 @@ export type ActionsListViewModel = {
 
 export function useActionsListViewModel(): ActionsListViewModel {
   const close = useContextMenuClose();
+  const { navigateTo } = useContextMenuNavigation();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const referralProgramConfig = useFeature("referralProgramDesktopSidebar");
-  const recoverFeature = useFeature("protectServicesDesktop");
-  const recoverHomePath = useAccountPath(recoverFeature);
-  const dispatch = useDispatch();
-  const hasClickedRecover = useSelector(hasClickedRecoverSelector);
+  const isBackupHubEnabled = !!useFeature("lwdBackupHub")?.enabled;
+  const { recoverFeature, hasClickedRecover, markRecoverSeen, openRecover } = useRecoverEntry();
   const recoverIcon = hasClickedRecover ? ShieldCheck : ShieldCheckNotification;
 
   const openHelp = useCallback(() => {
@@ -44,34 +39,20 @@ export function useActionsListViewModel(): ActionsListViewModel {
   }, [navigate, close]);
 
   const handleClickRecover = useCallback(() => {
-    const enabled = recoverFeature?.enabled;
-    const openRecoverFromSidebar = recoverFeature?.params?.openRecoverFromSidebar;
-    const liveAppId = recoverFeature?.params?.protectId;
-
-    if (!hasClickedRecover) {
-      dispatch(setHasClickedRecover(true));
-    }
-
-    if (enabled && openRecoverFromSidebar && liveAppId && recoverHomePath) {
-      navigate(recoverHomePath);
-    } else if (enabled) {
-      dispatch(openModal("MODAL_PROTECT_DISCOVER", undefined));
-    }
     track("button_clicked", {
       button: MY_WALLET_TRACKING_BUTTON.recover,
       page: MY_WALLET_TRACKING_PAGE_NAME,
     });
+
+    if (isBackupHubEnabled) {
+      markRecoverSeen();
+      navigateTo("backupHub");
+      return;
+    }
+
+    openRecover();
     close();
-  }, [
-    recoverFeature?.enabled,
-    recoverFeature?.params?.openRecoverFromSidebar,
-    recoverFeature?.params?.protectId,
-    recoverHomePath,
-    hasClickedRecover,
-    navigate,
-    dispatch,
-    close,
-  ]);
+  }, [isBackupHubEnabled, markRecoverSeen, navigateTo, openRecover, close]);
 
   const handleClickRefer = useCallback(() => {
     if (referralProgramConfig?.enabled && referralProgramConfig?.params?.path) {

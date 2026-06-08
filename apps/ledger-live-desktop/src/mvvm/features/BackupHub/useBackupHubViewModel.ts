@@ -1,0 +1,92 @@
+import { useCallback, useMemo } from "react";
+import { track } from "~/renderer/analytics/segment";
+import { openURL } from "~/renderer/linking";
+import { urls } from "~/config/urls";
+import { useRecoverBannerState } from "~/renderer/hooks/useRecoverBannerState";
+import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
+import { getBackupBucket } from "./utils/getBackupBucket";
+import { BACKUP_HUB_TRACKING_BUTTON, BACKUP_HUB_TRACKING_PAGE_NAME } from "./constants";
+import type { BackupBucket, PhysicalRowId } from "./types";
+import recoveryKeyImage from "./assets/recovery-key.png";
+import secretRecoveryPhraseImage from "./assets/24-words.png";
+
+const DEFAULT_PROTECT_ID = "protect-prod";
+
+export type BackupHubParams = {
+  onBack: () => void;
+  onClose: () => void;
+};
+
+export type PhysicalRowData = {
+  id: PhysicalRowId;
+  image: string;
+  onClick: () => void;
+};
+
+export type BackupHubViewModel = {
+  bucket: BackupBucket;
+  onBack: () => void;
+  onRecoverClick: () => void;
+  physicalRows: readonly PhysicalRowData[];
+};
+
+export function useBackupHubViewModel({ onBack, onClose }: BackupHubParams): BackupHubViewModel {
+  const { recoverFeature, openRecover } = useRecoverEntry();
+
+  const protectId = recoverFeature?.params?.protectId ?? DEFAULT_PROTECT_ID;
+  const { data } = useRecoverBannerState(protectId);
+  const bucket = getBackupBucket(data.subscriptionState);
+
+  const handleBack = useCallback(() => {
+    track("button_clicked", {
+      button: BACKUP_HUB_TRACKING_BUTTON.back,
+      page: BACKUP_HUB_TRACKING_PAGE_NAME,
+    });
+    onBack();
+  }, [onBack]);
+
+  const onRecoverClick = useCallback(() => {
+    track("button_clicked", {
+      button: BACKUP_HUB_TRACKING_BUTTON.recover,
+      page: BACKUP_HUB_TRACKING_PAGE_NAME,
+    });
+    openRecover();
+    onClose();
+  }, [openRecover, onClose]);
+
+  const openShop = useCallback(
+    (url: string, button: string) => {
+      track("button_clicked", { button, page: BACKUP_HUB_TRACKING_PAGE_NAME });
+      openURL(url);
+      onClose();
+    },
+    [onClose],
+  );
+
+  const physicalRows = useMemo<readonly PhysicalRowData[]>(
+    () => [
+      {
+        id: "recovery-key",
+        image: recoveryKeyImage,
+        onClick: () => openShop(urls.backupHub.recoveryKey, BACKUP_HUB_TRACKING_BUTTON.recoveryKey),
+      },
+      {
+        id: "secret-recovery-phrase",
+        image: secretRecoveryPhraseImage,
+        onClick: () =>
+          openShop(
+            urls.backupHub.secretRecoveryPhrase,
+            BACKUP_HUB_TRACKING_BUTTON.secretRecoveryPhrase,
+          ),
+      },
+    ],
+    [openShop],
+  );
+
+  return {
+    bucket,
+    onBack: handleBack,
+    onRecoverClick,
+    physicalRows,
+  };
+}
