@@ -1609,6 +1609,11 @@
   },
   "market": {
     "title": "Market",
+    "topCards": {
+      "moodIndex": {
+        "title": "Mood index"
+      }
+    },
     "currency": "Currency",
     "rangeLabel": "Time",
     "goBack": "Go back",
