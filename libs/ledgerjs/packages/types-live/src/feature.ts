@@ -261,6 +261,8 @@ export type Features = CurrencyFeatures & {
   lldThai: DefaultFeature;
   llmMmkvMigration: Feature_LlmMmkvMigration;
   lldModularDrawer: Feature_ModularDrawer;
+  lwdDeeplinkOpenHardening: DefaultFeature;
+  lwmDeeplinkOpenHardening: DefaultFeature;
   lldWebviewManifestDomainCheck: DefaultFeature;
   llmWebviewManifestDomainCheck: DefaultFeature;
   llmModularDrawer: Feature_ModularDrawer;
