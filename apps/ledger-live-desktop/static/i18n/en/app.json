@@ -1634,6 +1634,15 @@
       "marketCap": "Market cap",
       "last7d": "Last 7 days"
     },
+    "assets": {
+      "categories": {
+        "accessibilityLabel": "Asset categories",
+        "all": "All",
+        "stocks": "Stocks",
+        "favorites": "Favorites"
+      },
+      "emptyFavorites": "No favorites yet"
+    },
     "detailsPage": {
       "priceStatistics": "Price stats",
       "tradingVolume": "Trading volume",
