@@ -35,7 +35,7 @@ jest.mock("LLM/features/Receive", () => ({
   useOpenReceiveDrawer: () => ({ handleOpenReceiveDrawer: mockHandleOpenReceiveDrawer }),
 }));
 
-jest.mock("~/screens/SyncOnboarding/TwoStepStepper/useTwoStepDesync", () => ({
+jest.mock("../../hooks/useTwoStepDesync", () => ({
   __esModule: true,
   default: () => ({
     isDesyncOverlayOpen: false,
