@@ -4323,9 +4323,12 @@
                 "Assets will be available after undelegation"
               ],
               "warning": {
-                "description": "Choose your validator wisely: Part of your delegated assets may be irrevocably lost if the validator does not behave appropriately."
-              },
-              "seiAssociationWarning": "Your Sei account has not yet been linked on-chain. Delegation will fail until your account has its first outbound transaction confirmed on-chain. Send a small amount of SEI to any address first, wait for confirmation, then come back to delegate."
+                "description": "Choose your validator wisely: Part of your delegated assets may be irrevocably lost if the validator does not behave appropriately.",
+                "seiAssociationWarning": {
+                  "description": "To delegate, you need to activate your account by sending any amount to any address, including your own. This is a Sei network requirement.",
+                  "learnMore": "Learn more"
+                }
+              }
             },
             "amount": {
               "title": "Amount"

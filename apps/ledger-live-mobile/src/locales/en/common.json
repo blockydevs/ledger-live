@@ -6734,7 +6734,7 @@
               "description": "Choose your validator wisely: Part of your delegated assets may be irrevocably lost if the validator does not behave appropriately."
             },
             "cta": "Continue",
-            "seiAssociationWarning": "Your Sei account has not yet been linked on-chain. Delegation will fail until your account has its first outbound transaction confirmed on-chain. Send a small amount of SEI to any address first, wait for confirmation, then come back to delegate."
+            "seiAssociationWarning": "To delegate, you need to activate your account by sending any amount to any address, including your own. This is a Sei network requirement."
           },
           "validator": {
             "validators": "Validators",
