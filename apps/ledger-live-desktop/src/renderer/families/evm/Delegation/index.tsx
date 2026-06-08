@@ -241,7 +241,7 @@ const Delegation = ({ account }: { account: StakingAccount }) => {
           <UnbondingHeader />
           {mappedUnbondings.map(unbonding => (
             <UnbondingRow
-              key={`${unbonding.validatorAddress}-${unbonding.completionDate.valueOf()}-${unbonding.withdrawId}`}
+              key={`${unbonding.validatorAddress}-${unbonding.completionDate.valueOf()}${unbonding.withdrawId !== undefined ? `-${unbonding.withdrawId}` : ""}`}
               delegation={unbonding}
               onExternalLink={onExternalLink}
             />

@@ -118,6 +118,25 @@ describe("buildTransactionParams", () => {
         });
       }).toThrow("monad staking requires valId");
     });
+
+    it("builds params for undelegate operation (valId, amount, withdrawId as bigints)", () => {
+      const params = buildTransactionParams("monad", "undelegate" as StakingOperation, {
+        valId: "42",
+        amount: 1000000000000000000n,
+        withdrawId: "7",
+      });
+
+      expect(params).toStrictEqual([42n, 1000000000000000000n, 7n]);
+    });
+
+    it("throws when monad undelegate is missing withdrawId", () => {
+      expect(() => {
+        buildTransactionParams("monad", "undelegate" as StakingOperation, {
+          valId: "42",
+          amount: 1000000000000000000n,
+        });
+      }).toThrow("monad undelegate requires withdrawId");
+    });
   });
 
   describe("CELO", () => {
