@@ -8818,6 +8818,8 @@
     }
   },
   "topBar": {
+    "searchPlaceholder": "Search assets",
+    "searchEmptyState": "Start typing to search for an asset",
     "history": {
       "cta": "Transactions"
     },
