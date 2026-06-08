@@ -8,7 +8,7 @@ import { useFeatureFlagsState } from "../../hooks/useFeatureFlagsState";
 import { useFlagSelection } from "../../hooks/useFlagSelection";
 import { Divider } from "@ledgerhq/lumen-ui-react";
 import { Sidebar } from "../sidebar/Sidebar";
-import { ToolsHeader } from "../toolsHeader/ToolsHeader";
+import { ToolBar } from "../";
 import { useFeatureFlagsFilters } from "../../hooks";
 import { useSortFlag } from "../../hooks/useSortFlag";
 import { buildOverridesExport } from "../../utils/exportOverrides";
@@ -52,7 +52,7 @@ export const FlagList = (props: FeatureFlagsToolProps) => {
   return (
     <div>
       <div className="sticky top-0 z-10 bg-canvas">
-        <ToolsHeader
+        <ToolBar
           search={search}
           setSearch={setSearch}
           filter={filter}
