@@ -7,7 +7,6 @@ const makeProps = (overrides: Partial<SidebarFooterProps> = {}): SidebarFooterPr
   onClose: jest.fn(),
   onApplyOverride: jest.fn(),
   overrideDisabled: false,
-  currentJsonFlag: "{}",
   ...overrides,
 });
 
