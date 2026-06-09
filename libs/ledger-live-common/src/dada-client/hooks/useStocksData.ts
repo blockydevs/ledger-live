@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { useGetAssetsDataInfiniteQuery } from "../state-manager/api";
-import { GetAssetsDataParams } from "../state-manager/types";
-import { parseError } from "../utils/errorUtils";
+import { AssetCategory, GetAssetsDataParams } from "../state-manager/types";
 import { mergeAssetsDataPages } from "../utils/mergeAssetsDataPages";
+import { parseError } from "../utils/errorUtils";
 
-export function useAssetsData({
+const STOCKS_CATEGORIES = [AssetCategory.Stocks];
+
+export function useStocksData({
   search,
   currencyIds,
   useCase,
@@ -34,6 +36,7 @@ export function useAssetsData({
     isFetchingNextPage,
   } = useGetAssetsDataInfiniteQuery(
     {
+      categories: STOCKS_CATEGORIES,
       search,
       useCase,
       currencyIds: areCurrenciesFiltered ? currencyIds : undefined,
