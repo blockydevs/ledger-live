@@ -117,6 +117,8 @@ export const urls = {
     "https://www.ledger.com/staking-cosmos?utm_source=ledger_live_mobile&utm_medium=self_referral&utm_content=cosmos",
   evmNativeStaking:
     "https://www.ledger.com/staking-ethereum?utm_source=ledger_live_mobile&utm_medium=self_referral&utm_content=ethereum",
+  // TODO: change to LL sei link
+  seiAssociationWarning: "",
   cardanoStaking: "https://support.ledger.com/article/7880073204253-zd",
   algorandStaking: "https://support.ledger.com/article/360015897740-zd",
   polkadotStaking: "https://support.ledger.com/article/360018131260-zd",
