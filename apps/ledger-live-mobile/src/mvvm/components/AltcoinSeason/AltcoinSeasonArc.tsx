@@ -1,8 +1,8 @@
 import React from "react";
-import MarketInsightGauge from "LLM/components/MarketInsightGauge";
+import ArcGaugeIndicator from "LLM/components/ArcGaugeIndicator";
 
-const GRADIENT_START_COLOR = "#FF9416";
-const GRADIENT_END_COLOR = "#3F51B5";
+const BITCOIN_COLOR = "#FF9416";
+const ALTCOIN_COLOR = "#3F51B5";
 
 type Props = Readonly<{
   value: number;
@@ -10,12 +10,11 @@ type Props = Readonly<{
 
 export function AltcoinSeasonArc({ value }: Props) {
   return (
-    <MarketInsightGauge
+    <ArcGaugeIndicator
       value={value}
       appearance="expanded"
-      gradientId="altcoinSeasonGradient"
-      gradientStartColor={GRADIENT_START_COLOR}
-      gradientEndColor={GRADIENT_END_COLOR}
+      startColor={BITCOIN_COLOR}
+      endColor={ALTCOIN_COLOR}
     />
   );
 }

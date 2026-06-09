@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { View } from "react-native";
 import Animated, {
   Easing,
@@ -27,30 +27,29 @@ const ARC_PATH =
 const ARC_START = { x: 6.75144, y: 57.6112 };
 const ARC_END = { x: 79.5754, y: 57.6082 };
 
-export type MarketInsightGaugeAppearance = "compact" | "expanded";
+export type ArcGaugeAppearance = "compact" | "expanded";
 
-const SCALE_BY_APPEARANCE: Record<MarketInsightGaugeAppearance, number> = {
+const SCALE_BY_APPEARANCE: Record<ArcGaugeAppearance, number> = {
   compact: 0.5,
   expanded: 0.65,
 };
 
 type Props = Readonly<{
   value: number;
-  appearance?: MarketInsightGaugeAppearance;
-  /** Must be unique across gauges rendered on the same screen to avoid SVG id collisions. */
-  gradientId: string;
-  gradientStartColor: string;
-  gradientEndColor: string;
+  appearance?: ArcGaugeAppearance;
+  startColor: string;
+  endColor: string;
 }>;
 
-export default function MarketInsightGauge({
+export default function ArcGaugeIndicator({
   value,
   appearance = "compact",
-  gradientId,
-  gradientStartColor,
-  gradientEndColor,
+  startColor,
+  endColor,
 }: Props) {
   const { theme } = useTheme();
+  // react-native-svg mis-resolves the ":" that useId emits inside url(#...) references.
+  const gradientId = `arcGaugeGradient-${useId().replace(/:/g, "")}`;
   const scale = SCALE_BY_APPEARANCE[appearance];
   const width = VIEWBOX_WIDTH * scale;
   const height = VIEWBOX_HEIGHT * scale;
@@ -116,8 +115,8 @@ export default function MarketInsightGauge({
             y2="30.8"
             gradientUnits="userSpaceOnUse"
           >
-            <Stop offset="0" stopColor={gradientStartColor} />
-            <Stop offset="1" stopColor={gradientEndColor} />
+            <Stop offset="0" stopColor={startColor} />
+            <Stop offset="1" stopColor={endColor} />
           </LinearGradient>
         </Defs>
         <Path
