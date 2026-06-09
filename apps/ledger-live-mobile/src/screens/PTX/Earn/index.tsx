@@ -54,7 +54,7 @@ function Earn({ route }: Props) {
     [route.path],
   );
   const hideMainNavigator = useMemo(
-    () => ["deposit", "withdraw"].includes(params?.intent ?? ""),
+    () => ["deposit", "withdraw", "simulate"].includes(params?.intent ?? ""),
     [params],
   );
 
