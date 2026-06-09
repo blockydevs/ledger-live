@@ -1,7 +1,9 @@
 import type { MarketCurrencyData } from "../types";
 import {
   STOCK_MARKET_FILTER,
+  getMarketCategoriesParam,
   getMarketFilter,
+  isBuiltInMarketListCategory,
   isStockMarketCurrency,
   parseMarketListCategory,
 } from "../category";
@@ -30,6 +32,29 @@ describe("market category utils", () => {
     it("returns the stock filter only for the stocks category", () => {
       expect(getMarketFilter(true)).toBe(STOCK_MARKET_FILTER);
       expect(getMarketFilter(false)).toBeUndefined();
+    });
+  });
+
+  describe("isBuiltInMarketListCategory", () => {
+    it.each(["all", "starred", "stocks"] as const)("is true for the built-in %s", category => {
+      expect(isBuiltInMarketListCategory(category)).toBe(true);
+    });
+
+    it("is false for a trending category id", () => {
+      expect(isBuiltInMarketListCategory("infrastructure")).toBe(false);
+    });
+  });
+
+  describe("getMarketCategoriesParam", () => {
+    it.each(["all", "starred", "stocks"] as const)(
+      "returns undefined for the built-in %s",
+      category => {
+        expect(getMarketCategoriesParam(category)).toBeUndefined();
+      },
+    );
+
+    it("returns the id itself for a trending category", () => {
+      expect(getMarketCategoriesParam("infrastructure")).toBe("infrastructure");
     });
   });
 

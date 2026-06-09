@@ -155,7 +155,7 @@ function MarketCategorySwitcher({
             value={tab.value}
             testID={`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-${tab.value}`}
           >
-            {t(tab.labelKey)}
+            {tab.label ?? (tab.labelKey ? t(tab.labelKey) : tab.value)}
           </SegmentedControlButton>
         ))}
       </SegmentedControl>
