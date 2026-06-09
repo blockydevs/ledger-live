@@ -207,6 +207,32 @@ describe("EarnV2Webview", () => {
     expect(screen.queryByTestId("live-app-background")).toBeNull();
   });
 
+  it.each(["about:blank", "data:text/html,<html></html>"])(
+    "does not leave the intent flow presentation for transient non-http(s) URLs (%s)",
+    transientUrl => {
+      // Regression: WebViews transiently report non-http(s) URLs (e.g. about:blank) during load.
+      // These are parseable but not navigational routes, so they must not be treated as a known
+      // non-intent route, otherwise we'd bounce out of the intent flow on entry.
+      mockWebviewUrl = transientUrl;
+
+      render(
+        <EarnV2Webview
+          manifest={STUB_MANIFEST}
+          appManifestNotFoundError={ERROR}
+          hideMainNavigator
+        />,
+        {
+          overrideInitialState: withFlagOverrides({
+            ptxEarnUi: { enabled: true, params: { value: "v2" } },
+          }),
+        },
+      );
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("live-app-background")).toBeNull();
+    },
+  );
+
   it("does not navigate from the dashboard tab instance (hideMainNavigator false)", () => {
     mockWebviewUrl = "https://earn.test/v2/android/homescreen?uiVersion=v4";
 

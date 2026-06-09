@@ -29,14 +29,16 @@ const INTENTS_SET = new Set(INTENT_FLOWS);
  * is the source of truth for whether we are still inside an intent flow (deposit/withdraw/simulate).
  *
  * Returns `true` when on an intent flow route, `false` when on a known non-intent route, and
- * `null` while the URL is unknown/unparseable (e.g. the webview's initial empty state). The `null`
- * case must NOT be treated as "left the intent flow", otherwise we would bounce out of the intent
- * flow on first mount before its route has even loaded.
+ * `null` while the URL is unknown (e.g. the webview's initial empty state, or transient non-http(s)
+ * schemes like `about:blank`/`data:` reported during load). The `null` case must NOT be treated as
+ * "left the intent flow", otherwise we would bounce out of the intent flow on first mount before its
+ * route has even loaded. Only http(s) URLs count as a known route.
  */
 const getIntentFlowState = (rawUrl?: string): boolean | null => {
   if (!rawUrl) return null;
   const url = safeUrl(rawUrl);
   if (!url) return null;
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
   if (INTENTS_SET.has(url.searchParams.get("intent") ?? "")) return true;
   return INTENT_FLOWS.some(segment => url.pathname.includes(segment));
 };
