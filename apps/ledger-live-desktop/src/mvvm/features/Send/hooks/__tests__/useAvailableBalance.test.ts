@@ -1,17 +1,16 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 
-import { renderHook } from "tests/testSetup";
-import { useAvailableBalance } from "../useAvailableBalance";
-import { INITIAL_STATE as INITIAL_STATE_SETTINGS } from "~/renderer/reducers/settings";
-import { useCalculate } from "@ledgerhq/live-countervalues-react";
-import type { AccountLike } from "node_modules/@ledgerhq/types-live";
-import { BigNumber } from "bignumber.js";
-import { useMaybeAccountUnit } from "~/renderer/hooks/useAccountUnit";
-import type { Unit } from "node_modules/@ledgerhq/types-cryptoassets";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
+import { useCalculate } from "@ledgerhq/live-countervalues-react";
+import type { Unit } from "@ledgerhq/types-cryptoassets";
+import type { AccountLike } from "@ledgerhq/types-live";
+import { BigNumber } from "bignumber.js";
+import { renderHook } from "tests/testSetup";
+import { useMaybeAccountUnit } from "~/renderer/hooks/useAccountUnit";
+import { INITIAL_STATE as INITIAL_STATE_SETTINGS } from "~/renderer/reducers/settings";
+import { useAvailableBalance } from "../useAvailableBalance";
 
 jest.mock("@ledgerhq/live-common/account/index");
-jest.mock("~/renderer/hooks/useAccountUnit");
 jest.mock("@ledgerhq/live-common/currencies/index", () => ({
   ...jest.requireActual("@ledgerhq/live-common/currencies/index"),
   formatCurrencyUnit: jest.fn(),
