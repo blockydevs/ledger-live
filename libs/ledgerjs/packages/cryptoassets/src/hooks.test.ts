@@ -200,10 +200,32 @@ describe("Hooks", () => {
       expect(result.current.token).toBe(mockToken);
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBeUndefined();
-      expect(mockUseFindTokenByAddressInCurrencyQuery).toHaveBeenCalledWith({
-        contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        network: "ethereum",
-      });
+      expect(mockUseFindTokenByAddressInCurrencyQuery).toHaveBeenCalledWith(
+        {
+          contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          network: "ethereum",
+        },
+        undefined,
+      );
+    });
+
+    it("forwards skip option to the RTK Query hook", () => {
+      mockUseFindTokenByAddressInCurrencyQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: undefined,
+      } as any);
+
+      renderHook(() =>
+        useTokenByAddressInCurrency("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "ethereum", {
+          skip: true,
+        }),
+      );
+
+      expect(mockUseFindTokenByAddressInCurrencyQuery).toHaveBeenCalledWith(
+        { contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", network: "ethereum" },
+        { skip: true },
+      );
     });
 
     it("should handle loading state", () => {
