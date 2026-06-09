@@ -15,6 +15,7 @@ export {
   prefetchValidators,
   clearValidatorsCache,
 } from "./validators";
+export { prepareStakingIntent } from "./prepareIntents";
 export {
   mapDelegations,
   mapUnbondings,

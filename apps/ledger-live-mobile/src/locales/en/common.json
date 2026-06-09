@@ -3728,7 +3728,11 @@
       "desc": "Get the latest updates on Ledger Wallet, Ledger products, the market, and personalised recommendations. Opt-out anytime in the settings",
       "descVariantB": "Get real-time alerts on new tokens, earning opportunities, and market shifts. Opt out at any time.",
       "allow": "Allow notifications",
-      "later": "Maybe later"
+      "later": "Maybe later",
+      "transactionsAlerts": {
+        "title": "Know the status of your money",
+        "desc": "Receive real-time alerts when your crypto is sent or received. Opt out at anytime via Settings."
+      }
     },
     "optInScreen": {
       "title": "Enable notifications?",
@@ -4378,6 +4382,10 @@
       "available": "Available {{amount}}",
       "placeholder": "Enter address or ENS",
       "placeholderNoENS": "Enter address",
+      "pasteFromClipboard": {
+        "title": "Paste from clipboard",
+        "cta": "Paste"
+      },
       "editRecipientAccessibilityLabel": "Edit recipient",
       "recent": "Recent",
       "recentDetail": "Recent detail",
@@ -6730,7 +6738,7 @@
               "description": "Choose your validator wisely: Part of your delegated assets may be irrevocably lost if the validator does not behave appropriately."
             },
             "cta": "Continue",
-            "seiAssociationWarning": "Your Sei account has not yet been linked on-chain. Delegation will fail until your account has its first outbound transaction confirmed on-chain. Send a small amount of SEI to any address first, wait for confirmation, then come back to delegate."
+            "seiAssociationWarning": "To delegate, you need to activate your account by sending any amount to any address, including your own. This is a Sei network requirement."
           },
           "validator": {
             "validators": "Validators",
@@ -8104,11 +8112,31 @@
     "assets": {
       "title": "Assets",
       "emptyFavorites": "No favorites yet",
+      "emptyStocks": "No stocks found",
       "categories": {
         "accessibilityLabel": "Asset categories",
         "all": "All",
         "stocks": "Stocks",
         "favorites": "Favorites"
+      },
+      "filters": {
+        "accessibilityLabel": "Open asset filters",
+        "title": "Filters",
+        "sorting": "Sorting",
+        "timeframe": "Timeframe",
+        "sortingOptions": {
+          "marketCap": "Market cap",
+          "volume": "Volume",
+          "gainers": "Gainers",
+          "losers": "Losers"
+        },
+        "timeframeOptions": {
+          "1D": "1 day",
+          "7D": "1 week",
+          "30D": "1 month",
+          "6M": "6 months",
+          "1Y": "1 year"
+        }
       },
       "error": {
         "title": "Couldn't load assets",
@@ -8926,7 +8954,8 @@
     "title": "Ledger Sync",
     "banner": {
       "title": "Your wallet isn't synced",
-      "description": "Keep your portfolio up to date"
+      "description": "Keep your portfolio up to date",
+      "cta": "Sync my wallet"
     },
     "entryPoints": {
       "simpleCta": {

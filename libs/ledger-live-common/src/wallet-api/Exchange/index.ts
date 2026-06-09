@@ -40,3 +40,6 @@ export type {
   DexProviderTransactionData,
   DexTransactionData,
 } from "./dex";
+// Swap transaction status (Wallet API getTransactionStatus)
+export { getTransactionStatus } from "./transactionStatus";
+export type * from "./transactionStatus";

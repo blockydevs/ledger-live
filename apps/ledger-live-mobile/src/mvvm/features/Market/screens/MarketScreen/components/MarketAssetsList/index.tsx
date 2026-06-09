@@ -1,19 +1,19 @@
 import React, { useCallback, type ReactNode } from "react";
-import { FlatList, ListRenderItemInfo } from "react-native";
+import { FlatList, ListRenderItemInfo, ScrollView, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Banner,
   Box,
+  IconButton,
   SegmentedControl,
   SegmentedControlButton,
-  Spinner,
   Spot,
   Subheader,
   SubheaderRow,
   SubheaderTitle,
   Text,
 } from "@ledgerhq/lumen-ui-rnative";
-import { Search, StarFill } from "@ledgerhq/lumen-ui-rnative/symbols";
+import { Search, SettingsAlt2, StarFill } from "@ledgerhq/lumen-ui-rnative/symbols";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
 import { useTranslation } from "~/context/Locale";
 import type { MarketListCategory } from "~/reducers/types";
@@ -24,10 +24,13 @@ import AssetListItem, {
 import { BottomFadeGradient, GRADIENT_HEIGHT } from "LLM/components/BottomFadeGradient";
 import { MARKET_SCREEN_TEST_IDS } from "../../testIds";
 import type { MarketCategoryTab } from "../../useMarketCategories";
+import type { MarketFilters } from "../../useMarketFilters";
+import { MarketFiltersDrawer } from "../MarketFiltersDrawer";
 
 const HORIZONTAL_PADDING = 16;
 const TOP_PADDING = 24;
 const SKELETON_COUNT = 3;
+const CATEGORY_SWITCHER_BOTTOM_SPACING = 12;
 
 function MarketAssetsEmptyState({
   loading,
@@ -37,7 +40,7 @@ function MarketAssetsEmptyState({
 }: Readonly<{
   loading: boolean;
   error: boolean;
-  emptyState: "favorites" | undefined;
+  emptyState: "favorites" | "stocks" | undefined;
   showEmptySearchState: boolean;
 }>) {
   const { t } = useTranslation();
@@ -74,6 +77,21 @@ function MarketAssetsEmptyState({
         />
         <Text typography="heading5SemiBold" lx={{ color: "base", textAlign: "center" }}>
           {t("market.assets.emptyFavorites")}
+        </Text>
+      </Box>
+    );
+  }
+
+  if (emptyState === "stocks") {
+    return (
+      <Box
+        lx={emptyStateStyle}
+        style={emptyStateSize}
+        testID={MARKET_SCREEN_TEST_IDS.assetsStocksEmpty}
+      >
+        <Spot appearance="icon" icon={Search} size={72} />
+        <Text typography="heading5SemiBold" lx={{ color: "base", textAlign: "center" }}>
+          {t("market.assets.emptyStocks")}
         </Text>
       </Box>
     );
@@ -118,35 +136,42 @@ function MarketCategorySwitcher({
   );
 
   return (
-    <SegmentedControl
-      selectedValue={selectedCategory}
-      onSelectedChange={onSelectedChange}
-      accessibilityLabel={t("market.assets.categories.accessibilityLabel")}
-      testID={MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}
-      lx={categorySwitcherStyle}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={categorySwitcherScrollStyle}
+      contentContainerStyle={categorySwitcherContentStyle}
     >
-      {tabs.map(tab => (
-        <SegmentedControlButton
-          key={tab.value}
-          value={tab.value}
-          testID={`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-${tab.value}`}
-        >
-          {t(tab.labelKey)}
-        </SegmentedControlButton>
-      ))}
-    </SegmentedControl>
+      <SegmentedControl
+        selectedValue={selectedCategory}
+        onSelectedChange={onSelectedChange}
+        accessibilityLabel={t("market.assets.categories.accessibilityLabel")}
+        testID={MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}
+        tabLayout="fit"
+      >
+        {tabs.map(tab => (
+          <SegmentedControlButton
+            key={tab.value}
+            value={tab.value}
+            testID={`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-${tab.value}`}
+          >
+            {tab.label ?? (tab.labelKey ? t(tab.labelKey) : tab.value)}
+          </SegmentedControlButton>
+        ))}
+      </SegmentedControl>
+    </ScrollView>
   );
 }
 
 type Props = Readonly<{
   assets: MarketAssetDisplayData[];
   loading: boolean;
-  loadingMore: boolean;
   error: boolean;
-  emptyState: "favorites" | undefined;
+  emptyState: "favorites" | "stocks" | undefined;
   selectedCategory: MarketListCategory;
   categoryTabs: MarketCategoryTab[];
   onSelectCategory: (category: MarketListCategory) => void;
+  filters: MarketFilters;
   onAssetPress: (asset: MarketAssetDisplayData) => void;
   onEndReached: () => void;
   showSubheader: boolean;
@@ -156,12 +181,12 @@ type Props = Readonly<{
 export function MarketAssetsList({
   assets,
   loading,
-  loadingMore,
   error,
   emptyState,
   selectedCategory,
   categoryTabs,
   onSelectCategory,
+  filters,
   onAssetPress,
   onEndReached,
   showSubheader,
@@ -184,8 +209,16 @@ export function MarketAssetsList({
         {showSubheader ? (
           <>
             <Subheader lx={subHeaderStyle} testID={MARKET_SCREEN_TEST_IDS.assetsSubHeader}>
-              <SubheaderRow>
+              <SubheaderRow lx={subHeaderRowStyle}>
                 <SubheaderTitle>{t("market.assets.title")}</SubheaderTitle>
+                <IconButton
+                  accessibilityLabel={t("market.assets.filters.accessibilityLabel")}
+                  appearance="no-background"
+                  icon={SettingsAlt2}
+                  onPress={filters.onOpen}
+                  size="sm"
+                  testID={MARKET_SCREEN_TEST_IDS.assetsFilterButton}
+                />
               </SubheaderRow>
             </Subheader>
             <MarketCategorySwitcher
@@ -197,15 +230,6 @@ export function MarketAssetsList({
         ) : null}
       </Box>
     ) : null;
-
-  const listFooter = loadingMore ? (
-    <Spinner
-      size={24}
-      color="base"
-      lx={footerSpinnerStyle}
-      testID={MARKET_SCREEN_TEST_IDS.assetsFooterSpinner}
-    />
-  ) : null;
 
   return (
     <>
@@ -223,7 +247,6 @@ export function MarketAssetsList({
             showEmptySearchState={!showSubheader}
           />
         }
-        ListFooterComponent={listFooter}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
@@ -238,6 +261,7 @@ export function MarketAssetsList({
         }}
       />
       {assets.length > 0 && <BottomFadeGradient />}
+      <MarketFiltersDrawer filters={filters} />
     </>
   );
 }
@@ -249,12 +273,20 @@ const headerStyle: LumenViewStyle = {
 };
 
 const subHeaderStyle: LumenViewStyle = {
-  marginHorizontal: "s16",
+  paddingHorizontal: "s16",
 };
 
-const categorySwitcherStyle: LumenViewStyle = {
-  marginHorizontal: "s16",
-  marginBottom: "s12",
+const subHeaderRowStyle: LumenViewStyle = {
+  alignItems: "center",
+  justifyContent: "space-between",
+};
+
+const categorySwitcherScrollStyle: ViewStyle = {
+  marginBottom: CATEGORY_SWITCHER_BOTTOM_SPACING,
+};
+
+const categorySwitcherContentStyle: ViewStyle = {
+  paddingHorizontal: HORIZONTAL_PADDING,
 };
 
 const rowStyle: LumenViewStyle = {
@@ -264,11 +296,6 @@ const rowStyle: LumenViewStyle = {
 const skeletonStyle: LumenViewStyle = {
   marginHorizontal: "-s8",
   paddingHorizontal: "s8",
-};
-
-const footerSpinnerStyle: LumenViewStyle = {
-  marginVertical: "s24",
-  alignSelf: "center",
 };
 
 const emptyStateStyle: LumenViewStyle = {

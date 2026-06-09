@@ -37,10 +37,10 @@ catalog:
   "@ledgerhq/device-transport-kit-web-hid": 1.2.3
   "@ledgerhq/speculos-device-controller": 0.3.0
   "@ledgerhq/lumen-design-core": 0.1.16
-  "@ledgerhq/lumen-ui-react": 0.1.37
-  "@ledgerhq/lumen-ui-rnative": 0.1.38
-  "@ledgerhq/lumen-ui-rnative-visualization": 0.1.15
-  "@ledgerhq/lumen-ui-react-visualization": 0.1.16
+  "@ledgerhq/lumen-ui-react": 0.1.38
+  "@ledgerhq/lumen-ui-rnative": 0.1.39
+  "@ledgerhq/lumen-ui-rnative-visualization": 0.1.16
+  "@ledgerhq/lumen-ui-react-visualization": 0.1.17
   "@ledgerhq/zcash-utils": 0.3.1
   # React Native
   react-native: 0.79.7
@@ -197,7 +197,7 @@ catalog:
   oxlint: 1.51.0
   oxfmt: 0.36.0
   # Modules published by coin-modules
-  "@ledgerhq/coin-module-framework": 3.2.0
+  "@ledgerhq/coin-module-framework": 3.3.0
   "@ledgerhq/coin-xrp": 7.21.7
   detox: 20.51.1
 

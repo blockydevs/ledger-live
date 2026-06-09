@@ -35,6 +35,7 @@ import { BigNumber } from "bignumber.js";
 import { getAccountBridge } from "../../bridge";
 import { retrieveSwapPayload } from "../../exchange/swap/api/v5/actions";
 import { transactionStrategy } from "../../exchange/swap/transactionStrategies";
+import type { GetFeatureFn } from "../FeatureFlags/resolver";
 import { ExchangeSwap, FeatureFlags } from "../../exchange/swap/types";
 import { Exchange } from "../../exchange/types";
 import { Transaction } from "../../coin-modules/transaction-types";
@@ -64,6 +65,11 @@ import { SwapError } from "./SwapError";
 import { getQuotes } from "./quotes";
 import { resolveQuotesInput } from "./quotes/resolveQuotesInput";
 import { fetchSpotPrices } from "./quotes/service/fetchSpotPrices";
+import {
+  getTransactionStatus,
+  type GetTransactionStatusResponse,
+  type GetTransactionStatusWireArgs,
+} from "./transactionStatus";
 
 export { ExchangeType };
 
@@ -77,6 +83,10 @@ type Handlers = {
   "custom.isReady": RPCHandler<void, void>;
   "custom.exchange.swap": RPCHandler<SwapResult, ExchangeSwapParams>;
   "custom.exchange.getQuotes": RPCHandler<GetQuotesResponse, GetQuotesWireArgs>;
+  "custom.exchange.getTransactionStatus": RPCHandler<
+    GetTransactionStatusResponse,
+    GetTransactionStatusWireArgs
+  >;
 };
 
 export type CompleteExchangeUiRequest = {
@@ -182,6 +192,7 @@ export const handlers = ({
   tracking,
   manifest,
   flags,
+  getFeature,
   locale,
   counterValueCurrency,
   deviceModelId,
@@ -197,6 +208,7 @@ export const handlers = ({
   tracking: TrackingAPI;
   manifest: AppManifest;
   flags?: FeatureFlags;
+  getFeature?: GetFeatureFn;
   locale: string;
   counterValueCurrency: string;
   deviceModelId?: DeviceModelId;
@@ -579,7 +591,7 @@ export const handlers = ({
           sponsored,
         };
 
-        const transaction: Transaction = await getStrategy(strategyData, "swap");
+        const transaction: Transaction = await getStrategy(strategyData, "swap", getFeature);
 
         const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
 
@@ -790,6 +802,16 @@ export const handlers = ({
         });
       },
     ),
+
+    "custom.exchange.getTransactionStatus": customWrapper<
+      GetTransactionStatusWireArgs,
+      GetTransactionStatusResponse
+    >(async params => {
+      if (!params) {
+        throw new ServerError(createUnknownError({ message: "params is undefined" }));
+      }
+      return getTransactionStatus(params, { accounts });
+    }),
   }) as const satisfies Handlers;
 
 async function extractSwapStartParam(
@@ -970,6 +992,7 @@ async function getStrategy(
     sponsored,
   }: StrategyParams,
   customErrorType?: any,
+  getFeature?: GetFeatureFn,
 ): Promise<Transaction> {
   const family =
     currency.type === "TokenCurrency" ? currency.parentCurrency?.family : currency.family;
@@ -997,16 +1020,19 @@ async function getStrategy(
     }
   }
 
-  return strategy({
-    family,
-    amount: new BigNumber(amount),
-    recipient,
-    customFeeConfig: convertedCustomFeeConfig,
-    payinExtraId,
-    extraTransactionParameters,
-    customErrorType,
-    sponsored,
-  });
+  return strategy(
+    {
+      family,
+      amount: new BigNumber(amount),
+      recipient,
+      customFeeConfig: convertedCustomFeeConfig,
+      payinExtraId,
+      extraTransactionParameters,
+      customErrorType,
+      sponsored,
+    },
+    getFeature,
+  );
 }
 
 function isDrawerClosedError(error: unknown) {

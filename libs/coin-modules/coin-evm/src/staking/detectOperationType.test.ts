@@ -10,6 +10,7 @@ describe("isStakingOperation", () => {
     "getStakedBalance",
     "getUnstakedBalance",
     "claimReward",
+    "compoundReward",
   ];
 
   const invalidOperations: string[] = [

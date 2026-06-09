@@ -253,6 +253,7 @@ export type Features = CurrencyFeatures & {
   lwmLedgerSyncOptimisation: DefaultFeature;
   lwdLedgerSyncOptimisation: DefaultFeature;
   lwdProductTour: DefaultFeature;
+  lwdBackupHub: DefaultFeature;
   lwmNewWordingOptInNotificationsDrawer: Feature_LwmNewWordingOptInNotificationsDrawer;
   lldNanoSUpsellBanners: Feature_LldNanoSUpsellBanners;
   llmNanoSUpsellBanners: Feature_LlmNanoSUpsellBanners;
@@ -260,6 +261,8 @@ export type Features = CurrencyFeatures & {
   lldThai: DefaultFeature;
   llmMmkvMigration: Feature_LlmMmkvMigration;
   lldModularDrawer: Feature_ModularDrawer;
+  lwdDeeplinkOpenHardening: DefaultFeature;
+  lwmDeeplinkOpenHardening: DefaultFeature;
   lldWebviewManifestDomainCheck: DefaultFeature;
   llmWebviewManifestDomainCheck: DefaultFeature;
   llmModularDrawer: Feature_ModularDrawer;
@@ -328,7 +331,9 @@ export type Features = CurrencyFeatures & {
   lwmOnboardingCounterfeitWarning: DefaultFeature;
   lwmNotificationsOptIn: DefaultFeature;
   lwmProductTour: DefaultFeature;
+  lwmBackupHub: DefaultFeature;
   lwmWallet40: Feature_LwmWallet40;
+  lwmQuickActionsCtasVariant: DefaultFeature;
   lwdWallet40: Feature_LwdWallet40;
   addressPoisoningOperationsFilter: Feature_AddressPoisoningOperationsFilter;
   concordiumIdAppLinks: Feature_ConcordiumIdAppLinks;
@@ -866,7 +871,6 @@ type Feature_Wallet40_Params = {
   marketBanner: boolean;
   graphRework: boolean;
   quickActionCtas: boolean;
-  quickActionsCtasVariant: boolean;
   mainNavigation: boolean;
   tour: boolean;
   lazyOnboarding: boolean;

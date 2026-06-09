@@ -40,6 +40,7 @@ function ClaimRewardsClaim({ navigation, route }: Props) {
     const claimTx = bridge.updateTransaction(base, {
       mode: "claimReward",
       valAddress: validator.validatorAddress,
+      valId: validator.validatorId,
       amount: value,
     });
     return { account, parentAccount: undefined, transaction: claimTx as unknown as Transaction };

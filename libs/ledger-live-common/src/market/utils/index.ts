@@ -4,6 +4,9 @@ import { MarketItemPerformer, Order } from "./types";
 // Export all types from types.ts
 export * from "./types";
 
+// Export market category helpers (shared by desktop & mobile)
+export * from "./category";
+
 // Export fixtures for testing
 export * from "./fixtures";
 
@@ -74,6 +77,8 @@ export function getRange(range: PortfolioRange | string) {
     case "30d":
     case "month":
       return "1m";
+    case "6m":
+      return "6m";
     case "1y":
     case "year":
     case "all":

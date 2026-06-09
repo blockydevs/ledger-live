@@ -4,15 +4,14 @@ import {
   getStablecoinYieldSetting,
   getBitcoinYieldSetting,
   getEthDepositScreenSetting,
-} from "@ledgerhq/live-common/featureFlags/stakePrograms/index";
+} from "@ledgerhq/live-common/earn/stakePrograms/index";
 import { runOnceWhen } from "@ledgerhq/live-common/utils/runOnceWhen";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { getEnv } from "@ledgerhq/live-env";
 import { getDefaultAccountName } from "@ledgerhq/live-wallet/accountName";
-// `Feature, FeatureId, Features` stay on types-live: `analyticsFeatureFlagMethod` is set by
-// FirebaseFeatureFlagsProvider whose prop type uses live-common's `GetFeature` shape (LIVE-31228).
-import type { AccountLike, Feature, FeatureId, Features } from "@ledgerhq/types-live";
+import type { AccountLike } from "@ledgerhq/types-live";
 import { idsToLanguage } from "@ledgerhq/types-live";
+import type { Feature, FeatureId, Features } from "@shared/feature-flags";
 import invariant from "invariant";
 import { useCallback, useContext } from "react";
 import type * as Redux from "redux";
@@ -136,6 +135,16 @@ const getAddAccountAttributes = () => {
     feature_add_account_desktop: isEnabled,
   };
 };
+
+const getBackupHubAttributes = () => {
+  if (!analyticsFeatureFlagMethod) return {};
+  const backupHub = analyticsFeatureFlagMethod("lwdBackupHub");
+
+  return {
+    lwdBackupHub: !!backupHub?.enabled,
+  };
+};
+
 const getPtxAttributes = () => {
   if (!analyticsFeatureFlagMethod) return {};
   const fetchAdditionalCoins = analyticsFeatureFlagMethod("fetchAdditionalCoins");
@@ -251,6 +260,7 @@ const extraProperties = (store: ReduxStore) => {
   const mevProtectionAttributes = getMEVAttributes(state);
   const madAttributes = getMADAttributes();
   const addAccountAttributes = getAddAccountAttributes();
+  const backupHubAttributes = getBackupHubAttributes();
 
   const deviceInfo = device
     ? {
@@ -320,6 +330,7 @@ const extraProperties = (store: ReduxStore) => {
     ...ledgerSyncAttributes,
     ...mevProtectionAttributes,
     ...addAccountAttributes,
+    ...backupHubAttributes,
     madAttributes,
     isLDMKTransportEnabled: ldmkTransport?.enabled,
     isLDMKConnectAppEnabled: ldmkConnectApp?.enabled,

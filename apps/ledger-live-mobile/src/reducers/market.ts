@@ -3,8 +3,8 @@ import { Action, ReducerMap, handleActions } from "redux-actions";
 import {
   MarketListCategory,
   MarketListConfigState,
+  MarketListFilterTimeframe,
   MarketListSorting,
-  MarketListTimeframe,
   MarketState,
   State,
 } from "./types";
@@ -98,7 +98,8 @@ export default handleActions<MarketState, MarketPayload>(handlers, INITIAL_STATE
 
 /**
  * V4 asset list config — shared between MarketScreen and modularAssetDrawer.
- * Gated by llmAssetDiscoverability. Persisted as a user preference (never reset).
+ * Gated by llmAssetDiscoverability. Sorting/timeframe/network persist as user
+ * preferences; the selected category resets to the default on relaunch.
  */
 export const MARKET_LIST_CONFIG_INITIAL_STATE: MarketListConfigState = {
   sorting: "marketCap",
@@ -114,7 +115,7 @@ const marketListConfigSlice = createSlice({
     setMarketListSorting: (state, action: PayloadAction<MarketListSorting>) => {
       state.sorting = action.payload;
     },
-    setMarketListTimeframe: (state, action: PayloadAction<MarketListTimeframe>) => {
+    setMarketListTimeframe: (state, action: PayloadAction<MarketListFilterTimeframe>) => {
       state.timeframe = action.payload;
     },
     setMarketListNetwork: (state, action: PayloadAction<string | undefined>) => {
@@ -126,6 +127,9 @@ const marketListConfigSlice = createSlice({
     importMarketListConfig: (_state, action: PayloadAction<MarketListConfigState>) => ({
       ...MARKET_LIST_CONFIG_INITIAL_STATE,
       ...action.payload,
+      // The selected category is intentionally not persisted across launches:
+      // always start on the default category when the app relaunches.
+      category: MARKET_LIST_CONFIG_INITIAL_STATE.category,
     }),
   },
 });
@@ -140,7 +144,7 @@ export const {
 
 export const selectMarketListSorting = (state: State): MarketListSorting =>
   state.marketListConfig.sorting;
-export const selectMarketListTimeframe = (state: State): MarketListTimeframe =>
+export const selectMarketListTimeframe = (state: State): MarketListFilterTimeframe =>
   state.marketListConfig.timeframe;
 export const selectMarketListNetwork = (state: State): string | undefined =>
   state.marketListConfig.network;

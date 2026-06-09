@@ -14,6 +14,8 @@ import {
   type CustomSwapResult,
   type GetQuotesResponse,
   type GetQuotesWireArgs,
+  type GetTransactionStatusResponse,
+  type GetTransactionStatusWireArgs,
 } from "./types";
 
 export * from "./types";
@@ -202,6 +204,18 @@ export class ExchangeModule extends CustomModule {
    */
   async customSwap(params: CustomSwapParams): Promise<CustomSwapResult> {
     return this.request<CustomSwapParams, CustomSwapResult>("custom.swap", params);
+  }
+
+  /**
+   * Fetch swap transaction status from the Wallet API host.
+   */
+  async getTransactionStatus(
+    params: GetTransactionStatusWireArgs,
+  ): Promise<GetTransactionStatusResponse> {
+    return this.request<GetTransactionStatusWireArgs, GetTransactionStatusResponse>(
+      "custom.exchange.getTransactionStatus",
+      params,
+    );
   }
 
   /**
