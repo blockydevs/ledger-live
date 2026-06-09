@@ -36,21 +36,16 @@ const jestAllure2ReporterOptions = {
     historyId: ({ value }) => `${value}:${platform}`,
   },
   overwrite: false,
-  environment: async ({ $ }) => {
-    const { getDeviceFirmwareVersion, getSpeculosModel } = await import(
-      "@ledgerhq/live-common/e2e/speculosAppVersion"
-    );
-    return {
-      SPECULOS_DEVICE: process.env.SPECULOS_DEVICE,
-      SPECULOS_FIRMWARE_VERSION: await getDeviceFirmwareVersion(getSpeculosModel()),
-      MOBILE_DEVICE: process.env.DEVICE_INFO || "Unknown device",
-      path: process.cwd(),
-      "version.node": process.version,
-      "version.jest": await $.manifest("jest", ["version"]),
-      "package.name": await $.manifest(m => m.name),
-      "package.version": await $.manifest(["version"]),
-    };
-  },
+  environment: async ({ $ }) => ({
+    SPECULOS_DEVICE: process.env.SPECULOS_DEVICE,
+    SPECULOS_FIRMWARE_VERSION: process.env.SPECULOS_FIRMWARE_VERSION,
+    MOBILE_DEVICE: process.env.DEVICE_INFO || "Unknown device",
+    path: process.cwd(),
+    "version.node": process.version,
+    "version.jest": await $.manifest("jest", ["version"]),
+    "package.name": await $.manifest(m => m.name),
+    "package.version": await $.manifest(["version"]),
+  }),
 };
 
 // Video recording is handled by patched detox-allure2-adapter via DETOX_ENABLE_VIDEO env var in globalSetup
