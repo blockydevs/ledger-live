@@ -155,7 +155,10 @@ export type CeloOperationRaw = OperationRaw<CeloOperationExtraRaw>;
 export type CeloOperationExtra = {
   celoOperationValue?: BigNumber;
   celoSourceValidator?: string;
-  // Lowercased CIP-64 fee currency address; absent → native CELO.
+  // Tri-state fee-currency tag:
+  //   - lowercased 0x… address → CIP-64 tx, fees paid in that ERC-20
+  //   - NATIVE_FEE_CURRENCY_MARKER → confirmed non-CIP-64, fees paid in CELO
+  //   - absent → not yet enriched (e.g. inside the reorg window, or RPC failed)
   feeCurrencyAddress?: string;
 };
 // `feeCurrencyAddress` has a generic name, so we also validate its value shape

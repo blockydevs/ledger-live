@@ -18,8 +18,7 @@ type CeloRpcTransaction = {
 const isCeloRpcTransaction = (v: unknown): v is CeloRpcTransaction =>
   v !== null &&
   typeof v === "object" &&
-  "type" in v &&
-  (typeof v.type === "string" || typeof v.type === "undefined");
+  (!("type" in v) || typeof v.type === "string" || v.type === undefined);
 
 // 32-byte tx hash: "0x" + 64 hex chars.
 const TX_HASH_RE = /^0x[0-9a-f]{64}$/i;
