@@ -5,6 +5,7 @@ import type { ActionDialogParams } from "@ledgerhq/live-common/wallet-api/valida
 import type { DeviceModelId } from "@ledgerhq/devices";
 import type { Currency, Unit } from "@ledgerhq/types-cryptoassets";
 import { MarketListRequestParams } from "@ledgerhq/live-common/market/utils/types";
+import type { MarketListCategory } from "@ledgerhq/live-common/market/utils/category";
 import { PostOnboardingState } from "@ledgerhq/types-live";
 import type { DataOfUser, NotificationPromptTarget } from "LLM/features/NotificationsPrompt/types";
 import type { RatingsHappyMoment, RatingsDataOfUser } from "../logic/ratings";
@@ -386,7 +387,7 @@ export type MarketState = {
 
 export type MarketListSorting = "marketCap" | "volume" | "gainers" | "losers";
 export type MarketListFilterTimeframe = "1D" | "7D" | "30D" | "6M" | "1Y";
-export type MarketListCategory = "all" | "starred" | "stocks";
+export type { MarketListCategory };
 
 export type MarketListConfigState = {
   sorting: MarketListSorting;
