@@ -15,10 +15,15 @@ type CeloRpcTransaction = {
   feeCurrency?: `0x${string}` | null;
 };
 
-const isCeloRpcTransaction = (v: unknown): v is CeloRpcTransaction =>
-  v !== null &&
-  typeof v === "object" &&
-  (!("type" in v) || typeof v.type === "string" || v.type === undefined);
+const isCeloRpcTransaction = (v: unknown): v is CeloRpcTransaction => {
+  if (v === null || typeof v !== "object") return false;
+  const obj = v as Record<string, unknown>;
+  if (obj.type !== undefined && typeof obj.type !== "string") return false;
+  if (obj.feeCurrency !== undefined && obj.feeCurrency !== null) {
+    if (typeof obj.feeCurrency !== "string" || !obj.feeCurrency.startsWith("0x")) return false;
+  }
+  return true;
+};
 
 // 32-byte tx hash: "0x" + 64 hex chars.
 const TX_HASH_RE = /^0x[0-9a-f]{64}$/i;
@@ -40,7 +45,11 @@ export const getCeloTransactionFeeCurrency = async (hash: string): Promise<strin
   });
   if (!isCeloRpcTransaction(result)) throw new Error(`Celo tx ${hash} not found`);
   // JSON-RPC nodes may return hex strings in mixed case (e.g. "0x7B").
-  if (result.type?.toLowerCase() !== CIP64_TX_TYPE || !result.feeCurrency) return null;
+  if (result.type?.toLowerCase() !== CIP64_TX_TYPE) return null;
+  // CIP-64 with no feeCurrency = malformed response. Throwing forces a retry on
+  // the next sync — returning null here would persist the NATIVE sentinel and
+  // permanently mis-label a real CIP-64 op.
+  if (!result.feeCurrency) throw new Error(`Celo tx ${hash} is CIP-64 but feeCurrency is missing`);
   return result.feeCurrency.toLowerCase();
 };
 

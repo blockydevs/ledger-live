@@ -166,8 +166,7 @@ export type CeloOperationExtra = {
 // sentinel or a 20-byte EVM address (40 hex chars).
 const HEX_ADDRESS_RE = /^0x[0-9a-f]{40}$/i;
 const hasCeloFeeCurrencyAddress = (op: object): boolean => {
-  if (!("feeCurrencyAddress" in op)) return false;
-  const v = op.feeCurrencyAddress;
+  const v = (op as Record<string, unknown>).feeCurrencyAddress;
   return typeof v === "string" && (v === NATIVE_FEE_CURRENCY_MARKER || HEX_ADDRESS_RE.test(v));
 };
 const hasAnyCeloExtraKey = (op: object): boolean =>

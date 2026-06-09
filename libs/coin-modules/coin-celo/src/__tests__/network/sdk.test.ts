@@ -237,5 +237,28 @@ describe("network/sdk", () => {
       );
       expect(requestMock).not.toHaveBeenCalled();
     });
+
+    it("throws when a CIP-64 tx is missing `feeCurrency` (no silent native fallback)", async () => {
+      const { getCeloTransactionFeeCurrency } = loadSdkModule();
+      requestMock.mockResolvedValueOnce({ type: "0x7b", feeCurrency: null });
+
+      await expect(getCeloTransactionFeeCurrency(VALID_HASH)).rejects.toThrow(
+        /CIP-64 but feeCurrency is missing/,
+      );
+    });
+
+    it("rejects responses with a non-string `type`", async () => {
+      const { getCeloTransactionFeeCurrency } = loadSdkModule();
+      requestMock.mockResolvedValueOnce({ type: 123, feeCurrency: null });
+
+      await expect(getCeloTransactionFeeCurrency(VALID_HASH)).rejects.toThrow(/not found/);
+    });
+
+    it("rejects responses with a malformed `feeCurrency` (no 0x prefix)", async () => {
+      const { getCeloTransactionFeeCurrency } = loadSdkModule();
+      requestMock.mockResolvedValueOnce({ type: "0x7b", feeCurrency: "deadbeef" });
+
+      await expect(getCeloTransactionFeeCurrency(VALID_HASH)).rejects.toThrow(/not found/);
+    });
   });
 });
