@@ -214,8 +214,8 @@ const envDefinitions = {
   },
   API_SUI_TESTNET_NODE_PROXY: {
     parser: stringParser,
-    def: "https://sui.coin.ledger-test.com",
-    desc: "reverse proxy url for sui testnet node",
+    def: "https://fullnode.testnet.sui.io:443",
+    desc: "public fullnode url for sui testnet node",
   },
   API_SUI_NODE_PROXY: {
     parser: stringParser,
