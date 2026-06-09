@@ -232,7 +232,9 @@ describe("network/sdk", () => {
     it("throws synchronously on a malformed hash", async () => {
       const { getCeloTransactionFeeCurrency } = loadSdkModule();
 
-      await expect(getCeloTransactionFeeCurrency("0xnothex")).rejects.toThrow(/Invalid Celo tx hash/);
+      await expect(getCeloTransactionFeeCurrency("0xnothex")).rejects.toThrow(
+        /Invalid Celo tx hash/,
+      );
       expect(requestMock).not.toHaveBeenCalled();
     });
   });
