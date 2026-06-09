@@ -796,6 +796,7 @@ describe("NotificationsPrompt stake flow", () => {
             repromptDelay: null,
             dismissedCount: 0,
             skipReason: undefined,
+            drawerPromptTarget: "globalPushNotifications",
           },
         );
 
@@ -805,6 +806,7 @@ describe("NotificationsPrompt stake flow", () => {
           button: "allow notifications",
           page: "Drawer push notification opt-in",
           source: "stake",
+          drawerPromptTarget: "globalPushNotifications",
           repromptDelay: null,
           dismissedCount: 0,
           variant: AB_TESTING_VARIANTS.B,

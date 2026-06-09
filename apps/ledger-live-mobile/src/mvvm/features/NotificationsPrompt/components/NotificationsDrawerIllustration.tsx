@@ -5,16 +5,25 @@ import NotificationsBellDark from "~/images/illustration/Dark/_NotificationsBell
 import NotificationsBellLight from "~/images/illustration/Light/_NotificationsBell.webp";
 import NotificationsPerformanceChartDark from "~/images/illustration/Dark/_NotificationsPerformanceChart.webp";
 import NotificationsPerformanceChartLight from "~/images/illustration/Light/_NotificationsPerformanceChart.webp";
+import type { NotificationPromptTarget } from "../types";
+import { isTransactionsAlertsPromptTarget } from "../utils/getNotificationsPromptCopy";
 
 const WIDTH = 300;
 const HEIGHT = 141;
 
+export type NotificationsDrawerIllustrationProps = {
+  readonly type: NotificationsState["drawerSource"];
+  readonly promptTarget?: NotificationPromptTarget;
+};
+
 export function NotificationsDrawerIllustration({
   type,
-}: {
-  readonly type: NotificationsState["drawerSource"];
-}) {
-  if (type === "onboarding") {
+  promptTarget,
+}: NotificationsDrawerIllustrationProps) {
+  const useBellIllustration =
+    type === "onboarding" || isTransactionsAlertsPromptTarget(promptTarget);
+
+  if (useBellIllustration) {
     return (
       <Illustration
         lightSource={NotificationsBellLight}

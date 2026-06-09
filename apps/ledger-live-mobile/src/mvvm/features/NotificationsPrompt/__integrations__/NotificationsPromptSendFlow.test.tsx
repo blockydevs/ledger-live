@@ -164,6 +164,7 @@ describe("NotificationsPrompt send flow", () => {
       repromptDelay: null,
       dismissedCount: 0,
       skipReason: undefined,
+      drawerPromptTarget: "globalPushNotifications",
     });
 
     const maybeLaterButton = screen.getByText(/maybe later/i);
@@ -174,6 +175,7 @@ describe("NotificationsPrompt send flow", () => {
       button: "maybe later",
       page: "Drawer push notification opt-in",
       source: "send",
+      drawerPromptTarget: "globalPushNotifications",
       repromptDelay: null,
       dismissedCount: 0,
       variant: AB_TESTING_VARIANTS.B,
