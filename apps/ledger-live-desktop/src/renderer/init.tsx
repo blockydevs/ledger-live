@@ -51,6 +51,7 @@ import { Device } from "@ledgerhq/live-common/hw/actions/types";
 import { listCachedCurrencyIds } from "./bridge/cache";
 import { LogEntry } from "winston";
 import { importMarketState } from "./actions/market";
+import { importMarketBannerState } from "./reducers/marketBanner";
 import { fetchWallet } from "./actions/wallet";
 import { fetchTrustchain } from "./actions/trustchain";
 import { setupRecentAddressesStore } from "./recentAddresses";
@@ -332,6 +333,11 @@ async function init() {
   const marketState = await getKey("app", "market");
   if (marketState) {
     store.dispatch(importMarketState(marketState));
+  }
+
+  const marketBannerState = await getKey("app", "marketBanner");
+  if (marketBannerState) {
+    store.dispatch(importMarketBannerState(marketBannerState));
   }
 
   webFrame.setVisualZoomLevelLimits(1, 1);

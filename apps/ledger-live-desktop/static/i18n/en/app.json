@@ -8723,6 +8723,12 @@
     "cta": "View all",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
+    "ranking": {
+      "trending": "Trending",
+      "gainers": "Gainers",
+      "losers": "Losers",
+      "favorites": "Favorites"
+    },
     "fearAndGreed": {
       "title": "Mood"
     }
