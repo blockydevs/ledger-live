@@ -68,9 +68,9 @@ const envDefinitions = {
     desc: "API enpoint for Aptos",
   },
   APTOS_TESTNET_API_ENDPOINT: {
-    def: "https://apt.coin.ledger-stg.com/node/v1",
+    def: "https://api.testnet.aptoslabs.com/v1",
     parser: stringParser,
-    desc: "API enpoint for Aptos",
+    desc: "API endpoint for Aptos testnet",
   },
   APTOS_INDEXER_ENDPOINT: {
     def: "https://apt.coin.ledger.com/node/v1/graphql",
@@ -78,9 +78,9 @@ const envDefinitions = {
     desc: "Indexer endpoint for Aptos",
   },
   APTOS_TESTNET_INDEXER_ENDPOINT: {
-    def: "https://apt.coin.ledger-stg.com/node/v1/graphql",
+    def: "https://api.testnet.aptoslabs.com/v1/graphql",
     parser: stringParser,
-    desc: "Indexer endpoint for Aptos",
+    desc: "Indexer endpoint for Aptos testnet",
   },
   APTOS_ENABLE_TOKENS: {
     def: false,
