@@ -16,7 +16,7 @@ import { getDescription } from "tests/utils/customJsonReporter";
 import BigNumber from "bignumber.js";
 import { pickRotatingProvider } from "@ledgerhq/live-common/e2e/swap";
 
-const fromAccount = TokenAccount.ETH_USDC_1;
+const fromAccount = TokenAccount.ETH_USDT_1;
 const toAccount = Account.ETH_1;
 const eligibleProviders = [
   SwapProvider.THORCHAIN,
@@ -78,12 +78,16 @@ test.describe("Token reapproval - flow", () => {
       await performSwapUntilQuoteSelectionStep(app, swap, minAmount);
       await app.swap.selectSpecificProvider(provider);
       await app.swap.clickExchangeButton(provider.name);
+      await app.swap.expectResetApprovalScreen();
+      await app.swap.clickRevokeApprovalButton();
+      await app.swap.clickContinueButton();
+      await app.speculos.signTokenApproval();
+      await app.swap.expectTransactionSentToasterToBeVisible();
       await app.swap.expectTwoStepApprovalScreen();
       await app.swap.clickGiveApprovalButton();
       await app.swap.clickContinueButton();
       await app.speculos.signTokenApproval();
       await app.swap.expectTwoStepSignScreen();
-      await app.swap.expectTransactionSentToasterToBeVisible();
     },
   );
 });

@@ -52,6 +52,7 @@ export class SwapPage extends WebViewAppPage {
   // Swap Steps Approval components
   private readonly giveApprovalButton = "give-approval-button";
   private readonly signPermitButton = "sign-permit-button";
+  private readonly revokeApprovalButton = "revoke-approval-button";
 
   // History Components
   readonly historyButton = this.page.getByTestId("History-tab-button");
@@ -561,6 +562,20 @@ export class SwapPage extends WebViewAppPage {
   async clickSwapMax() {
     const webview = await this.getWebView();
     await webview.getByTestId(this.swapMaxToggle).click();
+  }
+
+  @step("Expect reset allowance screen to be displayed")
+  async expectResetApprovalScreen() {
+    await this.verifyElementIsVisible(this.revokeApprovalButton);
+  }
+
+  @step("Click Revoke Approval button")
+  async clickRevokeApprovalButton() {
+    const webview = await this.getWebView();
+    const revokeButton = webview.getByTestId(this.revokeApprovalButton);
+    await expect(revokeButton).toBeVisible();
+    await expect(revokeButton).toBeEnabled();
+    await revokeButton.click();
   }
 
   @step("Ensure token approval has been revoked")

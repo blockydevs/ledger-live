@@ -31,6 +31,7 @@ export default class SwapLiveAppPage {
   switchButton = "to-account-switch-accounts";
   lnsUnsupportedBannerPattern =
     /Ledger Nano S[\s\S]*(not supported|unsupported|does not support|not compatible)/i;
+  revokeApprovalButton = "revoke-approval-button";
   giveApprovalButton = "give-approval-button";
   signPermitButton = "sign-permit-button";
   specificQuoteCardProviderName = (provider: string) =>
@@ -447,6 +448,19 @@ export default class SwapLiveAppPage {
   async verifyLiveAppTitle(expectedText: string) {
     const liveAppTitle = await getTextOfElement("live-app-title");
     jestExpect(liveAppTitle.toLowerCase()).toContain(expectedText.toLowerCase());
+  }
+
+  @Step("Expect reset allowance screen")
+  async expectResetApprovalScreen() {
+    await waitWebElementByTestId(this.revokeApprovalButton);
+    await detoxExpect(getWebElementByTestId(this.revokeApprovalButton)).toExist();
+  }
+
+  @Step("Tap revoke approval button")
+  async tapRevokeApprovalButton() {
+    await waitWebElementByTestId(this.revokeApprovalButton);
+    await waitForWebElementToBeEnabled(this.revokeApprovalButton);
+    await tapWebElementByTestId(this.revokeApprovalButton);
   }
 
   @Step("Expect TwoStepApprovalScreen")

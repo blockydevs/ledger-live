@@ -63,6 +63,10 @@ export function runSwapTokenReapprovalFlow(
       );
       await app.swapLiveApp.selectSpecificProvider(swapProvider.uiName);
       await app.swapLiveApp.tapExecuteSwap(swapProvider.uiName);
+      await app.swapLiveApp.expectResetApprovalScreen();
+      await app.swapLiveApp.tapRevokeApprovalButton();
+      await app.send.summaryContinue();
+      await app.speculos.signTokenApproval();
       await app.swapLiveApp.expectTwoStepApprovalScreen();
       await app.swapLiveApp.tapGiveApprovalButton();
       await app.send.summaryContinue();
