@@ -67,6 +67,7 @@ async function cleanupAllSpeculos() {
     if (!trackingFiles.length) return;
 
     const allInstances: { deviceId: string; file: string }[] = [];
+    const parsedFiles = new Set<string>();
     for (const file of trackingFiles) {
       const fullPath = path.join(ARTIFACTS_DIR, file);
       const content = await fs.readFile(fullPath, "utf-8").catch(() => null);
@@ -74,8 +75,10 @@ async function cleanupAllSpeculos() {
       try {
         const parsed: { deviceId: string }[] = JSON.parse(content);
         for (const inst of parsed) allInstances.push({ ...inst, file: fullPath });
+        parsedFiles.add(fullPath);
       } catch {
         // ignore malformed tracking file
+        log.error(`Malformed Speculos tracking file ${fullPath}. Keeping file for recovery`);
       }
     }
 
@@ -91,9 +94,7 @@ async function cleanupAllSpeculos() {
       ),
     );
 
-    await Promise.all(
-      trackingFiles.map(f => fs.unlink(path.join(ARTIFACTS_DIR, f)).catch(() => {})),
-    );
+    await Promise.all([...parsedFiles].map(fullPath => fs.unlink(fullPath).catch(() => {})));
   } catch (error) {
     log.error("Speculos cleanup failed:", sanitizeError(error));
   }

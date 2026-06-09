@@ -212,15 +212,18 @@ export async function deleteSpeculos(deviceId?: string): Promise<number | undefi
   }
 
   const port = await findPortByDeviceId(deviceId);
-
+  let stopped = false;
   try {
     await stopSpeculos(deviceId);
     log.info("E2E", `Speculos successfully stopped for device ${deviceId}`);
+    stopped = true;
   } catch (error) {
     log.error("E2E", `Failed to stop Speculos ${deviceId}: ${sanitizeError(error)}`);
   } finally {
-    speculosDevices.delete(deviceId);
-    await removeSpeculosFromFile(deviceId);
+    if (stopped) {
+      speculosDevices.delete(deviceId);
+      await removeSpeculosFromFile(deviceId);
+    }
     setEnv("SPECULOS_API_PORT", 0);
     delete process.env.SPECULOS_API_PORT;
   }
@@ -253,8 +256,7 @@ export async function attachSpeculinhoLogsToAllure() {
   }
 }
 
-// Sweep every Speculos instance known to this process *and* any orphan
-// recorded in the tracking file (from a previous crashed run / sibling worker).
+// Sweep every Speculos instance known to this process and any orphan still recorded in this process tracking file.
 export async function cleanupAllSpeculos(): Promise<void> {
   await deleteSpeculos();
 
