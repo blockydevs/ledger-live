@@ -377,10 +377,9 @@ const OperationD = (props: Props) => {
   ]);
 
   const isStuck = bridge.isStuckOperation(operation);
+  // Fee currency/amount can be overridden by the family-specific
+  // operationDetails implementation.
   const useFeesCurrencyOverride = specific?.operationDetails?.useFeesCurrency;
-  // `specific` is keyed by the account family, which is stable across a single
-  // drawer mount — so the conditional call below is always taken or never taken,
-  // satisfying React's hook-rule invariant.
   const customFeesCurrency = useFeesCurrencyOverride?.(operation, mainAccount);
   const feesCurrency = customFeesCurrency ?? getFeesCurrency(mainAccount);
   const feesUnit = useMemo(() => getFeesUnit(feesCurrency), [feesCurrency]);

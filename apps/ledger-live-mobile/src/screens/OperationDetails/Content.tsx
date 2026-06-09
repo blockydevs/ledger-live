@@ -128,8 +128,8 @@ export default function Content({
       mainAccount.currency.family as keyof typeof byFamiliesOperationDetails
     ];
 
-  // `specificOperationDetails` is keyed by family; same mount, same value, so
-  // these conditional hook calls satisfy React's hook-rule invariant.
+  // Fee currency/amount can be overridden by the family-specific
+  // operationDetails implementation.
   const useFeesCurrencyOverride =
     specificOperationDetails && "useFeesCurrency" in specificOperationDetails
       ? specificOperationDetails.useFeesCurrency
