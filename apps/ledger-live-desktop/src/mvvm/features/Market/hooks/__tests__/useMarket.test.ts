@@ -204,4 +204,27 @@ describe("useMarket", () => {
       expect(result.current.marketData).toEqual([]);
     });
   });
+
+  describe("time range options", () => {
+    it("exposes full-label range options ordered shortest to longest", () => {
+      const { result } = renderHook(() => useMarket(), {
+        initialState: {
+          ...withFlagOverrides({ lldRefreshMarketData: { enabled: false } }),
+          settings: createSettingsState([]),
+          market: createMarketState([]),
+        },
+      });
+
+      expect(result.current.timeRangeSelectOptions.map(option => option.value)).toEqual([
+        "24h",
+        "7d",
+        "30d",
+        "1y",
+      ]);
+      result.current.timeRangeSelectOptions.forEach(option => {
+        expect(typeof option.label).toBe("string");
+        expect(option.label.length).toBeGreaterThan(0);
+      });
+    });
+  });
 });
