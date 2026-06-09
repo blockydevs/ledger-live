@@ -9,7 +9,12 @@ function compileToCjs(mod, filename, syntax) {
     jsc: {
       parser:
         syntax === "typescript"
-          ? { syntax: "typescript", tsx: filename.endsWith(".tsx") }
+          ? {
+              syntax: "typescript",
+              tsx: filename.endsWith(".tsx"),
+              decorators: true,
+              dynamicImport: true,
+            }
           : { syntax: "ecmascript" },
       target: "es2022",
       transform: { react: { runtime: "automatic" } },
