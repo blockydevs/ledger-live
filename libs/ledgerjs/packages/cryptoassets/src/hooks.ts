@@ -36,15 +36,10 @@ export function useTokenByAddressInCurrency(
   currencyId: string,
   options?: { skip?: boolean },
 ): TokenResult {
-  const result = options
-    ? cryptoAssetsApi.useFindTokenByAddressInCurrencyQuery(
-        { contract_address: address, network: currencyId },
-        options,
-      )
-    : cryptoAssetsApi.useFindTokenByAddressInCurrencyQuery({
-        contract_address: address,
-        network: currencyId,
-      });
+  const result = cryptoAssetsApi.useFindTokenByAddressInCurrencyQuery(
+    { contract_address: address, network: currencyId },
+    options,
+  );
   return {
     token: result.data,
     loading: result.isLoading,
