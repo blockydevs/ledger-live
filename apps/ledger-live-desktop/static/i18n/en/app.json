@@ -8823,6 +8823,9 @@
   "topBar": {
     "searchPlaceholder": "Search assets",
     "searchEmptyState": "Start typing to search for an asset",
+    "search": {
+      "noResults": "No results for \"{{query}}\""
+    },
     "history": {
       "cta": "Transactions"
     },
