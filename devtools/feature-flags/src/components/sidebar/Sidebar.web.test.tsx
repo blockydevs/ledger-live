@@ -84,7 +84,9 @@ describe("Sidebar", () => {
     const clearOverride = jest.fn();
     const user = userEvent.setup();
     render(
-      <Sidebar {...makeProps({ clearOverride, display: { ...baseDisplay, isOverridden: true } })} />,
+      <Sidebar
+        {...makeProps({ clearOverride, display: { ...baseDisplay, isOverridden: true } })}
+      />,
     );
     await user.click(screen.getByRole("button", { name: "Restore" }));
     expect(clearOverride).toHaveBeenCalledWith("mockFeature");

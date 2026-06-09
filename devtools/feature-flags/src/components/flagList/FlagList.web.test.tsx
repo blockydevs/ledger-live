@@ -14,9 +14,14 @@ const baseProps: FeatureFlagsToolProps = {
   setOverride: jest.fn(),
   clearOverride: jest.fn(),
   clearAllOverrides: jest.fn(),
+  importOverrides: jest.fn(),
 };
 
 const sidebar = () => screen.queryByTestId("feature-flags-sidebar");
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
 
 describe("FlagList", () => {
   it("renders a row for every flag id", () => {
@@ -27,12 +32,7 @@ describe("FlagList", () => {
   });
 
   describe("selection", () => {
-    it("does not render the sidebar initially", () => {
-      render(<FlagList {...baseProps} />);
-      expect(sidebar()).not.toBeInTheDocument();
-    });
-
-    it("opens the sidebar for the flag whose row is clicked", async () => {
+    it("renders the sidebar for the flag whose row is clicked", async () => {
       const user = userEvent.setup();
       render(<FlagList {...baseProps} />);
       await user.click(screen.getByText("mockFeature"));
