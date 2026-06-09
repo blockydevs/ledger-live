@@ -1,8 +1,8 @@
 import React from "react";
 import { MarketTopCardsSection } from "./MarketTopCardsSection";
-import { MarketTopCardPlaceholder } from "./components/MarketTopCardPlaceholder";
 import { GlobalMarketCapCard } from "./components/GlobalMarketCapCard";
 import { MoodIndexCard } from "./components/MoodIndexCard";
+import { AltSeasonIndexCard } from "./components/AltSeasonIndexCard";
 import { useMarketTopCardsViewModel } from "./hooks/useMarketTopCardsViewModel";
 
 function MarketTopCards() {
@@ -14,7 +14,7 @@ function MarketTopCards() {
     <MarketTopCardsSection>
       <GlobalMarketCapCard />
       <MoodIndexCard />
-      <MarketTopCardPlaceholder testId="market-top-card-3" />
+      <AltSeasonIndexCard />
     </MarketTopCardsSection>
   );
 }

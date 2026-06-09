@@ -4,6 +4,7 @@ import CryptoIconsHandlers from "./cryptoIcons";
 import CounterValuesHandlers from "./countervalues";
 import AssetsHandlers from "./assets";
 import FearAndGreedHandlers from "./fearAndGreed";
+import AltcoinSeasonHandlers from "./altcoinSeason";
 import ConcordiumHandlers from "./concordium";
 import BuyHandlers from "./buy";
 import SwapHandlers from "./swap";
@@ -17,6 +18,7 @@ export default [
   ...CounterValuesHandlers,
   ...AssetsHandlers,
   ...FearAndGreedHandlers,
+  ...AltcoinSeasonHandlers,
   ...BuyHandlers,
   ...SwapHandlers,
   ...LedgerSyncHandlers,

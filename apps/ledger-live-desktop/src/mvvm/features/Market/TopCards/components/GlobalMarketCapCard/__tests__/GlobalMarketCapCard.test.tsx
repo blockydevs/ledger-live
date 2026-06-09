@@ -30,15 +30,15 @@ describe("GlobalMarketCapCard", () => {
     expect(await screen.findByTestId("global-market-cap-dialog-content")).toBeVisible();
   });
 
-  it("renders nothing on a scoped query error so the row stays intact", async () => {
+  it("renders an error card on a scoped query error so the row stays intact", async () => {
     server.use(http.get(GLOBAL_MARKET_URL, () => new HttpResponse(null, { status: 500 })));
 
-    const { container } = render(<GlobalMarketCapCard />);
+    render(<GlobalMarketCapCard />);
 
     await waitFor(() => {
-      expect(screen.queryByTestId("market-top-card-1")).not.toBeInTheDocument();
+      expect(screen.getByText("Something went wrong")).toBeVisible();
+      expect(screen.queryByTestId("skeleton")).toBeNull();
     });
-    expect(screen.queryByTestId("global-market-cap-card")).not.toBeInTheDocument();
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("global-market-cap-card")).toBeNull();
   });
 });
