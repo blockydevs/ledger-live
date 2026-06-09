@@ -3,15 +3,24 @@ import { useTranslation } from "react-i18next";
 import { Slides, useSlidesContext } from "LLD/components/Slides";
 import { Button, PageIndicator } from "@ledgerhq/lumen-ui-react";
 import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
+import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
 import { AwarenessModalClampedText, CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "./clampedText";
 
 type CarouselContentSlideProps = Pick<
   GenericAwarenessModalCarouselSlide,
-  "title" | "subtitle" | "imageUrl"
+  "title" | "subtitle" | "imageUrlLight" | "imageUrlDark"
 >;
 
-function CarouselContentSlide({ title, subtitle, imageUrl }: Readonly<CarouselContentSlideProps>) {
-  const showImage = imageUrl != null && imageUrl.length > 0;
+function CarouselContentSlide({
+  title,
+  subtitle,
+  imageUrlLight,
+  imageUrlDark,
+}: Readonly<CarouselContentSlideProps>) {
+  const { imageUrl, showImage } = useThemedAwarenessModalImage({
+    imageUrlLight,
+    imageUrlDark,
+  });
 
   return (
     <div className="flex size-full flex-col">

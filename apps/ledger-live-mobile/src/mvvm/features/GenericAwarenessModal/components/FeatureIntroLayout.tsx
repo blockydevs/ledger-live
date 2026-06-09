@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Button, Text } from "@ledgerhq/lumen-ui-rnative";
 import * as Icons from "@ledgerhq/lumen-ui-rnative/symbols";
 import { Image, Linking } from "react-native";
+import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
 import type { FeatureIntroViewModel } from "../screens/useGenericAwarenessModalDrawerViewModel";
 
 type FeatureIntroLayoutProps = Readonly<{
@@ -17,7 +18,8 @@ const ITEM_SUBTITLE_NUMBER_OF_LINES = 2;
 export function FeatureIntroLayout({ onClose, viewModel }: FeatureIntroLayoutProps) {
   const { content } = viewModel;
   const {
-    imageUrl,
+    imageUrlLight,
+    imageUrlDark,
     title,
     subtitle,
     items,
@@ -26,6 +28,7 @@ export function FeatureIntroLayout({ onClose, viewModel }: FeatureIntroLayoutPro
     secondaryButtonLabel,
     secondaryButtonLink,
   } = content;
+  const { imageUrl, showImage } = useThemedAwarenessModalImage({ imageUrlLight, imageUrlDark });
 
   const handleButtonPress = async (link: string, onPress: () => void) => {
     onPress();
@@ -46,13 +49,15 @@ export function FeatureIntroLayout({ onClose, viewModel }: FeatureIntroLayoutPro
 
   return (
     <Box lx={{ gap: "s16", marginTop: "s8" }}>
-      <Box lx={{ borderRadius: "lg", overflow: "hidden" }}>
-        <Image
-          source={{ uri: imageUrl }}
-          style={{ width: "100%", height: 200 }}
-          resizeMode="cover"
-        />
-      </Box>
+      {showImage ? (
+        <Box lx={{ borderRadius: "lg", overflow: "hidden" }}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: "100%", height: 200 }}
+            resizeMode="cover"
+          />
+        </Box>
+      ) : null}
 
       <Text
         typography="heading3SemiBold"

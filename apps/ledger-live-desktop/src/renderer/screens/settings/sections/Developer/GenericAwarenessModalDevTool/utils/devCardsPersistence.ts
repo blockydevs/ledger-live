@@ -23,7 +23,8 @@ const isFeatureIntroCard = (value: unknown): value is GenericAwarenessModalFeatu
   typeof value.id === "string" &&
   typeof value.title === "string" &&
   typeof value.subtitle === "string" &&
-  typeof value.imageUrl === "string" &&
+  typeof value.imageUrlLight === "string" &&
+  typeof value.imageUrlDark === "string" &&
   typeof value.primaryButtonLabel === "string" &&
   typeof value.primaryButtonLink === "string" &&
   typeof value.secondaryButtonLabel === "string" &&

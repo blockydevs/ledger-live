@@ -8,6 +8,7 @@ import {
   ListItemTitle,
 } from "@ledgerhq/lumen-ui-react";
 import * as Icons from "@ledgerhq/lumen-ui-react/symbols";
+import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
 import { AwarenessModalClampedText, FEATURE_INTRO_TEXT_LINE_LIMITS } from "./clampedText";
 
 export type LumenSymbolName = keyof typeof Icons;
@@ -26,20 +27,26 @@ type FeatureIntroContentProps = {
   secondaryButtonLabel: string;
   onPrimaryClick: () => void;
   onSecondaryClick: () => void;
-  imageUrl?: string;
+  imageUrlLight?: string;
+  imageUrlDark?: string;
 };
 
 export default function FeatureIntroContent({
   title,
   subtitle,
-  imageUrl,
+  imageUrlLight,
+  imageUrlDark,
   items,
   primaryButtonLabel,
   secondaryButtonLabel,
   onPrimaryClick,
   onSecondaryClick,
 }: Readonly<FeatureIntroContentProps>) {
-  const showImage = imageUrl != null && imageUrl.length > 0;
+  const { imageUrl, showImage } = useThemedAwarenessModalImage(
+    imageUrlLight != null || imageUrlDark != null
+      ? { imageUrlLight: imageUrlLight ?? "", imageUrlDark: imageUrlDark ?? "" }
+      : undefined,
+  );
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">

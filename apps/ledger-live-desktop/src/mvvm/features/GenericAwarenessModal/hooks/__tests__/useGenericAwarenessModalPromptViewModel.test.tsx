@@ -30,7 +30,8 @@ describe("useGenericAwarenessModalPromptViewModel", () => {
       subtitle: "",
       primaryButtonLabel: "",
       secondaryButtonLabel: "",
-      imageUrl: undefined,
+      imageUrlLight: undefined,
+      imageUrlDark: undefined,
       onPrimaryClick: expect.any(Function),
       onSecondaryClick: expect.any(Function),
       onHeaderClose: expect.any(Function),
@@ -56,7 +57,8 @@ describe("useGenericAwarenessModalPromptViewModel", () => {
     expect(result.current.subtitle).toBe("Move assets to a hardware signer for true self-custody.");
     expect(result.current.primaryButtonLabel).toBe("Learn more");
     expect(result.current.secondaryButtonLabel).toBe("Maybe later");
-    expect(result.current.imageUrl).toBe("https://example.com/prompt.png");
+    expect(result.current.imageUrlLight).toBe("https://example.com/prompt.png");
+    expect(result.current.imageUrlDark).toBe("");
   });
 
   it("should track page view when open with a prompt card", () => {

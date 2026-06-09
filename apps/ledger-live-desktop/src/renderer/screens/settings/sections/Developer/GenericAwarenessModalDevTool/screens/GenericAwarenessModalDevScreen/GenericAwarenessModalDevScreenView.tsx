@@ -136,9 +136,14 @@ export function GenericAwarenessModalDevScreenView({
                   onChange={subtitle => updateSlide(index, { subtitle })}
                 />
                 <DevLabeledInput
-                  label={COPY.fields.imageUrl}
-                  value={slide.imageUrl}
-                  onChange={imageUrl => updateSlide(index, { imageUrl })}
+                  label={COPY.fields.imageUrlLight}
+                  value={slide.imageUrlLight}
+                  onChange={imageUrlLight => updateSlide(index, { imageUrlLight })}
+                />
+                <DevLabeledInput
+                  label={COPY.fields.imageUrlDark}
+                  value={slide.imageUrlDark}
+                  onChange={imageUrlDark => updateSlide(index, { imageUrlDark })}
                 />
                 <DevLabeledInput
                   label={COPY.fields.primaryButtonLabel}
@@ -169,9 +174,14 @@ export function GenericAwarenessModalDevScreenView({
               onChange={subtitle => updateForm({ subtitle })}
             />
             <DevLabeledInput
-              label={COPY.fields.imageUrl}
-              value={form.imageUrl}
-              onChange={imageUrl => updateForm({ imageUrl })}
+              label={COPY.fields.imageUrlLight}
+              value={form.imageUrlLight}
+              onChange={imageUrlLight => updateForm({ imageUrlLight })}
+            />
+            <DevLabeledInput
+              label={COPY.fields.imageUrlDark}
+              value={form.imageUrlDark}
+              onChange={imageUrlDark => updateForm({ imageUrlDark })}
             />
             <DevLabeledInput
               label={COPY.fields.primaryButtonLabel}

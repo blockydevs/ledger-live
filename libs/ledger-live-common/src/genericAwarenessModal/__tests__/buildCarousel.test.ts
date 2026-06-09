@@ -22,7 +22,8 @@ describe("buildCarousel", () => {
       slideCount: "2",
       title: "Slide 2",
       subtitle: "Second",
-      imageUrl: "https://example.com/2.png",
+      imageUrlLight: "https://example.com/2.png",
+      imageUrlDark: "",
       primaryButtonLabel: "Go",
       primaryButtonLink: "https://example.com/2",
     });
@@ -33,7 +34,8 @@ describe("buildCarousel", () => {
       slideCount: "2",
       title: "Slide 1",
       subtitle: "First",
-      imageUrl: "https://example.com/1.png",
+      imageUrlLight: "https://example.com/1.png",
+      imageUrlDark: "",
       primaryButtonLabel: "Start",
       primaryButtonLink: "https://example.com/1",
     });
@@ -48,14 +50,16 @@ describe("buildCarousel", () => {
         {
           title: "Slide 1",
           subtitle: "First",
-          imageUrl: "https://example.com/1.png",
+          imageUrlLight: "https://example.com/1.png",
+          imageUrlDark: "",
           primaryButtonLabel: "Start",
           primaryButtonLink: "https://example.com/1",
         },
         {
           title: "Slide 2",
           subtitle: "Second",
-          imageUrl: "https://example.com/2.png",
+          imageUrlLight: "https://example.com/2.png",
+          imageUrlDark: "",
           primaryButtonLabel: "Go",
           primaryButtonLink: "https://example.com/2",
         },
@@ -78,7 +82,8 @@ describe("buildCarousel", () => {
       {
         title: "",
         subtitle: "",
-        imageUrl: "",
+        imageUrlLight: "",
+        imageUrlDark: "",
         primaryButtonLabel: "",
         primaryButtonLink: "",
       },
@@ -148,7 +153,8 @@ describe("buildCarousel", () => {
       {
         title: "Valid",
         subtitle: "",
-        imageUrl: "",
+        imageUrlLight: "",
+        imageUrlDark: "",
         primaryButtonLabel: "",
         primaryButtonLink: "",
       },

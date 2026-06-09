@@ -4,7 +4,8 @@ export type DevTriggerMode = "appStart" | "bannerClick";
 export type CarouselSlideForm = {
   title: string;
   subtitle: string;
-  imageUrl: string;
+  imageUrlLight: string;
+  imageUrlDark: string;
   primaryButtonLabel: string;
   primaryButtonLink: string;
 };
@@ -21,7 +22,8 @@ export type GenericAwarenessModalDevFormState = {
   slides: CarouselSlideForm[];
   title: string;
   subtitle: string;
-  imageUrl: string;
+  imageUrlLight: string;
+  imageUrlDark: string;
   primaryButtonLabel: string;
   primaryButtonLink: string;
   secondaryButtonLabel: string;

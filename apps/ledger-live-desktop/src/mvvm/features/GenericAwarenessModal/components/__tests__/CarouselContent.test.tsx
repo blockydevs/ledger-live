@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "tests/testSetup";
+import useTheme from "~/renderer/hooks/useTheme";
 import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
 import { advanceCarouselSlide } from "../../testUtils/modalTestUtils";
 import CarouselContent, { type CarouselContentProps } from "../CarouselContent";
@@ -9,14 +10,16 @@ const slides: GenericAwarenessModalCarouselSlide[] = [
   {
     title: "First slide title",
     subtitle: "First slide subtitle",
-    imageUrl: "https://example.com/a.png",
+    imageUrlLight: "https://example.com/a-light.png",
+    imageUrlDark: "https://example.com/a-dark.png",
     primaryButtonLabel: "Primary A",
     primaryButtonLink: "https://www.ledger.com",
   },
   {
     title: "Second slide title",
     subtitle: "Second slide subtitle",
-    imageUrl: "https://example.com/b.png",
+    imageUrlLight: "https://example.com/b-light.png",
+    imageUrlDark: "https://example.com/b-dark.png",
     primaryButtonLabel: "Primary B",
     primaryButtonLink: "https://www.ledger.com/compare",
   },
@@ -30,12 +33,17 @@ const defaultProps: CarouselContentProps = {
   onClose: jest.fn(),
 };
 
+jest.mock("~/renderer/hooks/useTheme");
+
+const mockUseTheme = jest.mocked(useTheme);
+
 const renderCarousel = (props: Partial<CarouselContentProps> = {}) =>
   render(<CarouselContent {...defaultProps} {...props} />);
 
 describe("CarouselContent", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseTheme.mockReturnValue({ theme: "light" } as ReturnType<typeof useTheme>);
   });
 
   it("should render the first slide with line limits and primary label", () => {
@@ -50,18 +58,22 @@ describe("CarouselContent", () => {
     );
   });
 
-  it("should render the slide image when imageUrl is provided", () => {
+  it.each([
+    ["light", "https://example.com/a-light.png"],
+    ["dark", "https://example.com/a-dark.png"],
+  ] as const)("should render the %s slide image when themed urls are provided", (theme, expectedSrc) => {
+    mockUseTheme.mockReturnValue({ theme } as ReturnType<typeof useTheme>);
     renderCarousel();
 
     const image = screen.getByRole("presentation");
     expect(image).toBeVisible();
-    expect(image).toHaveAttribute("src", "https://example.com/a.png");
+    expect(image).toHaveAttribute("src", expectedSrc);
     expect(image).toHaveAttribute("alt", "");
   });
 
-  it("should not render an image when imageUrl is empty", () => {
+  it("should not render an image when themed urls are empty", () => {
     const slidesWithoutImage: GenericAwarenessModalCarouselSlide[] = [
-      { ...slides[0], imageUrl: "" },
+      { ...slides[0], imageUrlLight: "", imageUrlDark: "" },
       slides[1],
     ];
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@ledgerhq/lumen-ui-react";
+import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
 import { AwarenessModalClampedText, CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "./clampedText";
 
 export type PromptContentProps = {
@@ -9,19 +10,25 @@ export type PromptContentProps = {
   secondaryButtonLabel: string;
   onPrimaryClick: () => void;
   onSecondaryClick: () => void;
-  imageUrl?: string;
+  imageUrlLight?: string;
+  imageUrlDark?: string;
 };
 
 export default function PromptContent({
   title,
   subtitle,
-  imageUrl,
+  imageUrlLight,
+  imageUrlDark,
   primaryButtonLabel,
   secondaryButtonLabel,
   onPrimaryClick,
   onSecondaryClick,
 }: Readonly<PromptContentProps>) {
-  const showImage = imageUrl != null && imageUrl.length > 0;
+  const { imageUrl, showImage } = useThemedAwarenessModalImage(
+    imageUrlLight != null || imageUrlDark != null
+      ? { imageUrlLight: imageUrlLight ?? "", imageUrlDark: imageUrlDark ?? "" }
+      : undefined,
+  );
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">

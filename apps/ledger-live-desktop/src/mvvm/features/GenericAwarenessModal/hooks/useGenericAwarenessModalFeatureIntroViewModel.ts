@@ -24,7 +24,8 @@ export interface GenericAwarenessModalFeatureIntroViewModel {
   items: FeatureIntroContentItem[];
   primaryButtonLabel: string;
   secondaryButtonLabel: string;
-  imageUrl?: string;
+  imageUrlLight?: string;
+  imageUrlDark?: string;
   onPrimaryClick: () => void;
   onSecondaryClick: () => void;
   onHeaderClose: () => void;
@@ -127,7 +128,8 @@ const useGenericAwarenessModalFeatureIntroViewModel = (
       items: featureIntro ? mapFeatureIntroItems(featureIntro) : [],
       primaryButtonLabel: featureIntro?.primaryButtonLabel ?? "",
       secondaryButtonLabel: featureIntro?.secondaryButtonLabel ?? "",
-      imageUrl: featureIntro?.imageUrl || undefined,
+      imageUrlLight: featureIntro?.imageUrlLight,
+      imageUrlDark: featureIntro?.imageUrlDark,
       onPrimaryClick,
       onSecondaryClick,
       onHeaderClose,

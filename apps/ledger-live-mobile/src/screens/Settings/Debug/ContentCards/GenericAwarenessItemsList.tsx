@@ -198,9 +198,14 @@ function GenericAwarenessItemCard({
       {isCarousel ? (
         <>
           <GenericAwarenessModalField
-            label={t("settings.debug.contentCards.genericAwareness.imageUrl")}
-            value={item.imageUrl ?? ""}
-            onChangeText={value => onChange(index, { imageUrl: value })}
+            label={t("settings.debug.contentCards.genericAwareness.imageUrlLight")}
+            value={item.imageUrlLight ?? ""}
+            onChangeText={value => onChange(index, { imageUrlLight: value })}
+          />
+          <GenericAwarenessModalField
+            label={t("settings.debug.contentCards.genericAwareness.imageUrlDark")}
+            value={item.imageUrlDark ?? ""}
+            onChangeText={value => onChange(index, { imageUrlDark: value })}
           />
           <GenericAwarenessModalField
             label={t("settings.debug.contentCards.genericAwareness.primaryButtonLabel")}

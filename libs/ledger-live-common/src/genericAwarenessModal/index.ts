@@ -7,6 +7,12 @@ export {
   isGenericAwarenessModalContentCardReady,
 } from "./campaignCompleteness";
 export { getGenericAwarenessModalContentCard } from "./getGenericAwarenessModalContentCard";
+export {
+  hasThemedImage,
+  resolveThemedImageUrl,
+  type ThemedImageUrls,
+  type ThemeVariant,
+} from "./resolveThemedImageUrl";
 
 export { FeatureIntroRole, GenericAwarenessModalLayout } from "./types";
 export type {

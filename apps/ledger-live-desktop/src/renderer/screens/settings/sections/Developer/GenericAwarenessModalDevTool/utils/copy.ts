@@ -39,7 +39,8 @@ export const COPY = {
   fields: {
     title: "Title",
     subtitle: "Subtitle",
-    imageUrl: "Image URL",
+    imageUrlLight: "Image URL (light)",
+    imageUrlDark: "Image URL (dark)",
     primaryButtonLabel: "Primary button label",
     primaryButtonLink: "Primary button link",
     secondaryButtonLabel: "Secondary button label",

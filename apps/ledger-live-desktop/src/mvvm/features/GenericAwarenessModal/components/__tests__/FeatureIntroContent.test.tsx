@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "tests/testSetup";
+import useTheme from "~/renderer/hooks/useTheme";
 import FeatureIntroContent from "../FeatureIntroContent";
 import { FEATURE_INTRO_TEXT_LINE_LIMITS } from "../clampedText";
 
@@ -19,9 +20,14 @@ const baseProps = {
   onSecondaryClick: jest.fn(),
 };
 
+jest.mock("~/renderer/hooks/useTheme");
+
+const mockUseTheme = jest.mocked(useTheme);
+
 describe("FeatureIntroContent", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseTheme.mockReturnValue({ theme: "light" } as ReturnType<typeof useTheme>);
   });
 
   it("should render copy with line limits", () => {
@@ -45,13 +51,21 @@ describe("FeatureIntroContent", () => {
     expect(baseProps.onSecondaryClick).toHaveBeenCalledTimes(1);
   });
 
-  it("should render an image when imageUrl is provided", () => {
+  it.each([
+    ["light", "https://example.com/hero-light.png"],
+    ["dark", "https://example.com/hero-dark.png"],
+  ] as const)("should render the %s image when themed urls are provided", (theme, expectedSrc) => {
+    mockUseTheme.mockReturnValue({ theme } as ReturnType<typeof useTheme>);
     const { container } = render(
-      <FeatureIntroContent {...baseProps} imageUrl="https://example.com/hero.png" />,
+      <FeatureIntroContent
+        {...baseProps}
+        imageUrlLight="https://example.com/hero-light.png"
+        imageUrlDark="https://example.com/hero-dark.png"
+      />,
     );
 
     const img = container.querySelector("img");
     expect(img).not.toBeNull();
-    expect(img).toHaveAttribute("src", "https://example.com/hero.png");
+    expect(img).toHaveAttribute("src", expectedSrc);
   });
 });

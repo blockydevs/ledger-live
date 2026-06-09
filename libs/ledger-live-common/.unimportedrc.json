@@ -662,6 +662,7 @@
     "src/genericAwarenessModal/campaignCompleteness.ts",
     "src/genericAwarenessModal/getGenericAwarenessModalContentCard.ts",
     "src/genericAwarenessModal/index.ts",
+    "src/genericAwarenessModal/resolveThemedImageUrl.ts",
     "src/genericAwarenessModal/types.ts",
     "src/hideSmallValueTokenOperations/hooks/useHideSmallValueTokenOperationsEnabled.ts",
     "src/hideSmallValueTokenOperations/smallValueOperationsThreshold.ts",
