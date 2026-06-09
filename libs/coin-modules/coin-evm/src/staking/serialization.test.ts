@@ -129,6 +129,20 @@ describe("coin-evm/staking/serialization", () => {
       expect(fromStakingResourcesRaw(rawNoId).unbondings[0]).not.toHaveProperty("withdrawId");
     });
 
+    it("roundtrips an unbonding `status`, omitting it when absent", () => {
+      const withStatus: StakingResources = {
+        ...sampleResources,
+        unbondings: [{ ...sampleResources.unbondings[0], status: "deactivated" }],
+      };
+      const raw = toStakingResourcesRaw(withStatus);
+      expect(raw.unbondings[0]).toHaveProperty("status", "deactivated");
+      expect(fromStakingResourcesRaw(raw).unbondings[0].status).toBe("deactivated");
+
+      const rawNoStatus = toStakingResourcesRaw(sampleResources);
+      expect(rawNoStatus.unbondings[0]).not.toHaveProperty("status");
+      expect(fromStakingResourcesRaw(rawNoStatus).unbondings[0]).not.toHaveProperty("status");
+    });
+
     it("only propagates `validators` when defined", () => {
       expect(toStakingResourcesRaw(sampleResources)).not.toHaveProperty("validators");
       expect(toStakingResourcesRaw({ ...sampleResources, validators: [] })).toHaveProperty(
@@ -170,6 +184,7 @@ describe("coin-evm/staking/serialization", () => {
         unbondings: [
           {
             validatorAddress: "0xValidator",
+            validatorId: "7",
             validatorName: "GalaxyDigital",
             amount: new BigNumber("50"),
             completionDate,
@@ -189,13 +204,17 @@ describe("coin-evm/staking/serialization", () => {
         validatorId: "7",
         validatorName: "GalaxyDigital",
       });
-      expect(back.unbondings[0]).toMatchObject({ validatorName: "GalaxyDigital" });
+      expect(back.unbondings[0]).toMatchObject({
+        validatorId: "7",
+        validatorName: "GalaxyDigital",
+      });
     });
 
     it("omits validatorId and validatorName when absent", () => {
       const raw = toStakingResourcesRaw(sampleResources);
       expect(raw.delegations[0]).not.toHaveProperty("validatorId");
       expect(raw.delegations[0]).not.toHaveProperty("validatorName");
+      expect(raw.unbondings[0]).not.toHaveProperty("validatorId");
       expect(raw.unbondings[0]).not.toHaveProperty("validatorName");
     });
   });

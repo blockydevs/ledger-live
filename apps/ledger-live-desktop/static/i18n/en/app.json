@@ -4454,6 +4454,8 @@
         "header": "Undelegation(s)",
         "headerTooltip": "Available after the {{numberOfDays}}-day timelock",
         "inactiveTooltip": "Undelegated amounts do not generate rewards.",
+        "timelockTooltip": "Still within the timelock. These funds are not yet available to withdraw.",
+        "readyTooltip": "The timelock has ended. These funds are ready to withdraw.",
         "flow": {
           "title": "Stop staking",
           "steps": {
