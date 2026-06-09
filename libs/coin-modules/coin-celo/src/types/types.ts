@@ -11,6 +11,7 @@ import type {
   TransactionStatusCommonRaw,
 } from "@ledgerhq/types-live";
 import { BigNumber } from "bignumber.js";
+import { NATIVE_FEE_CURRENCY_MARKER } from "../constants";
 
 export type CeloOperationMode =
   | "send"
@@ -154,14 +155,29 @@ export type CeloOperationRaw = OperationRaw<CeloOperationExtraRaw>;
 export type CeloOperationExtra = {
   celoOperationValue?: BigNumber;
   celoSourceValidator?: string;
+  // Lowercased CIP-64 fee currency address; absent → native CELO.
+  feeCurrencyAddress?: string;
 };
+// `feeCurrencyAddress` has a generic name, so we also validate its value shape
+// to avoid false-matching another family's extras: must be either the NATIVE
+// sentinel or a 20-byte EVM address (40 hex chars).
+const HEX_ADDRESS_RE = /^0x[0-9a-f]{40}$/i;
+const hasCeloFeeCurrencyAddress = (op: object): boolean => {
+  if (!("feeCurrencyAddress" in op)) return false;
+  const v = op.feeCurrencyAddress;
+  return typeof v === "string" && (v === NATIVE_FEE_CURRENCY_MARKER || HEX_ADDRESS_RE.test(v));
+};
+const hasAnyCeloExtraKey = (op: object): boolean =>
+  "celoOperationValue" in op || "celoSourceValidator" in op || hasCeloFeeCurrencyAddress(op);
+
 export function isCeloOperationExtra(op: OperationExtra): op is CeloOperationExtra {
-  return op !== null && typeof op === "object" && "celoOperationValue" in op;
+  return op !== null && typeof op === "object" && hasAnyCeloExtraKey(op);
 }
 export type CeloOperationExtraRaw = {
   celoOperationValue?: string;
   celoSourceValidator?: string;
+  feeCurrencyAddress?: string;
 };
 export function isCeloOperationExtraRaw(op: OperationExtraRaw): op is CeloOperationExtraRaw {
-  return op !== null && typeof op === "object" && "celoOperationValue" in op;
+  return op !== null && typeof op === "object" && hasAnyCeloExtraKey(op);
 }

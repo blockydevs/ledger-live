@@ -377,8 +377,18 @@ const OperationD = (props: Props) => {
   ]);
 
   const isStuck = bridge.isStuckOperation(operation);
-  const feesCurrency = useMemo(() => getFeesCurrency(mainAccount), [mainAccount]);
+  const useFeesCurrencyOverride = specific?.operationDetails?.useFeesCurrency;
+  // `specific` is keyed by the account family, which is stable across a single
+  // drawer mount — so the conditional call below is always taken or never taken,
+  // satisfying React's hook-rule invariant.
+  const customFeesCurrency = useFeesCurrencyOverride?.(operation, mainAccount);
+  const feesCurrency = customFeesCurrency ?? getFeesCurrency(mainAccount);
   const feesUnit = useMemo(() => getFeesUnit(feesCurrency), [feesCurrency]);
+  const getDisplayFeeOverride = specific?.operationDetails?.getDisplayFee;
+  const displayFee = useMemo(
+    () => (fee ? (getDisplayFeeOverride?.(operation, mainAccount, feesCurrency) ?? fee) : fee),
+    [getDisplayFeeOverride, operation, mainAccount, feesCurrency, fee],
+  );
 
   return (
     <Box flow={3} px={20} mt={20}>
@@ -534,7 +544,7 @@ const OperationD = (props: Props) => {
                       />
                     </Box>
                   ) : null}
-                  <FormattedVal unit={feesUnit} showCode val={fee} color="neutral.c80" />
+                  <FormattedVal unit={feesUnit} showCode val={displayFee} color="neutral.c80" />
                 </Box>
                 <Box horizontal justifyContent="flex-end">
                   <CounterValue
@@ -542,7 +552,7 @@ const OperationD = (props: Props) => {
                     date={date}
                     fontSize={3}
                     currency={feesCurrency}
-                    value={fee}
+                    value={displayFee}
                     subMagnitude={1}
                     style={{
                       width: "auto",
