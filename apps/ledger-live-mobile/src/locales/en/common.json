@@ -4382,6 +4382,10 @@
       "available": "Available {{amount}}",
       "placeholder": "Enter address or ENS",
       "placeholderNoENS": "Enter address",
+      "pasteFromClipboard": {
+        "title": "Paste from clipboard",
+        "cta": "Paste"
+      },
       "editRecipientAccessibilityLabel": "Edit recipient",
       "recent": "Recent",
       "recentDetail": "Recent detail",
