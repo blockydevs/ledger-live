@@ -11,7 +11,7 @@ const TestComponent: React.FC = () => {
   const dmk = useDeviceManagementKit();
 
   return (
-    <DeviceManagementKitProvider>
+    <DeviceManagementKitProvider ldmkTransportEnabled={false}>
       <span data-testid="dmk">{JSON.stringify(dmk)}</span>
     </DeviceManagementKitProvider>
   );

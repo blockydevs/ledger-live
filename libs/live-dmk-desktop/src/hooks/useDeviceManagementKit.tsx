@@ -36,14 +36,14 @@ export const DeviceManagementKitContext = createContext<DeviceManagementKit | nu
 type Props = {
   children: React.ReactNode;
   /** Whether the `ldmkTransport` feature flag is enabled, supplied by the consuming app. */
-  ldmkTransportEnabled?: boolean;
+  ldmkTransportEnabled: boolean;
 };
 
 export const DeviceManagementKitProvider: React.FC<Props> = ({
   children,
   ldmkTransportEnabled,
 }) => {
-  const ldmkTransportFlag = !!ldmkTransportEnabled;
+  const ldmkTransportFlag = ldmkTransportEnabled;
 
   const deviceManagementKit = useMemo(() => {
     if (!ldmkTransportFlag) return null;

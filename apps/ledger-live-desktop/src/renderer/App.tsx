@@ -80,7 +80,7 @@ const InnerApp = ({ initialCountervalues }: { initialCountervalues: CounterValue
           <ConnectEnvsToDatadog />
           <UpdaterProvider>
             <AppDataStorageProvider>
-              <DeviceManagementKitProvider ldmkTransportEnabled={ldmkTransport?.enabled}>
+              <DeviceManagementKitProvider ldmkTransportEnabled={ldmkTransport?.enabled ?? false}>
                 <CountervaluesBridgedProvider initialState={initialCountervalues}>
                   <ToastProvider>
                     <ServiceStatusProviderWrapper>
