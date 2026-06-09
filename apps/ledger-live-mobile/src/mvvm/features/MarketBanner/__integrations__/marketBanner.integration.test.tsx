@@ -1,5 +1,11 @@
 import React from "react";
-import { renderWithReactQuery, screen, waitFor, withFlagOverrides } from "@tests/test-renderer";
+import {
+  renderWithReactQuery,
+  screen,
+  waitFor,
+  withFlagOverrides,
+  within,
+} from "@tests/test-renderer";
 import { server, http, HttpResponse } from "@tests/server";
 import { track } from "~/analytics";
 import { MarketBannerTest, MOCK_MARKET_PERFORMERS } from "./shared";
@@ -122,8 +128,9 @@ describe("MarketBanner Integration Tests", () => {
     it("should render the filter button with the default 'Trending' label", async () => {
       renderWithAssetDiscoverability(true);
 
-      expect(await screen.findByTestId("market-banner-filter-button")).toBeVisible();
-      expect(screen.getByText("Trending")).toBeVisible();
+      const filterButton = await screen.findByTestId("market-banner-filter-button");
+      expect(filterButton).toBeVisible();
+      expect(within(filterButton).getByText("Trending")).toBeVisible();
     });
 
     it("should track the filter button when pressed", async () => {
@@ -139,6 +146,26 @@ describe("MarketBanner Integration Tests", () => {
           banner: "Market Banner",
         });
       });
+    });
+
+    it("should render the four filter options in the drawer", async () => {
+      renderWithAssetDiscoverability(true);
+
+      expect(await screen.findByTestId("market-banner-filter-drawer-trending")).toBeVisible();
+      expect(screen.getByTestId("market-banner-filter-drawer-gainers")).toBeVisible();
+      expect(screen.getByTestId("market-banner-filter-drawer-losers")).toBeVisible();
+      expect(screen.getByTestId("market-banner-filter-drawer-favorites")).toBeVisible();
+    });
+
+    it("should persist the selected filter and track the change", async () => {
+      const { user, store } = renderWithAssetDiscoverability(true);
+
+      await user.press(await screen.findByTestId("market-banner-filter-drawer-losers"));
+
+      await waitFor(() => {
+        expect(store.getState().marketBanner.ranking).toBe("losers");
+      });
+      expect(track).toHaveBeenCalledWith("change_sort_market_banner", { sort: "losers" });
     });
   });
 

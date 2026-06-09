@@ -9341,6 +9341,7 @@
       "accessibilityLabel": "Change market banner filter",
       "accessibilityHint": "Double tap to choose which assets are shown",
       "title": "Sort by",
+      "noFavorites": "No favorite yet",
       "options": {
         "trending": "Trending",
         "gainers": "Gainers",
