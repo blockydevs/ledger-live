@@ -100,7 +100,7 @@ const collectKnownFeeCurrencies = (
       // Re-validate NATIVE sentinels while the op is still in the reorg window.
       if (
         stored === NATIVE_FEE_CURRENCY_MARKER &&
-        op.blockHeight != null &&
+        typeof op.blockHeight === "number" &&
         op.blockHeight > reorgCutoff
       ) {
         continue;
@@ -359,7 +359,7 @@ export const getAccountShape: GetAccountShape<CeloAccount> = async (info, config
     const fresh = feeCurrencyByHash.get(op.hash);
     if (!fresh) return op;
     if (readFeeCurrencyAddress(op.extra) === fresh) return op;
-    const base = op.extra != null && typeof op.extra === "object" ? op.extra : {};
+    const base = typeof op.extra === "object" && op.extra !== null ? op.extra : {};
     return { ...op, extra: { ...base, feeCurrencyAddress: fresh } };
   };
   const operations = mergedOperations.map(applyFeeCurrencyBackfill);
