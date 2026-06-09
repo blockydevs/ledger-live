@@ -26,6 +26,7 @@ import { attachNetworkLogging } from "../utils/networkLogging";
 import type { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
 import { unregisterAllTransportModules } from "@ledgerhq/live-common/hw/index";
 import { parseExtraFeatureFlags } from "@ledgerhq/live-common/e2e/featureFlagsJsonUtils";
+import { LWD_WALLET_40_FF_ENABLED } from "tests/utils/featureFlagUtils";
 
 type CliCommand = (userdataPath?: string) => Observable<unknown> | Promise<unknown> | string;
 
@@ -222,7 +223,13 @@ export const test = base.extend<TestFixtures>({
     use,
     testInfo,
   ) => {
-    const mergedFeatureFlags = merge({}, DEFAULT_FEATURE_FLAGS, EXTRA_FEATURE_FLAGS, featureFlags);
+    const mergedFeatureFlags = merge(
+      {},
+      DEFAULT_FEATURE_FLAGS,
+      EXTRA_FEATURE_FLAGS,
+      LWD_WALLET_40_FF_ENABLED, //Todo: Remove when Testing Firebase is sync with prod firebase
+      featureFlags,
+    );
     await attachMergedFeatureFlags(testInfo, mergedFeatureFlags);
 
     // default environment variables
