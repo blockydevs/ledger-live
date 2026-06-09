@@ -15,7 +15,7 @@ import React from "react";
 import { Trans } from "react-i18next";
 import Box from "~/renderer/components/Box";
 import FormattedVal from "~/renderer/components/FormattedVal";
-import { SplitAddress } from "~/renderer/components/OperationsList/AddressCell";
+import { SplitAddress } from "~/renderer/components/OperationsList/AddressCellShared";
 import Text from "~/renderer/components/Text";
 import {
   Address,
