@@ -21,8 +21,6 @@ export interface ApiTokenData {
  * This function applies client-side transformations to reconcile differences between
  * backend APIs (CAL/DaDa) and Ledger Live's expected token format:
  *
- * - Sui: Transforms tokenType from "coin" to "sui" [LIVE-22560]
- *
  * @param apiToken - Token data from backend API
  * @returns TokenCurrency object in Ledger Live format, or undefined if parent currency not found
  */
@@ -39,18 +37,11 @@ export function convertApiToken(apiToken: ApiTokenData): TokenCurrency | undefin
   } = apiToken;
 
   // Apply client-side patches to reconcile CAL format with LL format
-  let patchedStandard = standard;
-
   const parentCurrencyId = id.split("/")[0];
   const parentCurrency = findCryptoCurrencyById(parentCurrencyId);
 
   if (!parentCurrency) {
     return undefined;
-  }
-
-  // LIVE-22560: Sui - Transform "coin" standard to "sui" tokenType (LL format)
-  if (standard === "coin" && id.startsWith("sui/")) {
-    patchedStandard = "sui";
   }
 
   // Construct TokenCurrency directly from API data
@@ -59,7 +50,7 @@ export function convertApiToken(apiToken: ApiTokenData): TokenCurrency | undefin
     id,
     contractAddress: contractAddress,
     parentCurrency,
-    tokenType: patchedStandard,
+    tokenType: standard,
     name,
     ticker,
     delisted,

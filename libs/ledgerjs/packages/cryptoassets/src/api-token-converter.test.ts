@@ -18,35 +18,22 @@ describe("convertApiToken", () => {
     });
   });
 
-  describe("Sui transformation", () => {
-    it("should transform coin standard to sui for sui tokens", () => {
+  describe("Sui passthrough", () => {
+    it("should keep 'coin' standard as tokenType for sui tokens", () => {
       const apiToken: ApiTokenData = {
-        id: "sui/coin/0x2::sui::SUI",
-        contractAddress: "0x2::sui::SUI",
-        name: "Sui",
-        ticker: "SUI",
-        units: [{ code: "SUI", name: "Sui", magnitude: 9 }],
-        standard: "coin",
-      };
-
-      const result = convertApiToken(apiToken);
-
-      expect(result?.tokenType).toBe("sui");
-    });
-
-    it("should not transform coin standard for non-sui tokens", () => {
-      const apiToken: ApiTokenData = {
-        id: "aptos/coin/0x1::aptos_coin::AptosCoin",
-        contractAddress: "0x1::aptos_coin::AptosCoin",
-        name: "Aptos Coin",
-        ticker: "APT",
-        units: [{ code: "APT", name: "Aptos Coin", magnitude: 8 }],
+        id: "sui/coin/usdc_0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::usdc",
+        contractAddress:
+          "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC",
+        name: "USDC",
+        ticker: "USDC",
+        units: [{ code: "USDC", name: "USDC", magnitude: 6 }],
         standard: "coin",
       };
 
       const result = convertApiToken(apiToken);
 
       expect(result?.tokenType).toBe("coin");
+      expect(result?.parentCurrency?.id).toBe("sui");
     });
   });
 
