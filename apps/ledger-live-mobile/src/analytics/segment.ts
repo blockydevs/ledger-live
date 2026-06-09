@@ -15,14 +15,15 @@ import {
 } from "@react-navigation/native";
 import snakeCase from "lodash/snakeCase";
 import React, { type RefObject, useCallback } from "react";
-import { ABTestingVariants, FeatureId, Features, idsToLanguage } from "@ledgerhq/types-live";
+import { ABTestingVariants, idsToLanguage } from "@ledgerhq/types-live";
+import type { FeatureId, Features } from "@shared/feature-flags";
 
 import { runOnceWhen } from "@ledgerhq/live-common/utils/runOnceWhen";
 import {
   getStablecoinYieldSetting,
   getBitcoinYieldSetting,
   getEthDepositScreenSetting,
-} from "@ledgerhq/live-common/featureFlags/stakePrograms/index";
+} from "@ledgerhq/live-common/earn/stakePrograms/index";
 import { getTokensWithFunds } from "@ledgerhq/live-common/domain/getTokensWithFunds";
 import { getEnv } from "@ledgerhq/live-env";
 import { getAndroidArchitecture, getAndroidVersionCode } from "../logic/cleanBuildVersion";
@@ -67,7 +68,7 @@ import { resolveStartupEvents, STARTUP_EVENTS } from "LLM/utils/resolveStartupEv
 import { getTotalStakeableAssets } from "@ledgerhq/live-common/domain/getTotalStakeableAssets";
 import { getOnboardingCounterfeitWarningAttributes } from "@ledgerhq/live-common/analytics/featureFlagHelpers/onboardingCounterfeitWarning";
 import { getWallet40Attributes } from "@ledgerhq/live-common/analytics/featureFlagHelpers/wallet40";
-import { getRemoteABTestingAttributes } from "@ledgerhq/live-common/featureFlags/remoteABTesting/remoteABTestingAnalytics";
+import { getRemoteABTestingAttributes } from "@ledgerhq/live-common/analytics/remoteABTesting/remoteABTestingAnalytics";
 import { notificationsPermissionStatusSelector } from "~/reducers/notifications";
 import { AuthorizationStatus } from "@react-native-firebase/messaging";
 

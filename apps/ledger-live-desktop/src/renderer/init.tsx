@@ -62,6 +62,7 @@ import {
   setBannerVisible,
   selectFeature,
   selectRemoteFlagsReady,
+  type FeatureId,
 } from "@shared/feature-flags";
 import {
   setAllCoinConfigOverrides,
@@ -70,7 +71,6 @@ import {
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { installLiveConfigProvider } from "~/firebase/remoteConfig";
 import { setAnalyticsFeatureFlagMethod } from "~/renderer/analytics/segment";
-import { FeatureId } from "@ledgerhq/types-live";
 import { initHistory } from "~/renderer/reducers/history";
 
 const rootNode = document.getElementById("react-root");

@@ -1,8 +1,8 @@
-import snakeCase from "lodash/snakeCase";
 import semver from "semver";
-import { Feature, FeatureId, Features } from "@ledgerhq/types-live";
 import { getEnv } from "@ledgerhq/live-env";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
+import { formatToFirebaseFeatureId } from "@features/platform-feature-flags";
+import type { Feature, FeatureId, Features } from "@shared/feature-flags";
 
 type GetFeature = <T extends FeatureId>(param: {
   key: T;
@@ -10,13 +10,6 @@ type GetFeature = <T extends FeatureId>(param: {
   allowOverride?: boolean;
   localOverrides?: { [key in FeatureId]?: Feature | undefined };
 }) => Features[T] | null;
-
-export interface FirebaseFeatureFlagsProviderProps {
-  getFeature: GetFeature;
-  children: React.ReactNode;
-}
-
-export const formatToFirebaseFeatureId = (id: string) => `feature_${snakeCase(id)}`;
 
 export const checkFeatureFlagVersion = (feature: Feature) => {
   const platform = LiveConfig.instance.platform;
@@ -49,22 +42,11 @@ export const checkFeatureFlagVersion = (feature: Feature) => {
   return feature;
 };
 
-export const isFeature = (key: string): boolean => {
-  if (!LiveConfig.instance?.provider?.getValueByKey) {
-    return false;
-  }
-  try {
-    const value = LiveConfig.getValueByKey(formatToFirebaseFeatureId(key));
-    if (!value) {
-      return false;
-    }
-    return true;
-  } catch {
-    console.error(`Failed to check if feature "${key}" exists`);
-    return false;
-  }
-};
-
+/**
+ * LiveConfig-backed (Firebase remote config) imperative feature-flag reader for non-React
+ * call sites (e.g. reducers). React code should read the Redux slice via
+ * `@features/platform-feature-flags` hooks instead.
+ */
 export const getFeature: GetFeature = args => {
   if (!LiveConfig.instance?.provider?.getValueByKey) {
     return null;
@@ -106,7 +88,6 @@ export const getFeature: GetFeature = args => {
 
     return checkFeatureFlagVersion(feature);
   } catch {
-    // console.error(`Failed to retrieve feature "${key}"`);
     return null;
   }
 };

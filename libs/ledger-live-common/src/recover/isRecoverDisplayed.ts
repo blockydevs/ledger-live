@@ -1,8 +1,5 @@
 import { DeviceModelId } from "@ledgerhq/types-devices";
-import type {
-  Feature_ProtectServicesDesktop,
-  Feature_ProtectServicesMobile,
-} from "@ledgerhq/types-live";
+import type { Features } from "@shared/feature-flags";
 
 /**
  * Whether the Recover entry point should be offered for the given device model.
@@ -12,7 +9,7 @@ import type {
  * to change.
  */
 export function isRecoverDisplayed(
-  feature: Feature_ProtectServicesDesktop | Feature_ProtectServicesMobile | null | undefined,
+  feature: Features["protectServicesDesktop"] | Features["protectServicesMobile"] | null | undefined,
   deviceModelId: DeviceModelId | null | undefined,
 ): boolean {
   return Boolean(feature?.enabled && deviceModelId && deviceModelId !== DeviceModelId.nanoS);
