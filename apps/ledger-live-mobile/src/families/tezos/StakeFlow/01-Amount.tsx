@@ -3,7 +3,7 @@ import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransact
 import { useBridgeSync } from "@ledgerhq/live-common/bridge/react/index";
 import { isAwaitingDelegation, useDelegation } from "@ledgerhq/live-common/families/tezos/react";
 import type { Transaction as TezosTransaction } from "@ledgerhq/live-common/families/tezos/types";
-import { useTheme } from "@react-navigation/native";
+import { useNavigation, useRoute, useTheme } from "@react-navigation/native";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import React, { useCallback, useEffect, useState } from "react";
@@ -43,7 +43,9 @@ import {
 
 type Props = StackNavigatorProps<TezosStakeFlowParamList, ScreenName.TezosStakeAmount>;
 
-export default function StakeAmount({ navigation, route }: Props) {
+export default function StakeAmount() {
+  const navigation = useNavigation<Props["navigation"]>();
+  const route = useRoute<Props["route"]>();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { account, parentAccount } = useAccountScreen(route);

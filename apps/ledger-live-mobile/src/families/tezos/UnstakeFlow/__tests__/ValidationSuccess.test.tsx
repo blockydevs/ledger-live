@@ -5,7 +5,13 @@ import { ScreenName } from "~/const";
 
 const mockNavigate = jest.fn();
 const mockPop = jest.fn();
+let mockRouteParams: Record<string, unknown> = {};
 
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("@react-navigation/native"),
+  useNavigation: () => ({ navigate: mockNavigate, getParent: () => ({ pop: mockPop }) }),
+  useRoute: () => ({ params: mockRouteParams }),
+}));
 jest.mock("LLM/hooks/useAccountScreen", () => ({
   useAccountScreen: () => ({ account: { id: "tezos-acc-1", type: "Account" } }),
 }));
@@ -31,11 +37,10 @@ jest.mock("~/components/ValidateSuccess", () => {
 const transaction = { family: "tezos", mode: "unstake" };
 const operation = { id: "op-1", type: "UNSTAKE" };
 
-const makeProps = (params: Record<string, unknown> = {}) =>
-  ({
-    navigation: { navigate: mockNavigate, getParent: () => ({ pop: mockPop }) },
-    route: { params: { accountId: "tezos-acc-1", transaction, ...params } },
-  }) as unknown as React.ComponentProps<typeof ValidationSuccess>;
+const renderWith = (params: Record<string, unknown> = {}) => {
+  mockRouteParams = { accountId: "tezos-acc-1", transaction, ...params };
+  return render(<ValidationSuccess />);
+};
 
 describe("Tezos UnstakeFlow ValidationSuccess", () => {
   beforeEach(() => {
@@ -44,7 +49,7 @@ describe("Tezos UnstakeFlow ValidationSuccess", () => {
   });
 
   it("opens the resulting operation details", () => {
-    render(<ValidationSuccess {...makeProps({ result: operation })} />);
+    renderWith({ result: operation });
     fireEvent.press(screen.getByTestId("view-details"));
     expect(mockNavigate).toHaveBeenCalledWith(ScreenName.OperationDetails, {
       accountId: "tezos-acc-1",
@@ -53,13 +58,13 @@ describe("Tezos UnstakeFlow ValidationSuccess", () => {
   });
 
   it("does nothing on view-details when there is no operation result", () => {
-    render(<ValidationSuccess {...makeProps()} />);
+    renderWith();
     fireEvent.press(screen.getByTestId("view-details"));
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("closes by popping the parent navigator", () => {
-    render(<ValidationSuccess {...makeProps({ result: operation })} />);
+    renderWith({ result: operation });
     fireEvent.press(screen.getByTestId("close"));
     expect(mockPop).toHaveBeenCalled();
   });

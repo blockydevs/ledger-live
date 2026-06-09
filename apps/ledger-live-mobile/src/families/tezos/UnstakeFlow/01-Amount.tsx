@@ -2,7 +2,7 @@ import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge"
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useTezosStakingInfo } from "@ledgerhq/live-common/families/tezos/react";
 import type { Transaction as TezosTransaction } from "@ledgerhq/live-common/families/tezos/types";
-import { useTheme } from "@react-navigation/native";
+import { useNavigation, useRoute, useTheme } from "@react-navigation/native";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import React, { useCallback, useEffect, useState } from "react";
@@ -29,7 +29,9 @@ import { useAccountScreen } from "LLM/hooks/useAccountScreen";
 
 type Props = StackNavigatorProps<TezosUnstakeFlowParamList, ScreenName.TezosUnstakeAmount>;
 
-export default function UnstakeAmount({ navigation, route }: Props) {
+export default function UnstakeAmount() {
+  const navigation = useNavigation<Props["navigation"]>();
+  const route = useRoute<Props["route"]>();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { account, parentAccount } = useAccountScreen(route);

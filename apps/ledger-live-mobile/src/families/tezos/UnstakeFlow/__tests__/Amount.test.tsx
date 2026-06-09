@@ -20,6 +20,11 @@ let mockStatus: {
 };
 let mockBridgeError: Error | null = null;
 
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("@react-navigation/native"),
+  useNavigation: () => ({ navigate: mockNavigate }),
+  useRoute: () => ({ params: { accountId: "tezos-acc-1" } }),
+}));
 jest.mock("LLM/hooks/useAccountScreen", () => ({
   useAccountScreen: () => ({
     account: { id: "tezos-acc-1", type: "Account" },
@@ -92,12 +97,6 @@ jest.mock("~/components/Button", () => {
   );
 });
 
-const makeProps = () =>
-  ({
-    navigation: { navigate: mockNavigate },
-    route: { params: { accountId: "tezos-acc-1" } },
-  }) as unknown as React.ComponentProps<typeof UnstakeAmount>;
-
 describe("Tezos UnstakeFlow Amount", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
@@ -112,7 +111,7 @@ describe("Tezos UnstakeFlow Amount", () => {
   });
 
   it("continues to the device step once the amount is ready", async () => {
-    render(<UnstakeAmount {...makeProps()} />);
+    render(<UnstakeAmount />);
     fireEvent.press(await screen.findByTestId("tezos-unstake-amount-continue"));
     expect(mockNavigate).toHaveBeenCalledWith(
       ScreenName.TezosUnstakeSelectDevice,
@@ -126,7 +125,7 @@ describe("Tezos UnstakeFlow Amount", () => {
 
   it("surfaces a bridge error", async () => {
     mockBridgeError = new Error("prepare failed");
-    render(<UnstakeAmount {...makeProps()} />);
+    render(<UnstakeAmount />);
     expect(await screen.findByTestId("bridge-error-modal")).toBeTruthy();
   });
 
@@ -136,7 +135,7 @@ describe("Tezos UnstakeFlow Amount", () => {
       warnings: {},
       amount: new BigNumber(100),
     };
-    render(<UnstakeAmount {...makeProps()} />);
+    render(<UnstakeAmount />);
     expect(await screen.findByTestId("amount-input-error")).toBeTruthy();
   });
 
@@ -146,18 +145,18 @@ describe("Tezos UnstakeFlow Amount", () => {
       warnings: {},
       amount: new BigNumber(0),
     };
-    render(<UnstakeAmount {...makeProps()} />);
+    render(<UnstakeAmount />);
     await screen.findByTestId("amount-input");
     expect(screen.queryByTestId("amount-input-error")).toBeNull();
   });
 
   it("shows the staked balance as the available amount", async () => {
-    render(<UnstakeAmount {...makeProps()} />);
+    render(<UnstakeAmount />);
     expect(await screen.findByText("tezos.unstake.flow.amount.staked")).toBeTruthy();
   });
 
   it("shows the estimated network fee once loaded", async () => {
-    render(<UnstakeAmount {...makeProps()} />);
+    render(<UnstakeAmount />);
     expect(await screen.findByText("send.fees.title")).toBeTruthy();
   });
 });
