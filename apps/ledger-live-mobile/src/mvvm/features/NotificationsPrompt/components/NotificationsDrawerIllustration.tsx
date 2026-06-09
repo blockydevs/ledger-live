@@ -1,5 +1,4 @@
 import * as React from "react";
-import type { NotificationsState } from "~/reducers/types";
 import Illustration from "~/images/illustration/Illustration";
 import NotificationsBellDark from "~/images/illustration/Dark/_NotificationsBell.webp";
 import NotificationsBellLight from "~/images/illustration/Light/_NotificationsBell.webp";
@@ -11,35 +10,31 @@ import { isTransactionsAlertsPromptTarget } from "../utils/getNotificationsPromp
 const WIDTH = 300;
 const HEIGHT = 141;
 
+export type NotificationsDrawerIllustrationSources = {
+  lightSource: typeof NotificationsBellLight;
+  darkSource: typeof NotificationsBellDark;
+};
+
+export const resolveNotificationsDrawerIllustrationSources = (
+  promptTarget?: NotificationPromptTarget,
+): NotificationsDrawerIllustrationSources =>
+  isTransactionsAlertsPromptTarget(promptTarget)
+    ? { lightSource: NotificationsBellLight, darkSource: NotificationsBellDark }
+    : {
+        lightSource: NotificationsPerformanceChartLight,
+        darkSource: NotificationsPerformanceChartDark,
+      };
+
 export type NotificationsDrawerIllustrationProps = {
-  readonly type: NotificationsState["drawerSource"];
   readonly promptTarget?: NotificationPromptTarget;
 };
 
 export function NotificationsDrawerIllustration({
-  type,
   promptTarget,
 }: NotificationsDrawerIllustrationProps) {
-  const useBellIllustration =
-    type === "onboarding" || isTransactionsAlertsPromptTarget(promptTarget);
-
-  if (useBellIllustration) {
-    return (
-      <Illustration
-        lightSource={NotificationsBellLight}
-        darkSource={NotificationsBellDark}
-        width={WIDTH}
-        height={HEIGHT}
-      />
-    );
-  }
+  const { lightSource, darkSource } = resolveNotificationsDrawerIllustrationSources(promptTarget);
 
   return (
-    <Illustration
-      lightSource={NotificationsPerformanceChartLight}
-      darkSource={NotificationsPerformanceChartDark}
-      width={WIDTH}
-      height={HEIGHT}
-    />
+    <Illustration lightSource={lightSource} darkSource={darkSource} width={WIDTH} height={HEIGHT} />
   );
 }

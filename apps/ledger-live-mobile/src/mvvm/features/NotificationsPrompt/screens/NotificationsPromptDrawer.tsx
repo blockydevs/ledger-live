@@ -82,10 +82,7 @@ export const NotificationsPromptDrawer = () => {
 
       <Flex mb={4}>
         <Flex alignItems={"center"}>
-          <NotificationsDrawerIllustration
-            type={displayedDrawerSource}
-            promptTarget={displayedDrawerPromptTarget}
-          />
+          <NotificationsDrawerIllustration promptTarget={displayedDrawerPromptTarget} />
           <NotificationsPromptContent promptTarget={displayedDrawerPromptTarget} />
         </Flex>
         <Button
