@@ -1,6 +1,6 @@
 import type { Account } from "@ledgerhq/types-live";
 import { signMessage } from "./hw-signMessage";
-import type { TezosSigner } from "./types/signer";
+import type { TezosSigner } from "./types";
 
 const DEVICE_ID = "device-1";
 const RAW_SIG = "ab".repeat(64);

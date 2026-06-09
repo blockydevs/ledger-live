@@ -6241,9 +6241,6 @@ importers:
       '@ledgerhq/coin-module-framework':
         specifier: 'catalog:'
         version: 3.5.1(@ledgerhq/errors@libs+ledgerjs+packages+errors)
-      '@ledgerhq/cryptoassets':
-        specifier: workspace:^
-        version: link:../../ledgerjs/packages/cryptoassets
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../../ledgerjs/packages/devices
@@ -6259,9 +6256,6 @@ importers:
       '@ledgerhq/logs':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/logs
-      '@ledgerhq/types-live':
-        specifier: workspace:^
-        version: link:../../ledgerjs/packages/types-live
       '@taquito/ledger-signer':
         specifier: ^23.0.0-RC.0
         version: 23.0.0-beta.1
@@ -6290,9 +6284,6 @@ importers:
       '@ledgerhq/disable-network-setup':
         specifier: workspace:^
         version: link:../../disable-network-setup
-      '@ledgerhq/types-cryptoassets':
-        specifier: workspace:^
-        version: link:../../ledgerjs/packages/types-cryptoassets
       '@swc/core':
         specifier: 'catalog:'
         version: 1.15.11
