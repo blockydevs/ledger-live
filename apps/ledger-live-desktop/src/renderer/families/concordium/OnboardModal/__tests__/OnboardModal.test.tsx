@@ -63,8 +63,6 @@ function createMockPairObservable() {
   };
 }
 
-// PREPARE-only: emits the QR-code state and stays open, so the intermediate
-// step can be asserted without racing the SUCCESS debounce.
 function createMockPairPrepareOnlyObservable() {
   return {
     subscribe: jest.fn(({ next }: SubscribeArgs) => {
@@ -164,10 +162,9 @@ describe("OnboardModal", () => {
     await user.click(agreeButton);
     expect(mockPairWalletConnect).toHaveBeenCalledWith(currency.id, mockDevice.deviceId);
 
-    // The PREPARE → SUCCESS gap (T+200 vs T-debounce) is intentionally tight so
-    // the test stays fast; setStateWithTimeout may legitimately debounce the
-    // intermediate QR-code state away on a slow CI runner. Coverage for the QR
-    // step lives in the "should render QR code during pairing" test below.
+    // QR-code step intentionally not asserted here: setStateWithTimeout may
+    // debounce it away on slow runners (see #17714). Covered by the dedicated
+    // "should render QR code during pairing" test below.
     await waitFor(() => {
       expect(screen.getByText(/successfully connected to concordium id app/i)).toBeVisible();
     }, WAIT_OPTS);
@@ -204,8 +201,6 @@ describe("OnboardModal", () => {
   }, 20_000);
 
   it("should render QR code during pairing", async () => {
-    // PREPARE-only observable — SUCCESS never arrives to debounce the
-    // intermediate state away.
     mockPairWalletConnect.mockReturnValue(createMockPairPrepareOnlyObservable());
 
     const { user } = render(<OnboardModal {...defaultProps} />, { initialState });
