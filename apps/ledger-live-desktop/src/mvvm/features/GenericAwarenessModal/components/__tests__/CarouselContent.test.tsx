@@ -49,7 +49,9 @@ describe("CarouselContent", () => {
   it("should render the first slide with line limits and primary label", () => {
     renderCarousel();
 
-    expect(screen.getByText("First slide title")).toHaveClass("truncate");
+    expect(screen.getByText("First slide title").style.getPropertyValue("-webkit-line-clamp")).toBe(
+      String(CAROUSEL_SLIDE_TEXT_LINE_LIMITS.title),
+    );
     expect(
       screen.getByText("First slide subtitle").style.getPropertyValue("-webkit-line-clamp"),
     ).toBe(String(CAROUSEL_SLIDE_TEXT_LINE_LIMITS.subtitle));

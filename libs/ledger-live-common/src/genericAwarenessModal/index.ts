@@ -7,6 +7,7 @@ export {
   isGenericAwarenessModalContentCardReady,
 } from "./campaignCompleteness";
 export { getGenericAwarenessModalContentCard } from "./getGenericAwarenessModalContentCard";
+export { CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "./carouselTextLineLimits";
 export {
   hasThemedImage,
   resolveThemedImageUrl,

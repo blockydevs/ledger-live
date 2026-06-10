@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@ledgerhq/lumen-ui-react";
 import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
-import { AwarenessModalClampedText, CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "./clampedText";
+import { AwarenessModalClampedText, PROMPT_TEXT_LINE_LIMITS } from "./clampedText";
 
 export type PromptContentProps = {
   title: string;
@@ -47,12 +47,12 @@ export default function PromptContent({
         <div className="flex w-full min-w-0 flex-col items-center text-center">
           <AwarenessModalClampedText
             text={title}
-            maxLines={CAROUSEL_SLIDE_TEXT_LINE_LIMITS.title}
+            maxLines={PROMPT_TEXT_LINE_LIMITS.title}
             className="mb-8 text-center heading-4-semi-bold text-base"
           />
           <AwarenessModalClampedText
             text={subtitle}
-            maxLines={CAROUSEL_SLIDE_TEXT_LINE_LIMITS.subtitle}
+            maxLines={PROMPT_TEXT_LINE_LIMITS.subtitle}
             className="body-2 text-center text-muted"
           />
         </div>

@@ -2,10 +2,12 @@ import React from "react";
 import { Box, Text } from "@ledgerhq/lumen-ui-rnative";
 import { StyleSheet } from "react-native";
 import FastImage from "react-native-fast-image";
-import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
+import {
+  CAROUSEL_SLIDE_TEXT_LINE_LIMITS,
+  type GenericAwarenessModalCarouselSlide,
+} from "@ledgerhq/live-common/genericAwarenessModal";
 import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
 
-const TITLE_NUMBER_OF_LINES = 1;
 const SUBTITLE_NUMBER_OF_LINES = 3;
 
 type CarouselSlideItemProps = GenericAwarenessModalCarouselSlide &
@@ -29,6 +31,7 @@ export function CarouselSlideItem({
   onSubtitleTextLayout,
 }: CarouselSlideItemProps) {
   const { imageUrl, showImage } = useThemedAwarenessModalImage({ imageUrlLight, imageUrlDark });
+  const titleNumberOfLines = CAROUSEL_SLIDE_TEXT_LINE_LIMITS.title;
   const titleMinHeight = titleLineCount > 1 ? "s80" : "s40";
   let subtitleMinHeight: "s20" | "s40" | "s64" = "s20";
   if (subtitleLineCount > 2) {
@@ -69,9 +72,9 @@ export function CarouselSlideItem({
             color: "base",
             marginBottom: titleLineCount > 1 ? "s10" : "s4",
           }}
-          numberOfLines={TITLE_NUMBER_OF_LINES}
+          numberOfLines={titleNumberOfLines}
           onTextLayout={event => {
-            onTitleTextLayout(Math.min(event.nativeEvent.lines.length, TITLE_NUMBER_OF_LINES));
+            onTitleTextLayout(Math.min(event.nativeEvent.lines.length, titleNumberOfLines));
           }}
         >
           {title}

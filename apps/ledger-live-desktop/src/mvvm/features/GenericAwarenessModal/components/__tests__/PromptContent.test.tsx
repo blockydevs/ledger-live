@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "tests/testSetup";
 import useTheme from "~/renderer/hooks/useTheme";
-import { CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "../clampedText";
+import { PROMPT_TEXT_LINE_LIMITS } from "../clampedText";
 import PromptContent from "../PromptContent";
 
 const baseProps = {
@@ -23,12 +23,12 @@ describe("PromptContent", () => {
     mockUseTheme.mockReturnValue({ theme: "light" } as ReturnType<typeof useTheme>);
   });
 
-  it("should render title and subtitle with carousel slide line limits", () => {
+  it("should render title and subtitle with prompt line limits", () => {
     render(<PromptContent {...baseProps} />);
 
     expect(screen.getByText("Test title")).toHaveClass("truncate");
     expect(screen.getByText("Test subtitle").style.getPropertyValue("-webkit-line-clamp")).toBe(
-      String(CAROUSEL_SLIDE_TEXT_LINE_LIMITS.subtitle),
+      String(PROMPT_TEXT_LINE_LIMITS.subtitle),
     );
     expect(screen.getByRole("button", { name: "Primary" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Secondary" })).toBeVisible();
