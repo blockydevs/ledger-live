@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { track } from "~/analytics";
 import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
 import { useGlobalSearchDefaults } from "./useGlobalSearchDefaults";
+import { useGlobalSearchResults } from "./useGlobalSearchResults";
 import type { GlobalSearchDefaultSections } from "./types";
 
 export type GlobalSearchViewModel = {
@@ -18,20 +19,24 @@ export type GlobalSearchViewModel = {
   onBack: () => void;
 };
 
-const EMPTY_RESULTS: MarketAssetDisplayData[] = [];
-
 export function useGlobalSearchViewModel(): GlobalSearchViewModel {
   const navigation = useNavigation();
-  const [search, setSearch] = useState("");
-  const isSearchActive = search.length > 0;
 
+  const {
+    search,
+    setSearch,
+    clearSearch,
+    isSearchActive,
+    searchResults,
+    isLoadingSearch,
+    hasNoResults,
+  } = useGlobalSearchResults();
   const { defaultSections, isLoadingDefaults } = useGlobalSearchDefaults(!isSearchActive);
 
   useEffect(() => {
     track("search_open");
   }, []);
 
-  const clearSearch = useCallback(() => setSearch(""), []);
   const onBack = useCallback(() => navigation.goBack(), [navigation]);
 
   return {
@@ -40,10 +45,10 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
     clearSearch,
     isSearchActive,
     isLoadingDefaults,
-    isLoadingSearch: false,
-    hasNoResults: false,
+    isLoadingSearch,
+    hasNoResults,
     defaultSections,
-    searchResults: EMPTY_RESULTS,
+    searchResults,
     onBack,
   };
 }
