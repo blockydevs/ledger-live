@@ -1458,6 +1458,9 @@
     "button": "Reset",
     "warning": "Resetting Ledger Wallet will erase your swap transaction history for all your accounts."
   },
+  "globalSearch": {
+    "searchPlaceholder": "Search assets"
+  },
   "graph": {
     "week": "1W",
     "month": "1M",

@@ -172,6 +172,7 @@ export enum ScreenName {
   SwapSelectProvider = "SelectProvider",
   SwapTab = "SwapTab",
   PerpsTab = "PerpsTab",
+  GlobalSearch = "GlobalSearch",
   Earn = "Earn",
   Borrow = "Borrow",
   Transfer = "Transfer",

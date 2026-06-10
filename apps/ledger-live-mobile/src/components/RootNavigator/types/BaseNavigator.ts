@@ -91,6 +91,7 @@ import type { StakeNavigatorParamList } from "./StakeNavigator";
 import type { SwapNavigatorParamList } from "./SwapNavigator";
 import type { SwapSubScreensNavigatorParamList } from "./SwapSubScreensNavigator";
 import type { PerpsNavigatorParamList } from "./PerpsNavigator";
+import type { GlobalSearchNavigatorParamList } from "LLM/features/GlobalSearch/types";
 import type { UnfreezeNavigatorParamList } from "./UnfreezeNavigator";
 import type { WalletConnectLiveAppNavigatorParamList } from "./WalletConnectLiveAppNavigator";
 import type { WalletSyncNavigatorStackParamList } from "./WalletSyncNavigator";
@@ -232,6 +233,7 @@ export type BaseNavigatorStackParamList = {
   };
   [NavigatorName.Swap]?: NavigatorScreenParams<SwapNavigatorParamList>;
   [NavigatorName.Perps]?: NavigatorScreenParams<PerpsNavigatorParamList>;
+  [NavigatorName.GlobalSearch]?: NavigatorScreenParams<GlobalSearchNavigatorParamList>;
   [NavigatorName.Earn]?: NavigatorScreenParams<EarnLiveAppNavigatorParamList>;
   [NavigatorName.Borrow]?: NavigatorScreenParams<BorrowLiveAppNavigatorParamList>;
   [NavigatorName.Freeze]: NavigatorScreenParams<FreezeNavigatorParamList>;
