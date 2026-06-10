@@ -26,6 +26,7 @@ export enum EarnDeeplinkAction {
   GO_BACK = "go-back",
   STAKE = "stake",
   STAKE_ACCOUNT = "stake-account",
+  SIMULATE = "simulate",
 }
 
 export interface ValidatedEarnInfoModal {
@@ -310,6 +311,7 @@ function isValidEarnAction(action: string): action is EarnDeeplinkAction {
     EarnDeeplinkAction.GO_BACK,
     EarnDeeplinkAction.STAKE,
     EarnDeeplinkAction.STAKE_ACCOUNT,
+    EarnDeeplinkAction.SIMULATE,
   ];
   return validActions.includes(action);
 }

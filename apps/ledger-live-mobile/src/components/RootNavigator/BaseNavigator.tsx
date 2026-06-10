@@ -24,6 +24,7 @@ import UnfreezeNavigator from "./UnfreezeNavigator";
 import ClaimRewardsNavigator from "./ClaimRewardsNavigator";
 import ExchangeLiveAppNavigator from "./ExchangeLiveAppNavigator";
 import { CardLiveAppNavigator } from "LLM/features/Card";
+import { useWallet40Theme } from "LLM/hooks/useWallet40Theme";
 import BorrowLiveAppNavigator from "./BorrowLiveAppNavigator";
 import EarnLiveAppNavigator from "./EarnLiveAppNavigator";
 import PlatformExchangeNavigator from "./PlatformExchangeNavigator";
@@ -178,6 +179,9 @@ export default function BaseNavigator() {
     }>
   >();
   const { colors } = useTheme();
+  // The Rewards simulator's design uses the live-app canvas (pure black in Wallet 4.0 dark) for the
+  // whole screen. `canvasColor` is the resolved canvas color owned by `useWallet40Theme`.
+  const { canvasColor: liveAppCanvasColor } = useWallet40Theme("mobile");
   const stackNavigationConfig = useMemo(() => getStackNavigatorConfig(colors, true), [colors]);
   const nativeStackScreenOptions: Partial<NativeStackNavigationOptions> = stackNavigationConfig;
   const noNanoBuyNanoWallScreenOptions = useNoNanoBuyNanoWallScreenOptions();
@@ -578,14 +582,30 @@ export default function BaseNavigator() {
             const stakeLabel = getStakeLabelLocaleBased();
             const intent = props.route?.params?.params?.intent;
 
-            return intent === "deposit" || intent === "withdraw"
-              ? {
-                  headerShown: true,
-                  closable: false,
-                  headerTitle: t(stakeLabel),
-                  headerRight: () => null,
-                }
-              : { headerShown: false };
+            if (intent === "deposit" || intent === "withdraw") {
+              return {
+                headerShown: true,
+                closable: false,
+                headerTitle: t(stakeLabel),
+                headerRight: () => null,
+              };
+            }
+
+            // The Rewards simulator is presented full-screen (no tab bar). Show the native header so
+            // it gets the back button + status-bar safe area, like the deposit/withdraw flows.
+            if (intent === "simulate") {
+              return {
+                headerShown: true,
+                closable: false,
+                headerTitle: t("earn.simulator.title"),
+                headerRight: () => null,
+                headerStyle: { backgroundColor: liveAppCanvasColor },
+                headerShadowVisible: false,
+                contentStyle: { backgroundColor: liveAppCanvasColor },
+              };
+            }
+
+            return { headerShown: false };
           }}
         />
         <Stack.Screen

@@ -2,11 +2,18 @@ import { useMemo } from "react";
 import { useTheme } from "styled-components/native";
 import { useWalletFeaturesConfig, type WalletPlatform } from "@features/platform-feature-flags";
 
-export interface Wallet40ThemeResult {
+export interface Wallet40ThemeBase {
   readonly isDarkMode: boolean;
   readonly isWallet40Enabled: boolean;
   readonly isWallet40DarkMode: boolean;
+  /** Live-app canvas color as a native-ui token or hex (e.g. `"background.main"`). */
   readonly backgroundColor: string;
+}
+
+export interface Wallet40ThemeResult extends Wallet40ThemeBase {
+  /** Live-app canvas color resolved to a usable color value (pure black in Wallet 4.0 dark),
+   * for use in plain React Native styles (navigation headerStyle, View backgrounds, …). */
+  readonly canvasColor: string;
 }
 
 export interface Wallet40ThemeInput {
@@ -18,7 +25,7 @@ export interface Wallet40ThemeInput {
  * Pure function containing the theme logic.
  * Exported for testing purposes.
  */
-export const computeWallet40Theme = (input: Wallet40ThemeInput): Wallet40ThemeResult => {
+export const computeWallet40Theme = (input: Wallet40ThemeInput): Wallet40ThemeBase => {
   const isDarkMode = input.theme === "dark";
   const isWallet40DarkMode = input.isWallet40Enabled && isDarkMode;
   const backgroundColor = isWallet40DarkMode ? "#000000" : "background.main";
@@ -39,11 +46,15 @@ export const computeWallet40Theme = (input: Wallet40ThemeInput): Wallet40ThemeRe
  * @returns Theme-related values for Wallet 4.0
  */
 export const useWallet40Theme = (platform: WalletPlatform): Wallet40ThemeResult => {
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const { isEnabled: isWallet40Enabled } = useWalletFeaturesConfig(platform);
 
-  return useMemo(
-    () => computeWallet40Theme({ theme, isWallet40Enabled }),
-    [theme, isWallet40Enabled],
-  );
+  return useMemo(() => {
+    const base = computeWallet40Theme({ theme, isWallet40Enabled });
+    // `backgroundColor` may be the `background.main` native-ui token; resolve it to a real color so
+    // it can be used directly in plain RN styles.
+    const canvasColor =
+      base.backgroundColor === "background.main" ? colors.background.main : base.backgroundColor;
+    return { ...base, canvasColor };
+  }, [theme, colors, isWallet40Enabled]);
 };
