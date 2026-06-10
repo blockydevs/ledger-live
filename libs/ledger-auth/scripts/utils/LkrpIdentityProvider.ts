@@ -13,13 +13,14 @@ import {
   type KeycloakTokenResponse,
 } from "../../src/types";
 import { excludeFromTlv, toTlvField } from "./tlv";
+import type { KeyPair } from "./types";
 
 export class LkrpIdentityProvider implements IdentityProvider {
   readonly brokerId = "lkrp";
 
   constructor(
-    private readonly signer: Signer,
-    private readonly memberCredentials: MemberCredentials,
+    private readonly keypair: KeyPair,
+    private readonly trustchainId: string,
   ) {}
 
   async authenticate(request: IdPAuthParams): Promise<KeycloakToken> {
@@ -97,7 +98,7 @@ export class LkrpIdentityProvider implements IdentityProvider {
     const unsignedChallengeTLV = excludeFromTlv(
       Buffer.from(challenge.tlv, "hex"),
       [0x14, 0x15, 0x32, 0x33],
-    ).toString("hex");
+    );
 
     return {
       // curveId 33 = secp256k1, signAlgorithm 1 = ECDSA (matches the challenge's rp credential).
@@ -105,16 +106,13 @@ export class LkrpIdentityProvider implements IdentityProvider {
         version: 0,
         curveId: 33,
         signAlgorithm: 1,
-        publicKey: this.memberCredentials.pubkey,
+        publicKey: this.keypair.publicKey.toString("hex"),
       },
 
       // Spec https://ledgerhq.atlassian.net/wiki/spaces/TA/pages/4335960138/ARCH+LedgerLive+Auth+specifications
-      attestation: toTlvField(
-        0x02,
-        Buffer.from(this.memberCredentials.trustchainId, "utf8"),
-      ).toString("hex"),
+      attestation: toTlvField(0x02, Buffer.from(this.trustchainId, "utf8")).toString("hex"),
 
-      signature: this.signer.sign(this.memberCredentials.privatekey, unsignedChallengeTLV),
+      signature: this.keypair.sign(unsignedChallengeTLV).toString("hex"),
     };
   }
 }
@@ -159,13 +157,7 @@ function describeError(e: unknown): string {
 
 // --- Types ---
 
-export type MemberCredentials = {
-  trustchainId: string;
-  pubkey: string;
-  privatekey: string;
-};
-
-export type LKRPChallenge = { json: ChallengeJSON; tlv: string };
+type LKRPChallenge = { json: ChallengeJSON; tlv: string };
 
 type ChallengeJSON = {
   version: number;
@@ -176,10 +168,6 @@ type ChallengeJSON = {
     signature: string;
   }>;
   protocolVersion: { major: number; minor: number; patch: number };
-};
-
-export type Signer = {
-  sign(privateKey: string, message: string): string;
 };
 
 type ChallengeSignature = {

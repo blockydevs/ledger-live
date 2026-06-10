@@ -1,8 +1,8 @@
 /* oxlint-disable eslint/no-console */
+import makeFetchCookie from "fetch-cookie";
 import { AuthSDK } from "../src/authSDK";
+import { NobleKeyPair } from "./utils/NobleKeyPair";
 import { LkrpIdentityProvider } from "./utils/LkrpIdentityProvider";
-import { LkrpSigner } from "./utils/LkrpSigner";
-import { fetchWithCookies } from "./utils/fetchWithCookies";
 import { readMemberCredentials } from "./utils/readMemberCredentials";
 
 /**
@@ -46,8 +46,11 @@ async function main(): Promise<void> {
       keycloakRealm: KEYCLOAK_REALM,
     },
     {
-      provider: new LkrpIdentityProvider(new LkrpSigner(), credentials),
-      fetch: fetchWithCookies,
+      provider: new LkrpIdentityProvider(
+        NobleKeyPair.fromMemberCredentials(credentials),
+        credentials.trustchainId,
+      ),
+      fetch: makeFetchCookie(fetch),
     },
   ).authenticate();
 

@@ -1,4 +1,4 @@
-import type { MemberCredentials } from "./LkrpIdentityProvider";
+import type { MemberCredentials } from "./types";
 
 export async function readMemberCredentials(): Promise<MemberCredentials> {
   const credentials = await readObjectFromStdin(
