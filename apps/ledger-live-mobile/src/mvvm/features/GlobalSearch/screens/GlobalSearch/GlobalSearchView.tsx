@@ -5,12 +5,24 @@ import { useStyleSheet } from "@ledgerhq/lumen-ui-rnative/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "~/context/Locale";
 import { useExperimental } from "~/experimental";
+import { DefaultSections } from "./components/DefaultSections";
 import { GLOBAL_SEARCH_TEST_IDS } from "./testIds";
 import type { GlobalSearchViewModel } from "./useGlobalSearchViewModel";
 
 type Props = Readonly<GlobalSearchViewModel>;
 
-export function GlobalSearchView({ search, setSearch, clearSearch, onBack }: Props) {
+export function GlobalSearchView({
+  search,
+  setSearch,
+  clearSearch,
+  onBack,
+  isSearchActive,
+  defaultSections,
+  isLoadingDefaults,
+  onSeeAll,
+  onAssetPress,
+  onStockPress,
+}: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const hasExperimentalHeader = useExperimental();
@@ -66,6 +78,15 @@ export function GlobalSearchView({ search, setSearch, clearSearch, onBack }: Pro
           </View>
         </View>
       </View>
+      {!isSearchActive && (
+        <DefaultSections
+          sections={defaultSections}
+          isLoading={isLoadingDefaults}
+          onSeeAll={onSeeAll}
+          onAssetPress={onAssetPress}
+          onStockPress={onStockPress}
+        />
+      )}
     </View>
   );
 }

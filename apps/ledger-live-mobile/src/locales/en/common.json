@@ -1459,7 +1459,12 @@
     "warning": "Resetting Ledger Wallet will erase your swap transaction history for all your accounts."
   },
   "globalSearch": {
-    "searchPlaceholder": "Search assets"
+    "searchPlaceholder": "Search assets",
+    "sections": {
+      "cryptos": "Cryptos",
+      "stablecoins": "Stablecoins",
+      "stocks": "Stocks"
+    }
   },
   "graph": {
     "week": "1W",

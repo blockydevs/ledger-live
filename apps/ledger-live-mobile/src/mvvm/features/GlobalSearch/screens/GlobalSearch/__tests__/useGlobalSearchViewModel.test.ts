@@ -1,5 +1,6 @@
 import { renderHook, act } from "@tests/test-renderer";
 import { track } from "~/analytics";
+import { ScreenName } from "~/const";
 import { useGlobalSearchViewModel } from "../useGlobalSearchViewModel";
 import { useGlobalSearchDefaults } from "../useGlobalSearchDefaults";
 import { useGlobalSearchResults, type GlobalSearchResults } from "../useGlobalSearchResults";
@@ -82,5 +83,17 @@ describe("useGlobalSearchViewModel", () => {
     act(() => result.current.onBack());
 
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("tracks button_clicked with the section category when onSeeAll is invoked", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    act(() => result.current.onSeeAll("crypto"));
+
+    expect(track).toHaveBeenCalledWith("button_clicked", {
+      button: "See all",
+      page: ScreenName.GlobalSearch,
+      category: "crypto",
+    });
   });
 });
