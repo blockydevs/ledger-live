@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@ledgerhq/lumen-ui-react";
+import { hasAwarenessModalActionButton } from "@ledgerhq/live-common/genericAwarenessModal";
 import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
 import { AwarenessModalClampedText, PROMPT_TEXT_LINE_LIMITS } from "./clampedText";
 
@@ -7,7 +8,9 @@ export type PromptContentProps = {
   title: string;
   subtitle: string;
   primaryButtonLabel: string;
+  primaryButtonLink: string;
   secondaryButtonLabel: string;
+  secondaryButtonLink: string;
   onPrimaryClick: () => void;
   onSecondaryClick: () => void;
   imageUrlLight?: string;
@@ -20,10 +23,20 @@ export default function PromptContent({
   imageUrlLight,
   imageUrlDark,
   primaryButtonLabel,
+  primaryButtonLink,
   secondaryButtonLabel,
+  secondaryButtonLink,
   onPrimaryClick,
   onSecondaryClick,
 }: Readonly<PromptContentProps>) {
+  const showPrimaryButton = hasAwarenessModalActionButton(
+    primaryButtonLabel,
+    primaryButtonLink,
+  );
+  const showSecondaryButton = hasAwarenessModalActionButton(
+    secondaryButtonLabel,
+    secondaryButtonLink,
+  );
   const { imageUrl, showImage } = useThemedAwarenessModalImage(
     imageUrlLight != null || imageUrlDark != null
       ? { imageUrlLight: imageUrlLight ?? "", imageUrlDark: imageUrlDark ?? "" }
@@ -58,24 +71,28 @@ export default function PromptContent({
         </div>
       </div>
       <div className="flex w-full shrink-0 flex-col items-center gap-16 pt-24">
-        <Button
-          appearance="base"
-          size="lg"
-          onClick={onPrimaryClick}
-          className="w-full"
-          data-testid="generic-awareness-modal-primary-button"
-        >
-          {primaryButtonLabel}
-        </Button>
-        <Button
-          appearance="gray"
-          size="lg"
-          onClick={onSecondaryClick}
-          className="w-full"
-          data-testid="generic-awareness-modal-secondary-button"
-        >
-          {secondaryButtonLabel}
-        </Button>
+        {showPrimaryButton ? (
+          <Button
+            appearance="base"
+            size="lg"
+            onClick={onPrimaryClick}
+            className="w-full"
+            data-testid="generic-awareness-modal-primary-button"
+          >
+            {primaryButtonLabel}
+          </Button>
+        ) : null}
+        {showSecondaryButton ? (
+          <Button
+            appearance="gray"
+            size="lg"
+            onClick={onSecondaryClick}
+            className="w-full"
+            data-testid="generic-awareness-modal-secondary-button"
+          >
+            {secondaryButtonLabel}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

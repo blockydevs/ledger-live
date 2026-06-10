@@ -14,6 +14,7 @@ const slides: GenericAwarenessModalCarouselSlide[] = [
     imageUrlDark: "https://example.com/a-dark.png",
     primaryButtonLabel: "Primary A",
     primaryButtonLink: "https://www.ledger.com",
+    navigationButtonLabel: "",
   },
   {
     title: "Second slide title",
@@ -22,6 +23,7 @@ const slides: GenericAwarenessModalCarouselSlide[] = [
     imageUrlDark: "https://example.com/b-dark.png",
     primaryButtonLabel: "Primary B",
     primaryButtonLink: "https://www.ledger.com/compare",
+    navigationButtonLabel: "",
   },
 ];
 
@@ -44,6 +46,27 @@ describe("CarouselContent", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseTheme.mockReturnValue({ theme: "light" } as ReturnType<typeof useTheme>);
+  });
+
+  it("should hide the primary button when label or link is empty", () => {
+    renderCarousel({
+      slides: [{ ...slides[0], primaryButtonLabel: "Primary A", primaryButtonLink: "" }],
+    });
+
+    expect(
+      screen.queryByTestId("generic-awareness-modal-primary-button"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("generic-awareness-modal-continue-button")).toBeVisible();
+  });
+
+  it("should render a custom navigation button label when provided", () => {
+    renderCarousel({
+      slides: [{ ...slides[0], navigationButtonLabel: "Keep going" }],
+    });
+
+    expect(screen.getByTestId("generic-awareness-modal-continue-button")).toHaveTextContent(
+      "Keep going",
+    );
   });
 
   it("should render the first slide with line limits and primary label", () => {

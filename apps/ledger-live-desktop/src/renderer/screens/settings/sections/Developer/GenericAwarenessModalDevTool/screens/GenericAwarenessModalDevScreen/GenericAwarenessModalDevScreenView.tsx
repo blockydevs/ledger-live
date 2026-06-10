@@ -155,6 +155,11 @@ export function GenericAwarenessModalDevScreenView({
                   value={slide.primaryButtonLink}
                   onChange={primaryButtonLink => updateSlide(index, { primaryButtonLink })}
                 />
+                <DevLabeledInput
+                  label={COPY.fields.navigationButtonLabel}
+                  value={slide.navigationButtonLabel}
+                  onChange={navigationButtonLabel => updateSlide(index, { navigationButtonLabel })}
+                />
               </DevFormCard>
             ))}
           </section>

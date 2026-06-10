@@ -21,6 +21,7 @@ export const buildContentCardFromForm = (
         imageUrlDark: slide.imageUrlDark,
         primaryButtonLabel: slide.primaryButtonLabel,
         primaryButtonLink: slide.primaryButtonLink,
+        navigationButtonLabel: slide.navigationButtonLabel,
       })),
       isReady: true,
     };

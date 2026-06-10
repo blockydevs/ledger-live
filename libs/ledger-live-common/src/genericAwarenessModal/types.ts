@@ -89,6 +89,7 @@ export const GenericAwarenessModalCarouselSlideSchema = z.object({
   imageUrlDark: GenericAwarenessModalStringFieldSchema,
   primaryButtonLabel: GenericAwarenessModalStringFieldSchema,
   primaryButtonLink: GenericAwarenessModalStringFieldSchema,
+  navigationButtonLabel: GenericAwarenessModalStringFieldSchema,
 });
 
 export const GenericAwarenessModalCarouselInputSchema = z.object({
@@ -103,6 +104,7 @@ export const GenericAwarenessModalCarouselInputSchema = z.object({
   imageUrlDark: GenericAwarenessModalStringFieldSchema,
   primaryButtonLabel: GenericAwarenessModalStringFieldSchema,
   primaryButtonLink: GenericAwarenessModalStringFieldSchema,
+  navigationButtonLabel: GenericAwarenessModalStringFieldSchema,
 });
 
 export const GenericAwarenessModalFeatureIntroMainInputSchema = z.object({
@@ -218,6 +220,7 @@ export type GenericAwarenessModalInputExtras = Partial<{
   imageUrlDark: string;
   primaryButtonLabel: string;
   primaryButtonLink: string;
+  navigationButtonLabel: string;
   secondaryButtonLabel: string;
   secondaryButtonLink: string;
   icon: string;

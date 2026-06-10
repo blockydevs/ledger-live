@@ -20,7 +20,9 @@ export interface GenericAwarenessModalPromptViewModel {
   title: string;
   subtitle: string;
   primaryButtonLabel: string;
+  primaryButtonLink: string;
   secondaryButtonLabel: string;
+  secondaryButtonLink: string;
   imageUrlLight?: string;
   imageUrlDark?: string;
   onPrimaryClick: () => void;
@@ -103,7 +105,9 @@ const useGenericAwarenessModalPromptViewModel = (
       title: prompt?.title ?? "",
       subtitle: prompt?.subtitle ?? "",
       primaryButtonLabel: prompt?.primaryButtonLabel ?? "",
+      primaryButtonLink: prompt?.primaryButtonLink ?? "",
       secondaryButtonLabel: prompt?.secondaryButtonLabel ?? "",
+      secondaryButtonLink: prompt?.secondaryButtonLink ?? "",
       imageUrlLight: prompt?.imageUrlLight,
       imageUrlDark: prompt?.imageUrlDark,
       onPrimaryClick,

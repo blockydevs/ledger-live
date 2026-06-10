@@ -8,7 +8,9 @@ const baseProps = {
   title: "Test title",
   subtitle: "Test subtitle",
   primaryButtonLabel: "Primary",
+  primaryButtonLink: "https://example.com/primary",
   secondaryButtonLabel: "Secondary",
+  secondaryButtonLink: "https://example.com/secondary",
   onPrimaryClick: jest.fn(),
   onSecondaryClick: jest.fn(),
 };
@@ -33,6 +35,22 @@ describe("PromptContent", () => {
     expect(screen.getByRole("button", { name: "Primary" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Secondary" })).toBeVisible();
   });
+
+  it.each([
+    ["primary", { primaryButtonLabel: "", primaryButtonLink: "https://example.com/primary" }],
+    ["primary", { primaryButtonLabel: "Primary", primaryButtonLink: "" }],
+    ["secondary", { secondaryButtonLabel: "", secondaryButtonLink: "https://example.com/secondary" }],
+    ["secondary", { secondaryButtonLabel: "Secondary", secondaryButtonLink: "" }],
+  ] as const)(
+    "should hide the %s button when label or link is empty",
+    (button, patch) => {
+      render(<PromptContent {...baseProps} {...patch} />);
+
+      expect(
+        screen.queryByTestId(`generic-awareness-modal-${button}-button`),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it("should call onPrimaryClick when the primary button is pressed", async () => {
     const { user } = render(<PromptContent {...baseProps} />);

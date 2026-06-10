@@ -54,6 +54,7 @@ describe("buildCarousel", () => {
           imageUrlDark: "",
           primaryButtonLabel: "Start",
           primaryButtonLink: "https://example.com/1",
+          navigationButtonLabel: "",
         },
         {
           title: "Slide 2",
@@ -62,6 +63,7 @@ describe("buildCarousel", () => {
           imageUrlDark: "",
           primaryButtonLabel: "Go",
           primaryButtonLink: "https://example.com/2",
+          navigationButtonLabel: "",
         },
       ],
     });
@@ -86,8 +88,22 @@ describe("buildCarousel", () => {
         imageUrlDark: "",
         primaryButtonLabel: "",
         primaryButtonLink: "",
+        navigationButtonLabel: "",
       },
     ]);
+  });
+
+  it("should trim navigationButtonLabel from carousel input", () => {
+    const card = makeCard("1", {
+      layout: GenericAwarenessModalLayout.Carousel,
+      campaignId: "campaign-1",
+      index: "0",
+      slideCount: "1",
+      title: "Slide 1",
+      navigationButtonLabel: "  Next  ",
+    });
+
+    expect(buildCarousel("campaign-1", [card])?.data[0]?.navigationButtonLabel).toBe("Next");
   });
 
   it("should return carousel with isReady false when slideCount is set but not all slides have arrived", () => {
@@ -157,6 +173,7 @@ describe("buildCarousel", () => {
         imageUrlDark: "",
         primaryButtonLabel: "",
         primaryButtonLink: "",
+        navigationButtonLabel: "",
       },
     ]);
   });

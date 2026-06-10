@@ -43,6 +43,7 @@ export const COPY = {
     imageUrlDark: "Image URL (dark)",
     primaryButtonLabel: "Primary button label",
     primaryButtonLink: "Primary button link",
+    navigationButtonLabel: "Navigation button label (Continue/Close)",
     secondaryButtonLabel: "Secondary button label",
     secondaryButtonLink: "Secondary button link",
     icon: "Icon (Lumen symbol name)",

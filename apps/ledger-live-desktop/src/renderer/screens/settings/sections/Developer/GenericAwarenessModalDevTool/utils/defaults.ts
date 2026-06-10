@@ -19,6 +19,7 @@ const defaultCarouselSlide = (index: number): CarouselSlideForm => ({
   imageUrlDark: getDevToolCarouselImageUrl(index),
   primaryButtonLabel: CAROUSEL_PRIMARY_BUTTON_LABELS[index % CAROUSEL_PRIMARY_BUTTON_LABELS.length],
   primaryButtonLink: "https://www.ledger.com",
+  navigationButtonLabel: "",
 });
 
 const defaultFeatureIntroItem = (index: number): FeatureIntroItemForm => ({

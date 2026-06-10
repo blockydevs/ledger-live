@@ -84,6 +84,7 @@ export const carouselCampaignCard: GenericAwarenessModalCarousel = {
       imageUrlDark: "",
       primaryButtonLabel: "Discover Flex",
       primaryButtonLink: "https://www.ledger.com/products/ledger-flex",
+      navigationButtonLabel: "",
     },
     {
       title: "Ledger Wallet clarity",
@@ -92,6 +93,7 @@ export const carouselCampaignCard: GenericAwarenessModalCarousel = {
       imageUrlDark: "",
       primaryButtonLabel: "Explore the app",
       primaryButtonLink: "https://www.ledger.com/ledger-wallet",
+      navigationButtonLabel: "",
     },
     {
       title: "Bitcoin, secured",
@@ -100,6 +102,7 @@ export const carouselCampaignCard: GenericAwarenessModalCarousel = {
       imageUrlDark: "",
       primaryButtonLabel: "Bitcoin wallet",
       primaryButtonLink: "https://www.ledger.com/coin/wallet/bitcoin",
+      navigationButtonLabel: "",
     },
     {
       title: "Ethereum & beyond",
@@ -108,6 +111,7 @@ export const carouselCampaignCard: GenericAwarenessModalCarousel = {
       imageUrlDark: "",
       primaryButtonLabel: "Ethereum wallet",
       primaryButtonLink: "https://www.ledger.com/coin/wallet/ethereum",
+      navigationButtonLabel: "",
     },
   ],
   isReady: true,

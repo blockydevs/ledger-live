@@ -8,6 +8,7 @@ export type CarouselSlideForm = {
   imageUrlDark: string;
   primaryButtonLabel: string;
   primaryButtonLink: string;
+  navigationButtonLabel: string;
 };
 
 export type FeatureIntroItemForm = {

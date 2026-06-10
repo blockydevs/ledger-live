@@ -2,13 +2,9 @@ import React from "react";
 import { Box, Text } from "@ledgerhq/lumen-ui-rnative";
 import { StyleSheet } from "react-native";
 import FastImage from "react-native-fast-image";
-import {
-  CAROUSEL_SLIDE_TEXT_LINE_LIMITS,
-  type GenericAwarenessModalCarouselSlide,
-} from "@ledgerhq/live-common/genericAwarenessModal";
+import type { GenericAwarenessModalCarouselSlide } from "@ledgerhq/live-common/genericAwarenessModal";
 import { useThemedAwarenessModalImage } from "../hooks/useThemedAwarenessModalImage";
-
-const SUBTITLE_NUMBER_OF_LINES = 3;
+import { CAROUSEL_SLIDE_TEXT_LINE_LIMITS } from "../textLineLimits";
 
 type CarouselSlideItemProps = GenericAwarenessModalCarouselSlide &
   Readonly<{
@@ -84,10 +80,10 @@ export function CarouselSlideItem({
         <Text
           typography="body2"
           lx={{ color: "muted", textAlign: "center" }}
-          numberOfLines={SUBTITLE_NUMBER_OF_LINES}
+          numberOfLines={CAROUSEL_SLIDE_TEXT_LINE_LIMITS.subtitle}
           onTextLayout={event => {
             onSubtitleTextLayout(
-              Math.min(event.nativeEvent.lines.length, SUBTITLE_NUMBER_OF_LINES),
+              Math.min(event.nativeEvent.lines.length, CAROUSEL_SLIDE_TEXT_LINE_LIMITS.subtitle),
             );
           }}
         >
