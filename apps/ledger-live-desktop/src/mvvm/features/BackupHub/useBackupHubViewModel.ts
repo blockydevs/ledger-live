@@ -12,8 +12,8 @@ import {
   RECOVER_DEEPLINK_BASE,
 } from "./constants";
 import type { BackupBucket, PhysicalRowId } from "./types";
-import recoveryKeyImage from "./assets/recovery-key.png";
-import secretRecoveryPhraseImage from "./assets/24-words.png";
+import recoveryKeyImage from "./assets/recovery-key.webp";
+import secretRecoveryPhraseImage from "./assets/24-words.webp";
 
 const DEFAULT_PROTECT_ID = "protect-prod";
 
