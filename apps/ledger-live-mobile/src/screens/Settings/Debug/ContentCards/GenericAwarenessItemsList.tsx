@@ -217,6 +217,11 @@ function GenericAwarenessItemCard({
             value={item.primaryButtonLink ?? ""}
             onChangeText={value => onChange(index, { primaryButtonLink: value })}
           />
+          <GenericAwarenessModalField
+            label={t("settings.debug.contentCards.genericAwareness.navigationButtonLabel")}
+            value={item.navigationButtonLabel ?? ""}
+            onChangeText={value => onChange(index, { navigationButtonLabel: value })}
+          />
         </>
       ) : (
         <GenericAwarenessModalField

@@ -93,10 +93,12 @@ describe("useGenericAwarenessModalPromptViewModel", () => {
       }),
     );
     expect(openURL).toHaveBeenCalledWith("https://www.ledger.com/academy");
-    expect(jest.mocked(closeGenericAwarenessModalDialog)).toHaveBeenCalled();
+    expect(jest.mocked(closeGenericAwarenessModalDialog)).toHaveBeenCalledWith({
+      dismissAppStart: true,
+    });
   });
 
-  it("should track secondary click, open the link, and close dialog", () => {
+  it("should track secondary click, open the link, and dismiss app start when closing", () => {
     const { result } = renderHookWithStore(() =>
       useGenericAwarenessModalPromptViewModel(promptCampaignCard, true),
     );
@@ -114,6 +116,8 @@ describe("useGenericAwarenessModalPromptViewModel", () => {
       }),
     );
     expect(openURL).toHaveBeenCalledWith("https://www.ledger.com");
-    expect(jest.mocked(closeGenericAwarenessModalDialog)).toHaveBeenCalled();
+    expect(jest.mocked(closeGenericAwarenessModalDialog)).toHaveBeenCalledWith({
+      dismissAppStart: true,
+    });
   });
 });

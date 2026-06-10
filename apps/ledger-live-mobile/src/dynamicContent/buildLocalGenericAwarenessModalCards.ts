@@ -18,6 +18,7 @@ export type GenericAwarenessModalDebugItem = {
   imageUrlDark?: string;
   primaryButtonLabel?: string;
   primaryButtonLink?: string;
+  navigationButtonLabel?: string;
   icon?: string;
 };
 
@@ -133,6 +134,7 @@ function buildCarouselBrazeCards({
       imageUrlDark: item.imageUrlDark ?? "",
       primaryButtonLabel: item.primaryButtonLabel,
       primaryButtonLink: item.primaryButtonLink,
+      navigationButtonLabel: item.navigationButtonLabel,
     },
   }));
 }

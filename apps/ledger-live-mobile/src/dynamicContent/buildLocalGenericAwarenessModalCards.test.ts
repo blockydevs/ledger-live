@@ -56,6 +56,7 @@ describe("buildLocalGenericAwarenessModalCards", () => {
             imageUrlDark: "",
             primaryButtonLabel: "Next",
             primaryButtonLink: "ledgerlive://portfolio",
+            navigationButtonLabel: "",
           },
           {
             title: "First",
@@ -64,6 +65,7 @@ describe("buildLocalGenericAwarenessModalCards", () => {
             imageUrlDark: "",
             primaryButtonLabel: "Start",
             primaryButtonLink: "ledgerlive://portfolio",
+            navigationButtonLabel: "",
           },
         ],
       },
@@ -180,6 +182,42 @@ describe("buildLocalGenericAwarenessModalCards", () => {
         secondaryButtonLink: "ledgerlive://myledger",
       },
     ]);
+  });
+
+  it("should pass carousel navigationButtonLabel from debug form to Braze extras", () => {
+    const values: GenericAwarenessModalDebugFormValues = {
+      ...buildDefaultGenericAwarenessModalFormValues(),
+      campaignId: "debug-carousel-nav",
+      items: [
+        {
+          title: "Slide one",
+          subtitle: "Keep going",
+          navigationButtonLabel: "Keep going",
+        },
+        {
+          title: "Slide two",
+          subtitle: "All done",
+          navigationButtonLabel: "Done for now",
+        },
+      ],
+    };
+
+    const rawCards = buildLocalGenericAwarenessModalBrazeCards(values);
+    const contentCards = buildLocalGenericAwarenessModalContentCards(values);
+
+    expect(rawCards[0].extras).toMatchObject({
+      navigationButtonLabel: "Keep going",
+    });
+    expect(rawCards[1].extras).toMatchObject({
+      navigationButtonLabel: "Done for now",
+    });
+    expect(contentCards[0]).toMatchObject({
+      layout: GenericAwarenessModalLayout.Carousel,
+      data: [
+        expect.objectContaining({ navigationButtonLabel: "Keep going" }),
+        expect.objectContaining({ navigationButtonLabel: "Done for now" }),
+      ],
+    });
   });
 
   it("should provide app-start and deeplink campaign defaults", () => {

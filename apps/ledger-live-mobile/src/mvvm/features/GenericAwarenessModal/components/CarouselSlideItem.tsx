@@ -62,7 +62,7 @@ export function CarouselSlideItem({
         }}
       >
         <Text
-          typography="heading2SemiBold"
+          typography="heading3SemiBold"
           lx={{
             textAlign: "center",
             color: "base",
