@@ -22,7 +22,9 @@ export async function getMinimumSellAmount(currencyId: string): Promise<string> 
   if (amount === null) {
     throw new Error(`Could not determine minimum sell amount for "${currencyId}"`);
   }
-  return Number.parseFloat(amount.toFixed(6)).toString();
+  const factor = 10 ** 6;
+  const roundedUp = Math.ceil((amount - Number.EPSILON) * factor) / factor;
+  return roundedUp.toString();
 }
 
 async function fetchMinimumSellAmount(currencyId: string): Promise<number | null> {
