@@ -397,6 +397,14 @@ export type MarketListConfigState = {
   category: MarketListCategory;
 };
 
+// === MARKET BANNER STATE (V4) ===
+
+export type MarketBannerRanking = "trending" | "gainers" | "losers" | "favorites";
+
+export type MarketBannerState = {
+  ranking: MarketBannerRanking;
+};
+
 // === WALLETSYNC STATE ===
 
 export type WalletSyncState = {
@@ -439,6 +447,7 @@ export type State = LLMRTKApiState & {
   largeMover: LargeMoverState;
   market: MarketState;
   marketListConfig: MarketListConfigState;
+  marketBanner: MarketBannerState;
   modularDrawer: ModularDrawerState;
   receiveOptionsDrawer: ReceiveOptionsDrawerState;
   rebornBuyDeviceDrawer: RebornBuyDeviceDrawerState;

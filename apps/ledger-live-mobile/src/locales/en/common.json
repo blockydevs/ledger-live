@@ -9328,7 +9328,7 @@
     }
   },
   "marketBanner": {
-    "title": "Explore the market",
+    "title": "Market",
     "viewAll": "View all",
     "viewAllAccessibilityHint": "Double tap to view all market assets",
     "connectionFailed": "Connection failed",
@@ -9336,6 +9336,17 @@
     "tile": {
       "accessibilityLabel": "{{name}}, {{change}}",
       "accessibilityHint": "Double tap to view market details"
+    },
+    "filter": {
+      "accessibilityLabel": "Change market banner filter",
+      "accessibilityHint": "Double tap to choose which assets are shown",
+      "title": "Sort by",
+      "options": {
+        "trending": "Trending",
+        "gainers": "Gainers",
+        "losers": "Losers",
+        "favorites": "Favorites"
+      }
     }
   },
   "largeMover": {
