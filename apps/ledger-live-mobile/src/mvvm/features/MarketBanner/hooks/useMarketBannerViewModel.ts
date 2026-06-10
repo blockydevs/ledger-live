@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { useSelector } from "~/context/hooks";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useMarketPerformers } from "@ledgerhq/live-common/market/hooks/useMarketPerformers";
 import {
   MarketItemPerformer,
   filterMarketPerformersByAvailability,
@@ -11,20 +9,14 @@ import { useRampCatalog } from "@ledgerhq/live-common/platform/providers/RampCat
 import { useFetchCurrencyAll } from "@ledgerhq/live-common/exchange/swap/hooks/index";
 import { track } from "~/analytics";
 import { ScreenName } from "~/const";
-import { counterValueCurrencySelector } from "~/reducers/settings";
 import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import { useAssetDetailNavigation } from "LLM/features/AssetDetail/hooks/useAssetDetailNavigation";
 import { MARKET_BANNER_TILE_COUNT, PAGE_NAME, BANNER_NAME } from "../constants";
 import { UseMarketBannerViewModelResult } from "../types";
 import { useMarketBannerFilter } from "./useMarketBannerFilter";
+import { useMarketBannerData } from "./useMarketBannerData";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
-import {
-  TIME_RANGE,
-  MARKET_BANNER_DATA_SORT_ORDER,
-  MARKET_BANNER_TOP,
-  MARKET_PERFORMERS_SUPPORTED,
-  MARKET_BANNER_REFRESH_RATE,
-} from "@ledgerhq/live-common/market/constants";
+import { TIME_RANGE } from "@ledgerhq/live-common/market/constants";
 
 const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
   const baseNavigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
@@ -32,7 +24,6 @@ const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
     useWalletFeaturesConfig("mobile");
   const { openFromMarket } = useAssetDetailNavigation();
   const bannerFilter = useMarketBannerFilter();
-  const counterValueCurrency = useSelector(counterValueCurrencySelector);
 
   const { isCurrencyAvailable } = useRampCatalog();
   const { data: currenciesForSwapAll } = useFetchCurrencyAll();
@@ -42,26 +33,18 @@ const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
     [currenciesForSwapAll],
   );
 
-  const { data, isLoading, isError } = useMarketPerformers({
-    sort: MARKET_BANNER_DATA_SORT_ORDER,
-    counterCurrency: counterValueCurrency.ticker,
-    range: TIME_RANGE,
-    limit: MARKET_BANNER_TILE_COUNT * 2,
-    top: MARKET_BANNER_TOP,
-    supported: MARKET_PERFORMERS_SUPPORTED,
-    refreshRate: MARKET_BANNER_REFRESH_RATE,
-  });
+  const { data, isLoading, isError } = useMarketBannerData(bannerFilter.filter);
 
-  const filteredItems = useMemo(() => {
-    if (!data) return [];
-
-    return filterMarketPerformersByAvailability(
-      data,
-      isCurrencyAvailable,
-      currenciesForSwapAllSet,
-      MARKET_BANNER_TILE_COUNT,
-    );
-  }, [data, isCurrencyAvailable, currenciesForSwapAllSet]);
+  const filteredItems = useMemo(
+    () =>
+      filterMarketPerformersByAvailability(
+        data,
+        isCurrencyAvailable,
+        currenciesForSwapAllSet,
+        MARKET_BANNER_TILE_COUNT,
+      ),
+    [data, isCurrencyAvailable, currenciesForSwapAllSet],
+  );
 
   const navigateToMarket = useCallback(() => {
     baseNavigation.navigate(ScreenName.MarketList);
