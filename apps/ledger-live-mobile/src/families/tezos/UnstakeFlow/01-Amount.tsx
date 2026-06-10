@@ -1,22 +1,14 @@
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
-import { useBridgeSync } from "@ledgerhq/live-common/bridge/react/index";
-import { isAwaitingDelegation, useDelegation } from "@ledgerhq/live-common/families/tezos/react";
+import { useTezosStakingInfo } from "@ledgerhq/live-common/families/tezos/react";
 import type { Transaction as TezosTransaction } from "@ledgerhq/live-common/families/tezos/types";
 import { useNavigation, useRoute, useTheme } from "@react-navigation/native";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Keyboard,
-  Linking,
-  StyleSheet,
-  Switch,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { Keyboard, StyleSheet, Switch, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Flex, InfiniteLoader, Text } from "@ledgerhq/native-ui";
+import { Text } from "@ledgerhq/native-ui";
 import { Trans, useTranslation } from "~/context/Locale";
 import { TrackScreen } from "~/analytics";
 import Alert from "~/components/Alert";
@@ -30,20 +22,14 @@ import KeyboardView from "~/components/KeyboardView";
 import AmountInput from "~/screens/SendFunds/AmountInput";
 import SummaryRow from "~/screens/SendFunds/SummaryRow";
 import { ScreenName } from "~/const";
-import { urls } from "~/utils/urls";
 import type { StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
-import type { TezosStakeFlowParamList } from "./types";
+import type { TezosUnstakeFlowParamList } from "./types";
 import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
-import {
-  AWAIT_DELEGATION_POLL_INTERVAL_MS,
-  AWAIT_DELEGATION_SYNC_PRIORITY,
-  MAX_AWAIT_DELEGATION_POLLS,
-} from "./constants";
 
-type Props = StackNavigatorProps<TezosStakeFlowParamList, ScreenName.TezosStakeAmount>;
+type Props = StackNavigatorProps<TezosUnstakeFlowParamList, ScreenName.TezosUnstakeAmount>;
 
-export default function StakeAmount() {
+export default function UnstakeAmount() {
   const navigation = useNavigation<Props["navigation"]>();
   const route = useRoute<Props["route"]>();
   const { colors } = useTheme();
@@ -54,7 +40,7 @@ export default function StakeAmount() {
 
   const bridge = useAccountBridge<TezosTransaction>(account, parentAccount);
   const unit = useAccountUnit(account);
-  const [maxSpendable, setMaxSpendable] = useState<BigNumber | null>(null);
+  const { stakedBalance } = useTezosStakingInfo(account);
 
   const { transaction, setTransaction, status, bridgePending, bridgeError } =
     useBridgeTransaction<TezosTransaction>(bridge, () => {
@@ -62,56 +48,11 @@ export default function StakeAmount() {
       return {
         account,
         parentAccount,
-        transaction: bridge.updateTransaction(tx, { mode: "stake" }),
+        transaction: bridge.updateTransaction(tx, { mode: "unstake" }),
       };
     });
 
   invariant(transaction, "transaction must be defined");
-
-  // The delegation just signed may not have propagated yet; poll until it has so the stake
-  // estimate stops failing with MustDelegateBeforeStaking, then reveal the amount field.
-  const delegation = useDelegation(account);
-  const awaitingDelegation = isAwaitingDelegation(delegation, transaction);
-  const [awaitTimedOut, setAwaitTimedOut] = useState(false);
-  const syncDispatch = useBridgeSync();
-
-  useEffect(() => {
-    if (!awaitingDelegation) {
-      setAwaitTimedOut(false);
-      return;
-    }
-    let attempts = 0;
-    const dispatchSync = () => {
-      syncDispatch({
-        type: "SYNC_ONE_ACCOUNT",
-        priority: AWAIT_DELEGATION_SYNC_PRIORITY,
-        accountId: account.id,
-        reason: "tezos-stake-await-delegation",
-      });
-      attempts += 1;
-    };
-    dispatchSync();
-    const id = setInterval(() => {
-      if (attempts >= MAX_AWAIT_DELEGATION_POLLS) {
-        clearInterval(id);
-        setAwaitTimedOut(true);
-        return;
-      }
-      dispatchSync();
-    }, AWAIT_DELEGATION_POLL_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [awaitingDelegation, account.id, syncDispatch]);
-
-  useEffect(() => {
-    let cancelled = false;
-    bridge.estimateMaxSpendable({ account, parentAccount, transaction }).then(estimate => {
-      if (cancelled) return;
-      setMaxSpendable(estimate);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [bridge, account, parentAccount, transaction]);
 
   const onChange = useCallback(
     (amount: BigNumber) => {
@@ -127,7 +68,7 @@ export default function StakeAmount() {
   }, [bridge, transaction, setTransaction]);
 
   const onContinue = useCallback(() => {
-    navigation.navigate(ScreenName.TezosStakeSelectDevice, {
+    navigation.navigate(ScreenName.TezosUnstakeSelectDevice, {
       ...route.params,
       accountId: account.id,
       transaction,
@@ -135,15 +76,10 @@ export default function StakeAmount() {
     });
   }, [navigation, route.params, account.id, transaction, status]);
 
-  const learnMore = useCallback(() => Linking.openURL(urls.delegation), []);
   const blur = useCallback(() => Keyboard.dismiss(), []);
 
-  // While the delegation is still propagating, the estimate fails by design; don't surface it as an error.
   const [bridgeErr, setBridgeErr] = useState(bridgeError);
-  useEffect(
-    () => setBridgeErr(awaitingDelegation ? null : bridgeError),
-    [bridgeError, awaitingDelegation],
-  );
+  useEffect(() => setBridgeErr(bridgeError), [bridgeError]);
   const onBridgeErrorCancel = useCallback(() => {
     setBridgeErr(null);
     const parent = navigation.getParent();
@@ -154,29 +90,6 @@ export default function StakeAmount() {
     setTransaction(bridge.updateTransaction(transaction, {}));
   }, [setTransaction, bridge, transaction]);
 
-  if (awaitingDelegation && !awaitTimedOut) {
-    return (
-      <SafeAreaView
-        edges={["left", "right", "bottom"]}
-        style={[styles.root, { backgroundColor: colors.background }]}
-      >
-        <TrackScreen
-          category="TezosStakeFlow"
-          name="Amount Pending Delegation"
-          flow="stake"
-          action="stake"
-          currency="xtz"
-        />
-        <Flex flex={1} alignItems="center" justifyContent="center" px={6}>
-          <InfiniteLoader size={40} />
-          <Text variant="body" fontWeight="medium" color="neutral.c70" mt={6} textAlign="center">
-            {t("tezos.stake.flow.amount.awaitingDelegation")}
-          </Text>
-        </Flex>
-      </SafeAreaView>
-    );
-  }
-
   const { useAllAmount } = transaction;
   const { amount } = status;
 
@@ -186,18 +99,14 @@ export default function StakeAmount() {
       style={[styles.root, { backgroundColor: colors.background }]}
     >
       <TrackScreen
-        category="TezosStakeFlow"
+        category="TezosUnstakeFlow"
         name="Amount"
         flow="stake"
-        action="stake"
+        action="unstake"
         currency="xtz"
       />
       <KeyboardView style={styles.container}>
-        <Alert
-          type="primary"
-          title={t("tezos.stake.flow.amount.disclaimer")}
-          onLearnMore={learnMore}
-        />
+        <Alert type="primary" title={t("tezos.unstake.flow.amount.unbondingNotice")} />
         <TouchableWithoutFeedback onPress={blur}>
           <View style={styles.amountWrapper}>
             <AmountInput
@@ -207,7 +116,7 @@ export default function StakeAmount() {
               value={amount}
               error={amount.eq(0) && (bridgePending || !useAllAmount) ? null : status.errors.amount}
               warning={status.warnings.amount}
-              testID="tezos-stake-amount-input"
+              testID="tezos-unstake-amount-input"
             />
             <View style={styles.bottomWrapper}>
               <SummaryRow title={<Trans i18nKey="send.fees.title" />}>
@@ -218,13 +127,11 @@ export default function StakeAmount() {
               <View style={styles.available}>
                 <View style={styles.availableLeft}>
                   <Text color="neutral.c70">
-                    <Trans i18nKey="send.amount.available" />
+                    <Trans i18nKey="tezos.unstake.flow.amount.staked" />
                   </Text>
-                  {maxSpendable ? (
-                    <Text fontWeight="semiBold" color="neutral.c70">
-                      <CurrencyUnitValue showCode unit={unit} value={maxSpendable} />
-                    </Text>
-                  ) : null}
+                  <Text fontWeight="semiBold" color="neutral.c70">
+                    <CurrencyUnitValue showCode unit={unit} value={stakedBalance} />
+                  </Text>
                 </View>
                 <View style={styles.availableRight}>
                   <Text color="neutral.c70" style={styles.maxLabel}>
@@ -239,18 +146,20 @@ export default function StakeAmount() {
               </View>
               <View style={styles.continueWrapper}>
                 <Button
-                  event="TezosStakeAmountContinue"
+                  event="TezosUnstakeAmountContinue"
                   type="primary"
                   title={
                     <Trans
                       i18nKey={
-                        bridgePending ? "send.amount.loadingNetwork" : "tezos.stake.flow.amount.cta"
+                        bridgePending
+                          ? "send.amount.loadingNetwork"
+                          : "tezos.unstake.flow.amount.cta"
                       }
                     />
                   }
                   onPress={onContinue}
                   disabled={!!status.errors.amount || bridgePending}
-                  testID="tezos-stake-amount-continue"
+                  testID="tezos-unstake-amount-continue"
                 />
               </View>
             </View>

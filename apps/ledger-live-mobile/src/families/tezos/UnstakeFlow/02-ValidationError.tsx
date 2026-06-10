@@ -9,9 +9,9 @@ import type {
   StackNavigatorProps,
 } from "~/components/RootNavigator/types/helpers";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
-import type { TezosStakeFlowParamList } from "./types";
+import type { TezosUnstakeFlowParamList } from "./types";
 
-type Props = StackNavigatorProps<TezosStakeFlowParamList, ScreenName.TezosStakeValidationError>;
+type Props = StackNavigatorProps<TezosUnstakeFlowParamList, ScreenName.TezosUnstakeValidationError>;
 
 export default function ValidationError() {
   const navigation = useNavigation<Props["navigation"]>();
@@ -26,10 +26,10 @@ export default function ValidationError() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
       <TrackScreen
-        category="TezosStakeFlow"
+        category="TezosUnstakeFlow"
         name="ValidationError"
         flow="stake"
-        action="stake"
+        action="unstake"
         currency="xtz"
       />
       <ValidateError error={route.params.error} onRetry={retry} onClose={onClose} />

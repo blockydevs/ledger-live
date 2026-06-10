@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { Trans } from "~/context/Locale";
 import { useNavigation, useRoute, useTheme } from "@react-navigation/native";
-import { TrackScreen, track } from "~/analytics";
+import { TrackScreen } from "~/analytics";
 import { ScreenName } from "~/const";
 import PreventNativeBack from "~/components/PreventNativeBack";
 import ValidateSuccess from "~/components/ValidateSuccess";
@@ -12,11 +12,11 @@ import type {
   StackNavigatorProps,
 } from "~/components/RootNavigator/types/helpers";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
-import type { TezosStakeFlowParamList } from "./types";
+import type { TezosUnstakeFlowParamList } from "./types";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
 
 type Props = BaseComposite<
-  StackNavigatorProps<TezosStakeFlowParamList, ScreenName.TezosStakeValidationSuccess>
+  StackNavigatorProps<TezosUnstakeFlowParamList, ScreenName.TezosUnstakeValidationSuccess>
 >;
 
 export default function ValidationSuccess() {
@@ -24,8 +24,6 @@ export default function ValidationSuccess() {
   const route = useRoute<Props["route"]>();
   const { colors } = useTheme();
   const { account } = useAccountScreen(route);
-  const transaction = route.params.transaction;
-  const source = route.params.source?.name ?? "unknown";
 
   const onClose = useCallback(() => {
     navigation.getParent<StackNavigatorNavigation<BaseNavigatorStackParamList>>().pop();
@@ -41,30 +39,21 @@ export default function ValidationSuccess() {
     });
   }, [account, route.params, navigation]);
 
-  useEffect(() => {
-    track("staking_completed", {
-      currency: "XTZ",
-      source,
-      delegation: transaction.mode,
-      flow: "stake",
-    });
-  }, [source, transaction.mode]);
-
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <TrackScreen
-        category="TezosStakeFlow"
+        category="TezosUnstakeFlow"
         name="ValidationSuccess"
         flow="stake"
-        action="stake"
+        action="unstake"
         currency="xtz"
       />
       <PreventNativeBack />
       <ValidateSuccess
         onClose={onClose}
         onViewDetails={goToOperationDetails}
-        title={<Trans i18nKey="tezos.stake.flow.steps.confirmation.success.title" />}
-        description={<Trans i18nKey="tezos.stake.flow.steps.confirmation.success.text" />}
+        title={<Trans i18nKey="tezos.unstake.flow.steps.confirmation.success.title" />}
+        description={<Trans i18nKey="tezos.unstake.flow.steps.confirmation.success.text" />}
       />
     </View>
   );

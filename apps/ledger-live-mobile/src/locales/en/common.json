@@ -2976,7 +2976,7 @@
       "STAKE": "Staked",
       "UNSTAKE": "Unstaked",
       "WITHDRAW_UNSTAKED": "Withdrawn",
-      "FINALIZE_UNSTAKE": "Withdrawn",
+      "FINALIZE_UNSTAKE": "Unstaked",
       "ASSOCIATE_TOKEN": "Associate token",
       "CONTRACT_CALL": "Contract call",
       "UPDATE_ACCOUNT": "Updated account"
@@ -3052,6 +3052,7 @@
       "id": "Id",
       "autoClaimedRewards": "Auto Claimed Rewards",
       "stakedAmount": "Staked amount",
+      "unstakedAmount": "Unstaked amount",
       "accountCreationFee": "Account Creation Fee",
       "associatedTokenId": "Associated token ID",
       "targetStakingNodeId": "Target node ID",
@@ -6610,7 +6611,9 @@
       "title": "You can earn rewards by delegating your account",
       "btn": "Earn rewards"
     },
-    "manage": "Manage",
+    "operationTypes": {
+      "UNSTAKE": "Unstaking"
+    },
     "delegation": {
       "addCustomValidator": "+ Add custom validator",
       "sectionLabel": "Delegation"
@@ -6619,7 +6622,11 @@
       "sectionLabel": "Staking",
       "status": "Status",
       "unstaking": "Unstaking",
-      "available": "Available"
+      "available": "Available",
+      "availableIn": "Available in",
+      "lessThanADay": "Less than a day",
+      "stakeMore": "Stake more",
+      "unstake": "Unstake"
     },
     "earnRewards": {
       "title": "Earn Rewards",
@@ -6670,6 +6677,41 @@
           "info": "Learn more about Tezos staking vs Delegation"
         }
       }
+    },
+    "unstake": {
+      "flow": {
+        "amount": {
+          "unbondingNotice": "Unstaking takes 4 days. During this period your XTZ remains delegated and stops earning staking rewards.",
+          "staked": "Staked",
+          "cta": "Unstake"
+        },
+        "steps": {
+          "confirmation": {
+            "success": {
+              "title": "Unstake submitted",
+              "text": "Your XTZ are unstaking and will be available for withdrawal in ~4 days."
+            }
+          }
+        }
+      }
+    },
+    "unstakeRequired": {
+      "changeBaker": {
+        "title": "Unstake before changing baker",
+        "description": "You have staked XTZ with your current baker. Unstake your funds before delegating to a new baker."
+      },
+      "endDelegation": {
+        "title": "Unstake before ending delegation",
+        "description": "You have staked XTZ with your current baker. Unstake your funds before ending the delegation."
+      },
+      "steps": {
+        "0": "Open the Earn menu and select Unstake.",
+        "1": "Confirm the amount and submit the unstake transaction on your device.",
+        "2": "Wait ~4 days for the unstake period to complete.",
+        "3": "Once withdrawn, you can change baker or end delegation."
+      },
+      "learnMore": "Learn more about Tezos staking",
+      "close": "Close"
     },
     "account": {
       "availableBalanceTooltip": "Funds you can use right now.",

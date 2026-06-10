@@ -16,7 +16,7 @@ jest.mock("LLM/hooks/useAccountScreen", () => ({
   useAccountScreen: () => ({ account: { id: "tezos-acc-1", type: "Account" } }),
 }));
 
-jest.mock("~/analytics", () => ({ TrackScreen: () => null, track: jest.fn() }));
+jest.mock("~/analytics", () => ({ TrackScreen: () => null }));
 
 jest.mock("~/components/PreventNativeBack", () => () => null);
 
@@ -34,15 +34,15 @@ jest.mock("~/components/ValidateSuccess", () => {
   );
 });
 
-const transaction = { family: "tezos", mode: "stake" };
-const operation = { id: "op-1", type: "STAKE" };
+const transaction = { family: "tezos", mode: "unstake" };
+const operation = { id: "op-1", type: "UNSTAKE" };
 
 const renderWith = (params: Record<string, unknown> = {}) => {
   mockRouteParams = { accountId: "tezos-acc-1", transaction, ...params };
   return render(<ValidationSuccess />);
 };
 
-describe("Tezos StakeFlow ValidationSuccess", () => {
+describe("Tezos UnstakeFlow ValidationSuccess", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     mockPop.mockClear();
