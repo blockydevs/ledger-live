@@ -1,49 +1,27 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import {
-  MarketItemPerformer,
-  filterMarketPerformersByAvailability,
-} from "@ledgerhq/live-common/market/utils/index";
-import { useRampCatalog } from "@ledgerhq/live-common/platform/providers/RampCatalogProvider/useRampCatalog";
-import { useFetchCurrencyAll } from "@ledgerhq/live-common/exchange/swap/hooks/index";
+import { MarketItemPerformer } from "@ledgerhq/live-common/market/utils/index";
 import { track } from "~/analytics";
 import { ScreenName } from "~/const";
 import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import { useAssetDetailNavigation } from "LLM/features/AssetDetail/hooks/useAssetDetailNavigation";
-import { MARKET_BANNER_TILE_COUNT, PAGE_NAME, BANNER_NAME } from "../constants";
+import { PAGE_NAME, BANNER_NAME } from "../constants";
 import { UseMarketBannerViewModelResult } from "../types";
 import { useMarketBannerFilter } from "./useMarketBannerFilter";
-import { useMarketBannerData } from "./useMarketBannerData";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { TIME_RANGE } from "@ledgerhq/live-common/market/constants";
 
+/**
+ * Shared market banner presentation logic (range, filter trigger, navigation/tracking
+ * handlers). Data fetching lives in the ranking-specific item hooks so the favorites
+ * data source (React Query) is only mounted when the favorites ranking is active.
+ */
 const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
   const baseNavigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
   const { shouldDisplayAssetDiscoverability } = useWalletFeaturesConfig("mobile");
   const { openFromMarket } = useAssetDetailNavigation();
   const bannerFilter = useMarketBannerFilter();
-
-  const { isCurrencyAvailable } = useRampCatalog();
-  const { data: currenciesForSwapAll } = useFetchCurrencyAll();
-
-  const currenciesForSwapAllSet = useMemo(
-    () => new Set(currenciesForSwapAll ?? []),
-    [currenciesForSwapAll],
-  );
-
-  const { data, isLoading, isError } = useMarketBannerData(bannerFilter.filter);
-
-  const filteredItems = useMemo(
-    () =>
-      filterMarketPerformersByAvailability(
-        data,
-        isCurrencyAvailable,
-        currenciesForSwapAllSet,
-        MARKET_BANNER_TILE_COUNT,
-      ),
-    [data, isCurrencyAvailable, currenciesForSwapAllSet],
-  );
 
   const navigateToMarket = useCallback(() => {
     baseNavigation.navigate(ScreenName.MarketList);
@@ -85,9 +63,6 @@ const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
   }, [navigateToMarket]);
 
   return {
-    items: filteredItems,
-    isLoading,
-    isError,
     showFilter: shouldDisplayAssetDiscoverability,
     bannerFilter,
     range: TIME_RANGE,

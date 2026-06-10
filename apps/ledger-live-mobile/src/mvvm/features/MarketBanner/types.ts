@@ -22,9 +22,6 @@ export interface SkeletonTileProps {
 }
 
 export interface UseMarketBannerViewModelResult {
-  items: MarketItemPerformer[];
-  isLoading: boolean;
-  isError: boolean;
   showFilter: boolean;
   bannerFilter: MarketBannerFilterController;
   range: PortfolioRange;

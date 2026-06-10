@@ -170,6 +170,34 @@ describe("MarketBanner Integration Tests", () => {
       });
       expect(track).toHaveBeenCalledWith("change_sort_market_banner", { sort: "losers" });
     });
+
+    it("should fall back to trending when favorites is active but no asset is starred", async () => {
+      server.use(
+        http.get(`${COUNTERVALUES_API}/v3/markets`, () =>
+          HttpResponse.json(MOCK_MARKET_PERFORMERS),
+        ),
+      );
+
+      const { store } = renderWithReactQuery(<MarketBannerTest />, {
+        overrideInitialState: state => {
+          const flagged = withFlagOverrides({
+            lwmWallet40: {
+              enabled: true,
+              params: { marketBanner: true, assetDiscoverability: true },
+            },
+          })(state);
+          return {
+            ...flagged,
+            marketBanner: { ...flagged.marketBanner, ranking: "favorites" },
+            settings: { ...flagged.settings, starredMarketCoins: [] },
+          };
+        },
+      });
+
+      await waitFor(() => {
+        expect(store.getState().marketBanner.ranking).toBe("trending");
+      });
+    });
   });
 
   describe("Loading state", () => {

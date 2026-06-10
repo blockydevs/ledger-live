@@ -1,5 +1,5 @@
 import React from "react";
-import { renderWithReactQuery, screen, withFlagOverrides } from "@tests/test-renderer";
+import { render, renderWithReactQuery, screen, withFlagOverrides } from "@tests/test-renderer";
 import { PortfolioEmptySection } from "../index";
 import { State } from "~/reducers/types";
 import { genAccount } from "@ledgerhq/live-common/mock/account";
@@ -127,7 +127,7 @@ describe("PortfolioEmptySection", () => {
     });
 
     it("should render quick actions CTAs", () => {
-      renderWithReactQuery(<PortfolioEmptySection isLNSUpsellBannerShown={false} />, {
+      render(<PortfolioEmptySection isLNSUpsellBannerShown={false} />, {
         overrideInitialState: createAccountState,
       });
 
@@ -135,7 +135,7 @@ describe("PortfolioEmptySection", () => {
     });
 
     it("should not display the add account button", () => {
-      renderWithReactQuery(<PortfolioEmptySection isLNSUpsellBannerShown={false} />, {
+      render(<PortfolioEmptySection isLNSUpsellBannerShown={false} />, {
         overrideInitialState: createAccountState,
       });
 
