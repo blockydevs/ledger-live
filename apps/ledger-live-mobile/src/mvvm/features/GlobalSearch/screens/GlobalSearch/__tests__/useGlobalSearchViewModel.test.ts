@@ -1,6 +1,7 @@
 import { renderHook, act } from "@tests/test-renderer";
 import { track } from "~/analytics";
 import { useGlobalSearchViewModel } from "../useGlobalSearchViewModel";
+import { useGlobalSearchDefaults } from "../useGlobalSearchDefaults";
 
 const mockGoBack = jest.fn();
 
@@ -9,21 +10,27 @@ jest.mock("@react-navigation/native", () => ({
   useNavigation: () => ({ goBack: mockGoBack }),
 }));
 
+jest.mock("../useGlobalSearchDefaults");
+
+const mockedUseGlobalSearchDefaults = jest.mocked(useGlobalSearchDefaults);
+
+const EMPTY_SECTIONS = { cryptos: [], stablecoins: [], stocks: [] };
+
 describe("useGlobalSearchViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedUseGlobalSearchDefaults.mockReturnValue({
+      defaultSections: EMPTY_SECTIONS,
+      isLoadingDefaults: false,
+    });
   });
 
-  it("starts inactive with empty default sections and results", () => {
+  it("starts inactive and exposes the default sections from the data hook", () => {
     const { result } = renderHook(() => useGlobalSearchViewModel());
 
     expect(result.current.isSearchActive).toBe(false);
     expect(result.current.searchResults).toEqual([]);
-    expect(result.current.defaultSections).toEqual({
-      cryptos: [],
-      stablecoins: [],
-      stocks: [],
-    });
+    expect(result.current.defaultSections).toEqual(EMPTY_SECTIONS);
   });
 
   it("flips isSearchActive when typing and back to false when cleared", () => {
@@ -35,6 +42,15 @@ describe("useGlobalSearchViewModel", () => {
     act(() => result.current.clearSearch());
     expect(result.current.search).toBe("");
     expect(result.current.isSearchActive).toBe(false);
+  });
+
+  it("enables default fetching only while no search is active", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    expect(mockedUseGlobalSearchDefaults).toHaveBeenLastCalledWith(true);
+
+    act(() => result.current.setSearch("btc"));
+    expect(mockedUseGlobalSearchDefaults).toHaveBeenLastCalledWith(false);
   });
 
   it("tracks search_open on mount", () => {
