@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { track } from "~/analytics";
 import { useSelector } from "~/context/hooks";
-import { selectMarketBannerFilter } from "~/reducers/homeScreenConfig";
-import type { MarketBannerFilter } from "~/reducers/types";
+import { selectMarketBannerRanking } from "~/reducers/marketBanner";
+import type { MarketBannerRanking } from "~/reducers/types";
 import { PAGE_NAME, BANNER_NAME } from "../constants";
 
 export type MarketBannerFilterController = {
-  filter: MarketBannerFilter;
+  filter: MarketBannerRanking;
   isOpen: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -14,7 +14,7 @@ export type MarketBannerFilterController = {
 
 // Owns only the trigger; the drawer's options and selection handling belong to the drawer task.
 export function useMarketBannerFilter(): MarketBannerFilterController {
-  const filter = useSelector(selectMarketBannerFilter);
+  const filter = useSelector(selectMarketBannerRanking);
   const [isOpen, setIsOpen] = useState(false);
 
   const onOpen = useCallback(() => {

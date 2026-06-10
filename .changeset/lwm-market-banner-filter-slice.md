@@ -2,4 +2,4 @@
 "live-mobile": minor
 ---
 
-Add a persisted `homeScreenConfig` Redux slice holding the market banner filter (`marketBannerFilter`). Exposes `setMarketBannerFilter` and `selectMarketBannerFilter`, defaults to `"trending"`, and survives app restart via MMKV.
+Add a persisted `marketBanner` Redux slice holding the market banner ranking (`ranking`), mirroring ledger-live-desktop. Exposes `setMarketBannerRanking` and `selectMarketBannerRanking`, defaults to `"trending"`, and survives app restart via MMKV.

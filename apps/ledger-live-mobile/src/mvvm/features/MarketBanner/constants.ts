@@ -1,15 +1,15 @@
-import type { MarketBannerFilter } from "~/reducers/types";
+import type { MarketBannerRanking } from "~/reducers/types";
 
 export const MARKET_BANNER_TILE_COUNT = 7;
 
 export const PAGE_NAME = "Wallet";
 export const BANNER_NAME = "Market Banner";
 
-export const MARKET_BANNER_FILTER_LABEL_KEYS: Record<MarketBannerFilter, string> = {
+export const MARKET_BANNER_FILTER_LABEL_KEYS: Record<MarketBannerRanking, string> = {
   trending: "marketBanner.filter.options.trending",
   gainers: "marketBanner.filter.options.gainers",
   losers: "marketBanner.filter.options.losers",
-  starred: "marketBanner.filter.options.starred",
+  favorites: "marketBanner.filter.options.favorites",
 };
 
 export const MARKET_BANNER_TEST_IDS = {
