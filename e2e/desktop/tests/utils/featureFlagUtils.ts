@@ -1,4 +1,4 @@
-import { OptionalFeatureMap } from "@ledgerhq/types-live";
+import { OptionalFeatureMap } from "@shared/feature-flags";
 import { Page } from "@playwright/test";
 
 export const getFeatureFlags = async (page: Page): Promise<OptionalFeatureMap> => {
