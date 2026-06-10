@@ -1,43 +1,19 @@
 import React from "react";
-import { Linking } from "react-native";
-import { render, screen } from "@tests/test-renderer";
+import { render } from "@tests/test-renderer";
 import { BorrowInfoBottomSheet } from "../BorrowInfoBottomSheet";
+import { InfoBottomSheet } from "~/components/WebPTXPlayer/InfoBottomSheet";
 import { State } from "~/reducers/types";
 
-jest.mock("@ledgerhq/lumen-ui-rnative", () => {
-  const React = require("react");
-  const RN = require("react-native");
-  const actual = jest.requireActual("@ledgerhq/lumen-ui-rnative");
-  return {
-    ...actual,
-    BottomSheetView: ({ children }: { children: React.ReactNode }) => <RN.View>{children}</RN.View>,
-    BottomSheetHeader: () => <RN.View testID="bottom-sheet-header" />,
-  };
-});
+type CapturedProps = React.ComponentProps<typeof InfoBottomSheet>;
 
-jest.mock("LLM/components/QueuedDrawer/QueuedDrawerBottomSheet", () => {
-  const React = require("react");
-  const { View, Text, Pressable } = require("react-native");
-  return function MockQueuedDrawerBottomSheet({
-    children,
-    onClose,
-    isRequestingToBeOpened,
-  }: {
-    children: React.ReactNode;
-    onClose: () => void;
-    isRequestingToBeOpened: boolean;
-  }) {
-    return (
-      <View testID="queued-drawer-bottom-sheet">
-        <Text testID="is-requesting-to-be-opened">{isRequestingToBeOpened ? "true" : "false"}</Text>
-        {children}
-        <Pressable testID="close-bottom-sheet" onPress={onClose}>
-          <Text>Close</Text>
-        </Pressable>
-      </View>
-    );
-  };
-});
+const captured: { current: CapturedProps | undefined } = { current: undefined };
+
+jest.mock("~/components/WebPTXPlayer/InfoBottomSheet", () => ({
+  InfoBottomSheet: jest.fn((props: CapturedProps) => {
+    captured.current = props;
+    return null;
+  }),
+}));
 
 const renderBorrowInfoBottomSheet = (infoBottomSheet: State["borrow"]["infoBottomSheet"]) =>
   render(<BorrowInfoBottomSheet />, {
@@ -53,83 +29,27 @@ const renderBorrowInfoBottomSheet = (infoBottomSheet: State["borrow"]["infoBotto
 describe("BorrowInfoBottomSheet", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    captured.current = undefined;
   });
 
-  it("renders without crashing when info bottom sheet state is empty", () => {
-    const { getByTestId } = renderBorrowInfoBottomSheet(undefined);
+  it("forwards the borrow info bottom sheet state to InfoBottomSheet", () => {
+    const data = { title: "Borrow info title", message: "Borrow info message body" };
+    renderBorrowInfoBottomSheet(data);
 
-    expect(getByTestId("queued-drawer-bottom-sheet")).toBeTruthy();
+    expect(captured.current?.data).toEqual(data);
   });
 
-  it("passes isRequestingToBeOpened false when info bottom sheet state is undefined", () => {
+  it("passes undefined data when the slice has no info bottom sheet", () => {
     renderBorrowInfoBottomSheet(undefined);
 
-    expect(screen.getByTestId("is-requesting-to-be-opened")).toHaveTextContent("false");
+    expect(captured.current?.data).toBeUndefined();
   });
 
-  it("displays title and message when provided in state", () => {
-    renderBorrowInfoBottomSheet({
-      title: "Borrow info title",
-      message: "Borrow info message body",
-    });
+  it("clears the borrow info bottom sheet state when onClose is invoked", () => {
+    const { store } = renderBorrowInfoBottomSheet({ title: "Title", message: "Message" });
 
-    expect(screen.getByText("Borrow info title")).toBeTruthy();
-    expect(screen.getByText("Borrow info message body")).toBeTruthy();
-  });
-
-  it("passes isRequestingToBeOpened true when title and message are set", () => {
-    renderBorrowInfoBottomSheet({
-      title: "Some title",
-      message: "Some message",
-    });
-
-    expect(screen.getByTestId("is-requesting-to-be-opened")).toHaveTextContent("true");
-  });
-
-  it("clears borrow info bottom sheet state when close is pressed", async () => {
-    const { store, user } = renderBorrowInfoBottomSheet({
-      title: "Title",
-      message: "Message",
-    });
-
-    await user.press(screen.getByTestId("close-bottom-sheet"));
+    captured.current?.onClose();
 
     expect(store.getState().borrow.infoBottomSheet).toBeUndefined();
-  });
-
-  it("renders inline link and opens URL when linkText and linkHref are set", async () => {
-    const { user } = renderBorrowInfoBottomSheet({
-      title: "Title",
-      message: "For more information,",
-      linkText: "Learn more",
-      linkHref: "https://example.com",
-    });
-
-    expect(screen.getByText("Learn more")).toBeTruthy();
-
-    await user.press(screen.getByText("Learn more"));
-
-    expect(Linking.openURL).toHaveBeenCalledTimes(1);
-    expect(Linking.openURL).toHaveBeenCalledWith("https://example.com");
-  });
-
-  it("does not render inline link when only linkText is set", () => {
-    renderBorrowInfoBottomSheet({
-      title: "Title",
-      message: "Message",
-      linkText: "No href",
-    });
-
-    expect(screen.queryByText("No href")).toBeNull();
-  });
-
-  it("does not render inline link when only linkHref is set", () => {
-    renderBorrowInfoBottomSheet({
-      title: "Title",
-      message: "Message",
-      linkHref: "https://example.com",
-    });
-
-    expect(Linking.openURL).not.toHaveBeenCalled();
   });
 });

@@ -5,8 +5,6 @@ import React, { useEffect, useMemo } from "react";
 import { BorrowLiveAppView } from ".";
 import { useBorrowLiveAppViewModel } from "LLM/features/Borrow/screens/BorrowLiveApp/useBorrowLiveAppViewModel";
 import { useDispatch } from "~/context/hooks";
-import { createOpenMenuBottomSheetHandler } from "~/components/WebPTXPlayer/CustomHandlers";
-import { createOpenActionDialogHandler } from "~/components/WebPTXPlayer/actionDialogStore";
 import { createOpenBorrowInfoBottomSheetHandler } from "LLM/features/Borrow/handlers/borrowDialogHandlers";
 
 type BorrowLiveAppWrapperProps = Readonly<{
@@ -43,8 +41,6 @@ export function BorrowLiveAppWrapper({
         onGoToSwap: onWalletApiGoToSwap,
       }),
       "custom.bottomSheet.info": createOpenBorrowInfoBottomSheetHandler(dispatch),
-      "custom.bottomSheet.menu": createOpenMenuBottomSheetHandler(dispatch),
-      "custom.dialog.confirmation": createOpenActionDialogHandler(dispatch),
     }),
     [dispatch, onWalletApiGoBack, onWalletApiGoToSwap],
   );
