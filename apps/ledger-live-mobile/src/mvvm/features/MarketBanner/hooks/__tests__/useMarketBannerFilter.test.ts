@@ -1,6 +1,6 @@
 import { act, renderHook } from "@tests/test-renderer";
 import { track } from "~/analytics";
-import type { State } from "~/reducers/types";
+import type { MarketBannerRanking, State } from "~/reducers/types";
 import { useMarketBannerFilter } from "../useMarketBannerFilter";
 
 jest.mock("~/analytics", () => ({ track: jest.fn() }));
@@ -9,6 +9,13 @@ const withStarred = (starredMarketCoins: string[]) => (state: State) => ({
   ...state,
   settings: { ...state.settings, starredMarketCoins },
 });
+
+const withRanking = (ranking: MarketBannerRanking) => (state: State) => ({
+  ...state,
+  marketBanner: { ...state.marketBanner, ranking },
+});
+
+const ALL_RANKINGS: MarketBannerRanking[] = ["trending", "gainers", "losers", "favorites"];
 
 describe("useMarketBannerFilter", () => {
   beforeEach(() => {
@@ -75,5 +82,33 @@ describe("useMarketBannerFilter", () => {
     act(() => result.current.onSelect("trending"));
 
     expect(track).not.toHaveBeenCalledWith("change_sort_market_banner", expect.anything());
+  });
+
+  describe("change_sort_market_banner tracking", () => {
+    it.each(ALL_RANKINGS)(
+      "fires the event with sort=%s on a genuine change to that option",
+      ranking => {
+        // Start from a different ranking so selecting `ranking` is an actual change.
+        const initialRanking: MarketBannerRanking = ranking === "trending" ? "gainers" : "trending";
+        const { result } = renderHook(() => useMarketBannerFilter(), {
+          overrideInitialState: withRanking(initialRanking),
+        });
+
+        act(() => result.current.onSelect(ranking));
+
+        expect(track).toHaveBeenCalledTimes(1);
+        expect(track).toHaveBeenCalledWith("change_sort_market_banner", { sort: ranking });
+      },
+    );
+
+    it.each(ALL_RANKINGS)("does not fire when reselecting the active %s option", ranking => {
+      const { result } = renderHook(() => useMarketBannerFilter(), {
+        overrideInitialState: withRanking(ranking),
+      });
+
+      act(() => result.current.onSelect(ranking));
+
+      expect(track).not.toHaveBeenCalledWith("change_sort_market_banner", expect.anything());
+    });
   });
 });
