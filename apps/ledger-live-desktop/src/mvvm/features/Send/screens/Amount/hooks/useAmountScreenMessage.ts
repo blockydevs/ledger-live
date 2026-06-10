@@ -54,30 +54,35 @@ export function useAmountScreenMessage(params: {
 
   const multisignMessage =
     isStellarMultisignBlocked && recipientError?.title
-      ? ({ type: "error", text: recipientError.title } as const)
+      ? ({ type: "error", text: recipientError.title, error: recipientErrorRaw } as const)
       : null;
 
   const baseAmountMessage = useMemo((): AmountScreenMessage | null => {
     if (!params.hasRawAmount) return null;
 
     if (amountErrorTitle) {
-      return { type: "error", text: amountErrorTitle };
+      return { type: "error", text: amountErrorTitle, error: params.status.errors?.amount };
     }
 
     if (otherBlockingError?.title) {
-      return { type: "error", text: otherBlockingError.title };
+      return { type: "error", text: otherBlockingError.title, error: otherBlockingErrorRaw };
     }
 
-    return getAmountScreenMessage({
+    const amountMessage = getAmountScreenMessage({
       amountWarningTitle,
       isFeeTooHigh,
       hasRawAmount: params.hasRawAmount,
     });
+
+    return amountMessage ? { ...amountMessage, error: amountWarningRaw } : null;
   }, [
     params.hasRawAmount,
+    params.status.errors?.amount,
     amountErrorTitle,
     otherBlockingError?.title,
+    otherBlockingErrorRaw,
     amountWarningTitle,
+    amountWarningRaw,
     isFeeTooHigh,
   ]);
 

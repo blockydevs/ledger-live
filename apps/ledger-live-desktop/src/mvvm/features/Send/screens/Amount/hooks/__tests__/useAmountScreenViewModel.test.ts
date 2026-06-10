@@ -136,6 +136,7 @@ describe("useAmountScreenViewModel", () => {
       amount: new BigNumber(0),
       totalSpent: new BigNumber(0),
     } as TransactionStatus;
+    const error = status.errors.recipient;
 
     const { result } = renderHook(
       () =>
@@ -163,6 +164,7 @@ describe("useAmountScreenViewModel", () => {
     expect(result.current.amountMessage).toEqual({
       type: "error",
       text: "StellarSourceHasMultiSign",
+      error,
     });
   });
 
@@ -264,6 +266,7 @@ describe("useAmountScreenViewModel", () => {
       amount: new BigNumber(0),
       totalSpent: new BigNumber(0),
     } as TransactionStatus;
+    const error = status.errors.dustLimit;
 
     const { result } = renderHook(
       () =>
@@ -291,6 +294,7 @@ describe("useAmountScreenViewModel", () => {
     expect(result.current.amountMessage).toEqual({
       type: "error",
       text: "DustLimit",
+      error,
     });
     expect(result.current.reviewDisabled).toBe(true);
   });
