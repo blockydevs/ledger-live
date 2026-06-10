@@ -429,7 +429,7 @@ function Delegations({ account }: { account: StakingAccount }) {
           <AccountSectionLabel name={t("account.undelegation.sectionLabel")} />
           {undelegations.map((d, i) => (
             <View
-              key={`${d.validatorAddress}-${d.completionDate.valueOf()}`}
+              key={`${d.validatorAddress}-${d.completionDate.valueOf()}-${d.withdrawId ?? i}`}
               style={[styles.delegationsWrapper, { backgroundColor: colors.card }]}
             >
               <DelegationRow

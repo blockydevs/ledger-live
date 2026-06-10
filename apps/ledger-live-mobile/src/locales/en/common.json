@@ -6860,11 +6860,20 @@
             "youEarned": "You earned",
             "byDelegationAssetsTo": "by delegating assets to",
             "description": "Rewards will be claimed now and added to your available balance.",
-            "cta": "Continue"
+            "compoundRewardDescription": "Rewards will be restaked to the same validator, increasing your delegated balance.",
+            "cta": "Continue",
+            "method": {
+              "claimReward": "Cash in",
+              "compoundReward": "Compound",
+              "compoundOrCashIn": "Compound or Cash in?",
+              "claimRewardTooltip": "Rewards will be added to your available balance.",
+              "compoundRewardTooltip": "Rewards will be restaked to the same validator."
+            }
           },
           "verification": {
             "success": {
               "title": "You have successfully claimed your rewards. They were added to your available balance.",
+              "titleCompound": "Your rewards were delegated to the same validator.",
               "text": "Your account balance will be updated when the network confirms the transaction.",
               "cta": "View details"
             },
