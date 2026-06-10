@@ -6,10 +6,16 @@ import { useGlobalSearchDefaults } from "../useGlobalSearchDefaults";
 import { useGlobalSearchResults, type GlobalSearchResults } from "../useGlobalSearchResults";
 
 const mockGoBack = jest.fn();
+const mockNavigate = jest.fn();
+const mockOpenFromMarket = jest.fn();
 
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
-  useNavigation: () => ({ goBack: mockGoBack }),
+  useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
+}));
+
+jest.mock("LLM/features/AssetDetail/hooks/useAssetDetailNavigation", () => ({
+  useAssetDetailNavigation: () => ({ openFromMarket: mockOpenFromMarket }),
 }));
 
 jest.mock("../useGlobalSearchDefaults");
@@ -94,6 +100,60 @@ describe("useGlobalSearchViewModel", () => {
       button: "See all",
       page: ScreenName.GlobalSearch,
       category: "crypto",
+    });
+  });
+
+  it("opens the Market list on the all category from the Cryptos header", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    act(() => result.current.onSeeAll("crypto"));
+
+    expect(mockNavigate).toHaveBeenCalledWith(ScreenName.MarketList, { category: "all" });
+  });
+
+  it("opens the Market list on the stocks category from the Stocks header", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    act(() => result.current.onSeeAll("stocks"));
+
+    expect(mockNavigate).toHaveBeenCalledWith(ScreenName.MarketList, { category: "stocks" });
+  });
+
+  it("does not navigate from the Stablecoins header (no Market category yet)", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    act(() => result.current.onSeeAll("stable"));
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("opens asset detail from a tapped result row", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    act(() => result.current.onAssetPress({ id: "bitcoin", ledgerIds: ["bitcoin"] } as never));
+
+    expect(mockOpenFromMarket).toHaveBeenCalledWith({
+      marketCurrencyId: "bitcoin",
+      ledgerCurrencyIds: ["bitcoin"],
+      source: ScreenName.GlobalSearch,
+    });
+  });
+
+  it("opens asset detail from a tapped stock pill", () => {
+    const { result } = renderHook(() => useGlobalSearchViewModel());
+
+    act(() =>
+      result.current.onStockPress({
+        id: "aapl",
+        navigationId: "aapl-market",
+        ledgerId: "aapl-ledger",
+      } as never),
+    );
+
+    expect(mockOpenFromMarket).toHaveBeenCalledWith({
+      marketCurrencyId: "aapl-market",
+      ledgerCurrencyIds: ["aapl-ledger"],
+      source: ScreenName.GlobalSearch,
     });
   });
 });
