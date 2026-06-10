@@ -149,7 +149,9 @@ describe("MarketBanner Integration Tests", () => {
     });
 
     it("should render the four filter options in the drawer", async () => {
-      renderWithAssetDiscoverability(true);
+      const { user } = renderWithAssetDiscoverability(true);
+
+      await user.press(await screen.findByTestId("market-banner-filter-button"));
 
       expect(await screen.findByTestId("market-banner-filter-drawer-trending")).toBeVisible();
       expect(screen.getByTestId("market-banner-filter-drawer-gainers")).toBeVisible();
@@ -160,6 +162,7 @@ describe("MarketBanner Integration Tests", () => {
     it("should persist the selected filter and track the change", async () => {
       const { user, store } = renderWithAssetDiscoverability(true);
 
+      await user.press(await screen.findByTestId("market-banner-filter-button"));
       await user.press(await screen.findByTestId("market-banner-filter-drawer-losers"));
 
       await waitFor(() => {

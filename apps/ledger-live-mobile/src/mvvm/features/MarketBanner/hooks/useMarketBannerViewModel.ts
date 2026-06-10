@@ -20,8 +20,7 @@ import { TIME_RANGE } from "@ledgerhq/live-common/market/constants";
 
 const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
   const baseNavigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
-  const { shouldDisplayMarketBanner, shouldDisplayAssetDiscoverability } =
-    useWalletFeaturesConfig("mobile");
+  const { shouldDisplayAssetDiscoverability } = useWalletFeaturesConfig("mobile");
   const { openFromMarket } = useAssetDetailNavigation();
   const bannerFilter = useMarketBannerFilter();
 
@@ -89,7 +88,6 @@ const useMarketBannerViewModel = (): UseMarketBannerViewModelResult => {
     items: filteredItems,
     isLoading,
     isError,
-    isEnabled: shouldDisplayMarketBanner,
     showFilter: shouldDisplayAssetDiscoverability,
     bannerFilter,
     range: TIME_RANGE,

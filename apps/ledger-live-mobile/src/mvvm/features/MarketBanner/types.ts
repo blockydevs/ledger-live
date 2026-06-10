@@ -25,7 +25,6 @@ export interface UseMarketBannerViewModelResult {
   items: MarketItemPerformer[];
   isLoading: boolean;
   isError: boolean;
-  isEnabled: boolean;
   showFilter: boolean;
   bannerFilter: MarketBannerFilterController;
   range: PortfolioRange;

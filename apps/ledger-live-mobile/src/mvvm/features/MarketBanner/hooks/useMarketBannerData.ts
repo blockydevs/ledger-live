@@ -63,13 +63,17 @@ export function useMarketBannerData(ranking: MarketBannerRanking): MarketBannerD
     [starredMarketCoins],
   );
 
-  const isFavorites = ranking === "favorites";
+  const wantsFavorites = ranking === "favorites";
+  const hasStarred = sortedStarredIds.length > 0;
+  // Treat favorites as active only when there is something to show, so the empty
+  // case falls through to the trending performers instead of flashing an empty list.
+  const isFavorites = wantsFavorites && hasStarred;
 
   useEffect(() => {
-    if (isFavorites && sortedStarredIds.length === 0) {
+    if (wantsFavorites && !hasStarred) {
       dispatch(setMarketBannerRanking("trending"));
     }
-  }, [dispatch, isFavorites, sortedStarredIds.length]);
+  }, [dispatch, wantsFavorites, hasStarred]);
 
   const performers = useMarketPerformers({
     sort: ranking === "losers" ? "desc" : "asc",

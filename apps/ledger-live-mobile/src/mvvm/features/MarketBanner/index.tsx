@@ -1,13 +1,13 @@
 import React from "react";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import useMarketBannerViewModel from "./hooks/useMarketBannerViewModel";
 import MarketBannerView from "./components/MarketBannerView";
 import { MarketBannerProps } from "./types";
 
-const MarketBanner = ({ testID }: MarketBannerProps) => {
+const MarketBannerContent = ({ testID }: MarketBannerProps) => {
   const {
     items,
     isError,
-    isEnabled,
     showFilter,
     bannerFilter,
     range,
@@ -15,10 +15,6 @@ const MarketBanner = ({ testID }: MarketBannerProps) => {
     onViewAllPress,
     onSectionTitlePress,
   } = useMarketBannerViewModel();
-
-  if (!isEnabled) {
-    return null;
-  }
 
   return (
     <MarketBannerView
@@ -33,6 +29,17 @@ const MarketBanner = ({ testID }: MarketBannerProps) => {
       testID={testID}
     />
   );
+};
+
+const MarketBanner = ({ testID }: MarketBannerProps) => {
+  const { shouldDisplayMarketBanner } = useWalletFeaturesConfig("mobile");
+
+  // Gate before the data-heavy ViewModel so a disabled banner runs no data hooks.
+  if (!shouldDisplayMarketBanner) {
+    return null;
+  }
+
+  return <MarketBannerContent testID={testID} />;
 };
 
 export default React.memo(MarketBanner);
