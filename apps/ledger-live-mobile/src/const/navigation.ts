@@ -679,6 +679,7 @@ export enum NavigatorName {
   Swap = "SwapNavigator",
   SwapSubScreens = "SwapSubScreensNavigator",
   Perps = "PerpsNavigator",
+  GlobalSearch = "GlobalSearchNavigator",
   Earn = "EarnNavigator",
   Borrow = "BorrowNavigator",
   Fees = "FeesNavigator",
