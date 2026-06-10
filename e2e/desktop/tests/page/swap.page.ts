@@ -13,6 +13,10 @@ import { FileUtils } from "tests/utils/fileUtils";
 import { getMinimumSwapAmount } from "@ledgerhq/live-common/e2e/swap";
 import { getTokenAllowanceCommand } from "@ledgerhq/live-common/e2e/cliCommandsUtils";
 
+// Uniswap's Permit2 "Approve token access" step can take 1-5 min to confirm on-chain
+// before the sign-permit button appears (the app shows a "1-5 mins" estimate).
+const APPROVAL_PROCESSING_TIMEOUT = 300_000;
+
 export class SwapPage extends WebViewAppPage {
   protected readonly webviewIdentifier = "swap";
   private static readonly EXPORT_SOURCE_PATH = path.resolve("./ledgerwallet-swap-history.csv");
@@ -597,7 +601,7 @@ export class SwapPage extends WebViewAppPage {
   async clickGiveAuthorizationButton() {
     const webview = await this.getWebView();
     const authorizationButton = webview.getByTestId(this.signPermitButton);
-    await expect(authorizationButton).toBeVisible();
+    await expect(authorizationButton).toBeVisible({ timeout: APPROVAL_PROCESSING_TIMEOUT });
     await expect(authorizationButton).toBeEnabled();
     await authorizationButton.click();
   }
