@@ -20,7 +20,7 @@ describe("GlobalSearch screen", () => {
     render(<GlobalSearch />);
 
     expect(screen.getByTestId(GLOBAL_SEARCH_TEST_IDS.searchInput)).toBeVisible();
-    expect(screen.getByPlaceholderText("Search assets")).toBeVisible();
+    expect(screen.getByPlaceholderText(/search assets/i)).toBeVisible();
   });
 
   it("tracks search_open on mount", () => {
@@ -32,7 +32,7 @@ describe("GlobalSearch screen", () => {
   it("navigates back when the back button is pressed", async () => {
     const { user } = render(<GlobalSearch />);
 
-    await user.press(screen.getByLabelText("Back"));
+    await user.press(screen.getByLabelText(/back/i));
 
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
@@ -40,7 +40,7 @@ describe("GlobalSearch screen", () => {
   it("reflects typed input in the search field", async () => {
     const { user } = render(<GlobalSearch />);
 
-    await user.type(screen.getByPlaceholderText("Search assets"), "bitcoin");
+    await user.type(screen.getByPlaceholderText(/search assets/i), "bitcoin");
 
     expect(screen.getByDisplayValue("bitcoin")).toBeVisible();
   });

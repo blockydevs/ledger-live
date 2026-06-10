@@ -41,10 +41,8 @@ export function GlobalSearch() {
   const topPadding = hasExperimentalHeader ? 0 : insets.top;
 
   useEffect(() => {
-    // page is auto-injected by track() as the originating route name
     track("search_open");
 
-    // focus after the fade-in so the keyboard doesn't interrupt the animation
     const task = InteractionManager.runAfterInteractions(() => {
       inputRef.current?.focus();
     });
