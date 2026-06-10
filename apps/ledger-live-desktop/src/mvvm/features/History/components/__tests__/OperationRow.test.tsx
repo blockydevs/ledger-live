@@ -1,22 +1,12 @@
 import React from "react";
 import BigNumber from "bignumber.js";
-import { fireEvent, render, screen } from "tests/testSetup";
+import { render, screen } from "tests/testSetup";
 import { getCryptoCurrencyById } from "@ledgerhq/live-common/currencies/index";
 import type { Operation } from "@ledgerhq/types-live";
 import type { Currency } from "@ledgerhq/types-cryptoassets";
 import { OperationRow } from "../OperationRow";
 import type { OperationRow as OperationRowType, OperationTableItem } from "../../types";
 
-jest.mock("@features/platform-feature-flags", () => ({
-  useWalletFeaturesConfig: () => ({ shouldDisplayAggregatedAssets: false }),
-}));
-jest.mock("LLD/components/TransactionalIcon", () => ({
-  __esModule: true,
-  default: () => null,
-}));
-jest.mock("LLD/components/SquaredCryptoIcon", () => ({
-  SquaredCryptoIcon: () => null,
-}));
 jest.mock("LLD/components/Cells/BalanceCell", () => ({
   BalanceCell: () => null,
 }));
@@ -32,6 +22,7 @@ const bitcoinCurrency = getCryptoCurrencyById("bitcoin");
 const tokenCurrency = {
   type: "TokenCurrency",
   id: "ethereum/erc20/usd__coin",
+  name: "USD Coin",
   ticker: "USDC",
   parentCurrency: getCryptoCurrencyById("ethereum"),
 } as unknown as Currency;
@@ -63,14 +54,14 @@ const makeRow = (overrides: Partial<OperationTableItem> = {}): OperationRowType 
   }) as unknown as OperationRowType;
 
 const renderRow = (row: OperationRowType, onRowClick = jest.fn()) => {
-  render(
+  const { user } = render(
     <table>
       <tbody>
         <OperationRow row={row} onRowClick={onRowClick} />
       </tbody>
     </table>,
   );
-  return onRowClick;
+  return { user, onRowClick };
 };
 
 describe("History/OperationRow", () => {
@@ -101,10 +92,10 @@ describe("History/OperationRow", () => {
     expect(screen.getByText("Failed")).toBeInTheDocument();
   });
 
-  it("forwards row clicks", () => {
+  it("forwards row clicks", async () => {
     const row = makeRow();
-    const onRowClick = renderRow(row);
-    fireEvent.click(screen.getByTestId("history-operation-row-op-1"));
+    const { user, onRowClick } = renderRow(row);
+    await user.click(screen.getByTestId("history-operation-row-op-1"));
     expect(onRowClick).toHaveBeenCalledWith(row);
   });
 });
