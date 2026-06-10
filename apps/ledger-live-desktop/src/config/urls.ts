@@ -212,9 +212,9 @@ export const urls = {
   charonLearnMore: "https://shop.ledger.com/products/ledger-recovery-key",
   backupHub: {
     recoveryKey:
-      "https://shop.ledger.com/products/ledger-recovery-key?utm_source=lwd-backup-hub&utm_campaign=backup-hub-launch",
+      "https://shop.ledger.com/products/ledger-recovery-key/single-backup?utm_source=Ledger_Wallet&utm_medium=Native&utm_campaign=26-06-AlwaysOn-ALL-Awareness-LLD&utm_content=msg_backuphub",
     secretRecoveryPhrase:
-      "https://shop.ledger.com/products/cryptosteel-capsule-solo?utm_source=lwd-backup-hub&utm_campaign=backup-hub-launch",
+      "https://shop.ledger.com/?utm_source=Ledger_Wallet&utm_medium=Native&utm_campaign=26-06-AlwaysOn-ALL-Awareness-LLD&utm_content=msg_backuphub#category-srp-accessories",
   },
 
   // Node errors

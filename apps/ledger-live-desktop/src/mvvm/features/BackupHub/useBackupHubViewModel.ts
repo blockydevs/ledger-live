@@ -5,7 +5,12 @@ import { urls } from "~/config/urls";
 import { useRecoverBannerState } from "~/renderer/hooks/useRecoverBannerState";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { getBackupBucket } from "./utils/getBackupBucket";
-import { BACKUP_HUB_TRACKING_BUTTON, BACKUP_HUB_TRACKING_PAGE_NAME } from "./constants";
+import {
+  BACKUP_HUB_TRACKING_BUTTON,
+  BACKUP_HUB_TRACKING_PAGE_NAME,
+  BACKUP_HUB_RECOVER_DEEPLINK_QUERY,
+  RECOVER_DEEPLINK_BASE,
+} from "./constants";
 import type { BackupBucket, PhysicalRowId } from "./types";
 import recoveryKeyImage from "./assets/recovery-key.png";
 import secretRecoveryPhraseImage from "./assets/24-words.png";
@@ -50,9 +55,18 @@ export function useBackupHubViewModel({ onBack, onClose }: BackupHubParams): Bac
       button: BACKUP_HUB_TRACKING_BUTTON.recover,
       page: BACKUP_HUB_TRACKING_PAGE_NAME,
     });
-    openRecover();
+
+    if (bucket === "in-progress") {
+      openURL(
+        `${RECOVER_DEEPLINK_BASE}/${protectId}?${BACKUP_HUB_RECOVER_DEEPLINK_QUERY.inProgress}`,
+      );
+    } else if (bucket === "done") {
+      openURL(`${RECOVER_DEEPLINK_BASE}/${protectId}?${BACKUP_HUB_RECOVER_DEEPLINK_QUERY.done}`);
+    } else {
+      openRecover();
+    }
     onClose();
-  }, [openRecover, onClose]);
+  }, [bucket, protectId, openRecover, onClose]);
 
   const openShop = useCallback(
     (url: string, button: string) => {

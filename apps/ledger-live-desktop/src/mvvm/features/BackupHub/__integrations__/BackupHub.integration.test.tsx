@@ -6,6 +6,10 @@ import { LedgerRecoverSubscriptionStateEnum } from "~/types/recoverSubscriptionS
 import { isModalOpened } from "~/renderer/reducers/modals";
 import { openURL } from "~/renderer/linking";
 import { ContextMenu } from "LLD/features/MyWallet/components/ContextMenu";
+import {
+  BACKUP_HUB_RECOVER_DEEPLINK_QUERY,
+  RECOVER_DEEPLINK_BASE,
+} from "LLD/features/BackupHub/constants";
 
 const PROTECT_ID = "protect-id";
 const RECOVER_HOME_PATH = "/recover/protect-id";
@@ -90,6 +94,27 @@ describe("BackupHub", () => {
     expect(screen.queryByRole("button", { name: "Discover" })).not.toBeInTheDocument();
   });
 
+  it("opens the subscribed Recover deeplink when clicking the Recover row in the done variant", async () => {
+    const utils = render(<ContextMenu />, { initialState: backupHubState });
+    utils.store.dispatch(
+      setRecoverState({
+        protectId: PROTECT_ID,
+        subscriptionState: LedgerRecoverSubscriptionStateEnum.BACKUP_DONE,
+      }),
+    );
+
+    await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
+    await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
+    await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+
+    await utils.user.click(screen.getByTestId("backup-hub-recover-row"));
+
+    expect(mockOpenURL).toHaveBeenCalledWith(
+      `${RECOVER_DEEPLINK_BASE}/${PROTECT_ID}?${BACKUP_HUB_RECOVER_DEEPLINK_QUERY.done}`,
+    );
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it("shows the in-progress variant with the warning copy and no primary CTA", async () => {
     const utils = render(<ContextMenu />, { initialState: backupHubState });
     utils.store.dispatch(
@@ -105,6 +130,27 @@ describe("BackupHub", () => {
     await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
     expect(screen.getByText("Finish setting up your backup.")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Discover" })).not.toBeInTheDocument();
+  });
+
+  it("opens the ongoing-subscription Recover deeplink when clicking the Recover row in the in-progress variant", async () => {
+    const utils = render(<ContextMenu />, { initialState: backupHubState });
+    utils.store.dispatch(
+      setRecoverState({
+        protectId: PROTECT_ID,
+        subscriptionState: LedgerRecoverSubscriptionStateEnum.BACKUP_DEVICE_CONNECTION,
+      }),
+    );
+
+    await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
+    await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
+    await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+
+    await utils.user.click(screen.getByTestId("backup-hub-recover-row"));
+
+    expect(mockOpenURL).toHaveBeenCalledWith(
+      `${RECOVER_DEEPLINK_BASE}/${PROTECT_ID}?${BACKUP_HUB_RECOVER_DEEPLINK_QUERY.inProgress}`,
+    );
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("navigates to the Recover Live App home when clicking the Recover row", async () => {
@@ -139,9 +185,11 @@ describe("BackupHub", () => {
 
     expect(mockOpenURL).toHaveBeenCalledTimes(1);
     const calledWith = mockOpenURL.mock.calls[0][0];
-    expect(calledWith).toContain("https://shop.ledger.com/products/ledger-recovery-key");
-    expect(calledWith).toContain("utm_source=lwd-backup-hub");
-    expect(calledWith).toContain("utm_campaign=backup-hub-launch");
+    expect(calledWith).toContain(
+      "https://shop.ledger.com/products/ledger-recovery-key/single-backup",
+    );
+    expect(calledWith).toContain("utm_source=Ledger_Wallet");
+    expect(calledWith).toContain("utm_campaign=26-06-AlwaysOn-ALL-Awareness-LLD");
   });
 
   it("returns to the menu when pressing back", async () => {
