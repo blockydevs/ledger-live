@@ -133,7 +133,7 @@ const useFeesCurrency = (
     ? operation.extra.feeCurrencyAddress
     : undefined;
   const { data: fetchedAddress } = useQuery({
-    queryKey: ["celo.feeCurrency", operation.hash],
+    queryKey: ["celo.feeCurrency", account.currency.id, operation.hash],
     queryFn: () => getCeloTransactionFeeCurrency(operation.hash),
     enabled:
       !storedAddress &&

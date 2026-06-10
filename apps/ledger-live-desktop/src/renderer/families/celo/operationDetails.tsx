@@ -144,7 +144,7 @@ const useFeesCurrency = (
   // yet. Skipped when we already have a stored value (including the NATIVE
   // sentinel) or the op isn't confirmed on chain.
   const { data: fetchedAddress } = useQuery({
-    queryKey: ["celo.feeCurrency", operation.hash],
+    queryKey: ["celo.feeCurrency", account.currency.id, operation.hash],
     queryFn: () => getCeloTransactionFeeCurrency(operation.hash),
     enabled:
       !storedAddress &&
