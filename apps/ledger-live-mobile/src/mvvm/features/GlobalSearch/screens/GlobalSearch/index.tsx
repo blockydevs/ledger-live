@@ -26,7 +26,9 @@ export function GlobalSearch() {
       header: {
         flexDirection: "row",
         alignItems: "center",
+        minHeight: theme.sizes.s64,
         paddingHorizontal: theme.spacings.s16,
+        paddingVertical: theme.spacings.s8,
         gap: theme.spacings.s8,
       },
       searchInputContainer: {
@@ -51,23 +53,25 @@ export function GlobalSearch() {
 
   return (
     <View testID={GLOBAL_SEARCH_TEST_IDS.screen} style={styles.container}>
-      <View style={[styles.header, { paddingTop: topPadding }]}>
-        <NavBarBackButton
-          onPress={() => navigation.goBack()}
-          accessibilityLabel={t("common.back")}
-        />
-        <View style={styles.searchInputContainer}>
-          <SearchInput
-            ref={inputRef}
-            testID={GLOBAL_SEARCH_TEST_IDS.searchInput}
-            value={search}
-            onChangeText={setSearch}
-            onClear={() => setSearch("")}
-            hideClearButton={false}
-            placeholder={t("globalSearch.searchPlaceholder")}
-            autoCorrect={false}
-            autoCapitalize="none"
+      <View style={{ paddingTop: topPadding }}>
+        <View style={styles.header}>
+          <NavBarBackButton
+            onPress={() => navigation.goBack()}
+            accessibilityLabel={t("common.back")}
           />
+          <View style={styles.searchInputContainer}>
+            <SearchInput
+              ref={inputRef}
+              testID={GLOBAL_SEARCH_TEST_IDS.searchInput}
+              value={search}
+              onChangeText={setSearch}
+              onClear={() => setSearch("")}
+              hideClearButton={false}
+              placeholder={t("globalSearch.searchPlaceholder")}
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+          </View>
         </View>
       </View>
     </View>
