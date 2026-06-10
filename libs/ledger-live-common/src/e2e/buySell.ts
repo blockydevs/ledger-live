@@ -17,15 +17,6 @@ type CryptoLimitationsResponse = {
   value?: Record<string, CryptoLimitation>;
 };
 
-/**
- * Returns the minimum amount to sell `currencyId`, formatted as an input-ready string.
- *
- * Formatting (trim to 6 decimals, drop trailing zeros) lives here so every consumer
- * (desktop + mobile E2E) enters the exact same value — avoiding the per-POM drift the
- * swap helpers suffer from (desktop rounds to 6dp, mobile uses full precision).
- *
- * @throws if the minimum cannot be determined from the API or the countervalues fallback.
- */
 export async function getMinimumSellAmount(currencyId: string): Promise<string> {
   const amount = await fetchMinimumSellAmount(currencyId);
   if (amount === null) {
