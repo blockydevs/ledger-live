@@ -12,7 +12,7 @@ const withStarred = (starredMarketCoins: string[]) => (state: State) => ({
 
 const withRanking = (ranking: MarketBannerRanking) => (state: State) => ({
   ...state,
-  marketBanner: { ...state.marketBanner, ranking },
+  marketBanner: { ranking },
 });
 
 const ALL_RANKINGS: MarketBannerRanking[] = ["trending", "gainers", "losers", "favorites"];
@@ -91,7 +91,11 @@ describe("useMarketBannerFilter", () => {
         // Start from a different ranking so selecting `ranking` is an actual change.
         const initialRanking: MarketBannerRanking = ranking === "trending" ? "gainers" : "trending";
         const { result } = renderHook(() => useMarketBannerFilter(), {
-          overrideInitialState: withRanking(initialRanking),
+          // Favorites is only selectable with at least one starred asset, so seed one.
+          overrideInitialState: state =>
+            withRanking(initialRanking)(
+              ranking === "favorites" ? withStarred(["bitcoin"])(state) : state,
+            ),
         });
 
         act(() => result.current.onSelect(ranking));
@@ -103,7 +107,8 @@ describe("useMarketBannerFilter", () => {
 
     it.each(ALL_RANKINGS)("does not fire when reselecting the active %s option", ranking => {
       const { result } = renderHook(() => useMarketBannerFilter(), {
-        overrideInitialState: withRanking(ranking),
+        overrideInitialState: state =>
+          withRanking(ranking)(ranking === "favorites" ? withStarred(["bitcoin"])(state) : state),
       });
 
       act(() => result.current.onSelect(ranking));
