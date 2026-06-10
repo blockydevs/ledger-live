@@ -15,12 +15,18 @@ type CeloRpcTransaction = {
   feeCurrency?: `0x${string}` | null;
 };
 
+// CIP-64 `feeCurrency` is always a 20-byte EVM address. Reject anything else
+// (e.g. "0x1", "0xZZZ") rather than persisting garbage that would silently
+// mis-render ops and never retry — sync only retries when feeCurrencyAddress
+// is absent, not when it points to a non-existent contract.
+const ADDRESS_RE = /^0x[0-9a-f]{40}$/i;
+
 const isCeloRpcTransaction = (v: unknown): v is CeloRpcTransaction => {
   if (v === null || typeof v !== "object") return false;
   const obj = v as Record<string, unknown>;
   if (obj.type !== undefined && typeof obj.type !== "string") return false;
   if (obj.feeCurrency !== undefined && obj.feeCurrency !== null) {
-    if (typeof obj.feeCurrency !== "string" || !obj.feeCurrency.startsWith("0x")) return false;
+    if (typeof obj.feeCurrency !== "string" || !ADDRESS_RE.test(obj.feeCurrency)) return false;
   }
   return true;
 };

@@ -260,5 +260,22 @@ describe("network/sdk", () => {
 
       await expect(getCeloTransactionFeeCurrency(VALID_HASH)).rejects.toThrow(/not found/);
     });
+
+    it("rejects responses with a too-short `feeCurrency`", async () => {
+      const { getCeloTransactionFeeCurrency } = loadSdkModule();
+      requestMock.mockResolvedValueOnce({ type: "0x7b", feeCurrency: "0x1" });
+
+      await expect(getCeloTransactionFeeCurrency(VALID_HASH)).rejects.toThrow(/not found/);
+    });
+
+    it("rejects responses with non-hex characters in `feeCurrency`", async () => {
+      const { getCeloTransactionFeeCurrency } = loadSdkModule();
+      requestMock.mockResolvedValueOnce({
+        type: "0x7b",
+        feeCurrency: "0xZZ12CD34AB12CD34AB12CD34AB12CD34AB12CD34",
+      });
+
+      await expect(getCeloTransactionFeeCurrency(VALID_HASH)).rejects.toThrow(/not found/);
+    });
   });
 });
