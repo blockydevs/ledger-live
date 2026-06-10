@@ -1,6 +1,7 @@
 import React from "react";
 import BigNumber from "bignumber.js";
-import { act, render, screen } from "tests/testSetup";
+import { render, screen } from "tests/testSetup";
+import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import {
   getCryptoCurrencyById,
@@ -46,21 +47,11 @@ const renderDrawer = (account: TezosAccount) =>
   });
 
 describe("Tezos OperationDetails drawer", () => {
-  // The first OperationDetails mount in a fresh jest module registry never paints (a one-shot
-  // module-level async init keeps it suspended); mount and discard until a mount paints so the
-  // real tests below render deterministically.
+  // Warm the module-level account-bridge promise cache: the first mount otherwise
+  // suspends on the pending promise (useAccountBridge → use()) and never repaints.
   beforeAll(async () => {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const account = makeAccount(id => makeOperation(id, "OUT"));
-      const r = renderDrawer(account);
-      await act(async () => {
-        await new Promise(res => setTimeout(res, 1000));
-      });
-      const painted = r.container.innerHTML.length > 0;
-      r.unmount();
-      if (painted) return;
-    }
-  }, 30000);
+    await getAccountBridge(makeAccount(id => makeOperation(id, "OUT")));
+  });
 
   it("shows the tezos-scoped label for an UNSTAKE operation", async () => {
     const account = makeAccount(id => makeOperation(id, "UNSTAKE"));
