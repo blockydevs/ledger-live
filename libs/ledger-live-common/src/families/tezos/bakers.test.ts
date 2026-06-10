@@ -1,8 +1,8 @@
 import { setCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
 import { fromAccountRaw } from "@ledgerhq/ledger-wallet-framework/serialization";
-import { DerivationMode, type CryptoAssetsStore } from "@ledgerhq/types-live";
+import type { DerivationMode, CryptoAssetsStore } from "@ledgerhq/types-live";
 import { loadAccountDelegation } from "./bakers";
-import { TezosAccountRaw } from "./types";
+import type { TezosAccountRaw } from "./types";
 
 function makeAccountRaw(
   name: string,
@@ -39,7 +39,6 @@ const accountTZrevealedDelegating = makeAccountRaw(
 
 describe("tezos bakers", () => {
   beforeAll(() => {
-    // Initialize CryptoAssetsStore so fromAccountRaw can resolve the tezos currency
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     setCryptoAssetsStore({
       findTokenById: async () => undefined,
@@ -48,7 +47,6 @@ describe("tezos bakers", () => {
     } as CryptoAssetsStore);
   });
 
-  // TODO we'll need two accounts to test diff cases
   test("load account baker info", async () => {
     const account = await fromAccountRaw(accountTZrevealedDelegating);
     const delegation = await loadAccountDelegation(account);

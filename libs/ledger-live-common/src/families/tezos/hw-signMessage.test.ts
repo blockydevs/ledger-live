@@ -15,9 +15,9 @@ function makeAccount(freshAddress: string): Account {
 function setup(signOperationResult: { signature: string }) {
   const signOperation = jest.fn().mockResolvedValue(signOperationResult);
   const signer = { signOperation } as unknown as TezosSigner;
-  const signerContext = jest.fn((_deviceId: string, fn: (s: TezosSigner) => unknown) =>
-    Promise.resolve(fn(signer)),
-  );
+  const signerContext = jest
+    .fn()
+    .mockImplementation((_deviceId, fn) => Promise.resolve(fn(signer)));
   return { signOperation, signerContext };
 }
 

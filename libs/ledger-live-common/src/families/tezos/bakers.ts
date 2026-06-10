@@ -1,7 +1,3 @@
-// Wallet-coupled delegation helpers moved out of coin-tezos so the coin module
-// no longer depends on @ledgerhq/types-live. The pure baker-fetching logic
-// (listBakers, loadBaker, getBakerSync, asBaker, …) stays in
-// @ledgerhq/coin-tezos/network/bakers.
 import type { AccountLike } from "@ledgerhq/types-live";
 import { loadBaker } from "@ledgerhq/coin-tezos/network/bakers";
 import type { Delegation } from "./types";

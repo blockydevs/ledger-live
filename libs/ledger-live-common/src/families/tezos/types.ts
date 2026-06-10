@@ -65,9 +65,9 @@ export type TransactionRaw = TransactionCommonRaw & {
 
 // type used by UI to facilitate business logic of current delegation data
 export type Delegation = {
-  // delegator address
+  // address of the baker this account delegates to
   address: string;
-  // if not defined, we need to render "Unknown" on the UI. we don't know who is delegator.
+  // if not defined, we need to render "Unknown" on the UI: this baker is not in our list.
   baker: Baker | null | undefined;
   // operation related to delegation (to know the date info)
   operation: Operation;
@@ -118,7 +118,6 @@ export type TezosOperationExtra = {
   id?: number; // Used as most recent operation id for incremental sync
 };
 
-// Signer types (moved from coin-tezos; no @ledgerhq/live-signer-tezos package exists)
 export type TezosAddress = {
   address: string;
   publicKey: string;
