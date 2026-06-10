@@ -1154,12 +1154,13 @@ describe("getAvailableBalance", () => {
   it.each([TRANSACTION_TYPE.TRANSFER_PUBLIC, TRANSACTION_TYPE.TRANSFER_PRIVATE])(
     "should return zero when aleoResources is undefined (%s)",
     mode => {
-    // @ts-expect-error - testing behavior when aleoResources is explicitly undefined
-    const brokenAccount = getMockedAccount({ aleoResources: undefined });
-    const transaction = getMockedTransaction({ mode });
+      // @ts-expect-error - testing behavior when aleoResources is explicitly undefined
+      const brokenAccount = getMockedAccount({ aleoResources: undefined });
+      const transaction = getMockedTransaction({ mode });
 
-    expect(getAvailableBalance(brokenAccount, transaction)).toStrictEqual(new BigNumber(0));
-  });
+      expect(getAvailableBalance(brokenAccount, transaction)).toStrictEqual(new BigNumber(0));
+    },
+  );
 
   it.each(gatedTokenTransactionModes)("should throw for gated token mode %s", mode => {
     const transaction = getMockedTransaction({ mode });
@@ -1452,36 +1453,33 @@ describe("createFeeTransactionIntent", () => {
   it.each([
     TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE,
     TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC,
-  ])(
-    "should create a fee_public intent for gated token private mode %s",
-    mode => {
-      const transaction = getMockedTransaction({
-        mode,
-        properties: {
-          amountRecordCommitments: [],
-          feeRecordCommitment: mockUnspentRecord2.commitment,
-        },
-      });
+  ])("should create a fee_public intent for gated token private mode %s", mode => {
+    const transaction = getMockedTransaction({
+      mode,
+      properties: {
+        amountRecordCommitments: [],
+        feeRecordCommitment: mockUnspentRecord2.commitment,
+      },
+    });
 
-      const result = createFeeTransactionIntent({
-        account: mockPrivateAccount,
-        transaction,
+    const result = createFeeTransactionIntent({
+      account: mockPrivateAccount,
+      transaction,
+      executionId,
+      baseFee,
+      priorityFee,
+      isFeeSponsored: false,
+    });
+
+    expect(result.type).toBe("fee_public");
+    expect(result).toMatchObject({
+      data: {
+        type: "fee_public",
+        priorityFee: BigInt(0),
         executionId,
-        baseFee,
-        priorityFee,
-        isFeeSponsored: false,
-      });
-
-      expect(result.type).toBe("fee_public");
-      expect(result).toMatchObject({
-        data: {
-          type: "fee_public",
-          priorityFee: BigInt(0),
-          executionId,
-        },
-      });
-    },
-  );
+      },
+    });
+  });
 
   it("should throw when feeRecord is missing for a sponsored private transaction", () => {
     const transaction = getMockedTransaction({
