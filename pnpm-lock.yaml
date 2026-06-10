@@ -3196,9 +3196,6 @@ importers:
       '@ledgerhq/types-devices':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/types-devices
-      '@ledgerhq/types-live':
-        specifier: workspace:^
-        version: link:../../libs/ledgerjs/packages/types-live
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.60.0

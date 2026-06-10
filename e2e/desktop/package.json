@@ -23,7 +23,6 @@
     "@ledgerhq/live-wallet": "workspace:^",
     "@ledgerhq/logs": "workspace:^",
     "@ledgerhq/types-devices": "workspace:^",
-    "@ledgerhq/types-live": "workspace:^",
     "@playwright/test": "catalog:",
     "@shared/feature-flags": "workspace:*",
     "@types/node": "catalog:",
