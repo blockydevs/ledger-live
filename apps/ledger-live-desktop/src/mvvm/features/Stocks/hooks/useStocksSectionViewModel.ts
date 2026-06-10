@@ -12,7 +12,6 @@ export function useStocksSectionViewModel({
   const { data, isLoading } = useStocksData({
     product: "lld",
     version: __APP_VERSION__,
-    isStaging: true,
   });
 
   const stocks = useMemo<StockSuggestion[]>(() => {
