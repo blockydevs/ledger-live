@@ -7,7 +7,7 @@ type ContextMenuTransitionProps = {
   children: React.ReactNode;
 };
 
-export function ContextMenuTransition({ view, children }: ContextMenuTransitionProps) {
+export function ContextMenuTransition({ view, children }: Readonly<ContextMenuTransitionProps>) {
   const prevViewRef = useRef(view);
   const shouldAnimate = prevViewRef.current !== view;
 

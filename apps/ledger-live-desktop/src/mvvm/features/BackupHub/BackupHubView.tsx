@@ -41,7 +41,7 @@ const PHYSICAL_ROW_I18N: Record<PhysicalRowId, { titleKey: string; descriptionKe
   },
 };
 
-export function BackupHubView({ bucket, onBack, onRecoverClick, physicalRows }: BackupHubViewProps) {
+export function BackupHubView({ bucket, onBack, onRecoverClick, physicalRows }: Readonly<BackupHubViewProps>) {
   const { t } = useTranslation();
 
   const recoverRow = RECOVER_ROW_BY_BUCKET[bucket];

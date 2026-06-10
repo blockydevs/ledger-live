@@ -28,7 +28,7 @@ export function LedgerRecoverRow({
   description,
   ctaLabel,
   onClick,
-}: LedgerRecoverRowProps) {
+}: Readonly<LedgerRecoverRowProps>) {
   return (
     <ListItem
       onClick={onClick}
