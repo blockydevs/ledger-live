@@ -89,6 +89,28 @@ type Props = {
 
 type UseCaseAction = "setup" | "connect" | "restore" | "recover";
 
+const USE_CASE_BUTTON_TRACKING: Record<
+  UseCaseAction,
+  { button: string; seedConfiguration: string }
+> = {
+  setup: { button: "Create a new wallet", seedConfiguration: "new_seed" },
+  connect: { button: "Connect your device", seedConfiguration: "connect_device" },
+  restore: { button: "Restore with your secret phrase", seedConfiguration: "restore_seed" },
+  recover: { button: "Restore with ledger recover", seedConfiguration: "recover_seed" },
+};
+
+const trackUseCaseButtonClicked = (
+  action: UseCaseAction,
+  deviceModelId: DeviceModelId | null | undefined,
+) => {
+  const { button, seedConfiguration } = USE_CASE_BUTTON_TRACKING[action];
+  track("button_clicked", {
+    button,
+    deviceModelId,
+    seedConfiguration,
+  });
+};
+
 export function SelectUseCase({ setUseCase, setOpenedPedagogyModal }: Props) {
   const { t } = useTranslation();
   const { deviceModelId } = useContext(OnboardingContext);
@@ -137,13 +159,14 @@ export function SelectUseCase({ setUseCase, setOpenedPedagogyModal }: Props) {
 
   const runWithCounterfeitWarningGate = useCallback(
     (action: UseCaseAction) => {
+      trackUseCaseButtonClicked(action, deviceModelId);
       if (shouldShowCounterfeitWarning) {
         setPendingAction(action);
         return;
       }
       runAction(action);
     },
-    [runAction, shouldShowCounterfeitWarning],
+    [deviceModelId, runAction, shouldShowCounterfeitWarning],
   );
 
   const handleCounterfeitWarningProceed = useCallback(() => {
