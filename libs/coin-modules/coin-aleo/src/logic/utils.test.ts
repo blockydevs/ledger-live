@@ -1140,24 +1140,30 @@ describe("getAvailableBalance", () => {
   it.each([
     [TRANSACTION_TYPE.TRANSFER_PUBLIC, mockTransparentBalance],
     [TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE, mockTransparentBalance],
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC, mockTransparentBalance],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE, mockTransparentBalance],
     [TRANSACTION_TYPE.TRANSFER_PRIVATE, expectedPrivateSpendableBalance],
     [TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC, expectedPrivateSpendableBalance],
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE, expectedPrivateSpendableBalance],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC, expectedPrivateSpendableBalance],
   ])("should return correct balance for %s", (mode, expected) => {
     const transaction = getMockedTransaction({ mode });
 
     expect(getAvailableBalance(mockAccount, transaction)).toStrictEqual(expected);
   });
 
-  it.each([TRANSACTION_TYPE.TRANSFER_PUBLIC, TRANSACTION_TYPE.TRANSFER_PRIVATE])(
-    "should return zero when aleoResources is undefined (%s)",
-    mode => {
-      // @ts-expect-error - testing behavior when aleoResources is explicitly undefined
-      const brokenAccount = getMockedAccount({ aleoResources: undefined });
-      const transaction = getMockedTransaction({ mode });
+  it.each([
+    TRANSACTION_TYPE.TRANSFER_PUBLIC,
+    TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC,
+    TRANSACTION_TYPE.TRANSFER_PRIVATE,
+    TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE,
+  ])("should return zero when aleoResources is undefined (%s)", mode => {
+    // @ts-expect-error - testing behavior when aleoResources is explicitly undefined
+    const brokenAccount = getMockedAccount({ aleoResources: undefined });
+    const transaction = getMockedTransaction({ mode });
 
-      expect(getAvailableBalance(brokenAccount, transaction)).toStrictEqual(new BigNumber(0));
-    },
-  );
+    expect(getAvailableBalance(brokenAccount, transaction)).toStrictEqual(new BigNumber(0));
+  });
 
   it("should throw for an unsupported transaction mode", () => {
     const unsupportedMode = "unsupported_mode";
