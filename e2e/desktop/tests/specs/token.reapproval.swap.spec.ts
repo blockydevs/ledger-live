@@ -25,7 +25,6 @@ const eligibleProviders = [
   SwapProvider.ONE_INCH,
   SwapProvider.VELORA,
 ];
-const provider = pickRotatingProvider(eligibleProviders);
 
 test.describe("Token reapproval - flow", () => {
   test.skip(
@@ -67,6 +66,7 @@ test.describe("Token reapproval - flow", () => {
       ],
     },
     async ({ app }) => {
+      const provider = await pickRotatingProvider(eligibleProviders, fromAccount, toAccount);
       await app.swap.logSelectedProvider(provider.uiName);
       await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
       await revokeTokenApproval(fromAccount, provider);

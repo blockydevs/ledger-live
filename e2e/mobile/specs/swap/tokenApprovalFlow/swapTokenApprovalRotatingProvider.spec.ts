@@ -1,7 +1,8 @@
 import { SwapProvider } from "@ledgerhq/live-common/e2e/enum/Provider";
 import { runSwapTokenApprovalFlow } from "./swapTokenApprovalFlow";
-import { pickRotatingProvider } from "@ledgerhq/live-common/e2e/swap";
 
+const fromAccount = TokenAccount.ETH_USDC_1;
+const toAccount = Account.ETH_1;
 const eligibleProviders = [
   SwapProvider.THORCHAIN,
   SwapProvider.UNISWAP,
@@ -10,12 +11,11 @@ const eligibleProviders = [
   SwapProvider.ONE_INCH,
   SwapProvider.VELORA,
 ];
-const provider = pickRotatingProvider(eligibleProviders);
 
 const swapTokenApprovalFlowTestConfig = {
-  fromAccount: TokenAccount.ETH_USDC_1,
-  toAccount: Account.ETH_1,
-  provider,
+  fromAccount,
+  toAccount,
+  providers: eligibleProviders,
   tmsLinks: ["B2CQA-5632"],
   tags: ["@NanoSP", "@LNS", "@NanoX", "@Stax", "@Flex", "@NanoGen5", "@ethereum", "@family-evm"],
 };
@@ -23,7 +23,7 @@ const swapTokenApprovalFlowTestConfig = {
 runSwapTokenApprovalFlow(
   swapTokenApprovalFlowTestConfig.fromAccount,
   swapTokenApprovalFlowTestConfig.toAccount,
-  swapTokenApprovalFlowTestConfig.provider,
+  swapTokenApprovalFlowTestConfig.providers,
   swapTokenApprovalFlowTestConfig.tmsLinks,
   swapTokenApprovalFlowTestConfig.tags,
 );

@@ -23,6 +23,12 @@ type QuoteErrorItem = {
   parameter?: { minAmount?: string };
 };
 
+type SwapQuoteItem = {
+  provider?: string;
+  amountTo?: number;
+  code?: string;
+};
+
 function isQuoteErrorItem(item: unknown): item is QuoteErrorItem {
   return typeof item === "object" && item !== null && "parameter" in item;
 }
@@ -97,24 +103,111 @@ export async function getMinimumSwapAmount(
   }
 }
 
-export function pickRotatingProvider(eligibleProviders: SwapProvider[]): SwapProvider {
+/** Usable = the provider returned a real amount and no error code. */
+function isUsableQuote(item: SwapQuoteItem): item is SwapQuoteItem & { provider: string } {
+  return (
+    typeof item.provider === "string" &&
+    item.code === undefined &&
+    typeof item.amountTo === "number" &&
+    item.amountTo > 0
+  );
+}
+
+async function keepRunningProviders(
+  eligibleProviders: SwapProvider[],
+  accountFrom: Account,
+  accountTo: Account,
+): Promise<SwapProvider[]> {
+  try {
+    const addressFrom = accountFrom.address || accountFrom.parentAccount?.address;
+
+    if (!addressFrom) {
+      throw new Error("No address available from accounts when checking provider health.");
+    }
+
+    const amountFrom = await getMinimumSwapAmount(accountFrom, accountTo);
+    if (amountFrom == null) {
+      return eligibleProviders;
+    }
+
+    const requestConfig: AxiosRequestConfig = {
+      method: "GET",
+      url: SWAP_QUOTE_URL,
+      params: {
+        from: accountFrom.currency.id,
+        to: accountTo.currency.id,
+        amountFrom,
+        addressFrom,
+        fiatForCounterValue: "USD",
+        slippage: 1,
+        networkFees: PROBE_NETWORK_FEES,
+        networkFeesCurrency: accountTo.currency.speculosApp.name.toLowerCase(),
+        displayLanguage: "en",
+        theme: "light",
+        "providers-whitelist": eligibleProviders.map(p => p.name).join(","),
+        tradeType: "INPUT",
+        uniswapOrderType: "uniswapxv1",
+      },
+      headers: { accept: "application/json" },
+    };
+
+    const { data } = await axios(requestConfig);
+
+    if (!Array.isArray(data)) {
+      console.warn(
+        "Unexpected quote API response while checking provider health; keeping full list.",
+      );
+      return eligibleProviders;
+    }
+
+    const healthyNames = new Set(data.filter(isUsableQuote).map(item => item.provider));
+    const runningProviders = eligibleProviders.filter(p => healthyNames.has(p.name));
+
+    if (runningProviders.length < eligibleProviders.length) {
+      const dropped = eligibleProviders.filter(p => !healthyNames.has(p.name));
+      console.warn(
+        `[keepRunningProviders] no usable quote for ${accountFrom.currency.id} → ` +
+          `${accountTo.currency.id}; dropping: ${dropped.map(p => p.name).join(", ")}`,
+      );
+    }
+
+    return runningProviders;
+  } catch (error: unknown) {
+    console.warn("Error checking swap provider health:", sanitizeError(error));
+    return eligibleProviders;
+  }
+}
+
+export async function pickRotatingProvider(
+  eligibleProviders: SwapProvider[],
+  accountFrom: Account,
+  accountTo: Account,
+): Promise<SwapProvider> {
   if (eligibleProviders.length === 0) {
     throw new Error("[pickRotatingProvider] - eligibleProviders is empty");
   }
 
-  const override = process.env.SWAP_PROVIDER;
+  const runningProviders = await keepRunningProviders(eligibleProviders, accountFrom, accountTo);
+  if (runningProviders.length === 0) {
+    throw new Error(
+      `[pickRotatingProvider] - no running swap provider for ` +
+        `${accountFrom.currency.id} → ${accountTo.currency.id}`,
+    );
+  }
 
+  const override = process.env.SWAP_PROVIDER;
   if (override) {
-    const match = eligibleProviders.find(p => p.uiName === override || p.name === override);
+    const match = runningProviders.find(p => p.uiName === override || p.name === override);
     if (!match) {
       throw new Error(
         `[pickRotatingProvider] - "${override}" did not match any of: ` +
-          eligibleProviders.map(p => `${p.uiName} (or ${p.name})`).join(", "),
+          runningProviders.map(p => `${p.uiName} (or ${p.name})`).join(", "),
       );
     }
     return match;
   }
+
   const MONDAY_EPOCH_UTC_MS = Date.UTC(2024, 0, 1);
   const weekIndex = Math.floor((Date.now() - MONDAY_EPOCH_UTC_MS) / ONE_WEEK_MS);
-  return eligibleProviders[weekIndex % eligibleProviders.length];
+  return runningProviders[weekIndex % runningProviders.length];
 }
