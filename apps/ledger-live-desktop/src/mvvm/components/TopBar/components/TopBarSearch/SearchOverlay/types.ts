@@ -1,7 +1,7 @@
 import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
 import { StockSuggestion } from "LLD/features/Stocks/types";
 
-export type SearchMode = "suggestions" | "results" | "noResults";
+export type SearchMode = "suggestions" | "results" | "noResults" | "error";
 
 export type AssetSuggestionSection = {
   data: MarketCurrencyData[];
