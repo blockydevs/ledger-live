@@ -1103,10 +1103,10 @@ const getSwapNanoSIncompatibilityTrackingProperties = (
 ) => ({
   flow: "swap",
   deviceModel: "nanoS",
-  sourceCurrency: sourceCurrency ?? "",
-  targetCurrency: targetCurrency ?? "",
   ...(variant ? { variant } : {}),
   ...(provider ? { provider } : {}),
+  ...(sourceCurrency ? { sourceCurrency } : {}),
+  ...(targetCurrency ? { targetCurrency } : {}),
 });
 
 const OpenSwapBtn = ({

@@ -67,8 +67,8 @@ export function ThorSwapIncompatibility({
     deviceModel: "nanoS",
     variant: "provider",
     provider,
-    sourceCurrency: sourceCurrency ?? "",
-    targetCurrency: targetCurrency ?? "",
+    ...(sourceCurrency ? { sourceCurrency } : {}),
+    ...(targetCurrency ? { targetCurrency } : {}),
   };
 
   const onExploreCompatibleDevices = () => {
