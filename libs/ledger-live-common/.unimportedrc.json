@@ -437,6 +437,7 @@
     "src/dada-client/state-manager/api.ts",
     "src/dada-client/state-manager/types.ts",
     "src/dada-client/types/trend.ts",
+    "src/dada-client/utils/assetDiscovery.ts",
     "src/dada-client/utils/chunkCurrencyIds.ts",
     "src/dada-client/utils/currencySelection.ts",
     "src/dada-client/utils/deepMergeCryptoAssets.ts",
