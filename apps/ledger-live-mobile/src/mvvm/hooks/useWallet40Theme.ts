@@ -6,7 +6,6 @@ export interface Wallet40ThemeResult {
   readonly isDarkMode: boolean;
   readonly isWallet40Enabled: boolean;
   readonly isWallet40DarkMode: boolean;
-  /** Live-app canvas color as a native-ui token or hex (e.g. `"background.main"`). */
   readonly backgroundColor: string;
 }
 
