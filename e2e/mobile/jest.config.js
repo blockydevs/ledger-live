@@ -1,9 +1,4 @@
-require("./scripts/register-lib-es-cjs");
 const { compilerOptions } = require("./tsconfig.json");
-const {
-  getDeviceFirmwareVersion,
-  getSpeculosModel,
-} = require("@ledgerhq/live-common/e2e/speculosAppVersion");
 
 function pathsToModuleNameMapper(paths, { prefix = "<rootDir>/" } = {}) {
   const jestPaths = {};
@@ -43,7 +38,7 @@ const jestAllure2ReporterOptions = {
   overwrite: false,
   environment: async ({ $ }) => ({
     SPECULOS_DEVICE: process.env.SPECULOS_DEVICE,
-    SPECULOS_FIRMWARE_VERSION: await getDeviceFirmwareVersion(getSpeculosModel()),
+    SPECULOS_FIRMWARE_VERSION: process.env.SPECULOS_FIRMWARE_VERSION,
     MOBILE_DEVICE: process.env.DEVICE_INFO || "Unknown device",
     path: process.cwd(),
     "version.node": process.version,
