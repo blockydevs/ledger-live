@@ -67,6 +67,8 @@ test.describe("Token reapproval - flow", () => {
       ],
     },
     async ({ app }) => {
+      // Reapproval broadcasts revoke + approve and waits for each to confirm on mainnet; extend beyond the 400s CI default.
+      test.setTimeout(600_000);
       await app.swap.logSelectedProvider(provider.uiName);
       await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
       await revokeTokenApproval(fromAccount, provider);

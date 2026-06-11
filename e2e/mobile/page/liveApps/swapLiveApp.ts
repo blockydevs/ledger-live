@@ -171,7 +171,9 @@ export default class SwapLiveAppPage {
 
   @Step("Expect execute swap button on step approval")
   async expectExecuteSwapOnStepApproval() {
-    await waitWebElementByTestId(this.executeSwapButtonStepApproval, { timeout: 20000 });
+    await waitWebElementByTestId(this.executeSwapButtonStepApproval, {
+      timeout: APPROVAL_PROCESSING_TIMEOUT,
+    });
     await detoxExpect(getWebElementByTestId(this.executeSwapButtonStepApproval)).toExist();
   }
 

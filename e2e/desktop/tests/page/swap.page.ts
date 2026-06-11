@@ -593,7 +593,10 @@ export class SwapPage extends WebViewAppPage {
 
   @step("Expect TwoStepSign screen to be displayed")
   async expectTwoStepSignScreen() {
-    await this.verifyElementIsVisible(this.executeSwapBtn);
+    const webview = await this.getWebView();
+    await expect(webview.getByTestId(this.executeSwapBtn)).toBeVisible({
+      timeout: APPROVAL_PROCESSING_TIMEOUT,
+    });
   }
 
   @step("Click Give Authorization button")
