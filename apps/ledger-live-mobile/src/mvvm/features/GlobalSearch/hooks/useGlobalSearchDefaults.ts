@@ -3,6 +3,7 @@ import VersionNumber from "react-native-version-number";
 import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import { useStocksData } from "@ledgerhq/live-common/dada-client/hooks/useStocksData";
 import { useStablecoinTickers } from "@ledgerhq/live-common/dada-client/hooks/useStablecoinTickers";
+import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
 import {
   selectTopAssetsByCategory,
   selectTopStocks,
@@ -12,8 +13,8 @@ import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
 import { useSelector } from "~/context/hooks";
 import { counterValueCurrencySelector } from "~/reducers/settings";
 import { useLocale, useTranslation } from "~/context/Locale";
-import { mapDadaMarketToDisplayData } from "../../utils/mapDadaMarketToDisplayData";
-import type { GlobalSearchDefaultSections } from "./types";
+import { mapDadaMarketToDisplayData } from "LLM/features/GlobalSearch/utils/mapDadaMarketToDisplayData";
+import type { GlobalSearchDefaultSections } from "LLM/features/GlobalSearch/screens/GlobalSearch/types";
 
 const PRODUCT = "llm";
 const MAX_CRYPTOS = 3;
@@ -23,6 +24,7 @@ const MAX_STOCKS = 20;
 export type GlobalSearchDefaults = {
   defaultSections: GlobalSearchDefaultSections;
   isLoadingDefaults: boolean;
+  hasError: boolean;
 };
 
 export function useGlobalSearchDefaults(enabled: boolean): GlobalSearchDefaults {
@@ -31,6 +33,7 @@ export function useGlobalSearchDefaults(enabled: boolean): GlobalSearchDefaults 
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterCurrency = counterValueCurrency.ticker.toLowerCase();
   const counterValueUnit = counterValueCurrency.units[0];
+  const { rate: usdToFiatRate, status: rateStatus } = useUsdToFiatRate(counterValueCurrency.ticker);
   const version = VersionNumber.appVersion ?? "";
   const skip = !enabled;
 
@@ -39,7 +42,11 @@ export function useGlobalSearchDefaults(enabled: boolean): GlobalSearchDefaults 
     version,
     skip,
   );
-  const { data: assetsData, isLoading: loadingAssets } = useAssetsData({
+  const {
+    data: assetsData,
+    isLoading: loadingAssets,
+    isError: assetsError,
+  } = useAssetsData({
     product: PRODUCT,
     version,
     skip,
@@ -67,7 +74,7 @@ export function useGlobalSearchDefaults(enabled: boolean): GlobalSearchDefaults 
         mapDadaMarketToDisplayData(
           { id: meta.id, name: meta.name, ticker: meta.ticker, ledgerId: currency.id },
           market,
-          { counterCurrency, counterValueUnit, locale, t },
+          { counterCurrency, counterValueUnit, usdToFiatRate, locale, t },
         ),
       );
 
@@ -75,7 +82,7 @@ export function useGlobalSearchDefaults(enabled: boolean): GlobalSearchDefaults 
       cryptos: toDisplay(categorized.cryptos),
       stablecoins: toDisplay(categorized.stablecoins),
     };
-  }, [assetsData, stablecoinTickers, counterCurrency, counterValueUnit, locale, t]);
+  }, [assetsData, stablecoinTickers, counterCurrency, counterValueUnit, usdToFiatRate, locale, t]);
 
   const stocks = useMemo(
     () => (stocksData ? selectTopStocks(stocksData, MAX_STOCKS) : []),
@@ -89,6 +96,8 @@ export function useGlobalSearchDefaults(enabled: boolean): GlobalSearchDefaults 
 
   return {
     defaultSections,
-    isLoadingDefaults: enabled && (loadingTickers || loadingAssets || loadingStocks),
+    isLoadingDefaults:
+      enabled && (loadingTickers || loadingAssets || loadingStocks || rateStatus === "loading"),
+    hasError: enabled && assetsError,
   };
 }

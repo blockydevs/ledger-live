@@ -4,9 +4,11 @@ import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssets
 import { selectCurrencyForMetaId } from "@ledgerhq/live-common/dada-client/utils/currencySelection";
 import { useSearchCommon } from "@ledgerhq/live-common/modularDrawer/hooks/useSearch";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
+import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
 import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
 import { mapDadaMarketToDisplayData } from "LLM/features/GlobalSearch/utils/mapDadaMarketToDisplayData";
 import { track } from "~/analytics";
+import { ScreenName } from "~/const";
 import { useSelector } from "~/context/hooks";
 import { counterValueCurrencySelector } from "~/reducers/settings";
 import { useLocale, useTranslation } from "~/context/Locale";
@@ -22,6 +24,7 @@ export type GlobalSearchResults = {
   searchResults: MarketAssetDisplayData[];
   isLoadingSearch: boolean;
   hasNoResults: boolean;
+  hasError: boolean;
 };
 
 export function useGlobalSearchResults(): GlobalSearchResults {
@@ -30,9 +33,13 @@ export function useGlobalSearchResults(): GlobalSearchResults {
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const counterCurrency = counterValueCurrency.ticker.toLowerCase();
   const counterValueUnit = counterValueCurrency.units[0];
+  const { rate: usdToFiatRate, status: rateStatus } = useUsdToFiatRate(counterValueCurrency.ticker);
   const version = VersionNumber.appVersion ?? "";
 
-  const handleTrackSearch = useCallback((query: string) => track("search_query", { query }), []);
+  const handleTrackSearch = useCallback(
+    (query: string) => track("search_query", { query, page: ScreenName.GlobalSearch }),
+    [],
+  );
   const { handleSearch, handleDebouncedChange, displayedValue } = useSearchCommon({
     onTrackSearch: handleTrackSearch,
   });
@@ -71,13 +78,13 @@ export function useGlobalSearchResults(): GlobalSearchResults {
         mapDadaMarketToDisplayData(
           { id: meta.id, name: meta.name, ticker: meta.ticker, ledgerId: currency.id },
           data.markets[currency.id],
-          { counterCurrency, counterValueUnit, locale, t },
+          { counterCurrency, counterValueUnit, usdToFiatRate, locale, t },
         ),
       ];
     });
-  }, [data, query, counterCurrency, counterValueUnit, locale, t]);
+  }, [data, query, counterCurrency, counterValueUnit, usdToFiatRate, locale, t]);
 
-  const isLoadingSearch = isSearchActive && (isDebouncing || isLoading);
+  const isLoadingSearch = isSearchActive && (isDebouncing || isLoading || rateStatus === "loading");
   const clearSearch = useCallback(() => handleSearch(""), [handleSearch]);
 
   return {
@@ -87,6 +94,7 @@ export function useGlobalSearchResults(): GlobalSearchResults {
     isSearchActive,
     searchResults,
     isLoadingSearch,
+    hasError: isSearchActive && !isLoadingSearch && isError,
     hasNoResults:
       isSearchActive &&
       !isLoadingSearch &&

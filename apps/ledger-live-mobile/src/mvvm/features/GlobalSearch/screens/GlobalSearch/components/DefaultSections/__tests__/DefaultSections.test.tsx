@@ -34,6 +34,7 @@ const renderSections = (overrides = {}) => {
   const props = {
     sections,
     isLoading: false,
+    hasError: false,
     onSeeAll: jest.fn(),
     onAssetPress: jest.fn(),
     onStockPress: jest.fn(),
@@ -82,6 +83,13 @@ describe("DefaultSections", () => {
 
     expect(screen.getAllByTestId("global-search-asset-skeleton").length).toBeGreaterThan(0);
     expect(screen.getByTestId(GLOBAL_SEARCH_TEST_IDS.cryptosSection)).toBeVisible();
+  });
+
+  it("shows the error state instead of the sections when the data fails", () => {
+    renderSections({ hasError: true, sections: { cryptos: [], stablecoins: [], stocks: [] } });
+
+    expect(screen.getByTestId(GLOBAL_SEARCH_TEST_IDS.defaultsError)).toBeVisible();
+    expect(screen.queryByTestId(GLOBAL_SEARCH_TEST_IDS.defaultSections)).toBeNull();
   });
 
   it("hides empty sections when not loading", () => {

@@ -9,6 +9,9 @@ jest.mock("@ledgerhq/live-common/dada-client/hooks/useAssetsData");
 jest.mock("@ledgerhq/live-common/dada-client/hooks/useStocksData");
 jest.mock("@ledgerhq/live-common/dada-client/hooks/useStablecoinTickers");
 jest.mock("@ledgerhq/live-common/dada-client/utils/currencySelection");
+jest.mock("@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate", () => ({
+  useUsdToFiatRate: () => ({ rate: 1, status: "ready" }),
+}));
 
 const mockedAssets = jest.mocked(useAssetsData);
 const mockedStocks = jest.mocked(useStocksData);
@@ -94,9 +97,18 @@ describe("useGlobalSearchDefaults", () => {
     expect(result.current.defaultSections.stocks).toHaveLength(0);
   });
 
+  it("flags hasError when the assets query fails", () => {
+    mockedAssets.mockReturnValue({ data: undefined, isLoading: false, isError: true } as never);
+
+    const { result } = renderHook(() => useGlobalSearchDefaults(true));
+
+    expect(result.current.hasError).toBe(true);
+  });
+
   it("does nothing when disabled", () => {
     const { result } = renderHook(() => useGlobalSearchDefaults(false));
 
     expect(result.current.isLoadingDefaults).toBe(false);
+    expect(result.current.hasError).toBe(false);
   });
 });

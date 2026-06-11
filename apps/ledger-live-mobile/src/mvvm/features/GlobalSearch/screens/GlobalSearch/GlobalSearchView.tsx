@@ -23,6 +23,7 @@ export function GlobalSearchView({
   searchResults,
   isLoadingSearch,
   hasNoResults,
+  hasError,
   onSeeAll,
   onAssetPress,
   onStockPress,
@@ -42,7 +43,8 @@ export function GlobalSearchView({
         flexDirection: "row",
         alignItems: "center",
         minHeight: theme.sizes.s64,
-        paddingHorizontal: theme.spacings.s16,
+        paddingLeft: theme.spacings.s4,
+        paddingRight: theme.spacings.s16,
         paddingVertical: theme.spacings.s8,
         gap: theme.spacings.s8,
       },
@@ -87,12 +89,14 @@ export function GlobalSearchView({
           results={searchResults}
           isLoading={isLoadingSearch}
           hasNoResults={hasNoResults}
+          hasError={hasError}
           onAssetPress={onAssetPress}
         />
       ) : (
         <DefaultSections
           sections={defaultSections}
           isLoading={isLoadingDefaults}
+          hasError={hasError}
           onSeeAll={onSeeAll}
           onAssetPress={onAssetPress}
           onStockPress={onStockPress}

@@ -8,4 +8,6 @@ export const GLOBAL_SEARCH_TEST_IDS = {
   searchResults: "global-search-results",
   searchSkeleton: "global-search-results-skeleton",
   searchEmptyState: "global-search-empty-state",
+  searchError: "global-search-error-state",
+  defaultsError: "global-search-defaults-error-state",
 } as const;
