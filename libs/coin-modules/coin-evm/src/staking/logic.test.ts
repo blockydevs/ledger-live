@@ -159,8 +159,8 @@ describe("evm staking logic", () => {
   });
 
   describe("canWithdraw", () => {
-    it("returns true for a deactivated unbonding with a withdrawId", () => {
-      expect(canWithdraw({ withdrawId: 0, status: "deactivated" })).toBe(true);
+    it("returns true for an inactive unbonding with a withdrawId", () => {
+      expect(canWithdraw({ withdrawId: 0, status: "inactive" })).toBe(true);
     });
 
     it("returns false while the unbonding is still deactivating", () => {
@@ -168,7 +168,7 @@ describe("evm staking logic", () => {
     });
 
     it("returns false when there is no withdrawId (chains that auto-return funds)", () => {
-      expect(canWithdraw({ status: "deactivated" })).toBe(false);
+      expect(canWithdraw({ status: "inactive" })).toBe(false);
     });
   });
 

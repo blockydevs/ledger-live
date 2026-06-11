@@ -715,7 +715,7 @@ describe("staking/validators/monad", () => {
       expect(mockedWithApi).not.toHaveBeenCalled();
     });
 
-    it("marks a matured withdraw slot 'deactivated' and a pending one 'deactivating', dating completion from the current epoch", async () => {
+    it("marks a matured withdraw slot 'inactive' and a pending one 'deactivating', dating completion from the current epoch", async () => {
       const EPOCH_DURATION_MS = 5.5 * 60 * 60 * 1000;
       const NOW = Date.UTC(2026, 5, 4, 12, 0, 0);
       jest.useFakeTimers().setSystemTime(NOW);
@@ -747,7 +747,7 @@ describe("staking/validators/monad", () => {
             address: DELEGATOR,
             delegate: ethers.computeAddress(SECP),
             // withdrawEpoch 3 <= currentEpoch 5 => matured / ready to withdraw
-            state: "deactivated",
+            state: "inactive",
             stateUpdatedAt: new Date(NOW - 2 * EPOCH_DURATION_MS),
             asset: {
               type: "native",
