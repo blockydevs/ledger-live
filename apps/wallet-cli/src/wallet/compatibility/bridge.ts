@@ -196,7 +196,7 @@ export class BridgeAdapter {
         if (intent.mode) patch.mode = intent.mode;
         if (intent.validator) patch.validator = intent.validator;
         if (intent.stakeAccount) patch.stakeAccountId = intent.stakeAccount;
-        if (intent.memo) {
+        if (intent.memo && intent.mode === "send") {
           patch.model = tokenAccount
             ? {
                 kind: "token.transfer",
