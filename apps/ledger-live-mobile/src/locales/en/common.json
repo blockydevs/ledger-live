@@ -1338,6 +1338,9 @@
     }
   },
   "earn": {
+    "simulator": {
+      "title": "Rewards simulator"
+    },
     "deposit": {
       "protocolInfoModal": {
         "title": "To choose a protocol, here’s a few things to bear in mind:",
