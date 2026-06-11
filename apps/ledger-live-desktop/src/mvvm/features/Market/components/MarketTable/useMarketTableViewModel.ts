@@ -26,6 +26,16 @@ export type MarketTableData = {
   t: TFunction;
 };
 
+function getSortDirection(
+  order: Order | undefined,
+  descOrder: Order,
+  ascOrder: Order,
+): "asc" | "desc" | undefined {
+  if (order === descOrder) return "desc";
+  if (order === ascOrder) return "asc";
+  return undefined;
+}
+
 export function useMarketTableViewModel({
   marketData,
   marketParams,
@@ -68,10 +78,8 @@ export function useMarketTableViewModel({
     [onSort, order],
   );
 
-  const marketCapSort: "asc" | "desc" | undefined =
-    order === Order.MarketCapDesc ? "desc" : order === Order.MarketCapAsc ? "asc" : undefined;
-  const changeSort: "asc" | "desc" | undefined =
-    order === Order.topGainers ? "desc" : order === Order.topLosers ? "asc" : undefined;
+  const marketCapSort = getSortDirection(order, Order.MarketCapDesc, Order.MarketCapAsc);
+  const changeSort = getSortDirection(order, Order.topGainers, Order.topLosers);
 
   return {
     parentRef,

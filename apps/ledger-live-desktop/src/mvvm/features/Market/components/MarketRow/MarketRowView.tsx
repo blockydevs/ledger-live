@@ -83,7 +83,7 @@ export const MarketRowView = memo<MarketRowViewProps>(function MarketRowView({
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-price-change">
-        {priceChangePercentage != null ? <Trend value={priceChangePercentage} /> : "-"}
+        {priceChangePercentage == null ? "-" : <Trend value={priceChangePercentage} />}
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME}>

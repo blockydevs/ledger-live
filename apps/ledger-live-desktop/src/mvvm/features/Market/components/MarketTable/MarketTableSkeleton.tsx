@@ -2,14 +2,17 @@ import React from "react";
 import { listItemHeight } from "~/renderer/screens/market/components/Table";
 import { MARKET_TABLE_GRID_TEMPLATE } from "./constants";
 
-const SKELETON_ROWS = 12;
+const SKELETON_ROW_KEYS = Array.from(
+  { length: 12 },
+  (_, index) => `market-table-skeleton-row-${index}`,
+);
 
 export function MarketTableSkeleton() {
   return (
     <div data-testid="market-table-skeleton">
-      {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
+      {SKELETON_ROW_KEYS.map(key => (
         <div
-          key={index}
+          key={key}
           className="grid w-full items-center px-12"
           style={{ gridTemplateColumns: MARKET_TABLE_GRID_TEMPLATE, height: listItemHeight }}
         >

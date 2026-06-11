@@ -35,7 +35,7 @@ export function MarketRowActions({
   onFavouriteSelect,
   onMenuOpenChange,
   t,
-}: MarketRowActionsProps) {
+}: Readonly<MarketRowActionsProps>) {
   return (
     <div
       className="flex items-center justify-end gap-8"
