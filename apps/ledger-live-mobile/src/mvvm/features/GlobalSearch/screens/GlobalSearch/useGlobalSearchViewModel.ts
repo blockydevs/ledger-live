@@ -1,9 +1,12 @@
 import { useCallback, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { StockSuggestion } from "@ledgerhq/live-common/dada-client/utils/assetDiscovery";
 import { track } from "~/analytics";
 import { ScreenName } from "~/const";
+import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
+import { useAssetDetailNavigation } from "LLM/features/AssetDetail/hooks/useAssetDetailNavigation";
 import { useGlobalSearchDefaults } from "./useGlobalSearchDefaults";
 import { useGlobalSearchResults } from "./useGlobalSearchResults";
 import type { GlobalSearchDefaultSections } from "./types";
@@ -27,7 +30,8 @@ export type GlobalSearchViewModel = {
 };
 
 export function useGlobalSearchViewModel(): GlobalSearchViewModel {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
+  const { openFromMarket } = useAssetDetailNavigation();
 
   const {
     search,
@@ -46,13 +50,38 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
 
   const onBack = useCallback(() => navigation.goBack(), [navigation]);
 
-  const onSeeAll = useCallback((category: GlobalSearchCategory) => {
-    track("button_clicked", { button: "See all", page: ScreenName.GlobalSearch, category });
-  }, []);
+  const onSeeAll = useCallback(
+    (category: GlobalSearchCategory) => {
+      track("button_clicked", { button: "See all", page: ScreenName.GlobalSearch, category });
 
-  // Destinations are wired in LIVE-30048.
-  const onAssetPress = useCallback((_asset: MarketAssetDisplayData) => {}, []);
-  const onStockPress = useCallback((_stock: StockSuggestion) => {}, []);
+      if (category === "stable") return;
+
+      navigation.navigate(ScreenName.MarketList, {
+        category: category === "stocks" ? "stocks" : "all",
+      });
+    },
+    [navigation],
+  );
+
+  const onAssetPress = useCallback(
+    (asset: MarketAssetDisplayData) =>
+      openFromMarket({
+        marketCurrencyId: asset.id,
+        ledgerCurrencyIds: asset.ledgerIds,
+        source: ScreenName.GlobalSearch,
+      }),
+    [openFromMarket],
+  );
+
+  const onStockPress = useCallback(
+    (stock: StockSuggestion) =>
+      openFromMarket({
+        marketCurrencyId: stock.navigationId,
+        ledgerCurrencyIds: [stock.ledgerId],
+        source: ScreenName.GlobalSearch,
+      }),
+    [openFromMarket],
+  );
 
   return {
     search,
