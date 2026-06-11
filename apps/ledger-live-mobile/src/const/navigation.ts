@@ -273,6 +273,11 @@ export enum ScreenName {
   EvmClaimRewardsConnectDevice = "EvmClaimRewardsConnectDevice",
   EvmClaimRewardsValidationError = "EvmClaimRewardsValidationError",
   EvmClaimRewardsValidationSuccess = "EvmClaimRewardsValidationSuccess",
+  EvmWithdrawConfirmation = "EvmWithdrawConfirmation",
+  EvmWithdrawSelectDevice = "EvmWithdrawSelectDevice",
+  EvmWithdrawConnectDevice = "EvmWithdrawConnectDevice",
+  EvmWithdrawValidationError = "EvmWithdrawValidationError",
+  EvmWithdrawValidationSuccess = "EvmWithdrawValidationSuccess",
 
   // cosmos
   CosmosFamilyEditMemo = "CosmosFamilyEditMemo",
@@ -651,6 +656,7 @@ export enum NavigatorName {
   EvmDelegationFlow = "EvmDelegationFlow",
   EvmUndelegationFlow = "EvmUndelegationFlow",
   EvmClaimRewardsFlow = "EvmClaimRewardsFlow",
+  EvmWithdrawFlow = "EvmWithdrawFlow",
   CosmosClaimRewardsFlow = "CosmosClaimRewardsFlow",
   CosmosDelegationFlow = "CosmosDelegationFlow",
   CosmosRedelegationFlow = "CosmosRedelegationFlow",

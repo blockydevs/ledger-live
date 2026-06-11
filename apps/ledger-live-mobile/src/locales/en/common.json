@@ -6929,6 +6929,30 @@
           }
         }
       }
+    },
+    "withdraw": {
+      "stepperHeader": {
+        "title": "Withdraw",
+        "selectDevice": "Select device",
+        "connectDevice": "Connect device",
+        "stepRange": "Step {{currentStep}} of {{totalSteps}}"
+      },
+      "flow": {
+        "steps": {
+          "withdraw": {
+            "warning": "The undelegated amount has completed its timelock and will be sent back to your available balance.",
+            "cta": "Continue"
+          },
+          "verification": {
+            "success": {
+              "title": "You have successfully withdrawn your assets.",
+              "text": "Your account balance will be updated when the network confirms the transaction.",
+              "cta": "View details"
+            },
+            "broadcastError": "Your transaction may have failed. Please wait a moment then check the transaction history before trying again."
+          }
+        }
+      }
     }
   },
   "tron": {
