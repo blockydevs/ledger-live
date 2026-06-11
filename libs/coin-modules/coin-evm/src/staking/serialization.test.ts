@@ -132,11 +132,11 @@ describe("coin-evm/staking/serialization", () => {
     it("roundtrips an unbonding `status`, omitting it when absent", () => {
       const withStatus: StakingResources = {
         ...sampleResources,
-        unbondings: [{ ...sampleResources.unbondings[0], status: "deactivated" }],
+        unbondings: [{ ...sampleResources.unbondings[0], status: "deactivating" }],
       };
       const raw = toStakingResourcesRaw(withStatus);
-      expect(raw.unbondings[0]).toHaveProperty("status", "deactivated");
-      expect(fromStakingResourcesRaw(raw).unbondings[0].status).toBe("deactivated");
+      expect(raw.unbondings[0]).toHaveProperty("status", "deactivating");
+      expect(fromStakingResourcesRaw(raw).unbondings[0].status).toBe("deactivating");
 
       const rawNoStatus = toStakingResourcesRaw(sampleResources);
       expect(rawNoStatus.unbondings[0]).not.toHaveProperty("status");
@@ -197,7 +197,7 @@ describe("coin-evm/staking/serialization", () => {
         validatorId: "7",
         validatorName: "GalaxyDigital",
       });
-      expect(raw.unbondings[0]).toMatchObject({ validatorName: "GalaxyDigital" });
+      expect(raw.unbondings[0]).toMatchObject({ validatorId: "7", validatorName: "GalaxyDigital" });
 
       const back = fromStakingResourcesRaw(raw);
       expect(back.delegations[0]).toMatchObject({
