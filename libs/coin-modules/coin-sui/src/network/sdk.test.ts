@@ -3712,6 +3712,9 @@ describe("getCoinsForAmount – SIP-58 fake coins", () => {
   });
 });
 
+const PADDED_ACCUMULATOR_ROOT_ID =
+  "0x0000000000000000000000000000000000000000000000000000000000000acc";
+
 describe("isSettlementTransaction", () => {
   const makeSettlementTx = (
     overrides: Partial<SuiTransactionBlockResponse> = {},
@@ -3729,8 +3732,8 @@ describe("isSettlementTransaction", () => {
               {
                 type: "object" as const,
                 objectType: "sharedObject" as const,
-                objectId: "0xacc",
-                initialSharedVersion: "1",
+                objectId: PADDED_ACCUMULATOR_ROOT_ID,
+                initialSharedVersion: "684265543",
                 mutable: true,
               },
             ],
@@ -3757,8 +3760,34 @@ describe("isSettlementTransaction", () => {
       ...overrides,
     }) as SuiTransactionBlockResponse;
 
-  it("returns true for a transaction with 0xacc object input", () => {
+  it("returns true for a settlement tx with the padded accumulator root object input", () => {
     expect(sdk.isSettlementTransaction(makeSettlementTx())).toBe(true);
+  });
+
+  it("returns true for the short-form 0xacc object input", () => {
+    const tx = makeSettlementTx();
+    (tx.transaction!.data.transaction as any).inputs[0].objectId = "0xacc";
+    expect(sdk.isSettlementTransaction(tx)).toBe(true);
+  });
+
+  it("returns true for a mixed-case padded accumulator root object input", () => {
+    const tx = makeSettlementTx();
+    (tx.transaction!.data.transaction as any).inputs[0].objectId =
+      "0x0000000000000000000000000000000000000000000000000000000000000ACC";
+    expect(sdk.isSettlementTransaction(tx)).toBe(true);
+  });
+
+  it("returns false for a different padded system object input", () => {
+    const tx = makeSettlementTx();
+    (tx.transaction!.data.transaction as any).inputs[0].objectId =
+      "0x0000000000000000000000000000000000000000000000000000000000000005";
+    expect(sdk.isSettlementTransaction(tx)).toBe(false);
+  });
+
+  it("returns false when the accumulator root input is not mutable", () => {
+    const tx = makeSettlementTx();
+    (tx.transaction!.data.transaction as any).inputs[0].mutable = false;
+    expect(sdk.isSettlementTransaction(tx)).toBe(false);
   });
 
   it("returns false for a normal user transaction", () => {
@@ -4119,8 +4148,8 @@ describe("settlement transaction filtering in operations", () => {
             {
               type: "object" as const,
               objectType: "sharedObject" as const,
-              objectId: "0xacc",
-              initialSharedVersion: "1",
+              objectId: PADDED_ACCUMULATOR_ROOT_ID,
+              initialSharedVersion: "684265543",
               mutable: true,
             },
           ],

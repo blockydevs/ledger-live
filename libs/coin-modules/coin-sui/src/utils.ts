@@ -16,8 +16,8 @@ export function normalizeSuiAddressForComparison(addr: string): string {
 }
 
 /**
- * Normalize a Sui struct tag (coin type *or* event type) to the JSON-RPC short
- * form (e.g. `0x0000…0002::sui::SUI` → `0x2::sui::SUI`,
+ * Normalize a Sui struct tag (coin type, event type, or bare object id) to the
+ * JSON-RPC short form (e.g. `0x0000…0002::sui::SUI` → `0x2::sui::SUI`,
  * `0x0000…0003::validator::StakingRequestEvent` → `0x3::validator::StakingRequestEvent`).
  *
  * GraphQL emits type tags with addresses in canonical 32-byte long form; JSON-RPC

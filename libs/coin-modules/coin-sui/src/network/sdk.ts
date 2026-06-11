@@ -202,6 +202,10 @@ function isUnstaking(block?: SuiTransactionBlockKind): block is ProgrammableTran
  * accumulator state at checkpoint boundaries.  They can be identified by a
  * mutable reference to the root accumulator object `0xacc` in their inputs.
  *
+ * RPC returns object ids in canonical 32-byte padded form (`0x0000…0acc` — e.g.
+ * mainnet settlement tx `8th3QUBRS4kXxNrXXgVb8oH85NFEprXk3DXqGQjv7YiN`), so
+ * inputs are normalized to the short form before comparing.
+ *
  * These are internal bookkeeping transactions and should be excluded from the
  * user-facing operations history.
  */
@@ -217,7 +221,7 @@ export function isSettlementTransaction(tx: SuiTransactionBlockResponse): boolea
       "objectType" in input &&
       input.objectType === "sharedObject" &&
       input.mutable === true &&
-      input.objectId === ACCUMULATOR_ROOT_OBJECT_ID,
+      toShortStructTag(input.objectId) === ACCUMULATOR_ROOT_OBJECT_ID,
   );
 }
 

@@ -49,4 +49,10 @@ describe("toShortStructTag", () => {
       ),
     ).toBe("0x0::mod::T");
   });
+
+  it("strips leading zeros from a bare object id (SIP-58 accumulator root)", () => {
+    expect(
+      toShortStructTag("0x0000000000000000000000000000000000000000000000000000000000000acc"),
+    ).toBe("0xacc");
+  });
 });

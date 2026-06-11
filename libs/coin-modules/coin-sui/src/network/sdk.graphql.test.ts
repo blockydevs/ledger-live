@@ -27,6 +27,7 @@ import {
   simulateTransactionGraphQL,
 } from "./sdk.graphql";
 import type { SuiGraphQLClient } from "./graphql/client";
+import { isFinalizedTxNode } from "./graphql/transactions";
 import {
   addr,
   batchExchangeRateCalls,
@@ -1023,6 +1024,84 @@ describe("getOperations on GraphQL transport", () => {
 
     expect(query).toHaveBeenCalledTimes(1);
     expect(Array.isArray(ops)).toBe(true);
+  });
+
+  it("drops not-yet-finalized (indexing-lagged) nodes instead of mapping Failed/1970 ops", async () => {
+    const ADDR = addr("11");
+    const query = jest.fn().mockResolvedValueOnce({
+      data: {
+        transactions: {
+          nodes: [
+            {
+              digest: "0xfinalized",
+              effects: {
+                status: "SUCCESS",
+                checkpoint: { sequenceNumber: 10, digest: "0xcp1" },
+                timestamp: "2026-05-19T00:00:00.000Z",
+              },
+              transactionJson: { sender: ADDR, gasData: { owner: ADDR } },
+            },
+            // indexing lag: only the digest is known yet
+            { digest: "0xlagged", effects: null, transactionJson: null },
+          ],
+          pageInfo: { hasPreviousPage: false, startCursor: null },
+        },
+      },
+    });
+    mockNext({ query });
+
+    const ops = await getOperations("acc-1", ADDR, undefined, undefined, "sui-gql-getops");
+    const hashes = ops.map(o => o.hash);
+    expect(hashes).toContain("0xfinalized");
+    expect(hashes).not.toContain("0xlagged");
+  });
+
+  it("keeps a finalized FAILURE node (a real on-chain failure still shows)", async () => {
+    const ADDR = addr("11");
+    const query = jest.fn().mockResolvedValueOnce({
+      data: {
+        transactions: {
+          nodes: [
+            {
+              digest: "0xfail",
+              effects: {
+                status: "FAILURE",
+                checkpoint: { sequenceNumber: 11, digest: "0xcp2" },
+                timestamp: "2026-05-19T00:00:00.000Z",
+                effectsJson: { status: { error: { description: "MoveAbort" } } },
+              },
+              transactionJson: { sender: ADDR, gasData: { owner: ADDR } },
+            },
+          ],
+          pageInfo: { hasPreviousPage: false, startCursor: null },
+        },
+      },
+    });
+    mockNext({ query });
+
+    const ops = await getOperations("acc-1", ADDR, undefined, undefined, "sui-gql-getops");
+    expect(ops.find(o => o.hash === "0xfail")?.hasFailed).toBe(true);
+  });
+});
+
+describe("isFinalizedTxNode", () => {
+  it("is true for a node with an effects.timestamp", () => {
+    expect(
+      isFinalizedTxNode({
+        digest: "0x1",
+        effects: { timestamp: "2026-05-19T00:00:00.000Z" },
+      } as never),
+    ).toBe(true);
+  });
+
+  it("is false for a node with null effects (indexing lag)", () => {
+    expect(isFinalizedTxNode({ digest: "0x1", effects: null } as never)).toBe(false);
+  });
+
+  it("is false when effects carries no timestamp", () => {
+    expect(isFinalizedTxNode({ digest: "0x1", effects: { status: "SUCCESS" } } as never)).toBe(
+      false,
+    );
   });
 });
 

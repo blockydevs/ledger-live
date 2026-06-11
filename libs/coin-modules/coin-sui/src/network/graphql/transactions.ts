@@ -286,3 +286,16 @@ export function graphqlTxToJsonRpcResponse(
       : null,
   } as unknown as SuiTransactionBlockResponse;
 }
+
+/**
+ * A finalized Sui transaction always carries an execution `timestamp` (set when it is included
+ * in a checkpoint). A node returned before the indexer has finalized it — e.g. indexing lag in
+ * the moment after broadcast — comes back with a null `effects`/`timestamp`. Mapping such a node
+ * via `graphqlTxToJsonRpcResponse` yields a bogus operation (status defaults to failure, date to
+ * 1970, no sender/balance-changes). History paginators use this to skip not-yet-finalized nodes;
+ * the optimistic pending op covers the UI until the next sync returns the finalized node. A real
+ * on-chain failure is finalized (has a `timestamp` + `status: FAILURE`) so it is *not* skipped.
+ */
+export function isFinalizedTxNode(tx: GraphQLTransactionNode): boolean {
+  return Boolean(tx.effects?.timestamp);
+}

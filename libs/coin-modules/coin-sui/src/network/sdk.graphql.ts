@@ -26,7 +26,7 @@ import {
   TRANSACTIONS_BY_AFFECTED_ADDRESS,
   type SuiSystemStateResult,
 } from "./graphql/queries";
-import { graphqlTxToJsonRpcResponse } from "./graphql/transactions";
+import { graphqlTxToJsonRpcResponse, isFinalizedTxNode } from "./graphql/transactions";
 import {
   assertSystemStateJson,
   computeApy,
@@ -704,6 +704,9 @@ export const getTransactionsByAddressGraphQL = async (
     // stays newest-first across pages, matching the JSON-RPC contract.
     const nodes = (conn.nodes ?? []).slice().reverse();
     for (const node of nodes) {
+      // Skip not-yet-finalized nodes (indexing lag right after broadcast): mapping them would
+      // yield a bogus Failed/1970 op. They reappear, complete, on a later sync.
+      if (!isFinalizedTxNode(node)) continue;
       accumulated.push(graphqlTxToJsonRpcResponse(node));
       if (accumulated.length >= limit) break;
     }
@@ -763,7 +766,8 @@ export const getTransactionsWithCheckpointDigestsGraphQL = async (
   });
   const conn = unwrapGraphQL("TransactionsByAffectedAddress", res).transactions;
   const nodes = (conn?.nodes ?? []).slice().reverse(); // newest-first across the page
-  return nodes.map(node => ({
+  // Skip not-yet-finalized nodes (indexing lag) — they'd map to bogus Failed/1970 ops.
+  return nodes.filter(isFinalizedTxNode).map(node => ({
     tx: graphqlTxToJsonRpcResponse(node),
     checkpointDigest: node.effects?.checkpoint?.digest ?? undefined,
   }));
