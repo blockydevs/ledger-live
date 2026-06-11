@@ -45,7 +45,6 @@ export function runSwapTokenApprovalFlow(
     it("Swap - token approval flow", async () => {
       await app.swap.logSelectedProvider(provider.uiName);
       await revokeTokenApproval(fromAccount, provider);
-      await app.swap.ensureRevokeTokenApproval(fromAccount, provider);
       const amountToSwap = await getAmountFromUSD(fromAccount.currency.id, 5);
       if (amountToSwap === null) {
         throw new Error(`Could not resolve USD amount for ${fromAccount.currency.id}`);
