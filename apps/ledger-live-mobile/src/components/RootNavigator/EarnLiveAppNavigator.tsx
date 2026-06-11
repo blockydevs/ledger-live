@@ -32,7 +32,7 @@ type NavigationProps = BaseComposite<
 
 type EarnNavigation = NavigationProp<ParamListBase>;
 
-const Earn = (props: NavigationProps) => {
+export const Earn = (props: NavigationProps) => {
   const paramAction = props.route.params?.action;
   const paramAccountId = props.route.params?.accountId;
   const paramCurrencyId = props.route.params?.currencyId;

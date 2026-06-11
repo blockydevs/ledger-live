@@ -102,7 +102,7 @@ import AssetsListNavigator from "LLM/features/Assets/Navigator";
 import AnalyticsNavigator from "LLM/features/Analytics/Navigator";
 import OperationsHistoryNavigator from "LLM/features/OperationsHistory/Navigator";
 import FeesNavigator from "./FeesNavigator";
-import { getStakeLabelLocaleBased } from "~/helpers/getStakeLabelLocaleBased";
+import { getEarnScreenOptions } from "./getEarnScreenOptions";
 import SignRawTransactionNavigator from "./SignRawTransactionNavigator";
 import LiveAppModalScreen from "LLM/features/LiveAppModal";
 
@@ -579,35 +579,9 @@ export default function BaseNavigator() {
         <Stack.Screen
           name={NavigatorName.Earn}
           component={EarnLiveAppNavigator}
-          options={props => {
-            const stakeLabel = getStakeLabelLocaleBased();
-            const intent = props.route?.params?.params?.intent;
-
-            if (intent === "deposit" || intent === "withdraw") {
-              return {
-                headerShown: true,
-                closable: false,
-                headerTitle: t(stakeLabel),
-                headerRight: () => null,
-              };
-            }
-
-            // The Rewards simulator is presented full-screen (no tab bar). Show the native header so
-            // it gets the back button + status-bar safe area, like the deposit/withdraw flows.
-            if (intent === "simulate") {
-              return {
-                headerShown: true,
-                closable: false,
-                headerTitle: t("earn.simulator.title"),
-                headerRight: () => null,
-                headerStyle: { backgroundColor: liveAppCanvasColor },
-                headerShadowVisible: false,
-                contentStyle: { backgroundColor: liveAppCanvasColor },
-              };
-            }
-
-            return { headerShown: false };
-          }}
+          options={props =>
+            getEarnScreenOptions(props.route?.params?.params?.intent, t, liveAppCanvasColor)
+          }
         />
         <Stack.Screen
           name={NavigatorName.Borrow}
