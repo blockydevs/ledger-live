@@ -10,13 +10,11 @@ import {
   getMockedCoinFrameworkOperation,
   getMockedOperation,
 } from "../__tests__/fixtures/operation.fixture";
-import { toCoinFrameworkOperation, toBridgeOperation } from "./utils";
+import { getCalTokens, toCoinFrameworkOperation, toBridgeOperation } from "./utils";
 import { listOperations } from "./listOperations";
-import { getCalTokens } from "../logic/utils";
 
 jest.mock("../network/utils");
 jest.mock("./utils");
-jest.mock("../bridge/tokens");
 
 const mockFetchAccountTransactionsFromHeight = jest.mocked(fetchAccountTransactionsFromHeight);
 const mockToCoinFrameworkOperation = jest.mocked(toCoinFrameworkOperation);

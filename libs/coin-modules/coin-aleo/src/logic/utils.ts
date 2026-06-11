@@ -14,6 +14,8 @@ import {
   encodeTokenAccountId,
 } from "@ledgerhq/ledger-wallet-framework/account/accountId";
 import { decodeOperationId, encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
+import { getCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
+import { promiseAllBatched } from "@ledgerhq/live-promise";
 import aleoConfig from "../config";
 import {
   EXPLORER_TRANSFER_TYPES,
@@ -44,8 +46,6 @@ import type {
   AleoUnspentRecord,
   AleoTransactionIntent,
 } from "../types";
-import { getCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
-import { promiseAllBatched } from "@ledgerhq/live-promise";
 
 const MICROCREDITS_REGEX = /^(\d+)u\d+$/;
 

@@ -3,9 +3,9 @@ import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets
 import type { Account, OperationType, TokenAccount } from "@ledgerhq/types-live";
 import { encodeTokenAccountId, emptyHistoryCache } from "@ledgerhq/ledger-wallet-framework/account";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
+import { mergeOps } from "@ledgerhq/ledger-wallet-framework/bridge/jsHelpers";
 import type { AleoOperation, AleoTokenAccount } from "../types/bridge";
 import { apiClient } from "../network/api";
-import { mergeOps } from "@ledgerhq/ledger-wallet-framework/bridge/jsHelpers";
 import { parseAmount } from "../logic/utils";
 
 function promoteCoinOpToFees({
