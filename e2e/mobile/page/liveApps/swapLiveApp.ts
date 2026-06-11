@@ -179,6 +179,9 @@ export default class SwapLiveAppPage {
 
   @Step("Tap execute swap button on step approval")
   async tapExecuteSwapOnStepApproval() {
+    await waitWebElementByTestId(this.executeSwapButtonStepApproval, {
+      timeout: APPROVAL_PROCESSING_TIMEOUT,
+    });
     await waitForWebElementToBeEnabled(this.executeSwapButtonStepApproval);
     await tapWebElementByTestId(this.executeSwapButtonStepApproval);
     await waitForElement(app.send.summaryRecipient());
