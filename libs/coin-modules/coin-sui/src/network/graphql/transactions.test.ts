@@ -390,7 +390,7 @@ describe("graphqlTxToJsonRpcResponse", () => {
         payment: [
           {
             objectId: "0xf0db3db2b09626b123531b6da5415f20f50bd1e3105ba0792c355fc15e2fa863",
-            version: 914617841,
+            version: "914617841",
             digest: "C6soxiMsseqw4fQp7p5Aa651K2QXBYf8ejr3U9Swi1bW",
           },
         ],

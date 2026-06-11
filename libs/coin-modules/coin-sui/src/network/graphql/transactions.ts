@@ -200,7 +200,7 @@ function protoGasPaymentToGasData(raw: unknown): ProtoRecord {
   return {
     payment: (Array.isArray(gp.objects) ? gp.objects : []).map(obj => {
       const o = obj as ProtoRecord;
-      return { objectId: o.objectId, version: Number(o.version), digest: o.digest };
+      return { objectId: o.objectId, version: String(o.version), digest: o.digest };
     }),
     owner: gp.owner,
     price: gp.price,
