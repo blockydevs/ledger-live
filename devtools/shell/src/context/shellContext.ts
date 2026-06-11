@@ -7,9 +7,8 @@ export interface CategoryGroup {
   readonly tools: Tool[];
 }
 
-interface DevToolsShellValue {
+export interface DevToolsShellValue {
   readonly categories: CategoryGroup[];
-  readonly onQuit?: () => void;
 }
 
 const DevToolsShellContext = createContext<DevToolsShellValue>({ categories: [] });

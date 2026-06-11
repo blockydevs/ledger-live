@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Box } from "@ledgerhq/lumen-ui-rnative";
+import { ScrollView } from "react-native";
+import { Divider, Box } from "@ledgerhq/lumen-ui-rnative";
 import { CatalogRow } from "../CatalogRow/CatalogRow.native";
 import type { IconComponent } from "../../categoryConfig.native";
 
@@ -14,29 +14,18 @@ export interface CatalogItem {
 
 interface CatalogProps {
   readonly items: CatalogItem[];
-  readonly query?: string;
 }
 
-export function Catalog({ items, query = "" }: CatalogProps) {
-  const q = query.trim().toLowerCase();
-  const filtered = useMemo(
-    () =>
-      q
-        ? items.filter(
-            item =>
-              item.title.toLowerCase().includes(q) ||
-              (item.description ?? "").toLowerCase().includes(q),
-          )
-        : items,
-    [items, q],
-  );
-
+export function Catalog({ items }: CatalogProps) {
   return (
-    <Box>
-      {filtered.map(({ key, ...row }) => (
-        <CatalogRow key={key} {...row} />
+    <ScrollView>
+      {items.map(({ key, ...row }) => (
+        <Box key={key}>
+          <CatalogRow {...row} />
+          <Divider />
+        </Box>
       ))}
-    </Box>
+    </ScrollView>
   );
 }
 
