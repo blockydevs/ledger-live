@@ -1,13 +1,18 @@
 import React, { useEffect, useRef } from "react";
 import { cn } from "LLD/utils/cn";
-import type { ContextMenuView } from "./types";
+import type { ContextMenuView, NavDirection } from "./types";
 
 type ContextMenuTransitionProps = {
   view: ContextMenuView;
+  direction: NavDirection;
   children: React.ReactNode;
 };
 
-export function ContextMenuTransition({ view, children }: Readonly<ContextMenuTransitionProps>) {
+export function ContextMenuTransition({
+  view,
+  direction,
+  children,
+}: Readonly<ContextMenuTransitionProps>) {
   const prevViewRef = useRef(view);
   const shouldAnimate = prevViewRef.current !== view;
 
@@ -20,9 +25,8 @@ export function ContextMenuTransition({ view, children }: Readonly<ContextMenuTr
       key={view}
       className={cn(
         "flex flex-col",
-        view === "menu" && "gap-24",
         shouldAnimate &&
-          (view === "backupHub" ? "animate-slide-in-from-right" : "animate-slide-in-from-left"),
+          (direction === "forward" ? "animate-slide-in-from-right" : "animate-slide-in-from-left"),
       )}
     >
       {children}

@@ -11,22 +11,26 @@ import { useFeature } from "@features/platform-feature-flags";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { track } from "~/renderer/analytics/segment";
 import type { Action } from "./types";
-import { useContextMenuClose, useContextMenu } from "../ContextMenuContext";
+import { useContextMenuClose } from "../ContextMenuContext";
 import { MY_WALLET_TRACKING_BUTTON, MY_WALLET_TRACKING_PAGE_NAME } from "../../constants";
+
+export type ActionsListParams = {
+  onRecoverClick: () => void;
+};
 
 export type ActionsListViewModel = {
   actions: Action[];
 };
 
-export function useActionsListViewModel(): ActionsListViewModel {
+export function useActionsListViewModel({
+  onRecoverClick,
+}: ActionsListParams): ActionsListViewModel {
   const close = useContextMenuClose();
-  const { navigateTo } = useContextMenu();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const referralProgramConfig = useFeature("referralProgramDesktopSidebar");
-  const isBackupHubEnabled = !!useFeature("lwdBackupHub")?.enabled;
-  const { recoverFeature, hasClickedRecover, markRecoverSeen, openRecover } = useRecoverEntry();
+  const { recoverFeature, hasClickedRecover } = useRecoverEntry();
   const recoverIcon = hasClickedRecover ? ShieldCheck : ShieldCheckNotification;
 
   const openHelp = useCallback(() => {
@@ -37,22 +41,6 @@ export function useActionsListViewModel(): ActionsListViewModel {
     navigate("/settings/help");
     close();
   }, [navigate, close]);
-
-  const handleClickRecover = useCallback(() => {
-    track("button_clicked", {
-      button: MY_WALLET_TRACKING_BUTTON.recover,
-      page: MY_WALLET_TRACKING_PAGE_NAME,
-    });
-
-    if (isBackupHubEnabled) {
-      markRecoverSeen();
-      navigateTo("backupHub");
-      return;
-    }
-
-    openRecover();
-    close();
-  }, [isBackupHubEnabled, markRecoverSeen, navigateTo, openRecover, close]);
 
   const handleClickRefer = useCallback(() => {
     if (referralProgramConfig?.enabled && referralProgramConfig?.params?.path) {
@@ -71,7 +59,7 @@ export function useActionsListViewModel(): ActionsListViewModel {
           {
             icon: recoverIcon,
             label: t("myWallet.actionsList.recover"),
-            onClick: handleClickRecover,
+            onClick: onRecoverClick,
             id: "recover",
           },
         ]

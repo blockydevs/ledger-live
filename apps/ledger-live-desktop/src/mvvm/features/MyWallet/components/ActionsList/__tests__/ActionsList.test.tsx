@@ -10,13 +10,13 @@ const HELP_LABEL = "Help";
 const RECOVER_LABEL = "[L] Recover";
 const REFER_LABEL = "Referral";
 const MY_WALLET_ROUTE = "/my-wallet";
-const RECOVER_HOME_PATH = "/recover";
 const REFER_PATH = "/refer-a-friend";
 
 const mockNavigate = jest.fn();
 const mockClose = jest.fn();
 const mockNavigateTo = jest.fn();
 const mockGoBack = jest.fn();
+const mockOnRecoverClick = jest.fn();
 
 jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
   useAccountPath: jest.fn(),
@@ -32,9 +32,15 @@ const mockTrack = jest.mocked(track);
 const renderActionsList = (options?: Parameters<typeof render>[1]) =>
   render(
     <ContextMenuContext.Provider
-      value={{ close: mockClose, view: "menu", navigateTo: mockNavigateTo, goBack: mockGoBack }}
+      value={{
+        close: mockClose,
+        view: "myWallet",
+        direction: "forward",
+        navigateTo: mockNavigateTo,
+        goBack: mockGoBack,
+      }}
     >
-      <ActionsList />
+      <ActionsList onRecoverClick={mockOnRecoverClick} />
     </ContextMenuContext.Provider>,
     options,
   );
@@ -66,6 +72,23 @@ describe("ActionsList", () => {
     expect(getButton(RECOVER_LABEL)).toBeVisible();
   });
 
+  it("fires the injected onRecoverClick callback without navigating itself", async () => {
+    const { user } = renderActionsList({
+      initialState: withFlagOverrides({
+        protectServicesDesktop: {
+          enabled: true,
+          params: { openRecoverFromSidebar: true, protectId: "protect-id" },
+        },
+      }),
+    });
+
+    await user.click(getButton(RECOVER_LABEL));
+
+    expect(mockOnRecoverClick).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockNavigateTo).not.toHaveBeenCalled();
+  });
+
   it("navigates to help settings and tracks the click", async () => {
     const { user } = renderActionsList({ initialRoute: MY_WALLET_ROUTE });
 
@@ -76,75 +99,6 @@ describe("ActionsList", () => {
       button: MY_WALLET_TRACKING_BUTTON.help,
       page: MY_WALLET_TRACKING_PAGE_NAME,
     });
-  });
-
-  it("navigates to the recover home and tracks the click", async () => {
-    mockUseAccountPath.mockReturnValue(RECOVER_HOME_PATH);
-
-    const { user } = renderActionsList({
-      initialRoute: MY_WALLET_ROUTE,
-      initialState: withFlagOverrides({
-        protectServicesDesktop: {
-          enabled: true,
-          params: {
-            openRecoverFromSidebar: true,
-            protectId: "protect-id",
-          },
-        },
-      }),
-    });
-
-    await user.click(getButton(RECOVER_LABEL));
-
-    expect(mockNavigate).toHaveBeenCalledWith(RECOVER_HOME_PATH);
-    expect(mockTrack).toHaveBeenCalledWith("button_clicked", {
-      button: MY_WALLET_TRACKING_BUTTON.recover,
-      page: MY_WALLET_TRACKING_PAGE_NAME,
-    });
-  });
-
-  it("opens the Backup Hub in the popover instead of navigating when lwdBackupHub is enabled", async () => {
-    mockUseAccountPath.mockReturnValue(RECOVER_HOME_PATH);
-
-    const { user, store } = renderActionsList({
-      initialState: withFlagOverrides({
-        protectServicesDesktop: {
-          enabled: true,
-          params: { openRecoverFromSidebar: true, protectId: "protect-id" },
-        },
-        lwdBackupHub: { enabled: true },
-      }),
-    });
-
-    await user.click(getButton(RECOVER_LABEL));
-
-    expect(mockNavigateTo).toHaveBeenCalledWith("backupHub");
-    expect(mockNavigate).not.toHaveBeenCalled();
-    expect(mockClose).not.toHaveBeenCalled();
-    expect(store.getState().settings.hasClickedRecover).toBe(true);
-  });
-
-  it("persists hasClickedRecover in the store after the first recover click", async () => {
-    mockUseAccountPath.mockReturnValue(RECOVER_HOME_PATH);
-
-    const { user, store } = renderActionsList({
-      initialRoute: MY_WALLET_ROUTE,
-      initialState: withFlagOverrides({
-        protectServicesDesktop: {
-          enabled: true,
-          params: {
-            openRecoverFromSidebar: true,
-            protectId: "protect-id",
-          },
-        },
-      }),
-    });
-
-    expect(store.getState().settings.hasClickedRecover).toBe(false);
-
-    await user.click(getButton(RECOVER_LABEL));
-
-    expect(store.getState().settings.hasClickedRecover).toBe(true);
   });
 
   it("shows refer when the feature is enabled", () => {
