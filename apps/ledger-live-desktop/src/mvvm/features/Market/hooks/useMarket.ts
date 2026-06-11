@@ -9,7 +9,11 @@ import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { setMarketCurrentPage, setMarketOptions } from "~/renderer/actions/market";
 import { useInitSupportedCounterValues } from "~/renderer/hooks/useInitSupportedCounterValues";
 import { marketCurrentPageSelector, marketParamsSelector } from "~/renderer/reducers/market";
-import { localeSelector, starredMarketCoinsSelector } from "~/renderer/reducers/settings";
+import {
+  counterValueCurrencySelector,
+  localeSelector,
+  starredMarketCoinsSelector,
+} from "~/renderer/reducers/settings";
 import {
   BASIC_REFETCH,
   REFETCH_TIME_ONE_MINUTE,
@@ -31,6 +35,7 @@ export function useMarket() {
   const marketCurrentPage = useSelector(marketCurrentPageSelector);
   const starredMarketCoins: string[] = useSelector(starredMarketCoinsSelector);
   const locale = useSelector(localeSelector);
+  const settingsCounterValue = useSelector(counterValueCurrencySelector).ticker.toLowerCase();
 
   const REFRESH_RATE =
     Number(lldRefreshMarketDataFeature?.params?.refreshTime) > 0
@@ -59,8 +64,16 @@ export function useMarket() {
 
   const shouldDisplayLiveCompatible = filterBySupported || marketParams.liveCompatible;
 
+  const effectiveCounterCurrency = shouldDisplayAssetDiscoverability
+    ? supportedCounterCurrencies?.includes(settingsCounterValue)
+      ? settingsCounterValue
+      : "usd"
+    : marketParams.counterCurrency;
+
+  const resolvedMarketParams = { ...marketParams, counterCurrency: effectiveCounterCurrency };
+
   const marketResult = useMarketDataHook({
-    ...marketParams,
+    ...resolvedMarketParams,
     starred: starFilterOn ? starredMarketCoins : starred,
     liveCompatible: shouldDisplayLiveCompatible,
     filter: getMarketFilter(isStocksCategory) ?? marketParams.filter,
@@ -256,7 +269,7 @@ export function useMarket() {
     starredMarketCoins,
     timeRanges,
     timeRangeSelectOptions,
-    marketParams,
+    marketParams: resolvedMarketParams,
     marketCurrentPage,
     timeRangeValue,
     itemCount,

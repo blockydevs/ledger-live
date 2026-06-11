@@ -91,8 +91,15 @@ export default function Market() {
       <PageHeader title={t("market.title")} onBack={() => navigate("/")} />
 
       <Flex flexDirection="row" pr="6px" my={2} alignItems="center" justifyContent="space-between">
-        <SearchInputComponent search={search} updateSearch={updateSearch} />
-        <SelectBarContainer flexDirection="row" alignItems="center" justifyContent="flex-end">
+        {!shouldDisplayAssetDiscoverability && (
+          <SearchInputComponent search={search} updateSearch={updateSearch} />
+        )}
+        <SelectBarContainer
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="flex-end"
+          ml="auto"
+        >
           {!shouldDisplayAssetDiscoverability && (
             <Flex data-testid="market-countervalue-select" justifyContent="flex-end" mx={4}>
               <CounterValueSelect

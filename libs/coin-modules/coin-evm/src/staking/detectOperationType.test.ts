@@ -62,6 +62,14 @@ describe("detectEvmStakingOperationType", () => {
     expect(result).toBe("REWARD");
   });
 
+  it("should return REWARD for compound on the monad staking precompile", () => {
+    const monadStakingAddress = "0x0000000000000000000000000000000000001000";
+    const fn = "compound(uint64)";
+    const methodId = ethers.id(fn).slice(0, 10).toLowerCase();
+    const result = detectEvmStakingOperationType("monad", monadStakingAddress, methodId);
+    expect(result).toBe("REWARD");
+  });
+
   it("should return undefined for claimReward selector sent to the staking contract", () => {
     const fn = "withdrawDelegationRewards(string)";
     const methodId = ethers.id(fn).slice(0, 10).toLowerCase();

@@ -237,6 +237,7 @@ describe("NotificationsPrompt dApp complete flow", () => {
       repromptDelay: null,
       dismissedCount: 0,
       skipReason: undefined,
+      drawerPromptTarget: "globalPushNotifications",
     });
   });
 

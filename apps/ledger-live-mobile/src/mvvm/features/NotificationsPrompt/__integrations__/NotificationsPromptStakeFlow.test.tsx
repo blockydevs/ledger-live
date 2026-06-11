@@ -348,6 +348,18 @@ const stakePromptCases: StakePromptCase[] = [
     transaction: { family: "evm", mode: "claimReward" },
   },
   {
+    label: "EVM withdraw",
+    bucket: "withdrawing/withdraw",
+    flowName: NavigatorName.EvmWithdrawFlow,
+    familyExportKey: "EvmWithdrawFlow",
+    successScreenName: ScreenName.EvmWithdrawValidationSuccess,
+    errorScreenName: ScreenName.EvmWithdrawValidationError,
+    accountKey: "ethereum",
+    operationType: "WITHDRAW",
+    // STUB (LIVE-31683): coin-evm has no "withdraw" mode yet, the flow self-sends.
+    transaction: { family: "evm", mode: "send" },
+  },
+  {
     label: "Hedera claim rewards",
     bucket: "revoke/claim/lifecycle",
     flowName: NavigatorName.HederaClaimRewardsFlow,
@@ -796,6 +808,7 @@ describe("NotificationsPrompt stake flow", () => {
             repromptDelay: null,
             dismissedCount: 0,
             skipReason: undefined,
+            drawerPromptTarget: "globalPushNotifications",
           },
         );
 
@@ -805,6 +818,7 @@ describe("NotificationsPrompt stake flow", () => {
           button: "allow notifications",
           page: "Drawer push notification opt-in",
           source: "stake",
+          drawerPromptTarget: "globalPushNotifications",
           repromptDelay: null,
           dismissedCount: 0,
           variant: AB_TESTING_VARIANTS.B,

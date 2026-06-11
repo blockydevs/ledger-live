@@ -72,7 +72,7 @@ async function validateAmount(
   // And claim reward transaction
   // can have no amount
   if (!amount) {
-    if (intentStakingMode === "claimReward") {
+    if (intentStakingMode === "claimReward" || intentStakingMode === "compoundReward") {
       return { errors: {}, warnings: {} };
     } else if (!isSmartContractInteraction) {
       return { errors: { amount: new AmountRequired() }, warnings: {} };
@@ -277,7 +277,7 @@ function validateStaking(
 
   if (
     !isStakingIntent(intent) ||
-    !["delegate", "redelegate", "undelegate", "claimReward"].includes(intent.mode)
+    !["delegate", "redelegate", "undelegate", "claimReward", "compoundReward"].includes(intent.mode)
   ) {
     return { errors: {}, warnings: {} };
   }
@@ -306,7 +306,7 @@ function validateStaking(
   }
   // Only compare fees vs rewards when both are in the same native unit.
   if (
-    intent.mode === "claimReward" &&
+    ["claimReward", "compoundReward"].includes(intent.mode) &&
     isNative(intent.asset) &&
     intent.amount > 0n &&
     totalFees > intent.amount

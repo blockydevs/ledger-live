@@ -1,7 +1,7 @@
 import { WebViewAppPage } from "./webViewApp.page";
 import { step } from "tests/misc/reporters/step";
 import { expect } from "@playwright/test";
-import { Account, TokenAccount } from "@ledgerhq/live-common/e2e/enum/Account";
+import { Account } from "@ledgerhq/live-common/e2e/enum/Account";
 import { ChooseAssetDrawer } from "./drawer/choose.asset.drawer";
 import { SwapProvider } from "@ledgerhq/live-common/e2e/enum/Provider";
 import { Device } from "@ledgerhq/live-common/e2e/enum/Device";
@@ -11,7 +11,10 @@ import { readFile } from "fs/promises";
 import * as path from "path";
 import { FileUtils } from "tests/utils/fileUtils";
 import { getMinimumSwapAmount } from "@ledgerhq/live-common/e2e/swap";
-import { getTokenAllowanceCommand } from "@ledgerhq/live-common/e2e/cliCommandsUtils";
+
+// Uniswap's Permit2 "Approve token access" step can take 1-5 min to confirm on-chain
+// before the sign-permit button appears (the app shows a "1-5 mins" estimate).
+const APPROVAL_PROCESSING_TIMEOUT = 300_000;
 
 export class SwapPage extends WebViewAppPage {
   protected readonly webviewIdentifier = "swap";

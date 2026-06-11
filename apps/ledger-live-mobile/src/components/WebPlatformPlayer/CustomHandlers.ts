@@ -20,7 +20,7 @@ import { handlers as liveAppModalHandlers } from "@ledgerhq/live-common/wallet-a
 import { resolveLiveAppModalParams } from "@ledgerhq/live-common/wallet-api/LiveAppModal/types";
 import { setLiveAppModal } from "~/reducers/liveAppModal";
 import { Linking } from "react-native";
-import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
+import { useFeature } from "@features/platform-feature-flags";
 import { isLockedSelector } from "~/reducers/auth";
 
 type DeeplinkOpenHandlerParams = { url: string };

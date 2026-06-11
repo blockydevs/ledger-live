@@ -19,7 +19,7 @@ import {
 import { languageSelector, readOnlyModeEnabledSelector } from "~/reducers/settings";
 import { accountsCountSelector, useAreAccountsEmpty } from "~/reducers/accounts";
 import { useFeature } from "@features/platform-feature-flags";
-import { resolveRemoteCopy } from "@ledgerhq/live-common/featureFlags/remoteABTesting/resolveRemoteCopy";
+import { resolveRemoteCopy } from "@ledgerhq/live-common/analytics/remoteABTesting/resolveRemoteCopy";
 import { track } from "~/analytics";
 import { useTransferDrawerController } from "../../hooks/useTransferDrawerController";
 import { QuickActionCta, UserQuickActionsState } from "../../types";

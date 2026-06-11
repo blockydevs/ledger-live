@@ -158,6 +158,7 @@ describe("NotificationsPrompt receive flow", () => {
       repromptDelay: null,
       dismissedCount: 0,
       skipReason: undefined,
+      drawerPromptTarget: "globalPushNotifications",
     });
     const allowNotificationsButton = screen.getByText(/allow notifications/i);
     expect(allowNotificationsButton).toBeVisible();
@@ -166,6 +167,7 @@ describe("NotificationsPrompt receive flow", () => {
       button: "allow notifications",
       page: "Drawer push notification opt-in",
       source: "receive",
+      drawerPromptTarget: "globalPushNotifications",
       repromptDelay: null,
       dismissedCount: 0,
       variant: AB_TESTING_VARIANTS.B,
