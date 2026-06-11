@@ -63,6 +63,17 @@ function createMockPairObservable() {
   };
 }
 
+function createMockPairPrepareOnlyObservable() {
+  return {
+    subscribe: jest.fn(({ next }: SubscribeArgs) => {
+      const t1 = setTimeout(() => {
+        next({ status: "PREPARE", walletConnectUri: "wc:mock-uri-for-testing" });
+      }, 10);
+      return { unsubscribe: jest.fn(() => clearTimeout(t1)) };
+    }),
+  };
+}
+
 function createMockOnboardObservable(completedAccount: Account) {
   return {
     subscribe: jest.fn(({ next, complete }: SubscribeArgs) => {
@@ -151,10 +162,9 @@ describe("OnboardModal", () => {
     await user.click(agreeButton);
     expect(mockPairWalletConnect).toHaveBeenCalledWith(currency.id, mockDevice.deviceId);
 
-    await waitFor(() => {
-      expect(screen.getByText(/scan the qr code/i)).toBeVisible();
-    }, WAIT_OPTS);
-
+    // QR-code step intentionally not asserted here: setStateWithTimeout may
+    // debounce it away on slow runners (see #17714). Covered by the dedicated
+    // "should render QR code during pairing" test below.
     await waitFor(() => {
       expect(screen.getByText(/successfully connected to concordium id app/i)).toBeVisible();
     }, WAIT_OPTS);
@@ -189,6 +199,18 @@ describe("OnboardModal", () => {
 
     await user.click(doneButton);
   }, 20_000);
+
+  it("should render QR code during pairing", async () => {
+    mockPairWalletConnect.mockReturnValue(createMockPairPrepareOnlyObservable());
+
+    const { user } = render(<OnboardModal {...defaultProps} />, { initialState });
+
+    await user.click(await screen.findByRole("button", { name: /agree/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/scan the qr code/i)).toBeVisible();
+    }, WAIT_OPTS);
+  }, 10_000);
 
   it("should show error and Try again when pairing fails", async () => {
     mockPairWalletConnect.mockReturnValue(
