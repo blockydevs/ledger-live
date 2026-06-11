@@ -1,78 +1,98 @@
 import React from "react";
 import { render, screen, fireEvent } from "tests/testSetup";
-import { useMarketData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
+import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import { useStablecoinTickers } from "@ledgerhq/live-common/dada-client/hooks/useStablecoinTickers";
-import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
+import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
+import { AssetsDataWithPagination } from "@ledgerhq/live-common/dada-client/state-manager/types";
 import { useAssetSuggestionsViewModel } from "../hooks/useAssetSuggestionsViewModel";
 import { AssetSuggestionsSection } from "../AssetSuggestionsSection";
 
-jest.mock("@ledgerhq/live-common/market/hooks/useMarketDataProvider");
+jest.mock("@ledgerhq/live-common/dada-client/hooks/useAssetsData");
 jest.mock("@ledgerhq/live-common/dada-client/hooks/useStablecoinTickers");
+jest.mock("@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate");
 
-const mockedUseMarketData = jest.mocked(useMarketData);
+const mockedUseAssetsData = jest.mocked(useAssetsData);
 const mockedUseStablecoinTickers = jest.mocked(useStablecoinTickers);
+const mockedUseUsdToFiatRate = jest.mocked(useUsdToFiatRate);
 
 const CRYPTOS_LIMIT = 3;
 const STABLECOINS_LIMIT = 2;
 
-function buildCurrency(overrides: Partial<MarketCurrencyData>): MarketCurrencyData {
-  return {
-    id: "bitcoin",
-    ledgerIds: ["bitcoin"],
-    name: "Bitcoin",
-    ticker: "BTC",
-    price: 100,
-    marketcap: 1000,
-    marketcapRank: 1,
-    totalVolume: 0,
-    high24h: 0,
-    low24h: 0,
-    priceChangePercentage: { "1h": 0, "24h": 1.23, "7d": 0, "30d": 0, "6m": 0, "1y": 0 },
-    marketCapChangePercentage24h: 0,
-    circulatingSupply: 0,
-    ath: 0,
-    athDate: new Date(),
-    atl: 0,
-    atlDate: new Date(),
-    chartData: {} as MarketCurrencyData["chartData"],
-    ...overrides,
-  } as MarketCurrencyData;
-}
+type AssetDescriptor = {
+  id: string;
+  name: string;
+  ticker: string;
+  ledgerId: string;
+};
 
-const BTC = buildCurrency({
+const BTC: AssetDescriptor = {
   id: "bitcoin",
   name: "Bitcoin",
   ticker: "BTC",
-  ledgerIds: ["bitcoin"],
-});
-const ETH = buildCurrency({
+  ledgerId: "bitcoin",
+};
+const ETH: AssetDescriptor = {
   id: "ethereum",
   name: "Ethereum",
   ticker: "ETH",
-  ledgerIds: ["ethereum"],
-});
-const USDT = buildCurrency({
+  ledgerId: "ethereum",
+};
+const USDT: AssetDescriptor = {
   id: "tether",
   name: "Tether",
   ticker: "USDT",
-  ledgerIds: ["ethereum/erc20/usd_tether__erc20_"],
-});
+  ledgerId: "ethereum/erc20/usd_tether__erc20_",
+};
 
-function mockMarketData({
+/** Builds a minimal DADA assets-data payload from a list of assets, preserving order. */
+function buildAssetsData(assets: AssetDescriptor[]): AssetsDataWithPagination {
+  const cryptoAssets: Record<string, unknown> = {};
+  const cryptoOrTokenCurrencies: Record<string, unknown> = {};
+  const markets: Record<string, unknown> = {};
+
+  for (const asset of assets) {
+    cryptoAssets[asset.id] = {
+      id: asset.id,
+      ticker: asset.ticker,
+      name: asset.name,
+      assetsIds: { network: asset.ledgerId },
+    };
+    cryptoOrTokenCurrencies[asset.ledgerId] = {
+      id: asset.ledgerId,
+      type: "CryptoCurrency",
+      ticker: asset.ticker,
+      name: asset.name,
+    };
+    markets[asset.ledgerId] = {
+      id: asset.id,
+      price: 100,
+      priceChangePercentage24h: 1.23,
+    };
+  }
+
+  return {
+    cryptoAssets,
+    cryptoOrTokenCurrencies,
+    markets,
+    networks: {},
+    interestRates: {},
+    currenciesOrder: { key: "marketCap", order: "desc", metaCurrencyIds: assets.map(a => a.id) },
+    pagination: {},
+  } as unknown as AssetsDataWithPagination;
+}
+
+function mockAssetsData({
   data = [],
   isLoading = false,
 }: {
-  data?: MarketCurrencyData[];
+  data?: AssetDescriptor[];
   isLoading?: boolean;
 }) {
-  mockedUseMarketData.mockReturnValue({
-    data,
+  mockedUseAssetsData.mockReturnValue({
+    data: isLoading ? undefined : buildAssetsData(data),
     isLoading,
-    isPending: isLoading,
     isError: false,
-    isFetching: false,
-    cachedMetadataMap: new Map(),
-  } as unknown as ReturnType<typeof useMarketData>);
+  } as unknown as ReturnType<typeof useAssetsData>);
 }
 
 function mockStablecoinTickers({
@@ -120,10 +140,11 @@ function Harness() {
 }
 
 describe("SearchAssets suggestion sections", () => {
+  beforeEach(() => mockedUseUsdToFiatRate.mockReturnValue({ status: "ready", rate: 1 }));
   afterEach(() => jest.clearAllMocks());
 
   it("shows cryptos and stablecoins skeletons simultaneously while loading", () => {
-    mockMarketData({ isLoading: true });
+    mockAssetsData({ isLoading: true });
     mockStablecoinTickers({ isLoading: true });
 
     render(<Harness />);
@@ -133,7 +154,7 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("splits market data into cryptos and stablecoins via the DADA tickers", () => {
-    mockMarketData({ data: [BTC, USDT, ETH] });
+    mockAssetsData({ data: [BTC, USDT, ETH] });
     mockStablecoinTickers({ tickers: ["USDT"] });
 
     render(<Harness />);
@@ -146,7 +167,7 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("navigates to the asset detail when a row is clicked", () => {
-    mockMarketData({ data: [BTC] });
+    mockAssetsData({ data: [BTC] });
     mockStablecoinTickers({ tickers: ["USDT"] });
 
     render(<Harness />);
@@ -156,7 +177,7 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("triggers the see-all handler from the section header", () => {
-    mockMarketData({ data: [BTC] });
+    mockAssetsData({ data: [BTC] });
     mockStablecoinTickers({ tickers: ["USDT"] });
 
     render(<Harness />);
@@ -166,7 +187,7 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("hides a section when it has no data", () => {
-    mockMarketData({ data: [BTC] });
+    mockAssetsData({ data: [BTC] });
     mockStablecoinTickers({ tickers: ["USDT"] });
 
     render(<Harness />);
@@ -177,15 +198,13 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("caps each section to the requested limit", () => {
-    const extraCryptos = Array.from({ length: 5 }, (_, i) =>
-      buildCurrency({
-        id: `coin-${i}`,
-        name: `Coin ${i}`,
-        ticker: `C${i}`,
-        ledgerIds: ["bitcoin"],
-      }),
-    );
-    mockMarketData({ data: extraCryptos });
+    const extraCryptos = Array.from({ length: 5 }, (_, i) => ({
+      id: `coin-${i}`,
+      name: `Coin ${i}`,
+      ticker: `C${i}`,
+      ledgerId: `coin-${i}`,
+    }));
+    mockAssetsData({ data: extraCryptos });
     mockStablecoinTickers({ tickers: [] });
 
     render(<Harness />);
@@ -196,15 +215,13 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("caps cryptos to 3 and stablecoins to 2", () => {
-    const stablecoins = Array.from({ length: 4 }, (_, i) =>
-      buildCurrency({
-        id: `stable-${i}`,
-        name: `Stable ${i}`,
-        ticker: `S${i}`,
-        ledgerIds: ["ethereum"],
-      }),
-    );
-    mockMarketData({ data: stablecoins });
+    const stablecoins = Array.from({ length: 4 }, (_, i) => ({
+      id: `stable-${i}`,
+      name: `Stable ${i}`,
+      ticker: `S${i}`,
+      ledgerId: `stable-${i}`,
+    }));
+    mockAssetsData({ data: stablecoins });
     mockStablecoinTickers({ tickers: ["S0", "S1", "S2", "S3"] });
 
     render(<Harness />);

@@ -8,12 +8,12 @@ export function useStocksSectionViewModel({
 }: {
   limit: number;
 }): StocksSectionViewModelResult {
-  const { data, isLoading } = useStocksData({
+  const { data, isLoading, isError } = useStocksData({
     product: "lld",
     version: __APP_VERSION__,
   });
 
   const stocks = useMemo(() => (data ? selectTopStocks(data, limit) : []), [data, limit]);
 
-  return useMemo(() => ({ data: stocks, isLoading }), [stocks, isLoading]);
+  return useMemo(() => ({ data: stocks, isLoading, isError }), [stocks, isLoading, isError]);
 }

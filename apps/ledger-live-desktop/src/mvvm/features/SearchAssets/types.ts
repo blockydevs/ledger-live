@@ -5,6 +5,7 @@ export type AssetSuggestionsViewModelResult = {
   cryptos: AssetSuggestionSection;
   /** Top stablecoins ranked by market cap, capped to the limit. */
   stablecoins: AssetSuggestionSection;
+  isError: boolean;
 };
 
 export type AssetSuggestionsSectionProps = AssetSuggestionSection & {

@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import { useMarketData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
+import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import { useStablecoinTickers } from "@ledgerhq/live-common/dada-client/hooks/useStablecoinTickers";
-import { MarketCurrencyData, Order } from "@ledgerhq/live-common/market/utils/types";
+import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
+import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
 import { useSelector } from "LLD/hooks/redux";
-import { marketParamsSelector } from "~/renderer/reducers/market";
+import { counterValueCurrencySelector } from "~/renderer/reducers/settings";
+import { mapAssetsDataToMarketCurrencies } from "../utils/mapAssetsDataToMarketCurrencies";
 import { AssetSuggestionsViewModelResult } from "../types";
-
-const MARKET_FETCH_LIMIT = 50;
 
 export function useAssetSuggestionsViewModel({
   cryptosLimit,
@@ -15,25 +15,34 @@ export function useAssetSuggestionsViewModel({
   cryptosLimit: number;
   stablecoinsLimit: number;
 }): AssetSuggestionsViewModelResult {
-  const { counterCurrency } = useSelector(marketParamsSelector);
+  const counterCurrency = useSelector(counterValueCurrencySelector).ticker;
 
-  const market = useMarketData({
-    counterCurrency,
-    range: "24h",
-    order: Order.MarketCapDesc,
-    page: 1,
-    limit: MARKET_FETCH_LIMIT,
+  const {
+    data,
+    isLoading: assetsLoading,
+    isError: assetsError,
+  } = useAssetsData({
+    product: "lld",
+    version: __APP_VERSION__,
   });
 
-  const { tickers, isLoading: tickersLoading } = useStablecoinTickers("lld", __APP_VERSION__);
+  const {
+    tickers,
+    isLoading: tickersLoading,
+    isError: tickersError,
+  } = useStablecoinTickers("lld", __APP_VERSION__);
 
-  const isLoading = market.isLoading || tickersLoading;
+  const { status: rateStatus, rate } = useUsdToFiatRate(counterCurrency);
+
+  const hasData = !!data;
+  const isLoading = assetsLoading || tickersLoading || (hasData && rateStatus === "loading");
+  const isError = assetsError || tickersError || (hasData && rateStatus === "error");
 
   const { cryptos, stablecoins } = useMemo(() => {
     const cryptosData: MarketCurrencyData[] = [];
     const stablecoinsData: MarketCurrencyData[] = [];
 
-    for (const currency of market.data) {
+    for (const currency of mapAssetsDataToMarketCurrencies(data, rate ?? 1)) {
       const isStablecoin = tickers.has(currency.ticker.toUpperCase());
       const [bucket, bucketLimit] = isStablecoin
         ? [stablecoinsData, stablecoinsLimit]
@@ -43,13 +52,14 @@ export function useAssetSuggestionsViewModel({
     }
 
     return { cryptos: cryptosData, stablecoins: stablecoinsData };
-  }, [market.data, tickers, cryptosLimit, stablecoinsLimit]);
+  }, [data, rate, tickers, cryptosLimit, stablecoinsLimit]);
 
   return useMemo(
     () => ({
       cryptos: { data: cryptos, isLoading },
       stablecoins: { data: stablecoins, isLoading },
+      isError,
     }),
-    [cryptos, stablecoins, isLoading],
+    [cryptos, stablecoins, isLoading, isError],
   );
 }
