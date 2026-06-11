@@ -23,7 +23,9 @@ import {
 import { addStarredMarketCoins, removeStarredMarketCoins } from "~/renderer/actions/settings";
 import { useMarketCategories } from "LLD/features/Market/hooks/useMarketCategories";
 import {
+  getMarketCategoriesParam,
   getMarketFilter,
+  isBuiltInMarketListCategory,
   isStockMarketCurrency,
 } from "@ledgerhq/live-common/market/utils/category";
 
@@ -59,6 +61,8 @@ export function useMarket() {
     shouldDisplayAssetDiscoverability && categories.selectedCategory === "starred";
   const isStocksCategory =
     shouldDisplayAssetDiscoverability && categories.selectedCategory === "stocks";
+  const isTrendingCategory =
+    shouldDisplayAssetDiscoverability && !isBuiltInMarketListCategory(categories.selectedCategory);
 
   const starFilterOn = isStarredCategory || starred.length > 0;
 
@@ -77,6 +81,9 @@ export function useMarket() {
     starred: starFilterOn ? starredMarketCoins : starred,
     liveCompatible: shouldDisplayLiveCompatible,
     filter: getMarketFilter(isStocksCategory) ?? marketParams.filter,
+    categories: isTrendingCategory
+      ? getMarketCategoriesParam(categories.selectedCategory)
+      : undefined,
   });
 
   const timeRanges = useMemo(
@@ -118,7 +125,9 @@ export function useMarket() {
   const freshLoading = loading && !currenciesLength;
   // The extra row is the "show all" affordance, only relevant for the unfiltered list.
   const itemCount =
-    starFilterOn || isStocksCategory || search.length > 0 ? currenciesLength : currenciesLength + 1;
+    starFilterOn || isStocksCategory || isTrendingCategory || search.length > 0
+      ? currenciesLength
+      : currenciesLength + 1;
 
   const setCounterCurrency = useCallback(
     (ticker: string) => {
