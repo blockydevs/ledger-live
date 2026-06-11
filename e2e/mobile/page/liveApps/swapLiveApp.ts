@@ -173,7 +173,6 @@ export default class SwapLiveAppPage {
 
   @Step("Tap execute swap button on step approval")
   async tapExecuteSwapOnStepApproval() {
-    await waitWebElementByTestId(this.executeSwapButtonStepApproval);
     await waitForWebElementToBeEnabled(this.executeSwapButtonStepApproval);
     await tapWebElementByTestId(this.executeSwapButtonStepApproval);
     await waitForElement(app.send.summaryRecipient());
@@ -458,7 +457,6 @@ export default class SwapLiveAppPage {
 
   @Step("Tap revoke approval button")
   async tapRevokeApprovalButton() {
-    await waitWebElementByTestId(this.revokeApprovalButton);
     await waitForWebElementToBeEnabled(this.revokeApprovalButton);
     await tapWebElementByTestId(this.revokeApprovalButton);
   }
@@ -471,14 +469,12 @@ export default class SwapLiveAppPage {
 
   @Step("Tap give Approval button")
   async tapGiveApprovalButton() {
-    await waitWebElementByTestId(this.giveApprovalButton);
     await waitForWebElementToBeEnabled(this.giveApprovalButton);
     await tapWebElementByTestId(this.giveApprovalButton);
   }
 
   @Step("Tap Give Authorization button")
   async tapGiveAuthorizationButton() {
-    await waitWebElementByTestId(this.signPermitButton);
     await waitForWebElementToBeEnabled(this.signPermitButton);
     await tapWebElementByTestId(this.signPermitButton);
   }

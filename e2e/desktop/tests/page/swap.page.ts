@@ -573,8 +573,6 @@ export class SwapPage extends WebViewAppPage {
   async clickRevokeApprovalButton() {
     const webview = await this.getWebView();
     const revokeButton = webview.getByTestId(this.revokeApprovalButton);
-    await expect(revokeButton).toBeVisible();
-    await expect(revokeButton).toBeEnabled();
     await revokeButton.click();
   }
 
@@ -598,8 +596,6 @@ export class SwapPage extends WebViewAppPage {
   async clickGiveApprovalButton() {
     const webview = await this.getWebView();
     const approvalButton = webview.getByTestId(this.giveApprovalButton);
-    await expect(approvalButton).toBeVisible();
-    await expect(approvalButton).toBeEnabled();
     await approvalButton.click();
   }
 
@@ -612,8 +608,6 @@ export class SwapPage extends WebViewAppPage {
   async clickGiveAuthorizationButton() {
     const webview = await this.getWebView();
     const authorizationButton = webview.getByTestId(this.signPermitButton);
-    await expect(authorizationButton).toBeVisible();
-    await expect(authorizationButton).toBeEnabled();
     await authorizationButton.click();
   }
 
