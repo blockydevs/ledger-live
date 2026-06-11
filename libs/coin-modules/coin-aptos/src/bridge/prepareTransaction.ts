@@ -1,5 +1,6 @@
 import { findSubAccountById } from "@ledgerhq/ledger-wallet-framework/account/index";
 import BigNumber from "bignumber.js";
+import invariant from "invariant";
 
 import { getDelegationOpMaxAmount, getStakingPosition } from "../logic/staking";
 import { AptosAPI } from "../network";
@@ -12,8 +13,19 @@ import {
 import { getEstimatedGas } from "./getFeesForTransaction";
 import { getMaxSendBalance } from "./logic";
 
-const checkSendConditions = (transaction: Transaction, account: AptosAccount) =>
-  transaction.mode === "send" && transaction.amount.gt(account.spendableBalance);
+const checkSendConditions = (transaction: Transaction, account: AptosAccount) => {
+  if (transaction.mode !== "send") {
+    return false;
+  }
+
+  if (transaction.subAccountId) {
+    const tokenAccount = findSubAccountById(account, transaction.subAccountId);
+    invariant(tokenAccount, "aptos: token account is missing");
+    return transaction.amount.gt(tokenAccount.spendableBalance);
+  }
+
+  return transaction.amount.gt(account.spendableBalance);
+};
 
 const checkStakeConditions = (transaction: Transaction, account: AptosAccount) => {
   const txAmount = transaction.useAllAmount ? account.spendableBalance : transaction.amount;
