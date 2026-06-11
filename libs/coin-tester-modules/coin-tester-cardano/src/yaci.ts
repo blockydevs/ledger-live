@@ -62,6 +62,10 @@ export async function spawnYaci(): Promise<void> {
     }
     await sleep(READY_POLL_MS);
   }
+  // Timed out: `up` may have partially started containers. The process-exit handlers below only
+  // fire on process exit, not when the runner catches this throw — so tear down here to avoid
+  // leaking a half-started devnet into the next run. killYaci never throws.
+  await killYaci();
   throw new Error("Yaci DevKit did not become ready on :8080 within the timeout");
 }
 
@@ -106,10 +110,14 @@ export async function pollUtxos(
   predicate: (utxos: Utxo[]) => boolean,
 ): Promise<Utxo[]> {
   for (let i = 0; i < 30; i++) {
-    const utxos = (await (
-      await fetch(`${YACI_STORE_API}/addresses/${address}/utxos`)
-    ).json()) as Utxo[];
-    if (predicate(utxos)) return utxos;
+    try {
+      const utxos = (await (
+        await fetch(`${YACI_STORE_API}/addresses/${address}/utxos`)
+      ).json()) as Utxo[];
+      if (predicate(utxos)) return utxos;
+    } catch {
+      // Store still warming up or briefly unavailable — keep polling rather than failing fast.
+    }
     await sleep(2_000);
   }
   throw new Error("pollUtxos: condition not met in time");
