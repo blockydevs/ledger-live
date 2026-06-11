@@ -122,57 +122,38 @@ function protoInputToJsonRpc(raw: unknown): unknown {
   }
 }
 
+/** `(Array.isArray(v) ? v : []).map(protoArgToJsonRpc)` — proto arg list → JSON-RPC args. */
+const protoArgList = (v: unknown): unknown[] => (Array.isArray(v) ? v : []).map(protoArgToJsonRpc);
+
+/**
+ * Per-command mappers keyed by the proto's lowerCamel command tag. Each receives the command's
+ * inner object (`cmd.<tag>`) and returns the PascalCase JSON-RPC `SuiTransaction` shape.
+ */
+const PROTO_COMMAND_MAPPERS: Record<string, (cmd: ProtoRecord) => unknown> = {
+  moveCall: c => ({
+    MoveCall: {
+      package: c.package,
+      module: c.module,
+      function: c.function,
+      ...(Array.isArray(c.typeArguments) ? { type_arguments: c.typeArguments } : {}),
+      arguments: protoArgList(c.arguments),
+    },
+  }),
+  splitCoins: c => ({ SplitCoins: [protoArgToJsonRpc(c.coin), protoArgList(c.amounts)] }),
+  transferObjects: c => ({
+    TransferObjects: [protoArgList(c.objects), protoArgToJsonRpc(c.address)],
+  }),
+  mergeCoins: c => ({ MergeCoins: [protoArgToJsonRpc(c.coin), protoArgList(c.coinsToMerge)] }),
+  makeMoveVector: c => ({ MakeMoveVec: [c.elementType ?? null, protoArgList(c.elements)] }),
+};
+
 /** proto `Command` (lowerCamel-keyed) → JSON-RPC `SuiTransaction` (PascalCase-keyed). */
 function protoCommandToJsonRpc(raw: unknown): unknown {
   if (!raw || typeof raw !== "object") return raw;
   const cmd = raw as ProtoRecord;
-  if (cmd.moveCall && typeof cmd.moveCall === "object") {
-    const mc = cmd.moveCall as ProtoRecord;
-    return {
-      MoveCall: {
-        package: mc.package,
-        module: mc.module,
-        function: mc.function,
-        ...(Array.isArray(mc.typeArguments) ? { type_arguments: mc.typeArguments } : {}),
-        arguments: (Array.isArray(mc.arguments) ? mc.arguments : []).map(protoArgToJsonRpc),
-      },
-    };
-  }
-  if (cmd.splitCoins && typeof cmd.splitCoins === "object") {
-    const sc = cmd.splitCoins as ProtoRecord;
-    return {
-      SplitCoins: [
-        protoArgToJsonRpc(sc.coin),
-        (Array.isArray(sc.amounts) ? sc.amounts : []).map(protoArgToJsonRpc),
-      ],
-    };
-  }
-  if (cmd.transferObjects && typeof cmd.transferObjects === "object") {
-    const to = cmd.transferObjects as ProtoRecord;
-    return {
-      TransferObjects: [
-        (Array.isArray(to.objects) ? to.objects : []).map(protoArgToJsonRpc),
-        protoArgToJsonRpc(to.address),
-      ],
-    };
-  }
-  if (cmd.mergeCoins && typeof cmd.mergeCoins === "object") {
-    const mc = cmd.mergeCoins as ProtoRecord;
-    return {
-      MergeCoins: [
-        protoArgToJsonRpc(mc.coin),
-        (Array.isArray(mc.coinsToMerge) ? mc.coinsToMerge : []).map(protoArgToJsonRpc),
-      ],
-    };
-  }
-  if (cmd.makeMoveVector && typeof cmd.makeMoveVector === "object") {
-    const mv = cmd.makeMoveVector as ProtoRecord;
-    return {
-      MakeMoveVec: [
-        mv.elementType ?? null,
-        (Array.isArray(mv.elements) ? mv.elements : []).map(protoArgToJsonRpc),
-      ],
-    };
+  for (const [tag, mapper] of Object.entries(PROTO_COMMAND_MAPPERS)) {
+    const inner = cmd[tag];
+    if (inner && typeof inner === "object") return mapper(inner as ProtoRecord);
   }
   return raw;
 }

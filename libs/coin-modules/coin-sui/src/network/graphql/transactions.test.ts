@@ -456,6 +456,99 @@ describe("graphqlTxToJsonRpcResponse", () => {
       expect(inputs).toEqual([{ type: "pure", valueType: null, value: "AQID" }]);
     });
 
+    const mapInner = (inputs: unknown[], commands: unknown[]) =>
+      (
+        graphqlTxToJsonRpcResponse(
+          fakeTx({
+            transactionJson: {
+              kind: {
+                kind: "PROGRAMMABLE_TRANSACTION",
+                programmableTransaction: { inputs, commands },
+              },
+              sender: SENDER,
+            },
+          } as unknown as Partial<GraphQLTransactionNode>),
+        ).transaction as { data: { transaction: { inputs: unknown[]; transactions: unknown[] } } }
+      ).data.transaction;
+
+    it("maps immutable-or-owned / receiving object inputs and passes unknown input kinds through", () => {
+      const { inputs } = mapInner(
+        [
+          { kind: "IMMUTABLE_OR_OWNED", objectId: "0xobj1", version: "5", digest: "0xd1" },
+          { kind: "RECEIVING", objectId: "0xobj2", version: "6", digest: "0xd2" },
+          { kind: "FUTURE_INPUT_KIND", foo: 1 },
+        ],
+        [],
+      );
+      expect(inputs).toEqual([
+        {
+          type: "object",
+          objectType: "immOrOwnedObject",
+          objectId: "0xobj1",
+          version: "5",
+          digest: "0xd1",
+        },
+        {
+          type: "object",
+          objectType: "receiving",
+          objectId: "0xobj2",
+          version: "6",
+          digest: "0xd2",
+        },
+        { kind: "FUTURE_INPUT_KIND", foo: 1 },
+      ]);
+    });
+
+    it("maps mergeCoins / makeMoveVector commands and passes unknown command kinds through", () => {
+      const { transactions } = mapInner(
+        [],
+        [
+          { mergeCoins: { coin: { kind: "GAS" }, coinsToMerge: [{ kind: "INPUT", input: 0 }] } },
+          {
+            makeMoveVector: {
+              elementType: "0x2::sui::SUI",
+              elements: [{ kind: "INPUT", input: 1 }],
+            },
+          },
+          { publish: { modules: [] } },
+        ],
+      );
+      expect(transactions).toEqual([
+        { MergeCoins: ["GasCoin", [{ Input: 0 }]] },
+        { MakeMoveVec: ["0x2::sui::SUI", [{ Input: 1 }]] },
+        { publish: { modules: [] } },
+      ]);
+    });
+
+    it("maps a NestedResult argument and passes unknown argument kinds through", () => {
+      const { transactions } = mapInner(
+        [],
+        [
+          {
+            moveCall: {
+              package: "0x3",
+              module: "m",
+              function: "f",
+              arguments: [
+                { kind: "RESULT", result: 2, subresult: 1 },
+                { kind: "FUTURE_ARG_KIND", x: 1 },
+              ],
+            },
+          },
+        ],
+      );
+      expect(transactions).toEqual([
+        {
+          MoveCall: {
+            package: "0x3",
+            module: "m",
+            function: "f",
+            arguments: [{ NestedResult: [2, 1] }, { kind: "FUTURE_ARG_KIND", x: 1 }],
+          },
+        },
+      ]);
+    });
+
     it("leaves an already-JSON-RPC-shaped ProgrammableTransaction untouched", () => {
       const jsonRpcShaped = {
         kind: "ProgrammableTransaction",

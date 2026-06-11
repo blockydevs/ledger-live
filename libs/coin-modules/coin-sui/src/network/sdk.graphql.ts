@@ -700,16 +700,18 @@ export const getTransactionsByAddressGraphQL = async (
     });
     const conn = unwrapGraphQL("TransactionsByAffectedAddress", res).transactions;
     if (!conn) break;
-    // `last/before` returns ascending-within-page; reverse so the accumulated array
-    // stays newest-first across pages, matching the JSON-RPC contract.
-    const nodes = (conn.nodes ?? []).slice().reverse();
-    for (const node of nodes) {
-      // Skip not-yet-finalized nodes (indexing lag right after broadcast): mapping them would
-      // yield a bogus Failed/1970 op. They reappear, complete, on a later sync.
-      if (!isFinalizedTxNode(node)) continue;
-      accumulated.push(graphqlTxToJsonRpcResponse(node));
-      if (accumulated.length >= limit) break;
-    }
+    // `last/before` returns ascending-within-page; reverse so the accumulated array stays
+    // newest-first across pages, matching the JSON-RPC contract. Skip not-yet-finalized nodes
+    // (indexing lag right after broadcast) — mapping them yields bogus Failed/1970 ops; they
+    // reappear, complete, on a later sync. Then cap the accumulator at `limit`.
+    accumulated.push(
+      ...(conn.nodes ?? [])
+        .slice()
+        .reverse()
+        .filter(isFinalizedTxNode)
+        .map(graphqlTxToJsonRpcResponse),
+    );
+    if (accumulated.length > limit) accumulated.length = limit;
     if (!conn.pageInfo.hasPreviousPage || !conn.pageInfo.startCursor) {
       nextBefore = null;
       break;
