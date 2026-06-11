@@ -1,10 +1,10 @@
 import invariant from "invariant";
 import { act } from "react";
-import type { TokenAccount } from "@ledgerhq/types-live";
+import BigNumber from "bignumber.js";
 import { renderHook } from "tests/testSetup";
-import AccountHeaderActions from "../AccountHeaderManageActions";
-import { AleoCustomModal } from "../constants";
-import { ALEO_ACCOUNT_1, NEW_ALEO_ACCOUNT } from "../__mocks__/account.mock";
+import AccountHeaderActions from "./AccountHeaderManageActions";
+import { AleoCustomModal } from "./constants";
+import { ALEO_ACCOUNT_1, ALEO_MAIN_ACCOUNT, ALEO_TOKEN_ACCOUNT, NEW_ALEO_ACCOUNT } from "./__mocks__/account.mock";
 
 jest.mock("@ledgerhq/live-common/bridge/useAccountBridge", () => ({
   useAccountBridge: () => ({
@@ -15,15 +15,6 @@ jest.mock("@ledgerhq/live-common/bridge/useAccountBridge", () => ({
 describe("AccountHeaderManageActions", () => {
   const hook = AccountHeaderActions;
   invariant(hook, "aleo: type guard AccountHeaderActions");
-
-  describe("when account is not of type Account", () => {
-    it("should return an empty array", () => {
-      const tokenAccount = { ...ALEO_ACCOUNT_1, type: "TokenAccount" } as unknown as TokenAccount;
-      const { result } = renderHook(() => hook({ account: tokenAccount, parentAccount: null }));
-
-      expect(result.current).toEqual([]);
-    });
-  });
 
   describe("when account has no balance (empty)", () => {
     it("should return one action that is disabled", () => {
@@ -39,6 +30,21 @@ describe("AccountHeaderManageActions", () => {
       const action = result.current?.[0];
 
       expect(action?.tooltip).not.toBeUndefined();
+    });
+
+    it("should disable self-transfer for an empty token account", () => {
+      const emptyTokenAccount = {
+        ...ALEO_TOKEN_ACCOUNT,
+        balance: new BigNumber(0),
+        spendableBalance: new BigNumber(0),
+      };
+
+      const { result } = renderHook(() =>
+        hook({ account: emptyTokenAccount, parentAccount: ALEO_MAIN_ACCOUNT }),
+      );
+      const action = result.current?.[0];
+
+      expect(action?.disabled).toBe(true);
     });
   });
 
@@ -57,7 +63,16 @@ describe("AccountHeaderManageActions", () => {
       expect(action?.tooltip).toBeUndefined();
     });
 
-    it("should dispatch openModal with SELF_TRANSFER and account when onClick is called", () => {
+    it("should enable self-transfer for a token account with balance", () => {
+      const { result } = renderHook(() =>
+        hook({ account: ALEO_TOKEN_ACCOUNT, parentAccount: ALEO_MAIN_ACCOUNT }),
+      );
+      const action = result.current?.[0];
+
+      expect(action?.disabled).toBe(false);
+    });
+
+    it("should dispatch openModal with SELF_TRANSFER, account and parentAccount when onClick is called", () => {
       const { result, store } = renderHook(() =>
         hook({ account: ALEO_ACCOUNT_1, parentAccount: null }),
       );
@@ -71,7 +86,25 @@ describe("AccountHeaderManageActions", () => {
 
       expect(modalState).toEqual({
         isOpened: true,
-        data: { account: ALEO_ACCOUNT_1 },
+        data: { account: ALEO_ACCOUNT_1, parentAccount: null },
+      });
+    });
+
+    it("should dispatch openModal with parentAccount for token accounts", () => {
+      const { result, store } = renderHook(() =>
+        hook({ account: ALEO_TOKEN_ACCOUNT, parentAccount: ALEO_MAIN_ACCOUNT }),
+      );
+      const action = result.current?.[0];
+
+      act(() => {
+        action?.onClick();
+      });
+
+      const modalState = store.getState().modals[AleoCustomModal.SELF_TRANSFER];
+
+      expect(modalState).toEqual({
+        isOpened: true,
+        data: { account: ALEO_TOKEN_ACCOUNT, parentAccount: ALEO_MAIN_ACCOUNT },
       });
     });
   });

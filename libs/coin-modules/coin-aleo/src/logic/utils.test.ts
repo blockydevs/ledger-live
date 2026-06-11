@@ -66,6 +66,8 @@ import {
   isSelfTransferTransaction,
   isPublicTransaction,
   isPrivateTransaction,
+  derivePublicTransactionMode,
+  derivePrivateTransactionMode,
   createTransactionIntent,
   createFeeTransactionIntent,
   getRecordByCommitment,
@@ -1278,6 +1280,34 @@ describe("isPrivateTransaction", () => {
 
     expect(isPrivateTransaction(transaction)).toBe(expected);
   });
+});
+
+describe("derivePublicTransactionMode", () => {
+  it.each([
+    [TRANSACTION_TYPE.TRANSFER_PUBLIC, false, false],
+    [TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE, false, true],
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC, true, false],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE, true, true],
+  ] as const)(
+    "returns %s for isTokenTx=%s and isSelfTransfer=%s",
+    (expectedMode, isTokenTx, isSelfTransfer) => {
+      expect(derivePublicTransactionMode({ isTokenTx, isSelfTransfer })).toBe(expectedMode);
+    },
+  );
+});
+
+describe("derivePrivateTransactionMode", () => {
+  it.each([
+    [TRANSACTION_TYPE.TRANSFER_PRIVATE, false, false],
+    [TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC, false, true],
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE, true, false],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC, true, true],
+  ] as const)(
+    "returns %s for isTokenTx=%s and isSelfTransfer=%s",
+    (expectedMode, isTokenTx, isSelfTransfer) => {
+      expect(derivePrivateTransactionMode({ isTokenTx, isSelfTransfer })).toBe(expectedMode);
+    },
+  );
 });
 
 describe("createTransactionIntent", () => {
