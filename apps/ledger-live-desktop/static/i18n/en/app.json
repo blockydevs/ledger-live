@@ -8840,7 +8840,8 @@
   "topBar": {
     "searchPlaceholder": "Search assets",
     "search": {
-      "noResults": "No results for \"{{query}}\"",
+      "noAssetFound": "No asset found",
+      "error": "Connection failed",
       "cryptos": "Cryptos",
       "stablecoins": "Stablecoins",
       "stocks": "Stocks"
