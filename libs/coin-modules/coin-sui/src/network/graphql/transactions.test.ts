@@ -130,6 +130,31 @@ describe("graphqlTxToJsonRpcResponse", () => {
     expect(out.events?.[1]).toMatchObject({ type: "", parsedJson: {} });
   });
 
+  it("normalises a long-form event type to the JSON-RPC short form", () => {
+    const out = graphqlTxToJsonRpcResponse(
+      fakeTx({
+        effects: {
+          events: {
+            nodes: [
+              {
+                contents: {
+                  type: {
+                    repr: "0x0000000000000000000000000000000000000000000000000000000000000003::validator::StakingRequestEvent",
+                  },
+                  json: { validator_address: "0xval" },
+                },
+              },
+            ],
+          },
+        },
+      } as unknown as Partial<GraphQLTransactionNode>),
+    );
+    expect(out.events?.[0]).toMatchObject({
+      type: "0x3::validator::StakingRequestEvent",
+      parsedJson: { validator_address: "0xval" },
+    });
+  });
+
   it("converts timestamp + checkpoint sequenceNumber when present", () => {
     const iso = "2026-05-12T00:00:00.000Z";
     const out = graphqlTxToJsonRpcResponse(
@@ -188,6 +213,70 @@ describe("graphqlTxToJsonRpcResponse", () => {
         } as unknown as Partial<GraphQLTransactionNode>),
       );
       expect(out.balanceChanges).toEqual([null, undefined, 42, "string"]);
+    });
+
+    it("normalises a long-form SUI coinType to the JSON-RPC short form", () => {
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          effects: {
+            balanceChangesJson: [
+              {
+                address: "0x33444cf803c690db96527cec67e3c9ab512596f4ba2d4eace43f0b4f716e0164",
+                coinType:
+                  "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                amount: "150000000",
+              },
+            ],
+          },
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.balanceChanges).toEqual([
+        {
+          address: "0x33444cf803c690db96527cec67e3c9ab512596f4ba2d4eace43f0b4f716e0164",
+          owner: {
+            AddressOwner: "0x33444cf803c690db96527cec67e3c9ab512596f4ba2d4eace43f0b4f716e0164",
+          },
+          coinType: "0x2::sui::SUI",
+          amount: "150000000",
+        },
+      ]);
+    });
+
+    it("leaves a full-address token coinType unchanged (no leading zeros to strip)", () => {
+      const tokenType =
+        "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC";
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          effects: {
+            balanceChangesJson: [
+              { owner: { AddressOwner: "0x1" }, coinType: tokenType, amount: "5" },
+            ],
+          },
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.balanceChanges).toEqual([
+        { owner: { AddressOwner: "0x1" }, coinType: tokenType, amount: "5" },
+      ]);
+    });
+
+    it("normalises coinType even when the owner is already in JSON-RPC shape", () => {
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          effects: {
+            balanceChangesJson: [
+              {
+                owner: { AddressOwner: "0x1" },
+                coinType:
+                  "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                amount: "-100",
+              },
+            ],
+          },
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.balanceChanges).toEqual([
+        { owner: { AddressOwner: "0x1" }, coinType: "0x2::sui::SUI", amount: "-100" },
+      ]);
     });
   });
 

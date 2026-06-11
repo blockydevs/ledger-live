@@ -49,7 +49,7 @@ import type {
   SuiValidator,
   Transaction as TransactionType,
 } from "../types";
-import { ensureAddressFormat, normalizeSuiAddressForComparison } from "../utils";
+import { ensureAddressFormat, toShortStructTag, normalizeSuiAddressForComparison } from "../utils";
 import { fetcher, inferNetworkFromUrl } from "./fetcher";
 import { getCurrentSuiPreloadData } from "./preload-data";
 import { mapDryRunError } from "../logic/mapDryRunError";
@@ -251,7 +251,7 @@ export function getUnifiedBalanceChanges(tx: SuiTransactionBlockResponse): Balan
   for (const evt of accEvents) {
     if (!("integer" in evt.value)) continue;
 
-    const coinType = stripBalanceWrapper(evt.ty);
+    const coinType = stripBalanceWrapper(toShortStructTag(evt.ty));
     const amount = evt.operation === "merge" ? evt.value.integer : `-${evt.value.integer}`;
     const alreadyCovered = base.some(
       bc =>

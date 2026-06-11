@@ -8,6 +8,7 @@
 import type { SuiTransactionBlockResponse } from "@mysten/sui/jsonRpc";
 import type { TransactionByDigestResult, TransactionsByAffectedAddressResult } from "./queries";
 import { extractFailureError } from "./utils";
+import { toShortStructTag } from "../../utils";
 
 /**
  * gRPC-proto BalanceChange uses bare `address` strings; JSON-RPC wraps them in a discriminated
@@ -17,7 +18,11 @@ function normaliseBalanceChanges(raw: unknown): unknown[] {
   if (!Array.isArray(raw)) return [];
   return raw.map(bc => {
     if (!bc || typeof bc !== "object") return bc;
-    const entry = bc as Record<string, unknown>;
+    const rawEntry = bc as Record<string, unknown>;
+    const entry: Record<string, unknown> =
+      typeof rawEntry.coinType === "string"
+        ? { ...rawEntry, coinType: toShortStructTag(rawEntry.coinType) }
+        : rawEntry;
     const owner = entry.owner;
     // Already wrapped (JSON-RPC shape) — pass through.
     if (owner && typeof owner === "object" && !Array.isArray(owner)) return entry;
@@ -96,7 +101,7 @@ export function graphqlTxToJsonRpcResponse(
       packageId: "0x0",
       transactionModule: "",
       sender: "",
-      type: node.contents?.type?.repr ?? "",
+      type: node.contents?.type?.repr ? toShortStructTag(node.contents.type.repr) : "",
       parsedJson: node.contents?.json ?? {},
       bcs: "",
       bcsEncoding: "base64",

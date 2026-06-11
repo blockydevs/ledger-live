@@ -12,6 +12,7 @@ import { BigNumber } from "bignumber.js";
 import coinConfig from "../config";
 import { mist, ONE_SUI } from "../constants";
 import * as sdkOriginal from "./sdk";
+import { graphqlTxToJsonRpcResponse, type GraphQLTransactionNode } from "./graphql/transactions";
 
 // Create a mutable copy of the sdk module for mocking specific functions
 const mockLoadOperations = jest.fn<
@@ -612,6 +613,27 @@ describe("SDK Functions", () => {
     expect(sdk.getOperationCoinType(suiTx as SuiTransactionBlockResponse)).toBe(
       sdk.DEFAULT_COIN_TYPE,
     );
+  });
+
+  test("getOperationCoinType returns DEFAULT_COIN_TYPE for a GraphQL (long-form) SUI tx", () => {
+    const graphqlTx = graphqlTxToJsonRpcResponse({
+      digest: "0xtx",
+      transactionJson: { sender: "0xowner" },
+      effects: {
+        status: "SUCCESS",
+        balanceChangesJson: [
+          {
+            address: "0xowner",
+            coinType:
+              "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+            amount: "-1009880",
+          },
+        ],
+      },
+    } as unknown as GraphQLTransactionNode);
+
+    expect(graphqlTx.balanceChanges?.[0]).toMatchObject({ coinType: "0x2::sui::SUI" });
+    expect(sdk.getOperationCoinType(graphqlTx)).toBe(sdk.DEFAULT_COIN_TYPE);
   });
 
   test("transactionToOperation should map transaction to operation", () => {
@@ -1502,6 +1524,34 @@ describe("getStakingEventDetails", () => {
   it("should return empty object when no staking events", () => {
     expect(sdk.getStakingEventDetails(makeTx([]))).toEqual({});
     expect(sdk.getStakingEventDetails(makeTx(undefined))).toEqual({});
+  });
+
+  it("matches a GraphQL (long-form) StakingRequestEvent after adapter normalisation", () => {
+    const tx = graphqlTxToJsonRpcResponse({
+      digest: "0xstake",
+      transactionJson: {},
+      effects: {
+        status: "SUCCESS",
+        events: {
+          nodes: [
+            {
+              contents: {
+                type: {
+                  repr: "0x0000000000000000000000000000000000000000000000000000000000000003::validator::StakingRequestEvent",
+                },
+                json: { validator_address: "0xabc", staked_sui_id: "0xobj123" },
+              },
+            },
+          ],
+        },
+      },
+    } as unknown as GraphQLTransactionNode);
+
+    expect(tx.events?.[0].type).toBe("0x3::validator::StakingRequestEvent");
+    expect(sdk.getStakingEventDetails(tx)).toEqual({
+      validatorAddress: "0xabc",
+      stakedObjectId: "0xobj123",
+    });
   });
 });
 
@@ -3746,6 +3796,33 @@ describe("getUnifiedBalanceChanges", () => {
       coinType,
       owner: { AddressOwner: addr },
       amount: "-500",
+    });
+  });
+
+  it("normalises a long-form (Balance-wrapped) accumulator event ty to the short coinType", () => {
+    const tx = {
+      ...baseTx,
+      balanceChanges: [],
+      effects: {
+        ...baseTx.effects,
+        accumulatorEvents: [
+          {
+            accumulatorObj: "0xacc",
+            address: addr,
+            operation: "merge",
+            ty: "0x0000000000000000000000000000000000000000000000000000000000000002::balance::Balance<0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI>",
+            value: { integer: "1000" },
+          },
+        ],
+      },
+    } as unknown as SuiTransactionBlockResponse;
+
+    const result = sdk.getUnifiedBalanceChanges(tx);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      coinType: "0x2::sui::SUI",
+      owner: { AddressOwner: addr },
+      amount: "1000",
     });
   });
 
