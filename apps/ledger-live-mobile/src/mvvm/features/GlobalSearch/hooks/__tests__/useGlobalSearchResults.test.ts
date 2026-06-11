@@ -2,10 +2,14 @@ import { renderHook, act } from "@tests/test-renderer";
 import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import { selectCurrencyForMetaId } from "@ledgerhq/live-common/dada-client/utils/currencySelection";
 import { track } from "~/analytics";
+import { ScreenName } from "~/const";
 import { useGlobalSearchResults } from "../useGlobalSearchResults";
 
 jest.mock("@ledgerhq/live-common/hooks/useDebounce", () => ({
   useDebounce: (value: string) => value,
+}));
+jest.mock("@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate", () => ({
+  useUsdToFiatRate: () => ({ rate: 1, status: "ready" }),
 }));
 jest.mock("@ledgerhq/live-common/dada-client/hooks/useAssetsData");
 jest.mock("@ledgerhq/live-common/dada-client/utils/currencySelection");
@@ -55,7 +59,10 @@ describe("useGlobalSearchResults", () => {
 
     act(() => result.current.setSearch("bitcoin"));
 
-    expect(track).toHaveBeenCalledWith("search_query", { query: "bitcoin" });
+    expect(track).toHaveBeenCalledWith("search_query", {
+      query: "bitcoin",
+      page: ScreenName.GlobalSearch,
+    });
   });
 
   it("flags hasNoResults when the query returns nothing", () => {
@@ -77,13 +84,14 @@ describe("useGlobalSearchResults", () => {
     expect(result.current.hasNoResults).toBe(false);
   });
 
-  it("does not flag hasNoResults on an error / undefined response", () => {
+  it("flags hasError (not hasNoResults) on an error response", () => {
     mockedAssets.mockReturnValue({ data: undefined, isLoading: false, isError: true } as never);
 
     const { result } = renderHook(() => useGlobalSearchResults());
     act(() => result.current.setSearch("btc"));
 
     expect(result.current.hasNoResults).toBe(false);
+    expect(result.current.hasError).toBe(true);
   });
 
   it("clears the search", () => {
