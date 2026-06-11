@@ -24,7 +24,7 @@ import UnfreezeNavigator from "./UnfreezeNavigator";
 import ClaimRewardsNavigator from "./ClaimRewardsNavigator";
 import ExchangeLiveAppNavigator from "./ExchangeLiveAppNavigator";
 import { CardLiveAppNavigator } from "LLM/features/Card";
-import { useWallet40Theme } from "LLM/hooks/useWallet40Theme";
+import { useTheme as useLumenTheme } from "@ledgerhq/lumen-ui-rnative/styles";
 import BorrowLiveAppNavigator from "./BorrowLiveAppNavigator";
 import EarnLiveAppNavigator from "./EarnLiveAppNavigator";
 import PlatformExchangeNavigator from "./PlatformExchangeNavigator";
@@ -180,8 +180,9 @@ export default function BaseNavigator() {
   >();
   const { colors } = useTheme();
   // The Rewards simulator's design uses the live-app canvas (pure black in Wallet 4.0 dark) for the
-  // whole screen. `canvasColor` is the resolved canvas color owned by `useWallet40Theme`.
-  const { canvasColor: liveAppCanvasColor } = useWallet40Theme("mobile");
+  // whole screen — same canvas `getStackNavigationConfigV4` paints from (`theme.colors.bg.canvas`).
+  const { theme: lumenTheme } = useLumenTheme();
+  const liveAppCanvasColor = lumenTheme.colors.bg.canvas;
   const stackNavigationConfig = useMemo(() => getStackNavigatorConfig(colors, true), [colors]);
   const nativeStackScreenOptions: Partial<NativeStackNavigationOptions> = stackNavigationConfig;
   const noNanoBuyNanoWallScreenOptions = useNoNanoBuyNanoWallScreenOptions();

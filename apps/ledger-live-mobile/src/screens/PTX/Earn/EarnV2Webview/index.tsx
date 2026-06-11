@@ -17,7 +17,7 @@ import { NavigatorName } from "~/const";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import { EarnWebview } from "../EarnWebview";
 import { LiveAppBackground } from "LLM/components/LiveAppBackground";
-import { useWallet40Theme } from "LLM/hooks/useWallet40Theme";
+import { useTheme as useLumenTheme } from "@ledgerhq/lumen-ui-rnative/styles";
 import { computeEarnUiVersion } from "@ledgerhq/live-common/domain/computeEarnUiVersion";
 import type { WebviewState } from "~/components/Web3AppWebview/types";
 
@@ -70,7 +70,8 @@ export const EarnV2Webview = ({
   // Paint the area behind the webview so the loading state matches the content and native header
   // (no gray flash before the webview paints). Scoped to `simulate` so deposit/withdraw keep the
   // default background.
-  const { canvasColor } = useWallet40Theme("mobile");
+  const { theme: lumenTheme } = useLumenTheme();
+  const canvasColor = lumenTheme.colors.bg.canvas;
   const isSimulateIntent = inputs?.intent === "simulate";
   const { topBarHeight, bottomBarHeight } = useNavigationBarHeights();
   const { shouldDisplayEarnUpselling, shouldDisplayEarnSimulator } =

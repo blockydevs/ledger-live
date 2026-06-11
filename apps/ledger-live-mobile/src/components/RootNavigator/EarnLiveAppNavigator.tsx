@@ -90,8 +90,8 @@ const Earn = (props: NavigationProps) => {
         case "simulate": {
           // Present the Rewards simulator full-screen (Base stack → no top bar / bottom tab).
           // The earn live app fires `ledgerlive://earn?action=simulate` and routes itself to the
-          // simulator on load; intent="simulate" is handled by BaseNavigator (headerShown:false)
-          // and EarnV2Webview (INTENT_FLOWS / return-to-tab).
+          // simulator on load; intent="simulate" is handled by BaseNavigator (native header on the
+          // live-app canvas) and EarnV2Webview (INTENT_FLOWS / return-to-tab).
           navigation.navigate(NavigatorName.Base, {
             screen: NavigatorName.Earn,
             params: {
