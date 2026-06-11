@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { track } from "~/renderer/analytics/segment";
 import { openURL } from "~/renderer/linking";
 import { urls } from "~/config/urls";
+import { useLocalizedUrl } from "~/renderer/hooks/useLocalizedUrls";
 import { useRecoverBannerState } from "~/renderer/hooks/useRecoverBannerState";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { getBackupBucket } from "./utils/getBackupBucket";
@@ -41,6 +42,9 @@ export function useBackupHubViewModel({ onBack, onClose }: BackupHubParams): Bac
   const protectId = recoverFeature?.params?.protectId ?? DEFAULT_PROTECT_ID;
   const { data } = useRecoverBannerState(protectId);
   const bucket = getBackupBucket(data.subscriptionState);
+
+  const recoveryKeyUrl = useLocalizedUrl(urls.backupHub.recoveryKey);
+  const secretRecoveryPhraseUrl = useLocalizedUrl(urls.backupHub.secretRecoveryPhrase);
 
   const handleBack = useCallback(() => {
     track("button_clicked", {
@@ -82,19 +86,16 @@ export function useBackupHubViewModel({ onBack, onClose }: BackupHubParams): Bac
       {
         id: "recovery-key",
         image: recoveryKeyImage,
-        onClick: () => openShop(urls.backupHub.recoveryKey, BACKUP_HUB_TRACKING_BUTTON.recoveryKey),
+        onClick: () => openShop(recoveryKeyUrl, BACKUP_HUB_TRACKING_BUTTON.recoveryKey),
       },
       {
         id: "secret-recovery-phrase",
         image: secretRecoveryPhraseImage,
         onClick: () =>
-          openShop(
-            urls.backupHub.secretRecoveryPhrase,
-            BACKUP_HUB_TRACKING_BUTTON.secretRecoveryPhrase,
-          ),
+          openShop(secretRecoveryPhraseUrl, BACKUP_HUB_TRACKING_BUTTON.secretRecoveryPhrase),
       },
     ],
-    [openShop],
+    [openShop, recoveryKeyUrl, secretRecoveryPhraseUrl],
   );
 
   return {

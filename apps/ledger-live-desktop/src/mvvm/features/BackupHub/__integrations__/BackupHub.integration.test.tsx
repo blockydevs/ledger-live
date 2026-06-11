@@ -51,9 +51,8 @@ const openHub = async (options?: Parameters<typeof render>[1]) => {
   const utils = render(<ContextMenu />, { initialState: backupHubState, ...options });
 
   await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
-  await waitFor(() => expect(screen.getByTestId("my-wallet-action-recover")).toBeVisible());
-  await utils.user.click(screen.getByTestId("my-wallet-action-recover"));
-  await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+  await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
+  await screen.findByTestId("backup-hub");
 
   return utils;
 };
@@ -90,7 +89,7 @@ describe("BackupHub", () => {
     await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
     await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
 
-    await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+    await screen.findByTestId("backup-hub");
     expect(screen.queryByRole("button", { name: "Discover" })).not.toBeInTheDocument();
   });
 
@@ -105,7 +104,7 @@ describe("BackupHub", () => {
 
     await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
     await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
-    await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+    await screen.findByTestId("backup-hub");
 
     await utils.user.click(screen.getByTestId("backup-hub-recover-row"));
 
@@ -127,7 +126,7 @@ describe("BackupHub", () => {
     await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
     await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
 
-    await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+    await screen.findByTestId("backup-hub");
     expect(screen.getByText("Finish setting up your backup.")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Discover" })).not.toBeInTheDocument();
   });
@@ -143,7 +142,7 @@ describe("BackupHub", () => {
 
     await utils.user.click(screen.getByRole("button", { name: "My Wallet" }));
     await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
-    await waitFor(() => expect(screen.getByTestId("backup-hub")).toBeVisible());
+    await screen.findByTestId("backup-hub");
 
     await utils.user.click(screen.getByTestId("backup-hub-recover-row"));
 

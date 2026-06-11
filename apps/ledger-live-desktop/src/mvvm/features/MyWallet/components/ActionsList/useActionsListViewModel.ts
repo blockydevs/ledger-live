@@ -11,7 +11,7 @@ import { useFeature } from "@features/platform-feature-flags";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { track } from "~/renderer/analytics/segment";
 import type { Action } from "./types";
-import { useContextMenuClose, useContextMenuNavigation } from "../ContextMenuContext";
+import { useContextMenuClose, useContextMenu } from "../ContextMenuContext";
 import { MY_WALLET_TRACKING_BUTTON, MY_WALLET_TRACKING_PAGE_NAME } from "../../constants";
 
 export type ActionsListViewModel = {
@@ -20,7 +20,7 @@ export type ActionsListViewModel = {
 
 export function useActionsListViewModel(): ActionsListViewModel {
   const close = useContextMenuClose();
-  const { navigateTo } = useContextMenuNavigation();
+  const { navigateTo } = useContextMenu();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
