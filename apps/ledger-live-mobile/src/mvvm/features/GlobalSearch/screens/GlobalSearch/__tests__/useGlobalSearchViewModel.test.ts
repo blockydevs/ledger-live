@@ -2,6 +2,7 @@ import { renderHook, act } from "@tests/test-renderer";
 import { track } from "~/analytics";
 import { useGlobalSearchViewModel } from "../useGlobalSearchViewModel";
 import { useGlobalSearchDefaults } from "../useGlobalSearchDefaults";
+import { useGlobalSearchResults, type GlobalSearchResults } from "../useGlobalSearchResults";
 
 const mockGoBack = jest.fn();
 
@@ -11,46 +12,62 @@ jest.mock("@react-navigation/native", () => ({
 }));
 
 jest.mock("../useGlobalSearchDefaults");
+jest.mock("../useGlobalSearchResults");
 
-const mockedUseGlobalSearchDefaults = jest.mocked(useGlobalSearchDefaults);
+const mockedDefaults = jest.mocked(useGlobalSearchDefaults);
+const mockedResults = jest.mocked(useGlobalSearchResults);
 
 const EMPTY_SECTIONS = { cryptos: [], stablecoins: [], stocks: [] };
+
+const resultsState = (overrides: Partial<GlobalSearchResults> = {}): GlobalSearchResults => ({
+  search: "",
+  setSearch: jest.fn(),
+  clearSearch: jest.fn(),
+  isSearchActive: false,
+  searchResults: [],
+  isLoadingSearch: false,
+  hasNoResults: false,
+  ...overrides,
+});
 
 describe("useGlobalSearchViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedUseGlobalSearchDefaults.mockReturnValue({
-      defaultSections: EMPTY_SECTIONS,
-      isLoadingDefaults: false,
+    mockedDefaults.mockReturnValue({ defaultSections: EMPTY_SECTIONS, isLoadingDefaults: false });
+    mockedResults.mockReturnValue(resultsState());
+  });
+
+  it("composes default sections and search results from the data hooks", () => {
+    const cryptos = [{ id: "btc" }] as never;
+    const searchResults = [{ id: "eth" }] as never;
+    mockedDefaults.mockReturnValue({
+      defaultSections: { ...EMPTY_SECTIONS, cryptos },
+      isLoadingDefaults: true,
     });
-  });
+    mockedResults.mockReturnValue(resultsState({ searchResults, isLoadingSearch: true }));
 
-  it("starts inactive and exposes the default sections from the data hook", () => {
     const { result } = renderHook(() => useGlobalSearchViewModel());
 
-    expect(result.current.isSearchActive).toBe(false);
-    expect(result.current.searchResults).toEqual([]);
-    expect(result.current.defaultSections).toEqual(EMPTY_SECTIONS);
+    expect(result.current.defaultSections.cryptos).toBe(cryptos);
+    expect(result.current.isLoadingDefaults).toBe(true);
+    expect(result.current.searchResults).toBe(searchResults);
+    expect(result.current.isLoadingSearch).toBe(true);
   });
 
-  it("flips isSearchActive when typing and back to false when cleared", () => {
-    const { result } = renderHook(() => useGlobalSearchViewModel());
+  it("enables default fetching while no search is active", () => {
+    mockedResults.mockReturnValue(resultsState({ isSearchActive: false }));
 
-    act(() => result.current.setSearch("btc"));
-    expect(result.current.isSearchActive).toBe(true);
+    renderHook(() => useGlobalSearchViewModel());
 
-    act(() => result.current.clearSearch());
-    expect(result.current.search).toBe("");
-    expect(result.current.isSearchActive).toBe(false);
+    expect(mockedDefaults).toHaveBeenLastCalledWith(true);
   });
 
-  it("enables default fetching only while no search is active", () => {
-    const { result } = renderHook(() => useGlobalSearchViewModel());
+  it("disables default fetching while a search is active", () => {
+    mockedResults.mockReturnValue(resultsState({ isSearchActive: true }));
 
-    expect(mockedUseGlobalSearchDefaults).toHaveBeenLastCalledWith(true);
+    renderHook(() => useGlobalSearchViewModel());
 
-    act(() => result.current.setSearch("btc"));
-    expect(mockedUseGlobalSearchDefaults).toHaveBeenLastCalledWith(false);
+    expect(mockedDefaults).toHaveBeenLastCalledWith(false);
   });
 
   it("tracks search_open on mount", () => {
