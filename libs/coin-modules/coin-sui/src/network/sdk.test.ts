@@ -636,6 +636,80 @@ describe("SDK Functions", () => {
     expect(sdk.getOperationCoinType(graphqlTx)).toBe(sdk.DEFAULT_COIN_TYPE);
   });
 
+  test("transactionToOperation maps a GraphQL (gRPC-proto) staking tx to a DELEGATE op with JSON-RPC parity", () => {
+    const sender = "0xf58d8d4ba6a2160f630c600a1b946cff4dac25c3fcac241e91bbd12791cd7528";
+    const validator = "0x4fffd0005522be4bc029724c7f0f6ed7093a6bf3a09b90e62f61dc15181e1a3e";
+    const graphqlTx = graphqlTxToJsonRpcResponse({
+      digest: "FTow2FZLfLEwd4gGy4PUmBGkMD6gK27gge374H2rbRtS",
+      transactionJson: {
+        kind: {
+          kind: "PROGRAMMABLE_TRANSACTION",
+          programmableTransaction: {
+            inputs: [
+              { kind: "PURE", pure: "gO9pf1EAAAA=" }, // u64 350030000000
+              {
+                kind: "SHARED",
+                objectId: "0x0000000000000000000000000000000000000000000000000000000000000005",
+                version: "1",
+                mutable: true,
+                mutability: "MUTABLE",
+              },
+              { kind: "PURE", pure: "T//QAFUivkvAKXJMfw9u1wk6a/Ogm5DmL2HcFRgeGj4=" }, // validator address
+            ],
+            commands: [
+              { splitCoins: { coin: { kind: "GAS" }, amounts: [{ kind: "INPUT", input: 0 }] } },
+              {
+                moveCall: {
+                  package: "0x0000000000000000000000000000000000000000000000000000000000000003",
+                  module: "sui_system",
+                  function: "request_add_stake",
+                  arguments: [
+                    { kind: "INPUT", input: 1 },
+                    { kind: "RESULT", result: 0 },
+                    { kind: "INPUT", input: 2 },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        sender,
+        gasPayment: { objects: [], owner: sender, price: "100", budget: "11815536" },
+      },
+      effects: {
+        status: "SUCCESS",
+        timestamp: "2026-06-10T12:00:00.000Z",
+        balanceChangesJson: [
+          {
+            address: sender,
+            coinType:
+              "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+            amount: "-350039759296",
+          },
+        ],
+        gasEffects: {
+          gasSummary: {
+            computationCost: 100000,
+            storageCost: 935833600,
+            storageRebate: 926174304,
+            nonRefundableStorageFee: 9355296,
+          },
+        },
+      },
+    } as unknown as GraphQLTransactionNode);
+
+    const operation = sdk.transactionToOperation("mockAccountId", sender, graphqlTx);
+    expect(operation.type).toBe("DELEGATE");
+    expect(operation.value.toString()).toBe("350039759296");
+    expect(operation.fee.toString()).toBe("9759296");
+    expect(operation.senders).toEqual([sender]);
+    // [validator, validator] mirrors JSON-RPC behaviour byte-for-byte: getOperationRecipients
+    // pushes every pure address input, then the isStaking branch pushes the validator again.
+    expect(operation.recipients).toEqual([validator, validator]);
+    expect((operation.extra as { coinType: string }).coinType).toBe(sdk.DEFAULT_COIN_TYPE);
+    expect(sdk.getFeesPayer(graphqlTx)).toBe(sender);
+  });
+
   test("transactionToOperation should map transaction to operation", () => {
     const accountId = "mockAccountId";
     const address = "0x6e143fe0a8ca010a86580dafac44298e5b1b7d73efc345356a59a15f0d7824f0";

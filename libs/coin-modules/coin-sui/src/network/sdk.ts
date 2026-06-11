@@ -1669,10 +1669,14 @@ export const paymentInfo = async (
       }
     },
     graphql: async api => {
-      const sim = await simulateTransactionGraphQL(api, txb);
-      const fees =
-        BigInt(sim.computationCost) + BigInt(sim.storageCost) - BigInt(sim.storageRebate);
-      return { gasBudget: sim.gasBudget, totalGasUsed: fees, fees };
+      try {
+        const sim = await simulateTransactionGraphQL(api, txb);
+        const fees =
+          BigInt(sim.computationCost) + BigInt(sim.storageCost) - BigInt(sim.storageRebate);
+        return { gasBudget: sim.gasBudget, totalGasUsed: fees, fees };
+      } catch (error) {
+        throw mapDryRunError(error);
+      }
     },
   });
 };
@@ -1718,8 +1722,6 @@ export const executeTransactionBlock = async (
     graphql: async api => {
       const signatures = Array.isArray(params.signature) ? params.signature : [params.signature];
       const r = await executeTransactionGraphQL(api, params.transactionBlock, signatures);
-      // Mirror the JSON-RPC branch: a null status (effects/status absent in the
-      // GraphQL response) is a transport-shape issue, not a real on-chain failure.
       if (r.status === null) {
         return toExecuteResult(r.digest, "failure", "missing effects in broadcast response");
       }

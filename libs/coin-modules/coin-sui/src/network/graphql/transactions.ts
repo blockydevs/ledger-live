@@ -2,10 +2,12 @@
  * GraphQL → JSON-RPC `SuiTransactionBlockResponse` adapter. Hybrid: typed
  * fields (`digest`, `gasEffects`, `events`, `timestamp`, `checkpoint`) for
  * fixed shape; JSON blobs (`transactionJson` / `balanceChangesJson` /
- * `effectsJson`) for fields whose gRPC-proto shape downstream mappers
- * already understand.
+ * `effectsJson`) carry gRPC-proto shapes that are normalised here to the
+ * JSON-RPC forms downstream mappers expect (short struct tags, wrapped
+ * owners, `ProgrammableTransaction` kind/inputs/commands, `gasData`).
  */
 import type { SuiTransactionBlockResponse } from "@mysten/sui/jsonRpc";
+import { fromBase64 } from "@mysten/sui/utils";
 import type { TransactionByDigestResult, TransactionsByAffectedAddressResult } from "./queries";
 import { extractFailureError } from "./utils";
 import { toShortStructTag } from "../../utils";
@@ -38,6 +40,174 @@ function normaliseBalanceChanges(raw: unknown): unknown[] {
   });
 }
 
+// ----- gRPC-proto ProgrammableTransaction → JSON-RPC shape ------------------
+//
+// `transactionJson` carries the gRPC-proto `Transaction` message, whose shape differs from the
+// JSON-RPC one everywhere downstream mappers look: `kind` is a tagged object (not a string),
+// commands use lowerCamel keys (`moveCall` vs `MoveCall`), pure inputs are raw base64 BCS (no
+// decoded `valueType`/`value`), and gas lives under `gasPayment` (not `gasData`). Without this
+// mapping `isStaking`/`isUnstaking` never match (DELEGATE ops surface as OUT), recipients come
+// back empty and `getFeesPayer` reads undefined.
+
+type ProtoRecord = Record<string, unknown>;
+
+/** proto `Argument` → JSON-RPC argument: `"GasCoin" | {Input} | {Result} | {NestedResult}`. */
+function protoArgToJsonRpc(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const arg = raw as ProtoRecord;
+  switch (arg.kind) {
+    case "GAS":
+      return "GasCoin";
+    case "INPUT":
+      return { Input: arg.input };
+    case "RESULT":
+      return typeof arg.subresult === "number"
+        ? { NestedResult: [arg.result, arg.subresult] }
+        : { Result: arg.result };
+    default:
+      return raw;
+  }
+}
+
+/**
+ * proto `Input` → JSON-RPC `SuiCallArg`. Pure inputs are raw BCS bytes with no type info; the
+ * JSON-RPC `valueType` is recovered by length (u64 = 8 bytes, address = 32 bytes) — the only two
+ * pure shapes Ledger Live transactions produce and the only two downstream consumers
+ * (`getOperationRecipients`, `extractStakingEventDetails`) match on. Other sizes stay inert
+ * (`valueType: null`) rather than guessing.
+ */
+function protoInputToJsonRpc(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const input = raw as ProtoRecord;
+  switch (input.kind) {
+    case "PURE": {
+      if (typeof input.pure !== "string") return { type: "pure", valueType: null, value: null };
+      const bytes = fromBase64(input.pure);
+      if (bytes.length === 8) {
+        const value = new DataView(bytes.buffer, bytes.byteOffset, 8).getBigUint64(0, true);
+        return { type: "pure", valueType: "u64", value: value.toString() };
+      }
+      if (bytes.length === 32) {
+        const hex = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+        return { type: "pure", valueType: "address", value: `0x${hex}` };
+      }
+      return { type: "pure", valueType: null, value: input.pure };
+    }
+    case "SHARED":
+      return {
+        type: "object",
+        objectType: "sharedObject",
+        objectId: input.objectId,
+        initialSharedVersion: input.version,
+        mutable: input.mutable,
+      };
+    case "IMMUTABLE_OR_OWNED":
+      return {
+        type: "object",
+        objectType: "immOrOwnedObject",
+        objectId: input.objectId,
+        version: input.version,
+        digest: input.digest,
+      };
+    case "RECEIVING":
+      return {
+        type: "object",
+        objectType: "receiving",
+        objectId: input.objectId,
+        version: input.version,
+        digest: input.digest,
+      };
+    default:
+      return raw;
+  }
+}
+
+/** proto `Command` (lowerCamel-keyed) → JSON-RPC `SuiTransaction` (PascalCase-keyed). */
+function protoCommandToJsonRpc(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const cmd = raw as ProtoRecord;
+  if (cmd.moveCall && typeof cmd.moveCall === "object") {
+    const mc = cmd.moveCall as ProtoRecord;
+    return {
+      MoveCall: {
+        package: mc.package,
+        module: mc.module,
+        function: mc.function,
+        ...(Array.isArray(mc.typeArguments) ? { type_arguments: mc.typeArguments } : {}),
+        arguments: (Array.isArray(mc.arguments) ? mc.arguments : []).map(protoArgToJsonRpc),
+      },
+    };
+  }
+  if (cmd.splitCoins && typeof cmd.splitCoins === "object") {
+    const sc = cmd.splitCoins as ProtoRecord;
+    return {
+      SplitCoins: [
+        protoArgToJsonRpc(sc.coin),
+        (Array.isArray(sc.amounts) ? sc.amounts : []).map(protoArgToJsonRpc),
+      ],
+    };
+  }
+  if (cmd.transferObjects && typeof cmd.transferObjects === "object") {
+    const to = cmd.transferObjects as ProtoRecord;
+    return {
+      TransferObjects: [
+        (Array.isArray(to.objects) ? to.objects : []).map(protoArgToJsonRpc),
+        protoArgToJsonRpc(to.address),
+      ],
+    };
+  }
+  if (cmd.mergeCoins && typeof cmd.mergeCoins === "object") {
+    const mc = cmd.mergeCoins as ProtoRecord;
+    return {
+      MergeCoins: [
+        protoArgToJsonRpc(mc.coin),
+        (Array.isArray(mc.coinsToMerge) ? mc.coinsToMerge : []).map(protoArgToJsonRpc),
+      ],
+    };
+  }
+  if (cmd.makeMoveVector && typeof cmd.makeMoveVector === "object") {
+    const mv = cmd.makeMoveVector as ProtoRecord;
+    return {
+      MakeMoveVec: [
+        mv.elementType ?? null,
+        (Array.isArray(mv.elements) ? mv.elements : []).map(protoArgToJsonRpc),
+      ],
+    };
+  }
+  return raw;
+}
+
+/**
+ * proto `TransactionKind` → JSON-RPC `ProgrammableTransaction` block, or `null` when
+ * `transactionJson` is not proto-shaped (already-JSON-RPC fixtures pass through untouched).
+ */
+function protoTxKindToJsonRpc(rawKind: unknown): ProtoRecord | null {
+  if (!rawKind || typeof rawKind !== "object") return null;
+  const kind = rawKind as ProtoRecord;
+  if (kind.kind !== "PROGRAMMABLE_TRANSACTION") return null;
+  const pt = (kind.programmableTransaction ?? {}) as ProtoRecord;
+  return {
+    kind: "ProgrammableTransaction",
+    inputs: (Array.isArray(pt.inputs) ? pt.inputs : []).map(protoInputToJsonRpc),
+    transactions: (Array.isArray(pt.commands) ? pt.commands : []).map(protoCommandToJsonRpc),
+  };
+}
+
+/** proto `gasPayment` → JSON-RPC `gasData` (`getFeesPayer` reads `gasData.owner`). */
+function protoGasPaymentToGasData(raw: unknown): ProtoRecord {
+  if (!raw || typeof raw !== "object") return {};
+  const gp = raw as ProtoRecord;
+  return {
+    payment: (Array.isArray(gp.objects) ? gp.objects : []).map(obj => {
+      const o = obj as ProtoRecord;
+      return { objectId: o.objectId, version: Number(o.version), digest: o.digest };
+    }),
+    owner: gp.owner,
+    price: gp.price,
+    budget: gp.budget,
+  };
+}
+
 /** GraphQL Transaction node — both single and paginated query share this shape. */
 export type GraphQLTransactionNode =
   | NonNullable<TransactionByDigestResult["transaction"]>
@@ -57,9 +227,12 @@ export function graphqlTxToJsonRpcResponse(
   const effectsJson = (effects?.effectsJson ?? {}) as Record<string, unknown>;
   const gas = effects?.gasEffects?.gasSummary;
 
-  // gRPC-proto exposes the inner Move transaction at the top level for ProgrammableTransactionBlock —
-  // match the JSON-RPC nesting downstream expects.
-  const inner = (txJson.transaction ?? txJson) as Record<string, unknown>;
+  // gRPC-proto wraps the Move transaction in a tagged `kind` object — map it to the JSON-RPC
+  // `ProgrammableTransaction` block. Non-proto payloads keep the legacy unwrapping (the inner
+  // Move transaction at the top level, or nested under `.transaction`).
+  const inner =
+    protoTxKindToJsonRpc(txJson.kind) ??
+    ((txJson.transaction ?? txJson) as Record<string, unknown>);
 
   return {
     digest: tx.digest,
@@ -67,7 +240,7 @@ export function graphqlTxToJsonRpcResponse(
       data: {
         transaction: inner,
         sender: (txJson.sender as string) ?? "",
-        gasData: txJson.gasData ?? {},
+        gasData: txJson.gasData ?? protoGasPaymentToGasData(txJson.gasPayment),
         messageVersion: "v1",
       },
       txSignatures: [],

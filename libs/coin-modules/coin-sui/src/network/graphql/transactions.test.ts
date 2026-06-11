@@ -291,4 +291,184 @@ describe("graphqlTxToJsonRpcResponse", () => {
       accumulatorEvents,
     );
   });
+
+  describe("gRPC-proto transactionJson mapping", () => {
+    const SENDER = "0xf58d8d4ba6a2160f630c600a1b946cff4dac25c3fcac241e91bbd12791cd7528";
+    const VALIDATOR = "0x4fffd0005522be4bc029724c7f0f6ed7093a6bf3a09b90e62f61dc15181e1a3e";
+    const SYSTEM_STATE = "0x0000000000000000000000000000000000000000000000000000000000000005";
+    const protoStakingTxJson = () => ({
+      digest: "FTow2FZLfLEwd4gGy4PUmBGkMD6gK27gge374H2rbRtS",
+      version: 1,
+      kind: {
+        kind: "PROGRAMMABLE_TRANSACTION",
+        programmableTransaction: {
+          inputs: [
+            { kind: "PURE", pure: "gO9pf1EAAAA=" },
+            {
+              kind: "SHARED",
+              objectId: SYSTEM_STATE,
+              version: "1",
+              mutable: true,
+              mutability: "MUTABLE",
+            },
+            { kind: "PURE", pure: "T//QAFUivkvAKXJMfw9u1wk6a/Ogm5DmL2HcFRgeGj4=" },
+          ],
+          commands: [
+            { splitCoins: { coin: { kind: "GAS" }, amounts: [{ kind: "INPUT", input: 0 }] } },
+            {
+              moveCall: {
+                package: "0x0000000000000000000000000000000000000000000000000000000000000003",
+                module: "sui_system",
+                function: "request_add_stake",
+                arguments: [
+                  { kind: "INPUT", input: 1 },
+                  { kind: "RESULT", result: 0 },
+                  { kind: "INPUT", input: 2 },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      sender: SENDER,
+      gasPayment: {
+        objects: [
+          {
+            objectId: "0xf0db3db2b09626b123531b6da5415f20f50bd1e3105ba0792c355fc15e2fa863",
+            version: "914617841",
+            digest: "C6soxiMsseqw4fQp7p5Aa651K2QXBYf8ejr3U9Swi1bW",
+          },
+        ],
+        owner: SENDER,
+        price: "100",
+        budget: "11815536",
+      },
+      expiration: { kind: "NONE" },
+    });
+
+    it("maps a proto ProgrammableTransaction to the JSON-RPC kind/inputs/transactions shape", () => {
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          transactionJson: protoStakingTxJson(),
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.transaction?.data.transaction).toEqual({
+        kind: "ProgrammableTransaction",
+        inputs: [
+          { type: "pure", valueType: "u64", value: "350030000000" },
+          {
+            type: "object",
+            objectType: "sharedObject",
+            objectId: SYSTEM_STATE,
+            initialSharedVersion: "1",
+            mutable: true,
+          },
+          { type: "pure", valueType: "address", value: VALIDATOR },
+        ],
+        transactions: [
+          { SplitCoins: ["GasCoin", [{ Input: 0 }]] },
+          {
+            MoveCall: {
+              package: "0x0000000000000000000000000000000000000000000000000000000000000003",
+              module: "sui_system",
+              function: "request_add_stake",
+              arguments: [{ Input: 1 }, { Result: 0 }, { Input: 2 }],
+            },
+          },
+        ],
+      });
+      expect(out.transaction?.data.sender).toBe(SENDER);
+    });
+
+    it("maps proto gasPayment to JSON-RPC gasData (payment objects, owner, price, budget)", () => {
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          transactionJson: protoStakingTxJson(),
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.transaction?.data.gasData).toEqual({
+        payment: [
+          {
+            objectId: "0xf0db3db2b09626b123531b6da5415f20f50bd1e3105ba0792c355fc15e2fa863",
+            version: 914617841,
+            digest: "C6soxiMsseqw4fQp7p5Aa651K2QXBYf8ejr3U9Swi1bW",
+          },
+        ],
+        owner: SENDER,
+        price: "100",
+        budget: "11815536",
+      });
+    });
+
+    it("maps a proto transfer (pure address + transferObjects) so recipients are recoverable", () => {
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          transactionJson: {
+            kind: {
+              kind: "PROGRAMMABLE_TRANSACTION",
+              programmableTransaction: {
+                inputs: [
+                  { kind: "PURE", pure: "gO9pf1EAAAA=" },
+                  { kind: "PURE", pure: "T//QAFUivkvAKXJMfw9u1wk6a/Ogm5DmL2HcFRgeGj4=" },
+                ],
+                commands: [
+                  { splitCoins: { coin: { kind: "GAS" }, amounts: [{ kind: "INPUT", input: 0 }] } },
+                  {
+                    transferObjects: {
+                      objects: [{ kind: "RESULT", result: 0 }],
+                      address: { kind: "INPUT", input: 1 },
+                    },
+                  },
+                ],
+              },
+            },
+            sender: SENDER,
+          },
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.transaction?.data.transaction).toEqual({
+        kind: "ProgrammableTransaction",
+        inputs: [
+          { type: "pure", valueType: "u64", value: "350030000000" },
+          { type: "pure", valueType: "address", value: VALIDATOR },
+        ],
+        transactions: [
+          { SplitCoins: ["GasCoin", [{ Input: 0 }]] },
+          { TransferObjects: [[{ Result: 0 }], { Input: 1 }] },
+        ],
+      });
+    });
+
+    it("keeps odd-sized pure inputs inert (no u64/address valueType claimed)", () => {
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          transactionJson: {
+            kind: {
+              kind: "PROGRAMMABLE_TRANSACTION",
+              // 3-byte payload: neither u64 (8) nor address (32)
+              programmableTransaction: { inputs: [{ kind: "PURE", pure: "AQID" }], commands: [] },
+            },
+            sender: SENDER,
+          },
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      const inputs = (out.transaction?.data.transaction as { inputs: unknown[] }).inputs;
+      expect(inputs).toEqual([{ type: "pure", valueType: null, value: "AQID" }]);
+    });
+
+    it("leaves an already-JSON-RPC-shaped ProgrammableTransaction untouched", () => {
+      const jsonRpcShaped = {
+        kind: "ProgrammableTransaction",
+        inputs: [{ type: "pure", valueType: "u64", value: "42" }],
+        transactions: [{ SplitCoins: ["GasCoin", [{ Input: 0 }]] }],
+      };
+      const out = graphqlTxToJsonRpcResponse(
+        fakeTx({
+          transactionJson: { transaction: jsonRpcShaped, sender: SENDER, gasData: { price: "1" } },
+        } as unknown as Partial<GraphQLTransactionNode>),
+      );
+      expect(out.transaction?.data.transaction).toEqual(jsonRpcShaped);
+      expect(out.transaction?.data.gasData).toEqual({ price: "1" });
+    });
+  });
 });
