@@ -105,7 +105,11 @@ const config = {
   setupFilesAfterEnv: ["<rootDir>/setup.ts"],
   testMatch: ["<rootDir>/specs/**/*.spec.ts"],
   testTimeout: 300_000,
-  reporters: ["detox/runners/jest/reporter", ["jest-allure2-reporter", jestAllure2ReporterOptions]],
+  reporters: [
+    "detox/runners/jest/reporter",
+    ["jest-allure2-reporter", jestAllure2ReporterOptions],
+    ...(process.env.CI ? [["github-actions", { silent: false }]] : []),
+  ],
   globalSetup: "<rootDir>/jest.globalSetup.ts",
   globalTeardown: "<rootDir>/jest.globalTeardown.ts",
   testEnvironment: "<rootDir>/jest.environment.ts",
