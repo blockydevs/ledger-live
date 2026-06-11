@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "~/context/Locale";
 import { useExperimental } from "~/experimental";
 import { DefaultSections } from "./components/DefaultSections";
+import { SearchResults } from "./components/SearchResults";
 import { GLOBAL_SEARCH_TEST_IDS } from "./testIds";
 import type { GlobalSearchViewModel } from "./useGlobalSearchViewModel";
 
@@ -19,6 +20,9 @@ export function GlobalSearchView({
   isSearchActive,
   defaultSections,
   isLoadingDefaults,
+  searchResults,
+  isLoadingSearch,
+  hasNoResults,
   onSeeAll,
   onAssetPress,
   onStockPress,
@@ -78,7 +82,14 @@ export function GlobalSearchView({
           </View>
         </View>
       </View>
-      {!isSearchActive && (
+      {isSearchActive ? (
+        <SearchResults
+          results={searchResults}
+          isLoading={isLoadingSearch}
+          hasNoResults={hasNoResults}
+          onAssetPress={onAssetPress}
+        />
+      ) : (
         <DefaultSections
           sections={defaultSections}
           isLoading={isLoadingDefaults}

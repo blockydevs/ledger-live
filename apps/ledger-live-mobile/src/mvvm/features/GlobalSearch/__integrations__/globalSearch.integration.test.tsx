@@ -44,4 +44,20 @@ describe("GlobalSearch screen", () => {
 
     expect(screen.getByDisplayValue("bitcoin")).toBeVisible();
   });
+
+  it("swaps default sections for search results when typing and restores them on clear", async () => {
+    const { user } = render(<GlobalSearch />);
+    const input = screen.getByPlaceholderText(/search assets/i);
+
+    expect(screen.getByTestId(GLOBAL_SEARCH_TEST_IDS.defaultSections)).toBeVisible();
+
+    await user.type(input, "b");
+
+    expect(screen.queryByTestId(GLOBAL_SEARCH_TEST_IDS.defaultSections)).toBeNull();
+    expect(screen.getAllByTestId(GLOBAL_SEARCH_TEST_IDS.searchSkeleton).length).toBeGreaterThan(0);
+
+    await user.clear(input);
+
+    expect(screen.getByTestId(GLOBAL_SEARCH_TEST_IDS.defaultSections)).toBeVisible();
+  });
 });

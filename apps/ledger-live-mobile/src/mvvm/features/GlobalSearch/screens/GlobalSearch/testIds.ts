@@ -5,4 +5,7 @@ export const GLOBAL_SEARCH_TEST_IDS = {
   cryptosSection: "global-search-cryptos-section",
   stablecoinsSection: "global-search-stablecoins-section",
   stocksSection: "global-search-stocks-section",
+  searchResults: "global-search-results",
+  searchSkeleton: "global-search-results-skeleton",
+  searchEmptyState: "global-search-empty-state",
 } as const;
