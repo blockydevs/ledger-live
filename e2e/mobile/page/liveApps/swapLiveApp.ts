@@ -479,6 +479,7 @@ export default class SwapLiveAppPage {
 
   @Step("Tap Give Authorization button")
   async tapGiveAuthorizationButton() {
+    await waitWebElementByTestId(this.signPermitButton, { timeout: APPROVAL_PROCESSING_TIMEOUT });
     await waitForWebElementToBeEnabled(this.signPermitButton);
     await tapWebElementByTestId(this.signPermitButton);
   }

@@ -579,17 +579,6 @@ export class SwapPage extends WebViewAppPage {
     await revokeButton.click();
   }
 
-  @step("Ensure token approval has been revoked")
-  async ensureRevokeTokenApproval(fromAccount: TokenAccount, provider: SwapProvider) {
-    if (!provider.contractAddress) {
-      throw new Error(
-        `Provider "${provider.name}" has no contractAddress - revoke requires an EVM token provider`,
-      );
-    }
-    const remaining = await getTokenAllowanceCommand(fromAccount, provider.contractAddress);
-    expect(remaining).toBe("0");
-  }
-
   @step("Expect TwoStepApproval screen to be displayed")
   async expectTwoStepApprovalScreen() {
     await this.verifyElementIsVisible(this.giveApprovalButton);
@@ -611,6 +600,7 @@ export class SwapPage extends WebViewAppPage {
   async clickGiveAuthorizationButton() {
     const webview = await this.getWebView();
     const authorizationButton = webview.getByTestId(this.signPermitButton);
+    await expect(authorizationButton).toBeVisible({ timeout: APPROVAL_PROCESSING_TIMEOUT });
     await authorizationButton.click();
   }
 
