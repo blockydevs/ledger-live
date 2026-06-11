@@ -6,7 +6,7 @@ const ContextMenuContext = createContext<ContextMenuProviderValue | null>(null);
 export function useContextMenu() {
   const ctx = useContext(ContextMenuContext);
   if (!ctx) {
-    throw new Error("ContextMenu hooks must be used within a ContextMenu");
+    throw new Error("useContextMenu must be used within a ContextMenuContext.Provider");
   }
   return ctx;
 }

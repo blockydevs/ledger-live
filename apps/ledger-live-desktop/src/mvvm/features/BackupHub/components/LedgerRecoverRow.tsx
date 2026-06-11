@@ -48,7 +48,7 @@ export function LedgerRecoverRow({
       </ListItemLeading>
       <ListItemTrailing>
         {showCta ? (
-          <Button appearance="base" size="sm">
+          <Button appearance="base" size="sm" onClick={onClick}>
             {ctaLabel}
           </Button>
         ) : (

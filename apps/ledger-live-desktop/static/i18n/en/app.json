@@ -9083,7 +9083,7 @@
       },
       "recoveryKey": {
         "title": "Recovery Key",
-        "description": "Pin protected smart card"
+        "description": "PIN-protected smart card"
       },
       "secretRecoveryPhrase": {
         "title": "24-word accessories",
