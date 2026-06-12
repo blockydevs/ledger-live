@@ -18,6 +18,7 @@ import { CardType } from "./types";
 import { track, TrackScreen } from "~/analytics";
 import { PAGE_NAME } from "./const";
 import { useLargeMoverChartData } from "@ledgerhq/live-common/market/hooks/useLargeMoverChartData";
+import { useLargeMoverCurrencies } from "@ledgerhq/live-common/market/hooks/useLargeMoverCurrencies";
 import { counterValueCurrencySelector } from "~/reducers/settings";
 import { KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
 import { OverlayTutorial } from "./components/OverlayTutorial";
@@ -46,6 +47,11 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
     range,
   });
 
+  const marketDataArray = useLargeMoverCurrencies({
+    ids: chartIds,
+    counterCurrency: counterValueCurrency.ticker,
+  });
+
   const navigation = useNavigation<NavigationProp<WalletTabNavigatorStackParamList>>();
 
   const { colors } = useTheme();
@@ -68,15 +74,17 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
     setCurrentIndex(newIndex);
   };
   const currenciesWithId = useMemo(() => {
-    if (!currencies?.cryptoOrTokenCurrencies || !currencies?.markets) return [];
+    if (!currencies?.cryptoOrTokenCurrencies) return [];
 
     return currenciesIds.flatMap((currencyId, index) => {
       const currency = currencies.cryptoOrTokenCurrencies[currencyId];
-      const marketData = currencies.markets[currencyId];
+
+      const transformedId = chartIds[index];
+      const marketDataEntry = marketDataArray.find(marketData => marketData.id === transformedId);
+      const marketData = marketDataEntry?.data;
 
       if (!currency || !marketData) return [];
 
-      const transformedId = chartIds[index];
       const chartDataEntry = chartDataArray.find(
         chartData => chartData.idChartData === transformedId,
       );
@@ -93,7 +101,7 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
     chartDataArray,
     chartIds,
     currencies?.cryptoOrTokenCurrencies,
-    currencies?.markets,
+    marketDataArray,
     currenciesIds,
     loadingChart,
   ]);

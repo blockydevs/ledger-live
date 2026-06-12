@@ -1,4 +1,6 @@
 import { renderWithReactQuery, screen } from "@tests/test-renderer";
+import { server } from "@tests/server";
+import { http, HttpResponse } from "msw";
 import React from "react";
 import { ScreenName } from "~/const";
 import { State } from "~/reducers/types";
@@ -169,6 +171,75 @@ describe("LargeMoverLandingPage Integration Tests", () => {
     const newVariation = newVariationElements[0].props.children;
 
     expect(initialVariation).not.toBe(newVariation);
+  });
+
+  it("displays fiat figures in the selected app countervalue currency (GBP), not USD", async () => {
+    const GBP_PRICE = 47123;
+    const GBP_MARKET_CAP = 928_000_000_000;
+    let capturedTo: string | null = null;
+
+    server.use(
+      http.get("https://countervalues.live.ledger.com/v3/markets", ({ request }) => {
+        capturedTo = new URL(request.url).searchParams.get("to");
+
+        return HttpResponse.json([
+          {
+            id: "bitcoin",
+            ledgerIds: ["bitcoin"],
+            ticker: "btc",
+            name: "Bitcoin",
+            image: "",
+            marketCap: GBP_MARKET_CAP,
+            marketCapRank: 1,
+            fullyDilutedValuation: GBP_MARKET_CAP,
+            totalVolume: 21_000_000_000,
+            high24h: 48000,
+            low24h: 46000,
+            price: GBP_PRICE,
+            priceChange24h: 1000,
+            priceChangePercentage1h: 0.1,
+            priceChangePercentage24h: 2.1,
+            priceChangePercentage7d: 1.1,
+            priceChangePercentage30d: -1.2,
+            priceChangePercentage1y: 100,
+            marketCapChange24h: 1,
+            marketCapChangePercentage24h: 2.1,
+            circulatingSupply: 19_700_000,
+            totalSupply: 21_000_000,
+            maxSupply: 21_000_000,
+            allTimeHigh: 54000,
+            allTimeLow: 50,
+            allTimeHighDate: "2024-03-14T07:10:36.635Z",
+            allTimeLowDate: "2013-07-06T00:00:00Z",
+            sparkline: [],
+            updatedAt: "2024-05-15T14:48:15Z",
+          },
+        ]);
+      }),
+    );
+
+    renderWithReactQuery(
+      <MockedLargeMoverLandingPage
+        key={mockRoute.key}
+        name={mockRoute.name}
+        params={{ currencyIds: "BTC", initialRange: InitialRange.Day }}
+      />,
+      {
+        overrideInitialState: (state: State) => ({
+          ...state,
+          settings: {
+            ...state.settings,
+            counterValue: "GBP",
+          },
+          largeMover: {
+            tutorial: false,
+          },
+        }),
+      },
+    );
+
+    expect(await screen.findByText("£47,123.00")).toBeOnTheScreen();
+    expect(capturedTo?.toLowerCase()).toBe("gbp");
   });
 
   it("displays token data when using ledgerIds parameter", async () => {

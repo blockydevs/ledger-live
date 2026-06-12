@@ -4,6 +4,7 @@ import ledgerSyncHandlers from "./ledgerSync";
 import cryptoIconsHandlers from "./crypto-icons";
 import supportedCvsHandlers from "./supportedCvs";
 import cantonHandlers from "./canton";
+import mappingServiceHandlers from "./mappingService";
 import dadaHandlers from "../../src/mocks/dada/handler";
 
 export default [
@@ -13,5 +14,6 @@ export default [
   ...cryptoIconsHandlers,
   ...supportedCvsHandlers,
   ...cantonHandlers,
+  ...mappingServiceHandlers,
   ...dadaHandlers,
 ];
