@@ -8,6 +8,7 @@ import { MY_WALLET_TRACKING_BUTTON, MY_WALLET_TRACKING_PAGE_NAME } from "../../.
 
 const HELP_LABEL = "Help";
 const RECOVER_LABEL = "[L] Recover";
+const BACKUP_LABEL = "Backup";
 const REFER_LABEL = "Referral";
 const MY_WALLET_ROUTE = "/my-wallet";
 const REFER_PATH = "/refer-a-friend";
@@ -27,8 +28,30 @@ jest.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
+jest.mock("~/renderer/store", () => ({
+  getStoreValue: jest.fn(),
+  setStoreValue: jest.fn(),
+  resetStore: jest.fn(),
+}));
+
 const mockUseAccountPath = jest.mocked(useAccountPath);
 const mockTrack = jest.mocked(track);
+
+const protectEnabled = withFlagOverrides({
+  protectServicesDesktop: {
+    enabled: true,
+    params: { protectId: "protect-id" },
+  },
+});
+
+const backupHubEnabled = withFlagOverrides({
+  protectServicesDesktop: {
+    enabled: true,
+    params: { protectId: "protect-id" },
+  },
+  lwdBackupHub: { enabled: true },
+});
+
 const renderActionsList = (options?: Parameters<typeof render>[1]) =>
   render(
     <ContextMenuContext.Provider
@@ -60,16 +83,16 @@ describe("ActionsList", () => {
   });
 
   it("shows recover when the feature is enabled", () => {
-    renderActionsList({
-      initialState: withFlagOverrides({
-        protectServicesDesktop: {
-          enabled: true,
-          params: { protectId: "protect-id" },
-        },
-      }),
-    });
+    renderActionsList({ initialState: protectEnabled });
 
     expect(getButton(RECOVER_LABEL)).toBeVisible();
+  });
+
+  it("relabels the tile to Backup when the Backup Hub flag is enabled", () => {
+    renderActionsList({ initialState: backupHubEnabled });
+
+    expect(getButton(BACKUP_LABEL)).toBeVisible();
+    expect(screen.queryByRole("button", { name: RECOVER_LABEL })).not.toBeInTheDocument();
   });
 
   it("fires the injected onRecoverClick callback without navigating itself", async () => {

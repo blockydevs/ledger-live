@@ -5,9 +5,12 @@ import { setRecoverState } from "~/renderer/reducers/recoverState";
 import { LedgerRecoverSubscriptionStateEnum } from "~/types/recoverSubscriptionState";
 import { isModalOpened } from "~/renderer/reducers/modals";
 import { openURL } from "~/renderer/linking";
+import { track } from "~/renderer/analytics/segment";
 import { ContextMenu } from "LLD/features/MyWallet/components/ContextMenu";
+import { RECOVER_NOTIFICATION_DOT_TEST_ID } from "LLD/components/ShieldCheckNotificationIcon";
 import {
   BACKUP_HUB_RECOVER_DEEPLINK_QUERY,
+  BACKUP_HUB_TRACKING_PAGE_NAME,
   RECOVER_DEEPLINK_BASE,
 } from "LLD/features/BackupHub/constants";
 
@@ -69,12 +72,14 @@ describe("BackupHub", () => {
     expect(screen.getByTestId("backup-hub-recover-row")).toBeVisible();
     expect(screen.getByTestId("backup-hub-physical-row-recovery-key")).toBeVisible();
     expect(screen.getByTestId("backup-hub-physical-row-secret-recovery-phrase")).toBeVisible();
+    expect(track).toHaveBeenCalledWith("page_viewed", { page: BACKUP_HUB_TRACKING_PAGE_NAME });
   });
 
-  it("shows the not-subscribed variant with a primary CTA by default", async () => {
+  it("shows the not-subscribed variant with a primary CTA and the red notification dot by default", async () => {
     await openHub();
 
     expect(screen.getByRole("button", { name: "Discover" })).toBeVisible();
+    expect(screen.getByTestId(RECOVER_NOTIFICATION_DOT_TEST_ID)).toBeVisible();
   });
 
   it("shows the done variant without a primary CTA", async () => {
@@ -91,6 +96,7 @@ describe("BackupHub", () => {
 
     await screen.findByTestId("backup-hub");
     expect(screen.queryByRole("button", { name: "Discover" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId(RECOVER_NOTIFICATION_DOT_TEST_ID)).not.toBeInTheDocument();
   });
 
   it("opens the subscribed Recover deeplink when clicking the Recover row in the done variant", async () => {
@@ -127,8 +133,9 @@ describe("BackupHub", () => {
     await utils.user.click(await screen.findByTestId("my-wallet-action-recover"));
 
     await screen.findByTestId("backup-hub");
-    expect(screen.getByText("Finish setting up your backup.")).toBeVisible();
+    expect(screen.getByText("Complete activation")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Discover" })).not.toBeInTheDocument();
+    expect(screen.getByTestId(RECOVER_NOTIFICATION_DOT_TEST_ID)).toBeVisible();
   });
 
   it("opens the ongoing-subscription Recover deeplink when clicking the Recover row in the in-progress variant", async () => {

@@ -10,11 +10,13 @@ import {
   Spot,
 } from "@ledgerhq/lumen-ui-react";
 import { ChevronRight, ShieldCheck } from "@ledgerhq/lumen-ui-react/symbols";
+import { ShieldCheckNotificationIcon } from "LLD/components/ShieldCheckNotificationIcon";
 import { cn } from "LLD/utils/cn";
 
 export type LedgerRecoverRowProps = {
   showCta: boolean;
   isWarning: boolean;
+  showNotificationDot: boolean;
   title: string;
   description: string;
   ctaLabel: string;
@@ -24,6 +26,7 @@ export type LedgerRecoverRowProps = {
 export function LedgerRecoverRow({
   showCta,
   isWarning,
+  showNotificationDot,
   title,
   description,
   ctaLabel,
@@ -36,7 +39,10 @@ export function LedgerRecoverRow({
       data-testid="backup-hub-recover-row"
     >
       <ListItemLeading>
-        <Spot appearance="icon" icon={ShieldCheck} />
+        <Spot
+          appearance="icon"
+          icon={showNotificationDot ? ShieldCheckNotificationIcon : ShieldCheck}
+        />
         <ListItemContent>
           <ListItemTitle>{title}</ListItemTitle>
           <ListItemDescription
