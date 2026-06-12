@@ -8557,9 +8557,6 @@ importers:
       '@reduxjs/toolkit':
         specifier: 'catalog:'
         version: 2.11.2(react-redux@9.2.0(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      invariant:
-        specifier: '2'
-        version: 2.2.4
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
