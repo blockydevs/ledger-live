@@ -7,7 +7,6 @@ import {
   TokenAccount,
 } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
-import { setSupportedCurrencies } from "../currencies";
 import * as signMessage from "../hw/signMessage/index";
 import {
   createFixtureAccount,
@@ -144,13 +143,6 @@ describe("completeExchangeLogic", () => {
     "12",
   );
   const uiNavigation = jest.fn();
-
-  beforeAll(() => {
-    setSupportedCurrencies(["bitcoin", "ethereum"]);
-  });
-  afterAll(() => {
-    setSupportedCurrencies([]);
-  });
 
   beforeEach(() => {
     mockPlatformCompleteExchangeRequested.mockClear();

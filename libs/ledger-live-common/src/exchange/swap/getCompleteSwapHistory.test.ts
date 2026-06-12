@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { Operation, SwapOperation, TokenAccount } from "@ledgerhq/types-live";
-import { getCryptoCurrencyById, setSupportedCurrencies } from "../../currencies";
+import { getCryptoCurrencyById } from "../../currencies";
 import { setupMockCryptoAssetsStore } from "../../test-helpers/cryptoAssetsStore";
 import { genAccount } from "../../mock/account";
 import { genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
@@ -8,7 +8,6 @@ import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import getCompleteSwapHistory from "./getCompleteSwapHistory";
 
 setupMockCryptoAssetsStore();
-setSupportedCurrencies(["ethereum", "bitcoin"]);
 
 const ethereum = getCryptoCurrencyById("ethereum");
 

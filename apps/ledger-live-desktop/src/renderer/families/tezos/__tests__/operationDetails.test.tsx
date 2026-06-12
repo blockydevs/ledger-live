@@ -3,17 +3,13 @@ import BigNumber from "bignumber.js";
 import { render, screen } from "tests/testSetup";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
-import {
-  getCryptoCurrencyById,
-  setSupportedCurrencies,
-} from "@ledgerhq/live-common/currencies/index";
+import { getCryptoCurrencyById } from "@ledgerhq/live-common/currencies/index";
 import type { Operation } from "@ledgerhq/types-live";
 import type { TezosAccount } from "@ledgerhq/live-common/families/tezos/types";
 import { OperationDetails } from "~/renderer/drawers/OperationDetails";
 import { importLLDCoinFamily } from "~/renderer/families";
 import { AFTER_ONBOARDING_STATE } from "~/renderer/reducers/settings";
 
-setSupportedCurrencies(["tezos"]);
 const currency = getCryptoCurrencyById("tezos");
 
 const makeOperation = (accountId: string, type: Operation["type"]): Operation =>

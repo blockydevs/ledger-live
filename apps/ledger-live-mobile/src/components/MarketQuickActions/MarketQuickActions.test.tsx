@@ -5,7 +5,7 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { ScreenName } from "~/const";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
-import { isCurrencySupported } from "@ledgerhq/ledger-wallet-framework/currencies/support";
+import { isCurrencySupported } from "@ledgerhq/live-common/coin-modules/registry";
 import { setupMockCryptoAssetsStore } from "@ledgerhq/cryptoassets/cal-client/test-helpers";
 import { getCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
 import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
@@ -69,7 +69,10 @@ const kaspaAccount = genAccount("kaspa-account", { currency: kaspaCurrency });
 const ethereumAccount = genAccount("ethereum-account", { currency: ethereumCurrency });
 
 // Mock the support module
-jest.mock("@ledgerhq/ledger-wallet-framework/currencies/support");
+jest.mock("@ledgerhq/live-common/coin-modules/registry", () => ({
+  ...jest.requireActual("@ledgerhq/live-common/coin-modules/registry"),
+  isCurrencySupported: jest.fn(),
+}));
 
 // Set up the mock implementation
 (isCurrencySupported as jest.Mock).mockImplementation(currency => {

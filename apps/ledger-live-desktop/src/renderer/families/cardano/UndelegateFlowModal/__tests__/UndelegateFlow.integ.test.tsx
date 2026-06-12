@@ -1,7 +1,6 @@
 import React from "react";
 import { render, screen, cleanup } from "tests/testSetup";
 import BigNumber from "bignumber.js";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/currencies/index";
 import { DeviceModelId } from "@ledgerhq/devices";
 import { server } from "tests/server";
 import UndelegateFlowModal from "../index";
@@ -13,7 +12,6 @@ import { getCardanoAccountFixture } from "@ledgerhq/coin-cardano/fixtures/accoun
 import { getProtocolParamsFixture } from "@ledgerhq/coin-cardano/fixtures/protocolParams";
 import { http, HttpResponse } from "msw";
 
-setSupportedCurrencies(["cardano"]);
 jest.mock("~/renderer/actions/modals", () => {
   const original = jest.requireActual("~/renderer/actions/modals");
   return {
