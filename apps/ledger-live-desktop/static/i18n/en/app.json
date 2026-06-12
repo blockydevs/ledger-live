@@ -1639,6 +1639,7 @@
       "applyFilters": "Apply filters",
       "clearAll": "Clear all"
     },
+    "assetsTitle": "Assets",
     "marketTable": {
       "crypto": "Name",
       "price": "Market price",

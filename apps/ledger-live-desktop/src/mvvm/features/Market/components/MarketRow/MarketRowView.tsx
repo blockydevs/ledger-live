@@ -3,6 +3,7 @@ import { TFunction } from "i18next";
 import { TableRow, TableCell, TableCellContent, Trend, Tag } from "@ledgerhq/lumen-ui-react";
 import { CryptoIcon } from "@ledgerhq/crypto-icons";
 import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
+import { TruncatedText } from "LLD/components/TruncatedText";
 import { MARKET_TABLE_GRID_TEMPLATE, MARKET_CELL_CLASSNAME } from "../MarketTable/constants";
 import { MarketRowActions, MarketRowActionsProps } from "./MarketRowActions";
 
@@ -49,8 +50,9 @@ export const MarketRowView = memo<MarketRowViewProps>(function MarketRowView({
       className="absolute left-0 top-0 grid w-full items-center"
       style={{ ...style, gridTemplateColumns: MARKET_TABLE_GRID_TEMPLATE }}
     >
-      <TableCell className={MARKET_CELL_CLASSNAME}>
+      <TableCell className={`${MARKET_CELL_CLASSNAME} min-w-0 [&>div]:min-w-0`}>
         <TableCellContent
+          className="overflow-hidden"
           leadingContent={
             currency.ledgerIds.length > 0 ? (
               <CryptoIcon ledgerId={currency.ledgerIds[0]} ticker={currency.ticker} size={32} />
@@ -58,7 +60,7 @@ export const MarketRowView = memo<MarketRowViewProps>(function MarketRowView({
               <img width="32px" height="32px" src={currency.image} alt={currency.name} />
             )
           }
-          title={currency.name}
+          title={<TruncatedText text={currency.name} />}
           description={
             <span className="flex items-center gap-6">
               {ticker}
@@ -71,19 +73,25 @@ export const MarketRowView = memo<MarketRowViewProps>(function MarketRowView({
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-coin-price">
-        {formattedPrice}
+        <TableCellContent align="end" title={formattedPrice} />
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-volume">
-        {formattedVolume}
+        <TableCellContent align="end" title={formattedVolume} />
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-cap">
-        {formattedMarketCap}
+        <TableCellContent align="end" title={formattedMarketCap} />
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-price-change">
-        {priceChangePercentage == null ? "-" : <Trend value={priceChangePercentage} />}
+        {priceChangePercentage == null ? (
+          "-"
+        ) : Math.abs(priceChangePercentage) < 0.005 ? (
+          <span className="body-2 text-muted">0.00%</span>
+        ) : (
+          <Trend value={priceChangePercentage} />
+        )}
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME}>

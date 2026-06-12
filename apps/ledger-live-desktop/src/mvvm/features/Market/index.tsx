@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { Flex, Dropdown } from "@ledgerhq/react-ui";
+import { Subheader, SubheaderRow, SubheaderTitle } from "@ledgerhq/lumen-ui-react";
 import styled from "styled-components";
 import { useMarket } from "LLD/features/Market/hooks/useMarket";
 import TrackPage from "~/renderer/analytics/TrackPage";
@@ -141,14 +142,21 @@ export default function Market() {
       </Flex>
       <MarketTopCards />
       {shouldDisplayAssetDiscoverability && (
-        <Flex mb={3} alignItems="center" justifyContent="space-between">
-          <MarketCategoryBar categories={categories} t={t} />
-          <MarketRangeSelect
-            options={timeRangeSelectOptions}
-            value={timeRangeValue}
-            onChange={updateTimeRange}
-          />
-        </Flex>
+        <div className="flex flex-col gap-12 mb-16">
+          <Subheader>
+            <SubheaderRow>
+              <SubheaderTitle>{t("market.assetsTitle")}</SubheaderTitle>
+            </SubheaderRow>
+          </Subheader>
+          <div className="flex items-center justify-between">
+            <MarketCategoryBar categories={categories} t={t} />
+            <MarketRangeSelect
+              options={timeRangeSelectOptions}
+              value={timeRangeValue}
+              onChange={updateTimeRange}
+            />
+          </div>
+        </div>
       )}
       {shouldDisplayAssetDiscoverability ? (
         <MarketTable {...marketData} />
