@@ -71,15 +71,15 @@ export const MarketRowView = memo<MarketRowViewProps>(function MarketRowView({
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-coin-price">
-        {formattedPrice}
+        <TableCellContent align="end" title={formattedPrice} />
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-volume">
-        {formattedVolume}
+        <TableCellContent align="end" title={formattedVolume} />
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-cap">
-        {formattedMarketCap}
+        <TableCellContent align="end" title={formattedMarketCap} />
       </TableCell>
 
       <TableCell align="end" className={MARKET_CELL_CLASSNAME} data-testid="market-price-change">
