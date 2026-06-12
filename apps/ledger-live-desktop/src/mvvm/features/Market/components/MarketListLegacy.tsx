@@ -11,6 +11,7 @@ export default function MarketListLegacy(props: Readonly<MarketListLegacyProps>)
     marketData: props.marketData,
     loading: props.loading,
     currenciesLength: props.currenciesLength,
+    listKey: props.listKey,
     onLoadNextPage: props.onLoadNextPage,
     checkIfDataIsStaleAndRefetch: props.checkIfDataIsStaleAndRefetch,
   });

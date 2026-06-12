@@ -123,6 +123,20 @@ export function useMarket() {
   const loading = !isFavoritesEmpty && marketResult.isLoading;
   const isError = marketResult.isError;
   const freshLoading = loading && !currenciesLength;
+
+  // Identity of the underlying list (everything but the page cursor). When it changes the user
+  // switched list (category/sort/range/search/filter…), so pagination must re-arm and the scroll
+  // must jump back to the top. It intentionally excludes `page`, so paginating/refetching the same
+  // list does not trigger a reset.
+  const listKey = [
+    categories.selectedCategory,
+    order,
+    range,
+    effectiveCounterCurrency,
+    search,
+    String(shouldDisplayLiveCompatible),
+    String(starFilterOn),
+  ].join("|");
   // The extra row is the "show all" affordance, only relevant for the unfiltered list.
   const itemCount =
     starFilterOn || isStocksCategory || isTrendingCategory || search.length > 0
@@ -286,6 +300,7 @@ export function useMarket() {
     loading,
     isError,
     currenciesLength,
+    listKey,
     refreshRate: REFRESH_RATE,
   };
 }
