@@ -8773,7 +8773,7 @@
     "dialog": {
       "title": "Mood index",
       "content": "Shows overall market sentiment from 0 to 100, based notably on volatility, market momentum and social trends. Lower values indicate fear, higher values indicate greed.",
-      "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
+      "disclaimer": "Data is sourced from CoinMarketCap and provided for informational purposes only.",
       "cta": "Got it"
     }
   },
@@ -8781,6 +8781,7 @@
     "dialog": {
       "title": "Total market cap",
       "content": "The total market cap represents the market capitalization of all cryptocurrencies combined.",
+      "disclaimer": "Data is sourced from CoinMarketCap and provided for informational purposes only.",
       "cta": "Got it"
     }
   },
@@ -8788,7 +8789,7 @@
     "dialog": {
       "title": "Altcoin index",
       "content": "The Altcoin index shows how Bitcoin is performing compared to alternative cryptocurrencies. The higher the number, the better altcoins are doing compared to Bitcoin.",
-      "disclaimer": "Data is sourced from CoinMarketCap's Altcoin Season Index and provided for informational purposes only.",
+      "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
       "cta": "Got it"
     }
   },
