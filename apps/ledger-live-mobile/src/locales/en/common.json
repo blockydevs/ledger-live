@@ -4434,12 +4434,24 @@
         "walletNotExist": "Wallet doesn’t exist"
       },
       "skipMemo": {
-        "title": "Skip adding {{tag}}?",
-        "warning": "Your asset may be lost if a {{tag}} is required by your recipient"
+        "title": "Skip adding a {{tag}}?",
+        "warning": "Your asset may be lost if a {{tag}} is required by your recipient",
+        "notRequired": "{{tag}} not required by recipient?",
+        "confirm": "Yes, skip",
+        "neverAskAgain": "Don’t show this warning again"
       },
       "tagHelp": {
         "title": "What’s a {{tag}}?",
-        "description": "A {{tag}} is required when sending {{currency}} to a crypto exchange. It’s a feature used to identify the recipient of the transaction. Not including the {{tag}} memo may result in a loss of funds."
+        "description": "A {{tag}} is required when sending {{currency}} to a crypto exchange. It’s a feature used to identify the recipient of the transaction. Not including the {{tag}} may result in a loss of funds."
+      },
+      "memoLabel": {
+        "ripple": "Tag",
+        "casper": "Transfer ID",
+        "ton": "Comment",
+        "default": "Memo"
+      },
+      "memo": {
+        "transactionIdentifier": "Transaction identifier"
       },
       "networkFeesInFiat": "Network fees in {{currency}}",
       "feesAmount": "Fees amount ({{unit}})",

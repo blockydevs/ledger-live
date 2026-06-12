@@ -52,11 +52,13 @@ export function applyMemoToTransaction(
 
   const transaction = isRecord(memoTypeOrTransaction)
     ? memoTypeOrTransaction
-    : (currentTransaction ?? {});
+    : currentTransaction ?? {};
+
+  const value = memoValue === "" ? undefined : memoValue;
 
   const applyFn = memoApplicationRegistry[family];
   if (!applyFn) {
-    return { memo: memoValue };
+    return { memo: value };
   }
-  return applyFn(memoValue, memoType, transaction);
+  return applyFn(value, memoType, transaction);
 }
