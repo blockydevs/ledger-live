@@ -133,17 +133,42 @@ describe("Portfolio", () => {
       expect(portfolio.unavailableCurrencies).toMatchObject([getAccountCurrency(account)]);
       expect(portfolio.balanceAvailable).toBe(false);
     });
+    test("balanceAvailable should be true when the only account is empty (no rate to fetch)", () => {
+      const to = getFiatCurrencyByTicker("USD");
+      const zero = account.balance.minus(account.balance);
+      const emptyAccount: Account = {
+        ...account,
+        balance: zero,
+        spendableBalance: zero,
+        operationsCount: 0,
+        operations: [],
+        subAccounts: [],
+      };
+      const state = { ...initialState, data: {} };
+      const portfolio = getPortfolio([emptyAccount], range, state, to);
+      expect(portfolio.balanceAvailable).toBe(true);
+    });
+    test("balanceAvailable should be false when a non-empty account is still unpriced", () => {
+      const to = getFiatCurrencyByTicker("USD");
+      const zero = account.balance.minus(account.balance);
+      const emptyAccount: Account = {
+        ...account,
+        balance: zero,
+        spendableBalance: zero,
+        operationsCount: 0,
+        operations: [],
+        subAccounts: [],
+      };
+      const nonEmptyUnpriced = genAccountBitcoin("bitcoin_2");
+      const state = { ...initialState, data: {} };
+      const portfolio = getPortfolio([emptyAccount, nonEmptyUnpriced], range, state, to);
+      expect(portfolio.balanceAvailable).toBe(false);
+    });
     it("should have history identical to the account history", async () => {
       const account2 = genAccountBitcoin("bitcoin_2");
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account, account2], range, state, to);
-      const { history } = getBalanceHistoryWithCountervalue(
-        account,
-        range,
-        count,
-        state,
-        to,
-      );
+      const { history } = getBalanceHistoryWithCountervalue(account, range, count, state, to);
       const { history: history2 } = getBalanceHistoryWithCountervalue(
         account2,
         range,
@@ -156,13 +181,7 @@ describe("Portfolio", () => {
     it("should recompose partial cache", async () => {
       const account = genAccountBitcoin("bitcoin_whatever");
       const { state, to } = await loadCV(account);
-      const { history } = getBalanceHistoryWithCountervalue(
-        account,
-        "month",
-        100,
-        state,
-        to,
-      );
+      const { history } = getBalanceHistoryWithCountervalue(account, "month", 100, state, to);
       const { latestDate, balances } = account.balanceHistoryCache.DAY;
       account.balanceHistoryCache.DAY = {
         latestDate: (latestDate || 0) - 24 * 1000 * 60 * 60,
@@ -210,13 +229,7 @@ describe("Portfolio", () => {
       const account2 = genAccountBitcoin("bitcoin_2");
       const { state, to } = await loadCV(account);
       const portfolio = getCurrencyPortfolio([account, account2], range, state, to);
-      const { history } = getBalanceHistoryWithCountervalue(
-        account,
-        range,
-        count,
-        state,
-        to,
-      );
+      const { history } = getBalanceHistoryWithCountervalue(account, range, count, state, to);
       const { history: history2 } = getBalanceHistoryWithCountervalue(
         account2,
         range,
