@@ -438,7 +438,7 @@ describe("PortfolioView", () => {
         expect(screen.getByTestId("trending-assets-list")).toBeVisible();
       });
 
-      expect(screen.getByText("Explore the market")).toBeVisible();
+      expect(screen.getByText("Market")).toBeVisible();
     });
 
     it("should render MarketBanner skeleton while loading", () => {
@@ -470,7 +470,7 @@ describe("PortfolioView", () => {
 
     it("should not render MarketBanner when shouldDisplayMarketBanner is false", () => {
       render(<PortfolioView {...defaultProps} shouldDisplayMarketBanner={false} />);
-      expect(screen.queryByText("Explore the market")).toBeNull();
+      expect(screen.queryByText("Market")).toBeNull();
     });
   });
 
