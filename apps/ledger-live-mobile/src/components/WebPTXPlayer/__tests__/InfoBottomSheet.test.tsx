@@ -89,7 +89,7 @@ describe("InfoBottomSheet", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("renders inline link and opens URL when linkText and linkHref are set", async () => {
+  it("renders link and opens URL when linkText and linkHref are set", async () => {
     const { user } = render(
       <InfoBottomSheet
         data={{
@@ -110,7 +110,7 @@ describe("InfoBottomSheet", () => {
     expect(Linking.openURL).toHaveBeenCalledWith("https://example.com");
   });
 
-  it("does not render inline link when only linkText is set", () => {
+  it("does not render the link when only linkText is set", () => {
     render(
       <InfoBottomSheet
         data={{ title: "Title", message: "Message", linkText: "No href" }}
@@ -121,7 +121,7 @@ describe("InfoBottomSheet", () => {
     expect(screen.queryByText("No href")).toBeNull();
   });
 
-  it("does not render inline link when only linkHref is set", () => {
+  it("does not render the link when only linkHref is set", () => {
     render(
       <InfoBottomSheet
         data={{ title: "Title", message: "Message", linkHref: "https://example.com" }}
