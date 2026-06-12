@@ -5116,6 +5116,10 @@
           "title": "Stablecoin preset",
           "desc": "Generate Ethereum, Arbitrum, Optimism, Base, Solana, Tron and Algorand accounts with top stablecoins (max 5 per network)"
         },
+        "stocksGenerate": {
+          "title": "Stocks preset",
+          "desc": "Generate accounts with the top tokenized stocks from DADA (category=stocks) as sub-accounts under their network"
+        },
         "currencySelector": {
           "placeholder": "Choose currencies...",
           "searchPlaceholder": "Search",
@@ -5134,7 +5138,10 @@
           "generateAccountsQuick": "Generate {{count}} accounts",
           "generateEmptyAccount": "Generate empty account",
           "generateStablecoinAccounts": "Generate {{count}} stablecoin account",
-          "generateStablecoinAccounts_other": "Generate {{count}} stablecoin accounts"
+          "generateStablecoinAccounts_other": "Generate {{count}} stablecoin accounts",
+          "generateStockAccounts": "Generate {{count}} stock account",
+          "generateStockAccounts_other": "Generate {{count}} stock accounts",
+          "loadingStocks": "Loading stock data…"
         },
         "alerts": {
           "selectCurrency": "Please select at least one currency",
