@@ -7748,9 +7748,6 @@ importers:
         specifier: 'catalog:'
         version: 4.3.6
     devDependencies:
-      '@noble/curves':
-        specifier: 2.0.1
-        version: 2.0.1
       '@swc/core':
         specifier: 'catalog:'
         version: 1.15.11
@@ -7763,9 +7760,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.12.0
-      fetch-cookie:
-        specifier: 3.2.0
-        version: 3.2.0
       jest:
         specifier: 'catalog:'
         version: 30.2.0(@types/node@24.12.0)(ts-node@10.9.2(@swc/core@1.15.11)(@types/node@24.12.0)(typescript@6.0.2))
@@ -7781,9 +7775,6 @@ importers:
       rimraf:
         specifier: ^4.4.1
         version: 4.4.1
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.15.11)(@types/node@24.12.0)(typescript@6.0.2)
 
   libs/ledger-key-ring-protocol:
     dependencies:
@@ -7848,6 +7839,9 @@ importers:
       expect:
         specifier: 'catalog:'
         version: 30.2.0
+      fetch-cookie:
+        specifier: 3.2.0
+        version: 3.2.0
       jest:
         specifier: 'catalog:'
         version: 30.2.0(@types/node@24.12.0)(ts-node@10.9.2(@swc/core@1.15.11)(@types/node@24.12.0)(typescript@6.0.2))
