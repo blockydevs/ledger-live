@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext } from "react";
+import { createContext, createElement, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Category, Tool } from "@devtools/registry";
 
@@ -11,7 +11,16 @@ export interface DevToolsShellValue {
   readonly categories: CategoryGroup[];
 }
 
-const DevToolsShellContext = createContext<DevToolsShellValue>({ categories: [] });
+interface DevToolsShellContextValue extends DevToolsShellValue {
+  readonly query: string;
+  readonly setQuery: (query: string) => void;
+}
+
+const DevToolsShellContext = createContext<DevToolsShellContextValue>({
+  categories: [],
+  query: "",
+  setQuery: () => {},
+});
 
 export function DevToolsShellProvider({
   value,
@@ -20,9 +29,14 @@ export function DevToolsShellProvider({
   value: DevToolsShellValue;
   children: ReactNode;
 }) {
-  return createElement(DevToolsShellContext.Provider, { value }, children);
+  const [query, setQuery] = useState("");
+  const contextValue = useMemo<DevToolsShellContextValue>(
+    () => ({ ...value, query, setQuery }),
+    [value, query],
+  );
+  return createElement(DevToolsShellContext.Provider, { value: contextValue }, children);
 }
 
-export function useDevToolsShell(): DevToolsShellValue {
+export function useDevToolsShell(): DevToolsShellContextValue {
   return useContext(DevToolsShellContext);
 }
