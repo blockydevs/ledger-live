@@ -11,7 +11,6 @@ const mockedUseAssetSearchBar = jest.mocked(useAssetSearchBar);
 const EMPTY_SECTION = { data: [], isLoading: false };
 const EMPTY_SUGGESTIONS: SearchSuggestions = {
   cryptos: EMPTY_SECTION,
-  stablecoins: EMPTY_SECTION,
   stocks: EMPTY_SECTION,
 };
 const EMPTY_RESULTS: SearchResults = { data: [], isLoading: false };

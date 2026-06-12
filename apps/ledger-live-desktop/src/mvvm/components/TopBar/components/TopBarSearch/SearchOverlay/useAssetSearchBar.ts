@@ -7,7 +7,6 @@ import { SearchMode, SearchResults, SearchSuggestions } from "./types";
 
 export const STOCKS_SUGGESTION_LIMIT = 20;
 export const CRYPTOS_SUGGESTION_LIMIT = 3;
-export const STABLECOINS_SUGGESTION_LIMIT = 2;
 
 export const SEARCH_RESULTS_LIMIT = 10;
 
@@ -35,19 +34,11 @@ export function useAssetSearchBar() {
 
   // --- Default suggestions (top market cap + stocks), shown when the query is empty. ---
   const stocks = useStocksSectionViewModel({ limit: STOCKS_SUGGESTION_LIMIT });
-  const {
-    cryptos,
-    stablecoins,
-    isError: suggestionsAssetsError,
-  } = useAssetSuggestionsViewModel({
+  const { cryptos, isError: suggestionsAssetsError } = useAssetSuggestionsViewModel({
     cryptosLimit: CRYPTOS_SUGGESTION_LIMIT,
-    stablecoinsLimit: STABLECOINS_SUGGESTION_LIMIT,
   });
 
-  const suggestions: SearchSuggestions = useMemo(
-    () => ({ cryptos, stablecoins, stocks }),
-    [cryptos, stablecoins, stocks],
-  );
+  const suggestions: SearchSuggestions = useMemo(() => ({ cryptos, stocks }), [cryptos, stocks]);
 
   // --- Live search: a single flat list from the DADA assets search, driven by the debounced query. ---
   const search = useAssetSearchResultsViewModel({

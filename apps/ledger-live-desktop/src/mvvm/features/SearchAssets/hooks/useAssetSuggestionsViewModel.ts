@@ -10,10 +10,8 @@ import { AssetSuggestionsViewModelResult } from "../types";
 
 export function useAssetSuggestionsViewModel({
   cryptosLimit,
-  stablecoinsLimit,
 }: {
   cryptosLimit: number;
-  stablecoinsLimit: number;
 }): AssetSuggestionsViewModelResult {
   const counterCurrency = useSelector(counterValueCurrencySelector).ticker;
 
@@ -38,28 +36,23 @@ export function useAssetSuggestionsViewModel({
   const isLoading = assetsLoading || tickersLoading || (hasData && rateStatus === "loading");
   const isError = assetsError || tickersError || (hasData && rateStatus === "error");
 
-  const { cryptos, stablecoins } = useMemo(() => {
+  const cryptos = useMemo(() => {
     const cryptosData: MarketCurrencyData[] = [];
-    const stablecoinsData: MarketCurrencyData[] = [];
 
     for (const currency of mapAssetsDataToMarketCurrencies(data, rate ?? 1)) {
-      const isStablecoin = tickers.has(currency.ticker.toUpperCase());
-      const [bucket, bucketLimit] = isStablecoin
-        ? [stablecoinsData, stablecoinsLimit]
-        : [cryptosData, cryptosLimit];
-      if (bucket.length < bucketLimit) bucket.push(currency);
-      if (cryptosData.length >= cryptosLimit && stablecoinsData.length >= stablecoinsLimit) break;
+      if (tickers.has(currency.ticker.toUpperCase())) continue;
+      cryptosData.push(currency);
+      if (cryptosData.length >= cryptosLimit) break;
     }
 
-    return { cryptos: cryptosData, stablecoins: stablecoinsData };
-  }, [data, rate, tickers, cryptosLimit, stablecoinsLimit]);
+    return cryptosData;
+  }, [data, rate, tickers, cryptosLimit]);
 
   return useMemo(
     () => ({
       cryptos: { data: cryptos, isLoading },
-      stablecoins: { data: stablecoins, isLoading },
       isError,
     }),
-    [cryptos, stablecoins, isLoading, isError],
+    [cryptos, isLoading, isError],
   );
 }

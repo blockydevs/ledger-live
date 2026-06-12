@@ -15,7 +15,6 @@ export type StocksSuggestionSection = {
 
 export type SearchSuggestions = {
   cryptos: AssetSuggestionSection;
-  stablecoins: AssetSuggestionSection;
   stocks: StocksSuggestionSection;
 };
 
