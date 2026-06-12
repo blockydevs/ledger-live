@@ -95,7 +95,8 @@ jest.mock("@ledgerhq/live-common/families/cardano/react", () => ({
 }));
 
 jest.mock("~/renderer/families", () => ({
-  getLLDCoinFamily: jest.fn(() => ({})),
+  useLLDCoinFamily: jest.fn(() => ({})),
+  importLLDCoinFamily: jest.fn(() => Promise.resolve({})),
 }));
 
 jest.mock("~/renderer/modals/Send/AccountFooter", () => ({

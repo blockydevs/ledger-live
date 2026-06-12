@@ -10,6 +10,7 @@ import {
 import type { Operation } from "@ledgerhq/types-live";
 import type { TezosAccount } from "@ledgerhq/live-common/families/tezos/types";
 import { OperationDetails } from "~/renderer/drawers/OperationDetails";
+import { importLLDCoinFamily } from "~/renderer/families";
 import { AFTER_ONBOARDING_STATE } from "~/renderer/reducers/settings";
 
 setSupportedCurrencies(["tezos"]);
@@ -49,7 +50,10 @@ const renderDrawer = (account: TezosAccount) =>
 describe("Tezos OperationDetails drawer", () => {
   // Warm the module-level account-bridge promise cache: the first mount otherwise
   // suspends on the pending promise (useAccountBridge → use()) and never repaints.
+  // Preload the tezos family too, so useLLDCoinFamily resolves synchronously on
+  // first render instead of suspending with no Suspense boundary.
   beforeAll(async () => {
+    await importLLDCoinFamily("tezos");
     await getAccountBridge(makeAccount(id => makeOperation(id, "OUT")));
   });
 
