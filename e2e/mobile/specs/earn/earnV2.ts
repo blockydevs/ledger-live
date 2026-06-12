@@ -74,7 +74,7 @@ export function runColdStartTest(account: Account, tmsLinks: string[], tags: str
       await app.earnV2Dashboard.verifyColdStartPage();
       await app.earnV2Dashboard.verifyAssetReadyToEarn(account.currency.ticker);
       await app.earnV2Dashboard.clickAssetEarnCta(account.currency.ticker);
-      await app.earnV2Dashboard.verifyStakingFlowOpened(account.currency.ticker);
+      await app.earnV2Dashboard.verifyEarnFlowStarted(account.currency.ticker);
     });
   });
 }
@@ -177,8 +177,17 @@ export function runPartnerDappCTATest(
     it(`${account.currency.ticker} earn CTA -> ${providerId} provider -> dapp`, async () => {
       await navigateToEarn();
       await app.earnV2Dashboard.clickAssetEarnCta(account.currency.ticker);
-      await app.earnV2Dashboard.verifyStakingFlowOpened(account.currency.ticker);
-      await app.earnV2Dashboard.tapStakingProvider(providerId);
+      if (account.currency.ticker === "ETH") {
+        // ETH redirects into the earn deposit webview: pick an amount, choose the provider, then
+        // confirm to open the partner dapp (no native staking drawer in this flow).
+        await app.earnV2Dashboard.verifyDepositFlowVisible();
+        await app.earnV2Dashboard.completeEthDepositAmountStep("0.02");
+        await app.earnV2Dashboard.selectEthProviderInWebview(providerId);
+        await app.earnV2Dashboard.confirmEthDepositProvider();
+      } else {
+        await app.earnV2Dashboard.verifyStakingFlowOpened(account.currency.ticker);
+        await app.earnV2Dashboard.tapStakingProvider(providerId);
+      }
       await app.earnV2Dashboard.verifyPartnerDappLoaded(dappUrlSubstring);
     });
   });
@@ -240,6 +249,37 @@ export function runPositionToWithdrawalTest(account: Account, tmsLinks: string[]
       await app.earnV2Dashboard.waitForManageDrawerAndVerifyOptions(["Withdraw all", "Earn more"]);
       await app.earnV2Dashboard.tapManageDrawerOption("Withdraw all");
       await app.earnV2Dashboard.verifyWithdrawalFlowVisible();
+    });
+  });
+}
+
+// --- Inline Add Account ---
+
+export function runInlineAddAccountTest(account: Account, tmsLinks: string[], tags: string[]) {
+  describe("Earn V2 - Inline Add Account", () => {
+    beforeAll(async () => {
+      await beforeAllFunction({
+        userdata: "skip-onboarding",
+        speculosApp: account.currency.speculosApp,
+        featureFlags: EARN_V2_FLAGS,
+      });
+    });
+
+    setTeamOwner(Team.EARN);
+    tmsLinks.forEach(tmsLink => $TmsLink(tmsLink));
+    tags.forEach(tag => $Tag(tag));
+    it(`Inline Add Account [${account.currency.speculosApp.name}]`, async () => {
+      await navigateToEarn();
+      await app.earnV2Dashboard.verifyIceColdStartPage();
+      await app.earnV2Dashboard.clickIceColdStartEarnCTA();
+      await app.earnV2Dashboard.verifyModularAssetDrawerVisible();
+
+      await app.modularDrawer.performSearchByTicker(account.currency.ticker);
+      await app.modularDrawer.selectCurrencyByTicker(account.currency.ticker);
+      await app.modularDrawer.tapAddNewOrExistingAccountButtonMAD();
+      await app.addAccount.addAccountAtIndex(`${account.currency.name} 1`, account.currency.id, 0);
+
+      await app.earnV2Dashboard.verifyEarnFlowStarted(account.currency.ticker);
     });
   });
 }
