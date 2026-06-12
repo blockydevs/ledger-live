@@ -94,6 +94,7 @@ runs:
         if [ -n "${{ inputs.repeat_each }}" ]; then
           REPEAT_ARG="--repeat-each=${{ inputs.repeat_each }}"
         fi
+
         if [[ "${{ inputs.enable_asset_section }}" = "false" ]]; then
           export E2E_ENABLE_ASSET_SECTION=0
           echo "Asset Section disabled!"
