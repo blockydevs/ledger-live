@@ -11,7 +11,7 @@ import { useGlobalSearchDefaults } from "LLM/features/GlobalSearch/hooks/useGlob
 import { useGlobalSearchResults } from "LLM/features/GlobalSearch/hooks/useGlobalSearchResults";
 import type { GlobalSearchDefaultSections } from "./types";
 
-export type GlobalSearchCategory = "crypto" | "stable" | "stocks";
+export type GlobalSearchCategory = "crypto" | "stocks";
 
 const SEARCH_FLOW = "global_search";
 
@@ -63,8 +63,6 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
   const onSeeAll = useCallback(
     (category: GlobalSearchCategory) => {
       track("button_clicked", { button: "See all", page: ScreenName.GlobalSearch, category });
-
-      if (category === "stable") return;
 
       navigation.navigate(ScreenName.MarketList, {
         category: category === "stocks" ? "stocks" : "all",

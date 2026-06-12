@@ -27,7 +27,7 @@ jest.mock("LLM/features/GlobalSearch/hooks/useGlobalSearchResults");
 const mockedDefaults = jest.mocked(useGlobalSearchDefaults);
 const mockedResults = jest.mocked(useGlobalSearchResults);
 
-const EMPTY_SECTIONS = { cryptos: [], stablecoins: [], stocks: [] };
+const EMPTY_SECTIONS = { cryptos: [], stocks: [] };
 
 const resultsState = (overrides: Partial<GlobalSearchResults> = {}): GlobalSearchResults => ({
   search: "",
@@ -146,14 +146,6 @@ describe("useGlobalSearchViewModel", () => {
     act(() => result.current.onSeeAll("stocks"));
 
     expect(mockNavigate).toHaveBeenCalledWith(ScreenName.MarketList, { category: "stocks" });
-  });
-
-  it("does not navigate from the Stablecoins header (no Market category yet)", () => {
-    const { result } = renderHook(() => useGlobalSearchViewModel());
-
-    act(() => result.current.onSeeAll("stable"));
-
-    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("opens asset detail and tracks asset_clicked from a tapped result row", () => {

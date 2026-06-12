@@ -60,16 +60,6 @@ export function DefaultSections({
           onSeeAll={onSeeAll}
           onAssetPress={onAssetPress}
         />
-        <AssetRowsSection
-          title={t("globalSearch.sections.stablecoins")}
-          testID={GLOBAL_SEARCH_TEST_IDS.stablecoinsSection}
-          assets={sections.stablecoins}
-          isLoading={isLoading}
-          skeletonCount={2}
-          category="stable"
-          onSeeAll={onSeeAll}
-          onAssetPress={onAssetPress}
-        />
         <StocksSection
           title={t("globalSearch.sections.stocks")}
           testID={GLOBAL_SEARCH_TEST_IDS.stocksSection}

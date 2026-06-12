@@ -1465,7 +1465,6 @@
     "searchPlaceholder": "Search assets",
     "sections": {
       "cryptos": "Cryptos",
-      "stablecoins": "Stablecoins",
       "stocks": "Stocks"
     }
   },

@@ -36,8 +36,8 @@ const makeMarket = (id: string, rank: number) => ({
   priceChangePercentage24h: rank,
 });
 
-// 4 cryptos + 2 stablecoins (USDT/USDC), ordered by market cap.
-const assetIds = ["btc", "eth", "sol", "ada", "usdt", "usdc"];
+// Cryptos and stablecoins (USDT/USDC) interleaved, ordered by market cap.
+const assetIds = ["btc", "usdt", "eth", "usdc", "sol", "ada"];
 // 22 stocks (more than the 20 cap).
 const stockIds = Array.from({ length: 22 }, (_, i) => `stock${i}`);
 
@@ -62,22 +62,20 @@ describe("useGlobalSearchDefaults", () => {
     mockedStocks.mockReturnValue({ data: buildDadaData(stockIds), isLoading: false } as never);
   });
 
-  it("returns the top 3 cryptos, 2 stablecoins and 20 stocks", () => {
+  it("returns the top 3 cryptos and 20 stocks", () => {
     const { result } = renderHook(() => useGlobalSearchDefaults(true));
-    const { cryptos, stablecoins, stocks } = result.current.defaultSections;
+    const { cryptos, stocks } = result.current.defaultSections;
 
     expect(cryptos).toHaveLength(3);
-    expect(stablecoins).toHaveLength(2);
     expect(stocks).toHaveLength(20);
     expect(result.current.isLoadingDefaults).toBe(false);
   });
 
-  it("splits stablecoins out of the cryptos list by ticker", () => {
+  it("excludes stablecoins from the cryptos list by ticker", () => {
     const { result } = renderHook(() => useGlobalSearchDefaults(true));
-    const { cryptos, stablecoins } = result.current.defaultSections;
+    const { cryptos } = result.current.defaultSections;
 
     expect(cryptos.map(c => c.ticker)).toEqual(["BTC", "ETH", "SOL"]);
-    expect(stablecoins.map(s => s.ticker)).toEqual(["USDT", "USDC"]);
   });
 
   it("reports loading while the assets query is in flight", () => {
