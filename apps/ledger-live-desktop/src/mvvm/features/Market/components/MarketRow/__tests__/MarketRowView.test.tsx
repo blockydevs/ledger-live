@@ -76,6 +76,13 @@ describe("MarketRowView", () => {
     expect(screen.getByTestId("market-price-change")).not.toHaveTextContent("-");
   });
 
+  it("should render '0.00%' without a trend icon when priceChangePercentage is 0", () => {
+    renderRow(createProps({ priceChangePercentage: 0 }));
+    const cell = screen.getByTestId("market-price-change");
+    expect(cell).toHaveTextContent("0.00%");
+    expect(cell.querySelector("svg")).toBeNull();
+  });
+
   it("should call onCurrencyClick when the row is clicked", async () => {
     const onCurrencyClick = jest.fn();
     const { user } = renderRow(createProps({ onCurrencyClick }));
