@@ -198,6 +198,38 @@ describe("MarketBanner Integration Tests", () => {
         expect(store.getState().marketBanner.ranking).toBe("trending");
       });
     });
+
+    it("should request favorites with a valid pageSize (the /v3/markets endpoint only accepts 1/5/20/50)", async () => {
+      let favoritesPageSize: string | null = null;
+      server.use(
+        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("ids")) {
+            favoritesPageSize = url.searchParams.get("pageSize");
+          }
+          return HttpResponse.json(MOCK_MARKET_PERFORMERS);
+        }),
+      );
+
+      renderWithReactQuery(<MarketBannerTest />, {
+        overrideInitialState: state => {
+          const flagged = withFlagOverrides({
+            lwmWallet40: {
+              enabled: true,
+              params: { marketBanner: true, assetDiscoverability: true },
+            },
+          })(state);
+          return {
+            ...flagged,
+            marketBanner: { ...flagged.marketBanner, ranking: "favorites" },
+            settings: { ...flagged.settings, starredMarketCoins: ["bitcoin", "ethereum"] },
+          };
+        },
+      });
+
+      await waitFor(() => expect(favoritesPageSize).not.toBeNull());
+      expect(["1", "5", "20", "50"]).toContain(favoritesPageSize);
+    });
   });
 
   describe("Loading state", () => {
