@@ -16,7 +16,6 @@ const mockedUseStablecoinTickers = jest.mocked(useStablecoinTickers);
 const mockedUseUsdToFiatRate = jest.mocked(useUsdToFiatRate);
 
 const CRYPTOS_LIMIT = 3;
-const STABLECOINS_LIMIT = 2;
 
 type AssetDescriptor = {
   id: string;
@@ -113,29 +112,16 @@ const navigateToAsset = jest.fn();
 const navigateToMarket = jest.fn();
 
 function Harness() {
-  const { cryptos, stablecoins } = useAssetSuggestionsViewModel({
-    cryptosLimit: CRYPTOS_LIMIT,
-    stablecoinsLimit: STABLECOINS_LIMIT,
-  });
+  const { cryptos } = useAssetSuggestionsViewModel({ cryptosLimit: CRYPTOS_LIMIT });
   return (
-    <>
-      <AssetSuggestionsSection
-        {...cryptos}
-        title="Cryptos"
-        testIdPrefix="cryptos"
-        limit={CRYPTOS_LIMIT}
-        navigateToAsset={navigateToAsset}
-        onSeeAll={navigateToMarket}
-      />
-      <AssetSuggestionsSection
-        {...stablecoins}
-        title="Stablecoins"
-        testIdPrefix="stablecoins"
-        limit={STABLECOINS_LIMIT}
-        navigateToAsset={navigateToAsset}
-        onSeeAll={navigateToMarket}
-      />
-    </>
+    <AssetSuggestionsSection
+      {...cryptos}
+      title="Cryptos"
+      testIdPrefix="cryptos"
+      limit={CRYPTOS_LIMIT}
+      navigateToAsset={navigateToAsset}
+      onSeeAll={navigateToMarket}
+    />
   );
 }
 
@@ -143,17 +129,16 @@ describe("SearchAssets suggestion sections", () => {
   beforeEach(() => mockedUseUsdToFiatRate.mockReturnValue({ status: "ready", rate: 1 }));
   afterEach(() => jest.clearAllMocks());
 
-  it("shows cryptos and stablecoins skeletons simultaneously while loading", () => {
+  it("shows the cryptos skeleton while loading", () => {
     mockAssetsData({ isLoading: true });
     mockStablecoinTickers({ isLoading: true });
 
     render(<Harness />);
 
     expect(screen.getByTestId("cryptos-skeleton")).toBeVisible();
-    expect(screen.getByTestId("stablecoins-skeleton")).toBeVisible();
   });
 
-  it("splits market data into cryptos and stablecoins via the DADA tickers", () => {
+  it("excludes stablecoins from the cryptos list via the DADA tickers", () => {
     mockAssetsData({ data: [BTC, USDT, ETH] });
     mockStablecoinTickers({ tickers: ["USDT"] });
 
@@ -161,7 +146,6 @@ describe("SearchAssets suggestion sections", () => {
 
     expect(screen.getByTestId("cryptos-item-btc")).toBeVisible();
     expect(screen.getByTestId("cryptos-item-eth")).toBeVisible();
-    expect(screen.getByTestId("stablecoins-item-usdt")).toBeVisible();
     // A stablecoin must not leak into the cryptos list.
     expect(screen.queryByTestId("cryptos-item-usdt")).not.toBeInTheDocument();
   });
@@ -187,14 +171,13 @@ describe("SearchAssets suggestion sections", () => {
   });
 
   it("hides a section when it has no data", () => {
-    mockAssetsData({ data: [BTC] });
+    mockAssetsData({ data: [] });
     mockStablecoinTickers({ tickers: ["USDT"] });
 
     render(<Harness />);
 
-    expect(screen.getByTestId("cryptos-section")).toBeVisible();
-    // No stablecoins in the data → section is hidden.
-    expect(screen.queryByTestId("stablecoins-section")).not.toBeInTheDocument();
+    // No data → section is hidden.
+    expect(screen.queryByTestId("cryptos-section")).not.toBeInTheDocument();
   });
 
   it("caps each section to the requested limit", () => {
@@ -212,22 +195,5 @@ describe("SearchAssets suggestion sections", () => {
     expect(screen.getByTestId("cryptos-item-c0")).toBeVisible();
     expect(screen.getByTestId("cryptos-item-c2")).toBeVisible();
     expect(screen.queryByTestId("cryptos-item-c3")).not.toBeInTheDocument();
-  });
-
-  it("caps cryptos to 3 and stablecoins to 2", () => {
-    const stablecoins = Array.from({ length: 4 }, (_, i) => ({
-      id: `stable-${i}`,
-      name: `Stable ${i}`,
-      ticker: `S${i}`,
-      ledgerId: `stable-${i}`,
-    }));
-    mockAssetsData({ data: stablecoins });
-    mockStablecoinTickers({ tickers: ["S0", "S1", "S2", "S3"] });
-
-    render(<Harness />);
-
-    expect(screen.getByTestId("stablecoins-item-s0")).toBeVisible();
-    expect(screen.getByTestId("stablecoins-item-s1")).toBeVisible();
-    expect(screen.queryByTestId("stablecoins-item-s2")).not.toBeInTheDocument();
   });
 });
