@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Box } from "@ledgerhq/lumen-ui-rnative";
 import { Trans } from "~/context/Locale";
 import { TrackScreen } from "~/analytics";
 import ModalLock from "~/components/ModalLock";
@@ -6,6 +7,7 @@ import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { InitializerDevice } from "../types";
 import type { SourceFlow } from "../../utils/SourceFlowContext";
 import { LoadingContent } from "./LoadingContent";
+import { OverrideDeviceIntentExecutorHeader } from "../..";
 
 type LoadingStateProps = Readonly<{
   device: InitializerDevice;
@@ -29,6 +31,9 @@ export function LoadingState({ device, sourceFlow }: LoadingStateProps) {
   return (
     <>
       <ModalLock />
+      <OverrideDeviceIntentExecutorHeader>
+        <Box lx={{ height: "s64" }} />
+      </OverrideDeviceIntentExecutorHeader>
       {dwellElapsed && (
         <TrackScreen
           category={PAGE_CONNECT_APP.Loading}
