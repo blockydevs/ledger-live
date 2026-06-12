@@ -1,6 +1,5 @@
 import { renderWithReactQuery, screen } from "@tests/test-renderer";
-import { server } from "@tests/server";
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, server } from "@tests/server";
 import React from "react";
 import { ScreenName } from "~/const";
 import { State } from "~/reducers/types";
@@ -176,11 +175,11 @@ describe("LargeMoverLandingPage Integration Tests", () => {
   it("displays fiat figures in the selected app countervalue currency (GBP), not USD", async () => {
     const GBP_PRICE = 47123;
     const GBP_MARKET_CAP = 928_000_000_000;
-    let capturedTo: string | null = null;
+    const captured: { to: string | null } = { to: null };
 
     server.use(
       http.get("https://countervalues.live.ledger.com/v3/markets", ({ request }) => {
-        capturedTo = new URL(request.url).searchParams.get("to");
+        captured.to = new URL(request.url).searchParams.get("to");
 
         return HttpResponse.json([
           {
@@ -239,7 +238,7 @@ describe("LargeMoverLandingPage Integration Tests", () => {
     );
 
     expect(await screen.findByText("£47,123.00")).toBeOnTheScreen();
-    expect(capturedTo?.toLowerCase()).toBe("gbp");
+    expect(captured.to?.toLowerCase()).toBe("gbp");
   });
 
   it("displays token data when using ledgerIds parameter", async () => {

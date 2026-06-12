@@ -80,8 +80,7 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
       const currency = currencies.cryptoOrTokenCurrencies[currencyId];
 
       const transformedId = chartIds[index];
-      const marketDataEntry = marketDataArray.find(marketData => marketData.id === transformedId);
-      const marketData = marketDataEntry?.data;
+      const marketData = marketDataArray[index]?.data;
 
       if (!currency || !marketData) return [];
 
