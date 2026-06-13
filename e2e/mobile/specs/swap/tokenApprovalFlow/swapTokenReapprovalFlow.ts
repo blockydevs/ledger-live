@@ -62,8 +62,8 @@ export function runSwapTokenReapprovalFlow(
         minAmount,
         true,
       );
-      await app.swapLiveApp.selectSpecificProvider(swapProvider.uiName);
-      await app.swapLiveApp.tapExecuteSwap(swapProvider.uiName);
+      await app.swapLiveApp.selectSpecificProvider(provider.uiName);
+      await app.swapLiveApp.tapExecuteSwap(provider.uiName);
       await app.swapLiveApp.expectResetApprovalScreen();
       await app.swapLiveApp.tapRevokeApprovalButton();
       await app.send.summaryContinue();
