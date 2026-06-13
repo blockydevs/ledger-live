@@ -10,11 +10,13 @@ const HELP_LABEL = "Help";
 const RECOVER_LABEL = "[L] Recover";
 const REFER_LABEL = "Referral";
 const MY_WALLET_ROUTE = "/my-wallet";
-const RECOVER_HOME_PATH = "/recover";
 const REFER_PATH = "/refer-a-friend";
 
 const mockNavigate = jest.fn();
 const mockClose = jest.fn();
+const mockNavigateTo = jest.fn();
+const mockGoBack = jest.fn();
+const mockOnRecoverClick = jest.fn();
 
 jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
   useAccountPath: jest.fn(),
@@ -29,8 +31,16 @@ const mockUseAccountPath = jest.mocked(useAccountPath);
 const mockTrack = jest.mocked(track);
 const renderActionsList = (options?: Parameters<typeof render>[1]) =>
   render(
-    <ContextMenuContext.Provider value={{ close: mockClose }}>
-      <ActionsList />
+    <ContextMenuContext.Provider
+      value={{
+        close: mockClose,
+        view: "myWallet",
+        direction: "forward",
+        navigateTo: mockNavigateTo,
+        goBack: mockGoBack,
+      }}
+    >
+      <ActionsList onRecoverClick={mockOnRecoverClick} />
     </ContextMenuContext.Provider>,
     options,
   );
@@ -38,10 +48,8 @@ const getButton = (name: string) => screen.getByRole("button", { name });
 
 describe("ActionsList", () => {
   beforeEach(() => {
-    mockUseAccountPath.mockReturnValue(undefined);
-  });
-  afterAll(() => {
     jest.clearAllMocks();
+    mockUseAccountPath.mockReturnValue(undefined);
   });
 
   it("shows only help by default", () => {
@@ -64,6 +72,23 @@ describe("ActionsList", () => {
     expect(getButton(RECOVER_LABEL)).toBeVisible();
   });
 
+  it("fires the injected onRecoverClick callback without navigating itself", async () => {
+    const { user } = renderActionsList({
+      initialState: withFlagOverrides({
+        protectServicesDesktop: {
+          enabled: true,
+          params: { openRecoverFromSidebar: true, protectId: "protect-id" },
+        },
+      }),
+    });
+
+    await user.click(getButton(RECOVER_LABEL));
+
+    expect(mockOnRecoverClick).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockNavigateTo).not.toHaveBeenCalled();
+  });
+
   it("navigates to help settings and tracks the click", async () => {
     const { user } = renderActionsList({ initialRoute: MY_WALLET_ROUTE });
 
@@ -74,54 +99,6 @@ describe("ActionsList", () => {
       button: MY_WALLET_TRACKING_BUTTON.help,
       page: MY_WALLET_TRACKING_PAGE_NAME,
     });
-  });
-
-  it("navigates to the recover home and tracks the click", async () => {
-    mockUseAccountPath.mockReturnValue(RECOVER_HOME_PATH);
-
-    const { user } = renderActionsList({
-      initialRoute: MY_WALLET_ROUTE,
-      initialState: withFlagOverrides({
-        protectServicesDesktop: {
-          enabled: true,
-          params: {
-            openRecoverFromSidebar: true,
-            protectId: "protect-id",
-          },
-        },
-      }),
-    });
-
-    await user.click(getButton(RECOVER_LABEL));
-
-    expect(mockNavigate).toHaveBeenCalledWith(RECOVER_HOME_PATH);
-    expect(mockTrack).toHaveBeenCalledWith("button_clicked", {
-      button: MY_WALLET_TRACKING_BUTTON.recover,
-      page: MY_WALLET_TRACKING_PAGE_NAME,
-    });
-  });
-
-  it("persists hasClickedRecover in the store after the first recover click", async () => {
-    mockUseAccountPath.mockReturnValue(RECOVER_HOME_PATH);
-
-    const { user, store } = renderActionsList({
-      initialRoute: MY_WALLET_ROUTE,
-      initialState: withFlagOverrides({
-        protectServicesDesktop: {
-          enabled: true,
-          params: {
-            openRecoverFromSidebar: true,
-            protectId: "protect-id",
-          },
-        },
-      }),
-    });
-
-    expect(store.getState().settings.hasClickedRecover).toBe(false);
-
-    await user.click(getButton(RECOVER_LABEL));
-
-    expect(store.getState().settings.hasClickedRecover).toBe(true);
   });
 
   it("shows refer when the feature is enabled", () => {

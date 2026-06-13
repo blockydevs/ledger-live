@@ -30,6 +30,7 @@ import { StepProps as AddAccountsStepProps } from "../modals/AddAccounts";
 import { ModularDrawerAddAccountFlowManagerProps } from "LLD/features/AddAccountDrawer/ModularDrawerAddAccountFlowManager";
 import type { SplitAddressProps } from "../components/OperationsList/AddressCellShared";
 import type { Step } from "~/renderer/components/Stepper";
+import type { CoinModalKey } from "./modals-loaders";
 
 export type AddressCellProps<O extends Operation> = {
   operation: O;
@@ -492,6 +493,9 @@ export type LLDCoinFamily<
    * Component allowing to fully customize the add account flow in the drawer
    */
   ModularDrawerAddAccountFlowManager?: React.ComponentType<ModularDrawerAddAccountFlowManagerProps>;
+
+  /** Modal chunks to warm when this family loads, so the first open is instant. */
+  modalsToPreload?: CoinModalKey[];
 };
 
 export type FieldComponentProps<

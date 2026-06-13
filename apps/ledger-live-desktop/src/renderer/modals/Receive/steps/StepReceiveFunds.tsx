@@ -35,7 +35,7 @@ import { useDispatch, useSelector } from "LLD/hooks/redux";
 
 import { openModal } from "~/renderer/actions/modals";
 import { Device } from "@ledgerhq/live-common/hw/actions/types";
-import { getLLDCoinFamily } from "~/renderer/families";
+import { useLLDCoinFamily } from "~/renderer/families";
 import { firstValueFrom } from "rxjs";
 import { getDefaultAccountName } from "@ledgerhq/live-wallet/accountName";
 import { useMaybeAccountName } from "~/renderer/reducers/wallet";
@@ -183,6 +183,9 @@ const StepReceiveFunds = (props: StepProps) => {
   } = props;
   const dispatch = useDispatch();
   const isOnboardingReceiveFlow = useSelector(onboardingReceiveFlowSelector);
+  const specific = useLLDCoinFamily(
+    account ? getMainAccount(account, parentAccount)?.currency.family : undefined,
+  );
 
   const receiveStakingFlowConfig = useFeature("receiveStakingFlowConfigDesktop");
   const stakePrograms = useVersionedStakePrograms();
@@ -300,7 +303,6 @@ const StepReceiveFunds = (props: StepProps) => {
   ]);
 
   // custom family UI for StepReceiveFunds
-  const specific = getLLDCoinFamily(mainAccount.currency.family);
   const CustomStepReceiveFunds = specific?.StepReceiveFunds;
 
   // Families that own their confirm-address lifecycle opt out of the shared auto-trigger.

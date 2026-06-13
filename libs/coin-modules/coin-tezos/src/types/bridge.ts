@@ -1,4 +1,4 @@
-import type { Stake } from "@ledgerhq/coin-module-framework/api/index";
+import type { Stake, StakeState } from "@ledgerhq/coin-module-framework/api/index";
 import type {
   Account,
   AccountRaw,
@@ -105,7 +105,7 @@ export type StakingPositionRaw = {
   uid: string;
   address: string;
   delegate?: string;
-  state: "inactive" | "activating" | "active" | "deactivating";
+  state: StakeState;
   amount: string;
   createdAt?: string;
 };

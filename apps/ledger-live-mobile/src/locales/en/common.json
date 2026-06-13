@@ -1338,6 +1338,9 @@
     }
   },
   "earn": {
+    "simulator": {
+      "title": "Rewards simulator"
+    },
     "deposit": {
       "protocolInfoModal": {
         "title": "To choose a protocol, here’s a few things to bear in mind:",
@@ -1462,7 +1465,6 @@
     "searchPlaceholder": "Search assets",
     "sections": {
       "cryptos": "Cryptos",
-      "stablecoins": "Stablecoins",
       "stocks": "Stocks"
     }
   },
@@ -3695,9 +3697,11 @@
           "campaignId": "Campaign ID",
           "titleField": "Title",
           "subtitle": "Subtitle",
-          "imageUrl": "Image URL",
+          "imageUrlLight": "Image URL (light)",
+          "imageUrlDark": "Image URL (dark)",
           "primaryButtonLabel": "Primary button label",
           "primaryButtonLink": "Primary button link",
+          "navigationButtonLabel": "Navigation button label (Continue/Close)",
           "secondaryButtonLabel": "Secondary button label",
           "secondaryButtonLink": "Secondary button link",
           "icon": "Icon",
@@ -4431,12 +4435,24 @@
         "walletNotExist": "Wallet doesn’t exist"
       },
       "skipMemo": {
-        "title": "Skip adding {{tag}}?",
-        "warning": "Your asset may be lost if a {{tag}} is required by your recipient"
+        "title": "Skip adding a {{tag}}?",
+        "warning": "Your asset may be lost if a {{tag}} is required by your recipient",
+        "notRequired": "{{tag}} not required by recipient?",
+        "confirm": "Yes, skip",
+        "neverAskAgain": "Don’t show this warning again"
       },
       "tagHelp": {
         "title": "What’s a {{tag}}?",
-        "description": "A {{tag}} is required when sending {{currency}} to a crypto exchange. It’s a feature used to identify the recipient of the transaction. Not including the {{tag}} memo may result in a loss of funds."
+        "description": "A {{tag}} is required when sending {{currency}} to a crypto exchange. It’s a feature used to identify the recipient of the transaction. Not including the {{tag}} may result in a loss of funds."
+      },
+      "memoLabel": {
+        "ripple": "Tag",
+        "casper": "Transfer ID",
+        "ton": "Comment",
+        "default": "Memo"
+      },
+      "memo": {
+        "transactionIdentifier": "Transaction identifier"
       },
       "networkFeesInFiat": "Network fees in {{currency}}",
       "feesAmount": "Fees amount ({{unit}})",
@@ -4478,7 +4494,8 @@
         "networkFeesInFiat": "Network fees in {{currency}}",
         "invalidValue": "Enter a valid number",
         "belowMinimum": "Minimum is {{min}}",
-        "maxFeeBelowPriorityFee": "Max fee must be greater than or equal to max priority fee"
+        "maxFeeBelowPriorityFee": "Max fee must be greater than or equal to max priority fee",
+        "payFeesIn": "Pay fees in"
       },
       "coinControl": {
         "title": "Coin control",
@@ -8708,7 +8725,11 @@
     "tabs": {
       "crypto": "Crypto",
       "stablecoins": "Stablecoins",
+      "stocks": "Stocks",
       "market": "Market"
+    },
+    "stocks": {
+      "exploreAll": "Explore All"
     },
     "referralProgram": "$20"
   },

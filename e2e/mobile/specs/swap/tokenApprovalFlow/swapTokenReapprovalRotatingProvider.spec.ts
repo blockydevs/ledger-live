@@ -10,7 +10,7 @@ const eligibleProviders = [
 ];
 
 const swapTokenReapprovalFlowTestConfig = {
-  fromAccount: TokenAccount.ETH_USDC_1,
+  fromAccount: TokenAccount.ETH_USDT_1,
   toAccount: Account.ETH_1,
   providers: eligibleProviders,
   tmsLinks: ["B2CQA-4012"],

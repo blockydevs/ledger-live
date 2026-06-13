@@ -317,6 +317,7 @@ export enum SettingsActionTypes {
   REMOVE_STARRED_MARKET_COINS = "REMOVE_STARRED_MARKET_COINS",
   SET_HAS_SEEN_WALLET_V4_TOUR = "SET_HAS_SEEN_WALLET_V4_TOUR",
   SET_PRODUCT_TOUR_COMPLETED = "SET_PRODUCT_TOUR_COMPLETED",
+  SET_DO_NOT_ASK_AGAIN_SKIP_MEMO = "SET_DO_NOT_ASK_AGAIN_SKIP_MEMO",
   DEPRECATION_DO_NOT_REMIND = "DEPRECATION_DO_NOT_REMIND",
   SET_ANALYTICS_CONSENT_INFO = "SET_ANALYTICS_CONSENT_INFO",
   SET_HAS_CLICKED_RECOVER = "SET_HAS_CLICKED_RECOVER",
@@ -402,6 +403,7 @@ export type SettingsSetSupportedCounterValues = SettingsState["supportedCounterV
 export type SettingsSetHasSeenAnalyticsOptInPrompt = SettingsState["hasSeenAnalyticsOptInPrompt"];
 export type SettingsSetAnalyticsConsentInfoPayload = SettingsState["analyticsConsentInfo"];
 export type SettingsSetHasSeenWalletV4TourPayload = SettingsState["hasSeenWalletV4Tour"];
+export type SettingsSetDoNotAskAgainSkipMemoPayload = SettingsState["doNotAskAgainSkipMemo"];
 export type SettingsSetProductTourCompletedPayload = SettingsState["productTourCompleted"];
 export type SettingsSetDismissedContentCardsPayload = SettingsState["dismissedContentCards"];
 export type SettingsClearDismissedContentCardsPayload = string[];
@@ -470,6 +472,7 @@ export type SettingsPayload =
   | SettingsAddStarredMarketcoinsPayload
   | SettingsRemoveStarredMarketcoinsPayload
   | SettingsSetHasSeenWalletV4TourPayload
+  | SettingsSetDoNotAskAgainSkipMemoPayload
   | SettingsSetProductTourCompletedPayload
   | SettingsSetHasClickedRecoverPayload;
 

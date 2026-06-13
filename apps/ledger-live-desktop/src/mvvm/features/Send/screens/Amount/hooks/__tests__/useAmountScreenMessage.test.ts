@@ -46,6 +46,7 @@ describe("useAmountScreenMessage", () => {
     expect(result.current.amountMessage).toEqual({
       type: "error",
       text: "DustLimit",
+      error: dustLimitError,
     });
   });
 
@@ -66,6 +67,7 @@ describe("useAmountScreenMessage", () => {
     expect(result.current.amountMessage).toEqual({
       type: "info",
       text: "FeeTooHigh",
+      error: feeTooHigh,
     });
   });
 });

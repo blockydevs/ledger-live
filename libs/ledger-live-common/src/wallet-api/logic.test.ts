@@ -40,7 +40,6 @@ jest.mock("../hw/signMessage/index", () => ({
 import { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { TrackingAPI } from "./tracking";
 import { cryptocurrenciesById } from "@ledgerhq/cryptoassets/currencies";
-import { setSupportedCurrencies } from "../currencies";
 import { initialState as walletState } from "@ledgerhq/live-wallet/store";
 import { setupMockCryptoAssetsStore } from "@ledgerhq/cryptoassets/cal-client/test-helpers";
 
@@ -188,13 +187,6 @@ describe("completeExchangeLogic", () => {
   });
 
   const uiNavigation = jest.fn();
-  beforeAll(() => {
-    setSupportedCurrencies(["bitcoin", "ethereum"]);
-  });
-  afterAll(() => {
-    setSupportedCurrencies([]);
-  });
-
   beforeEach(() => {
     mockWalletAPICompleteExchangeRequested.mockClear();
     uiNavigation.mockClear();

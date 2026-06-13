@@ -300,6 +300,7 @@ export type SettingsState = {
   selectedTabPortfolioAssets: TabPortfolioAssetsType;
   hasSeenWalletV4Tour: boolean;
   productTourCompleted: boolean;
+  doNotAskAgainSkipMemo: boolean;
   deprecationDoNotRemind: string[];
   analyticsConsentInfo: AnalyticsConsentInfo;
   hasClickedRecover: boolean;
