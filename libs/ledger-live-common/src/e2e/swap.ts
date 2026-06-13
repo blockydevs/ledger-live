@@ -19,7 +19,6 @@ const PROVIDERS_WHITELIST =
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const ONE_WEEK_MS = ONE_DAY_MS * 7;
 const MONDAY_EPOCH_UTC_MS = Date.UTC(2024, 0, 1);
-const WEEK_INDEX = Math.floor((Date.now() - MONDAY_EPOCH_UTC_MS) / ONE_WEEK_MS);
 
 type QuoteErrorItem = {
   parameter?: { minAmount?: string };
@@ -209,7 +208,8 @@ export async function pickRotatingProvider(
   // Deterministic weekly slot over the eligible list; walk forward to the next
   // healthy provider only when the scheduled one(s) is down.
   const isRunning = runningProviders.map(p => p.name);
-  const scheduledIndex = WEEK_INDEX % eligibleProviders.length;
+  const weekIndex = Math.floor((Date.now() - MONDAY_EPOCH_UTC_MS) / ONE_WEEK_MS);
+  const scheduledIndex = weekIndex % eligibleProviders.length;
   for (let offset = 0; offset < eligibleProviders.length; offset++) {
     const candidate = eligibleProviders[(scheduledIndex + offset) % eligibleProviders.length];
     if (isRunning.includes(candidate.name)) {
