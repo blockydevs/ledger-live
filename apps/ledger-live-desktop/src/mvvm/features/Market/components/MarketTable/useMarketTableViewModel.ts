@@ -16,6 +16,7 @@ export type MarketTableData = {
   loading: boolean;
   currenciesLength: number;
   itemCount: number;
+  listKey: string;
   emptyState?: "favorites";
   starredMarketCoins: string[];
   resetSearch: () => void;
@@ -45,6 +46,7 @@ export function useMarketTableViewModel({
   loading,
   currenciesLength,
   itemCount,
+  listKey,
   emptyState,
   starredMarketCoins,
   resetSearch,
@@ -61,6 +63,7 @@ export function useMarketTableViewModel({
     marketData,
     loading,
     currenciesLength,
+    listKey,
     onLoadNextPage,
     checkIfDataIsStaleAndRefetch,
   });

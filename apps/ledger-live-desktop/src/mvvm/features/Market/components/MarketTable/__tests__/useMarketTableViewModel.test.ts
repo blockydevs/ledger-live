@@ -24,6 +24,7 @@ function createData(overrides: Partial<MarketTableData> = {}): MarketTableData {
     loading: false,
     currenciesLength: MOCK_MARKET_CURRENCY_DATA.length,
     itemCount: MOCK_MARKET_CURRENCY_DATA.length,
+    listKey: "all",
     starredMarketCoins: ["bitcoin"],
     resetSearch: jest.fn(),
     refresh: jest.fn(),
