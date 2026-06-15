@@ -32,10 +32,9 @@ export function InfoBottomSheet({ data, onClose }: InfoBottomSheetProps) {
         <Text typography="heading3SemiBold" lx={{ color: "base", marginBottom: "s12" }}>
           {title}
         </Text>
-        <Text
-          typography="body1"
-          lx={{ color: "base", marginBottom: showLink ? "s16" : "s24" }}
-        >
+        <Text typography="body1" lx={{ color: "base", marginBottom: showLink ? "s16" : "s24" }}>
+          ||||||| parent of f3bfa8067dc (fix: migrate celo operationDetails fixtures and solana JSON
+          fixture to parentCurrencyId)
           {message}
         </Text>
         {showLink ? (

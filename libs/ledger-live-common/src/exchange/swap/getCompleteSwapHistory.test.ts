@@ -17,7 +17,7 @@ const makeTokenCurrency = (id: string): TokenCurrency => ({
   name: "Mock Token",
   ticker: "MTK",
   contractAddress: "0x0000000000000000000000000000000000000001",
-  parentCurrency: ethereum,
+  parentCurrencyId: "ethereum",
   tokenType: "erc20",
   units: [{ name: "MTK", code: "MTK", magnitude: 18 }],
 });

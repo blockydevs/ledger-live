@@ -60,7 +60,7 @@ const makeTokenAccount = (id: string): TokenAccount =>
       type: "TokenCurrency",
       id: `ethereum/erc20/${id}`,
       contractAddress: "0x0000000000000000000000000000000000000001",
-      parentCurrency: mockEthCurrency,
+      parentCurrencyId: mockEthCurrency.id,
       tokenType: "erc20",
       name: id,
       ticker: id.toUpperCase(),

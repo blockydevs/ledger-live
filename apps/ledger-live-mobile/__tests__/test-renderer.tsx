@@ -382,9 +382,7 @@ const customRenderHook = <Result,>(
     overrideInitialState,
   });
   const ProvidersWrapper = ({ children }: WrapperProps): React.JSX.Element => {
-    const inner = innerWrapper
-      ? React.createElement(innerWrapper, undefined, children)
-      : children;
+    const inner = innerWrapper ? React.createElement(innerWrapper, undefined, children) : children;
     return (
       <Providers store={store} renderType={RenderType.HOOK}>
         {inner}

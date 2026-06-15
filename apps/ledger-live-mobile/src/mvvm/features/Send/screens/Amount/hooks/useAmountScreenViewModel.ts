@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { BigNumber } from "bignumber.js";
 import { useTranslation } from "~/context/Locale";
 import type { Account, AccountLike } from "@ledgerhq/types-live";
@@ -129,14 +130,43 @@ export function useAmountScreenViewModel({
     onSelectMax: handleSelectMax,
   });
 
-  const amountMessage: AmountScreenMessage | null = useMemo(
-    () => getAmountScreenRawMessage({ status, hasRawAmount }),
-    [hasRawAmount, status],
-  );
-  const isAmountInputDisabled = useMemo(
-    () => isAmountInputDisabledByRecipientError(status),
-    [status],
-  );
+  const amountError = status.errors?.amount;
+  const amountWarningRaw = status.warnings?.amount ?? status.warnings?.feeTooHigh;
+  const recipientErrorRaw = getStatusError(status.errors, "recipient");
+  const otherBlockingErrorRaw = useMemo(() => {
+    const candidate = pickBlockingError(status.errors);
+    return candidate?.name === "AmountRequired" ? undefined : candidate;
+  }, [status.errors]);
+
+  const isAmountRequiredError = status.errors?.amount?.name === "AmountRequired";
+
+  const isFeeTooHigh =
+    status.warnings?.amount?.name === "FeeTooHigh" ||
+    status.warnings?.feeTooHigh?.name === "FeeTooHigh";
+
+  const cryptoCurrency =
+    accountCurrency.type === "TokenCurrency"
+      ? getCryptoCurrencyById(accountCurrency.parentCurrencyId)
+      : accountCurrency;
+
+  const isStellarMultisignBlocked =
+    cryptoCurrency?.family === "stellar" && recipientErrorRaw?.name === "StellarSourceHasMultiSign";
+
+  const amountMessage: AmountScreenMessage | null = (() => {
+    if (isStellarMultisignBlocked && recipientErrorRaw) {
+      return { type: "error", error: recipientErrorRaw };
+    }
+    if (amountError && !isAmountRequiredError && hasRawAmount) {
+      return { type: "error", error: amountError };
+    }
+    if (otherBlockingErrorRaw && hasRawAmount) {
+      return { type: "error", error: otherBlockingErrorRaw };
+    }
+    if (amountWarningRaw && hasRawAmount) {
+      return { type: isFeeTooHigh ? "info" : "warning", error: amountWarningRaw };
+    }
+    return null;
+  })();
 
   const reviewDisabled = coreReviewDisabled || amountInput.isTyping;
 

@@ -15,7 +15,7 @@ const mockToken = {
   ticker: "USDC",
   name: "USD Coin",
   units: [mockUnit],
-  parentCurrency: { id: "ethereum", type: "CryptoCurrency" },
+  parentCurrencyId: "ethereum",
 } as unknown as TokenAccount["token"];
 const mockSubAccount: TokenAccount = {
   type: "TokenAccount",
