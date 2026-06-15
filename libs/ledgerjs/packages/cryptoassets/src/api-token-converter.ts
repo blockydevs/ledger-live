@@ -21,7 +21,6 @@ export interface ApiTokenData {
  * This function applies client-side transformations to reconcile differences between
  * backend APIs (CAL/DaDa) and Ledger Live's expected token format:
  *
- * - Cardano: Reconstructs contractAddress from policyId + tokenIdentifier [LIVE-22559]
  * - Sui: Transforms tokenType from "coin" to "sui" [LIVE-22560]
  *
  * @param apiToken - Token data from backend API
@@ -36,12 +35,10 @@ export function convertApiToken(apiToken: ApiTokenData): TokenCurrency | undefin
     ticker,
     units,
     delisted = false,
-    tokenIdentifier,
     ledgerSignature,
   } = apiToken;
 
   // Apply client-side patches to reconcile CAL format with LL format
-  let patchedContractAddress = contractAddress;
   let patchedStandard = standard;
 
   const parentCurrencyId = id.split("/")[0];
@@ -49,11 +46,6 @@ export function convertApiToken(apiToken: ApiTokenData): TokenCurrency | undefin
 
   if (!parentCurrency) {
     return undefined;
-  }
-
-  // LIVE-22559: Cardano - Reconstruct full assetId (policyId + assetName)
-  if (standard === "native" && tokenIdentifier) {
-    patchedContractAddress = contractAddress + tokenIdentifier;
   }
 
   // LIVE-22560: Sui - Transform "coin" standard to "sui" tokenType (LL format)
@@ -65,7 +57,7 @@ export function convertApiToken(apiToken: ApiTokenData): TokenCurrency | undefin
   const tokenCurrency: TokenCurrency = {
     type: "TokenCurrency",
     id,
-    contractAddress: patchedContractAddress,
+    contractAddress: contractAddress,
     parentCurrency,
     tokenType: patchedStandard,
     name,

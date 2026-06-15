@@ -2,23 +2,6 @@ import { convertApiToken, type ApiTokenData } from "./api-token-converter";
 
 describe("convertApiToken", () => {
   describe("Cardano transformation", () => {
-    it("should reconstruct contractAddress from policyId + tokenIdentifier", () => {
-      const apiToken: ApiTokenData = {
-        id: "cardano/native/policyId.assetName",
-        contractAddress: "policyId",
-        name: "Test Token",
-        ticker: "TEST",
-        units: [{ code: "TEST", name: "Test Token", magnitude: 6 }],
-        standard: "native",
-        tokenIdentifier: ".assetName",
-      };
-
-      const result = convertApiToken(apiToken);
-
-      expect(result?.contractAddress).toBe("policyId.assetName");
-      expect(result?.tokenType).toBe("native");
-    });
-
     it("should not reconstruct if tokenIdentifier is missing", () => {
       const apiToken: ApiTokenData = {
         id: "cardano/native/policyId",
