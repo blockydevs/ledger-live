@@ -205,9 +205,9 @@ export function MarketAssetsList({
   const listHeader =
     header || showSubheader ? (
       <Box lx={headerStyle}>
-        {header}
+        {header ? <Box lx={highlightsStyle}>{header}</Box> : null}
         {showSubheader ? (
-          <>
+          <Box lx={subHeaderGroupStyle}>
             <Subheader lx={subHeaderStyle} testID={MARKET_SCREEN_TEST_IDS.assetsSubHeader}>
               <SubheaderRow lx={subHeaderRowStyle}>
                 <SubheaderTitle>{t("market.assets.title")}</SubheaderTitle>
@@ -226,7 +226,7 @@ export function MarketAssetsList({
               tabs={categoryTabs}
               onSelectCategory={onSelectCategory}
             />
-          </>
+          </Box>
         ) : null}
       </Box>
     ) : null;
@@ -268,7 +268,14 @@ export function MarketAssetsList({
 
 const headerStyle: LumenViewStyle = {
   marginHorizontal: "-s16",
-  paddingTop: "s24",
+};
+
+const highlightsStyle: LumenViewStyle = {
+  marginTop: "s16",
+  marginBottom: "s16",
+};
+
+const subHeaderGroupStyle: LumenViewStyle = {
   gap: "s12",
 };
 
