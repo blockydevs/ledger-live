@@ -7,7 +7,7 @@ import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { InitializerDevice } from "../types";
 import type { SourceFlow } from "../../utils/SourceFlowContext";
 import { LoadingContent } from "./LoadingContent";
-import { OverrideDeviceIntentExecutorHeader } from "../..";
+import { OverrideDeviceIntentExecutorHeader } from "../../components/OverrideDeviceIntentExecutorHeader";
 
 type InstallingAppStateProps = Readonly<{
   device: InitializerDevice;

@@ -6,7 +6,7 @@ import { TrackScreen } from "~/analytics";
 import ModalLock from "~/components/ModalLock";
 import { PAGE_CONNECT_APP } from "../../utils/trackDeviceIntent";
 import type { BaseInitializerStateProps } from "../types";
-import { OverrideDeviceIntentExecutorHeader } from "../..";
+import { OverrideDeviceIntentExecutorHeader } from "../../components/OverrideDeviceIntentExecutorHeader";
 
 type AllowSecureConnectionStateProps = BaseInitializerStateProps<
   Extract<EnsureAppReadyState, { type: DeviceInteractionRequiredType.AllowSecureConnection }>
