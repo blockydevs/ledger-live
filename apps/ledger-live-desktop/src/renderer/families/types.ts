@@ -144,6 +144,26 @@ export type LLDCoinFamily<
     getAmount?: (operation: O) => BigNumber;
 
     /**
+     * Override the currency used to display operation fees in the details drawer
+     * (e.g. Celo CIP-64 fees paid in a non-native token). Called during render
+     * and may invoke React hooks; return undefined to fall back to
+     * `getFeesCurrency(mainAccount)`.
+     */
+    useFeesCurrency?: (operation: O, account: A) => CryptoCurrency | TokenCurrency | undefined;
+
+    /**
+     * Override the raw fee value when the on-chain magnitude differs from the
+     * fee currency's native unit (e.g. Celo CIP-64 stores fees in 18-decimal
+     * normalized units regardless of token decimals). Return undefined to fall
+     * back to `operation.fee`.
+     */
+    getDisplayFee?: (
+      operation: O,
+      account: A,
+      currency: CryptoCurrency | TokenCurrency,
+    ) => BigNumber | undefined;
+
+    /**
      * Change operation first cell (mostly icons)
      */
     confirmationCell?: Partial<
