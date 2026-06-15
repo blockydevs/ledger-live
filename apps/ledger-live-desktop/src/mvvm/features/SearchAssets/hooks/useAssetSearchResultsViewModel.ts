@@ -9,19 +9,22 @@ import { mapAssetsDataToMarketCurrencies } from "../utils/mapAssetsDataToMarketC
 type Params = {
   search?: string;
   skip?: boolean;
-  limit: number;
+  limit?: number;
 };
 
 type Result = {
   data: MarketCurrencyData[];
   isLoading: boolean;
   isError: boolean;
+  loadNext?: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
 };
 
 export function useAssetSearchResultsViewModel({ search, skip, limit }: Params): Result {
   const counterCurrency = useSelector(counterValueCurrencySelector).ticker;
 
-  const { data, isLoading, isError } = useAssetsData({
+  const { data, isLoading, isError, loadNext, isFetchingNextPage } = useAssetsData({
     product: "lld",
     version: __APP_VERSION__,
     search,
@@ -30,10 +33,10 @@ export function useAssetSearchResultsViewModel({ search, skip, limit }: Params):
 
   const { status: rateStatus, rate } = useUsdToFiatRate(counterCurrency);
 
-  const results = useMemo<MarketCurrencyData[]>(
-    () => mapAssetsDataToMarketCurrencies(data, rate ?? 1).slice(0, limit),
-    [data, rate, limit],
-  );
+  const results = useMemo<MarketCurrencyData[]>(() => {
+    const mapped = mapAssetsDataToMarketCurrencies(data, rate ?? 1);
+    return limit === undefined ? mapped : mapped.slice(0, limit);
+  }, [data, rate, limit]);
 
   const hasData = !!data;
 
@@ -42,7 +45,10 @@ export function useAssetSearchResultsViewModel({ search, skip, limit }: Params):
       data: results,
       isLoading: isLoading || (hasData && rateStatus === "loading"),
       isError: isError || (hasData && rateStatus === "error"),
+      loadNext,
+      hasNextPage: !!loadNext,
+      isFetchingNextPage,
     }),
-    [results, isLoading, isError, hasData, rateStatus],
+    [results, isLoading, isError, hasData, rateStatus, loadNext, isFetchingNextPage],
   );
 }
