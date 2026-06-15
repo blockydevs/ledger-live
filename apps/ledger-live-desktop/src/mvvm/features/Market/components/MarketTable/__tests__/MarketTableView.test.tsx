@@ -28,8 +28,10 @@ function createProps(overrides: Partial<MarketTableViewProps> = {}): MarketTable
     toggleStar: jest.fn(),
     marketCapSort: "desc",
     changeSort: undefined,
+    volumeSort: undefined,
     onToggleMarketCap: jest.fn(),
     onToggleChange: jest.fn(),
+    onToggleVolume: jest.fn(),
     t: mockT,
     ...overrides,
   };

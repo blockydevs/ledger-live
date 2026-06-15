@@ -17,16 +17,20 @@ export type SortDirection = "asc" | "desc" | undefined;
 type MarketTableHeaderProps = {
   marketCapSort: SortDirection;
   changeSort: SortDirection;
+  volumeSort: SortDirection;
   onToggleMarketCap: () => void;
   onToggleChange: () => void;
+  onToggleVolume: () => void;
   t: TFunction;
 };
 
 export const MarketTableHeader = memo<MarketTableHeaderProps>(function MarketTableHeader({
   marketCapSort,
   changeSort,
+  volumeSort,
   onToggleMarketCap,
   onToggleChange,
+  onToggleVolume,
   t,
 }) {
   return (
@@ -43,7 +47,12 @@ export const MarketTableHeader = memo<MarketTableHeaderProps>(function MarketTab
           {t("market.marketTable.price")}
         </TableHeaderCell>
         <TableHeaderCell align="end" className={MARKET_HEADER_CELL_END_CLASSNAME}>
-          <TableSortButton align="end" data-testid="market-sort-volume">
+          <TableSortButton
+            align="end"
+            sortDirection={volumeSort}
+            onToggleSort={onToggleVolume}
+            data-testid="market-sort-volume"
+          >
             {t("market.marketTable.volume")}
           </TableSortButton>
         </TableHeaderCell>

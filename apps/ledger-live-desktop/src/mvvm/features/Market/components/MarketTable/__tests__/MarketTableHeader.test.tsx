@@ -9,8 +9,10 @@ function createProps(overrides: Partial<HeaderProps> = {}): HeaderProps {
   return {
     marketCapSort: "desc",
     changeSort: undefined,
+    volumeSort: undefined,
     onToggleMarketCap: jest.fn(),
     onToggleChange: jest.fn(),
+    onToggleVolume: jest.fn(),
     t: mockT,
     ...overrides,
   };
@@ -45,5 +47,13 @@ describe("MarketTableHeader", () => {
 
     await user.click(screen.getByTestId("market-sort-change"));
     expect(onToggleChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call onToggleVolume when the volume sort button is clicked", async () => {
+    const onToggleVolume = jest.fn();
+    const { user } = renderHeader(createProps({ onToggleVolume }));
+
+    await user.click(screen.getByTestId("market-sort-volume"));
+    expect(onToggleVolume).toHaveBeenCalledTimes(1);
   });
 });

@@ -30,8 +30,10 @@ export type MarketTableViewProps = {
   toggleStar: (id: string, isStarred: boolean) => void;
   marketCapSort: SortDirection;
   changeSort: SortDirection;
+  volumeSort: SortDirection;
   onToggleMarketCap: () => void;
   onToggleChange: () => void;
+  onToggleVolume: () => void;
   t: TFunction;
 };
 
@@ -52,8 +54,10 @@ export function MarketTableView({
   toggleStar,
   marketCapSort,
   changeSort,
+  volumeSort,
   onToggleMarketCap,
   onToggleChange,
+  onToggleVolume,
   t,
 }: Readonly<MarketTableViewProps>) {
   if (emptyState === "favorites") {
@@ -76,8 +80,10 @@ export function MarketTableView({
             <MarketTableHeader
               marketCapSort={marketCapSort}
               changeSort={changeSort}
+              volumeSort={volumeSort}
               onToggleMarketCap={onToggleMarketCap}
               onToggleChange={onToggleChange}
+              onToggleVolume={onToggleVolume}
               t={t}
             />
           </Table>

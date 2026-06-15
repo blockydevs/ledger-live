@@ -77,9 +77,14 @@ export function useMarketTableViewModel({
     () => onSort(order === Order.topGainers ? Order.topLosers : Order.topGainers),
     [onSort, order],
   );
+  const onToggleVolume = useCallback(
+    () => onSort(order === Order.VolumeDesc ? Order.VolumeAsc : Order.VolumeDesc),
+    [onSort, order],
+  );
 
   const marketCapSort = getSortDirection(order, Order.MarketCapDesc, Order.MarketCapAsc);
   const changeSort = getSortDirection(order, Order.topGainers, Order.topLosers);
+  const volumeSort = getSortDirection(order, Order.VolumeDesc, Order.VolumeAsc);
 
   return {
     parentRef,
@@ -98,8 +103,10 @@ export function useMarketTableViewModel({
     toggleStar,
     marketCapSort,
     changeSort,
+    volumeSort,
     onToggleMarketCap,
     onToggleChange,
+    onToggleVolume,
     t,
   };
 }
