@@ -1,9 +1,12 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { track } from "~/renderer/analytics/segment";
 import { openURL } from "~/renderer/linking";
 import { urls } from "~/config/urls";
 import { useLocalizedUrl } from "~/renderer/hooks/useLocalizedUrls";
-import { useRecoverBannerState } from "~/renderer/hooks/useRecoverBannerState";
+import {
+  DEFAULT_PROTECT_ID,
+  useRecoverBannerState,
+} from "~/renderer/hooks/useRecoverBannerState";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { getBackupBucket } from "./utils/getBackupBucket";
 import {
@@ -15,8 +18,6 @@ import {
 import type { BackupBucket, PhysicalRowId } from "./types";
 import recoveryKeyImage from "./assets/recovery-key.webp";
 import secretRecoveryPhraseImage from "./assets/24-words.webp";
-
-const DEFAULT_PROTECT_ID = "protect-prod";
 
 export type BackupHubParams = {
   onBack: () => void;
@@ -45,6 +46,10 @@ export function useBackupHubViewModel({ onBack, onClose }: BackupHubParams): Bac
 
   const recoveryKeyUrl = useLocalizedUrl(urls.backupHub.recoveryKey);
   const secretRecoveryPhraseUrl = useLocalizedUrl(urls.backupHub.secretRecoveryPhrase);
+
+  useEffect(() => {
+    track("page_viewed", { page: BACKUP_HUB_TRACKING_PAGE_NAME });
+  }, []);
 
   const handleBack = useCallback(() => {
     track("button_clicked", {

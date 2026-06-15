@@ -9188,6 +9188,7 @@
     "actionsList": {
       "help": "Help",
       "recover": "[L] Recover",
+      "backup": "Backup",
       "refer": "Referral"
     },
     "backupHub": {
@@ -9201,17 +9202,17 @@
       "recover": {
         "title": "Ledger Recover",
         "notSubscribed": "Create a backup you can't lose",
-        "inProgress": "Finish setting up your backup.",
+        "inProgress": "Complete activation",
         "done": "Manage your backup",
         "discover": "Discover"
       },
       "recoveryKey": {
-        "title": "Recovery Key",
-        "description": "PIN-protected smart card"
+        "title": "Ledger Recovery Key",
+        "description": "A PIN-protected smart card"
       },
       "secretRecoveryPhrase": {
-        "title": "24-word accessories",
-        "description": "Protect against fire"
+        "title": "24-word metal storage",
+        "description": "Fire and water resistant protection."
       }
     },
     "myLedger": {

@@ -53,7 +53,7 @@ describe("useMenuViewModel", () => {
     expect(mockOpenRecover).not.toHaveBeenCalled();
     expect(mockClose).not.toHaveBeenCalled();
     expect(mockTrack).toHaveBeenCalledWith("button_clicked", {
-      button: MY_WALLET_TRACKING_BUTTON.recover,
+      button: MY_WALLET_TRACKING_BUTTON.backup,
       page: MY_WALLET_TRACKING_PAGE_NAME,
     });
   });

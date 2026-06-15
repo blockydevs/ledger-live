@@ -17,7 +17,9 @@ export function useMenuViewModel(): MenuViewModel {
 
   const onRecoverClick = useCallback(() => {
     track("button_clicked", {
-      button: MY_WALLET_TRACKING_BUTTON.recover,
+      button: isBackupHubEnabled
+        ? MY_WALLET_TRACKING_BUTTON.backup
+        : MY_WALLET_TRACKING_BUTTON.recover,
       page: MY_WALLET_TRACKING_PAGE_NAME,
     });
 

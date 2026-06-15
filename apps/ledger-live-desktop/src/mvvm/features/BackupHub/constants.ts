@@ -1,4 +1,4 @@
-export const BACKUP_HUB_TRACKING_PAGE_NAME = "Backup Hub";
+export const BACKUP_HUB_TRACKING_PAGE_NAME = "Backup hub";
 
 export const BACKUP_HUB_TRACKING_BUTTON = {
   back: "Back",
