@@ -1,9 +1,12 @@
 import { KeysPriceChange } from "@ledgerhq/live-common/market/utils/types";
 import {
   clampDayChangePercentPointsNearZero,
+  getChartRangeVariation,
   getFiatPriceVariationFromPercentChange,
   getPriceChangeKeyForRange,
   getScrubVariation,
+  isChartDerivedPriceChangeRange,
+  resolveRangePriceChange,
   resolveTrendPercentAndVariant,
 } from "../utils/marketPriceDerivation";
 
@@ -97,17 +100,70 @@ describe("resolveTrendPercentAndVariant", () => {
   });
 });
 
+describe("getChartRangeVariation", () => {
+  it("derives percent points and fiat delta from the first and last chart prices", () => {
+    expect(getChartRangeVariation([100, 150])).toEqual({
+      percentage: 50,
+      variationFiat: 50,
+    });
+  });
+
+  it("returns undefined when the series is too short", () => {
+    expect(getChartRangeVariation([100])).toBeUndefined();
+    expect(getChartRangeVariation([])).toBeUndefined();
+  });
+});
+
+describe("resolveRangePriceChange", () => {
+  it("derives all-time variation from chart endpoints", () => {
+    expect(
+      resolveRangePriceChange({
+        selectedRange: "all",
+        chartPrices: [10_000, 40_000],
+      }),
+    ).toEqual({ percentage: 300, variationFiat: 30_000 });
+  });
+
+  it("uses market API percentages for standard ranges", () => {
+    expect(
+      resolveRangePriceChange({
+        selectedRange: "1d",
+        chartPrices: [],
+        price: 110,
+        priceChangePercentage: {
+          [KeysPriceChange.hour]: 0,
+          [KeysPriceChange.day]: 10,
+          [KeysPriceChange.week]: 0,
+          [KeysPriceChange.month]: 0,
+          [KeysPriceChange.sixMonths]: 0,
+          [KeysPriceChange.year]: 0,
+        },
+      }),
+    ).toEqual({ percentage: 10, variationFiat: expect.closeTo(10, 5) });
+  });
+});
+
+describe("isChartDerivedPriceChangeRange", () => {
+  it("marks the all-time range as chart-derived", () => {
+    expect(isChartDerivedPriceChangeRange("all")).toBe(true);
+    expect(isChartDerivedPriceChangeRange("1y")).toBe(false);
+  });
+});
+
 describe("getPriceChangeKeyForRange", () => {
   it("maps each chart range to a price-change key", () => {
     expect(getPriceChangeKeyForRange("1d")).toBe(KeysPriceChange.day);
     expect(getPriceChangeKeyForRange("1w")).toBe(KeysPriceChange.week);
     expect(getPriceChangeKeyForRange("1m")).toBe(KeysPriceChange.month);
+    expect(getPriceChangeKeyForRange("6m")).toBe(KeysPriceChange.sixMonths);
     expect(getPriceChangeKeyForRange("1y")).toBe(KeysPriceChange.year);
   });
 
   it("folds ranges longer than the API's 1y series into the yearly key", () => {
-    expect(getPriceChangeKeyForRange("6m")).toBe(KeysPriceChange.year);
     expect(getPriceChangeKeyForRange("5y")).toBe(KeysPriceChange.year);
-    expect(getPriceChangeKeyForRange("all")).toBe(KeysPriceChange.year);
+  });
+
+  it("returns undefined for chart-derived ranges", () => {
+    expect(getPriceChangeKeyForRange("all")).toBeUndefined();
   });
 });

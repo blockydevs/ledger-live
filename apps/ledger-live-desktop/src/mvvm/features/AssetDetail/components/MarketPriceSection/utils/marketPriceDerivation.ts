@@ -5,18 +5,67 @@ export const DAY_CHANGE_PERCENT_NEAR_ZERO_EPSILON = 0.01;
 
 export type TrendVariant = "positive" | "negative" | "neutral";
 
-const RANGE_TO_PRICE_CHANGE_KEY: Record<LineChartRange, KeysPriceChange> = {
+const RANGE_TO_PRICE_CHANGE_KEY: Partial<Record<LineChartRange, KeysPriceChange>> = {
   "1d": KeysPriceChange.day,
   "1w": KeysPriceChange.week,
   "1m": KeysPriceChange.month,
-  "6m": KeysPriceChange.year,
+  "6m": KeysPriceChange.sixMonths,
   "1y": KeysPriceChange.year,
   "5y": KeysPriceChange.year,
-  all: KeysPriceChange.year,
 };
 
-export function getPriceChangeKeyForRange(range: LineChartRange): KeysPriceChange {
+const CHART_DERIVED_PRICE_CHANGE_RANGES = new Set<LineChartRange>(["all"]);
+
+export function isChartDerivedPriceChangeRange(range: LineChartRange): boolean {
+  return CHART_DERIVED_PRICE_CHANGE_RANGES.has(range);
+}
+
+export function getPriceChangeKeyForRange(range: LineChartRange): KeysPriceChange | undefined {
   return RANGE_TO_PRICE_CHANGE_KEY[range];
+}
+
+export function getChartRangeVariation(
+  prices: readonly number[],
+): { percentage: number; variationFiat: number } | undefined {
+  if (prices.length < 2) return undefined;
+  const first = prices[0];
+  const last = prices[prices.length - 1];
+  if (!Number.isFinite(first) || !Number.isFinite(last)) return undefined;
+  const variationFiat = last - first;
+  const percentage = first === 0 ? 0 : (variationFiat / first) * 100;
+  return { percentage, variationFiat };
+}
+
+export type RangePriceChange = Readonly<{
+  percentage: number | null | undefined;
+  variationFiat: number | undefined;
+}>;
+
+export function resolveRangePriceChange(options: {
+  selectedRange: LineChartRange;
+  chartPrices: readonly number[];
+  price?: number;
+  priceChangePercentage?: Record<KeysPriceChange, number>;
+}): RangePriceChange {
+  const { selectedRange, chartPrices, price, priceChangePercentage } = options;
+
+  if (isChartDerivedPriceChangeRange(selectedRange)) {
+    const derived = getChartRangeVariation(chartPrices);
+    if (derived == null) return { percentage: undefined, variationFiat: undefined };
+    return {
+      percentage: clampDayChangePercentPointsNearZero(derived.percentage),
+      variationFiat: derived.variationFiat,
+    };
+  }
+
+  const key = getPriceChangeKeyForRange(selectedRange);
+  const percentage = clampDayChangePercentPointsNearZero(
+    key != null ? priceChangePercentage?.[key] : undefined,
+  );
+  return {
+    percentage,
+    variationFiat: getFiatPriceVariationFromPercentChange(price, percentage),
+  };
 }
 
 /** Implied fiat delta from current spot price and a percent change (e.g. 24h %) in percent points. */
