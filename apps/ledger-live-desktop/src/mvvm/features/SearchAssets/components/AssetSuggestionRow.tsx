@@ -25,7 +25,7 @@ type AssetSuggestionRowProps = {
   counterCurrency: string;
   locale: string;
   testIdPrefix: string;
-  onClick: (currencyId: string) => void;
+  onClick: (currencyId: string, marketState?: MarketCurrencyData) => void;
   density?: AssetSuggestionRowDensity;
 };
 
@@ -64,7 +64,7 @@ export function AssetSuggestionRow({
     <ListItem
       density={isExpanded ? "expanded" : "compact"}
       className="cursor-pointer"
-      onClick={() => onClick(currency.id)}
+      onClick={() => onClick(currency.id, currency)}
       aria-label={currency.name}
       data-testid={`${testIdPrefix}-item-${currency.ticker.toLowerCase()}`}
     >

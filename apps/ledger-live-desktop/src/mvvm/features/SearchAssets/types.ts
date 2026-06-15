@@ -1,3 +1,4 @@
+import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
 import { AssetSuggestionSection } from "LLD/components/TopBar/components/TopBarSearch/SearchOverlay/types";
 
 export type AssetSuggestionsViewModelResult = {
@@ -14,7 +15,7 @@ export type AssetSuggestionsSectionProps = AssetSuggestionSection & {
   /** Disambiguates test ids and skeleton keys (e.g. "cryptos"). */
   testIdPrefix: string;
   /** Redirects to the asset detail page for the given market id. */
-  navigateToAsset: (currencyId: string) => void;
+  navigateToAsset: (currencyId: string, marketState?: MarketCurrencyData) => void;
   /** Lands on the market list. */
   onSeeAll: () => void;
 };

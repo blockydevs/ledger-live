@@ -6,7 +6,7 @@ type SearchResultRowProps = {
   currency: MarketCurrencyData;
   counterCurrency: string;
   locale: string;
-  onClick: (currencyId: string) => void;
+  onClick: (currencyId: string, marketState?: MarketCurrencyData) => void;
 };
 
 export function SearchResultRow({
