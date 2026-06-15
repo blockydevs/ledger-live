@@ -8,17 +8,15 @@ type StocksProps = {
   navigateToAsset: (currencyId: string) => void;
   onSeeAll: () => void;
   headerVariant?: StocksHeaderVariant;
-  fillWidth?: boolean;
 };
 
-const Stocks = ({ limit, navigateToAsset, onSeeAll, headerVariant, fillWidth }: StocksProps) => (
+const Stocks = ({ limit, navigateToAsset, onSeeAll, headerVariant }: StocksProps) => (
   <StocksSectionView
     {...useStocksSectionViewModel({ limit })}
     limit={limit}
     navigateToAsset={navigateToAsset}
     onSeeAll={onSeeAll}
     headerVariant={headerVariant}
-    fillWidth={fillWidth}
   />
 );
 
