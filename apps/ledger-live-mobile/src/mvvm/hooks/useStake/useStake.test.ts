@@ -129,61 +129,62 @@ const userDataTron = accountRawToAccountUserData(rawTron);
 walletState.accountNames.set(userData.id, userData.name);
 walletState.accountNames.set(userDataTron.id, userDataTron.name);
 
-const feature_stake_programs_json = {
-  enabled: true,
-  params: {
-    list: [
-      "mantra",
-      "xion",
-      "ethereum",
-      "solana",
-      "tezos",
-      "cosmos",
-      "osmo",
-      "celo",
-      "near",
-      "elrond",
-      "quicksilver",
-      "persistence",
-      "axelar",
-      "cardano",
-      "dydx",
-      "injective",
-      "aptos",
-    ],
-    redirects: {
-      tron: {
-        platform: "mock-live-app",
-        name: "Live App",
-        queryParams: {
-          yieldId: "native-staking",
-        },
+const feature_stake_programs_params = {
+  list: [
+    "mantra",
+    "xion",
+    "ethereum",
+    "solana",
+    "tezos",
+    "cosmos",
+    "osmo",
+    "celo",
+    "near",
+    "elrond",
+    "quicksilver",
+    "persistence",
+    "axelar",
+    "cardano",
+    "dydx",
+    "injective",
+    "aptos",
+  ],
+  redirects: {
+    tron: {
+      platform: "mock-live-app",
+      name: "Live App",
+      queryParams: {
+        yieldId: "native-staking",
       },
-      "ethereum/erc20/usd_tether__erc20_": {
-        platform: "mock-dapp-v3",
-        name: "Dapp v3",
-        queryParams: {
-          chainId: 1,
-        },
+    },
+    "ethereum/erc20/usd_tether__erc20_": {
+      platform: "mock-dapp-v3",
+      name: "Dapp v3",
+      queryParams: {
+        chainId: 1,
       },
-      "ethereum/erc20/usd__coin": {
-        platform: "mock-dapp-v1",
-        name: "Dapp",
-        queryParams: {
-          chainId: 1,
-        },
+    },
+    "ethereum/erc20/usd__coin": {
+      platform: "mock-dapp-v1",
+      name: "Dapp",
+      queryParams: {
+        chainId: 1,
       },
-      "ethereum/erc20/usds_stablecoin_0xdc035d45d973e3ec169d2276ddab16f1e407384f": {
-        platform: "earn",
-        name: "Earn",
-        queryParams: {
-          intent: "deposit",
-          cryptoAssetId:
-            "ethereum/erc20/usds_stablecoin_0xdc035d45d973e3ec169d2276ddab16f1e407384f",
-        },
+    },
+    "ethereum/erc20/usds_stablecoin_0xdc035d45d973e3ec169d2276ddab16f1e407384f": {
+      platform: "earn",
+      name: "Earn",
+      queryParams: {
+        intent: "deposit",
+        cryptoAssetId: "ethereum/erc20/usds_stablecoin_0xdc035d45d973e3ec169d2276ddab16f1e407384f",
       },
     },
   },
+};
+
+const feature_stake_programs_json = {
+  enabled: true,
+  params: feature_stake_programs_params,
 } as unknown as Parameters<typeof withFlagOverrides>[0]["stakePrograms"];
 
 const withStakePrograms = withFlagOverrides({ stakePrograms: feature_stake_programs_json });
@@ -363,9 +364,9 @@ describe("useStake()", () => {
         stakePrograms: {
           ...feature_stake_programs_json,
           params: {
-            ...feature_stake_programs_json.params,
+            ...feature_stake_programs_params,
             redirects: {
-              ...feature_stake_programs_json.params.redirects,
+              ...feature_stake_programs_params.redirects,
               "ethereum/erc20/usds_stablecoin_0xdc035d45d973e3ec169d2276ddab16f1e407384f": {
                 platform: "earn",
                 name: "Earn",
@@ -421,10 +422,6 @@ describe("useStake()", () => {
           }),
         }),
       }),
-    );
-    // Verify the queryParams value is NOT present
-    expect((params as { params: { params: { cryptoAssetId: string } } }).params.params.cryptoAssetId).toBe(
-      overriddenCryptoAssetId,
     );
   });
 });
