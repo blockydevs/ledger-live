@@ -8,7 +8,7 @@ const OP_MAP: Partial<Record<StakingOperation, OperationType>> = {
   delegate: "DELEGATE",
   undelegate: "UNDELEGATE",
   redelegate: "REDELEGATE",
-  withdraw: "WITHDRAW",
+  withdraw: "WITHDRAW_UNBONDED",
   claimReward: "REWARD",
   compoundReward: "REWARD",
 };

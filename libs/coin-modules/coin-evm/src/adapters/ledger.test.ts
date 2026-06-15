@@ -793,7 +793,7 @@ describe("EVM Family", () => {
           expect(result[0].senders).toEqual([]);
         });
 
-        it("should detect a Monad staking withdraw (value 0 contract call) as a WITHDRAW operation instead of FEES", () => {
+        it("should detect a Monad staking withdraw (value 0 contract call) as a WITHDRAW_UNBONDED operation instead of FEES", () => {
           const monadAccountId = encodeAccountId({
             type: "js",
             version: "2",
@@ -840,7 +840,7 @@ describe("EVM Family", () => {
           const result = ledgerOperationToOperations(monadAccountId, ledgerOp);
 
           expect(result).toHaveLength(1);
-          expect(result[0].type).toBe("WITHDRAW");
+          expect(result[0].type).toBe("WITHDRAW_UNBONDED");
         });
       });
 

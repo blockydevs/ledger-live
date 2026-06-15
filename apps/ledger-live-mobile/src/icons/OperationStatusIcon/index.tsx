@@ -31,7 +31,6 @@ const iconsComponent = {
   BOND: IconsLegacy.LinkMedium,
   UNBOND: IconsLegacy.LinkNoneMedium,
   WITHDRAW_UNBONDED: IconsLegacy.CoinsMedium,
-  WITHDRAW: IconsLegacy.CoinsMedium,
   SLASH: IconsLegacy.TrashMedium,
   NOMINATE: IconsLegacy.VoteMedium,
   CHILL: IconsLegacy.VoteMedium,
