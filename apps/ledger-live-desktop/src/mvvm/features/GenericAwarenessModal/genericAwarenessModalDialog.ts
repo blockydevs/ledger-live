@@ -44,11 +44,7 @@ export const closeGenericAwarenessModalDialog =
     const campaignId = selectGenericAwarenessModalCampaignId(state);
     const contentCard = selectGenericAwarenessModalContentCardByCampaignId(state)(campaignId);
 
-    if (
-      options?.dismissAppStart &&
-      contentCard?.id &&
-      isAppStartContentCardId(contentCard.id)
-    ) {
+    if (options?.dismissAppStart && contentCard?.id && isAppStartContentCardId(contentCard.id)) {
       const dismissedAt = Date.now();
       dispatch(setDismissedContentCards({ id: contentCard.id, timestamp: dismissedAt }));
       const dismissedIds = [

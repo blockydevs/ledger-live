@@ -99,10 +99,7 @@ function CarouselContentFooter({
     isLastSlide ? t("common.close") : t("common.continue"),
   );
   const showPrimaryButton = currentSlide
-    ? hasAwarenessModalActionButton(
-        currentSlide.primaryButtonLabel,
-        currentSlide.primaryButtonLink,
-      )
+    ? hasAwarenessModalActionButton(currentSlide.primaryButtonLabel, currentSlide.primaryButtonLink)
     : false;
 
   const handleContinue = useCallback(() => {

@@ -53,9 +53,7 @@ describe("CarouselContent", () => {
       slides: [{ ...slides[0], primaryButtonLabel: "Primary A", primaryButtonLink: "" }],
     });
 
-    expect(
-      screen.queryByTestId("generic-awareness-modal-primary-button"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("generic-awareness-modal-primary-button")).not.toBeInTheDocument();
     expect(screen.getByTestId("generic-awareness-modal-continue-button")).toBeVisible();
   });
 
@@ -86,15 +84,18 @@ describe("CarouselContent", () => {
   it.each([
     ["light", "https://example.com/a-light.png"],
     ["dark", "https://example.com/a-dark.png"],
-  ] as const)("should render the %s slide image when themed urls are provided", (theme, expectedSrc) => {
-    mockUseTheme.mockReturnValue({ theme } as ReturnType<typeof useTheme>);
-    renderCarousel();
+  ] as const)(
+    "should render the %s slide image when themed urls are provided",
+    (theme, expectedSrc) => {
+      mockUseTheme.mockReturnValue({ theme } as ReturnType<typeof useTheme>);
+      renderCarousel();
 
-    const image = screen.getByRole("presentation");
-    expect(image).toBeVisible();
-    expect(image).toHaveAttribute("src", expectedSrc);
-    expect(image).toHaveAttribute("alt", "");
-  });
+      const image = screen.getByRole("presentation");
+      expect(image).toBeVisible();
+      expect(image).toHaveAttribute("src", expectedSrc);
+      expect(image).toHaveAttribute("alt", "");
+    },
+  );
 
   it("should not render an image when themed urls are empty", () => {
     const slidesWithoutImage: GenericAwarenessModalCarouselSlide[] = [

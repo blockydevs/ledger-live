@@ -129,7 +129,9 @@ describe("devCardsPersistence", () => {
     persistDevGenericAwarenessModalCards([validCarouselCard]);
     persistDevGenericAwarenessModalCards([]);
 
-    expect(globalThis.localStorage.getItem(DEV_GENERIC_AWARENESS_MODAL_CARDS_STORAGE_KEY)).toBeNull();
+    expect(
+      globalThis.localStorage.getItem(DEV_GENERIC_AWARENESS_MODAL_CARDS_STORAGE_KEY),
+    ).toBeNull();
     expect(loadPersistedDevGenericAwarenessModalCards()).toEqual([]);
   });
 });

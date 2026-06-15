@@ -52,10 +52,7 @@ export default function FeatureIntroContent({
   onPrimaryClick,
   onSecondaryClick,
 }: Readonly<FeatureIntroContentProps>) {
-  const showPrimaryButton = hasAwarenessModalActionButton(
-    primaryButtonLabel,
-    primaryButtonLink,
-  );
+  const showPrimaryButton = hasAwarenessModalActionButton(primaryButtonLabel, primaryButtonLink);
   const showSecondaryButton = hasAwarenessModalActionButton(
     secondaryButtonLabel,
     secondaryButtonLink,
