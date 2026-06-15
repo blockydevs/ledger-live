@@ -9806,7 +9806,7 @@
   "fearAndGreed": {
     "title": "Mood index",
     "description": "Shows overall market sentiment from 0 to 100, based notably on volatility, market momentum and social trends. Lower values indicate fear, higher values indicate greed.",
-    "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
+    "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
     "levels": {
       "fearPlus": "Fear+",
       "fear": "Fear",
@@ -9820,7 +9820,7 @@
     "title": "Season",
     "definitionTitle": "Altcoin index",
     "description": "The Altcoin index shows how Bitcoin is performing compared to alternative cryptocurrencies. The higher the number, the better altcoins are doing compared to Bitcoin.",
-    "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
+    "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
     "levels": {
       "bitcoin": "Bitcoin",
       "altcoin": "Altcoin"
@@ -9828,7 +9828,8 @@
   },
   "marketCapCard": {
     "title": "Total market cap",
-    "description": "The total market cap represents the market capitalization of all cryptocurrencies combined."
+    "description": "The total market cap represents the market capitalization of all cryptocurrencies combined.",
+    "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only."
   },
   "analyticsAllocation": {
     "header": {
