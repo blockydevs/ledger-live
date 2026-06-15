@@ -279,7 +279,19 @@ jest.mock("~/firebase/remoteConfig", () => ({
   whenReady: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@braze/react-native-sdk", () => ({}));
+jest.mock("@braze/react-native-sdk", () => ({
+  __esModule: true,
+  default: {
+    changeUser: jest.fn(),
+    setCustomUserAttribute: jest.fn(),
+    logContentCardDismissed: jest.fn(),
+    logContentCardClicked: jest.fn(),
+    logContentCardImpression: jest.fn(),
+    requestContentCardsRefresh: jest.fn(),
+    getContentCards: jest.fn().mockResolvedValue([]),
+    getInitialPushPayload: jest.fn(),
+  },
+}));
 
 jest.mock("react-native-webview", () => jest.fn());
 
