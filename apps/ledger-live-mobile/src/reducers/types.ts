@@ -395,7 +395,6 @@ export type MarketListConfigState = {
   timeframe: MarketListFilterTimeframe;
   /** Selected network id, or `undefined` for all networks (consumed by LIVE-29972). */
   network: string | undefined;
-  category: MarketListCategory;
 };
 
 // === MARKET BANNER STATE (V4) ===

@@ -30,13 +30,12 @@ const enableAssetDiscoverability = withFlagOverrides({
   lwmWallet40: { enabled: true, params: { assetDiscoverability: true } },
 });
 
-function enableFavoritesCategory(starredMarketCoins: string[] = []) {
+function withStarredMarketCoins(starredMarketCoins: string[] = []) {
   return withFlagOverrides(
     { lwmWallet40: { enabled: true, params: { assetDiscoverability: true } } },
     (state: State): State => ({
       ...state,
       settings: { ...state.settings, starredMarketCoins },
-      marketListConfig: { ...state.marketListConfig, category: "starred" },
     }),
   );
 }
@@ -181,22 +180,37 @@ describe("MarketScreen assets list (Block 3)", () => {
   });
 
   it("renders the favorites empty state when no market coin is starred", async () => {
-    renderWithReactQuery(<NavigatorWrapper />, {
-      overrideInitialState: enableFavoritesCategory(),
+    const { user } = renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: withStarredMarketCoins(),
     });
+
+    await waitFor(() => expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible(), {
+      timeout: 5000,
+    });
+
+    await user.press(
+      screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-starred`),
+    );
 
     await waitFor(() => {
       expect(screen.getByText("No favorites yet")).toBeVisible();
     });
-
     expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsFavoritesEmptyIcon)).toBeVisible();
     expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();
   });
 
   it("renders only starred market coins in the Favorites category", async () => {
-    renderWithReactQuery(<NavigatorWrapper />, {
-      overrideInitialState: enableFavoritesCategory(["bitcoin"]),
+    const { user } = renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: withStarredMarketCoins(["bitcoin"]),
     });
+
+    await waitFor(() => expect(screen.getByTestId("marketItem-ethereum")).toBeVisible(), {
+      timeout: 5000,
+    });
+
+    await user.press(
+      screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-starred`),
+    );
 
     await waitFor(
       () => {
@@ -298,27 +312,29 @@ describe("MarketScreen assets list (Block 3)", () => {
     expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();
   });
 
-  it("renders CVS stock rows when the Stocks category is persisted", async () => {
-    renderWithReactQuery(<NavigatorWrapper />, {
-      overrideInitialState: withFlagOverrides(
-        { lwmWallet40: { enabled: true, params: { assetDiscoverability: true } } },
-        (state: State): State => ({
-          ...state,
-          marketListConfig: { ...state.marketListConfig, category: "stocks" },
-        }),
-      ),
+  it("switches categories from the tabs, including back to All", async () => {
+    const marketRequests: string[] = [];
+    const dadaRequests: string[] = [];
+    installCapturedMarketHandlers(marketRequests, dadaRequests);
+
+    const { user } = renderWithReactQuery(<NavigatorWrapper />, {
+      overrideInitialState: enableAssetDiscoverability,
     });
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("marketItem-tesla-xstock")).toBeVisible();
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible(), {
+      timeout: 5000,
+    });
 
-    expect(screen.getByText("Tesla xStock")).toBeVisible();
-    expect(screen.getByText("Stocks")).toBeVisible();
-    expect(screen.getByTestId(MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher)).toBeVisible();
+    await user.press(screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-stocks`));
+    await waitFor(() => expect(screen.getByTestId("marketItem-tesla-xstock")).toBeVisible(), {
+      timeout: 5000,
+    });
     expect(screen.queryByTestId("marketItem-bitcoin")).toBeNull();
+
+    await user.press(screen.getByTestId(`${MARKET_SCREEN_TEST_IDS.assetsCategorySwitcher}-all`));
+    await waitFor(() => expect(screen.getByTestId("marketItem-bitcoin")).toBeVisible(), {
+      timeout: 5000,
+    });
+    expect(screen.queryByTestId("marketItem-tesla-xstock")).toBeNull();
   });
 });
