@@ -6,7 +6,7 @@ import QueuedDrawerBottomSheet from "LLM/components/QueuedDrawer/QueuedDrawerBot
 import { SendFlowLayout } from "LLM/features/Send/components/SendFlowLayout";
 import { MemoControls } from "LLM/features/Send/components/Memo/MemoControls";
 import { useMemoViewModel } from "LLM/features/Send/components/Memo/hooks/useMemoViewModel";
-import { shouldShowMatchedAddress } from "LLM/features/Send/components/Memo/shouldShowMatchedAddress";
+import { shouldShowMatchedAddress } from "@ledgerhq/live-common/flows/send/recipient/utils/shouldShowMatchedAddress";
 import { useSendFlowData } from "LLM/features/Send/context/SendFlowContext";
 import React, { useCallback } from "react";
 import { useRecipientScreenView } from "../hooks/useRecipientScreenView";
