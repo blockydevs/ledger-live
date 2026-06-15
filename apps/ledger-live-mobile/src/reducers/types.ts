@@ -351,6 +351,17 @@ export type EarnState = {
   actionDialog?: ActionDialogParams;
 };
 
+// === BORROW STATE ===
+
+export type BorrowState = {
+  infoBottomSheet?: {
+    message: string;
+    title: string;
+    linkText?: string;
+    linkHref?: string;
+  };
+};
+
 // === PROTECT STATE ===
 
 export type ProtectData = {
@@ -435,6 +446,7 @@ export type State = LLMRTKApiState & {
   appstate: AppState;
   auth: AuthState;
   ble: BleState;
+  borrow: BorrowState;
   countervalues: CountervaluesState;
   deeplinkInstallApp: DeeplinkInstallAppState;
   dynamicContent: DynamicContentState;

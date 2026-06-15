@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@tests/test-renderer";
-import { EarnInfoBottomSheet } from "../EarnInfoBottomSheet";
+import { BorrowInfoBottomSheet } from "../BorrowInfoBottomSheet";
 import { InfoBottomSheet } from "~/components/WebPTXPlayer/InfoBottomSheet";
 import { State } from "~/reducers/types";
 
@@ -15,41 +15,41 @@ jest.mock("~/components/WebPTXPlayer/InfoBottomSheet", () => ({
   }),
 }));
 
-const renderEarnInfoBottomSheet = (infoBottomSheet: State["earn"]["infoBottomSheet"]) =>
-  render(<EarnInfoBottomSheet />, {
+const renderBorrowInfoBottomSheet = (infoBottomSheet: State["borrow"]["infoBottomSheet"]) =>
+  render(<BorrowInfoBottomSheet />, {
     overrideInitialState: (state: State) => ({
       ...state,
-      earn: {
-        ...state.earn,
+      borrow: {
+        ...state.borrow,
         infoBottomSheet,
       },
     }),
   });
 
-describe("EarnInfoBottomSheet", () => {
+describe("BorrowInfoBottomSheet", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     captured.current = undefined;
   });
 
-  it("forwards the earn info bottom sheet state to InfoBottomSheet", () => {
-    const data = { title: "Earn info title", message: "Earn info message body" };
-    renderEarnInfoBottomSheet(data);
+  it("forwards the borrow info bottom sheet state to InfoBottomSheet", () => {
+    const data = { title: "Borrow info title", message: "Borrow info message body" };
+    renderBorrowInfoBottomSheet(data);
 
     expect(captured.current?.data).toEqual(data);
   });
 
   it("passes undefined data when the slice has no info bottom sheet", () => {
-    renderEarnInfoBottomSheet(undefined);
+    renderBorrowInfoBottomSheet(undefined);
 
     expect(captured.current?.data).toBeUndefined();
   });
 
-  it("clears the earn info bottom sheet state when onClose is invoked", () => {
-    const { store } = renderEarnInfoBottomSheet({ title: "Title", message: "Message" });
+  it("clears the borrow info bottom sheet state when onClose is invoked", () => {
+    const { store } = renderBorrowInfoBottomSheet({ title: "Title", message: "Message" });
 
     captured.current?.onClose();
 
-    expect(store.getState().earn.infoBottomSheet).toBeUndefined();
+    expect(store.getState().borrow.infoBottomSheet).toBeUndefined();
   });
 });

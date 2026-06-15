@@ -18,6 +18,7 @@ import type {
   State,
   WalletConnectState,
   EarnState,
+  BorrowState,
   DynamicContentState,
   ProtectState,
   MarketState,
@@ -522,6 +523,15 @@ export type EarnPayload =
   | EarnSetProtocolInfoModalPayload
   | EarnSetActionDialogPayload;
 
+// === BORROW ACTIONS ===
+export enum BorrowActionTypes {
+  BORROW_INFO_BOTTOM_SHEET = "BORROW_INFO_BOTTOM_SHEET",
+}
+
+export type BorrowSetInfoBottomSheetPayload = BorrowState["infoBottomSheet"];
+
+export type BorrowPayload = BorrowSetInfoBottomSheetPayload;
+
 // === IN VIEW ACTIONS ===
 export enum InViewActionTypes {
   IN_VIEW_SET_HAS_ITEMS = "IN_VIEW_SET_HAS_ITEMS",
@@ -624,5 +634,6 @@ export type ActionsPayload =
   | Action<PostOnboardingPayload>
   | Action<ProtectPayload>
   | Action<EarnPayload>
+  | Action<BorrowPayload>
   | Action<MarketPayload>
   | UnknownAction;
