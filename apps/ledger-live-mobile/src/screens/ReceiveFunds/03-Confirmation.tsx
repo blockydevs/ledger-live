@@ -301,16 +301,12 @@ function ReceiveConfirmationInner({ navigation, route, account, parentAccount }:
   }
 
   let CustomConfirmationTokenAlert;
-  if (
-    currency.type === "TokenCurrency" &&
-    Object.keys(byFamilyTokenAlert).includes(
-      getCryptoCurrencyById(currency.parentCurrencyId).family,
-    )
-  ) {
-    CustomConfirmationTokenAlert =
-      byFamilyTokenAlert[
-        getCryptoCurrencyById(currency.parentCurrencyId).family as keyof typeof byFamilyTokenAlert
-      ];
+  if (currency.type === "TokenCurrency") {
+    const parentFamily = getCryptoCurrencyById(currency.parentCurrencyId).family;
+    if (parentFamily in byFamilyTokenAlert) {
+      CustomConfirmationTokenAlert =
+        byFamilyTokenAlert[parentFamily as keyof typeof byFamilyTokenAlert];
+    }
   }
 
   const isAnAccount = account.type === "Account";
