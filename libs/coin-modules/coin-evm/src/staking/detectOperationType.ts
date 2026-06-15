@@ -9,6 +9,7 @@ const OP_MAP: Partial<Record<StakingOperation, OperationType>> = {
   undelegate: "UNDELEGATE",
   redelegate: "REDELEGATE",
   claimReward: "REWARD",
+  compoundReward: "REWARD",
 };
 
 /**
