@@ -7,7 +7,7 @@ export const aleoTokenCurrency: TokenCurrency = {
   type: "TokenCurrency",
   id: "aleo_test_token",
   contractAddress: "token.aleo",
-  parentCurrency: aleoCurrency,
+  parentCurrencyId: aleoCurrency.id,
   tokenType: "arc22",
   name: "Test Aleo Token",
   ticker: "TAT",
