@@ -24,7 +24,7 @@ export function PhysicalBackupRow({
   description,
   onPress,
   testID,
-}: PhysicalBackupRowProps) {
+}: Readonly<PhysicalBackupRowProps>) {
   return (
     <ListItem onPress={onPress} testID={testID}>
       <ListItemLeading>

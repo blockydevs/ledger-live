@@ -27,7 +27,7 @@ export function LedgerRecoverRow({
   description,
   ctaLabel,
   onPress,
-}: LedgerRecoverRowProps) {
+}: Readonly<LedgerRecoverRowProps>) {
   return (
     <ListItem onPress={onPress} testID="backup-hub-recover-row">
       <ListItemLeading>

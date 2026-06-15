@@ -3,6 +3,7 @@ import { Linking, type ImageSourcePropType } from "react-native";
 import { track } from "~/analytics";
 import useRecoverBannerState from "LLM/features/Portfolio/hooks/useRecoverBannerState";
 import { useRecoverEntry } from "LLM/hooks/useRecoverEntry";
+import { useLocalizedUrl } from "LLM/hooks/useLocalizedUrls";
 import { urls } from "~/utils/urls";
 import { getBackupBucket } from "../../utils/getBackupBucket";
 import {
@@ -34,6 +35,10 @@ export function useBackupHubScreenViewModel(): BackupHubScreenViewModel {
   const { data } = useRecoverBannerState(protectId);
   const bucket = getBackupBucket(data.subscriptionState);
 
+  const recoveryKeyUrl = useLocalizedUrl(urls.backupHub.recoveryKey);
+  const secretRecoveryPhraseUrl = useLocalizedUrl(urls.backupHub.secretRecoveryPhrase);
+  const compareAllUrl = useLocalizedUrl(urls.backupHub.compareAll);
+
   const onRecoverPress = useCallback(() => {
     markRecoverSeen();
     track("button_clicked", {
@@ -62,27 +67,24 @@ export function useBackupHubScreenViewModel(): BackupHubScreenViewModel {
   }, []);
 
   const onComparePress = useCallback(() => {
-    openShop(urls.backupHub.compareAll, BACKUP_HUB_TRACKING_BUTTON.compare);
-  }, [openShop]);
+    openShop(compareAllUrl, BACKUP_HUB_TRACKING_BUTTON.compare);
+  }, [openShop, compareAllUrl]);
 
   const physicalRows = useMemo<readonly PhysicalRowData[]>(
     () => [
       {
         id: "recovery-key",
         image: recoveryKeyImage,
-        onPress: () => openShop(urls.backupHub.recoveryKey, BACKUP_HUB_TRACKING_BUTTON.recoveryKey),
+        onPress: () => openShop(recoveryKeyUrl, BACKUP_HUB_TRACKING_BUTTON.recoveryKey),
       },
       {
         id: "secret-recovery-phrase",
         image: secretRecoveryPhraseImage,
         onPress: () =>
-          openShop(
-            urls.backupHub.secretRecoveryPhrase,
-            BACKUP_HUB_TRACKING_BUTTON.secretRecoveryPhrase,
-          ),
+          openShop(secretRecoveryPhraseUrl, BACKUP_HUB_TRACKING_BUTTON.secretRecoveryPhrase),
       },
     ],
-    [openShop],
+    [openShop, recoveryKeyUrl, secretRecoveryPhraseUrl],
   );
 
   return {

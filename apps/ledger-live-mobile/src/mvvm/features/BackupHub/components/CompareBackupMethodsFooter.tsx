@@ -7,7 +7,10 @@ export type CompareBackupMethodsFooterProps = {
   onPress: () => void;
 };
 
-export function CompareBackupMethodsFooter({ label, onPress }: CompareBackupMethodsFooterProps) {
+export function CompareBackupMethodsFooter({
+  label,
+  onPress,
+}: Readonly<CompareBackupMethodsFooterProps>) {
   return (
     <Button
       appearance="no-background"

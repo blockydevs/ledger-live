@@ -48,7 +48,7 @@ export function BackupHubScreenView({
   onRecoverPress,
   onComparePress,
   physicalRows,
-}: BackupHubScreenViewModel) {
+}: Readonly<BackupHubScreenViewModel>) {
   const { t } = useTranslation();
   const { bottom: bottomInset } = useSafeAreaInsets();
 
