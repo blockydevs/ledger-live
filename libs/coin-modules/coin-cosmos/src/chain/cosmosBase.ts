@@ -9,6 +9,8 @@ abstract class cosmosBase {
   defaultGas = 100000;
   minGasPrice = 0.0025;
   version = "v1beta1";
+  // chain queues staking msgs until epoch end (x/epoching); sync merges the queue into positions
+  epochedStaking = false;
   public static COSMOS_FAMILY_LEDGER_VALIDATOR_ADDRESSES: string[] = [];
 }
 
