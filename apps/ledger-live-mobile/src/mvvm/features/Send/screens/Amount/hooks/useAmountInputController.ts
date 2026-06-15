@@ -19,6 +19,7 @@ import {
   processFiatInput,
   calculateFiatEquivalent,
 } from "@ledgerhq/live-common/flows/send/amount/utils/amountInput";
+import { useSendAmountDisplayMode } from "@ledgerhq/live-common/flows/send/amount/SendAmountDisplayModeContext";
 import { syncAmountInputs } from "@ledgerhq/live-common/flows/send/amount/utils/amountInputSync";
 
 type UseAmountInputControllerParams = Readonly<{
@@ -64,7 +65,7 @@ export function useAmountInputController({
     to: counterValueCurrency,
   });
 
-  const [inputMode, setInputMode] = useState<"fiat" | "crypto">("fiat");
+  const { displayMode: inputMode, setDisplayMode: setInputMode } = useSendAmountDisplayMode();
   const [fiatInputValue, setFiatInputValue] = useState<string>("");
   const [cryptoInputValue, setCryptoInputValue] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -95,7 +96,7 @@ export function useAmountInputController({
 
   const amountValue = inputMode === "fiat" ? fiatInputValue : cryptoInputValue;
   const currencyText =
-    inputMode === "fiat" ? (counterValueCurrency.symbol ?? fiatUnit.code) : accountUnit.code;
+    inputMode === "fiat" ? counterValueCurrency.symbol ?? fiatUnit.code : accountUnit.code;
   const currencyPosition: "left" | "right" = inputMode === "fiat" ? "left" : "right";
 
   const secondaryValue = useMemo(() => {
@@ -225,7 +226,7 @@ export function useAmountInputController({
 
       return next;
     });
-  }, [accountUnit, cryptoAmount, fiatAmount, fiatUnit, locale]);
+  }, [accountUnit, cryptoAmount, fiatAmount, fiatUnit, locale, setInputMode]);
 
   const updateBothInputs = useCallback(
     (amount: BigNumber) => {
