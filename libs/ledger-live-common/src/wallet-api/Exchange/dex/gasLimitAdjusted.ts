@@ -20,11 +20,7 @@ export const getAdjustedGasLimit = (
     return defaultGasLimit;
   }
 
-  const safeMultiplier =
-    !Number.isFinite(multiplier) || multiplier <= 0 ? 1 : multiplier;
+  const safeMultiplier = !Number.isFinite(multiplier) || multiplier <= 0 ? 1 : multiplier;
 
-  return baseGasLimit
-    .times(safeMultiplier)
-    .integerValue(BigNumber.ROUND_CEIL)
-    .toString();
+  return baseGasLimit.times(safeMultiplier).integerValue(BigNumber.ROUND_CEIL).toString();
 };

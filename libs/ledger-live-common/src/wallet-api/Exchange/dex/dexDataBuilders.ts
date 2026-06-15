@@ -8,10 +8,7 @@
  */
 import { getAdjustedGasLimit } from "./gasLimitAdjusted";
 import { getOkxTransaction } from "./swap-api/okx";
-import {
-  getOneinchTransaction,
-  type OneInchSwapData,
-} from "./swap-api/oneinch";
+import { getOneinchTransaction, type OneInchSwapData } from "./swap-api/oneinch";
 import { getUniswapTransaction } from "./swap-api/uniswap";
 import {
   getVeloraTransaction,
@@ -30,9 +27,9 @@ import {
  * can build calldata for. The discriminant is the same `providerType`
  * field used by the live-app: only `DEX` rows go through this path.
  */
-export function isDexExecutionProvider<
-  T extends { provider: string; providerType?: string },
->(quote: T): quote is T & { provider: DexProvider } {
+export function isDexExecutionProvider<T extends { provider: string; providerType?: string }>(
+  quote: T,
+): quote is T & { provider: DexProvider } {
   return quote.providerType === "DEX" && isDexProvider(quote.provider);
 }
 
@@ -45,8 +42,7 @@ export function isDexExecutionProvider<
 async function buildUniswapTransactionData(
   ctx: DexBuildContext,
 ): Promise<DexProviderTransactionData> {
-  const { customFields, permitSignature, gasLimitMultiplier, defaultGasLimit } =
-    ctx;
+  const { customFields, permitSignature, gasLimitMultiplier, defaultGasLimit } = ctx;
 
   const response = await getUniswapTransaction({
     customFields,
@@ -60,11 +56,7 @@ async function buildUniswapTransactionData(
       to: response.swap.to,
       data: response.swap.data,
       value: response.swap.value,
-      gasLimit: getAdjustedGasLimit(
-        response.swap.gasLimit,
-        gasLimitMultiplier,
-        defaultGasLimit,
-      ),
+      gasLimit: getAdjustedGasLimit(response.swap.gasLimit, gasLimitMultiplier, defaultGasLimit),
     },
   };
 }
@@ -104,11 +96,7 @@ async function buildOneinchTransactionData(
       to: response.to,
       data: response.data,
       value: response.value,
-      gasLimit: getAdjustedGasLimit(
-        response.gasLimit,
-        gasLimitMultiplier,
-        defaultGasLimit,
-      ),
+      gasLimit: getAdjustedGasLimit(response.gasLimit, gasLimitMultiplier, defaultGasLimit),
     },
   };
 }
@@ -155,11 +143,7 @@ async function buildVeloraTransactionData(
       to: response.to,
       data: response.data,
       value: String(response.value),
-      gasLimit: getAdjustedGasLimit(
-        response.gasLimit,
-        gasLimitMultiplier,
-        defaultGasLimit,
-      ),
+      gasLimit: getAdjustedGasLimit(response.gasLimit, gasLimitMultiplier, defaultGasLimit),
     },
   };
 }
@@ -168,9 +152,7 @@ async function buildVeloraTransactionData(
  * Provider adapter for OKX DEX quotes. OKX's swap endpoint accepts the
  * raw `customFields` bag without further shaping.
  */
-async function buildOkxTransactionData(
-  ctx: DexBuildContext,
-): Promise<DexProviderTransactionData> {
+async function buildOkxTransactionData(ctx: DexBuildContext): Promise<DexProviderTransactionData> {
   const { customFields, gasLimitMultiplier, defaultGasLimit } = ctx;
 
   const response = await getOkxTransaction({ customFields });
@@ -182,11 +164,7 @@ async function buildOkxTransactionData(
       to: response.to,
       data: response.data,
       value: String(response.value),
-      gasLimit: getAdjustedGasLimit(
-        response.gasLimit,
-        gasLimitMultiplier,
-        defaultGasLimit,
-      ),
+      gasLimit: getAdjustedGasLimit(response.gasLimit, gasLimitMultiplier, defaultGasLimit),
     },
   };
 }
