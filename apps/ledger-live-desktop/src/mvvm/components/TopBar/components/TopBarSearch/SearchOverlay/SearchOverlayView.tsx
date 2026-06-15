@@ -60,6 +60,7 @@ export function SearchOverlayView({
             placeholder={t("topBar.searchPlaceholder")}
             onChange={onChangeQuery}
             onKeyDown={onKeyDown}
+            isOpen={open}
             testId="topbar-search-input"
           />
         }
