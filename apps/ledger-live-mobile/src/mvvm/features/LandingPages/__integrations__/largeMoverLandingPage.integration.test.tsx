@@ -13,6 +13,7 @@ import { mockNavigation } from "../screens/LargeMoverLandingPage/fixtures/naviga
 import { PanGesture, State as GestureState } from "react-native-gesture-handler";
 import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 import { MockedLargeMoverLandingPage } from "./shared";
+import { mappingServiceHandlers } from "../__tests__/mappingServiceHandlers";
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
@@ -35,6 +36,7 @@ describe("LargeMoverLandingPage Integration Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.mocked(navigationModule.useNavigation).mockReturnValue(mockNavigation);
+    server.use(...mappingServiceHandlers);
   });
 
   it("displays the ticker of the first currency", async () => {

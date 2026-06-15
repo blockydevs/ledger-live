@@ -28,10 +28,8 @@ const mappedAssets: MappedAsset[] = [
   mappedAsset("ethereum/erc20/usd__coin", "usd-coin", "USDC", "USD Coin", "Token"),
 ];
 
-const handlers = [
+export const mappingServiceHandlers = [
   http.get("https://mapping-service.api.ledger.com/v1/coingecko/mapped-assets", () =>
     HttpResponse.json(mappedAssets),
   ),
 ];
-
-export default handlers;
