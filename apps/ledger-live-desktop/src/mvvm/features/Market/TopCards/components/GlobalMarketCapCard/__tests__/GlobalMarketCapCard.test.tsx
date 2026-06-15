@@ -30,7 +30,7 @@ describe("GlobalMarketCapCard", () => {
     expect(await screen.findByTestId("global-market-cap-dialog-content")).toBeVisible();
     expect(
       screen.getByText(
-        "Data is sourced from CoinMarketCap and provided for informational purposes only.",
+        "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
       ),
     ).toBeVisible();
   });
