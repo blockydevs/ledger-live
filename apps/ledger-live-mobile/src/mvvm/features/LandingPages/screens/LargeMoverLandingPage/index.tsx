@@ -52,6 +52,9 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
     counterCurrency: counterValueCurrency.ticker,
   });
 
+  const loadingMarket = marketDataArray.some(entry => entry.isLoading);
+  const isLoading = loading || loadingMarket;
+
   const navigation = useNavigation<NavigationProp<WalletTabNavigatorStackParamList>>();
 
   const { colors } = useTheme();
@@ -138,7 +141,7 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
   }
   return (
     <>
-      {showOverlay && !loading && <OverlayTutorial />}
+      {showOverlay && !isLoading && <OverlayTutorial />}
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutral.c00, paddingTop: 40 }}>
         <TrackScreen
           name={PAGE_NAME}
@@ -148,7 +151,7 @@ export const LargeMoverLandingPage = ({ route }: LargeMoverLandingPageProps) => 
         />
         <StickyHeader />
         <Flex paddingTop={25}>
-          {loading && loadingChart ? (
+          {isLoading ? (
             <LoadingIndicator height={height} />
           ) : (
             <Flex>
