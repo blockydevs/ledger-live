@@ -46,6 +46,47 @@ export function bigNumberToBigIntDeep<T>(obj: T): BigNumberToBigIntDeep<T> {
   return obj as BigNumberToBigIntDeep<T>;
 }
 
+function toFeeDataFromUnknown(value: unknown): FeeData {
+  const read = (key: keyof FeeData): BigNumber | null => {
+    if (!value || typeof value !== "object" || !(key in value)) return null;
+    const raw = (value as Record<string, unknown>)[key];
+    if (typeof raw === "bigint") return new BigNumber(raw.toString());
+    if (typeof raw === "number") return new BigNumber(raw);
+    if (typeof raw === "string") return new BigNumber(raw);
+    return null;
+  };
+  return {
+    gasPrice: read("gasPrice"),
+    maxFeePerGas: read("maxFeePerGas"),
+    maxPriorityFeePerGas: read("maxPriorityFeePerGas"),
+    nextBaseFee: read("nextBaseFee"),
+  };
+}
+
+/**
+ * Converts the fee-estimation `gasOptions` (API shape, numeric values as bigint)
+ * into the transaction's `GasOptions` shape (BigNumber). Returns `undefined` when
+ * the value does not expose the expected slow/medium/fast structure, so families
+ * that don't produce gas options are left untouched.
+ */
+export function toGasOptionsFromUnknown(value: unknown): GasOptions | undefined {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("slow" in value) ||
+    !("medium" in value) ||
+    !("fast" in value)
+  ) {
+    return undefined;
+  }
+  const options = value as Record<"slow" | "medium" | "fast", unknown>;
+  return {
+    slow: toFeeDataFromUnknown(options.slow),
+    medium: toFeeDataFromUnknown(options.medium),
+    fast: toFeeDataFromUnknown(options.fast),
+  };
+}
+
 export function findCryptoCurrencyByNetwork(network: string): CryptoCurrency | undefined {
   const networksRemap = {
     xrp: "ripple",
@@ -229,7 +270,7 @@ export function adaptCoreOperationToLiveOperation(accountId: string, op: CoreOpe
     const s = op.details.stake as { address?: string; amount?: bigint };
     extra.stake = {
       address: s.address ?? "",
-      amount: new BigNumber(s.amount !== undefined ? String(s.amount) : "0"),
+      amount: new BigNumber(typeof s.amount === "bigint" ? s.amount.toString() : "0"),
     };
   }
 
@@ -549,8 +590,10 @@ export const buildOptimisticOperation = (
   const { subAccounts } = account;
   const parentType = subAccountId ? "FEES" : type;
   const tokenAccount = subAccountId ? subAccounts?.find(ta => ta.id === subAccountId) : null;
-  const normalizedSequenceNumber = String(sequenceNumber ?? 0);
-  const nonce = sequenceNumber === undefined ? undefined : new BigNumber(normalizedSequenceNumber);
+  const transactionSequenceNumber = new BigNumber(
+    sequenceNumber === undefined ? "0" : sequenceNumber.toString(),
+  );
+  const nonce = sequenceNumber === undefined ? undefined : transactionSequenceNumber;
 
   const operation: Operation = {
     id: encodeOperationId(account.id, "", parentType),
@@ -562,7 +605,7 @@ export const buildOptimisticOperation = (
     blockHeight: null,
     senders: [account.freshAddress.toString()],
     recipients: [transaction.recipient],
-    transactionSequenceNumber: new BigNumber(normalizedSequenceNumber),
+    transactionSequenceNumber,
     accountId: account.id,
     date: new Date(),
     transactionRaw: toGenericTransactionRaw({
@@ -591,7 +634,7 @@ export const buildOptimisticOperation = (
         blockHeight: null,
         senders: [account.freshAddress],
         recipients: [transaction.recipient],
-        transactionSequenceNumber: new BigNumber(normalizedSequenceNumber),
+        transactionSequenceNumber,
         accountId: subAccountId,
         date: new Date(),
         transactionRaw: toGenericTransactionRaw({
