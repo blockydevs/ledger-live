@@ -35,11 +35,9 @@ import {
   filterOperationTableItemsByAllowedAccountIds,
   filterTopLevelAccountsByAllowedAccountIds,
 } from "LLD/features/History/utils/accountScopeForHistory";
-import {
-  clampDayChangePercentPointsNearZero,
-  getScrubVariation,
-  resolveRangePriceChange,
-} from "../MarketPriceSection/utils";
+import { clampDayChangePercentPointsNearZero } from "@ledgerhq/live-common/market/utils/resolveRangePriceChange";
+import { getScrubVariation } from "@ledgerhq/live-common/market/utils/scrubVariation";
+import { resolveRangePriceChange } from "../MarketPriceSection/utils";
 import { useAssetDetailChartSeries } from "../../hooks/useAssetDetailChartSeries";
 import { useAssetChartDateFormatter } from "../../hooks/useAssetChartDateFormatter";
 import { useScrubbedPrice } from "../../context/ScrubbedPriceContext";

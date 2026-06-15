@@ -15,8 +15,8 @@ import {
   useDateFormatter,
 } from "~/renderer/hooks/useDateFormatter";
 import { useAssetDetailChartSeries } from "../../hooks/useAssetDetailChartSeries";
+import { isChartDerivedPriceChangeRange } from "@ledgerhq/live-common/market/utils/chartRangeVariation";
 import {
-  isChartDerivedPriceChangeRange,
   resolveMarketPriceSectionSourceId,
   resolveRangePriceChange,
   resolveTrendPercentAndVariant,

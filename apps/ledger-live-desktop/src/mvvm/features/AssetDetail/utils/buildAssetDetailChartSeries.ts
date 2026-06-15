@@ -1,6 +1,5 @@
+import { buildMarketChartSeries } from "@ledgerhq/live-common/market/utils/buildMarketChartSeries";
 import type { MarketCoinDataChart } from "@ledgerhq/live-common/market/utils/types";
-import { injectMarketExtrema } from "@ledgerhq/live-common/market/utils/injectMarketExtrema";
-import { resampleChartPointsByInterval } from "@ledgerhq/live-common/market/utils/resampleChartPoints";
 import type { LineChartRange } from "LLD/components/LineChart";
 
 const MINUTE_MS = 60_000;
@@ -36,16 +35,13 @@ export function buildAssetDetailChartSeries({
   athTime,
   atlTime,
 }: BuildAssetDetailChartSeriesParams): { prices: number[]; timestamps: number[] } {
-  const rawPoints = chartData?.[selectedRange] ?? [];
-  const withExtrema =
-    selectedRange === "all"
-      ? injectMarketExtrema(rawPoints, { ath, athDate: athTime, atl, atlDate: atlTime })
-      : rawPoints;
-  const points = resampleChartPointsByInterval(
-    withExtrema,
-    ASSET_DETAIL_RANGE_TARGET_INTERVAL_MS[selectedRange],
-  );
-  const prices = points.map(([, value]) => value);
-  const timestamps = points.map(([timestamp]) => timestamp);
-  return { prices, timestamps };
+  return buildMarketChartSeries({
+    chartData,
+    range: selectedRange,
+    targetIntervalMs: ASSET_DETAIL_RANGE_TARGET_INTERVAL_MS[selectedRange],
+    ath,
+    atl,
+    athTime,
+    atlTime,
+  });
 }
