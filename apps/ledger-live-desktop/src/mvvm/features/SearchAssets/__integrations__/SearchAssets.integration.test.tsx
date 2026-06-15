@@ -157,7 +157,7 @@ describe("SearchAssets suggestion sections", () => {
     render(<Harness />);
 
     fireEvent.click(screen.getByTestId("cryptos-item-btc"));
-    expect(navigateToAsset).toHaveBeenCalledWith(BTC.id);
+    expect(navigateToAsset).toHaveBeenCalledWith(BTC.id, expect.objectContaining({ id: BTC.id }));
   });
 
   it("triggers the see-all handler from the section header", () => {

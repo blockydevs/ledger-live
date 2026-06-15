@@ -1,6 +1,7 @@
 import { KeyboardEvent, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
+import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
 import { setTrackingSource } from "~/renderer/analytics/TrackPage";
 import { getMarketOrAssetDetailPath } from "LLD/utils/marketAssetNavigation";
 import { setMarketCategory } from "~/renderer/actions/market";
@@ -16,9 +17,11 @@ export function useSearchOverlayViewModel() {
     useAssetSearchBar();
 
   const navigateToAsset = useCallback(
-    (currencyId: string) => {
+    (currencyId: string, marketState?: MarketCurrencyData) => {
       setTrackingSource("Global Search");
-      navigate(getMarketOrAssetDetailPath(currencyId, shouldDisplayAggregatedAssets));
+      navigate(getMarketOrAssetDetailPath(currencyId, shouldDisplayAggregatedAssets), {
+        state: marketState,
+      });
       close();
     },
     [navigate, shouldDisplayAggregatedAssets, close],
