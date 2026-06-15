@@ -72,11 +72,26 @@ describe("useMarketTableViewModel", () => {
     expect(losers.current.changeSort).toBe("asc");
   });
 
+  it("should derive volumeSort from the volume order", () => {
+    const { result: desc } = renderHook(() =>
+      useMarketTableViewModel(createData({ marketParams: { order: Order.VolumeDesc } })),
+    );
+    expect(desc.current.volumeSort).toBe("desc");
+    expect(desc.current.marketCapSort).toBeUndefined();
+
+    const { result: asc } = renderHook(() =>
+      useMarketTableViewModel(createData({ marketParams: { order: Order.VolumeAsc } })),
+    );
+    expect(asc.current.volumeSort).toBe("asc");
+  });
+
   it("should toggle the market cap order between desc and asc", () => {
     const refresh = jest.fn();
 
     const { result: fromDesc } = renderHook(() =>
-      useMarketTableViewModel(createData({ refresh, marketParams: { order: Order.MarketCapDesc } })),
+      useMarketTableViewModel(
+        createData({ refresh, marketParams: { order: Order.MarketCapDesc } }),
+      ),
     );
     fromDesc.current.onToggleMarketCap();
     expect(refresh).toHaveBeenCalledWith({ order: Order.MarketCapAsc });
@@ -100,10 +115,31 @@ describe("useMarketTableViewModel", () => {
 
     refresh.mockClear();
     const { result: fromOther } = renderHook(() =>
-      useMarketTableViewModel(createData({ refresh, marketParams: { order: Order.MarketCapDesc } })),
+      useMarketTableViewModel(
+        createData({ refresh, marketParams: { order: Order.MarketCapDesc } }),
+      ),
     );
     fromOther.current.onToggleChange();
     expect(refresh).toHaveBeenCalledWith({ order: Order.topGainers });
+  });
+
+  it("should toggle the volume order between desc and asc", () => {
+    const refresh = jest.fn();
+
+    const { result: fromDesc } = renderHook(() =>
+      useMarketTableViewModel(createData({ refresh, marketParams: { order: Order.VolumeDesc } })),
+    );
+    fromDesc.current.onToggleVolume();
+    expect(refresh).toHaveBeenCalledWith({ order: Order.VolumeAsc });
+
+    refresh.mockClear();
+    const { result: fromOther } = renderHook(() =>
+      useMarketTableViewModel(
+        createData({ refresh, marketParams: { order: Order.MarketCapDesc } }),
+      ),
+    );
+    fromOther.current.onToggleVolume();
+    expect(refresh).toHaveBeenCalledWith({ order: Order.VolumeDesc });
   });
 
   it("should show the skeleton while fresh loading or on error", () => {
