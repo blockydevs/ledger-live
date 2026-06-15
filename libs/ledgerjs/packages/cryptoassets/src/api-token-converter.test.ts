@@ -33,7 +33,7 @@ describe("convertApiToken", () => {
       const result = convertApiToken(apiToken);
 
       expect(result?.tokenType).toBe("coin");
-      expect(result?.parentCurrency?.id).toBe("sui");
+      expect(result?.parentCurrencyId).toBe("sui");
     });
   });
 
