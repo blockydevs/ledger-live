@@ -6,10 +6,11 @@ import type { AppSpec } from "@ledgerhq/ledger-wallet-framework/bot/types";
 import { Account } from "@ledgerhq/types-live";
 import invariant from "invariant";
 import sample from "lodash/sample";
-import { getAccountDelegationSync, isAccountDelegating } from "../network/bakers";
-import whitelist from "../network/bakers.whitelist-default";
-import { isTezosAccount, type Transaction } from "../types";
-import { acceptTransaction } from "./bot-deviceActions";
+import whitelist from "@ledgerhq/coin-tezos/network/bakers.whitelist-default";
+import { getAccountDelegationSync, isAccountDelegating } from "../bakers";
+import { isTezosAccount } from "../types";
+import type { Transaction } from "../types";
+import { acceptTransaction } from "./deviceActions";
 
 const maxAccount = 12;
 

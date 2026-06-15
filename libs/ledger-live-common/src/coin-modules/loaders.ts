@@ -345,9 +345,9 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     family: "tezos",
     supportedCoins: ["tezos"],
     loadSetup: () => import("../families/tezos/setup"),
-    loadTransaction: () => import("@ledgerhq/coin-tezos/transaction").then(m => m.default),
+    loadTransaction: () => import("../families/tezos/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
-      import("@ledgerhq/coin-tezos/deviceTransactionConfig").then(m => m.default),
+      import("../families/tezos/deviceTransactionConfig").then(m => m.default),
     loadMockBridge: () => import("../families/tezos/bridge/mock").then(m => m.default),
     loadValidateAddress: () =>
       import("@ledgerhq/coin-tezos/logic/validateAddress").then(

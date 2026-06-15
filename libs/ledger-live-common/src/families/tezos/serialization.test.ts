@@ -1,7 +1,7 @@
 import type { Account, AccountRaw } from "@ledgerhq/types-live";
 import { BigNumber } from "bignumber.js";
 import { assignFromAccountRaw, assignToAccountRaw } from "./serialization";
-import type { StakingPosition, TezosAccount, TezosAccountRaw } from "./types/bridge";
+import type { StakingPosition, TezosAccount, TezosAccountRaw } from "./types";
 
 const ADDRESS = "tz1WvvbEGpBXGeTVbLiR6DYBe1izmgiYuZbq";
 const DELEGATE = "tz1baker";
@@ -89,10 +89,10 @@ describe("coin-tezos serialization", () => {
           amount: "42",
         },
       ],
-    } as AccountRaw;
+    } as unknown as AccountRaw;
     const account = {} as Account;
     assignFromAccountRaw(raw, account);
-    const got = (account as TezosAccount).stakingPositions;
+    const got = (account as TezosAccount).stakingPositions!;
     expect(got).toHaveLength(2);
     expect(got[0]).toEqual({
       uid: `delegation-${ADDRESS}`,
@@ -176,6 +176,7 @@ describe("coin-tezos serialization", () => {
         state: "deactivating",
         asset: { type: "native" },
         amount: new BigNumber("1"),
+        actions: [],
         createdAt: new Date("not-a-date"),
       },
     ];
@@ -197,9 +198,9 @@ describe("coin-tezos serialization", () => {
           createdAt: "not-a-date",
         },
       ],
-    } as AccountRaw;
+    } as unknown as AccountRaw;
     const account = {} as Account;
     assignFromAccountRaw(raw, account);
-    expect((account as TezosAccount).stakingPositions[0]).not.toHaveProperty("createdAt");
+    expect((account as TezosAccount).stakingPositions![0]).not.toHaveProperty("createdAt");
   });
 });

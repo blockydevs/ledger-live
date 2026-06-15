@@ -4,9 +4,9 @@ import invariant from "invariant";
 import flatMap from "lodash/flatMap";
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { listBakers, fetchAllBakers } from "../network/bakers";
-import defaultList from "../network/bakers.whitelist-default";
-import type { Transaction, Baker } from "../types";
+import { listBakers, fetchAllBakers } from "@ledgerhq/coin-tezos/network/bakers";
+import defaultList from "@ledgerhq/coin-tezos/network/bakers.whitelist-default";
+import type { Transaction, Baker } from "./types";
 
 const options = [
   {
@@ -64,12 +64,10 @@ function inferTransactions(
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tezos", "tezos family");
-    let subAccountId;
 
     return {
       ...transaction,
       mode: opts.mode || "send",
-      subAccountId,
       fees: opts.fees ? inferAmount(account, opts.fees) : null,
       gasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
       storageLimit: opts.storageLimit ? new BigNumber(opts.storageLimit) : null,
