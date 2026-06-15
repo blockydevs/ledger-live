@@ -153,10 +153,10 @@ export function canUndelegate(account: StakingAccount, delegation?: StakingDeleg
  * Only applies to chains with an explicit finalization slot (Monad carries a
  * `withdrawId`); other EVM chains auto-return funds once the unbonding period
  * elapses, so there is no withdraw CTA. The slot must also have matured — its
- * `status` advanced to `"inactive"`.
+ * `status` advanced to `"withdrawable"`.
  */
 export function canWithdraw(unbonding: Pick<StakingUnbonding, "withdrawId" | "status">): boolean {
-  return unbonding.withdrawId !== undefined && unbonding.status === "inactive";
+  return unbonding.withdrawId !== undefined && unbonding.status === "withdrawable";
 }
 
 export function canDelegate(account: StakingAccount): boolean {

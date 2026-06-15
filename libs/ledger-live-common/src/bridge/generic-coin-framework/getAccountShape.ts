@@ -53,7 +53,7 @@ function hasDeactivatingStake(balance: Balance): balance is Balance & {
   stake: Stake;
 } {
   const state = balance.stake?.state as string | undefined;
-  return state === "deactivating" || state === "inactive";
+  return state === "deactivating" || state === "inactive" || state === "withdrawable";
 }
 
 function hasStakeDelegate<T extends Balance & { stake: Stake }>(
@@ -427,7 +427,7 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
           validatorAddress: b.stake.delegate,
           amount: new BigNumber(delegated.toString()),
           completionDate: b.stake.stateUpdatedAt ?? new Date(),
-          status: (b.stake.state as string) === "inactive" ? "inactive" : "deactivating",
+          status: (b.stake.state as string) === "withdrawable" ? "withdrawable" : "deactivating",
           ...(typeof validatorId === "string" ? { validatorId } : {}),
           ...(typeof validatorName === "string" ? { validatorName } : {}),
           ...(typeof withdrawId === "number" ? { withdrawId } : {}),

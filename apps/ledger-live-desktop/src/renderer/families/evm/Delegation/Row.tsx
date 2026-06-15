@@ -354,7 +354,7 @@ export function UnbondingRow({
         <Ellipsis>{name}</Ellipsis>
       </Column>
       <Column>
-        {status === "inactive" ? (
+        {status === "withdrawable" ? (
           <Box color="positiveGreen" pl={2}>
             <ToolTip content={<Trans i18nKey="ethereum.evmStaking.undelegation.readyTooltip" />}>
               <CheckCircle size={14} />

@@ -42,7 +42,7 @@ export type StakingRedelegationRaw = {
 
 export type StakingUnbondingStatus =
   | "deactivating" // unbonding period still in progress; funds remain locked
-  | "inactive"; // unbonding period elapsed; funds are released (withdrawable where the chain requires an explicit withdraw)
+  | "withdrawable"; // unbonding period elapsed; funds are released (the chain requires an explicit withdraw to claim them)
 
 export type StakingUnbonding = {
   validatorAddress: string;

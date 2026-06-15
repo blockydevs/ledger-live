@@ -423,7 +423,7 @@ const fetchStakeForValId = async (
       uid: `${contractAddress}-${valId.toString()}-${delegator}-withdraw-${withdrawId}`,
       address: delegator,
       ...(validatorAddress ? { delegate: validatorAddress } : {}),
-      state: canWithdraw ? "inactive" : "deactivating",
+      state: canWithdraw ? "withdrawable" : "deactivating",
       ...(completionDate ? { stateUpdatedAt: completionDate } : {}),
       asset,
       amount: withdrawalAmount,
