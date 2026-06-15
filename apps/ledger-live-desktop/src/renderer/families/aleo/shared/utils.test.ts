@@ -114,6 +114,10 @@ describe("isAleoAccount", () => {
   it("should return true for a plain Aleo account without aleoResources", () => {
     expect(isAleoAccount(ALEO_ACCOUNT_1)).toBe(true);
   });
+
+  it("should return true for token account", () => {
+    expect(isAleoAccount(ALEO_TOKEN_ACCOUNT)).toBe(true);
+  });
 });
 
 describe("isAleoTransaction", () => {
