@@ -657,6 +657,7 @@
     "src/flows/send/customFees/hooks/useCustomFeesViewModelCore.ts",
     "src/flows/send/customFees/hooks/useStableGasOptions.ts",
     "src/flows/send/customFees/utils/customFeeUtils.ts",
+    "src/flows/send/effects/hooks/useFlowEffects.ts",
     "src/flows/send/hooks/useSendFlowAccount.ts",
     "src/flows/send/hooks/useSendFlowAmountReviewCore.ts",
     "src/flows/send/hooks/useSendFlowBusinessLogic.ts",
