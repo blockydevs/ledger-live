@@ -33,7 +33,7 @@ describe("convertApiToken", () => {
       const result = convertApiToken(apiToken);
 
       expect(result?.tokenType).toBe("coin");
-      expect(result?.parentCurrency?.id).toBe("sui");
+      expect(result?.parentCurrencyId).toBe("sui");
     });
   });
 
@@ -166,7 +166,7 @@ describe("convertApiToken", () => {
 
       expect(result?.type).toBe("TokenCurrency");
       expect(result?.tokenType).toBe("erc20");
-      expect(result?.parentCurrency?.id).toBe("ethereum");
+      expect(result?.parentCurrencyId).toBe("ethereum");
     });
 
     it("should convert SPL token", () => {
@@ -182,7 +182,7 @@ describe("convertApiToken", () => {
       const result = convertApiToken(apiToken);
 
       expect(result?.tokenType).toBe("spl");
-      expect(result?.parentCurrency?.id).toBe("solana");
+      expect(result?.parentCurrencyId).toBe("solana");
     });
 
     it("should convert TRC20 token", () => {

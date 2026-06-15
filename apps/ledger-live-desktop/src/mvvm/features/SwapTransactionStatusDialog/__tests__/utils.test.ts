@@ -24,7 +24,7 @@ const ton = getCryptoCurrencyById("ton");
 const usdcPolygon: TokenCurrency = {
   type: "TokenCurrency",
   id: "polygon/erc20/usd_coin",
-  parentCurrency: polygon,
+  parentCurrencyId: polygon.id,
   tokenType: "erc20",
   contractAddress: "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
   ticker: "USDC",

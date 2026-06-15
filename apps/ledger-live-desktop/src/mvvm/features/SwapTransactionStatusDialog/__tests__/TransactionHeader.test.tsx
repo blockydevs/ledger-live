@@ -25,7 +25,7 @@ const ethereum = getCryptoCurrencyById("ethereum");
 const usdtEthereum: TokenCurrency = {
   type: "TokenCurrency",
   id: "ethereum/erc20/usd_tether__erc20_",
-  parentCurrency: ethereum,
+  parentCurrencyId: ethereum.id,
   tokenType: "erc20",
   contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
   ticker: "USDT",

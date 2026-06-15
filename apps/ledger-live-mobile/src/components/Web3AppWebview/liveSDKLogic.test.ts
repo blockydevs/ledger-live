@@ -41,7 +41,7 @@ describe("prepareSignTransaction", () => {
       maxFeePerGas: undefined,
       maxPriorityFeePerGas: undefined,
       type: 0,
-      chainId: 0,
+      chainId: 1,
     };
 
     // When
@@ -75,7 +75,7 @@ describe("prepareSignTransaction", () => {
       maxFeePerGas: undefined,
       maxPriorityFeePerGas: undefined,
       type: 0,
-      chainId: 0,
+      chainId: 1,
     };
 
     // When
@@ -211,7 +211,7 @@ function createTokenCurrency(): TokenCurrency {
     type: "TokenCurrency",
     id: "3",
     contractAddress: "",
-    parentCurrency: defaultEthCryptoFamily,
+    parentCurrencyId: "ethereum",
     tokenType: "",
     // -- CurrencyCommon
     name: "",

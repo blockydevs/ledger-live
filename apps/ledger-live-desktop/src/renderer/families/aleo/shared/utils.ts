@@ -10,13 +10,16 @@ import type {
 } from "@ledgerhq/live-common/families/aleo/types";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import type { AccountLike } from "@ledgerhq/types-live";
 
 export const getAleoCurrencyConfig = (
   currency: CryptoCurrency | TokenCurrency,
 ): AleoCoinConfig | undefined => {
   try {
-    const cryptoCurrency = isCryptoCurrency(currency) ? currency : currency.parentCurrency;
+    const cryptoCurrency = isCryptoCurrency(currency)
+      ? currency
+      : getCryptoCurrencyById(currency.parentCurrencyId);
     return getCurrencyConfiguration<AleoCoinConfig>(cryptoCurrency.id);
   } catch {
     return undefined;
@@ -24,7 +27,8 @@ export const getAleoCurrencyConfig = (
 };
 
 export function isAleoAccount(acc: AccountLike): acc is AleoAccount | AleoTokenAccount {
-  const currency = acc.type === "Account" ? acc.currency : acc.token.parentCurrency;
+  const currency =
+    acc.type === "Account" ? acc.currency : getCryptoCurrencyById(acc.token.parentCurrencyId);
   return currency.family === "aleo";
 }
 

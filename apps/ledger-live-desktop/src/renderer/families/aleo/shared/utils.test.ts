@@ -39,7 +39,7 @@ describe("getAleoCurrencyConfig", () => {
     // @ts-expect-error - not all fields are needed for this test
     const tokenCurrency: TokenCurrency = {
       type: "TokenCurrency",
-      parentCurrency: aleoCurrency,
+      parentCurrencyId: "aleo",
     };
 
     const result = getAleoCurrencyConfig(tokenCurrency);

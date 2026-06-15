@@ -387,7 +387,7 @@ function AccountRow({
 
   const ledgerId = currency.id;
   const ticker = currency.ticker;
-  const network = currency.type === "TokenCurrency" ? currency.parentCurrency.id : undefined;
+  const network = currency.type === "TokenCurrency" ? currency.parentCurrencyId : undefined;
   const validSize = 20;
 
   return (

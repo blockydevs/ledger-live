@@ -1,5 +1,6 @@
 import invariant from "invariant";
 import React, { useEffect, useCallback, useState } from "react";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { getMainAccount } from "@ledgerhq/live-common/account/index";
 import TrackPage from "~/renderer/analytics/TrackPage";
@@ -202,7 +203,9 @@ const StepReceiveFunds = (props: StepProps) => {
   const isDirectStakingEnabledForAccount =
     !!receivedCurrencyId && receiveStakingFlowConfig?.params?.[receivedCurrencyId]?.direct;
   const isSPLToken =
-    account && account.type === "TokenAccount" && account.token.parentCurrency.family === "solana";
+    account &&
+    account.type === "TokenAccount" &&
+    getCryptoCurrencyById(account.token.parentCurrencyId).family === "solana";
 
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
   invariant(account && mainAccount, "No account given");

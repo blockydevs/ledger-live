@@ -49,7 +49,7 @@ export function convertApiToken(apiToken: ApiTokenData): TokenCurrency | undefin
     type: "TokenCurrency",
     id,
     contractAddress: contractAddress,
-    parentCurrency,
+    parentCurrencyId,
     tokenType: standard,
     name,
     ticker,

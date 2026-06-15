@@ -32,10 +32,7 @@ export function InfoBottomSheet({ data, onClose }: InfoBottomSheetProps) {
         <Text typography="heading3SemiBold" lx={{ color: "base", marginBottom: "s12" }}>
           {title}
         </Text>
-        <Text
-          typography="body1"
-          lx={{ color: "base", marginBottom: showLink ? "s16" : "s24" }}
-        >
+        <Text typography="body1" lx={{ color: "base", marginBottom: showLink ? "s16" : "s24" }}>
           {message}
         </Text>
         {showLink ? (

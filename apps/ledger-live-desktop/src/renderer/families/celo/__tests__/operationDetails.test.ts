@@ -60,7 +60,7 @@ const buildToken = (
   type: "TokenCurrency",
   id,
   contractAddress,
-  parentCurrency: celo,
+  parentCurrencyId: celo.id,
   tokenType: "erc20",
   name: "Test Token",
   ticker: "TST",
