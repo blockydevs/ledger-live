@@ -404,6 +404,46 @@ export function isTokenTransaction(transaction: Pick<Transaction, "mode">): bool
   );
 }
 
+/**
+ * Workaround for useBridgeTransaction.setAccount preserving the previous mode and only patching subAccountId.
+ * Switching between main/sub-account can leave a native mode on a token tx (or vice versa).
+ */
+export function derivePublicTransactionMode({
+  isTokenTx,
+  isSelfTransfer,
+}: {
+  isTokenTx: boolean;
+  isSelfTransfer: boolean;
+}): TransactionPublic["mode"] {
+  if (isTokenTx) {
+    return isSelfTransfer
+      ? TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE
+      : TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC;
+  }
+
+  return isSelfTransfer
+    ? TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE
+    : TRANSACTION_TYPE.TRANSFER_PUBLIC;
+}
+
+export function derivePrivateTransactionMode({
+  isTokenTx,
+  isSelfTransfer,
+}: {
+  isTokenTx: boolean;
+  isSelfTransfer: boolean;
+}): TransactionPrivate["mode"] {
+  if (isTokenTx) {
+    return isSelfTransfer
+      ? TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC
+      : TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE;
+  }
+
+  return isSelfTransfer
+    ? TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC
+    : TRANSACTION_TYPE.TRANSFER_PRIVATE;
+}
+
 export function findBestRecordForFee({
   unspentRecords,
   targetFee,
