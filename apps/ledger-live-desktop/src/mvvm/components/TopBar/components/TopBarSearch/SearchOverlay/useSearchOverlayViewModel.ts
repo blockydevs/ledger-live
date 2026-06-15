@@ -1,4 +1,4 @@
-import { KeyboardEvent, useCallback, useMemo } from "react";
+import { KeyboardEvent, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { setTrackingSource } from "~/renderer/analytics/TrackPage";
@@ -14,6 +14,13 @@ export function useSearchOverlayViewModel() {
   const { shouldDisplayAggregatedAssets } = useWalletFeaturesConfig("desktop");
   const { query, onChangeQuery, isOpen, open, close, mode, suggestions, results } =
     useAssetSearchBar();
+
+  // Keep the last mode while open so the popover fades out with its current content instead of
+  // flickering the default asset list when closing clears the query.
+  const [displayedMode, setDisplayedMode] = useState(mode);
+  if (isOpen && displayedMode !== mode) {
+    setDisplayedMode(mode);
+  }
 
   const navigateToAsset = useCallback(
     (currencyId: string) => {
@@ -65,10 +72,26 @@ export function useSearchOverlayViewModel() {
       navigateToStocksMarket,
       suggestions,
       results,
-      mode,
+      mode: displayedMode,
     }),
-    [close, navigateToAsset, navigateToMarket, navigateToStocksMarket, suggestions, results, mode],
+    [
+      close,
+      navigateToAsset,
+      navigateToMarket,
+      navigateToStocksMarket,
+      suggestions,
+      results,
+      displayedMode,
+    ],
   );
 
-  return { open: isOpen, onOpenChange, query, onChangeQuery, onKeyDown, mode, contextValue };
+  return {
+    open: isOpen,
+    onOpenChange,
+    query,
+    onChangeQuery,
+    onKeyDown,
+    mode: displayedMode,
+    contextValue,
+  };
 }
