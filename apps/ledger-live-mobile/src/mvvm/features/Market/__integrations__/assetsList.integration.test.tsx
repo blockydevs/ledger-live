@@ -52,8 +52,8 @@ function hasTestID(node: React.ReactNode, testID: string): boolean {
 }
 
 function installCapturedMarketHandlers(marketRequests: string[], dadaRequests: string[]) {
+  // The dedicated CVS `tokenized-stock` category is authoritative, so it returns only stocks.
   const stockMarketsMock: typeof marketsMock = [
-    marketsMock[0],
     {
       ...marketsMock[0],
       id: "tesla-xstock",
@@ -63,15 +63,6 @@ function installCapturedMarketHandlers(marketRequests: string[], dadaRequests: s
       marketCapRank: 528,
       price: 411.28,
     },
-    {
-      ...marketsMock[0],
-      id: "rif-token",
-      ledgerIds: ["rsk/erc20/rif"],
-      ticker: "rif",
-      name: "Rootstock Infrastructure Framework",
-      marketCapRank: 412,
-      price: 0.07,
-    },
   ];
 
   server.use(
@@ -79,10 +70,11 @@ function installCapturedMarketHandlers(marketRequests: string[], dadaRequests: s
       marketRequests.push(request.url);
       const searchParams = new URL(request.url).searchParams;
       const filter = searchParams.get("filter")?.toLowerCase();
+      const categories = searchParams.get("categories");
       const ids = searchParams.get("ids")?.split(",") ?? [];
 
       let filteredData = marketsMock;
-      if (filter === "stock") {
+      if (categories === "tokenized-stock") {
         filteredData = stockMarketsMock;
       } else if (filter) {
         filteredData = marketsMock.filter(
@@ -248,7 +240,7 @@ describe("MarketScreen assets list (Block 3)", () => {
     );
 
     const stockMarketRequest = marketRequests.find(
-      url => new URL(url).searchParams.get("filter") === "stock",
+      url => new URL(url).searchParams.get("categories") === "tokenized-stock",
     );
     const dadaStocksRequests = dadaRequests.filter(
       url => new URL(url).searchParams.get("categories") === "stocks",
