@@ -44,7 +44,9 @@ export function CarouselSlideItem({
       }}
     >
       {showImage ? (
-        <Box lx={{ flex: 1, alignItems: "center", justifyContent: "flex-end", marginBottom: "s20" }}>
+        <Box
+          lx={{ flex: 1, alignItems: "center", justifyContent: "flex-end", marginBottom: "s20" }}
+        >
           <FastImage
             source={{
               uri: imageUrl,

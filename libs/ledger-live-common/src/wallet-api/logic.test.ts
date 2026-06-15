@@ -1316,9 +1316,9 @@ describe("liveBlindSigningReporter live-app context wrapping", () => {
 
     const uiNavigation = jest.fn().mockRejectedValueOnce(new Error("user rejected"));
 
-    await expect(
-      signMessageLogic(context, walletAccountId, "msg", uiNavigation),
-    ).rejects.toThrow("user rejected");
+    await expect(signMessageLogic(context, walletAccountId, "msg", uiNavigation)).rejects.toThrow(
+      "user rejected",
+    );
 
     expect(setContextSpy).toHaveBeenLastCalledWith({ liveAppContext: null });
     expect(liveBlindSigningReporter.getContext().liveAppContext).toBeNull();
@@ -1358,9 +1358,9 @@ describe("liveBlindSigningReporter live-app context wrapping", () => {
       } as unknown as TrackingAPI,
     };
 
-    await expect(
-      signRawTransactionLogic(context, "wallet-id", "", jest.fn()),
-    ).rejects.toThrow("Transaction required");
+    await expect(signRawTransactionLogic(context, "wallet-id", "", jest.fn())).rejects.toThrow(
+      "Transaction required",
+    );
 
     expect(setContextSpy).toHaveBeenLastCalledWith({ liveAppContext: null });
     expect(liveBlindSigningReporter.getContext().liveAppContext).toBeNull();

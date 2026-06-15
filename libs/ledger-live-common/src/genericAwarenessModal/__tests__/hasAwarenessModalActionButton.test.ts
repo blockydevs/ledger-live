@@ -9,10 +9,7 @@ describe("hasAwarenessModalActionButton", () => {
     ["   ", "https://example.com", false],
     ["Primary", "   ", false],
     ["  Primary  ", "  https://example.com  ", true],
-  ] as const)(
-    "should return %s when label is %j and link is %j",
-    (label, link, expected) => {
-      expect(hasAwarenessModalActionButton(label, link)).toBe(expected);
-    },
-  );
+  ] as const)("should return %s when label is %j and link is %j", (label, link, expected) => {
+    expect(hasAwarenessModalActionButton(label, link)).toBe(expected);
+  });
 });

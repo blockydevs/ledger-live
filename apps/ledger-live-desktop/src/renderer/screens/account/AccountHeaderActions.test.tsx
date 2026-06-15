@@ -28,12 +28,9 @@ jest.mock("@ledgerhq/live-common/account/index", () => {
   };
 });
 
-jest.mock(
-  "@ledgerhq/live-common/platform/providers/RampCatalogProvider/useRampCatalog",
-  () => ({
-    useRampCatalog: () => ({ isCurrencyAvailable: () => false }),
-  }),
-);
+jest.mock("@ledgerhq/live-common/platform/providers/RampCatalogProvider/useRampCatalog", () => ({
+  useRampCatalog: () => ({ isCurrencyAvailable: () => false }),
+}));
 
 jest.mock("@ledgerhq/live-common/exchange/swap/index", () => ({
   getAvailableProviders: () => [],

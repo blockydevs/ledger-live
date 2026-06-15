@@ -284,7 +284,7 @@ const Body = ({
   }
   const error = transactionError || bridgeError;
   const stepperProps = {
-    title: stepId === "warning" ? t("common.information") : title ?? t("send.title"),
+    title: stepId === "warning" ? t("common.information") : (title ?? t("send.title")),
     modalName,
     stepId,
     steps,

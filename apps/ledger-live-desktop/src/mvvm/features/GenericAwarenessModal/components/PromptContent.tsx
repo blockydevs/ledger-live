@@ -29,10 +29,7 @@ export default function PromptContent({
   onPrimaryClick,
   onSecondaryClick,
 }: Readonly<PromptContentProps>) {
-  const showPrimaryButton = hasAwarenessModalActionButton(
-    primaryButtonLabel,
-    primaryButtonLink,
-  );
+  const showPrimaryButton = hasAwarenessModalActionButton(primaryButtonLabel, primaryButtonLink);
   const showSecondaryButton = hasAwarenessModalActionButton(
     secondaryButtonLabel,
     secondaryButtonLink,

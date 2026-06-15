@@ -3,10 +3,7 @@ import { track } from "~/renderer/analytics/segment";
 import { openURL } from "~/renderer/linking";
 import { urls } from "~/config/urls";
 import { useLocalizedUrl } from "~/renderer/hooks/useLocalizedUrls";
-import {
-  DEFAULT_PROTECT_ID,
-  useRecoverBannerState,
-} from "~/renderer/hooks/useRecoverBannerState";
+import { DEFAULT_PROTECT_ID, useRecoverBannerState } from "~/renderer/hooks/useRecoverBannerState";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
 import { getBackupBucket } from "./utils/getBackupBucket";
 import {

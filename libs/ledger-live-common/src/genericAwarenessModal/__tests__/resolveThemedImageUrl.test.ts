@@ -44,9 +44,7 @@ describe("resolveThemedImageUrl", () => {
   });
 
   it("should return an empty string when light url is whitespace only", () => {
-    expect(
-      resolveThemedImageUrl({ imageUrlLight: "  \t  ", imageUrlDark: "" }, "light"),
-    ).toBe("");
+    expect(resolveThemedImageUrl({ imageUrlLight: "  \t  ", imageUrlDark: "" }, "light")).toBe("");
   });
 });
 
@@ -54,19 +52,17 @@ describe("hasThemedImage", () => {
   it.each([
     ["light", true],
     ["dark", true],
-  ] as const)("should return true when a resolvable image exists for %s theme", (theme, expected) => {
-    expect(
-      hasThemedImage(
-        { imageUrlLight: "https://example.com/light.png", imageUrlDark: "" },
-        theme,
-      ),
-    ).toBe(expected);
-  });
+  ] as const)(
+    "should return true when a resolvable image exists for %s theme",
+    (theme, expected) => {
+      expect(
+        hasThemedImage({ imageUrlLight: "https://example.com/light.png", imageUrlDark: "" }, theme),
+      ).toBe(expected);
+    },
+  );
 
   it("should return false when both themed urls are empty", () => {
-    expect(
-      hasThemedImage({ imageUrlLight: "", imageUrlDark: "" }, "light"),
-    ).toBe(false);
+    expect(hasThemedImage({ imageUrlLight: "", imageUrlDark: "" }, "light")).toBe(false);
   });
 
   it.each([
