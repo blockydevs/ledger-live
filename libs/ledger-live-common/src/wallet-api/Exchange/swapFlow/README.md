@@ -5,8 +5,7 @@ Headless XState machine + flow planner that drives the wallet-side
 imports: hosts inject a [`SwapFlowPorts`](./types.ts) contract to bridge
 intents and device-init payloads to their runtime.
 
-The mobile (LWM) adapter lives in
-[`apps/ledger-live-mobile/src/mvvm/features/SwapDeviceIntentPOC`](../../../../../../apps/ledger-live-mobile/src/mvvm/features/SwapDeviceIntentPOC).
+The mobile (LWM) adapter is introduced in the stacked follow-up PR that integrates this machine into `apps/ledger-live-mobile`.
 This document sketches how a non-React host (CLI, scripts, tests) can
 consume the same machine.
 

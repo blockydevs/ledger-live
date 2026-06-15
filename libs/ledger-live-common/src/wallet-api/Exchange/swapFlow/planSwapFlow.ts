@@ -14,8 +14,7 @@ import type { PlanSwapFlowInput, SwapFlowPlan } from "./types";
 
 /**
  * Providers known to require the USDT-on-Ethereum revoke-to-0 dance
- * before a non-zero allowance can be set. Mirrors
- * `apps/live-app/src/utils/revoke.ts#PROVIDERS_THAT_NEED_REVOKING`.
+ * before a non-zero allowance can be set.
  */
 const PROVIDERS_THAT_NEED_USDT_REVOKE: ReadonlySet<string> = new Set([
   "thorswap",
@@ -34,9 +33,7 @@ const USDT_DECIMALS = 6;
  * `_stepMachine`:
  *   `isTokenApprovalRequired && tokenAllowance && !tokenAllowance.isApproved`
  *
- * Source of truth for the rule:
- * - `apps/live-app/src/executeSwap/helpers.ts#needsTokenApproval`
- * - `apps/live-app/src/app/multi-step-transaction/_stepMachine/utils/determineFlowSteps.ts`
+ * Source of truth: swap-live-app approval predicate (see LIVE-31887).
  *
  * Re-implemented against the wallet-side `Quote` shape because that lives
  * under `quoteDetails.{tags,tokenAllowance}` rather than the live-app's
@@ -78,8 +75,7 @@ function getApprovalTransaction(
 
 /**
  * Identifies the RFQ provider for a quote, or `null` for classic AMM /
- * non-RFQ quotes. Mirrors `apps/live-app/src/executeSwap/helpers.ts#isRfq`
- * and `apps/live-app/src/components/ApprovalHandlers/approvalHandlers.ts`.
+ * non-RFQ quotes. Mirrors swap-live-app RFQ classification rules (see LIVE-31887).
  *
  * Unlike the previous `isRfqQuote` predicate, this also returns the
  * provider tag for UniswapX quotes that still need a token approval —

@@ -192,15 +192,9 @@ export class ExchangeModule extends CustomModule {
   }
 
   /**
-   * Run the new device-intent-based swap flow on the wallet host.
+   * Run the device-intent-based swap flow on the wallet host.
    *
-   * For now this only handles the EVM token-approval step (sign the approval
-   * transaction on the device, broadcast it, wait for the receipt). The
-   * submit + final-swap-broadcast steps will be added on the wallet side
-   * later, reusing the same wire shape.
-   *
-   * @returns `approvalTxHash` if an approval was needed and confirmed, or an
-   *   empty object when the source token already has a sufficient allowance.
+   * Result fields are additive; see {@link CustomSwapResult}.
    */
   async customSwap(params: CustomSwapParams): Promise<CustomSwapResult> {
     return this.request<CustomSwapParams, CustomSwapResult>("custom.swap", params);

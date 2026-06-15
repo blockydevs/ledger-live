@@ -1,22 +1,11 @@
 import { concat, defer, from, of, type Observable } from "rxjs";
-import { catchError, filter, finalize, map, switchMap } from "rxjs/operators";
-import {
-  DeviceActionStatus,
-  hexaStringToBuffer,
-  UserInteractionRequired,
-} from "@ledgerhq/device-management-kit";
-import {
-  SignTransactionDAStep,
-  type Signature,
-} from "@ledgerhq/device-signer-kit-ethereum";
-import { combine } from "@ledgerhq/coin-evm/logic/combine";
+import { catchError, switchMap } from "rxjs/operators";
 import { craftTransaction } from "@ledgerhq/coin-evm/logic/craftTransaction";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Account } from "@ledgerhq/types-live";
 import type { DeviceConnectionResult, Job } from "@ledgerhq/device-intent";
 import { getCryptoCurrencyById } from "../../../../currencies";
-import { DmkSignerEth } from "@ledgerhq/live-signer-evm";
-import { mapDmkSignerError } from "../shared/mapDmkSignerError";
+import { runSignTransactionEvm } from "../shared/signTransactionEvm";
 import type { DexTransactionData } from "../../dex";
 import type { SignSwapEvmIntentInput, SignSwapEvmJobState } from "./types";
 
@@ -45,7 +34,7 @@ async function buildUnsignedSwapTxHex(
       asset: { type: "native" },
       data: { type: "buffer", value: data },
       feesStrategy: "medium",
-    } as Parameters<typeof craftTransaction>[1]["transactionIntent"],
+    } satisfies Parameters<typeof craftTransaction>[1]["transactionIntent"],
     customFees: {
       value: 0n,
       // Only gasLimit is pinned — `craftTransaction` fetches `maxFeePerGas`
@@ -57,69 +46,20 @@ async function buildUnsignedSwapTxHex(
   return transaction;
 }
 
-function combineSignedTx(unsignedTxHex: string, signature: Signature): string {
-  return combine(unsignedTxHex, signature);
-}
-
 function runSignSwap(
   connectionResult: DeviceConnectionResult,
   input: SignSwapEvmIntentInput,
 ): Observable<SignSwapEvmJobState> {
   const currency = getCryptoCurrencyById(input.currencyId);
   return from(buildUnsignedSwapTxHex(currency, input.account, input.transactionData)).pipe(
-    switchMap(unsignedTxHex => {
-      const buffer = hexaStringToBuffer(unsignedTxHex);
-      if (!buffer) {
-        throw new Error("Failed to encode unsigned swap transaction to bytes");
-      }
-      const { dmk, sessionId } = connectionResult;
-      // Reuse the production CAL-wired SignerEth so the device can
-      // resolve partner calldata descriptors (Uniswap UniversalRouter,
-      // 1inch AggregationRouter, …) and clear-sign the swap instead
-      // of falling back to blind signing.
-      const signer = new DmkSignerEth(dmk, sessionId).signer;
-      const { observable, cancel } = signer.signTransaction(input.derivationPath, buffer, {
-        skipOpenApp: true,
-      });
-
-      return observable.pipe(
-        finalize(cancel),
-        map((state): SignSwapEvmJobState | null => {
-          if (state.status === DeviceActionStatus.Error) {
-            return {
-              type: "failed",
-              error: mapDmkSignerError(state.error, "Sign swap failed"),
-            };
-          }
-          if (state.status === DeviceActionStatus.Completed) {
-            return { type: "signed", signedTxHex: combineSignedTx(unsignedTxHex, state.output) };
-          }
-          if (state.status === DeviceActionStatus.Pending) {
-            const { step, requiredUserInteraction } = state.intermediateValue;
-            if (
-              step === SignTransactionDAStep.BUILD_CONTEXTS ||
-              step === SignTransactionDAStep.GET_APP_CONFIG ||
-              step === SignTransactionDAStep.GET_ADDRESS ||
-              step === SignTransactionDAStep.PARSE_TRANSACTION ||
-              step === SignTransactionDAStep.PROVIDE_CONTEXTS
-            ) {
-              return { type: "loading-context" };
-            }
-            if (requiredUserInteraction === UserInteractionRequired.SignTransaction) {
-              return { type: "awaiting-confirmation" };
-            }
-            if (
-              step === SignTransactionDAStep.SIGN_TRANSACTION ||
-              step === SignTransactionDAStep.BLIND_SIGN_TRANSACTION_FALLBACK
-            ) {
-              return { type: "signing" };
-            }
-          }
-          return null;
-        }),
-        filter((s): s is SignSwapEvmJobState => s !== null),
-      );
-    }),
+    switchMap(unsignedTxHex =>
+      runSignTransactionEvm(
+        connectionResult,
+        unsignedTxHex,
+        input.derivationPath,
+        "Sign swap failed",
+      ),
+    ),
     catchError(err =>
       of<SignSwapEvmJobState>({
         type: "failed",

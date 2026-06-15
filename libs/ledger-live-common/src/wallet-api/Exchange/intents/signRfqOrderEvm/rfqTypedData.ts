@@ -18,8 +18,7 @@ export type RfqProvider = "uniswapx" | "oneinchfusion";
  * concrete `EIP712Message` shape expected by the DMK Ethereum signer for
  * RFQ order signing.
  *
- * Mirrors the swap-live-app's `signOrderMessage` helper
- * (apps/live-app/src/utils/rfqOrderManagement.ts):
+ * Mirrors the swap-live-app's `signOrderMessage` helper (see LIVE-31887):
  * - reads the message from either `values` (UniswapX) or `message`
  *   (1inch-fusion);
  * - keeps the partner-provided `EIP712Domain` entries verbatim when

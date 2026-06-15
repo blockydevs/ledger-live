@@ -5,9 +5,8 @@ import type { QuotePermit2Message } from "../../quotes/types";
  * Adapts the quote's optional `QuotePermit2Message` payload into the
  * concrete `EIP712Message` shape expected by the DMK Ethereum signer.
  *
- * Mirrors the live-app's `handlePermitSignature` normalisation
- * (apps/live-app/src/app/multi-step-transaction/_stepMachine/actions/handlePermitSignature.ts):
- * it pins the `EIP712Domain` types entry (Permit2's domain only carries
+ * Mirrors the live-app's `handlePermitSignature` normalisation: it pins the
+ * `EIP712Domain` types entry (Permit2's domain only carries
  * `name` / `chainId` / `verifyingContract`) and forces `primaryType` to
  * `"PermitSingle"` when the quote omits it.
  *
