@@ -13,26 +13,27 @@ type SearchInputViewProps = {
   placeholder: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
+  isOpen: boolean;
   testId?: string;
 } & Omit<ComponentPropsWithoutRef<"div">, "onChange" | "onKeyDown">;
 
-function stopClearButtonFromTogglingOverlay(e: SyntheticEvent) {
-  if (e.target instanceof Element && e.target.closest("button")) {
-    e.stopPropagation();
-  }
-}
-
 export const SearchInputView = forwardRef<HTMLDivElement, SearchInputViewProps>(
   function SearchInputView(
-    { value, placeholder, onChange, onKeyDown, testId, className, ...rest },
+    { value, placeholder, onChange, onKeyDown, isOpen, testId, className, ...rest },
     ref,
   ) {
+    // While the overlay is open, clicks inside the search field (the input itself or the clear
+    // button) must not bubble to the Popover trigger, which would otherwise toggle it closed and
+    // reset the query. The first click (overlay closed) still propagates so it can open the overlay.
+    const stopOverlayToggleWhenOpen = (e: SyntheticEvent) => {
+      if (isOpen) {
+        e.stopPropagation();
+      }
+    };
+
     return (
       <div ref={ref} className={cn("min-w-0 max-w-[450px] flex-auto mr-24", className)} {...rest}>
-        <div
-          onClick={stopClearButtonFromTogglingOverlay}
-          onPointerDown={stopClearButtonFromTogglingOverlay}
-        >
+        <div onClick={stopOverlayToggleWhenOpen} onPointerDown={stopOverlayToggleWhenOpen}>
           <SearchInput
             appearance="transparent"
             value={value}
