@@ -173,6 +173,8 @@ export type CurrencyFeatures = {
   currencyUnichainSepolia: DefaultFeature;
   currencyArc: DefaultFeature;
   currencyArcTestnet: DefaultFeature;
+  currencyRobinhood: DefaultFeature;
+  currencyRobinhoodTestnet: DefaultFeature;
 };
 
 /**
