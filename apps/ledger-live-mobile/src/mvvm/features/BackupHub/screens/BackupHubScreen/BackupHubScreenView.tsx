@@ -110,7 +110,7 @@ export function BackupHubScreenView({
 
       <Box
         lx={{ paddingHorizontal: "s16", paddingTop: "s8", alignItems: "center" }}
-        style={{ paddingBottom: bottomInset + 4 }}
+        style={{ paddingBottom: bottomInset + 34 }}
       >
         <CompareBackupMethodsFooter
           label={t("myWallet.backupHub.compareFooter")}

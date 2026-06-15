@@ -1,14 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { Linking, type ImageSourcePropType } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useFeature } from "@features/platform-feature-flags";
-import { useSelector, useDispatch } from "~/context/hooks";
-import { ScreenName } from "~/const";
-import { lastConnectedDeviceSelector, hasClickedRecoverSelector } from "~/reducers/settings";
-import { setHasClickedRecover } from "~/actions/settings";
 import { track } from "~/analytics";
 import useRecoverBannerState from "LLM/features/Portfolio/hooks/useRecoverBannerState";
+import { useRecoverEntry } from "LLM/hooks/useRecoverEntry";
 import { urls } from "~/utils/urls";
 import { getBackupBucket } from "../../utils/getBackupBucket";
 import {
@@ -20,8 +14,6 @@ import {
 import type { BackupBucket, PhysicalRowId } from "../../types";
 import recoveryKeyImage from "../../assets/recovery-key.webp";
 import secretRecoveryPhraseImage from "../../assets/24-words.webp";
-
-const DEFAULT_PROTECT_ID = "protect-prod";
 
 export type PhysicalRowData = {
   id: PhysicalRowId;
@@ -37,21 +29,13 @@ export type BackupHubScreenViewModel = {
 };
 
 export function useBackupHubScreenViewModel(): BackupHubScreenViewModel {
-  const dispatch = useDispatch();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<{ [key: string]: object | undefined }>>();
-  const lastConnectedDevice = useSelector(lastConnectedDeviceSelector);
-  const hasClickedRecover = useSelector(hasClickedRecoverSelector);
-  const recoverFeature = useFeature("protectServicesMobile");
-  const protectId = recoverFeature?.params?.protectId ?? DEFAULT_PROTECT_ID;
+  const { protectId, markRecoverSeen, openRecover } = useRecoverEntry();
 
   const { data } = useRecoverBannerState(protectId);
   const bucket = getBackupBucket(data.subscriptionState);
 
   const onRecoverPress = useCallback(() => {
-    if (!hasClickedRecover) {
-      dispatch(setHasClickedRecover(true));
-    }
+    markRecoverSeen();
     track("button_clicked", {
       button: BACKUP_HUB_TRACKING_BUTTON.recover,
       page: BACKUP_HUB_TRACKING_PAGE_NAME,
@@ -69,13 +53,8 @@ export function useBackupHubScreenViewModel(): BackupHubScreenViewModel {
       );
       return;
     }
-    // TODO: not-subscribed should open the Feature Intro bottom-sheet; falls back to the
-    // Ledger Recover screen until it is wired.
-    navigation.navigate(ScreenName.Recover, {
-      platform: protectId,
-      device: lastConnectedDevice ?? undefined,
-    });
-  }, [bucket, navigation, protectId, lastConnectedDevice, hasClickedRecover, dispatch]);
+    openRecover();
+  }, [bucket, protectId, markRecoverSeen, openRecover]);
 
   const openShop = useCallback((url: string, button: string) => {
     track("button_clicked", { button, page: BACKUP_HUB_TRACKING_PAGE_NAME });
