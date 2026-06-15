@@ -15,6 +15,39 @@ const EARN_V2_FLAGS: PartialFeatures = {
   ptxEarnUi: { enabled: true, params: { value: "v2" } },
 };
 
+// Pins the ETH deposit webview to the `basic_sorting` cohort (mirrors the desktop
+// FF_STAKE_PROGRAMS_MODAL). This guarantees the provider category filter bar — including the "All"
+// chip we tap to reveal every provider — is deterministically rendered, so the tests can assert on
+// it rather than treating it as optional.
+const FF_STAKE_PROGRAMS_MODAL: PartialFeatures = {
+  stakePrograms: {
+    enabled: true,
+    params: {
+      list: ["cosmos"],
+      redirects: {
+        "ethereum/erc20/usd__coin": {
+          platform: "earn",
+          name: "Earn - Deposit",
+          queryParams: {
+            cryptoAssetId: "ethereum/erc20/usd__coin",
+            intent: "deposit",
+            deposit: "stablecoin",
+          },
+        },
+        ethereum: {
+          platform: "earn",
+          name: "Earn - Deposit",
+          queryParams: {
+            cryptoAssetId: "ethereum",
+            intent: "deposit",
+            ethDepositCohort: "basic_sorting",
+          },
+        },
+      },
+    },
+  },
+};
+
 let earnReady: Promise<string>;
 
 async function navigateToEarn() {
@@ -161,12 +194,18 @@ export function runPartnerDappCTATest(
   tmsLinks: string[],
   tags: string[],
 ) {
+  // ETH selects a provider in the deposit webview, which requires the category filter bar; pin its
+  // cohort so that bar is guaranteed to render. Other tickers use the native staking drawer.
+  const featureFlags =
+    account.currency.ticker === "ETH"
+      ? { ...EARN_V2_FLAGS, ...FF_STAKE_PROGRAMS_MODAL }
+      : EARN_V2_FLAGS;
   describe(`Earn V2 - CTA -> Partner dapp (${account.currency.ticker} / ${providerId})`, () => {
     beforeAll(async () => {
       await beforeAllFunction({
         userdata: "skip-onboarding",
         speculosApp: account.currency.speculosApp,
-        featureFlags: EARN_V2_FLAGS,
+        featureFlags,
         cliCommands: [liveDataWithAddressCommand(account)],
       });
     });

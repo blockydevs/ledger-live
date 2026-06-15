@@ -143,10 +143,11 @@ export default class EarnV2DashboardPage {
   @Step("Select ETH provider $0 in deposit webview")
   async selectEthProviderInWebview(providerId: string) {
     await waitWebElementByTestId(this.ethProviderPanel);
-    // Best-effort: reveal every provider in case a default category filter is hiding the target.
-    await getWebElementByTestId(this.ethProviderAllFilterChip)
-      .tap()
-      .catch(() => {});
+    // The ETH partner-dapp flags pin the deposit cohort to basic_sorting, so the category filter bar
+    // always renders. Its default filter (protocol/liquid) hides providers in other categories (e.g.
+    // Kiln is "pooling"), so reset to "All" to make any provider selectable. Tapping directly (no
+    // presence guard) asserts the chip exists — a regression in the filter bar fails loudly.
+    await tapWebElementByTestId(this.ethProviderAllFilterChip);
     const cardId = EarnV2DashboardPage.ethProviderCardIds[providerId] ?? providerId;
     await tapWebElementByTestId(`eth-provider-card-${cardId}`);
   }
