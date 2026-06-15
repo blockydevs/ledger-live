@@ -20,9 +20,8 @@ jest.mock("LLM/hooks/useStake/useStake", () => ({
   }),
 }));
 
-jest.mock("@ledgerhq/live-common/featureFlags/useFeature", () => ({
-  __esModule: true,
-  default: (...args: unknown[]) => mockUseFeature(...args),
+jest.mock("@features/platform-feature-flags", () => ({
+  useFeature: (...args: unknown[]) => mockUseFeature(...args),
 }));
 
 jest.mock("../../generated/accountActions", () => ({

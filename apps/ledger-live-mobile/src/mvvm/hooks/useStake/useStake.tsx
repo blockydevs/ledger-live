@@ -170,6 +170,7 @@ export function useStake() {
         ...customPartnerParams,
         ...(asset_id ? { asset_id } : {}),
         accountId: accountIdForManifestVersion,
+        ...(cryptoAssetId ? { cryptoAssetId } : {}),
       })?.toString();
 
       const isEarnManifest = ["earn", "earn-stg", "earn-prd-eks"].includes(manifest.id);
