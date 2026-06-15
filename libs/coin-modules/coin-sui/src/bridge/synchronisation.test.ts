@@ -277,7 +277,7 @@ describe("getAccountShape", () => {
         parentCurrency: { id: "sui" },
         standard: "SUI-20",
         ticker: "TEST",
-        tokenType: "sui",
+        tokenType: "coin",
       } as unknown as TokenCurrency;
     });
 
@@ -328,7 +328,7 @@ describe("getAccountShape", () => {
           parentCurrency: { id: "sui" },
           standard: "SUI-20",
           ticker: "TEST",
-          tokenType: "sui",
+          tokenType: "coin",
         },
         type: "TokenAccount",
       },
@@ -356,7 +356,7 @@ describe("getAccountShape", () => {
           parentCurrency: { id: "sui" },
           standard: "SUI-20",
           ticker: "TEST",
-          tokenType: "sui",
+          tokenType: "coin",
         },
         type: "TokenAccount",
       },
