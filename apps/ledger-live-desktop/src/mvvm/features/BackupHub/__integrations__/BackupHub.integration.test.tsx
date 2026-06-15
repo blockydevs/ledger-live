@@ -7,7 +7,7 @@ import { isModalOpened } from "~/renderer/reducers/modals";
 import { openURL } from "~/renderer/linking";
 import { track } from "~/renderer/analytics/segment";
 import { ContextMenu } from "LLD/features/MyWallet/components/ContextMenu";
-import { RECOVER_NOTIFICATION_DOT_TEST_ID } from "LLD/components/ShieldCheckNotificationIcon";
+import { RECOVER_NOTIFICATION_DOT_TEST_ID } from "LLD/features/BackupHub/components/ShieldCheckNotificationIcon";
 import {
   BACKUP_HUB_RECOVER_DEEPLINK_QUERY,
   BACKUP_HUB_TRACKING_PAGE_NAME,

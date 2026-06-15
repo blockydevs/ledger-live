@@ -10,7 +10,7 @@ import {
   Spot,
 } from "@ledgerhq/lumen-ui-react";
 import { ChevronRight, ShieldCheck } from "@ledgerhq/lumen-ui-react/symbols";
-import { ShieldCheckNotificationIcon } from "LLD/components/ShieldCheckNotificationIcon";
+import { ShieldCheckNotificationIcon } from "./ShieldCheckNotificationIcon";
 import { cn } from "LLD/utils/cn";
 
 export type LedgerRecoverRowProps = {

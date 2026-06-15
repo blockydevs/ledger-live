@@ -9,7 +9,7 @@ import {
 } from "@ledgerhq/lumen-ui-react/symbols";
 import { useFeature } from "@features/platform-feature-flags";
 import { useRecoverEntry } from "LLD/hooks/useRecoverEntry";
-import { ShieldCheckNotificationIcon } from "LLD/components/ShieldCheckNotificationIcon";
+import { ShieldCheckNotificationIcon } from "LLD/features/BackupHub/components/ShieldCheckNotificationIcon";
 import {
   DEFAULT_PROTECT_ID,
   useRecoverBannerState,
