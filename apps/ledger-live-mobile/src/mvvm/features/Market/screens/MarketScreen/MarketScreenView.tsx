@@ -61,4 +61,5 @@ const screenStyle: LumenViewStyle = {
 const searchBarStyle: LumenViewStyle = {
   marginTop: "s16",
   marginHorizontal: "s16",
+  marginBottom: "s12",
 };
