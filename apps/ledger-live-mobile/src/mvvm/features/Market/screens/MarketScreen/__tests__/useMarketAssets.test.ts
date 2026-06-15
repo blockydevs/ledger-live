@@ -134,11 +134,11 @@ describe("useMarketAssets", () => {
     );
   });
 
-  it("falls back to market cap sorting while volume is unavailable", () => {
+  it("maps volume sorting to the total-volume order", () => {
     renderHook(() => useMarketAssets({ sorting: "volume" }));
 
     expect(mockedUseMarketData).toHaveBeenLastCalledWith(
-      expect.objectContaining({ order: Order.MarketCapDesc }),
+      expect.objectContaining({ order: Order.VolumeDesc }),
     );
   });
 
