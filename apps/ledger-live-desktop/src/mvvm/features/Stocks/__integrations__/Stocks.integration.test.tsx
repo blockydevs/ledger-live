@@ -193,4 +193,54 @@ describe("Stocks section", () => {
     fireEvent.click(screen.getByTestId("stocks-explore"));
     expect(onSeeAll).toHaveBeenCalledTimes(1);
   });
+
+  describe("layout", () => {
+    // The fill-width layout compares the visible container (clientWidth) to a hidden copy of the
+    // packed two-row block (scrollWidth) to decide between two rows and a single scrollable line.
+    // jsdom reports 0 for both, so we stub the two values per data-testid to drive the reflow.
+    function mockLayoutWidths({ container, measure }: { container: number; measure: number }) {
+      jest.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (
+        this: HTMLElement,
+      ) {
+        return this.getAttribute("data-testid") === "stocks-list" ? container : 0;
+      });
+      jest.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(function (
+        this: HTMLElement,
+      ) {
+        return this.getAttribute("data-testid") === "stocks-measure" ? measure : 0;
+      });
+    }
+
+    it("renders the compact two-row carousel by default", () => {
+      mockStocksData({ metas: [APPLE, TESLA, NVIDIA] });
+
+      render(<Stocks limit={3} navigateToAsset={navigateToAsset} onSeeAll={onSeeAll} />);
+
+      expect(screen.getAllByTestId("stocks-row")).toHaveLength(2);
+    });
+
+    it("keeps two packed rows while the window is narrower than the two-row block", () => {
+      mockLayoutWidths({ container: 300, measure: 900 });
+      mockStocksData({ metas: [APPLE, TESLA, NVIDIA] });
+
+      render(<Stocks limit={3} fillWidth navigateToAsset={navigateToAsset} onSeeAll={onSeeAll} />);
+
+      expect(screen.getAllByTestId("stocks-row")).toHaveLength(2);
+      expect(screen.getByTestId("stock-item-ticker-aaplx")).toBeVisible();
+      expect(screen.getByTestId("stock-item-ticker-tslax")).toBeVisible();
+      expect(screen.getByTestId("stock-item-ticker-nvdax")).toBeVisible();
+    });
+
+    it("collapses onto a single scrollable line once there is room beyond the packed rows", () => {
+      mockLayoutWidths({ container: 900, measure: 300 });
+      mockStocksData({ metas: [APPLE, TESLA, NVIDIA] });
+
+      render(<Stocks limit={3} fillWidth navigateToAsset={navigateToAsset} onSeeAll={onSeeAll} />);
+
+      expect(screen.getAllByTestId("stocks-row")).toHaveLength(1);
+      expect(screen.getByTestId("stock-item-ticker-aaplx")).toBeVisible();
+      expect(screen.getByTestId("stock-item-ticker-tslax")).toBeVisible();
+      expect(screen.getByTestId("stock-item-ticker-nvdax")).toBeVisible();
+    });
+  });
 });

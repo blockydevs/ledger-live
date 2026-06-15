@@ -6,9 +6,11 @@ import { StockSuggestion } from "../types";
 type StockPillProps = {
   stock: StockSuggestion;
   onClick: (currencyId: string) => void;
+  /** Hidden copy used only to measure the natural one-line width; skips the test id to stay unique. */
+  measurement?: boolean;
 };
 
-export function StockPill({ stock, onClick }: Readonly<StockPillProps>) {
+export function StockPill({ stock, onClick, measurement = false }: Readonly<StockPillProps>) {
   const { name, ticker, ledgerId, navigationId } = stock;
 
   if (!ledgerId) return null;
@@ -24,7 +26,7 @@ export function StockPill({ stock, onClick }: Readonly<StockPillProps>) {
       className="shrink-0"
       onClick={() => onClick(navigationId)}
       aria-label={name}
-      data-testid={`stock-item-ticker-${ticker.toLowerCase()}`}
+      data-testid={measurement ? undefined : `stock-item-ticker-${ticker.toLowerCase()}`}
     >
       {ticker.toUpperCase()}
     </MediaButton>

@@ -23,6 +23,7 @@ export const StocksSection = () => {
     <Stocks
       limit={STOCKS_PORTFOLIO_LIMIT}
       headerVariant="explore"
+      fillWidth
       navigateToAsset={navigateToAsset}
       onSeeAll={onSeeAll}
     />

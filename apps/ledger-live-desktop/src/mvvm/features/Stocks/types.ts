@@ -24,4 +24,9 @@ export type StocksSectionViewProps = StocksSection & {
   onSeeAll: () => void;
   /** Header affordance to render. Defaults to "showMore". */
   headerVariant?: StocksHeaderVariant;
+  /**
+   * Lay the pills out on a responsive grid that always fills the available width and reflows
+   * from two rows onto a single line as it widens. Defaults to false: a compact two-row carousel.
+   */
+  fillWidth?: boolean;
 };
