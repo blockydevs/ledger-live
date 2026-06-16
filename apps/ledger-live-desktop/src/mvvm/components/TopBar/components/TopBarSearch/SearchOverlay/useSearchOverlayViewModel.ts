@@ -1,8 +1,11 @@
 import { KeyboardEvent, useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
-import { getMarketOrAssetDetailPath } from "LLD/utils/marketAssetNavigation";
+import {
+  getMarketOrAssetDetailPath,
+  isAssetOrMarketDetailPath,
+} from "LLD/utils/marketAssetNavigation";
 import { setMarketCategory } from "~/renderer/actions/market";
 import { useAssetSearchBar } from "./useAssetSearchBar";
 import { SearchOverlayContextValue } from "./types";
@@ -12,6 +15,7 @@ import { getCurrentTrackingPage, getPreviousTrackingPage } from "~/renderer/anal
 
 export function useSearchOverlayViewModel() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { shouldDisplayAggregatedAssets } = useWalletFeaturesConfig("desktop");
   const { query, onChangeQuery, isOpen, open, close, mode, suggestions, results } =
@@ -23,6 +27,10 @@ export function useSearchOverlayViewModel() {
   if (isOpen && displayedMode !== mode) {
     setDisplayedMode(mode);
   }
+
+  // Searching while already on a detail page replaces the entry instead of pushing, so repeated
+  // searches don't stack in history and a single Back returns to the page before the first search.
+  const replace = isAssetOrMarketDetailPath(location.pathname);
 
   const navigateToAsset = useCallback(
     (currencyId: string, marketState?: MarketCurrencyData) => {
@@ -36,16 +44,17 @@ export function useSearchOverlayViewModel() {
       });
       navigate(getMarketOrAssetDetailPath(currencyId, shouldDisplayAggregatedAssets), {
         state: marketState,
+        replace,
       });
       close();
     },
-    [navigate, shouldDisplayAggregatedAssets, close, displayedMode],
+    [navigate, shouldDisplayAggregatedAssets, close, displayedMode, replace],
   );
 
   const goToMarket = useCallback(
     (marketCategory: Parameters<typeof setMarketCategory>[0], trackCategory: string) => {
       dispatch(setMarketCategory(marketCategory));
-      navigate("/market");
+      navigate("/market", { replace });
       track("button_clicked", {
         button: "see all",
         flow: "global_search",
@@ -54,7 +63,7 @@ export function useSearchOverlayViewModel() {
       });
       close();
     },
-    [dispatch, navigate, close],
+    [dispatch, navigate, close, replace],
   );
 
   const navigateToMarket = useCallback(() => goToMarket("all", "crypto"), [goToMarket]);
