@@ -360,6 +360,11 @@ export type BorrowState = {
     linkText?: string;
     linkHref?: string;
   };
+  errorBottomSheet?: {
+    title: string;
+    description: string;
+    ctaLabel: string;
+  };
 };
 
 // === PROTECT STATE ===

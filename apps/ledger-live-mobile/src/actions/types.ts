@@ -526,11 +526,13 @@ export type EarnPayload =
 // === BORROW ACTIONS ===
 export enum BorrowActionTypes {
   BORROW_INFO_BOTTOM_SHEET = "BORROW_INFO_BOTTOM_SHEET",
+  BORROW_ERROR_BOTTOM_SHEET = "BORROW_ERROR_BOTTOM_SHEET",
 }
 
 export type BorrowSetInfoBottomSheetPayload = BorrowState["infoBottomSheet"];
+export type BorrowSetErrorBottomSheetPayload = BorrowState["errorBottomSheet"];
 
-export type BorrowPayload = BorrowSetInfoBottomSheetPayload;
+export type BorrowPayload = BorrowSetInfoBottomSheetPayload | BorrowSetErrorBottomSheetPayload;
 
 // === IN VIEW ACTIONS ===
 export enum InViewActionTypes {
