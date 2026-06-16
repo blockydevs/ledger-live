@@ -1,5 +1,5 @@
 ---
-"@shared/feature-flags": patch
+"@shared/feature-flags": minor
 ---
 
 Remove welcomeScreenVideoCarousel feature flag (always enabled)

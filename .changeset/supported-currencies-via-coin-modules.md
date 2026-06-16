@@ -4,9 +4,9 @@
 "@ledgerhq/live-env": minor
 "ledger-live-desktop": minor
 "live-mobile": minor
-"@ledgerhq/live-cli": patch
-"@ledgerhq/wallet-cli": patch
-"@ledgerhq/web-tools": patch
+"@ledgerhq/live-cli": minor
+"@ledgerhq/wallet-cli": minor
+"@ledgerhq/web-tools": minor
 ---
 
 Derive "supported currencies" from the coin-modules registry instead of `setSupportedCurrencies`.

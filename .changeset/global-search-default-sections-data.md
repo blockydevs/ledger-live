@@ -1,7 +1,7 @@
 ---
 "@ledgerhq/live-common": minor
 "live-mobile": minor
-"ledger-live-desktop": patch
+"ledger-live-desktop": minor
 ---
 
 Add the Global Search default-sections data on mobile, fed by DADA. Cryptos (top 3) and stablecoins (top 2) render as market rows; stocks (top 10) as pills.

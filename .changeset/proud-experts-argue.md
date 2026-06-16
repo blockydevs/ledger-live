@@ -1,5 +1,5 @@
 ---
-"ledger-live-desktop": patch
+"ledger-live-desktop": minor
 ---
 
 fix(market): use the Settings countervalue in the Market list when asset discoverability is enabled
