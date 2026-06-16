@@ -374,7 +374,7 @@ test.describe("Swap history", () => {
     },
   );
 
-  test.only(
+  test(
     `User should be able to see their swap history from the swap history page`,
     {
       tag: [

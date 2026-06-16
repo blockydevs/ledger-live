@@ -37,6 +37,7 @@ export class SwapTransactionStatusDialog extends Dialog {
     expect(await this.provider.textContent()).toContain(provider.uiName);
     await expect(this.viewExplorerBtn).toBeVisible();
     const explorerHref = await this.viewExplorerBtn.getAttribute("data-href");
-    expect(explorerHref).toMatch(/^https:\/\/explorer\.solana\.com\/tx/);
+    expect(explorerHref).not.toBeNull();
+    expect(explorerHref!).toMatch(/^https:\/\/explorer\.solana\.com\/tx/);
   }
 }
