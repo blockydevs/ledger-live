@@ -9145,6 +9145,35 @@
       "explore": "Explore my new portfolio"
     }
   },
+  "q2Tour": {
+    "slides": {
+      "welcome": {
+        "title": "Smarter portfolio management. Clearer paths to growth",
+        "description": ""
+      },
+      "aggregatedBalance": {
+        "title": "One balance for each asset",
+        "description": "Multi-chain assets like USDC are now shown as one total. Simple, accurate, clear."
+      },
+      "pnl": {
+        "title": "Your returns, front and center",
+        "description": "See profit and loss on every asset, across your portfolio and analytics page."
+      },
+      "earnSimulator": {
+        "title": "Test your earn potential",
+        "description": "Simulate what rewards you can earn and build a growth plan that fits your goals."
+      },
+      "earnUpselling": {
+        "title": "More protocols, more rewards",
+        "description": "Stablecoins and top picks, surfaced right in your wallet. Less searching. More deciding."
+      }
+    },
+    "cta": {
+      "seeWhatsNew": "See what's new",
+      "next": "Next",
+      "gotIt": "Got it"
+    }
+  },
   "productTour": {
     "cta": {
       "continue": "Continue",

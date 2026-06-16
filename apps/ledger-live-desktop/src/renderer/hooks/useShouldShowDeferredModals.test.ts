@@ -1,11 +1,19 @@
 import { act, renderHook, withFlagOverrides } from "tests/testSetup";
 import { useShouldShowDeferredModals } from "./useShouldShowDeferredModals";
 import { setHasSeenWalletV4Tour } from "~/renderer/actions/settings";
+import { setQ2TourHasSeen } from "~/renderer/reducers/q2TourSlice";
 
 const tourEnabledOverrides = {
   lwdWallet40: {
     enabled: true,
-    params: { tour: true },
+    params: { tour: true, q2Tour: false },
+  },
+};
+
+const q2TourEnabledOverrides = {
+  lwdWallet40: {
+    enabled: true,
+    params: { tour: false, q2Tour: true },
   },
 };
 
@@ -67,6 +75,50 @@ describe("useShouldShowDeferredModals", () => {
 
     act(() => {
       store.dispatch(setHasSeenWalletV4Tour(true));
+    });
+
+    expect(result.current).toBe(false);
+  });
+});
+
+describe("useShouldShowDeferredModals – Q2 Tour", () => {
+  it("returns false when Q2 tour is enabled and user has not seen tour at mount", () => {
+    const { result } = renderHook(() => useShouldShowDeferredModals(), {
+      initialState: {
+        ...withFlagOverrides(q2TourEnabledOverrides),
+        q2Tour: { hasSeen: false },
+      },
+      minimal: false,
+    });
+
+    expect(result.current).toBe(false);
+  });
+
+  it("returns true when Q2 tour is enabled but user had already seen tour at mount", () => {
+    const { result } = renderHook(() => useShouldShowDeferredModals(), {
+      initialState: {
+        ...withFlagOverrides(q2TourEnabledOverrides),
+        q2Tour: { hasSeen: true },
+      },
+      minimal: false,
+    });
+
+    expect(result.current).toBe(true);
+  });
+
+  it("stays false after Q2 hasSeen becomes true in same session (ref frozen at mount)", () => {
+    const { result, store } = renderHook(() => useShouldShowDeferredModals(), {
+      initialState: {
+        ...withFlagOverrides(q2TourEnabledOverrides),
+        q2Tour: { hasSeen: false },
+      },
+      minimal: false,
+    });
+
+    expect(result.current).toBe(false);
+
+    act(() => {
+      store.dispatch(setQ2TourHasSeen(true));
     });
 
     expect(result.current).toBe(false);

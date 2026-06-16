@@ -4,6 +4,10 @@ import { useFeature } from "@features/platform-feature-flags";
 import { setOverride } from "@shared/feature-flags";
 import { hasSeenWalletV4TourSelector } from "~/renderer/reducers/settings";
 import { setHasSeenWalletV4Tour } from "~/renderer/actions/settings";
+import {
+  selectQ2TourHasSeen,
+  setQ2TourHasSeen,
+} from "~/renderer/reducers/q2TourSlice";
 import { WALLET_FEATURES_FLAG, WALLET_FEATURES_PARAMS, WalletFeatureParamKey } from "../constants";
 import { WalletFeatureParams, WalletFeaturesViewModel } from "../types";
 
@@ -11,6 +15,7 @@ export const useWalletFeaturesDevToolViewModel = (): WalletFeaturesViewModel => 
   const dispatch = useDispatch();
   const featureFlag = useFeature(WALLET_FEATURES_FLAG);
   const hasSeenWalletV4Tour = useSelector(hasSeenWalletV4TourSelector);
+  const q2TourHasSeen = useSelector(selectQ2TourHasSeen);
 
   const isEnabled = featureFlag?.enabled ?? false;
 
@@ -74,15 +79,21 @@ export const useWalletFeaturesDevToolViewModel = (): WalletFeaturesViewModel => 
     dispatch(setHasSeenWalletV4Tour(!hasSeenWalletV4Tour));
   }, [dispatch, hasSeenWalletV4Tour]);
 
+  const handleToggleQ2TourHasSeen = useCallback(() => {
+    dispatch(setQ2TourHasSeen(!q2TourHasSeen));
+  }, [dispatch, q2TourHasSeen]);
+
   return {
     featureFlag,
     isEnabled,
     params,
     allEnabled,
     hasSeenWalletV4Tour,
+    q2TourHasSeen,
     handleToggleAll,
     handleToggleEnabled,
     handleToggleParam,
     handleToggleHasSeenTour,
+    handleToggleQ2TourHasSeen,
   };
 };

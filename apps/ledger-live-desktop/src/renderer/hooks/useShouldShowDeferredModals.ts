@@ -1,16 +1,24 @@
 import { useRef } from "react";
 import { useSelector } from "LLD/hooks/redux";
 import { hasSeenWalletV4TourSelector } from "~/renderer/reducers/settings";
+import { selectQ2TourHasSeen } from "~/renderer/reducers/q2TourSlice";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 
 /**
  * Returns whether Release Notes and Terms of Use modals should be mounted.
- * When the Wallet V4 tour is active, we defer those modals. We freeze "has seen tour"
+ * When a product tour is active, we defer those modals. We freeze "has seen tour"
  * at mount so closing the tour in the same session does not mount them.
  */
 export function useShouldShowDeferredModals(): boolean {
   const hasSeenTour = useSelector(hasSeenWalletV4TourSelector);
-  const { shouldDisplayTour } = useWalletFeaturesConfig("desktop");
+  const hasSeenQ2Tour = useSelector(selectQ2TourHasSeen);
+  const { shouldDisplayTour, shouldDisplayQ2Tour } = useWalletFeaturesConfig("desktop");
   const hasSeenTourAtMountRef = useRef(hasSeenTour);
-  return !shouldDisplayTour || hasSeenTourAtMountRef.current;
+  const hasSeenQ2TourAtMountRef = useRef(hasSeenQ2Tour);
+
+  const isAnyTourActiveAtMount =
+    (shouldDisplayTour && !hasSeenTourAtMountRef.current) ||
+    (shouldDisplayQ2Tour && !hasSeenQ2TourAtMountRef.current);
+
+  return !isAnyTourActiveAtMount;
 }
