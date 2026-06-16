@@ -373,22 +373,24 @@ export function UnbondingRow({
       </Column>
       <Column>{date}</Column>
       <Column>
-        <DropDown
-          items={dropDownItems}
-          renderItem={({ item, isActive }) => (
-            <ManageDropDownItem item={item} isActive={isActive} />
-          )}
-          onChange={onSelect}
-        >
-          {() => (
-            <Box flex={1} horizontal alignItems="center">
-              <Trans i18nKey="common.manage" />
-              <div style={{ transform: "rotate(90deg)" }}>
-                <ChevronRight size={16} />
-              </div>
-            </Box>
-          )}
-        </DropDown>
+        {typeof withdrawId === "number" ? (
+          <DropDown
+            items={dropDownItems}
+            renderItem={({ item, isActive }) => (
+              <ManageDropDownItem item={item} isActive={isActive} />
+            )}
+            onChange={onSelect}
+          >
+            {() => (
+              <Box flex={1} horizontal alignItems="center">
+                <Trans i18nKey="common.manage" />
+                <div style={{ transform: "rotate(90deg)" }}>
+                  <ChevronRight size={16} />
+                </div>
+              </Box>
+            )}
+          </DropDown>
+        ) : null}
       </Column>
     </Wrapper>
   );
