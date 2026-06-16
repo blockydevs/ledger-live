@@ -20,7 +20,7 @@ const HANDLER_NAME = "custom.bottomSheet.error";
 type BorrowErrorBottomSheetResolver = (result: { confirmed: boolean }) => void;
 
 let pendingResolver: BorrowErrorBottomSheetResolver | null = null;
-let errorDialogDispatch: Dispatch | null = null;
+let errorBottomSheetDispatch: Dispatch | null = null;
 
 /**
  * Settle the pending error bottom sheet.
@@ -31,9 +31,9 @@ let errorDialogDispatch: Dispatch | null = null;
 export function resolveBorrowErrorBottomSheet(confirmed: boolean) {
   const resolver = pendingResolver;
   pendingResolver = null;
-  if (errorDialogDispatch) {
-    errorDialogDispatch(makeSetBorrowErrorBottomSheetAction(undefined));
-    errorDialogDispatch = null;
+  if (errorBottomSheetDispatch) {
+    errorBottomSheetDispatch(makeSetBorrowErrorBottomSheetAction(undefined));
+    errorBottomSheetDispatch = null;
   }
   if (resolver) resolver({ confirmed });
 }
@@ -52,7 +52,7 @@ export function createOpenBorrowErrorBottomSheetHandler(dispatch: Dispatch) {
 
     return new Promise<{ confirmed: boolean }>(resolve => {
       pendingResolver = resolve;
-      errorDialogDispatch = dispatch;
+      errorBottomSheetDispatch = dispatch;
       dispatch(makeSetBorrowErrorBottomSheetAction(validated));
     });
   };

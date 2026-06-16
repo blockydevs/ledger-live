@@ -146,7 +146,7 @@ describe("BorrowErrorBottomSheet", () => {
     expect(mockedResolve).toHaveBeenCalledWith(true);
   });
 
-  it("rejects with confirmed=false on unmount if a sheet was pending", () => {
+  it("resolves with confirmed=false on unmount if a sheet was pending", () => {
     const { unmount } = renderSheet({ title: "T", description: "D", ctaLabel: "CTA" });
 
     unmount();
