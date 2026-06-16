@@ -114,19 +114,22 @@ async function keepRunningProviders(
   accountFrom: Account,
   accountTo: Account,
 ): Promise<SwapProvider[]> {
+  const addressFrom = accountFrom.address || accountFrom.parentAccount?.address;
+  if (!addressFrom) {
+    console.warn("No address available from accounts when checking provider health.");
+    return eligibleProviders;
+  }
+
+  const amountFrom = await getMinimumSwapAmount(
+    accountFrom,
+    accountTo,
+    eligibleProviders.map(p => p.name),
+  );
+  if (amountFrom == null) {
+    return eligibleProviders;
+  }
+
   try {
-    const addressFrom = accountFrom.address || accountFrom.parentAccount?.address;
-    if (!addressFrom) {
-      throw new Error("No address available from accounts when checking provider health.");
-    }
-    const amountFrom = await getMinimumSwapAmount(
-      accountFrom,
-      accountTo,
-      eligibleProviders.map(p => p.name),
-    );
-    if (amountFrom == null) {
-      return eligibleProviders;
-    }
     const requestConfig: AxiosRequestConfig = {
       method: "GET",
       url: SWAP_QUOTE_URL,
