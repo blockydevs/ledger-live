@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { TransactionIntent } from "@ledgerhq/coin-module-framework/api/types";
+import { log } from "@ledgerhq/logs";
 import { setupMockCryptoAssetsStore } from "@ledgerhq/cryptoassets/cal-client/test-helpers";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import aleoConfig from "../config";
@@ -66,6 +67,7 @@ import {
   isSelfTransferTransaction,
   isPublicTransaction,
   isPrivateTransaction,
+  isTokenTransaction,
   derivePublicTransactionMode,
   derivePrivateTransactionMode,
   createTransactionIntent,
@@ -82,6 +84,9 @@ import {
 } from "./utils";
 
 jest.mock("../config");
+jest.mock("@ledgerhq/logs", () => ({
+  log: jest.fn(),
+}));
 
 const mockedAleoConfig = jest.mocked(aleoConfig);
 
@@ -383,6 +388,10 @@ describe("toBridgeOperation", () => {
   const recipientAddress = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
   const senderAddress = "aleo1a2ehlgqhvs3p7d4hqhs0tvgk954dr8gafu9kxse2mzu9a5sqxvpsrn98pr";
 
+  beforeEach(() => {
+    jest.mocked(log).mockClear();
+  });
+
   it("should produce an operation with encoded id and accountId", () => {
     const rawTx = getMockedPublicTransaction();
     const expectedId = encodeOperationId(ledgerAccountId, rawTx.transaction_id, "IN");
@@ -438,6 +447,31 @@ describe("toBridgeOperation", () => {
     const result = toBridgeOperation(ledgerAccountId, rawTx, recipientAddress, true);
 
     expect(result.extra.programId).toBe("usdcx_stablecoin.aleo");
+  });
+
+  it.each([
+    ["NaN amount", { amount: NaN as number }],
+    ["zero amount", { amount: 0 }],
+    ["negative amount", { amount: -1 }],
+  ])("should log invalid raw transaction details for %s", (_label, amountOverride) => {
+    const rawTx = getMockedPublicTransaction(amountOverride);
+
+    const result = toBridgeOperation(ledgerAccountId, rawTx, recipientAddress);
+
+    expect(log).toHaveBeenCalledWith(
+      "aleo/toBridgeOperation",
+      `Invalid raw transaction details for ${recipientAddress}`,
+      rawTx,
+    );
+    expect(result.value).toEqual(new BigNumber(rawTx.amount));
+  });
+
+  it("should not log when amount is valid", () => {
+    const rawTx = getMockedPublicTransaction();
+
+    toBridgeOperation(ledgerAccountId, rawTx, recipientAddress);
+
+    expect(log).not.toHaveBeenCalled();
   });
 });
 
@@ -1294,6 +1328,22 @@ describe("derivePublicTransactionMode", () => {
       expect(derivePublicTransactionMode({ isTokenTx, isSelfTransfer })).toBe(expectedMode);
     },
   );
+});
+
+describe("isTokenTransaction", () => {
+  it.each([
+    [true, TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC],
+    [true, TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE],
+    [true, TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE],
+    [true, TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC],
+    [false, TRANSACTION_TYPE.TRANSFER_PUBLIC],
+    [false, TRANSACTION_TYPE.TRANSFER_PRIVATE],
+    [false, "other_type" as never],
+  ] as const)("should return %s for mode '%s'", (expected, mode) => {
+    const transaction = getMockedTransaction({ mode });
+
+    expect(isTokenTransaction(transaction)).toBe(expected);
+  });
 });
 
 describe("derivePrivateTransactionMode", () => {
