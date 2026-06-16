@@ -4,7 +4,7 @@ import { Banner, Box, Button, Checkbox, Link, Text } from "@ledgerhq/lumen-ui-rn
 import { useTranslation } from "~/context/Locale";
 import { useLocalizedUrl } from "LLM/hooks/useLocalizedUrls";
 import { urls } from "~/utils/urls";
-import type { SkipMemoState } from "./hooks/useRecipientMemo";
+import type { SkipMemoState } from "@ledgerhq/live-common/flows/send/recipient/hooks/useRecipientMemoCore";
 
 type SkipMemoSectionProps = Readonly<{
   memoLabel: string;
