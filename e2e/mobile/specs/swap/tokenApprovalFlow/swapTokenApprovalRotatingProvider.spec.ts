@@ -1,8 +1,6 @@
 import { SwapProvider } from "@ledgerhq/live-common/e2e/enum/Provider";
 import { runSwapTokenApprovalFlow } from "./swapTokenApprovalFlow";
 
-const fromAccount = TokenAccount.ETH_USDC_1;
-const toAccount = Account.ETH_1;
 const eligibleProviders = [
   SwapProvider.THORCHAIN,
   SwapProvider.UNISWAP,
@@ -13,8 +11,8 @@ const eligibleProviders = [
 ];
 
 const swapTokenApprovalFlowTestConfig = {
-  fromAccount,
-  toAccount,
+  fromAccount: TokenAccount.ETH_USDC_1,
+  toAccount: Account.ETH_1,
   providers: eligibleProviders,
   tmsLinks: ["B2CQA-5632"],
   tags: ["@NanoSP", "@LNS", "@NanoX", "@Stax", "@Flex", "@NanoGen5", "@ethereum", "@family-evm"],

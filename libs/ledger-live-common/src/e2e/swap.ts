@@ -105,13 +105,8 @@ export async function getMinimumSwapAmount(
 }
 
 /** Usable = the provider returned a real amount and no error code. */
-function isUsableQuote(item: SwapQuoteItem): item is SwapQuoteItem & { provider: string } {
-  return (
-    typeof item.provider === "string" &&
-    item.code === undefined &&
-    typeof item.amountTo === "number" &&
-    item.amountTo > 0
-  );
+function isUsableQuote(q: SwapQuoteItem): boolean {
+  return q.code === undefined && Number(q.amountTo) > 0;
 }
 
 async function keepRunningProviders(
