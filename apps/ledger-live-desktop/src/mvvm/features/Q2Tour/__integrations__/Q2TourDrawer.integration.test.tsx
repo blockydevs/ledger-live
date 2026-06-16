@@ -41,7 +41,7 @@ const tourEnabledOverrides = {
 };
 
 function getTourTestInitialState(overrides?: {
-  hasSeen?: boolean;
+  hasSeenQ2Tour?: boolean;
   hasCompletedOnboarding?: boolean;
   featureFlagOverrides?: typeof tourEnabledOverrides;
 }) {
@@ -49,9 +49,7 @@ function getTourTestInitialState(overrides?: {
     ...withFlagOverrides(overrides?.featureFlagOverrides ?? tourEnabledOverrides),
     settings: {
       hasCompletedOnboarding: overrides?.hasCompletedOnboarding ?? true,
-    },
-    q2Tour: {
-      hasSeen: overrides?.hasSeen ?? false,
+      hasSeenQ2Tour: overrides?.hasSeenQ2Tour ?? false,
     },
   };
 }
@@ -71,7 +69,7 @@ describe("Q2Tour Drawer", () => {
 
   it("should not open dialog when hasSeen is true", async () => {
     const { user } = render(<TestHarness />, {
-      initialState: getTourTestInitialState({ hasSeen: true }),
+      initialState: getTourTestInitialState({ hasSeenQ2Tour: true }),
     });
 
     await user.click(screen.getByTestId("open-dialog"));

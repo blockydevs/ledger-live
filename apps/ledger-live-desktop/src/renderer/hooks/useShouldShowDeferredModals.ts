@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useSelector } from "LLD/hooks/redux";
-import { hasSeenWalletV4TourSelector } from "~/renderer/reducers/settings";
-import { selectQ2TourHasSeen } from "~/renderer/reducers/q2TourSlice";
+import { hasSeenQ2TourSelector, hasSeenWalletV4TourSelector } from "~/renderer/reducers/settings";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 
 /**
@@ -11,7 +10,7 @@ import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
  */
 export function useShouldShowDeferredModals(): boolean {
   const hasSeenTour = useSelector(hasSeenWalletV4TourSelector);
-  const hasSeenQ2Tour = useSelector(selectQ2TourHasSeen);
+  const hasSeenQ2Tour = useSelector(hasSeenQ2TourSelector);
   const { shouldDisplayTour, shouldDisplayQ2Tour } = useWalletFeaturesConfig("desktop");
   const hasSeenTourAtMountRef = useRef(hasSeenTour);
   const hasSeenQ2TourAtMountRef = useRef(hasSeenQ2Tour);

@@ -1,7 +1,6 @@
 import { act, renderHook, withFlagOverrides } from "tests/testSetup";
 import { useShouldShowDeferredModals } from "./useShouldShowDeferredModals";
-import { setHasSeenWalletV4Tour } from "~/renderer/actions/settings";
-import { setQ2TourHasSeen } from "~/renderer/reducers/q2TourSlice";
+import { setHasSeenWalletV4Tour, setHasSeenQ2Tour } from "~/renderer/actions/settings";
 
 const tourEnabledOverrides = {
   lwdWallet40: {
@@ -86,7 +85,9 @@ describe("useShouldShowDeferredModals – Q2 Tour", () => {
     const { result } = renderHook(() => useShouldShowDeferredModals(), {
       initialState: {
         ...withFlagOverrides(q2TourEnabledOverrides),
-        q2Tour: { hasSeen: false },
+        settings: {
+          hasSeenQ2Tour: false,
+        },
       },
       minimal: false,
     });
@@ -98,7 +99,9 @@ describe("useShouldShowDeferredModals – Q2 Tour", () => {
     const { result } = renderHook(() => useShouldShowDeferredModals(), {
       initialState: {
         ...withFlagOverrides(q2TourEnabledOverrides),
-        q2Tour: { hasSeen: true },
+        settings: {
+          hasSeenQ2Tour: true,
+        },
       },
       minimal: false,
     });
@@ -110,7 +113,9 @@ describe("useShouldShowDeferredModals – Q2 Tour", () => {
     const { result, store } = renderHook(() => useShouldShowDeferredModals(), {
       initialState: {
         ...withFlagOverrides(q2TourEnabledOverrides),
-        q2Tour: { hasSeen: false },
+        settings: {
+          hasSeenQ2Tour: false,
+        },
       },
       minimal: false,
     });
@@ -118,7 +123,7 @@ describe("useShouldShowDeferredModals – Q2 Tour", () => {
     expect(result.current).toBe(false);
 
     act(() => {
-      store.dispatch(setQ2TourHasSeen(true));
+      store.dispatch(setHasSeenQ2Tour(true));
     });
 
     expect(result.current).toBe(false);

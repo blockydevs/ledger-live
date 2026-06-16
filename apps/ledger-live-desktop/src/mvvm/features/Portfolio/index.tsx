@@ -5,7 +5,7 @@ import { ProductTourDialog, useProductTourDialogViewModel } from "LLD/features/P
 import {
   Q2TourDialog,
   useQ2TourDrawerViewModel,
-} from "LLD/features/Q2Tour/Drawer";
+} from "LLD/features/Q2Tour";
 import {
   useWalletV4TourDrawerViewModel,
   WalletV4TourDialog,

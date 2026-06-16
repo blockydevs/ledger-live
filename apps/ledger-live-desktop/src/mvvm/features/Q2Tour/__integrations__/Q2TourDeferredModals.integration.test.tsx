@@ -7,7 +7,7 @@ import { act, render, screen, waitFor, withFlagOverrides } from "tests/testSetup
 import { useShouldShowDeferredModals } from "~/renderer/hooks/useShouldShowDeferredModals";
 import IsTermOfUseUpdated from "~/renderer/components/IsTermOfUseUpdated";
 import ModalsLayer from "~/renderer/ModalsLayer";
-import { setQ2TourHasSeen } from "~/renderer/reducers/q2TourSlice";
+import { setHasSeenQ2Tour } from "~/renderer/actions/settings";
 
 const vaultSigner = { enabled: false, host: "", token: "", workspace: "" };
 const baseSettings = {
@@ -24,9 +24,7 @@ const q2TourEnabledState = {
   }),
   settings: {
     ...baseSettings,
-  },
-  q2Tour: {
-    hasSeen: false,
+    hasSeenQ2Tour: false,
   },
 };
 
@@ -36,9 +34,7 @@ const q2TourDisabledState = {
   }),
   settings: {
     ...baseSettings,
-  },
-  q2Tour: {
-    hasSeen: false,
+    hasSeenQ2Tour: false,
   },
 };
 
@@ -48,9 +44,7 @@ const q2TourEnabledAlreadySeenState = {
   }),
   settings: {
     ...baseSettings,
-  },
-  q2Tour: {
-    hasSeen: true,
+    hasSeenQ2Tour: true,
   },
 };
 
@@ -119,7 +113,7 @@ describe("Q2 Tour – deferred modals (Release Notes / Terms of Use)", () => {
     expect(screen.queryByTestId("terms-update-popup")).not.toBeInTheDocument();
 
     act(() => {
-      store.dispatch(setQ2TourHasSeen(true));
+      store.dispatch(setHasSeenQ2Tour(true));
     });
 
     expect(screen.queryByTestId("terms-update-popup")).not.toBeInTheDocument();

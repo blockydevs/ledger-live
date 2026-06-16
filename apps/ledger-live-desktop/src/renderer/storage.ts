@@ -16,7 +16,6 @@ import logger from "./logger";
 import { trustchainStoreSelector } from "@ledgerhq/ledger-key-ring-protocol/store";
 import { marketStoreSelector } from "./reducers/market";
 import { marketBannerStoreSelector } from "./reducers/marketBanner";
-import { q2TourStoreSelector } from "./reducers/q2TourSlice";
 import { ExportedWalletState } from "@ledgerhq/live-wallet/store";
 import type { PersistedCAL } from "@ledgerhq/cryptoassets/cal-client/persistence";
 import type { PersistedIdentities } from "@ledgerhq/client-ids/store";
@@ -40,7 +39,6 @@ export type PostOnboarding = ReturnType<typeof hubStateSelector>;
 export type Settings = ReturnType<typeof settingsStoreSelector>;
 export type Market = ReturnType<typeof marketStoreSelector>;
 export type MarketBanner = ReturnType<typeof marketBannerStoreSelector>;
-export type Q2Tour = ReturnType<typeof q2TourStoreSelector>;
 
 export type TrustchainStore = ReturnType<typeof trustchainStoreSelector>;
 
@@ -55,7 +53,6 @@ type DatabaseValues = {
   wallet: ExportedWalletState;
   market: Market;
   marketBanner: MarketBanner;
-  q2Tour: Q2Tour;
   cryptoAssets: PersistedCAL;
   featureFlags: Pick<FeatureFlagsState, "overrides" | "bannerVisible">;
   coinConfigOverrides: { overrides: Record<string, unknown> };

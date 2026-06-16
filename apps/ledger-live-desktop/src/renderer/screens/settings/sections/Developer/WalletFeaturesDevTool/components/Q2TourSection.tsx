@@ -31,7 +31,7 @@ export const Q2TourSection = ({
             : "User has not seen the tour yet."
         }
       />
-      <Button appearance="accent" size="sm" onClick={onOpenDrawer}>
+      <Button appearance="accent" size="sm" onClick={onOpenDrawer} disabled={hasSeen}>
         {t("settings.developer.walletFeaturesDevTool.openDrawer")}
       </Button>
     </div>

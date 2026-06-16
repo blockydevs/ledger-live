@@ -13,7 +13,7 @@ export interface WalletFeaturesViewModel {
   readonly params: WalletFeatureParams;
   readonly allEnabled: boolean;
   readonly hasSeenWalletV4Tour: boolean;
-  readonly q2TourHasSeen: boolean;
+  readonly hasSeenQ2Tour: boolean;
   readonly handleToggleAll: (enable: boolean) => void;
   readonly handleToggleEnabled: () => void;
   readonly handleToggleParam: (key: WalletFeatureParamKey) => void;

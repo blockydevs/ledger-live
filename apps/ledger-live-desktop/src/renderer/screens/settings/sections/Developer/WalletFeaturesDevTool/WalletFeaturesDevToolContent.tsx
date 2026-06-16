@@ -19,7 +19,7 @@ import {
 import {
   Q2TourDialog,
   useQ2TourDrawerViewModel,
-} from "LLD/features/Q2Tour/Drawer";
+} from "LLD/features/Q2Tour";
 export const WalletFeaturesDevToolContent = ({ expanded }: WalletFeaturesDevToolContentProps) => {
   const { t } = useTranslation();
   const {
@@ -28,7 +28,7 @@ export const WalletFeaturesDevToolContent = ({ expanded }: WalletFeaturesDevTool
     params,
     allEnabled,
     hasSeenWalletV4Tour,
-    q2TourHasSeen,
+    hasSeenQ2Tour,
     handleToggleAll,
     handleToggleEnabled,
     handleToggleParam,
@@ -82,7 +82,7 @@ export const WalletFeaturesDevToolContent = ({ expanded }: WalletFeaturesDevTool
           </div>
 
           <Q2TourSection
-            hasSeen={q2TourHasSeen}
+            hasSeen={hasSeenQ2Tour}
             onToggleHasSeen={handleToggleQ2TourHasSeen}
             onOpenDrawer={handleOpenQ2Tour}
           />

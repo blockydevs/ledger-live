@@ -2,7 +2,7 @@ import React from "react";
 import {
   AwarenessModalClampedText,
   CAROUSEL_SLIDE_TEXT_LINE_LIMITS,
-} from "~/mvvm/features/GenericAwarenessModal/components/clampedText";
+} from "LLD/features/GenericAwarenessModal/components/clampedText";
 import { useQ2TourSlideItemViewModel } from "../hooks/useQ2TourSlideItemViewModel";
 
 interface SlideItemProps {

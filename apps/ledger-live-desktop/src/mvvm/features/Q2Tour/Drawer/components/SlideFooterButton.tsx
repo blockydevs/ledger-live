@@ -10,14 +10,14 @@ interface SlideFooterButtonProps {
 }
 
 export function SlideFooterButton({ onContinueClick, onComplete }: SlideFooterButtonProps) {
-  const { currentIndex, totalSlides, goToNext } = useSlidesContext();
+  const { displayedIndex, totalSlides, goToNext } = useSlidesContext();
   const { t } = useTranslation();
 
-  const isLastSlide = currentIndex === totalSlides - 1;
-  const ctaKey = Q2_TOUR_SLIDES[currentIndex]?.ctaKey ?? "q2Tour.cta.next";
+  const isLastSlide = displayedIndex === totalSlides - 1;
+  const ctaKey = Q2_TOUR_SLIDES[displayedIndex]?.ctaKey ?? "q2Tour.cta.next";
 
   const handleClick = () => {
-    onContinueClick(currentIndex, isLastSlide);
+    onContinueClick(displayedIndex, isLastSlide);
 
     if (isLastSlide) {
       onComplete();

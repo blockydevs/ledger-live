@@ -26,7 +26,6 @@ import {
 
 import { marketStoreSelector } from "../reducers/market";
 import { marketBannerStoreSelector } from "../reducers/marketBanner";
-import { q2TourStoreSelector } from "../reducers/q2TourSlice";
 import { exportIdentitiesForPersistence } from "@ledgerhq/client-ids/store";
 import { accountsPersistedStateChanged } from "@ledgerhq/live-common/account/index";
 
@@ -114,18 +113,6 @@ const DBMiddleware: Middleware<object, State> = store => next => action => {
 
     if (oldState.marketBanner !== newState.marketBanner) {
       setKey("app", "marketBanner", marketBannerStoreSelector(newState));
-    }
-
-    return res;
-  }
-
-  if (action.type.startsWith("q2Tour/")) {
-    const oldState = store.getState();
-    const res = next(action);
-    const newState = store.getState();
-
-    if (oldState.q2Tour !== newState.q2Tour) {
-      setKey("app", "q2Tour", q2TourStoreSelector(newState));
     }
 
     return res;

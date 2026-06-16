@@ -52,7 +52,6 @@ import { listCachedCurrencyIds } from "./bridge/cache";
 import { LogEntry } from "winston";
 import { importMarketState } from "./actions/market";
 import { importMarketBannerState } from "./reducers/marketBanner";
-import { importQ2TourState } from "./reducers/q2TourSlice";
 import { fetchWallet } from "./actions/wallet";
 import { fetchTrustchain } from "./actions/trustchain";
 import { setupRecentAddressesStore } from "./recentAddresses";
@@ -339,14 +338,6 @@ async function init() {
   const marketBannerState = await getKey("app", "marketBanner");
   if (marketBannerState) {
     store.dispatch(importMarketBannerState(marketBannerState));
-  }
-
-  // ponytail: reads legacy `q2ProductTour` storage key until all clients migrate
-  const q2TourState =
-    (await getKey("app", "q2Tour")) ??
-    (await getKey("app", "q2ProductTour" as "q2Tour"));
-  if (q2TourState) {
-    store.dispatch(importQ2TourState(q2TourState));
   }
 
   webFrame.setVisualZoomLevelLimits(1, 1);

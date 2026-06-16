@@ -33,10 +33,8 @@ export const Q2TourDialog = ({
     [],
   );
 
-  if (!isOpen) return null;
-
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={() => { }}>
       <DialogContent
         className="flex h-screen min-h-0 flex-col"
         onPointerDownOutside={onDismiss}

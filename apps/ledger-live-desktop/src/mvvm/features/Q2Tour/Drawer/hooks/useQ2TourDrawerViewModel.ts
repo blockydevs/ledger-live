@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
-import { hasCompletedOnboardingSelector } from "~/renderer/reducers/settings";
-import { selectQ2TourHasSeen, setQ2TourHasSeen } from "~/renderer/reducers/q2TourSlice";
+import { hasCompletedOnboardingSelector, hasSeenQ2TourSelector } from "~/renderer/reducers/settings";
+import { setHasSeenQ2Tour } from "~/renderer/actions/settings";
 import {
   getQ2TourAnalyticsContext,
   trackQ2TourCloseClick,
@@ -42,7 +42,7 @@ export const useQ2TourDrawerViewModel = (
   const isClosingRef = useRef(false);
   const hasTrackedOpenRef = useRef(false);
 
-  const hasSeenTour = useSelector(selectQ2TourHasSeen);
+  const hasSeenTour = useSelector(hasSeenQ2TourSelector);
   const hasCompletedOnboarding = useSelector(hasCompletedOnboardingSelector);
   const { shouldDisplayQ2Tour } = useWalletFeaturesConfig("desktop");
 
@@ -61,7 +61,7 @@ export const useQ2TourDrawerViewModel = (
 
   const handleCloseDialog = useCallback(() => {
     setIsDialogOpen(false);
-    dispatch(setQ2TourHasSeen(true));
+    dispatch(setHasSeenQ2Tour(true));
   }, [dispatch]);
 
   const closeDrawer = useCallback(() => {
