@@ -3,9 +3,9 @@ import { DmkSignerSol, LegacySignerSolana } from "@ledgerhq/live-signer-solana";
 import type { SolanaSigner as CoinSolanaSigner } from "@ledgerhq/coin-solana/signer";
 import type { GetAddressFn } from "@ledgerhq/ledger-wallet-framework/bridge/getAddressWrapper";
 import type { SignerContext } from "@ledgerhq/ledger-wallet-framework/signer";
-import type { CoinFrameworkSigner } from "../../types";
-import { CreateSigner, executeWithSigner } from "../../../setup";
-import { isDmkTransport } from "../../../../hw/dmkUtils";
+import type { CoinFrameworkSigner } from "../../bridge/generic-coin-framework/types";
+import { CreateSigner, executeWithSigner } from "../../bridge/setup";
+import { isDmkTransport } from "../../hw/dmkUtils";
 import bs58 from "bs58";
 
 export type SolanaSigner = {

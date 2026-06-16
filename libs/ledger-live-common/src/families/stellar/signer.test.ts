@@ -3,7 +3,7 @@ import Stellar from "@ledgerhq/hw-app-str";
 import Transport from "@ledgerhq/hw-transport";
 
 jest.mock("@ledgerhq/hw-app-str");
-jest.mock("../../../../families/stellar/getAddress", () => jest.fn());
+jest.mock("./getAddress", () => jest.fn());
 
 const MockedStellar = Stellar as jest.MockedClass<typeof Stellar>;
 const mockTransport = {} as Transport;

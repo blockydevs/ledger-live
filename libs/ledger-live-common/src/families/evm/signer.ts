@@ -8,8 +8,8 @@ import { ResolutionConfig, LoadConfig } from "@ledgerhq/hw-app-eth/services/type
 import { Signature } from "ethers";
 import type { DomainServiceResolution } from "@ledgerhq/types-live";
 import resolver from "@ledgerhq/coin-evm/hw-getAddress";
-import { CreateSigner, executeWithSigner } from "../../../setup";
-import type { CoinFrameworkSigner } from "../../types";
+import { CreateSigner, executeWithSigner } from "../../bridge/setup";
+import type { CoinFrameworkSigner } from "../../bridge/generic-coin-framework/types";
 
 export type Signer = {
   getAddress: (

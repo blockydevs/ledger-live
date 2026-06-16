@@ -1,6 +1,6 @@
 import { setCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { computeIntentType, getAssetFromToken, getTokenFromAsset } from "./bridge";
+import { computeIntentType, getAssetFromToken, getTokenFromAsset } from "./api";
 
 beforeAll(() => {
   const mockStore: Parameters<typeof setCryptoAssetsStore>[0] = {

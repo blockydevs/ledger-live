@@ -2,10 +2,10 @@ import bs58 from "bs58";
 import { createSigner, solanaGetAddress } from "./signer";
 
 jest.mock("@ledgerhq/live-signer-solana");
-jest.mock("../../../../hw/dmkUtils");
+jest.mock("../../hw/dmkUtils");
 
 import { LegacySignerSolana, DmkSignerSol } from "@ledgerhq/live-signer-solana";
-import { isDmkTransport } from "../../../../hw/dmkUtils";
+import { isDmkTransport } from "../../hw/dmkUtils";
 import Transport from "@ledgerhq/hw-transport";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 import type { DeviceManagementKit } from "@ledgerhq/device-management-kit";
