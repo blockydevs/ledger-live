@@ -985,6 +985,7 @@ type Feature_Wallet40_Params = {
   newReceiveDialog?: boolean;
   earnUpselling?: boolean;
   earnSimulator?: boolean;
+  q2Tour?: boolean;
 };
 
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["lwmWallet40"]` from `@shared/feature-flags` instead. */
