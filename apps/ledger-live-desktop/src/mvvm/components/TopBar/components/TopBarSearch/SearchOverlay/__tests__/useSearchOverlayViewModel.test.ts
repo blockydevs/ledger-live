@@ -1,11 +1,21 @@
-import { renderHook } from "tests/testSetup";
+import { renderHook, act } from "tests/testSetup";
+import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
+import { track } from "~/renderer/analytics/segment";
 import { useSearchOverlayViewModel } from "../useSearchOverlayViewModel";
 import { useAssetSearchBar } from "../useAssetSearchBar";
 import { SearchMode, SearchResults, SearchSuggestions } from "../types";
 
 jest.mock("../useAssetSearchBar");
 
+// getCurrentTrackingPage/getPreviousTrackingPage read module-level navigation refs that leak
+// across the full suite. Mock them so the tracked page/source are deterministic here.
+jest.mock("~/renderer/analytics/screenRefs", () => ({
+  getCurrentTrackingPage: () => "",
+  getPreviousTrackingPage: () => "",
+}));
+
 const mockedUseAssetSearchBar = jest.mocked(useAssetSearchBar);
+const mockedTrack = jest.mocked(track);
 
 const EMPTY_SECTION = { data: [], isLoading: false };
 const EMPTY_SUGGESTIONS: SearchSuggestions = {
@@ -74,6 +84,57 @@ describe("useSearchOverlayViewModel", () => {
       mockSearchBar({ mode: "suggestions", isOpen: true, query: "" });
       rerender();
       expect(result.current.mode).toBe("suggestions");
+    });
+  });
+
+  describe("navigateToAsset tracking", () => {
+    it("tracks asset_clicked with searched=true when clicking a search result", () => {
+      mockSearchBar({ mode: "results", isOpen: true, query: "bit" });
+      const { result } = renderHook(() => useSearchOverlayViewModel());
+
+      act(() => {
+        result.current.contextValue.navigateToAsset("bitcoin", {
+          name: "Bitcoin",
+        } as MarketCurrencyData);
+      });
+
+      expect(mockedTrack).toHaveBeenCalledWith("asset_clicked", {
+        asset: "Bitcoin",
+        page: "",
+        flow: "global_search",
+        source: "",
+        searched: true,
+      });
+    });
+
+    it("tracks asset_clicked with searched=false when clicking the default suggestions list", () => {
+      mockSearchBar({ mode: "suggestions", isOpen: true, query: "" });
+      const { result } = renderHook(() => useSearchOverlayViewModel());
+
+      act(() => {
+        result.current.contextValue.navigateToAsset("bitcoin", {
+          name: "Bitcoin",
+        } as MarketCurrencyData);
+      });
+
+      expect(mockedTrack).toHaveBeenCalledWith(
+        "asset_clicked",
+        expect.objectContaining({ asset: "Bitcoin", flow: "global_search", searched: false }),
+      );
+    });
+
+    it("falls back to the currency id when no market state is provided", () => {
+      mockSearchBar({ mode: "suggestions", isOpen: true, query: "" });
+      const { result } = renderHook(() => useSearchOverlayViewModel());
+
+      act(() => {
+        result.current.contextValue.navigateToAsset("aaplx");
+      });
+
+      expect(mockedTrack).toHaveBeenCalledWith(
+        "asset_clicked",
+        expect.objectContaining({ asset: "aaplx", searched: false }),
+      );
     });
   });
 });
