@@ -66,13 +66,13 @@ describe("BackupHub screen (mobile)", () => {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.NO_SUBSCRIPTION),
     });
 
-    expect(screen.getByTestId("backup-hub")).toBeTruthy();
-    expect(await screen.findByText("Create a backup you can't lose")).toBeTruthy();
+    expect(screen.getByTestId("backup-hub")).toBeOnTheScreen();
+    expect(await screen.findByText("Create a backup you can't lose")).toBeOnTheScreen();
 
     const cta = screen.getByTestId("backup-hub-recover-cta");
     await user.press(cta);
 
-    expect(await screen.findByText("RECOVER_SCREEN")).toBeTruthy();
+    expect(await screen.findByText("RECOVER_SCREEN")).toBeOnTheScreen();
   });
 
   it("opens the ongoing-subscription Recover deeplink for the in-progress variant", async () => {
@@ -82,7 +82,7 @@ describe("BackupHub screen (mobile)", () => {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.BACKUP_VERIFY_IDENTITY),
     });
 
-    expect(await screen.findByText("Finish setting up your backup.")).toBeTruthy();
+    expect(await screen.findByText("Finish setting up your backup.")).toBeOnTheScreen();
     expect(screen.queryByTestId("backup-hub-recover-cta")).toBeNull();
 
     await user.press(screen.getByTestId("backup-hub-recover-row"));
@@ -99,7 +99,7 @@ describe("BackupHub screen (mobile)", () => {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.BACKUP_DONE),
     });
 
-    expect(await screen.findByText("Manage your backup")).toBeTruthy();
+    expect(await screen.findByText("Manage your backup")).toBeOnTheScreen();
     expect(screen.queryByTestId("backup-hub-recover-cta")).toBeNull();
 
     await user.press(screen.getByTestId("backup-hub-recover-row"));
