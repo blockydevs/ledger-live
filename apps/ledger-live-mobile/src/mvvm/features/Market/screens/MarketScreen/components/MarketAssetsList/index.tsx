@@ -90,6 +90,15 @@ export function MarketAssetsList({
     [selectedCategory, categoryTabs, onSelectCategory],
   );
 
+  const footerSpinner = fetchingNextPage ? (
+    <Spinner
+      size={24}
+      color="base"
+      lx={footerSpinnerStyle}
+      testID={MARKET_SCREEN_TEST_IDS.assetsFooterSpinner}
+    />
+  ) : null;
+
   const listFooter =
     assets.length === 0 ? (
       <Box style={{ minHeight: footerMinHeight }}>
@@ -100,14 +109,9 @@ export function MarketAssetsList({
           showEmptySearchState={!showSubheader}
         />
       </Box>
-    ) : fetchingNextPage ? (
-      <Spinner
-        size={24}
-        color="base"
-        lx={footerSpinnerStyle}
-        testID={MARKET_SCREEN_TEST_IDS.assetsFooterSpinner}
-      />
-    ) : null;
+    ) : (
+      footerSpinner
+    );
 
   return (
     <>
