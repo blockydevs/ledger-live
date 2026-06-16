@@ -41,6 +41,7 @@ const seedSubscriptionState =
   (subscriptionState: LedgerRecoverSubscriptionStateEnum) =>
   (state: State): State => ({
     ...state,
+    settings: { ...state.settings, language: "en" },
     recoverState: {
       protectIdState: { [PROTECT_ID]: { subscriptionState, displayBanner: true } },
     },
@@ -75,7 +76,7 @@ describe("BackupHub screen (mobile)", () => {
   });
 
   it("opens the ongoing-subscription Recover deeplink for the in-progress variant", async () => {
-    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
+    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 
     const { user } = render(<BackupHubTestNavigator />, {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.BACKUP_VERIFY_IDENTITY),
@@ -92,7 +93,7 @@ describe("BackupHub screen (mobile)", () => {
   });
 
   it("opens the subscribed Recover deeplink for the done variant", async () => {
-    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
+    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 
     const { user } = render(<BackupHubTestNavigator />, {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.BACKUP_DONE),
@@ -109,7 +110,7 @@ describe("BackupHub screen (mobile)", () => {
   });
 
   it("opens the shop via Linking.openURL when a physical row is pressed", async () => {
-    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
+    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 
     const { user } = render(<BackupHubTestNavigator />, {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.NO_SUBSCRIPTION),
@@ -121,7 +122,7 @@ describe("BackupHub screen (mobile)", () => {
   });
 
   it("opens the compare-all backup solutions shop link from the footer", async () => {
-    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
+    const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 
     const { user } = render(<BackupHubTestNavigator />, {
       overrideInitialState: overrideWith(LedgerRecoverSubscriptionStateEnum.NO_SUBSCRIPTION),

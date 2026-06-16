@@ -2,6 +2,7 @@ import React from "react";
 import { ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Box, Subheader, SubheaderRow, SubheaderTitle, Text } from "@ledgerhq/lumen-ui-rnative";
+import { useTheme } from "@ledgerhq/lumen-ui-rnative/styles";
 import { useTranslation } from "~/context/Locale";
 import { TrackScreen } from "~/analytics";
 import { LedgerRecoverRow } from "../../components/LedgerRecoverRow";
@@ -50,6 +51,7 @@ export function BackupHubScreenView({
   physicalRows,
 }: Readonly<BackupHubScreenViewModel>) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const { bottom: bottomInset } = useSafeAreaInsets();
 
   const recoverRow = RECOVER_ROW_BY_BUCKET[bucket];
@@ -110,7 +112,7 @@ export function BackupHubScreenView({
 
       <Box
         lx={{ paddingHorizontal: "s16", paddingTop: "s8", alignItems: "center" }}
-        style={{ paddingBottom: bottomInset + 34 }}
+        style={{ paddingBottom: bottomInset + theme.spacings.s32 }}
       >
         <CompareBackupMethodsFooter
           label={t("myWallet.backupHub.compareFooter")}
