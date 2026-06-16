@@ -8229,8 +8229,8 @@
       "filters": {
         "accessibilityLabel": "Open asset filters",
         "title": "Filters",
-        "sorting": "Sorting",
-        "timeframe": "Timeframe",
+        "sorting": "Sort assets by",
+        "timeframe": "Choose timeframe",
         "sortingOptions": {
           "marketCap": "Market cap",
           "volume": "Volume",
