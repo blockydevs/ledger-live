@@ -37,7 +37,8 @@ import { openURL } from "~/renderer/linking";
 import { urls } from "~/config/urls";
 import { useLLDCoinFamily } from "~/renderer/families";
 import { useNewSendFlowFeature } from "LLD/features/Send/hooks/useNewSendFlowFeature";
-import { Account } from "@ledgerhq/types-live";
+import { Account, Operation } from "@ledgerhq/types-live";
+import { Transaction, TransactionStatus } from "@ledgerhq/live-common/generated/types";
 
 const openSplTokenExtensionsArticle = () => openURL(urls.solana.splTokenExtensions);
 
@@ -60,6 +61,10 @@ export const DefaultStepRecipient = ({
   const lldMemoTag = useFeature("lldMemoTag");
   const { isEnabledForFamily } = useNewSendFlowFeature();
   const bridge = useAccountBridgeOrNull(account ?? null, parentAccount);
+  const mainAccount = account ? getMainAccount(account, parentAccount) : null;
+  const specific = useLLDCoinFamily<Account, Transaction, TransactionStatus, Operation>(
+    mainAccount?.currency.family,
+  );
 
   const accountFilter = useMemo(
     () => (acc: Account) => {
@@ -69,13 +74,15 @@ export const DefaultStepRecipient = ({
     [isEnabledForFamily],
   );
 
-  if (!status || !account) return null;
+  if (!status || !account || !mainAccount) return null;
 
-  const mainAccount = getMainAccount(account, parentAccount);
   const extensions = getTokenExtensions(account);
 
   // check if there is a stuck transaction. If so, display a warning panel with "speed up or cancel" button
   const stuckAccountAndOperation = bridge?.getStuckAccountAndOperation(account, parentAccount);
+
+  const isReady = account && transaction && mainAccount;
+  const SendStepRecipientFromSelector = specific?.SendStepRecipientFromSelector;
 
   return (
     <Box flow={4}>
@@ -105,6 +112,14 @@ export const DefaultStepRecipient = ({
             />
           </Box>
 
+          {SendStepRecipientFromSelector && transaction ? (
+            <SendStepRecipientFromSelector
+              account={mainAccount}
+              transaction={transaction}
+              onChange={onChangeTransaction}
+            />
+          ) : null}
+
           {extensions && hasProblematicExtension(extensions) ? (
             <Alert data-testid="spl-2022-problematic-extension" type="warning" small={true}>
               <Trans i18nKey="send.steps.details.splExtensionsWarning">
@@ -120,7 +135,7 @@ export const DefaultStepRecipient = ({
             />
           ) : null}
           <StepRecipientSeparator />
-          {account && transaction && mainAccount && (
+          {isReady && (
             <>
               <RecipientField
                 status={status}
