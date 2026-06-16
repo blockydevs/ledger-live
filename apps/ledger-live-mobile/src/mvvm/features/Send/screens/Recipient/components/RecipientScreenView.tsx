@@ -6,13 +6,15 @@ import { MemoControls } from "LLM/features/Send/components/Memo/MemoControls";
 import { useMemoViewModel } from "LLM/features/Send/components/Memo/hooks/useMemoViewModel";
 import { shouldShowMatchedAddress } from "@ledgerhq/live-common/flows/send/recipient/utils/shouldShowMatchedAddress";
 import { useSendFlowData } from "LLM/features/Send/context/SendFlowContext";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { useRecipientScreenView } from "../hooks/useRecipientScreenView";
 import { AddressMatchedSection } from "./AddressMatchedSection";
 import { AddressValidationError } from "./AddressValidationError";
 import { LoadingState } from "./LoadingState";
 import { PasteFromClipboard } from "./PasteFromClipboard";
 import { ValidationBanner } from "./ValidationBanner";
+import { useAnalytics } from "~/analytics";
+import { getSendFlowTrackingProperties } from "@ledgerhq/ledger-wallet-framework/tracking/send";
 
 type RecipientScreenViewProps = Readonly<{
   account: AccountLike;
@@ -72,6 +74,23 @@ export const RecipientScreenView = ({
     hasMemoError: !!memoVm.memoError,
   });
 
+  const { track } = useAnalytics();
+  const trackingProperties = useMemo(() => {
+    return {
+      ...getSendFlowTrackingProperties(account, parentAccount),
+      button: "my accounts",
+      page: "step recipient",
+    };
+  }, [account, parentAccount]);
+
+  const handleMatchedAddress = useCallback(
+    (address: string, ensName?: string) => {
+      track("button_clicked", trackingProperties);
+      handleAddressSelect(address, ensName);
+    },
+    [track, trackingProperties, handleAddressSelect],
+  );
+
   const shouldShowErrorBanner =
     !isLoading &&
     (showBridgeSenderError ||
@@ -85,7 +104,10 @@ export const RecipientScreenView = ({
         {isLoading && <LoadingState />}
 
         {showInitialState && clipboardAddress && (
-          <PasteFromClipboard address={clipboardAddress} onPaste={handlePasteFromClipboard} />
+          <PasteFromClipboard
+            address={clipboardAddress}
+            onPaste={handlePasteFromClipboard}
+          />
         )}
 
         {showMemo && <MemoControls vm={memoVm} />}
@@ -94,7 +116,7 @@ export const RecipientScreenView = ({
           <AddressMatchedSection
             searchResult={result}
             searchValue={searchValue}
-            onSelect={handleAddressSelect}
+            onSelect={handleMatchedAddress}
             isSanctioned={showSanctionedBanner}
             isAddressComplete={isAddressComplete}
             hasBridgeError={showBridgeRecipientError}
@@ -108,7 +130,11 @@ export const RecipientScreenView = ({
         {shouldShowErrorBanner && (
           <Box lx={{ marginHorizontal: "s8", gap: "s16" }}>
             {showBridgeSenderError && (
-              <ValidationBanner type="error" error={bridgeSenderError} variant="sender" />
+              <ValidationBanner
+                type="error"
+                error={bridgeSenderError}
+                variant="sender"
+              />
             )}
             {showSanctionedBanner && <ValidationBanner type="sanctioned" />}
             {showBridgeRecipientError && (
