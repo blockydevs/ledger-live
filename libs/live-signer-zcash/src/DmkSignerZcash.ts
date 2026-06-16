@@ -4,7 +4,9 @@ import type {
   ZcashViewKey,
   ZcashTrustedInput,
   ZcashSigner,
-  ZcashSignerEvent,
+  ZcashSignature,
+  SignerTransactionLike,
+  BitcoinCreateTransactionLike,
 } from "./types";
 import {
   DeviceActionStatus,
@@ -16,6 +18,10 @@ import {
   GetFullViewingKeyDAError,
   SignerZcash,
   SignerZcashBuilder,
+  type LegacyCreateTransactionArg,
+  type LegacyTransaction,
+  type SignTransactionDAError,
+  type SignTransactionDAOutput,
 } from "@ledgerhq/device-signer-kit-zcash";
 
 type ZcashGetAddressResult = {
@@ -127,11 +133,64 @@ export class DmkSignerZcash implements ZcashSigner {
     throw new Error("Not implemented");
   }
 
-  async signTransaction(_path: string, _rawTxHex: string): Promise<ZcashSignerEvent> {
-    throw new Error("Not implemented");
+  private toLegacyTransaction(tx: SignerTransactionLike): LegacyTransaction {
+    return {
+      version: tx.version,
+      inputs: tx.inputs.map(input => ({
+        prevout: input.prevout,
+        script: input.script,
+        sequence: input.sequence,
+        ...(input.tree ? { tree: input.tree } : {}),
+      })),
+      ...(tx.outputs
+        ? { outputs: tx.outputs.map(output => ({ amount: output.amount, script: output.script })) }
+        : {}),
+      ...(tx.locktime ? { locktime: tx.locktime } : {}),
+      ...(tx.timestamp ? { timestamp: tx.timestamp } : {}),
+      ...(tx.nVersionGroupId ? { nVersionGroupId: tx.nVersionGroupId } : {}),
+      ...(tx.nExpiryHeight ? { nExpiryHeight: tx.nExpiryHeight } : {}),
+      ...(tx.extraData ? { extraData: tx.extraData } : {}),
+    };
   }
 
-  async signMessage(_path: string, _rawTxHex: string): Promise<ZcashSignerEvent> {
+  /**
+   * Sign a transparent Zcash transaction via the DMK signer.
+   *
+   * Maps the Bitcoin signer's `CreateTransaction` (produced by the coin module's
+   * `wallet.signAccountTx`) onto the DMK `LegacyCreateTransactionArg`, runs the
+   * `signTransaction` device action, and returns the fully serialized signed
+   * transaction. The DMK output is `0x`-prefixed (`HexaString`); the prefix is
+   * stripped so the result matches what the Bitcoin broadcast path expects.
+   */
+  async createPaymentTransaction(arg: BitcoinCreateTransactionLike): Promise<string> {
+    const legacyArg: LegacyCreateTransactionArg = {
+      inputs: arg.inputs.map(([tx, outputIndex, script, sequence, blockHeight]) => [
+        this.toLegacyTransaction(tx),
+        outputIndex,
+        script,
+        sequence,
+        blockHeight,
+      ]),
+      associatedKeysets: arg.associatedKeysets,
+      outputScriptHex: arg.outputScriptHex,
+      additionals: arg.additionals,
+      ...(arg.changePath ? { changePath: arg.changePath } : {}),
+      ...(arg.lockTime !== undefined ? { lockTime: arg.lockTime } : {}),
+      ...(arg.blockHeight !== undefined ? { blockHeight: arg.blockHeight } : {}),
+      ...(arg.sigHashType !== undefined ? { sigHashType: arg.sigHashType } : {}),
+      ...(arg.expiryHeight ? { expiryHeight: arg.expiryHeight } : {}),
+    };
+
+    const { observable } = this.signer.signTransaction(legacyArg, { skipOpenApp: true });
+    const signedTx = await this.resolveDeviceAction<
+      SignTransactionDAOutput,
+      SignTransactionDAError
+    >(observable);
+
+    return signedTx.startsWith("0x") ? signedTx.slice(2) : signedTx;
+  }
+
+  async signMessage(_path: string, _messageHex: string): Promise<ZcashSignature> {
     throw new Error("Not implemented");
   }
 }

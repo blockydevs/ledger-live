@@ -18,6 +18,7 @@ jest.mock("@ledgerhq/live-signer-zcash", () => ({
       args,
       getAddress: jest.fn(),
       getFullViewingKey: jest.fn(),
+      createPaymentTransaction: jest.fn().mockResolvedValue("0500signedtx"),
     };
   }),
 }));
@@ -340,7 +341,34 @@ describe("zcash chain adapter — createSigner", () => {
     expect(signer).toBe(defaultSigner);
     expect(signer).toHaveProperty("getAddress");
     expect(signer).toHaveProperty("getFullViewingKey");
+    expect(signer).toHaveProperty("createPaymentTransaction");
+    // splitTransaction is a pure hex parser — kept from the default Btc signer
     expect(signer).toHaveProperty("splitTransaction");
+  });
+
+  it("routes transparent signing through the DMK createPaymentTransaction", async () => {
+    const dmk = { dmkSentinel: true };
+    // The legacy hw-app-btc createPaymentTransaction must be overridden, not used.
+    // Capture its reference before createSigner mutates defaultSigner in place.
+    const legacyCreatePaymentTransaction = jest
+      .fn()
+      .mockResolvedValue("LEGACY_SHOULD_NOT_BE_CALLED");
+    const defaultSigner = {
+      splitTransaction: jest.fn(),
+      createPaymentTransaction: legacyCreatePaymentTransaction,
+    } as unknown as BitcoinSigner;
+
+    const signer = adapter.createSigner!({ dmk, sessionId: "s" }, currency, defaultSigner)!;
+
+    const signed = await signer.createPaymentTransaction({
+      inputs: [],
+      associatedKeysets: [],
+      outputScriptHex: "",
+      additionals: ["zcash"],
+    });
+
+    expect(signed).toBe("0500signedtx");
+    expect(legacyCreatePaymentTransaction).not.toHaveBeenCalled();
   });
 
   it("returns undefined for non-DMK transports (falls through to standard Btc)", () => {
