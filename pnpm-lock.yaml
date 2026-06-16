@@ -2623,6 +2623,9 @@ importers:
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.5.11(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.13.16(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@uiw/react-codemirror':
         specifier: ^4.25.4
         version: 4.25.4(@codemirror/view@6.39.5)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
