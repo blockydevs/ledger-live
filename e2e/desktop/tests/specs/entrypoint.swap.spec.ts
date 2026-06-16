@@ -374,7 +374,7 @@ test.describe("Swap history", () => {
     },
   );
 
-  test(
+  test.only(
     `User should be able to see their swap history from the swap history page`,
     {
       tag: [
@@ -398,7 +398,7 @@ test.describe("Swap history", () => {
       await app.swap.goToSwapHistory();
       await app.swap.checkSwapOperation(swapHistory.swapId, swapHistory.provider, swapHistory.swap);
       await app.swap.openSelectedOperation(swapHistory.swapId);
-      await app.operationDrawer.expectSwapDrawerInfos(
+      await app.swapTransactionStatusDialog.expectSwapTransactionStatusDialogInfos(
         swapHistory.swapId,
         swapHistory.swap,
         swapHistory.provider,

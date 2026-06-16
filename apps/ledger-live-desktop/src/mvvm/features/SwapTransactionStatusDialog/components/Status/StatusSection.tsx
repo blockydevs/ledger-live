@@ -49,6 +49,8 @@ export function StatusSection({
           value={sentAmount ?? <Skeleton className="h-16 w-96 rounded-sm" />}
           isLoading={isLoading}
           lineStatus={receiveDisplayStatus}
+          testId="swap-status-send-row"
+          amountTestId="swap-status-sent-amount"
         />
         <StatusRow
           status={receiveDisplayStatus}
@@ -56,6 +58,8 @@ export function StatusSection({
           subtitle={receiveStatusLabel}
           value={receivedAmount ?? <Skeleton className="h-16 w-96 rounded-sm" />}
           isLoading={isLoading}
+          testId="swap-status-receive-row"
+          amountTestId="swap-status-received-amount"
         />
       </div>
     </section>
