@@ -46,9 +46,15 @@ jest.mock("LLM/features/Send/hooks/useNewSendFlowFeature", () => ({
 
 const ethereum = getCryptoCurrencyById("ethereum");
 const polygon = getCryptoCurrencyById("polygon");
-const usdc = { parentCurrency: ethereum } as unknown as TokenCurrency;
-const usdtEth = { id: "ethereum/erc20/usdt", parentCurrency: ethereum } as unknown as TokenCurrency;
-const usdtPoly = { id: "polygon/erc20/usdt", parentCurrency: polygon } as unknown as TokenCurrency;
+const usdc = { parentCurrencyId: ethereum.id } as unknown as TokenCurrency;
+const usdtEth = {
+  id: "ethereum/erc20/usdt",
+  parentCurrencyId: ethereum.id,
+} as unknown as TokenCurrency;
+const usdtPoly = {
+  id: "polygon/erc20/usdt",
+  parentCurrencyId: polygon.id,
+} as unknown as TokenCurrency;
 
 const EMPTY_ETH = genAccount("sa-empty-eth", {
   currency: ethereum,

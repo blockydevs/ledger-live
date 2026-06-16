@@ -116,21 +116,21 @@ describe("useAmountScreenViewModel", () => {
     );
   });
 
-  it("shows a blocking Stellar multisign error and disables the amount input", () => {
-    mockedGetAccountCurrency.mockReturnValue(getCryptoCurrencyById("stellar"));
+  it("shows an input-blocking recipient error and disables the amount input", () => {
+    mockedGetAccountCurrency.mockReturnValue(getCryptoCurrencyById("bitcoin"));
 
     const account = createMockAccount({
       id: "acc",
-      currency: getCryptoCurrencyById("stellar"),
+      currency: getCryptoCurrencyById("bitcoin"),
     });
     const transaction = {
-      family: "stellar",
-      recipient: "GRECIPIENT",
+      family: "bitcoin",
+      recipient: "bc1qrecipient",
       amount: new BigNumber(0),
       useAllAmount: false,
     } as Transaction;
     const status = {
-      errors: { recipient: createNamedError("StellarSourceHasMultiSign") },
+      errors: { recipient: createNamedError("SourceHasMultiSign") },
       warnings: {},
       estimatedFees: new BigNumber(0),
       amount: new BigNumber(0),
@@ -163,7 +163,7 @@ describe("useAmountScreenViewModel", () => {
     expect(result.current.isInputDisabled).toBe(true);
     expect(result.current.amountMessage).toEqual({
       type: "error",
-      text: "StellarSourceHasMultiSign",
+      text: "SourceHasMultiSign",
       error,
     });
   });

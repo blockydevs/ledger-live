@@ -1,3 +1,4 @@
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import React, { useMemo } from "react";
 import BigNumber from "bignumber.js";
 import styled from "styled-components";
@@ -211,7 +212,10 @@ const AleoStepRecordPicker = ({ account, transaction, status, updateTransaction 
 const StepRecordPicker = ({ account, transaction, status, updateTransaction }: StepProps) => {
   if (transaction?.family !== "aleo" || !account || !isAleoAccount(account)) return null;
 
-  const currency = account.type === "Account" ? account.currency : account.token.parentCurrency;
+  const currency =
+    account.type === "Account"
+      ? account.currency
+      : getCryptoCurrencyById(account.token.parentCurrencyId);
   const config = getAleoCurrencyConfig(currency);
 
   if (config?.recordPickingStrategy === "auto") return null;

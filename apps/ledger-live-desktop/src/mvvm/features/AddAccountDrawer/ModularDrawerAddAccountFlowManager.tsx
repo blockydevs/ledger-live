@@ -1,4 +1,5 @@
 import type { AppResult } from "@ledgerhq/live-common/hw/actions/app";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { Flex, Text } from "@ledgerhq/react-ui/index";
 import { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { Account, TokenAccount } from "@ledgerhq/types-live";
@@ -78,7 +79,10 @@ const ModularDrawerAddAccountFlowManager = ({
   });
 
   const isAccountSelectionFlow = !!onAccountSelected;
-  const cryptoCurrency = currency.type === "CryptoCurrency" ? currency : currency.parentCurrency;
+  const cryptoCurrency =
+    currency.type === "CryptoCurrency"
+      ? currency
+      : getCryptoCurrencyById(currency.parentCurrencyId);
 
   const handleConnect = useCallback(
     (result: AppResult) => {

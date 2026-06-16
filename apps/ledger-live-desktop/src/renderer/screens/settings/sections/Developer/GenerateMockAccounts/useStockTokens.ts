@@ -24,7 +24,7 @@ export function useStockTokens(enabled = true): StockTokensResult {
     for (const { ledgerId } of selectTopStocks(data, MAX_STOCK_TOKENS)) {
       const currency = data.cryptoOrTokenCurrencies[ledgerId];
       if (!currency || currency.type !== "TokenCurrency") continue;
-      const parentId = currency.parentCurrency.id;
+      const parentId = currency.parentCurrencyId;
       groups.set(parentId, [...(groups.get(parentId) ?? []), currency]);
     }
 

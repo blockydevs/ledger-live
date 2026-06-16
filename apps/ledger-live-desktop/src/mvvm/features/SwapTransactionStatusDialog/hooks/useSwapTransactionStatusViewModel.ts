@@ -1,3 +1,4 @@
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { useEffect, useMemo, useState } from "react";
 import {
   flattenAccounts,
@@ -62,7 +63,9 @@ export function useSwapTransactionStatusViewModel(params: SwapTransactionStatusP
   const sendCurrency = sendResolved ? getAccountCurrency(sendResolved.account) : undefined;
   const receiveCurrency = receiveResolved ? getAccountCurrency(receiveResolved.account) : undefined;
   const sendMainCurrency =
-    sendCurrency?.type === "TokenCurrency" ? sendCurrency.parentCurrency : sendCurrency;
+    sendCurrency?.type === "TokenCurrency"
+      ? getCryptoCurrencyById(sendCurrency.parentCurrencyId)
+      : sendCurrency;
   const { getTransactionExplorer } = useLLDCoinFamily(sendMainCurrency?.family);
   const sentAmount = formatAmount(sendCurrency, details?.sentAmount, locale);
   const receivedAmount = formatAmount(

@@ -1,3 +1,4 @@
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import BigNumber from "bignumber.js";
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
@@ -117,7 +118,9 @@ export function getExplorerUrl({
 }): string | undefined {
   if (!provider) return undefined;
   const mainCurrency =
-    fromCurrency?.type === "TokenCurrency" ? fromCurrency.parentCurrency : fromCurrency;
+    fromCurrency?.type === "TokenCurrency"
+      ? getCryptoCurrencyById(fromCurrency.parentCurrencyId)
+      : fromCurrency;
   const providerExplorer = PROVIDER_EXPLORERS[provider];
 
   if (providerExplorer) {

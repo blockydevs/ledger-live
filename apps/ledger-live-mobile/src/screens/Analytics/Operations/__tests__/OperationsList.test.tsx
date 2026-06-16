@@ -36,7 +36,7 @@ jest.mock("~/screens/Portfolio/NoOpStatePortfolio", () => {
 });
 
 const ethereum = getCryptoCurrencyById("ethereum");
-const usdc = { parentCurrency: { family: "evm" } } as TokenCurrency;
+const usdc = { parentCurrencyId: "ethereum" } as TokenCurrency;
 
 const EMPTY_PARENT = genAccount("opslist-parent-empty", {
   currency: ethereum,

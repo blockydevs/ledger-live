@@ -6,6 +6,7 @@ import Box from "~/renderer/components/Box";
 import { TFunction } from "i18next";
 import { AccountLike, Account, Operation } from "@ledgerhq/types-live";
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import ConfirmationCell from "./ConfirmationCell";
 import DateCell from "./DateCell";
@@ -68,7 +69,10 @@ function OperationComponent({
 
   const isOptimistic = operation.blockHeight === null;
   const currency = getAccountCurrency(account);
-  const cryptoCurrency = currency.type === "CryptoCurrency" ? currency : currency.parentCurrency;
+  const cryptoCurrency =
+    currency.type === "CryptoCurrency"
+      ? currency
+      : getCryptoCurrencyById(currency.parentCurrencyId);
 
   const isConfirmed = isConfirmedOperation(operation, mainAccount, confirmationsNb);
   const specific = useLLDCoinFamily(cryptoCurrency.family);

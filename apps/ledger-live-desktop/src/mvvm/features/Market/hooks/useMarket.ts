@@ -24,9 +24,7 @@ import { addStarredMarketCoins, removeStarredMarketCoins } from "~/renderer/acti
 import { useMarketCategories } from "LLD/features/Market/hooks/useMarketCategories";
 import {
   getMarketCategoriesParam,
-  getMarketFilter,
   isBuiltInMarketListCategory,
-  isStockMarketCurrency,
 } from "@ledgerhq/live-common/market/utils/category";
 
 export function useMarket() {
@@ -68,10 +66,13 @@ export function useMarket() {
 
   const shouldDisplayLiveCompatible = filterBySupported || marketParams.liveCompatible;
 
+  // While the supported list is still loading we keep the user's counter value, and only fall
+  // back to usd once we know it is unsupported — otherwise a request fires with usd first.
+  const isCounterValueUnsupported =
+    !!supportedCounterCurrencies && !supportedCounterCurrencies.includes(settingsCounterValue);
+  const discoverabilityCounterCurrency = isCounterValueUnsupported ? "usd" : settingsCounterValue;
   const effectiveCounterCurrency = shouldDisplayAssetDiscoverability
-    ? supportedCounterCurrencies?.includes(settingsCounterValue)
-      ? settingsCounterValue
-      : "usd"
+    ? discoverabilityCounterCurrency
     : marketParams.counterCurrency;
 
   const resolvedMarketParams = { ...marketParams, counterCurrency: effectiveCounterCurrency };
@@ -80,8 +81,8 @@ export function useMarket() {
     ...resolvedMarketParams,
     starred: starFilterOn ? starredMarketCoins : starred,
     liveCompatible: shouldDisplayLiveCompatible,
-    filter: getMarketFilter(isStocksCategory) ?? marketParams.filter,
-    categories: isTrendingCategory
+    filter: marketParams.filter,
+    categories: shouldDisplayAssetDiscoverability
       ? getMarketCategoriesParam(categories.selectedCategory)
       : undefined,
   });
@@ -112,12 +113,7 @@ export function useMarket() {
   const isFavoritesEmpty = isStarredCategory && starredMarketCoins.length === 0;
   const emptyState = isFavoritesEmpty ? ("favorites" as const) : undefined;
 
-  // The backend `stock` filter is not yet exhaustive, so narrow the list client-side.
-  const marketData = isFavoritesEmpty
-    ? []
-    : isStocksCategory
-      ? marketResult.data.filter(isStockMarketCurrency)
-      : marketResult.data;
+  const marketData = isFavoritesEmpty ? [] : marketResult.data;
 
   const currenciesLength = marketData.length;
   const loading = !isFavoritesEmpty && marketResult.isLoading;

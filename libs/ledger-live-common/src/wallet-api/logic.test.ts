@@ -14,11 +14,7 @@ import {
 import { liveBlindSigningReporter } from "@ledgerhq/live-dmk-shared";
 
 import { AppManifest, WalletAPITransaction } from "./types";
-import {
-  createFixtureAccount,
-  createFixtureCryptoCurrency,
-  createFixtureTokenAccount,
-} from "../mock/fixtures/cryptoCurrencies";
+import { createFixtureAccount, createFixtureTokenAccount } from "../mock/fixtures/cryptoCurrencies";
 import { Transaction as EvmTransaction } from "@ledgerhq/coin-evm/types/index";
 import { OperationType, SignedOperation, TokenAccount } from "@ledgerhq/types-live";
 import { getWalletAccount } from "@ledgerhq/coin-bitcoin/wallet-btc/index";
@@ -1316,9 +1312,9 @@ describe("liveBlindSigningReporter live-app context wrapping", () => {
 
     const uiNavigation = jest.fn().mockRejectedValueOnce(new Error("user rejected"));
 
-    await expect(
-      signMessageLogic(context, walletAccountId, "msg", uiNavigation),
-    ).rejects.toThrow("user rejected");
+    await expect(signMessageLogic(context, walletAccountId, "msg", uiNavigation)).rejects.toThrow(
+      "user rejected",
+    );
 
     expect(setContextSpy).toHaveBeenLastCalledWith({ liveAppContext: null });
     expect(liveBlindSigningReporter.getContext().liveAppContext).toBeNull();
@@ -1358,9 +1354,9 @@ describe("liveBlindSigningReporter live-app context wrapping", () => {
       } as unknown as TrackingAPI,
     };
 
-    await expect(
-      signRawTransactionLogic(context, "wallet-id", "", jest.fn()),
-    ).rejects.toThrow("Transaction required");
+    await expect(signRawTransactionLogic(context, "wallet-id", "", jest.fn())).rejects.toThrow(
+      "Transaction required",
+    );
 
     expect(setContextSpy).toHaveBeenLastCalledWith({ liveAppContext: null });
     expect(liveBlindSigningReporter.getContext().liveAppContext).toBeNull();
@@ -1480,7 +1476,7 @@ function createTokenCurrency(): TokenCurrency {
     type: "TokenCurrency",
     id: "3",
     contractAddress: "",
-    parentCurrency: createFixtureCryptoCurrency("eth"),
+    parentCurrencyId: "ethereum",
     tokenType: "",
     //-- CurrencyCommon
     name: "",

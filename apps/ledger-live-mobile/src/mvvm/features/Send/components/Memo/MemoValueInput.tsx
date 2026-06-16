@@ -10,6 +10,7 @@ import {
   useBottomSheetRef,
 } from "@ledgerhq/lumen-ui-rnative";
 import { Information } from "@ledgerhq/lumen-ui-rnative/symbols";
+import { sanitizeMemoValue } from "@ledgerhq/live-common/flows/send/recipient/utils/memoValue";
 import { useTranslation } from "~/context/Locale";
 import { useTranslatedBridgeError } from "../../screens/Recipient/hooks/useTranslatedBridgeError";
 
@@ -43,17 +44,9 @@ function MemoValueInputComponent({
 
   const handleChangeText = useCallback(
     (text: string) => {
-      let next = text;
-      if (isTagType) {
-        next = next.replace(/\D/g, "");
-        if (memoMaxValue != null && next !== "") {
-          const num = Number(next);
-          if (num > memoMaxValue) next = String(memoMaxValue);
-        }
-      }
-      onChange(next);
+      onChange(sanitizeMemoValue({ value: text, memoType, memoMaxValue }));
     },
-    [isTagType, memoMaxValue, onChange],
+    [memoType, memoMaxValue, onChange],
   );
 
   const openHelp = useCallback(() => {

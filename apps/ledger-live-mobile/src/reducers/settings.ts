@@ -935,8 +935,7 @@ export const selectedTabPortfolioAssetsSelector = (state: State) =>
   state.settings.selectedTabPortfolioAssets;
 export const hasSeenWalletV4TourSelector = (state: State) => state.settings.hasSeenWalletV4Tour;
 
-export const doNotAskAgainSkipMemoSelector = (state: State) =>
-  state.settings.doNotAskAgainSkipMemo;
+export const doNotAskAgainSkipMemoSelector = (state: State) => state.settings.doNotAskAgainSkipMemo;
 export const productTourCompletedSelector = (state: State) => state.settings.productTourCompleted;
 export const analyticsConsentInfoSelector = (state: State) => state.settings.analyticsConsentInfo;
 export const hasClickedRecoverSelector = (state: State) => state.settings.hasClickedRecover;

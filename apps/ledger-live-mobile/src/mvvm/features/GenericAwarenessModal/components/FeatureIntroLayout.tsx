@@ -60,11 +60,7 @@ export function FeatureIntroLayout({ onClose, viewModel }: FeatureIntroLayoutPro
           lx={FEATURE_INTRO_HERO_CONTAINER_LX}
           testID="generic-awareness-modal-feature-intro-hero"
         >
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: imageUrl }} style={styles.heroImage} resizeMode="cover" />
         </Box>
       ) : null}
 

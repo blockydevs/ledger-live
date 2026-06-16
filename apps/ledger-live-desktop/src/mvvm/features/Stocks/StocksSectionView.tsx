@@ -10,7 +10,7 @@ import {
 import { StockPill } from "./components/StockPill";
 import { StocksSkeleton } from "./components/StocksSkeleton";
 import { splitIntoTwoRows } from "./utils/splitIntoTwoRows";
-import { StocksHeaderVariant, StocksSectionViewProps } from "./types";
+import type { StockSuggestion, StocksHeaderVariant, StocksSectionViewProps } from "./types";
 
 function StocksHeader({
   variant,
@@ -57,6 +57,34 @@ function StocksHeader({
   );
 }
 
+function StocksList({
+  data,
+  navigateToAsset,
+}: Readonly<{
+  data: StockSuggestion[];
+  navigateToAsset: (currencyId: string) => void;
+}>) {
+  const rows = splitIntoTwoRows(data);
+
+  return (
+    <div className="scrollbar-none overflow-x-auto" data-testid="stocks-list">
+      <div className="flex w-max flex-col gap-8">
+        {rows.map((rowStocks, rowIndex) => (
+          <div
+            key={rowIndex === 0 ? "top" : "bottom"}
+            className="flex gap-8"
+            data-testid="stocks-row"
+          >
+            {rowStocks.map(stock => (
+              <StockPill key={stock.id} stock={stock} onClick={navigateToAsset} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function StocksSectionView({
   data,
   isLoading,
@@ -69,25 +97,13 @@ export function StocksSectionView({
     return null;
   }
 
-  const rows = splitIntoTwoRows(data);
-
   return (
     <div className="flex flex-col gap-8" data-testid="stocks-section">
       <StocksHeader variant={headerVariant} onSeeAll={onSeeAll} />
       {isLoading ? (
         <StocksSkeleton count={limit} />
       ) : (
-        <div className="scrollbar-none overflow-x-auto" data-testid="stocks-list">
-          <div className="flex w-max flex-col gap-8">
-            {rows.map((rowStocks, rowIndex) => (
-              <div key={`${rowStocks.join("-")}-${rowIndex}`} className="flex gap-8">
-                {rowStocks.map(stock => (
-                  <StockPill key={stock.id} stock={stock} onClick={navigateToAsset} />
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+        <StocksList data={data} navigateToAsset={navigateToAsset} />
       )}
     </div>
   );

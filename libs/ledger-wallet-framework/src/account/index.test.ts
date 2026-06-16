@@ -160,7 +160,7 @@ test("accountWithMandatoryTokens ethereum", () => {
       type: "TokenCurrency" as const,
       id: `${currency.id}/erc20/mock_token_${i}`,
       contractAddress: `0x${i.toString(16).padStart(40, "0")}`,
-      parentCurrency: currency,
+      parentCurrencyId: currency.id,
       tokenType: "erc20" as const,
       name: `Mock Token ${i}`,
       ticker: `MOCK${i}`,

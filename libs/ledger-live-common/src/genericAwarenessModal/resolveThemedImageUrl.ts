@@ -5,10 +5,7 @@ export type ThemedImageUrls = {
 
 export type ThemeVariant = "light" | "dark";
 
-export const resolveThemedImageUrl = (
-  urls: ThemedImageUrls,
-  theme: ThemeVariant,
-): string => {
+export const resolveThemedImageUrl = (urls: ThemedImageUrls, theme: ThemeVariant): string => {
   const imageUrlLight = urls.imageUrlLight.trim();
   const imageUrlDark = urls.imageUrlDark.trim();
 

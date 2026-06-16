@@ -89,7 +89,9 @@ describe("FeatureIntroLayout", () => {
       },
     });
 
-    expect(screen.queryByTestId("generic-awareness-modal-feature-intro-hero")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("generic-awareness-modal-feature-intro-hero"),
+    ).not.toBeOnTheScreen();
   });
 
   it("should render with fallback icon when icon name is invalid", () => {

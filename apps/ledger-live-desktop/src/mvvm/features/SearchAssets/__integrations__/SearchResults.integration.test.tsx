@@ -91,9 +91,7 @@ describe("search results integration", () => {
       mockAssetsData({ data: [BTC] });
       mockedUseUsdToFiatRate.mockReturnValue({ status: "ready", rate: 0.9 });
 
-      const { result } = renderHook(() =>
-        useAssetSearchResultsViewModel({ search: "bit", limit: 10 }),
-      );
+      const { result } = renderHook(() => useAssetSearchResultsViewModel({ search: "bit" }));
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data[0].price).toBeCloseTo(90);
@@ -101,25 +99,7 @@ describe("search results integration", () => {
       expect(result.current.isError).toBe(false);
     });
 
-    it("caps results to the requested limit", () => {
-      const assets = Array.from({ length: 5 }, (_, i) => ({
-        id: `coin-${i}`,
-        name: `Coin ${i}`,
-        ticker: `C${i}`,
-        ledgerId: `coin-${i}`,
-        price: 10,
-      }));
-      mockAssetsData({ data: assets });
-      mockedUseUsdToFiatRate.mockReturnValue({ status: "ready", rate: 1 });
-
-      const { result } = renderHook(() =>
-        useAssetSearchResultsViewModel({ search: "c", limit: 3 }),
-      );
-
-      expect(result.current.data).toHaveLength(3);
-    });
-
-    it("returns every result without slicing when no limit is provided", () => {
+    it("returns every result (pagination handles the rest via infinite scroll)", () => {
       const assets = Array.from({ length: 5 }, (_, i) => ({
         id: `coin-${i}`,
         name: `Coin ${i}`,
@@ -161,9 +141,7 @@ describe("search results integration", () => {
       mockAssetsData({ data: [BTC] });
       mockedUseUsdToFiatRate.mockReturnValue({ status: "loading", rate: null });
 
-      const { result } = renderHook(() =>
-        useAssetSearchResultsViewModel({ search: "bit", limit: 10 }),
-      );
+      const { result } = renderHook(() => useAssetSearchResultsViewModel({ search: "bit" }));
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.data[0].price).toBe(100);
@@ -173,9 +151,7 @@ describe("search results integration", () => {
       mockAssetsData({ data: [BTC] });
       mockedUseUsdToFiatRate.mockReturnValue({ status: "error", rate: null });
 
-      const { result } = renderHook(() =>
-        useAssetSearchResultsViewModel({ search: "bit", limit: 10 }),
-      );
+      const { result } = renderHook(() => useAssetSearchResultsViewModel({ search: "bit" }));
 
       expect(result.current.isError).toBe(true);
     });
