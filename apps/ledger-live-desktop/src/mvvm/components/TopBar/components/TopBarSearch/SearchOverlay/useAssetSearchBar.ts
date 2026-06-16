@@ -10,8 +10,6 @@ import { getCurrentTrackingPage } from "~/renderer/analytics/screenRefs";
 export const STOCKS_SUGGESTION_LIMIT = 20;
 export const CRYPTOS_SUGGESTION_LIMIT = 3;
 
-export const SEARCH_RESULTS_LIMIT = 10;
-
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 2;
 
@@ -54,11 +52,11 @@ export function useAssetSearchBar() {
 
   const suggestions: SearchSuggestions = useMemo(() => ({ cryptos, stocks }), [cryptos, stocks]);
 
-  // --- Live search: a single flat list from the DADA assets search, driven by the debounced query. ---
+  // --- Live search: a single flat list from the DADA assets search, driven by the debounced query.
+  // Results are paginated (infinite scroll), so no client-side cap is applied. ---
   const search = useAssetSearchResultsViewModel({
     search: debouncedQuery,
     skip: !searchEnabled,
-    limit: SEARCH_RESULTS_LIMIT,
   });
 
   // While the debounce settles, keep the list in its loading (skeleton) state so the overlay never
@@ -66,8 +64,21 @@ export function useAssetSearchBar() {
   const searchSettling = trimmedQuery.length > 0 && trimmedQuery !== debouncedQuery;
 
   const results: SearchResults = useMemo(
-    () => ({ data: search.data, isLoading: search.isLoading || searchSettling }),
-    [search.data, search.isLoading, searchSettling],
+    () => ({
+      data: search.data,
+      isLoading: search.isLoading || searchSettling,
+      loadNext: search.loadNext,
+      hasNextPage: search.hasNextPage,
+      isFetchingNextPage: search.isFetchingNextPage,
+    }),
+    [
+      search.data,
+      search.isLoading,
+      search.loadNext,
+      search.hasNextPage,
+      search.isFetchingNextPage,
+      searchSettling,
+    ],
   );
 
   const suggestionsError = suggestionsAssetsError || stocks.isError;

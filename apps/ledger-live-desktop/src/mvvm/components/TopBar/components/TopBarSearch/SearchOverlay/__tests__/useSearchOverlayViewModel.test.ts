@@ -22,7 +22,12 @@ const EMPTY_SUGGESTIONS: SearchSuggestions = {
   cryptos: EMPTY_SECTION,
   stocks: EMPTY_SECTION,
 };
-const EMPTY_RESULTS: SearchResults = { data: [], isLoading: false };
+const EMPTY_RESULTS: SearchResults = {
+  data: [],
+  isLoading: false,
+  hasNextPage: false,
+  isFetchingNextPage: false,
+};
 
 function mockSearchBar({
   mode,
