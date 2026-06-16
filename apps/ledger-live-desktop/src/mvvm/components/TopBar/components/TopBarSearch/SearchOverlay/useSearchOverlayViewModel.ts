@@ -2,12 +2,13 @@ import { KeyboardEvent, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
-import { setTrackingSource } from "~/renderer/analytics/TrackPage";
 import { getMarketOrAssetDetailPath } from "LLD/utils/marketAssetNavigation";
 import { setMarketCategory } from "~/renderer/actions/market";
 import { useAssetSearchBar } from "./useAssetSearchBar";
 import { SearchOverlayContextValue } from "./types";
 import { useDispatch } from "LLD/hooks/redux";
+import { track } from "~/renderer/analytics/segment";
+import { getCurrentTrackingPage, getPreviousTrackingPage } from "~/renderer/analytics/screenRefs";
 
 export function useSearchOverlayViewModel() {
   const navigate = useNavigate();
@@ -25,28 +26,39 @@ export function useSearchOverlayViewModel() {
 
   const navigateToAsset = useCallback(
     (currencyId: string, marketState?: MarketCurrencyData) => {
-      setTrackingSource("Global Search");
+      track("asset_clicked", {
+        asset: marketState?.name ?? currencyId,
+        page: getCurrentTrackingPage(),
+        flow: "global_search",
+        source: getPreviousTrackingPage(),
+        // true when clicked from the search results list, false from the default suggestions list.
+        searched: displayedMode === "results",
+      });
       navigate(getMarketOrAssetDetailPath(currencyId, shouldDisplayAggregatedAssets), {
         state: marketState,
       });
       close();
     },
-    [navigate, shouldDisplayAggregatedAssets, close],
+    [navigate, shouldDisplayAggregatedAssets, close, displayedMode],
   );
 
-  const navigateToMarket = useCallback(() => {
-    setTrackingSource("Global Search");
-    dispatch(setMarketCategory("all"));
-    navigate("/market");
-    close();
-  }, [dispatch, navigate, close]);
+  const goToMarket = useCallback(
+    (marketCategory: Parameters<typeof setMarketCategory>[0], trackCategory: string) => {
+      dispatch(setMarketCategory(marketCategory));
+      navigate("/market");
+      track("button_clicked", {
+        button: "see all",
+        flow: "global_search",
+        page: getCurrentTrackingPage(),
+        category: trackCategory,
+      });
+      close();
+    },
+    [dispatch, navigate, close],
+  );
 
-  const navigateToStocksMarket = useCallback(() => {
-    setTrackingSource("Global Search");
-    dispatch(setMarketCategory("stocks"));
-    navigate("/market");
-    close();
-  }, [dispatch, navigate, close]);
+  const navigateToMarket = useCallback(() => goToMarket("all", "crypto"), [goToMarket]);
+  const navigateToStocksMarket = useCallback(() => goToMarket("stocks", "stocks"), [goToMarket]);
 
   const onOpenChange = useCallback(
     (next: boolean) => {

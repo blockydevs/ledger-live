@@ -1,9 +1,11 @@
-import { ChangeEvent, useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
 import { useStocksSectionViewModel } from "LLD/features/Stocks/hooks/useStocksSectionViewModel";
 import { useAssetSuggestionsViewModel } from "LLD/features/SearchAssets/hooks/useAssetSuggestionsViewModel";
 import { useAssetSearchResultsViewModel } from "LLD/features/SearchAssets/hooks/useAssetSearchResultsViewModel";
 import { SearchMode, SearchResults, SearchSuggestions } from "./types";
+import { track } from "~/renderer/analytics/segment";
+import { getCurrentTrackingPage } from "~/renderer/analytics/screenRefs";
 
 export const STOCKS_SUGGESTION_LIMIT = 20;
 export const CRYPTOS_SUGGESTION_LIMIT = 3;
@@ -22,7 +24,10 @@ export function useAssetSearchBar() {
   }, []);
 
   const clear = useCallback(() => setQuery(""), []);
-  const open = useCallback(() => setIsOpen(true), []);
+  const open = useCallback(() => {
+    setIsOpen(true);
+    track("search_open", { page: getCurrentTrackingPage() });
+  }, []);
   const close = useCallback(() => {
     setIsOpen(false);
     setQuery("");
@@ -31,6 +36,15 @@ export function useAssetSearchBar() {
   const trimmedQuery = query.trim();
   const debouncedQuery = useDebounce(trimmedQuery, SEARCH_DEBOUNCE_MS);
   const searchEnabled = debouncedQuery.length >= MIN_SEARCH_LENGTH;
+
+  // Track the search once the debounce settles on a searchable query.
+  useEffect(() => {
+    if (debouncedQuery.length < MIN_SEARCH_LENGTH) return;
+    track("Query global search", {
+      search_query: debouncedQuery,
+      page: getCurrentTrackingPage(),
+    });
+  }, [debouncedQuery]);
 
   // --- Default suggestions (top market cap + stocks), shown when the query is empty. ---
   const stocks = useStocksSectionViewModel({ limit: STOCKS_SUGGESTION_LIMIT });
