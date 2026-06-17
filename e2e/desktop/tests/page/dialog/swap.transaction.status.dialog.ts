@@ -19,7 +19,7 @@ export class SwapTransactionStatusDialog extends Dialog {
 
   @step("Verify swap transaction status dialog information")
   async expectSwapTransactionStatusDialogInfos(
-    swapId: string,
+    swapIdPrefix: string,
     provider: SwapProvider,
     details: {
       date: string;
@@ -44,7 +44,7 @@ export class SwapTransactionStatusDialog extends Dialog {
     await expect(this.networkFees).toHaveText(details.networkFees);
     await expect(this.receiveAccount).toBeVisible();
     await expect(this.receiveAccount).toHaveText(details.receiveAccount);
-    await expect(this.swapId).toHaveText(new RegExp(swapId.slice(0, 6)));
+    await expect(this.swapId).toContainText(swapIdPrefix);
     await expect(this.provider).toHaveText(provider.uiName);
     await expect(this.viewExplorerBtn).toBeVisible();
     await expect(this.viewExplorerBtn).toHaveAttribute("data-href", /^https:\/\/.+/);

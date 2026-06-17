@@ -406,7 +406,7 @@ test.describe("Swap history", () => {
       await app.swap.checkSwapOperation(swapHistory.swapId, swapHistory.provider, swapHistory.swap);
       await app.swap.openSelectedOperation(swapHistory.swapId);
       await app.swapTransactionStatusDialog.expectSwapTransactionStatusDialogInfos(
-        swapHistory.swapId,
+        swapHistory.swapId.slice(0, 6),
         swapHistory.provider,
         swapHistory.details,
       );
