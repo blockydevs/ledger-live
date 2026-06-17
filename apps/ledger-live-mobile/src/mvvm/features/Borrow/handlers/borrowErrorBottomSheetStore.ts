@@ -12,7 +12,7 @@
 
 import { sanitizeBorrowErrorBottomSheetParams } from "@ledgerhq/live-common/wallet-api/Borrow/errorBottomSheetParams";
 import type { BorrowErrorBottomSheetParams } from "@ledgerhq/live-common/wallet-api/Borrow/errorBottomSheetParams";
-import { makeSetBorrowErrorBottomSheetAction } from "~/actions/borrow";
+import { setErrorBottomSheet } from "~/reducers/borrow";
 import type { Dispatch } from "redux";
 
 const HANDLER_NAME = "custom.bottomSheet.error";
@@ -32,7 +32,7 @@ export function resolveBorrowErrorBottomSheet(confirmed: boolean) {
   const resolver = pendingResolver;
   pendingResolver = null;
   if (errorBottomSheetDispatch) {
-    errorBottomSheetDispatch(makeSetBorrowErrorBottomSheetAction(undefined));
+    errorBottomSheetDispatch(setErrorBottomSheet(undefined));
     errorBottomSheetDispatch = null;
   }
   if (resolver) resolver({ confirmed });
@@ -53,7 +53,7 @@ export function createOpenBorrowErrorBottomSheetHandler(dispatch: Dispatch) {
     return new Promise<{ confirmed: boolean }>(resolve => {
       pendingResolver = resolve;
       errorBottomSheetDispatch = dispatch;
-      dispatch(makeSetBorrowErrorBottomSheetAction(validated));
+      dispatch(setErrorBottomSheet(validated));
     });
   };
 }

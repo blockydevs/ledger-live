@@ -23,20 +23,14 @@ jest.mock("LLM/components/QueuedDrawer/QueuedDrawerBottomSheet", () => {
     children,
     onClose,
     isRequestingToBeOpened,
-    backgroundComponent,
   }: {
     children: React.ReactNode;
     onClose: () => void;
     isRequestingToBeOpened: boolean;
-    backgroundComponent?: React.ComponentType<unknown>;
   }) {
     return (
       <View testID="queued-drawer-bottom-sheet">
         <Text testID="is-requesting-to-be-opened">{isRequestingToBeOpened ? "true" : "false"}</Text>
-        <Text testID="background-component-name">
-          {(backgroundComponent && (backgroundComponent.displayName ?? backgroundComponent.name)) ||
-            "none"}
-        </Text>
         {children}
         <Pressable testID="close-bottom-sheet" onPress={onClose}>
           <Text>Close</Text>
@@ -93,14 +87,6 @@ describe("BorrowErrorBottomSheet", () => {
     expect(screen.getByText("Retry")).toBeTruthy();
   });
 
-  it("renders BottomSheetErrorGradient as the background", () => {
-    renderSheet({ title: "T", description: "D", ctaLabel: "CTA" });
-
-    expect(screen.getByTestId("background-component-name")).toHaveTextContent(
-      "BottomSheetErrorGradient",
-    );
-  });
-
   it("renders an error Spot above the title and description", () => {
     renderSheet({ title: "T", description: "D", ctaLabel: "CTA" });
 
@@ -114,7 +100,7 @@ describe("BorrowErrorBottomSheet", () => {
       ctaLabel: "Confirm",
     });
 
-    await user.press(screen.getByText("Confirm"));
+    await user.press(screen.getByTestId("borrow-error-bottom-sheet-cta"));
 
     expect(mockedResolve).toHaveBeenCalledWith(true);
   });
@@ -139,7 +125,7 @@ describe("BorrowErrorBottomSheet", () => {
   it("does not call close-resolve after the CTA has been pressed", async () => {
     const { user } = renderSheet({ title: "T", description: "D", ctaLabel: "Confirm" });
 
-    await user.press(screen.getByText("Confirm"));
+    await user.press(screen.getByTestId("borrow-error-bottom-sheet-cta"));
     await user.press(screen.getByTestId("close-bottom-sheet"));
 
     expect(mockedResolve).toHaveBeenCalledTimes(1);

@@ -2,7 +2,7 @@ import {
   createOpenBorrowErrorBottomSheetHandler,
   resolveBorrowErrorBottomSheet,
 } from "../borrowErrorBottomSheetStore";
-import { makeSetBorrowErrorBottomSheetAction } from "~/actions/borrow";
+import { setErrorBottomSheet } from "~/reducers/borrow";
 
 const validParams = {
   title: "Something went wrong",
@@ -31,7 +31,7 @@ describe("borrowErrorBottomSheetStore", () => {
       });
 
       expect(dispatch).toHaveBeenCalledTimes(1);
-      expect(dispatch).toHaveBeenCalledWith(makeSetBorrowErrorBottomSheetAction(validParams));
+      expect(dispatch).toHaveBeenCalledWith(setErrorBottomSheet(validParams));
     });
 
     it("propagates validation errors from sanitizeBorrowErrorBottomSheetParams", async () => {
@@ -73,7 +73,7 @@ describe("borrowErrorBottomSheetStore", () => {
       await pending;
 
       expect(dispatch).toHaveBeenCalledTimes(2);
-      expect(dispatch).toHaveBeenLastCalledWith(makeSetBorrowErrorBottomSheetAction(undefined));
+      expect(dispatch).toHaveBeenLastCalledWith(setErrorBottomSheet(undefined));
     });
 
     it("resolves a previous pending sheet as dismissed when a new sheet opens", async () => {

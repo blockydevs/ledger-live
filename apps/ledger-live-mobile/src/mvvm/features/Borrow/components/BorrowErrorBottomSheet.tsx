@@ -1,15 +1,8 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import {
-  BottomSheetView,
-  BottomSheetHeader,
-  Box,
-  Button,
-  Spot,
-  Text,
-} from "@ledgerhq/lumen-ui-rnative";
+import { BottomSheetView, BottomSheetHeader } from "@ledgerhq/lumen-ui-rnative";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QueuedDrawerBottomSheet from "LLM/components/QueuedDrawer/QueuedDrawerBottomSheet";
-import { BottomSheetErrorGradient } from "LLM/components/BottomSheetGradient";
+import { InfoState } from "LLM/components/InfoState";
 import { useSelector } from "~/context/hooks";
 import { borrowErrorBottomSheetSelector } from "~/reducers/borrow";
 import { resolveBorrowErrorBottomSheet } from "LLM/features/Borrow/handlers/borrowErrorBottomSheetStore";
@@ -18,9 +11,13 @@ import { resolveBorrowErrorBottomSheet } from "LLM/features/Borrow/handlers/borr
  * Renders the bottom sheet opened by the Borrow live app via the
  * `custom.bottomSheet.error` wallet-api method.
  *
- * The background is fixed to `BottomSheetErrorGradient`. The wallet-api promise
- * always resolves with `{ confirmed: boolean }`: `true` when the CTA is pressed
- * (onSuccess), `false` when the sheet is closed or dragged down (onError).
+ * The sheet uses the shared `InfoState` with `preset="error"`, which both
+ * renders the error visual + title + description + CTA and tints the parent
+ * bottom sheet with the error gradient via `useBottomSheetBackgroundTone`.
+ *
+ * The wallet-api promise always resolves with `{ confirmed: boolean }`:
+ * `true` when the CTA is pressed, `false` when the sheet is closed or dragged
+ * down.
  */
 export function BorrowErrorBottomSheet() {
   const insets = useSafeAreaInsets();
@@ -69,38 +66,22 @@ export function BorrowErrorBottomSheet() {
       isRequestingToBeOpened={isRequestingToBeOpened}
       onClose={handleClose}
       enableDynamicSizing
-      backgroundComponent={BottomSheetErrorGradient}
     >
       <BottomSheetView style={{ paddingBottom: insets.bottom }}>
         <BottomSheetHeader />
         {data ? (
-          <Box
-            lx={{
-              alignItems: "center",
-              padding: "s16",
-              paddingBottom: "s24",
-              gap: "s24",
+          <InfoState
+            preset="error"
+            size="hug"
+            title={data.title}
+            description={data.description}
+            primaryCta={{
+              label: data.ctaLabel,
+              onPress: handleConfirm,
+              testID: "borrow-error-bottom-sheet-cta",
             }}
-          >
-            <Spot appearance="error" size={72} />
-            <Box lx={{ alignItems: "center", gap: "s8" }}>
-              <Text typography="heading4SemiBold" lx={{ color: "base", textAlign: "center" }}>
-                {data.title}
-              </Text>
-              <Text typography="body2" lx={{ color: "muted", textAlign: "center" }}>
-                {data.description}
-              </Text>
-            </Box>
-            <Button
-              appearance="base"
-              size="lg"
-              onPress={handleConfirm}
-              lx={{ width: "full" }}
-              testID="borrow-error-bottom-sheet-cta"
-            >
-              {data.ctaLabel}
-            </Button>
-          </Box>
+            testID="borrow-error-bottom-sheet"
+          />
         ) : null}
       </BottomSheetView>
     </QueuedDrawerBottomSheet>

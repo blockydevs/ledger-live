@@ -2,30 +2,32 @@ import reducer, {
   INITIAL_STATE,
   borrowInfoBottomSheetSelector,
   borrowErrorBottomSheetSelector,
+  setInfoBottomSheet,
+  setErrorBottomSheet,
 } from "../borrow";
-import {
-  makeSetBorrowInfoBottomSheetAction,
-  makeSetBorrowErrorBottomSheetAction,
-} from "../../actions/borrow";
 import type { State } from "../types";
 
-describe("borrow reducer", () => {
-  describe("BORROW_INFO_BOTTOM_SHEET", () => {
+describe("borrow slice", () => {
+  describe("setInfoBottomSheet", () => {
     it("sets infoBottomSheet from payload", () => {
       const payload = { title: "Borrow info", message: "Some help text" };
-      const state = reducer(INITIAL_STATE, makeSetBorrowInfoBottomSheetAction(payload));
+      const state = reducer(INITIAL_STATE, setInfoBottomSheet(payload));
 
       expect(state.infoBottomSheet).toEqual(payload);
     });
 
-    it("sets infoBottomSheet to undefined when payload is undefined", () => {
-      const state = reducer(INITIAL_STATE, makeSetBorrowInfoBottomSheetAction(undefined));
+    it("clears infoBottomSheet when payload is undefined", () => {
+      const seeded = reducer(
+        INITIAL_STATE,
+        setInfoBottomSheet({ title: "Info", message: "Help" }),
+      );
+      const state = reducer(seeded, setInfoBottomSheet(undefined));
 
       expect(state.infoBottomSheet).toBeUndefined();
     });
   });
 
-  describe("BORROW_ERROR_BOTTOM_SHEET", () => {
+  describe("setErrorBottomSheet", () => {
     const payload = {
       title: "Borrow failed",
       description: "The provider rejected your request.",
@@ -33,25 +35,22 @@ describe("borrow reducer", () => {
     };
 
     it("sets errorBottomSheet from payload", () => {
-      const state = reducer(INITIAL_STATE, makeSetBorrowErrorBottomSheetAction(payload));
+      const state = reducer(INITIAL_STATE, setErrorBottomSheet(payload));
 
       expect(state.errorBottomSheet).toEqual(payload);
     });
 
-    it("sets errorBottomSheet to undefined when payload is undefined", () => {
-      const stateWithSheet = reducer(
-        INITIAL_STATE,
-        makeSetBorrowErrorBottomSheetAction(payload),
-      );
-      const state = reducer(stateWithSheet, makeSetBorrowErrorBottomSheetAction(undefined));
+    it("clears errorBottomSheet when payload is undefined", () => {
+      const seeded = reducer(INITIAL_STATE, setErrorBottomSheet(payload));
+      const state = reducer(seeded, setErrorBottomSheet(undefined));
 
       expect(state.errorBottomSheet).toBeUndefined();
     });
 
     it("preserves infoBottomSheet when updating errorBottomSheet", () => {
       const infoPayload = { title: "Info", message: "Help" };
-      const baseState = reducer(INITIAL_STATE, makeSetBorrowInfoBottomSheetAction(infoPayload));
-      const state = reducer(baseState, makeSetBorrowErrorBottomSheetAction(payload));
+      const baseState = reducer(INITIAL_STATE, setInfoBottomSheet(infoPayload));
+      const state = reducer(baseState, setErrorBottomSheet(payload));
 
       expect(state.infoBottomSheet).toEqual(infoPayload);
       expect(state.errorBottomSheet).toEqual(payload);
@@ -59,8 +58,8 @@ describe("borrow reducer", () => {
 
     it("preserves errorBottomSheet when updating infoBottomSheet", () => {
       const infoPayload = { title: "Info", message: "Help" };
-      const baseState = reducer(INITIAL_STATE, makeSetBorrowErrorBottomSheetAction(payload));
-      const state = reducer(baseState, makeSetBorrowInfoBottomSheetAction(infoPayload));
+      const baseState = reducer(INITIAL_STATE, setErrorBottomSheet(payload));
+      const state = reducer(baseState, setInfoBottomSheet(infoPayload));
 
       expect(state.infoBottomSheet).toEqual(infoPayload);
       expect(state.errorBottomSheet).toEqual(payload);
