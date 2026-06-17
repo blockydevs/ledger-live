@@ -696,6 +696,7 @@ describe("sync.ts", () => {
         [],
       );
 
+      expect(mockFetchAllOwnedRecords).toHaveBeenCalledTimes(2);
       expect(mockFetchAllOwnedRecords).toHaveBeenCalledWith(
         expect.objectContaining({ start: 9999 }),
       );
@@ -721,6 +722,7 @@ describe("sync.ts", () => {
         [],
       );
 
+      expect(mockFetchAllOwnedRecords).toHaveBeenCalledTimes(2);
       expect(mockFetchAllOwnedRecords).toHaveBeenCalledWith(expect.objectContaining({ start: 0 }));
     });
 
