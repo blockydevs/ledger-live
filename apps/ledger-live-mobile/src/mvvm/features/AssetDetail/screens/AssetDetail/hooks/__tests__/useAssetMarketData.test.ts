@@ -145,5 +145,74 @@ describe("useAssetMarketData", () => {
       expect(result.current.marketCurrency).toBeUndefined();
       expect(result.current.ledgerIds).toEqual([mockBtcCryptoCurrency.id]);
     });
+
+    it("keeps using the legacy ids filter when a coingecko id is available (e.g. bitcoin)", async () => {
+      const requestedIds: string[] = [];
+      server.use(
+        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
+          const ids = new URL(request.url).searchParams.get("ids");
+          if (ids) requestedIds.push(ids);
+          return HttpResponse.json([]);
+        }),
+      );
+
+      renderHook(() =>
+        useAssetMarketData({
+          marketApiId: mockBtcCryptoCurrency.id,
+          knownLedgerIds: [mockBtcCryptoCurrency.id],
+        }),
+      );
+
+      await waitFor(() => {
+        expect(requestedIds).toContain(mockBtcCryptoCurrency.id);
+      });
+    });
+
+    it("requests /v3/markets with ledgerIds when the market api id is a ledger id", async () => {
+      const requestedLedgerIds: string[] = [];
+      server.use(
+        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
+          const ledgerIds = new URL(request.url).searchParams.get("ledgerIds");
+          if (ledgerIds) requestedLedgerIds.push(ledgerIds);
+          return HttpResponse.json([
+            {
+              id: "shiba-inu",
+              name: "Shiba Inu",
+              ticker: "SHIB",
+              ledgerIds: ["ethereum/erc20/shiba_inu"],
+              price: 0.00001,
+              marketCap: 1,
+              marketCapRank: 1,
+              totalVolume: 1,
+              high24h: 1,
+              low24h: 1,
+              priceChange24h: 0,
+              priceChangePercentage24h: 0,
+              priceChangePercentage: {
+                "1h": 0,
+                "24h": 0,
+                "7d": 0,
+                "30d": 0,
+                "6m": 0,
+                "1y": 0,
+              },
+              image: "",
+            },
+          ]);
+        }),
+      );
+
+      const { result } = renderHook(() =>
+        useAssetMarketData({
+          marketApiId: "ethereum/erc20/shiba_inu",
+          knownLedgerIds: ["ethereum/erc20/shiba_inu"],
+        }),
+      );
+
+      await waitFor(() => {
+        expect(requestedLedgerIds).toContain("ethereum/erc20/shiba_inu");
+        expect(result.current.marketId).toBe("shiba-inu");
+      });
+    });
   });
 });
