@@ -105,7 +105,7 @@ describe("sync.ts", () => {
       nextCursor: null,
     });
     mockApiClient.getTokenBalance.mockResolvedValue(null);
-    mockListPrivateOperations.mockResolvedValue({ operations: [], consumedRecordTags: new Set() });
+    mockListPrivateOperations.mockResolvedValue({ operations: [], consumedRecordTags: new Map() });
     mockGetPrivateBalance.mockResolvedValue({ balance: new BigNumber(0), unspentRecords: [] });
     mockPatchPublicOperations.mockResolvedValue([]);
   });
@@ -624,7 +624,7 @@ describe("sync.ts", () => {
         .mockResolvedValueOnce(mockUnspentRecords);
       mockListPrivateOperations.mockResolvedValueOnce({
         operations: mockPrivateOps,
-        consumedRecordTags: new Set(),
+        consumedRecordTags: new Map(),
       });
       mockGetPrivateBalance.mockResolvedValueOnce({
         balance: new BigNumber(50000),
@@ -865,7 +865,7 @@ describe("sync.ts", () => {
       });
       mockListPrivateOperations.mockResolvedValueOnce({
         operations: [newPrivateOp],
-        consumedRecordTags: new Set(),
+        consumedRecordTags: new Map(),
       });
       mockPatchPublicOperations.mockResolvedValueOnce([newPublicOp, oldPublicOp]);
 
@@ -990,7 +990,7 @@ describe("sync.ts", () => {
         .mockResolvedValueOnce([spentRecord, unspentRecord]); // unspent from scanner (with stale data)
       mockListPrivateOperations.mockResolvedValueOnce({
         operations: [],
-        consumedRecordTags: new Set([consumedTag]),
+        consumedRecordTags: new Map([[consumedTag, true]]),
       });
 
       await performPrivateSync(
