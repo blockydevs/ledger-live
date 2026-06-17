@@ -14,9 +14,8 @@ import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useU
 import { applyDadaMarketFallback } from "../utils/applyDadaMarketFallback";
 import { resolveDadaMarket } from "../utils/resolveDadaMarket";
 import {
-  getMarketLedgerIdsForQuery,
+  buildMarketCurrencyQueryArgs,
   resolveCoingeckoIdForIdsQuery,
-  shouldFetchMarketByLedgerIds,
 } from "../utils/resolveMarketCurrencyQuery";
 import type { AssetMarketDataInput, AssetMarketDataResult } from "../types";
 
@@ -30,22 +29,12 @@ export function useAssetMarketData({
   knownMarketId,
   enabled = true,
 }: AssetMarketDataInput): AssetMarketDataResult {
-  const fetchByLedgerIds = shouldFetchMarketByLedgerIds(marketApiId, knownLedgerIds);
-  const idsQueryId = resolveCoingeckoIdForIdsQuery(marketApiId);
-
-  const currencyQueryArgs = useMemo(
-    () =>
-      fetchByLedgerIds && knownLedgerIds?.length
-        ? {
-            ledgerIds: getMarketLedgerIdsForQuery(knownLedgerIds),
-            counterCurrency,
-          }
-        : { id: idsQueryId ?? marketApiId ?? "", counterCurrency },
-    [fetchByLedgerIds, knownLedgerIds, idsQueryId, marketApiId, counterCurrency],
+  const { args: currencyQueryArgs, skip: skipMarketQueryBase } = useMemo(
+    () => buildMarketCurrencyQueryArgs({ marketApiId, knownLedgerIds, counterCurrency }),
+    [marketApiId, knownLedgerIds, counterCurrency],
   );
 
-  const skipMarketQuery =
-    !enabled || (fetchByLedgerIds ? !knownLedgerIds?.length : !idsQueryId && !marketApiId);
+  const skipMarketQuery = !enabled || skipMarketQueryBase;
 
   const {
     data: marketFromHook,

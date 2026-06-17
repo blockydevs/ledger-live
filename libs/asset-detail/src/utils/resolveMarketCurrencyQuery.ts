@@ -31,3 +31,37 @@ export function shouldFetchMarketByLedgerIds(
 export function getMarketLedgerIdsForQuery(knownLedgerIds: readonly string[]): string[] {
   return [...knownLedgerIds].slice(0, MAX_MARKET_LEDGER_IDS);
 }
+
+export type MarketCurrencyQueryArgs = Readonly<{
+  id?: string;
+  ledgerIds?: string[];
+  counterCurrency: string;
+}>;
+
+export function buildMarketCurrencyQueryArgs({
+  marketApiId,
+  knownLedgerIds,
+  counterCurrency,
+}: {
+  marketApiId?: string;
+  knownLedgerIds?: readonly string[];
+  counterCurrency: string;
+}): { args: MarketCurrencyQueryArgs; skip: boolean } {
+  const fetchByLedgerIds = shouldFetchMarketByLedgerIds(marketApiId, knownLedgerIds);
+  const idsQueryId = resolveCoingeckoIdForIdsQuery(marketApiId);
+
+  if (fetchByLedgerIds && knownLedgerIds?.length) {
+    return {
+      args: {
+        ledgerIds: getMarketLedgerIdsForQuery(knownLedgerIds),
+        counterCurrency,
+      },
+      skip: false,
+    };
+  }
+
+  return {
+    args: { id: idsQueryId ?? marketApiId ?? "", counterCurrency },
+    skip: !idsQueryId && !marketApiId,
+  };
+}

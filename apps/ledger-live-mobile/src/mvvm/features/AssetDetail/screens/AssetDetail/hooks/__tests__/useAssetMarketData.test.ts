@@ -6,6 +6,26 @@ import { useAssetMarketData } from "../useAssetMarketData";
 
 const COUNTERVALUES_API = "https://countervalues.live.ledger.com";
 
+type MarketQueryParams = {
+  ids: string[];
+  ledgerIds: string[];
+};
+
+function trackMarketQueryParams() {
+  const captured: MarketQueryParams = { ids: [], ledgerIds: [] };
+  server.use(
+    http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
+      const url = new URL(request.url);
+      const ids = url.searchParams.get("ids");
+      const ledgerIds = url.searchParams.get("ledgerIds");
+      if (ids) captured.ids.push(ids);
+      if (ledgerIds) captured.ledgerIds.push(ledgerIds);
+      return HttpResponse.json([]);
+    }),
+  );
+  return captured;
+}
+
 const withCounterValue =
   (ticker: string) =>
   (state: State): State => ({
@@ -127,38 +147,9 @@ describe("useAssetMarketData", () => {
     });
   });
 
-  describe("ledgerIds", () => {
-    it("returns [] when no known ledger ids are provided", () => {
-      const { result } = renderHook(() => useAssetMarketData({}));
-
-      expect(result.current.ledgerIds).toEqual([]);
-    });
-
-    it("falls back to knownLedgerIds while market data has not resolved yet", () => {
-      const { result } = renderHook(() =>
-        useAssetMarketData({
-          marketApiId: mockBtcCryptoCurrency.id,
-          knownLedgerIds: [mockBtcCryptoCurrency.id],
-        }),
-      );
-
-      expect(result.current.marketCurrency).toBeUndefined();
-      expect(result.current.ledgerIds).toEqual([mockBtcCryptoCurrency.id]);
-    });
-
-    it("keeps using the legacy ids filter when a coingecko id is available (e.g. bitcoin)", async () => {
-      const requestedIds: string[] = [];
-      const requestedLedgerIds: string[] = [];
-      server.use(
-        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
-          const url = new URL(request.url);
-          const ids = url.searchParams.get("ids");
-          const ledgerIds = url.searchParams.get("ledgerIds");
-          if (ids) requestedIds.push(ids);
-          if (ledgerIds) requestedLedgerIds.push(ledgerIds);
-          return HttpResponse.json([]);
-        }),
-      );
+  describe("market query strategy", () => {
+    it("uses the legacy ids filter for coingecko ids", async () => {
+      const captured = trackMarketQueryParams();
 
       renderHook(() =>
         useAssetMarketData({
@@ -168,24 +159,13 @@ describe("useAssetMarketData", () => {
       );
 
       await waitFor(() => {
-        expect(requestedIds).toContain(mockBtcCryptoCurrency.id);
+        expect(captured.ids).toContain(mockBtcCryptoCurrency.id);
       });
-      expect(requestedLedgerIds).toHaveLength(0);
+      expect(captured.ledgerIds).toHaveLength(0);
     });
 
-    it("uses the legacy ids filter for DADA urn market ids (backward compatible with v3)", async () => {
-      const requestedIds: string[] = [];
-      const requestedLedgerIds: string[] = [];
-      server.use(
-        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
-          const url = new URL(request.url);
-          const ids = url.searchParams.get("ids");
-          const ledgerIds = url.searchParams.get("ledgerIds");
-          if (ids) requestedIds.push(ids);
-          if (ledgerIds) requestedLedgerIds.push(ledgerIds);
-          return HttpResponse.json([]);
-        }),
-      );
+    it("uses the legacy ids filter for DADA urns", async () => {
+      const captured = trackMarketQueryParams();
 
       const { result } = renderHook(() =>
         useAssetMarketData({
@@ -196,9 +176,9 @@ describe("useAssetMarketData", () => {
       );
 
       await waitFor(() => {
-        expect(requestedIds).toContain("shiba-inu");
+        expect(captured.ids).toContain("shiba-inu");
       });
-      expect(requestedLedgerIds).toHaveLength(0);
+      expect(captured.ledgerIds).toHaveLength(0);
       expect(result.current.marketId).toBe("shiba-inu");
     });
 
@@ -247,6 +227,24 @@ describe("useAssetMarketData", () => {
         expect(requestedLedgerIds).toContain("ethereum/erc20/shiba_inu");
         expect(result.current.marketId).toBe("shiba-inu");
       });
+    });
+
+    it("returns [] when no known ledger ids are provided", () => {
+      const { result } = renderHook(() => useAssetMarketData({}));
+
+      expect(result.current.ledgerIds).toEqual([]);
+    });
+
+    it("falls back to knownLedgerIds while market data has not resolved yet", () => {
+      const { result } = renderHook(() =>
+        useAssetMarketData({
+          marketApiId: mockBtcCryptoCurrency.id,
+          knownLedgerIds: [mockBtcCryptoCurrency.id],
+        }),
+      );
+
+      expect(result.current.marketCurrency).toBeUndefined();
+      expect(result.current.ledgerIds).toEqual([mockBtcCryptoCurrency.id]);
     });
   });
 });
