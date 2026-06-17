@@ -77,7 +77,7 @@ export const calculateAmount = ({
         break;
       case "token.send":
         amount =
-          findSubAccountById(account, transaction.subAccountId!)?.spendableBalance ??
+          findSubAccountById(account, transaction.subAccountId ?? "")?.spendableBalance ??
           new BigNumber(0);
         break;
       case "delegate":
