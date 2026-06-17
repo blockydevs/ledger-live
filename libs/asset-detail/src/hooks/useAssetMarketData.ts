@@ -15,7 +15,6 @@ import { applyDadaMarketFallback } from "../utils/applyDadaMarketFallback";
 import { resolveDadaMarket } from "../utils/resolveDadaMarket";
 import {
   getMarketLedgerIdsForQuery,
-  isCoingeckoStyleMarketId,
   resolveCoingeckoIdForIdsQuery,
   shouldFetchMarketByLedgerIds,
 } from "../utils/resolveMarketCurrencyQuery";
@@ -126,9 +125,7 @@ export function useAssetMarketData({
 
   return {
     marketCurrencyData,
-    marketId:
-      marketFromHook?.id ??
-      (knownMarketId && isCoingeckoStyleMarketId(knownMarketId) ? knownMarketId : undefined),
+    marketId: marketFromHook?.id ?? resolveCoingeckoIdForIdsQuery(knownMarketId),
     ledgerCurrencyFromDada,
     ledgerIds,
     isLoading: isLoadingMarket || isLoadingDada || (!!dadaMarket && rateStatus === "loading"),

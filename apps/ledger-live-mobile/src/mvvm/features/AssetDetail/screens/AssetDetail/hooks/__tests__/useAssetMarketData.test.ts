@@ -148,10 +148,14 @@ describe("useAssetMarketData", () => {
 
     it("keeps using the legacy ids filter when a coingecko id is available (e.g. bitcoin)", async () => {
       const requestedIds: string[] = [];
+      const requestedLedgerIds: string[] = [];
       server.use(
         http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
-          const ids = new URL(request.url).searchParams.get("ids");
+          const url = new URL(request.url);
+          const ids = url.searchParams.get("ids");
+          const ledgerIds = url.searchParams.get("ledgerIds");
           if (ids) requestedIds.push(ids);
+          if (ledgerIds) requestedLedgerIds.push(ledgerIds);
           return HttpResponse.json([]);
         }),
       );
@@ -166,6 +170,36 @@ describe("useAssetMarketData", () => {
       await waitFor(() => {
         expect(requestedIds).toContain(mockBtcCryptoCurrency.id);
       });
+      expect(requestedLedgerIds).toHaveLength(0);
+    });
+
+    it("uses the legacy ids filter for DADA urn market ids (backward compatible with v3)", async () => {
+      const requestedIds: string[] = [];
+      const requestedLedgerIds: string[] = [];
+      server.use(
+        http.get(`${COUNTERVALUES_API}/v3/markets`, ({ request }) => {
+          const url = new URL(request.url);
+          const ids = url.searchParams.get("ids");
+          const ledgerIds = url.searchParams.get("ledgerIds");
+          if (ids) requestedIds.push(ids);
+          if (ledgerIds) requestedLedgerIds.push(ledgerIds);
+          return HttpResponse.json([]);
+        }),
+      );
+
+      const { result } = renderHook(() =>
+        useAssetMarketData({
+          marketApiId: "urn:crypto:meta-currency:shiba_inu",
+          knownLedgerIds: ["ethereum/erc20/shiba_inu"],
+          knownMarketId: "urn:crypto:meta-currency:shiba_inu",
+        }),
+      );
+
+      await waitFor(() => {
+        expect(requestedIds).toContain("shiba-inu");
+      });
+      expect(requestedLedgerIds).toHaveLength(0);
+      expect(result.current.marketId).toBe("shiba-inu");
     });
 
     it("requests /v3/markets with ledgerIds when the market api id is a ledger id", async () => {
