@@ -129,9 +129,9 @@ const txToOps = (info: AccountShapeInfo, accountId: string, txs: CosmosTx[]): Co
     // simplify the message types
     const messages = tx.tx.body.messages.map((message: any) => {
       const type = message["@type"].substring(message["@type"].lastIndexOf(".") + 1);
-      // babylon x/epoching wraps the staking msg under `msg` (MsgWrapped*); unwrap so the
+      // babylon x/epoching nests the real staking msg under `msg` (MsgWrapped*); unwrap so the
       // standard delegate/undelegate/redelegate handling below applies.
-      if (type.startsWith("MsgWrapped") && message.msg) {
+      if (message["@type"].startsWith("/babylon.epoching.") && message.msg) {
         return { ...message.msg, type: type.replace("Wrapped", "") };
       }
       return { ...message, type };
