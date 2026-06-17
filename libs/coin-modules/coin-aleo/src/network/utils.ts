@@ -665,11 +665,8 @@ export async function getTokenOutDetails({
       fee,
     };
 
-  // Collect all plaintext values from inputs (strip visibility suffixes).
-  // transfer_private_to_public and many token programs expose the recipient address
-  // and (for Priv2Pub) the amount directly in plaintext, so scan these first.
   const plaintexts = transition.inputs.flatMap(inp =>
-    "value" in inp && inp.value ? [normalizeAleoPlaintext(inp.value)] : [],
+    inp.type === "public" ? [normalizeAleoPlaintext(inp.value)] : [],
   );
   const recipient = plaintexts.find(isAleoAddressPlaintext) ?? null;
 
