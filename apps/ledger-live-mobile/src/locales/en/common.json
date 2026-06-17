@@ -1463,6 +1463,12 @@
   },
   "globalSearch": {
     "searchPlaceholder": "Search assets",
+    "searchPlaceholders": {
+      "crypto": "Search crypto",
+      "stablecoins": "Search stablecoins",
+      "stock": "Search stock",
+      "addresses": "Search addresses"
+    },
     "sections": {
       "cryptos": "Cryptos",
       "stocks": "Stocks"
