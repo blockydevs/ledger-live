@@ -1,13 +1,11 @@
 import React, { useCallback } from "react";
-import { View, StyleSheet } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
-import { Text, Button } from "@ledgerhq/lumen-ui-rnative";
+import { ScrollView } from "react-native";
+import { Box, Text, Switch, Button } from "@ledgerhq/lumen-ui-rnative";
 import { useFeature } from "@features/platform-feature-flags";
 import { setOverride } from "@shared/feature-flags";
 import { useDispatch, useSelector } from "~/context/hooks";
 import { setHasSeenQ2WalletV4Tour } from "~/actions/settings";
 import { hasSeenQ2WalletV4TourSelector } from "~/reducers/settings";
-import { SectionCard, ToggleRow } from "../../ProductTour/Debug/components";
 
 const WALLET_40_FLAG = "lwmWallet40";
 
@@ -36,75 +34,61 @@ function Q2WalletV4TourScreenDebug() {
   }, [dispatch, hasSeenQ2WalletV4Tour]);
 
   return (
-    <View style={styles.root}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <SectionCard>
-          <Text typography="body2" lx={{ color: "muted" }}>
-            {
-              "Allows you to test the image-based Q2 Wallet V4 Tour (gated by lwmWallet40.params.q2Tour)."
-            }
-          </Text>
-        </SectionCard>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <Box lx={{ padding: "s16", rowGap: "s24" }}>
+        <Text typography="body2" lx={{ color: "muted" }}>
+          Test the Q2 Wallet V4 Tour, gated by the lwmWallet40 q2Tour parameter.
+        </Text>
 
-        <SectionCard title="Feature Flag">
-          <ToggleRow
-            label="lwmWallet40 · q2Tour enabled"
-            value={isQ2TourEnabled}
-            onChange={handleToggleQ2TourEnabled}
-            description={
-              isQ2TourEnabled
-                ? "q2Tour param is enabled (lwmWallet40 enabled). Toggle to disable."
-                : "q2Tour param is disabled. Toggle to enable (also enables lwmWallet40)."
-            }
+        <Box
+          lx={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            columnGap: "s12",
+          }}
+        >
+          <Box lx={{ flexShrink: 1 }}>
+            <Text typography="body2SemiBold" lx={{ color: "base" }}>
+              q2Tour enabled
+            </Text>
+            <Text typography="body3" lx={{ color: "muted" }}>
+              Toggles lwmWallet40.params.q2Tour (also enables lwmWallet40).
+            </Text>
+          </Box>
+          <Switch checked={isQ2TourEnabled} onCheckedChange={handleToggleQ2TourEnabled} />
+        </Box>
+
+        <Box
+          lx={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            columnGap: "s12",
+          }}
+        >
+          <Box lx={{ flexShrink: 1 }}>
+            <Text typography="body2SemiBold" lx={{ color: "base" }}>
+              Tour seen
+            </Text>
+            <Text typography="body3" lx={{ color: "muted" }}>
+              Persisted hasSeenQ2WalletV4Tour. Toggle off to replay the tour.
+            </Text>
+          </Box>
+          <Switch
+            checked={hasSeenQ2WalletV4Tour}
+            onCheckedChange={handleToggleHasSeenQ2WalletV4Tour}
           />
-        </SectionCard>
+        </Box>
 
-        <SectionCard title="Tour State">
-          <ToggleRow
-            label="Q2 Wallet V4 Tour Seen"
-            value={hasSeenQ2WalletV4Tour}
-            onChange={handleToggleHasSeenQ2WalletV4Tour}
-            description={
-              hasSeenQ2WalletV4Tour
-                ? "Tour has been seen. Toggle to reset."
-                : "Tour has not been seen yet."
-            }
-          />
-        </SectionCard>
-
-        <SectionCard title="Current Configuration">
-          <Text typography="body2" lx={{ color: "muted" }}>
-            {`Tour State: ${hasSeenQ2WalletV4Tour ? "Seen" : "Not seen"}`}
-          </Text>
-        </SectionCard>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Button size="lg" appearance="accent" disabled>
-          {"Open Drawer (coming soon)"}
-        </Button>
-      </View>
-    </View>
+        <Box lx={{ flex: 1, justifyContent: "flex-end" }}>
+          <Button size="lg" appearance="accent" disabled>
+            Open Drawer (coming soon)
+          </Button>
+        </Box>
+      </Box>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 8,
-    marginBottom: 12,
-  },
-});
 
 export default Q2WalletV4TourScreenDebug;

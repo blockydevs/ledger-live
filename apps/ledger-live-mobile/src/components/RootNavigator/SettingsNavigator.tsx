@@ -638,10 +638,10 @@ export default function SettingsNavigator() {
         }}
       />
       <Stack.Screen
-        name={ScreenName.DebugProductTourQ2}
+        name={ScreenName.DebugQ2WalletV4Tour}
         component={Q2WalletV4TourScreenDebug}
         options={{
-          title: "Product Tour Q2",
+          title: "Q2 Wallet V4 Tour",
         }}
       />
     </Stack.Navigator>
