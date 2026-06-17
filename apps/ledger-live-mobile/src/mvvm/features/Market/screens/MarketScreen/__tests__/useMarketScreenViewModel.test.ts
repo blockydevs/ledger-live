@@ -99,6 +99,7 @@ describe("useMarketScreenViewModel", () => {
       button: "asset",
       currency: "BTC",
       page: "Market",
+      category: "all",
     });
     expect(openFromMarket).toHaveBeenCalledWith({
       marketCurrencyId: "bitcoin",
@@ -206,6 +207,41 @@ describe("useMarketScreenViewModel", () => {
       ...defaultMarketAssetsParams,
       sorting: "losers",
       timeframe: "30D",
+    });
+  });
+
+  it("exposes the default page tracking properties", () => {
+    const { result } = renderHook(() => useMarketScreenViewModel());
+
+    expect(result.current.pageTracking).toEqual({
+      sortVolume: "desc",
+      sortMarketCap: "desc",
+      sortChange: "desc",
+      timeframe: "1D",
+      category: "all",
+    });
+  });
+
+  it("maps the active sorting and starred category into the page tracking properties", () => {
+    mockMarketListRoute("starred");
+
+    const { result } = renderHook(
+      () => useMarketScreenViewModel(),
+      withAssetDiscoverability(
+        true,
+        (state: State): State => ({
+          ...state,
+          marketListConfig: { ...state.marketListConfig, sorting: "losers", timeframe: "7D" },
+        }),
+      ),
+    );
+
+    expect(result.current.pageTracking).toEqual({
+      sortVolume: "desc",
+      sortMarketCap: "desc",
+      sortChange: "asc",
+      timeframe: "7D",
+      category: "favorites",
     });
   });
 
