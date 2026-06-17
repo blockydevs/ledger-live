@@ -1,5 +1,38 @@
 # ledger-live-desktop
 
+## 4.9.0-next.1
+
+### Minor Changes
+
+- [#18642](https://github.com/LedgerHQ/ledger-live/pull/18642) [`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9) Thanks [@hedi-edelbloute](https://github.com/hedi-edelbloute)! - feat: add new evm chain
+
+### Patch Changes
+
+- Updated dependencies [[`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9)]:
+  - @ledgerhq/cryptoassets@13.52.0-next.1
+  - @ledgerhq/types-live@6.112.0-next.1
+  - @ledgerhq/coin-evm@4.3.0-next.1
+  - @ledgerhq/live-currency-format@0.10.0-next.1
+  - @ledgerhq/live-common@36.2.0-next.1
+  - @shared/feature-flags@0.11.0-next.1
+  - @ledgerhq/asset-aggregation@0.8.1-next.1
+  - @ledgerhq/coin-bitcoin@0.44.1-next.1
+  - @ledgerhq/coin-canton@0.26.2-next.1
+  - @ledgerhq/coin-cardano@0.27.0-next.1
+  - @ledgerhq/coin-casper@2.13.7-next.1
+  - @ledgerhq/coin-concordium@0.13.1-next.1
+  - @ledgerhq/coin-cosmos@0.36.0-next.1
+  - @ledgerhq/coin-filecoin@1.25.1-next.1
+  - @ledgerhq/ledger-wallet-framework@2.2.0-next.1
+  - @ledgerhq/live-wallet@0.27.3-next.1
+  - @ledgerhq/wallet-pnl@0.6.0-next.1
+  - @ledgerhq/domain-service@1.8.7-next.1
+  - @ledgerhq/live-countervalues@0.20.0-next.1
+  - @ledgerhq/live-countervalues-react@0.15.1-next.1
+  - @ledgerhq/asset-detail@0.6.0-next.1
+  - @ledgerhq/live-dmk-desktop@0.18.0-next.1
+  - @features/platform-feature-flags@0.4.0-next.1
+
 ## 4.9.0-next.0
 
 ### Minor Changes

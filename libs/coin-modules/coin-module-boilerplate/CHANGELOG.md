@@ -1,5 +1,14 @@
 # @ledgerhq/coin-module-boilerplate
 
+## 4.21.3-next.1
+
+### Patch Changes
+
+- Updated dependencies [[`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9)]:
+  - @ledgerhq/cryptoassets@13.52.0-next.1
+  - @ledgerhq/types-live@6.112.0-next.1
+  - @ledgerhq/ledger-wallet-framework@2.2.0-next.1
+
 ## 4.21.3-next.0
 
 ### Patch Changes

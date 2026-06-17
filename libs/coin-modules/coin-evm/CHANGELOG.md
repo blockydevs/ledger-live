@@ -1,5 +1,19 @@
 # @ledgerhq/coin-evm
 
+## 4.3.0-next.1
+
+### Minor Changes
+
+- [#18642](https://github.com/LedgerHQ/ledger-live/pull/18642) [`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9) Thanks [@hedi-edelbloute](https://github.com/hedi-edelbloute)! - feat: add new evm chain
+
+### Patch Changes
+
+- Updated dependencies [[`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9)]:
+  - @ledgerhq/cryptoassets@13.52.0-next.1
+  - @ledgerhq/ledger-wallet-framework@2.2.0-next.1
+  - @ledgerhq/domain-service@1.8.7-next.1
+  - @ledgerhq/evm-tools@1.12.10-next.0
+
 ## 4.3.0-next.0
 
 ### Minor Changes

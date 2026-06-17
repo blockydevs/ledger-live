@@ -1,5 +1,13 @@
 # @ledgerhq/asset-detail
 
+## 0.6.0-next.1
+
+### Patch Changes
+
+- Updated dependencies [[`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9)]:
+  - @ledgerhq/live-common@36.2.0-next.1
+  - @ledgerhq/asset-aggregation@0.8.1-next.1
+
 ## 0.6.0-next.0
 
 ### Minor Changes

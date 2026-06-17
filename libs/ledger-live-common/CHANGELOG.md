@@ -1,5 +1,59 @@
 # @ledgerhq/live-common
 
+## 36.2.0-next.1
+
+### Minor Changes
+
+- [#18642](https://github.com/LedgerHQ/ledger-live/pull/18642) [`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9) Thanks [@hedi-edelbloute](https://github.com/hedi-edelbloute)! - feat: add new evm chain
+
+### Patch Changes
+
+- Updated dependencies [[`93a5bcd`](https://github.com/LedgerHQ/ledger-live/commit/93a5bcd8b7e361148f7bac751d072cc8bcec2cf9)]:
+  - @ledgerhq/cryptoassets@13.52.0-next.1
+  - @ledgerhq/coin-evm@4.3.0-next.1
+  - @ledgerhq/live-currency-format@0.10.0-next.1
+  - @shared/feature-flags@0.11.0-next.1
+  - @ledgerhq/asset-aggregation@0.8.1-next.1
+  - @ledgerhq/coin-aleo@1.15.0-next.1
+  - @ledgerhq/coin-algorand@1.6.3-next.1
+  - @ledgerhq/coin-aptos@3.20.3-next.1
+  - @ledgerhq/coin-bitcoin@0.44.1-next.1
+  - @ledgerhq/coin-canton@0.26.2-next.1
+  - @ledgerhq/coin-cardano@0.27.0-next.1
+  - @ledgerhq/coin-casper@2.13.7-next.1
+  - @ledgerhq/coin-celo@2.6.0-next.1
+  - @ledgerhq/coin-concordium@0.13.1-next.1
+  - @ledgerhq/coin-cosmos@0.36.0-next.1
+  - @ledgerhq/coin-filecoin@1.25.1-next.1
+  - @ledgerhq/coin-hedera@1.35.0-next.1
+  - @ledgerhq/coin-icon@0.23.5-next.1
+  - @ledgerhq/coin-internet_computer@1.22.5-next.1
+  - @ledgerhq/coin-mina@1.15.5-next.1
+  - @ledgerhq/coin-multiversx@0.17.4-next.1
+  - @ledgerhq/coin-near@0.25.7-next.1
+  - @ledgerhq/coin-polkadot@6.27.3-next.1
+  - @ledgerhq/coin-solana@0.55.2-next.1
+  - @ledgerhq/coin-stacks@0.21.7-next.1
+  - @ledgerhq/coin-sui@0.37.0-next.1
+  - @ledgerhq/coin-ton@0.29.1-next.1
+  - @ledgerhq/coin-tron@6.3.0-next.1
+  - @ledgerhq/coin-vechain@2.22.5-next.1
+  - @ledgerhq/ledger-wallet-framework@2.2.0-next.1
+  - @ledgerhq/live-wallet@0.27.3-next.1
+  - @ledgerhq/coin-kaspa@1.16.1-next.1
+  - @ledgerhq/device-core@0.11.4-next.1
+  - @ledgerhq/hw-app-eth@7.8.7-next.1
+  - @ledgerhq/live-countervalues@0.20.0-next.1
+  - @ledgerhq/live-countervalues-react@0.15.1-next.1
+  - @ledgerhq/live-signer-aleo@0.18.0-next.1
+  - @ledgerhq/live-signer-canton@0.9.8-next.1
+  - @ledgerhq/live-signer-celo@1.1.4-next.1
+  - @ledgerhq/live-signer-cosmos@0.2.7-next.1
+  - @ledgerhq/live-signer-evm@0.19.1-next.1
+  - @ledgerhq/live-signer-solana@0.15.5-next.1
+  - @features/platform-feature-flags@0.4.0-next.1
+  - @ledgerhq/live-signer-concordium@0.4.1-next.1
+
 ## 36.2.0-next.0
 
 ### Minor Changes
