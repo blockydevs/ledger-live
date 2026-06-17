@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Flex, Dropdown } from "@ledgerhq/react-ui";
 import { Subheader, SubheaderRow, SubheaderTitle } from "@ledgerhq/lumen-ui-react";
 import styled from "styled-components";
@@ -14,7 +14,7 @@ import MarketTable from "./components/MarketTable";
 import MarketTopCards from "./TopCards";
 import { MarketCategoryBar } from "./components/MarketCategoryBar";
 import { MarketRangeSelect } from "./components/MarketRangeSelect";
-import { getMarketDiscoverabilityPageAnalytics } from "./utils/marketPageAnalytics";
+import { useTrackMarketDiscoverabilityPage } from "./utils/marketPageAnalytics";
 
 const Container = styled(Flex).attrs({
   flex: "1",
@@ -73,28 +73,22 @@ export default function Market() {
 
   const { order, range, counterCurrency, search = "", liveCompatible } = marketParams;
 
-  const discoverabilityPageAnalytics = useMemo(
-    () =>
-      getMarketDiscoverabilityPageAnalytics({
-        order,
-        range,
-        category: categories.selectedCategory,
-      }),
-    [categories.selectedCategory, order, range],
-  );
+  useTrackMarketDiscoverabilityPage(shouldDisplayAssetDiscoverability, {
+    order,
+    range,
+    category: categories.selectedCategory,
+  });
 
   return (
     <Container>
-      <TrackPage
-        {...(shouldDisplayAssetDiscoverability
-          ? discoverabilityPageAnalytics
-          : {
-              sort: order !== "desc",
-              timeframe: range,
-              countervalue: counterCurrency,
-              category: "Market",
-            })}
-      />
+      {!shouldDisplayAssetDiscoverability && (
+        <TrackPage
+          category="Market"
+          sort={order !== "desc"}
+          timeframe={range}
+          countervalue={counterCurrency}
+        />
+      )}
       <PageHeader title={t("market.title")} onBack={() => navigate("/")} />
 
       <Flex flexDirection="row" pr="6px" my={2} alignItems="center" justifyContent="space-between">

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import type { MarketListCategory } from "@ledgerhq/live-common/market/utils/category";
 import { KeysPriceChange, Order } from "@ledgerhq/live-common/market/utils/types";
+import { trackPage } from "~/renderer/analytics/segment";
 
 export type MarketSortDirection = "asc" | "desc";
 
@@ -67,21 +69,42 @@ export function getMarketPageCategoryAnalytics(category: MarketListCategory): st
   return category;
 }
 
+export type MarketDiscoverabilityPageAnalyticsParams = {
+  order: Order | undefined;
+  range: string | undefined;
+  category: MarketListCategory;
+};
+
 export function getMarketDiscoverabilityPageAnalytics({
   order,
   range,
   category,
-}: {
-  order: Order | undefined;
-  range: string | undefined;
-  category: MarketListCategory;
-}) {
+}: MarketDiscoverabilityPageAnalyticsParams) {
   return {
     sortVolume: getMarketPageSortAnalytics(order, Order.VolumeDesc, Order.VolumeAsc),
     sortMarketCap: getMarketPageSortAnalytics(order, Order.MarketCapDesc, Order.MarketCapAsc),
     sortChange: getMarketPageSortAnalytics(order, Order.topGainers, Order.topLosers),
     timeframe: getMarketPageTimeframeAnalytics(range),
     category: getMarketPageCategoryAnalytics(category),
-    name: "Market",
   };
+}
+
+export function useTrackMarketDiscoverabilityPage(
+  enabled: boolean,
+  params: MarketDiscoverabilityPageAnalyticsParams,
+) {
+  const { order, range, category } = params;
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    trackPage(
+      "Market",
+      undefined,
+      getMarketDiscoverabilityPageAnalytics({ order, range, category }),
+      true,
+      true,
+      false,
+    );
+  }, [enabled, order, range, category]);
 }

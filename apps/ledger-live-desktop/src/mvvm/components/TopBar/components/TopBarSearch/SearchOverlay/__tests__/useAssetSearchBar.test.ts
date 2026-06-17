@@ -38,8 +38,8 @@ describe("useAssetSearchBar", () => {
 
     act(() => result.current.onChangeQuery(changeQuery("bit")));
 
-    expect(mockedTrack).toHaveBeenCalledWith("Query global search", {
-      search_query: "bit",
+    expect(mockedTrack).toHaveBeenCalledWith("search_query", {
+      query: "bit",
       page: "",
     });
   });
@@ -49,6 +49,6 @@ describe("useAssetSearchBar", () => {
 
     act(() => result.current.onChangeQuery(changeQuery("b")));
 
-    expect(mockedTrack).not.toHaveBeenCalledWith("Query global search", expect.anything());
+    expect(mockedTrack).not.toHaveBeenCalledWith("search_query", expect.anything());
   });
 });

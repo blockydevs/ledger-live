@@ -1,4 +1,6 @@
 import { Order } from "@ledgerhq/live-common/market/utils/types";
+import { renderHook } from "tests/testSetup";
+import { trackPage } from "~/renderer/analytics/segment";
 import {
   getMarketDiscoverabilityPageAnalytics,
   getMarketPageCategoryAnalytics,
@@ -7,9 +9,18 @@ import {
   getMarketSortDirection,
   getMarketSortListAnalytics,
   getMarketSortToggleValue,
+  useTrackMarketDiscoverabilityPage,
 } from "../marketPageAnalytics";
 
+jest.mock("~/renderer/analytics/segment", () => ({
+  trackPage: jest.fn(),
+}));
+
 describe("marketPageAnalytics", () => {
+  beforeEach(() => {
+    jest.mocked(trackPage).mockReset();
+  });
+
   describe("getMarketSortDirection", () => {
     it("returns desc when order matches the desc order", () => {
       expect(
@@ -120,8 +131,46 @@ describe("marketPageAnalytics", () => {
         sortChange: "desc",
         timeframe: "7D",
         category: "favorites",
-        name: "Market",
       });
+    });
+  });
+
+  describe("useTrackMarketDiscoverabilityPage", () => {
+    it("tracks Page Market with category as an event property", () => {
+      renderHook(() =>
+        useTrackMarketDiscoverabilityPage(true, {
+          order: Order.MarketCapDesc,
+          range: "7d",
+          category: "starred",
+        }),
+      );
+
+      expect(trackPage).toHaveBeenCalledWith(
+        "Market",
+        undefined,
+        {
+          sortVolume: "desc",
+          sortMarketCap: "desc",
+          sortChange: "desc",
+          timeframe: "7D",
+          category: "favorites",
+        },
+        true,
+        true,
+        false,
+      );
+    });
+
+    it("does not track when discoverability is disabled", () => {
+      renderHook(() =>
+        useTrackMarketDiscoverabilityPage(false, {
+          order: Order.MarketCapDesc,
+          range: "7d",
+          category: "all",
+        }),
+      );
+
+      expect(trackPage).not.toHaveBeenCalled();
     });
   });
 });
