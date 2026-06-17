@@ -10,12 +10,18 @@ import type { MarketScreenViewModel } from "./useMarketScreenViewModel";
 
 type Props = Readonly<MarketScreenViewModel>;
 
-export function MarketScreenView({ search, highlights, assetsList, isSearchActive }: Props) {
+export function MarketScreenView({
+  search,
+  highlights,
+  assetsList,
+  isSearchActive,
+  pageTracking,
+}: Props) {
   const { t } = useTranslation();
 
   return (
     <Box testID={MARKET_SCREEN_TEST_IDS.screen} lx={screenStyle}>
-      <TrackScreen category="Page" name="Market" access />
+      <TrackScreen name="Market" access {...pageTracking} />
       <Box lx={searchBarStyle}>
         <SearchInput
           testID={MARKET_SCREEN_TEST_IDS.searchBar}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { StockSuggestion } from "@ledgerhq/live-common/dada-client/utils/assetDiscovery";
 import { track } from "~/analytics";
@@ -9,6 +9,7 @@ import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
 import { useAssetDetailNavigation } from "LLM/features/AssetDetail/hooks/useAssetDetailNavigation";
 import { useGlobalSearchDefaults } from "LLM/features/GlobalSearch/hooks/useGlobalSearchDefaults";
 import { useGlobalSearchResults } from "LLM/features/GlobalSearch/hooks/useGlobalSearchResults";
+import type { GlobalSearchNavigatorParamList } from "LLM/features/GlobalSearch/types";
 import type { GlobalSearchDefaultSections } from "./types";
 
 export type GlobalSearchCategory = "crypto" | "stocks";
@@ -34,6 +35,8 @@ export type GlobalSearchViewModel = {
 
 export function useGlobalSearchViewModel(): GlobalSearchViewModel {
   const navigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
+  const route = useRoute<RouteProp<GlobalSearchNavigatorParamList, ScreenName.GlobalSearch>>();
+  const source = route.params?.source;
   const { openFromMarket } = useAssetDetailNavigation();
 
   const {
@@ -78,6 +81,7 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
         page: ScreenName.GlobalSearch,
         flow: SEARCH_FLOW,
         searched: isSearchActive,
+        source,
       });
       openFromMarket({
         marketCurrencyId: asset.id,
@@ -85,7 +89,7 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
         source: ScreenName.GlobalSearch,
       });
     },
-    [openFromMarket, isSearchActive],
+    [openFromMarket, isSearchActive, source],
   );
 
   const onStockPress = useCallback(
@@ -95,6 +99,7 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
         page: ScreenName.GlobalSearch,
         flow: SEARCH_FLOW,
         searched: false,
+        source,
       });
       openFromMarket({
         marketCurrencyId: stock.navigationId,
@@ -102,7 +107,7 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
         source: ScreenName.GlobalSearch,
       });
     },
-    [openFromMarket],
+    [openFromMarket, source],
   );
 
   return {

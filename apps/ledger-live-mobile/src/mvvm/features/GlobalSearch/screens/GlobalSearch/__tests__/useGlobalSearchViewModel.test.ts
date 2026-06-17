@@ -15,6 +15,7 @@ const mockOpenFromMarket = jest.fn();
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
   useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
+  useRoute: () => ({ params: { source: "Portfolio" } }),
 }));
 
 jest.mock("LLM/features/AssetDetail/hooks/useAssetDetailNavigation", () => ({
@@ -164,6 +165,7 @@ describe("useGlobalSearchViewModel", () => {
       page: ScreenName.GlobalSearch,
       flow: "global_search",
       searched: false,
+      source: "Portfolio",
     });
     expect(mockOpenFromMarket).toHaveBeenCalledWith({
       marketCurrencyId: "bitcoin",
@@ -207,6 +209,7 @@ describe("useGlobalSearchViewModel", () => {
       page: ScreenName.GlobalSearch,
       flow: "global_search",
       searched: false,
+      source: "Portfolio",
     });
     expect(mockOpenFromMarket).toHaveBeenCalledWith({
       marketCurrencyId: "aapl-market",
