@@ -20,7 +20,7 @@ export default async function getEstimatedFees({
 }: {
   account: SuiAccount;
   transaction: Transaction;
-}): Promise<BigNumber> {
+}): Promise<{ fees: BigNumber; gasBudget: BigNumber }> {
   const t = {
     ...transaction,
     recipient: getAbandonSeedAddress(account.currency.id),
@@ -53,7 +53,7 @@ export default async function getEstimatedFees({
       break;
   }
 
-  const fees = await estimateFees({
+  const { fees, gasBudget } = await estimateFees({
     intentType,
     recipient: getAbandonSeedAddress(account.currency.id),
     sender: account.freshAddress,
@@ -64,5 +64,8 @@ export default async function getEstimatedFees({
     ...(transaction.useAllAmount !== undefined && { useAllAmount: transaction.useAllAmount }),
     ...(transaction.stakedSuiId !== undefined && { stakedSuiId: transaction.stakedSuiId }),
   });
-  return new BigNumber(fees.toString());
+  return {
+    fees: new BigNumber(fees.toString()),
+    gasBudget: new BigNumber(gasBudget.toString()),
+  };
 }

@@ -33,12 +33,14 @@ export const estimateMaxSpendable: AccountBridge<Transaction>["estimateMaxSpenda
 
     if (transaction?.mode !== "delegate") {
       if (account.type === "Account") {
-        const fees = await getFeesForTransaction({
+        // Reserve the gas BUDGET (≥ actual fee): the network requires the gas coins to cover it, so
+        // the max-spendable must leave it aside or the send fails at execution.
+        const { gasBudget } = await getFeesForTransaction({
           account: mainAccount,
           transaction: estimatedTransaction,
         });
-        if (fees) {
-          spendableBalance = spendableBalance.minus(fees);
+        if (gasBudget) {
+          spendableBalance = spendableBalance.minus(gasBudget);
         }
       }
     }
