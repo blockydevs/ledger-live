@@ -322,7 +322,7 @@ test.describe("Swap history", () => {
     details: {
       date: "July 15, 2025",
       sentAmount: "0.07 SOL",
-      receivedAmount: "0.00354662 ETH",
+      receivedAmount: "751.0672 ETH",
       networkFees: "0.000005 SOL",
       receiveAccount: "Ethereum 1",
     },
