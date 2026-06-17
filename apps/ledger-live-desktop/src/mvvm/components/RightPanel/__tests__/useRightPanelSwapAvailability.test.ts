@@ -1,10 +1,13 @@
 import { renderHook } from "tests/testSetup";
 import { useRightPanelSwapAvailability } from "../useRightPanelSwapAvailability";
 import { useAssetRouteLedgerIds } from "LLD/features/AssetDetail/hooks/useAssetRouteLedgerIds";
-import { useTradeAvailability } from "LLD/features/AssetDetail/hooks/useTradeAvailability";
+import { useTradeAvailability } from "@ledgerhq/asset-detail";
 
 jest.mock("LLD/features/AssetDetail/hooks/useAssetRouteLedgerIds");
-jest.mock("LLD/features/AssetDetail/hooks/useTradeAvailability");
+jest.mock("@ledgerhq/asset-detail", () => ({
+  ...jest.requireActual("@ledgerhq/asset-detail"),
+  useTradeAvailability: jest.fn(),
+}));
 
 const mockLedgerIds = (ledgerIds: string[], isLoading = false) =>
   jest.mocked(useAssetRouteLedgerIds).mockReturnValue({ ledgerIds, isLoading });

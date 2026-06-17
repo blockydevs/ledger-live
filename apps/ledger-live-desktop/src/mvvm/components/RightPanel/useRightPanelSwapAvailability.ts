@@ -1,4 +1,4 @@
-import { useTradeAvailability } from "LLD/features/AssetDetail/hooks/useTradeAvailability";
+import { useTradeAvailability } from "@ledgerhq/asset-detail";
 import { useAssetRouteLedgerIds } from "LLD/features/AssetDetail/hooks/useAssetRouteLedgerIds";
 import { getRightPanelRouteAssetId } from "./useRightPanelViewModel";
 
