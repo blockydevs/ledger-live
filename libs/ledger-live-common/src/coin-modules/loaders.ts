@@ -178,6 +178,8 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
       "hyperevm",
       "arc",
       "arc_testnet",
+      "robinhood",
+      "robinhood_testnet",
       "neon_evm",
       "lukso",
       "linea",
