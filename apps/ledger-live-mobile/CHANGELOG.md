@@ -1,5 +1,11 @@
 # live-mobile
 
+## 4.9.0-next.2
+
+### Minor Changes
+
+- [#18672](https://github.com/LedgerHQ/ledger-live/pull/18672) [`6ded0c1`](https://github.com/LedgerHQ/ledger-live/commit/6ded0c1acf14387ac6249783bd4e4ab63b00971e) Thanks [@OlivierFreyssinet](https://github.com/OlivierFreyssinet)! - Update DMK to fix recovery-mode restore device connection
+
 ## 4.9.0-next.1
 
 ### Minor Changes
