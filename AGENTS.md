@@ -2,23 +2,14 @@
 
 ## Overview
 
-- "Ledger Wallet" (formerly "ledger-live") is a crypto wallet
-- This pnpm and nx monorepo provides frontend apps
+"Ledger Wallet" (formerly "ledger-live") is a crypto wallet. This pnpm and Nx monorepo contains multiple frontend apps and over 150 library packages.
 
-## Common Commands
+See the root [README](./README.md) for an overview and read local README files relevant to where you are working.
 
-- Use pnpm commands for build, dev, linting and testing.
-- See [/docs/common-commands.md](/docs/common-commands.md)
+## Repo Commands
+
+See [/docs/repo-commands.md](/docs/repo-commands.md) for build, dev and check recipes, as well as notes on Nx, filtering and aliases.
 
 ## Validate Before Finishing
 
-- Before finishing any agentic code change, run static checks for the affected scope
-- See [/docs/validate-before-finishing.md](/docs/validate-before-finishing.md)
-
-## Read READMEs for packages where you're working
-
-See examples:
-
-- **Entity packages** (`domain/entity/`): read `domain/entity/README.md`
-- **API packages** (`domain/api/`): read `domain/api/README.md`
-- **Shared packages** (`shared/**`): read `shared/README.md`
+Always follow the [validate-before-finishing](/docs/validate-before-finishing.md) instructions before completing code changes.
