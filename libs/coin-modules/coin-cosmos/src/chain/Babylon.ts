@@ -5,6 +5,7 @@ export default class Babylon extends CosmosBase {
   unbondingPeriod: number;
   prefix: string;
   validatorPrefix: string;
+  epochedStaking = true;
   // Provided by coin config
   ledgerValidator!: string;
   lcd!: string;

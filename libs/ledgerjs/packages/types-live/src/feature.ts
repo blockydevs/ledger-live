@@ -173,6 +173,8 @@ export type CurrencyFeatures = {
   currencyUnichainSepolia: DefaultFeature;
   currencyArc: DefaultFeature;
   currencyArcTestnet: DefaultFeature;
+  currencyRobinhood: DefaultFeature;
+  currencyRobinhoodTestnet: DefaultFeature;
 };
 
 /**
@@ -349,6 +351,7 @@ export type Features = CurrencyFeatures & {
   llmTransferButtonCopyVariant: Feature_LlmTransferButtonCopyVariant;
   lldTezosStaking: DefaultFeature;
   llmTezosStaking: DefaultFeature;
+  swapToEarn: DefaultFeature;
 };
 
 /**
