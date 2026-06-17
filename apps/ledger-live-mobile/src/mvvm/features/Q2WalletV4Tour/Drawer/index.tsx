@@ -8,14 +8,12 @@ import { useStyleSheet } from "@ledgerhq/lumen-ui-rnative/styles";
 import QueuedDrawerBottomSheet from "LLM/components/QueuedDrawer/QueuedDrawerBottomSheet";
 import { Platform } from "react-native";
 import { useTranslation } from "~/context/Locale";
-import { TrackScreen } from "~/analytics";
 import { useQ2WalletV4TourControls } from "../context/Q2WalletV4TourControlsContext";
 import { useQ2WalletV4TourDrawerViewModel } from "./hooks/useQ2WalletV4TourDrawerViewModel";
 import { SlideItem } from "./components/SlideItem";
 import { SlideFooterButton } from "./components/SlideFooterButton";
 import { ProgressIndicator } from "./components/ProgressIndicator";
 import {
-  PAGE_TRACKING_Q2_WALLET_V4_TOUR,
   Q2_WALLET_V4_TOUR_SLIDES,
   SLIDES_CONTAINER_HEIGHT,
   SLIDES_LIST_HEIGHT,
@@ -71,7 +69,6 @@ export const Q2WalletV4TourDrawer = () => {
       {isDrawerOpen ? (
         <BottomSheetView style={styles.content}>
           <BottomSheetHeader />
-          <TrackScreen page={PAGE_TRACKING_Q2_WALLET_V4_TOUR} source="Portfolio" />
           <Slides
             bounces={false}
             as={AnimatedGestureHandlerFlatList}

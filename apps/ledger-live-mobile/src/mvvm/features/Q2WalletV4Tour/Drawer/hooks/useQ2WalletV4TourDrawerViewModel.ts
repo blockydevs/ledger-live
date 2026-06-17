@@ -40,7 +40,7 @@ export const useQ2WalletV4TourDrawerViewModel = (
       true,
       false,
     );
-    track("Q2_tour_card", {
+    track("product_tour_card", {
       page: PAGE_TRACKING_Q2_WALLET_V4_TOUR,
       card: 1,
     });
@@ -65,7 +65,7 @@ export const useQ2WalletV4TourDrawerViewModel = (
 
   const onSlideChange = useCallback((index: number) => {
     currentIndexRef.current = index;
-    track("Q2_tour_card", {
+    track("product_tour_card", {
       page: PAGE_TRACKING_Q2_WALLET_V4_TOUR,
       card: index + 1,
     });
