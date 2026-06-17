@@ -148,7 +148,7 @@ Ticker is **mandatory** in `--amount`. No `--token` flag — ticker drives asset
 
 ### swap quote
 
-Fetches quotes in parallel from the built-in provider list (no device when addresses are supplied via flags below).
+Fetches quotes in parallel from the built-in provider list (no device required; addresses are resolved from session accounts).
 
 **Currencies:** `--from` / `-f` and `--to` / `-t` are Ledger **currency IDs** — native assets (e.g. `ethereum`, `bitcoin`, `solana`) **or token IDs** when the token’s parent chain is a supported native swap currency (same IDs the CLI allows for swap). They are **not** session account labels — use `--from-account` / `--to-account` for accounts.
 
