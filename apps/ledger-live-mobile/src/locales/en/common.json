@@ -1727,6 +1727,32 @@
       "subTitle": "Fund your Ledger Wallet your way — transfer, buy, or convert cash to stablecoins."
     }
   },
+  "q2WalletV4Tour": {
+    "cta": {
+      "start": "See what's new",
+      "next": "Next",
+      "done": "Got it"
+    },
+    "portfolio": {
+      "title": "Smarter portfolio management. Clearer paths to growth"
+    },
+    "balance": {
+      "title": "One balance for each asset",
+      "subTitle": "Multi-chain assets like USDT are now shown as one total. Simple, accurate, clear."
+    },
+    "returns": {
+      "title": "Your returns, front and center",
+      "subTitle": "See profit and loss on every asset, across your portfolio and analytics page."
+    },
+    "earn": {
+      "title": "Test your earn potential",
+      "subTitle": "Simulate what rewards you can earn and build a growth plan that fits your goals."
+    },
+    "protocols": {
+      "title": "More protocols, more rewards",
+      "subTitle": "Stablecoins and top picks, surfaced right in your wallet. Less searching. More deciding."
+    }
+  },
   "discover": {
     "title": "Discover",
     "desc": "Explore the world of Web3 securely",

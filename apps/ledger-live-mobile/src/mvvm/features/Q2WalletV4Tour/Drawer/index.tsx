@@ -1,0 +1,110 @@
+import React, { useMemo } from "react";
+import { Slides } from "@ledgerhq/native-ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated from "react-native-reanimated";
+import { FlatList } from "react-native-gesture-handler";
+import { BottomSheetHeader, BottomSheetView } from "@ledgerhq/lumen-ui-rnative";
+import { useStyleSheet } from "@ledgerhq/lumen-ui-rnative/styles";
+import QueuedDrawerBottomSheet from "LLM/components/QueuedDrawer/QueuedDrawerBottomSheet";
+import { Platform } from "react-native";
+import { useTranslation } from "~/context/Locale";
+import { TrackScreen } from "~/analytics";
+import { useQ2WalletV4TourControls } from "../context/Q2WalletV4TourControlsContext";
+import { useQ2WalletV4TourDrawerViewModel } from "./hooks/useQ2WalletV4TourDrawerViewModel";
+import { SlideItem } from "./components/SlideItem";
+import { SlideFooterButton } from "./components/SlideFooterButton";
+import { ProgressIndicator } from "./components/ProgressIndicator";
+import {
+  PAGE_TRACKING_Q2_WALLET_V4_TOUR,
+  Q2_WALLET_V4_TOUR_SLIDES,
+  SLIDES_CONTAINER_HEIGHT,
+  SLIDES_LIST_HEIGHT,
+} from "./const";
+import type { Q2WalletV4TourResolvedSlide } from "./types";
+
+export const useQ2WalletV4TourDrawer = () => useQ2WalletV4TourDrawerViewModel();
+
+const AnimatedGestureHandlerFlatList = Animated.createAnimatedComponent(FlatList);
+
+export const Q2WalletV4TourDrawer = () => {
+  const { isDrawerOpen, closeQ2WalletV4Tour, onSlideChange, completeQ2WalletV4Tour } =
+    useQ2WalletV4TourControls();
+  const { t } = useTranslation();
+  const { bottom: bottomInset } = useSafeAreaInsets();
+  const styles = useStyleSheet(
+    theme => ({
+      content: {
+        paddingHorizontal: theme.spacings.s16,
+        paddingBottom: bottomInset + theme.spacings.s8,
+      },
+      slidesContainer: {
+        height: SLIDES_CONTAINER_HEIGHT,
+      },
+      slidesList: {
+        height: SLIDES_LIST_HEIGHT,
+      },
+      progressIndicator: {
+        marginTop: theme.spacings.s40,
+        marginBottom: theme.spacings.s32,
+      },
+    }),
+    [bottomInset],
+  );
+
+  const slides = useMemo<readonly Q2WalletV4TourResolvedSlide[]>(
+    () =>
+      Q2_WALLET_V4_TOUR_SLIDES.map(slide => ({
+        title: t(slide.titleKey),
+        subtitle: slide.subTitleKey ? t(slide.subTitleKey) : "",
+        imageSrc: slide.imageSrc,
+      })),
+    [t],
+  );
+
+  return (
+    <QueuedDrawerBottomSheet
+      isRequestingToBeOpened={isDrawerOpen}
+      onClose={closeQ2WalletV4Tour}
+      enableDynamicSizing
+      maxDynamicContentSize={Platform.OS === "ios" ? "fullWithOffset" : undefined}
+    >
+      {isDrawerOpen ? (
+        <BottomSheetView style={styles.content}>
+          <BottomSheetHeader />
+          <TrackScreen page={PAGE_TRACKING_Q2_WALLET_V4_TOUR} source="Portfolio" />
+          <Slides
+            bounces={false}
+            as={AnimatedGestureHandlerFlatList}
+            testID="q2-wallet-v4-tour-slides-container"
+            initialNumToRender={1}
+            maxToRenderPerBatch={Platform.OS === "ios" ? 1 : undefined}
+            onSlideChange={onSlideChange}
+            style={styles.slidesContainer}
+            contentContainerStyle={styles.slidesList}
+          >
+            <Slides.Content>
+              {slides.map((slide, index) => (
+                <Slides.Content.Item key={slide.title + slide.subtitle}>
+                  <SlideItem
+                    title={slide.title}
+                    subtitle={slide.subtitle}
+                    imageSrc={slide.imageSrc}
+                    index={index}
+                  />
+                </Slides.Content.Item>
+              ))}
+            </Slides.Content>
+
+            <Slides.ProgressIndicator style={styles.progressIndicator}>
+              <ProgressIndicator />
+            </Slides.ProgressIndicator>
+
+            <Slides.Footer>
+              <SlideFooterButton onComplete={completeQ2WalletV4Tour} />
+            </Slides.Footer>
+          </Slides>
+        </BottomSheetView>
+      ) : null}
+    </QueuedDrawerBottomSheet>
+  );
+};
