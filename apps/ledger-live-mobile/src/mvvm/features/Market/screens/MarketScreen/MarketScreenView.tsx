@@ -26,7 +26,7 @@ export function MarketScreenView({
     if (wasFocused.current === isFocused) return;
     wasFocused.current = isFocused;
     if (isFocused) {
-      screen("Market", undefined, { ...pageTracking, access: true }, true, true);
+      screen("Market", undefined, pageTracking, true, true);
     }
   }, [isFocused, pageTracking]);
 

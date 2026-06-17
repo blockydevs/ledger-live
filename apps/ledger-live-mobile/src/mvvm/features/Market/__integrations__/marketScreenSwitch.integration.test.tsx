@@ -69,7 +69,6 @@ describe("Market screen navigator switch", () => {
           sortMarketCap: "desc",
           sortChange: "desc",
           timeframe: "1D",
-          access: true,
         }),
         true,
         true,
