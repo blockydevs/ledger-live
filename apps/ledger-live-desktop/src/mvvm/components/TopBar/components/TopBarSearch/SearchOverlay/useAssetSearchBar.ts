@@ -38,8 +38,8 @@ export function useAssetSearchBar() {
   // Track the search once the debounce settles on a searchable query.
   useEffect(() => {
     if (debouncedQuery.length < MIN_SEARCH_LENGTH) return;
-    track("Query global search", {
-      search_query: debouncedQuery,
+    track("search_query", {
+      query: debouncedQuery,
       page: getCurrentTrackingPage(),
     });
   }, [debouncedQuery]);
