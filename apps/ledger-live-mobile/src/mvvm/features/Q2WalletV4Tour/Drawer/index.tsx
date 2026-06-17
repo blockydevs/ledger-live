@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Slides } from "@ledgerhq/native-ui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
@@ -7,18 +7,12 @@ import { BottomSheetHeader, BottomSheetView } from "@ledgerhq/lumen-ui-rnative";
 import { useStyleSheet } from "@ledgerhq/lumen-ui-rnative/styles";
 import QueuedDrawerBottomSheet from "LLM/components/QueuedDrawer/QueuedDrawerBottomSheet";
 import { Platform } from "react-native";
-import { useTranslation } from "~/context/Locale";
 import { useQ2WalletV4TourControls } from "../context/Q2WalletV4TourControlsContext";
 import { useQ2WalletV4TourDrawerViewModel } from "./hooks/useQ2WalletV4TourDrawerViewModel";
 import { SlideItem } from "./components/SlideItem";
 import { SlideFooterButton } from "./components/SlideFooterButton";
 import { ProgressIndicator } from "./components/ProgressIndicator";
-import {
-  Q2_WALLET_V4_TOUR_SLIDES,
-  SLIDES_CONTAINER_HEIGHT,
-  SLIDES_LIST_HEIGHT,
-} from "./const";
-import type { Q2WalletV4TourResolvedSlide } from "./types";
+import { Q2_WALLET_V4_TOUR_SLIDES, SLIDES_CONTAINER_HEIGHT, SLIDES_LIST_HEIGHT } from "./const";
 
 export const useQ2WalletV4TourDrawer = () => useQ2WalletV4TourDrawerViewModel();
 
@@ -27,7 +21,6 @@ const AnimatedGestureHandlerFlatList = Animated.createAnimatedComponent(FlatList
 export const Q2WalletV4TourDrawer = () => {
   const { isDrawerOpen, closeQ2WalletV4Tour, onSlideChange, completeQ2WalletV4Tour } =
     useQ2WalletV4TourControls();
-  const { t } = useTranslation();
   const { bottom: bottomInset } = useSafeAreaInsets();
   const styles = useStyleSheet(
     theme => ({
@@ -47,16 +40,6 @@ export const Q2WalletV4TourDrawer = () => {
       },
     }),
     [bottomInset],
-  );
-
-  const slides = useMemo<readonly Q2WalletV4TourResolvedSlide[]>(
-    () =>
-      Q2_WALLET_V4_TOUR_SLIDES.map(slide => ({
-        title: t(slide.titleKey),
-        subtitle: slide.subTitleKey ? t(slide.subTitleKey) : "",
-        imageSrc: slide.imageSrc,
-      })),
-    [t],
   );
 
   return (
@@ -80,14 +63,9 @@ export const Q2WalletV4TourDrawer = () => {
             contentContainerStyle={styles.slidesList}
           >
             <Slides.Content>
-              {slides.map((slide, index) => (
-                <Slides.Content.Item key={slide.title + slide.subtitle}>
-                  <SlideItem
-                    title={slide.title}
-                    subtitle={slide.subtitle}
-                    imageSrc={slide.imageSrc}
-                    index={index}
-                  />
+              {Q2_WALLET_V4_TOUR_SLIDES.map((slide, index) => (
+                <Slides.Content.Item key={slide.titleKey}>
+                  <SlideItem index={index} />
                 </Slides.Content.Item>
               ))}
             </Slides.Content>

@@ -1,8 +1,7 @@
 import React from "react";
-import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
-import { useTranslation } from "~/context/Locale";
+import { StyleSheet } from "react-native";
+import Animated from "react-native-reanimated";
 import { Button } from "@ledgerhq/lumen-ui-rnative";
-import { useStyleSheet } from "@ledgerhq/lumen-ui-rnative/styles";
 import { useSlideFooterButtonViewModel } from "../hooks/useSlideFooterButtonViewModel";
 
 interface SlideFooterButtonProps {
@@ -10,55 +9,16 @@ interface SlideFooterButtonProps {
 }
 
 export const SlideFooterButton = ({ onComplete }: SlideFooterButtonProps) => {
-  const { lastIndex, isFirstSlide, isLastSlide, scrollProgressSharedValue, goNext, complete } =
-    useSlideFooterButtonViewModel(onComplete);
-
-  const styles = useStyleSheet(
-    () => ({
-      container: {
-        position: "relative",
-      },
-      overlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      },
-    }),
-    [],
-  );
-  const { t } = useTranslation();
-
-  const fadeStart = lastIndex - 0.5;
-  const isInTest = process.env.NODE_ENV === "test";
-  const primaryLabel = isFirstSlide
-    ? t("q2WalletV4Tour.cta.start")
-    : t("q2WalletV4Tour.cta.next");
-
-  const continueStyle = useAnimatedStyle(
-    () => ({
-      opacity: interpolate(
-        scrollProgressSharedValue.value,
-        [fadeStart, lastIndex],
-        [1, 0],
-        "clamp",
-      ),
-    }),
-    [fadeStart, lastIndex, scrollProgressSharedValue],
-  );
-
-  const doneStyle = useAnimatedStyle(
-    () => ({
-      opacity: interpolate(
-        scrollProgressSharedValue.value,
-        [fadeStart, lastIndex],
-        [0, 1],
-        "clamp",
-      ),
-    }),
-    [fadeStart, lastIndex, scrollProgressSharedValue],
-  );
+  const {
+    primaryLabel,
+    doneLabel,
+    continueStyle,
+    doneStyle,
+    isLastSlide,
+    isDoneButtonInteractive,
+    goNext,
+    complete,
+  } = useSlideFooterButtonViewModel(onComplete);
 
   return (
     <Animated.View style={styles.container}>
@@ -70,12 +30,25 @@ export const SlideFooterButton = ({ onComplete }: SlideFooterButtonProps) => {
 
       <Animated.View
         style={[styles.overlay, doneStyle]}
-        pointerEvents={isLastSlide || isInTest ? "box-none" : "none"}
+        pointerEvents={isDoneButtonInteractive ? "box-none" : "none"}
       >
         <Button appearance="base" size="lg" onPress={complete}>
-          {t("q2WalletV4Tour.cta.done")}
+          {doneLabel}
         </Button>
       </Animated.View>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    position: "relative",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+});
