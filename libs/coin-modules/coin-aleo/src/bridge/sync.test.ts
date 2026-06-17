@@ -105,7 +105,7 @@ describe("sync.ts", () => {
       nextCursor: null,
     });
     mockApiClient.getTokenBalance.mockResolvedValue(null);
-    mockListPrivateOperations.mockResolvedValue({ operations: [], consumedRecordTags: new Map() });
+    mockListPrivateOperations.mockResolvedValue({ operations: [], consumedRecordTags: new Set() });
     mockGetPrivateBalance.mockResolvedValue({ balance: new BigNumber(0), unspentRecords: [] });
     mockPatchPublicOperations.mockResolvedValue([]);
   });
@@ -624,7 +624,7 @@ describe("sync.ts", () => {
         .mockResolvedValueOnce(mockUnspentRecords);
       mockListPrivateOperations.mockResolvedValueOnce({
         operations: mockPrivateOps,
-        consumedRecordTags: new Map(),
+        consumedRecordTags: new Set(),
       });
       mockGetPrivateBalance.mockResolvedValueOnce({
         balance: new BigNumber(50000),
@@ -696,6 +696,7 @@ describe("sync.ts", () => {
         [],
       );
 
+      expect(mockFetchAllOwnedRecords).toHaveBeenCalledTimes(2);
       expect(mockFetchAllOwnedRecords).toHaveBeenCalledWith(
         expect.objectContaining({ start: 9999 }),
       );
@@ -721,6 +722,7 @@ describe("sync.ts", () => {
         [],
       );
 
+      expect(mockFetchAllOwnedRecords).toHaveBeenCalledTimes(2);
       expect(mockFetchAllOwnedRecords).toHaveBeenCalledWith(expect.objectContaining({ start: 0 }));
     });
 
@@ -865,7 +867,7 @@ describe("sync.ts", () => {
       });
       mockListPrivateOperations.mockResolvedValueOnce({
         operations: [newPrivateOp],
-        consumedRecordTags: new Map(),
+        consumedRecordTags: new Set(),
       });
       mockPatchPublicOperations.mockResolvedValueOnce([newPublicOp, oldPublicOp]);
 
@@ -990,7 +992,7 @@ describe("sync.ts", () => {
         .mockResolvedValueOnce([spentRecord, unspentRecord]); // unspent from scanner (with stale data)
       mockListPrivateOperations.mockResolvedValueOnce({
         operations: [],
-        consumedRecordTags: new Map([[consumedTag, true]]),
+        consumedRecordTags: new Set([consumedTag]),
       });
 
       await performPrivateSync(

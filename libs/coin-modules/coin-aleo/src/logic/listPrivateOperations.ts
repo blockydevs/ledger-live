@@ -20,8 +20,8 @@ function onlyRecordValue(
 export function buildConsumedRecordTags(
   enrichedRecords: (EnrichedPrivateRecord | null)[],
   address: string,
-): Map<string, true> {
-  const tags = new Map<string, true>();
+): Set<string> {
+  const tags = new Set<string>();
 
   for (const enriched of enrichedRecords) {
     if (enriched?.rawRecord.sender !== address) continue;
@@ -34,7 +34,7 @@ export function buildConsumedRecordTags(
     const inputRecords = txTransitions.flatMap(({ inputs }) => inputs.filter(onlyRecordValue));
 
     for (const input of inputRecords) {
-      tags.set(input.tag, true);
+      tags.add(input.tag);
     }
   }
 
@@ -61,7 +61,7 @@ export async function listPrivateOperations({
   tokenRecords?: AleoPrivateRecord[];
 }): Promise<{
   operations: AleoOperation[];
-  consumedRecordTags: Map<string, true>;
+  consumedRecordTags: Set<string>;
 }> {
   const recordsToEnrich = tokenRecords ? [...privateRecords, ...tokenRecords] : privateRecords;
   const nativeRecordTags = new Set(privateRecords.map(record => record.tag));

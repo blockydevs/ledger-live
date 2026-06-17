@@ -34,7 +34,7 @@ describe("listPrivateOperations", () => {
 
     expect(mockEnrichPrivateRecord).not.toHaveBeenCalled();
     expect(result.operations).toEqual([]);
-    expect(result.consumedRecordTags).toEqual(new Map());
+    expect(result.consumedRecordTags).toEqual(new Set());
   });
 
   it("should pass non-credits program records to enrichPrivateRecord (filtering is done by the caller)", async () => {
@@ -61,7 +61,7 @@ describe("listPrivateOperations", () => {
       address: mockAddress,
     });
     expect(result.operations).toEqual([]);
-    expect(result.consumedRecordTags).toEqual(new Map());
+    expect(result.consumedRecordTags).toEqual(new Set());
   });
 
   it("should process transfer_private records", async () => {
@@ -356,7 +356,7 @@ describe("listPrivateOperations", () => {
     });
 
     expect(result.operations).toEqual([mockOp]);
-    expect(result.consumedRecordTags).toEqual(new Map([["consumed-tag-1", true]]));
+    expect(result.consumedRecordTags).toEqual(new Set(["consumed-tag-1"]));
   });
 
   it("should not collect tags from incoming transactions where sender is not this address", async () => {
@@ -396,7 +396,7 @@ describe("listPrivateOperations", () => {
       privateRecords: [record],
     });
 
-    expect(result.consumedRecordTags).toEqual(new Map());
+    expect(result.consumedRecordTags).toEqual(new Set());
   });
 
   it("should call onProgress after each enriched record", async () => {
