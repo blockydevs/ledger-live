@@ -8,6 +8,7 @@
 
 # CI team
 .github                                                 @ledgerhq/wallet-ci
+.github/workflows/generate-e2e-userdata.yml             @ledgerhq/wallet-ci  @ledgerhq/qaa
 .github/workflows/test-ui-e2e-only-desktop.yml          @ledgerhq/wallet-ci  @ledgerhq/qaa
 .github/workflows/test-mobile-e2e-reusable.yml          @ledgerhq/wallet-ci  @ledgerhq/qaa
 .github/workflows/test-design-system-reusable.yml       @ledgerhq/wallet-ci  @ledgerhq/wallet-xp
