@@ -27,7 +27,7 @@ export function FooterSection({ explorerUrl, isLoading }: FooterSectionProps) {
         isFull
         size="md"
         icon={ExternalLink}
-        data-testid="swap-status-view-explorer-btn"
+        data-testid="swap-transaction-view-explorer-btn"
         data-href={explorerUrl}
         onClick={() => openURL(explorerUrl, "SwapTransactionStatus_ViewExplorer")}
       >

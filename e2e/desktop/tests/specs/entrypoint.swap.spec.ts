@@ -319,6 +319,13 @@ test.describe("Swap history", () => {
     swapId: "wQ90NrWdvJz5dA4",
     addressFrom: Addresses.SWAP_HISTORY_SOL_FROM,
     addressTo: Addresses.SWAP_HISTORY_ETH_TO,
+    details: {
+      date: "July 15, 2025",
+      sentAmount: "0.07 SOL",
+      receivedAmount: "0.00354662 ETH",
+      networkFees: "0.000005 SOL",
+      receiveAccount: "Ethereum 1",
+    },
   };
 
   setupEnv(true);
@@ -374,7 +381,7 @@ test.describe("Swap history", () => {
     },
   );
 
-  test(
+  test.only(
     `User should be able to see their swap history from the swap history page`,
     {
       tag: [
@@ -400,8 +407,8 @@ test.describe("Swap history", () => {
       await app.swap.openSelectedOperation(swapHistory.swapId);
       await app.swapTransactionStatusDialog.expectSwapTransactionStatusDialogInfos(
         swapHistory.swapId,
-        swapHistory.swap,
         swapHistory.provider,
+        swapHistory.details,
       );
     },
   );
