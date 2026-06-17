@@ -23,7 +23,7 @@ describe("useQ2TourSlideItemViewModel", () => {
     expect(result.current).toEqual({
       title: "One balance for each asset",
       description:
-        "Multi-chain assets like USDC are now shown as one total. Simple, accurate, clear.",
+        "Multi-chain assets like USDT are now shown as one total. Simple, accurate, clear.",
       imageSrc: SLIDE_IMAGES.light[1],
     });
   });

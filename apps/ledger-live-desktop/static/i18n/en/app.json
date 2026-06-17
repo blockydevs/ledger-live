@@ -9155,7 +9155,7 @@
       },
       "aggregatedBalance": {
         "title": "One balance for each asset",
-        "description": "Multi-chain assets like USDC are now shown as one total. Simple, accurate, clear."
+        "description": "Multi-chain assets like USDT are now shown as one total. Simple, accurate, clear."
       },
       "pnl": {
         "title": "Your returns, front and center",
