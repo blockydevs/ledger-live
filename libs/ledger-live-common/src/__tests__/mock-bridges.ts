@@ -12,11 +12,7 @@ import { CryptoCurrencyId } from "@ledgerhq/types-cryptoassets";
 import { firstValueFrom } from "rxjs";
 jest.setTimeout(120000);
 
-// The mock bridge (bridge/mockHelpers.ts) simulates device latency with real timers
-// (delay() in scanAccounts/signOperation + a raw setTimeout in sync), costing ~78s of
-// idle wall-clock across the 8 currencies below. Every wait bottoms out in
-// global.setTimeout, so forwarding it with a 0ms delay zeros the wall-clock while
-// preserving async ordering (callbacks still run on a future tick, not synchronously).
+// Speed up mock bridge tests by forcing all setTimeout delays to 0ms while preserving async ordering.
 const realSetTimeout = global.setTimeout;
 let setTimeoutSpy: jest.SpyInstance;
 beforeAll(() => {
