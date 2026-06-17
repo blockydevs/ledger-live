@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import { Box, SearchInput } from "@ledgerhq/lumen-ui-rnative";
 import type { LumenViewStyle } from "@ledgerhq/lumen-ui-rnative/styles";
-import { TrackScreen } from "~/analytics";
+import { screen } from "~/analytics";
 import { useTranslation } from "~/context/Locale";
 import { MarketAssetsList } from "./components/MarketAssetsList";
 import { MarketHighlights } from "./components/MarketHighlights";
@@ -18,10 +19,19 @@ export function MarketScreenView({
   pageTracking,
 }: Props) {
   const { t } = useTranslation();
+  const isFocused = useIsFocused();
+  const wasFocused = useRef(false);
+
+  useEffect(() => {
+    if (wasFocused.current === isFocused) return;
+    wasFocused.current = isFocused;
+    if (isFocused) {
+      screen("Market", undefined, { ...pageTracking, access: true }, true, true);
+    }
+  }, [isFocused, pageTracking]);
 
   return (
     <Box testID={MARKET_SCREEN_TEST_IDS.screen} lx={screenStyle}>
-      <TrackScreen name="Market" access {...pageTracking} />
       <Box lx={searchBarStyle}>
         <SearchInput
           testID={MARKET_SCREEN_TEST_IDS.searchBar}

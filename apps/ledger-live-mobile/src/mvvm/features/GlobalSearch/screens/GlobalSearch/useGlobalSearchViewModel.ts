@@ -3,6 +3,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { StockSuggestion } from "@ledgerhq/live-common/dada-client/utils/assetDiscovery";
 import { track } from "~/analytics";
+import { currentRouteNameRef } from "~/analytics/screenRefs";
 import { ScreenName } from "~/const";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
@@ -58,6 +59,7 @@ export function useGlobalSearchViewModel(): GlobalSearchViewModel {
   const hasError = isSearchActive ? hasSearchError : hasDefaultsError;
 
   useEffect(() => {
+    currentRouteNameRef.current = ScreenName.GlobalSearch;
     track("search_open", { page: ScreenName.GlobalSearch });
   }, []);
 
