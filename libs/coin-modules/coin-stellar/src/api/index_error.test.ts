@@ -6,6 +6,20 @@ describe("Stellar Api", () => {
   let module: CoinModuleApi<StellarMemo>;
   const ADDRESS = "GBAUZBDXMVV7HII4JWBGFMLVKVJ6OLQAKOCGXM5E2FM4TAZB6C7JO2L7";
 
+  // The 429-retry path sleeps on a real 4s setTimeout (logic/operationsFromHeight.ts),
+  // which races Jest's 5s default timeout and flakes CI. Fire timer callbacks
+  // synchronously so the retry happens with zero real delay.
+  let setTimeoutSpy: jest.SpyInstance;
+  beforeEach(() => {
+    setTimeoutSpy = jest.spyOn(global, "setTimeout").mockImplementation((fn: TimerHandler) => {
+      if (typeof fn === "function") (fn as () => void)();
+      return 0 as unknown as NodeJS.Timeout;
+    });
+  });
+  afterEach(() => {
+    setTimeoutSpy.mockRestore();
+  });
+
   beforeAll(() => {
     nock("https://horizon-testnet.stellar.org")
       .get(/.*/)
