@@ -1,7 +1,7 @@
 import React from "react";
 import { Banner } from "@ledgerhq/lumen-ui-react";
 import { useTranslation } from "react-i18next";
-import { useTradeAvailability } from "LLD/features/AssetDetail/hooks/useTradeAvailability";
+import { useTradeAvailability } from "@ledgerhq/asset-detail";
 
 type FallbackBannerProps = Readonly<{
   ledgerIds: readonly string[];

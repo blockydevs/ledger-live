@@ -1,9 +1,12 @@
 import React from "react";
 import { render, screen } from "tests/testSetup";
 import { FallbackBanner } from "../index";
-import { useTradeAvailability } from "LLD/features/AssetDetail/hooks/useTradeAvailability";
+import { useTradeAvailability } from "@ledgerhq/asset-detail";
 
-jest.mock("LLD/features/AssetDetail/hooks/useTradeAvailability");
+jest.mock("@ledgerhq/asset-detail", () => ({
+  ...jest.requireActual("@ledgerhq/asset-detail"),
+  useTradeAvailability: jest.fn(),
+}));
 
 const BANNER_TEST_ID = "asset-detail-fallback-banner";
 

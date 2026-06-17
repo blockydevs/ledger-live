@@ -2,7 +2,7 @@ import type { AccountLike, DistributionItem } from "@ledgerhq/types-live";
 import type { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
-import { ledgerIdsFromLedgerCurrency } from "./ledgerIdsFromCurrency";
+import { ledgerIdsFromLedgerCurrency } from "@ledgerhq/asset-detail";
 
 function collectLedgerIdsForRampFromAccounts(accounts: AccountLike[]): string[] {
   const ids = new Set<string>();

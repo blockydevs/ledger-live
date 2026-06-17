@@ -6,7 +6,7 @@ import {
   isAvailableOnBuy,
   isAvailableOnSwap,
   type MarketCurrencyRampLedgerIds,
-} from "LLD/features/Market/utils/rampCatalogAvailability";
+} from "../utils/tradeAvailability";
 
 export type TradeAvailability = Readonly<{
   availableOnBuy: boolean;
@@ -15,6 +15,11 @@ export type TradeAvailability = Readonly<{
   isResolved: boolean;
 }>;
 
+/**
+ * Resolves which transfer actions are available for an asset from its ledger ids.
+ * `isCurrencySupported` is false when every ledger id is deactivated by a feature
+ * flag (or none is provided) — gate every CTA on it so view-only assets expose none.
+ */
 export function useTradeAvailability(ledgerIds: readonly string[] | undefined): TradeAvailability {
   const { isCurrencyAvailable, getSupportedCryptoCurrencyIds } = useRampCatalog();
   const { data: currenciesForSwapAll } = useFetchCurrencyAll();
