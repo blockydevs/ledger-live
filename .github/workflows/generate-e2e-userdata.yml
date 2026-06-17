@@ -3,8 +3,8 @@ run-name: >
   @E2E userdata generation • ${{ inputs.platform || 'both' }} • ${{ inputs.ref || github.ref_name }}
 
 on:
-  schedule:
-    - cron: "0 1 * * *"
+  # schedule:
+  #   - cron: "0 1 * * *"
   workflow_dispatch:
     inputs:
       ref:
