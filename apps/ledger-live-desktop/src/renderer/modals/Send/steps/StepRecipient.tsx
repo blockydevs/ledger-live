@@ -37,10 +37,177 @@ import { openURL } from "~/renderer/linking";
 import { urls } from "~/config/urls";
 import { useLLDCoinFamily } from "~/renderer/families";
 import { useNewSendFlowFeature } from "LLD/features/Send/hooks/useNewSendFlowFeature";
-import { Account, Operation } from "@ledgerhq/types-live";
+import { Account, AccountLike, Operation } from "@ledgerhq/types-live";
 import { Transaction, TransactionStatus } from "@ledgerhq/live-common/generated/types";
 
 const openSplTokenExtensionsArticle = () => openURL(urls.solana.splTokenExtensions);
+
+type StuckAccountAndOperation = {
+  account: AccountLike;
+  parentAccount: Account | undefined;
+  operation: Operation;
+};
+
+type SendStepRecipientFromSelectorComponent = React.ComponentType<{
+  account: Account;
+  transaction: Transaction;
+  onChange: (t: Transaction) => void;
+}>;
+
+const SenderErrorBanner = ({ error }: { error: Error }) => (
+  <div data-testid="sender-error-container">
+    <ErrorBanner dataTestId="sender-error" error={error} />
+  </div>
+);
+
+const SplProblematicExtensionWarning = ({ account }: { account: AccountLike }) => {
+  const extensions = getTokenExtensions(account);
+  if (!extensions || !hasProblematicExtension(extensions)) return null;
+
+  return (
+    <Alert data-testid="spl-2022-problematic-extension" type="warning" small={true}>
+      <Trans i18nKey="send.steps.details.splExtensionsWarning">
+        <Link type="color" onClick={openSplTokenExtensionsArticle} />
+      </Trans>
+    </Alert>
+  );
+};
+
+type RecipientFormFieldsProps = {
+  t: StepProps["t"];
+  mainAccount: Account;
+  parentAccount: StepProps["parentAccount"];
+  transaction: Transaction;
+  status: TransactionStatus;
+  openedFromAccount: boolean;
+  forceAutoFocusOnMemoField: boolean;
+  onChangeTransaction: StepProps["onChangeTransaction"];
+  maybeRecipient?: string;
+  onResetMaybeRecipient: () => void;
+};
+
+const RecipientFormFields = ({
+  t,
+  mainAccount,
+  parentAccount,
+  transaction,
+  status,
+  openedFromAccount,
+  forceAutoFocusOnMemoField,
+  onChangeTransaction,
+  maybeRecipient,
+  onResetMaybeRecipient,
+}: RecipientFormFieldsProps) => (
+  <>
+    <RecipientField
+      status={status}
+      autoFocus={openedFromAccount && !forceAutoFocusOnMemoField}
+      account={mainAccount}
+      transaction={transaction}
+      onChangeTransaction={onChangeTransaction}
+      t={t}
+      initValue={maybeRecipient}
+      resetInitValue={onResetMaybeRecipient}
+    />
+    <SendRecipientFields
+      account={mainAccount}
+      parentAccount={parentAccount}
+      status={status}
+      transaction={transaction}
+      onChange={onChangeTransaction}
+      autoFocus={forceAutoFocusOnMemoField}
+    />
+  </>
+);
+
+type RecipientStepContentProps = {
+  t: StepProps["t"];
+  account: AccountLike;
+  mainAccount: Account;
+  parentAccount: StepProps["parentAccount"];
+  transaction: StepProps["transaction"];
+  status: TransactionStatus;
+  error: StepProps["error"];
+  openedFromAccount: boolean;
+  forceAutoFocusOnMemoField: boolean;
+  accountFilter: (acc: Account) => boolean;
+  stuckAccountAndOperation: StuckAccountAndOperation | undefined;
+  SendStepRecipientFromSelector?: SendStepRecipientFromSelectorComponent;
+  onChangeAccount: StepProps["onChangeAccount"];
+  onChangeTransaction: StepProps["onChangeTransaction"];
+  maybeRecipient?: string;
+  onResetMaybeRecipient: () => void;
+};
+
+const RecipientStepContent = ({
+  t,
+  account,
+  mainAccount,
+  parentAccount,
+  transaction,
+  status,
+  error,
+  openedFromAccount,
+  forceAutoFocusOnMemoField,
+  accountFilter,
+  stuckAccountAndOperation,
+  SendStepRecipientFromSelector,
+  onChangeAccount,
+  onChangeTransaction,
+  maybeRecipient,
+  onResetMaybeRecipient,
+}: RecipientStepContentProps) => (
+  <>
+    <CurrencyDownStatusAlert currencies={[mainAccount.currency]} />
+    {error ? <ErrorBanner error={error} /> : null}
+    {status.errors?.sender ? <SenderErrorBanner error={status.errors.sender} /> : null}
+
+    <Box flow={1}>
+      <Label>{t("send.steps.details.selectAccountDebit")}</Label>
+      <SelectAccount
+        id="account-debit-placeholder"
+        withSubAccounts
+        enforceHideEmptySubAccounts
+        autoFocus={!openedFromAccount && !forceAutoFocusOnMemoField}
+        onChange={onChangeAccount}
+        value={account}
+        filter={accountFilter}
+      />
+    </Box>
+
+    {SendStepRecipientFromSelector && transaction ? (
+      <SendStepRecipientFromSelector
+        account={mainAccount}
+        transaction={transaction}
+        onChange={onChangeTransaction}
+      />
+    ) : null}
+
+    <SplProblematicExtensionWarning account={account} />
+    {stuckAccountAndOperation ? (
+      <EditOperationPanel
+        operation={stuckAccountAndOperation.operation}
+        account={stuckAccountAndOperation.account}
+        parentAccount={stuckAccountAndOperation.parentAccount}
+      />
+    ) : null}
+    <StepRecipientSeparator />
+    {transaction ? (
+      <RecipientFormFields
+        t={t}
+        mainAccount={mainAccount}
+        parentAccount={parentAccount}
+        transaction={transaction}
+        status={status}
+        openedFromAccount={openedFromAccount}
+        forceAutoFocusOnMemoField={forceAutoFocusOnMemoField}
+        onChangeTransaction={onChangeTransaction}
+        maybeRecipient={maybeRecipient}
+        onResetMaybeRecipient={onResetMaybeRecipient}
+      />
+    ) : null}
+  </>
+);
 
 export const DefaultStepRecipient = ({
   t,
@@ -76,13 +243,8 @@ export const DefaultStepRecipient = ({
 
   if (!status || !account || !mainAccount) return null;
 
-  const extensions = getTokenExtensions(account);
-
   // check if there is a stuck transaction. If so, display a warning panel with "speed up or cancel" button
   const stuckAccountAndOperation = bridge?.getStuckAccountAndOperation(account, parentAccount);
-
-  const isReady = account && transaction && mainAccount;
-  const SendStepRecipientFromSelector = specific?.SendStepRecipientFromSelector;
 
   return (
     <Box flow={4}>
@@ -90,74 +252,24 @@ export const DefaultStepRecipient = ({
       {isMemoTagBoxVisibile && lldMemoTag?.enabled ? (
         <MemoTagSendInfo />
       ) : (
-        <>
-          {mainAccount ? <CurrencyDownStatusAlert currencies={[mainAccount.currency]} /> : null}
-          {error ? <ErrorBanner error={error} /> : null}
-          {status.errors && status.errors.sender ? (
-            <div data-testid="sender-error-container">
-              <ErrorBanner dataTestId="sender-error" error={status.errors.sender} />
-            </div>
-          ) : null}
-
-          <Box flow={1}>
-            <Label>{t("send.steps.details.selectAccountDebit")}</Label>
-            <SelectAccount
-              id="account-debit-placeholder"
-              withSubAccounts
-              enforceHideEmptySubAccounts
-              autoFocus={!openedFromAccount && !forceAutoFocusOnMemoField}
-              onChange={onChangeAccount}
-              value={account}
-              filter={accountFilter}
-            />
-          </Box>
-
-          {SendStepRecipientFromSelector && transaction ? (
-            <SendStepRecipientFromSelector
-              account={mainAccount}
-              transaction={transaction}
-              onChange={onChangeTransaction}
-            />
-          ) : null}
-
-          {extensions && hasProblematicExtension(extensions) ? (
-            <Alert data-testid="spl-2022-problematic-extension" type="warning" small={true}>
-              <Trans i18nKey="send.steps.details.splExtensionsWarning">
-                <Link type="color" onClick={openSplTokenExtensionsArticle} />
-              </Trans>
-            </Alert>
-          ) : null}
-          {stuckAccountAndOperation ? (
-            <EditOperationPanel
-              operation={stuckAccountAndOperation.operation}
-              account={stuckAccountAndOperation.account}
-              parentAccount={stuckAccountAndOperation.parentAccount}
-            />
-          ) : null}
-          <StepRecipientSeparator />
-          {isReady && (
-            <>
-              <RecipientField
-                status={status}
-                autoFocus={openedFromAccount && !forceAutoFocusOnMemoField}
-                account={mainAccount}
-                transaction={transaction}
-                onChangeTransaction={onChangeTransaction}
-                t={t}
-                initValue={maybeRecipient}
-                resetInitValue={onResetMaybeRecipient}
-              />
-              <SendRecipientFields
-                account={mainAccount}
-                parentAccount={parentAccount}
-                status={status}
-                transaction={transaction}
-                onChange={onChangeTransaction}
-                autoFocus={forceAutoFocusOnMemoField}
-              />
-            </>
-          )}
-        </>
+        <RecipientStepContent
+          t={t}
+          account={account}
+          mainAccount={mainAccount}
+          parentAccount={parentAccount}
+          transaction={transaction}
+          status={status}
+          error={error}
+          openedFromAccount={openedFromAccount}
+          forceAutoFocusOnMemoField={forceAutoFocusOnMemoField}
+          accountFilter={accountFilter}
+          stuckAccountAndOperation={stuckAccountAndOperation}
+          SendStepRecipientFromSelector={specific?.SendStepRecipientFromSelector}
+          onChangeAccount={onChangeAccount}
+          onChangeTransaction={onChangeTransaction}
+          maybeRecipient={maybeRecipient}
+          onResetMaybeRecipient={onResetMaybeRecipient}
+        />
       )}
     </Box>
   );

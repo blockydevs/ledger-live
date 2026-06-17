@@ -8919,7 +8919,7 @@
           },
           "private": {
             "title": "Private balance",
-            "subtitle": "Orchard",
+            "subtitle": "Shielded",
             "unavailable": "Private balance unavailable"
           }
         }

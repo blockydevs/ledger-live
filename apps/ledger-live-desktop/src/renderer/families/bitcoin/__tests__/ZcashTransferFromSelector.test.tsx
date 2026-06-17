@@ -61,9 +61,9 @@ describe("ZcashTransferFromSelector", () => {
   it("renders both cards with Public active by default and persists the default to the transaction", () => {
     const onChange = renderSelector(buildAccount(), {});
 
-    expect(screen.getByTestId("zcash-transfer-from-selector")).toBeInTheDocument();
-    expect(screen.getByTestId("transfer-from-public")).toBeInTheDocument();
-    expect(screen.getByTestId("transfer-from-private")).toBeInTheDocument();
+    expect(screen.getByTestId("zcash-transfer-from-selector")).toBeVisible();
+    expect(screen.getByTestId("transfer-from-public")).toBeVisible();
+    expect(screen.getByTestId("transfer-from-private")).toBeVisible();
 
     // Public default is written to the transaction state once on mount.
     expect(onChange).toHaveBeenCalledTimes(1);
