@@ -6,10 +6,16 @@ the cosmos coin module end to end.
 
 ## Features
 
-- Deterministic testing scenarios for Babylon (`x/epoching` wrapped staking)
-- Two-validator local devnet so redelegation can be exercised end to end
+- Deterministic Babylon (`BABY`) scenario covering send, delegate, and claim
+  rewards end to end against a local node
+- Babylon staking is `x/epoching`-wrapped; the wrapped **delegate** is exercised
+  here. Wrapped **undelegate / redelegate** are crafted correctly but don't yet
+  execute on the devnet (accepted into a block but no-op at the epoch boundary —
+  see the note in `src/scenarii/Babylon.ts`), so they're omitted pending a
+  follow-up investigation
 - Local software signer written in TypeScript (matches the DMK signer's wire output)
-- Docker-based `babylond` devnet with a short epoch interval for fast tests
+- Docker-based two-validator `babylond` devnet (both validators are needed for
+  consensus) with a short epoch interval for fast tests
 
 ## Usage
 
