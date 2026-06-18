@@ -693,8 +693,8 @@ export async function getTokenOutDetails({
     return { amount: amountStr ? parseAmount(amountStr) : null, recipient, fee };
   }
 
-  // Fully private transfer: decrypt recipient and amount arguments by their function
-  // argument indices (same layout as credits.aleo transfer_private), not input array position.
+  // Fully private transfer: decrypt recipient and amount arguments using the token program's
+  // argument indices (recipientOutputIndex/amountOutputIndex already account for layout differences).
   if (transition.inputs.length <= amountOutputIndex) {
     return { amount: null, recipient, fee };
   }

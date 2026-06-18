@@ -104,6 +104,10 @@ function buildNoneParentOp(
  * @returns updatedCoinOperations – coin ops with `subOperations` filled in.
  * @returns tokenOperationsBySubAccountId – map from token account id to its operations.
  */
+function appendUniqueOperation(ops: AleoOperation[], op: AleoOperation): AleoOperation[] {
+  return ops.some(o => o.id === op.id) ? ops : [...ops, op];
+}
+
 export async function prepareTokenOperations({
   address,
   ledgerAccountId,
@@ -180,14 +184,13 @@ export async function prepareTokenOperations({
       });
     }
 
-    if (!parentCoinOp.subOperations.some(so => so.id === subAccountOp.id)) {
-      parentCoinOp.subOperations = [...parentCoinOp.subOperations, subAccountOp];
-    }
+    parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);
 
     const existing = tokenOperationsBySubAccountId.get(tokenAccountId) ?? [];
-    if (!existing.some(so => so.id === subAccountOp.id)) {
-      tokenOperationsBySubAccountId.set(tokenAccountId, [...existing, subAccountOp]);
-    }
+    tokenOperationsBySubAccountId.set(
+      tokenAccountId,
+      appendUniqueOperation(existing, subAccountOp),
+    );
   }
 
   return { updatedCoinOperations, tokenOperationsBySubAccountId };
@@ -423,7 +426,8 @@ export function buildPrivateTokenOp(
   }
 
   const senders = type === "OUT" ? [address] : [record.sender];
-  const recipients = type === "OUT" ? (recipient ? [recipient] : []) : [address];
+  const outRecipients = recipient ? [recipient] : [];
+  const recipients = type === "OUT" ? outRecipients : [address];
 
   return {
     id: encodeOperationId(tokenAccountId, txId, type),
