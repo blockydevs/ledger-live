@@ -1,7 +1,23 @@
 import React from "react";
-import { render, screen, fireEvent } from "tests/testSetup";
+import { render, screen, fireEvent, act } from "tests/testSetup";
 import { useStocksData } from "@ledgerhq/live-common/dada-client/hooks/useStocksData";
 import Stocks from "..";
+
+function simulateScrollLayout(
+  container: Element,
+  scrollLeft: number,
+  clientWidth: number,
+  scrollWidth: number,
+) {
+  Object.defineProperty(container, "scrollLeft", {
+    value: scrollLeft,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(container, "clientWidth", { value: clientWidth, configurable: true });
+  Object.defineProperty(container, "scrollWidth", { value: scrollWidth, configurable: true });
+  container.dispatchEvent(new Event("scroll"));
+}
 
 jest.mock("@ledgerhq/live-common/dada-client/hooks/useStocksData");
 
@@ -204,6 +220,28 @@ describe("Stocks section", () => {
       expect(screen.getByTestId("stock-item-ticker-aaplx")).toBeVisible();
       expect(screen.getByTestId("stock-item-ticker-tslax")).toBeVisible();
       expect(screen.getByTestId("stock-item-ticker-nvdax")).toBeVisible();
+    });
+  });
+
+  describe("horizontal scroll", () => {
+    it("shows and hides the scroll edges based on scroll position", () => {
+      mockStocksData({ metas: [APPLE, TESLA, NVIDIA] });
+
+      render(<Stocks limit={3} navigateToAsset={navigateToAsset} onSeeAll={onSeeAll} />);
+
+      const scrollContainer = screen.getByTestId("stocks-scroll-container");
+
+      act(() => simulateScrollLayout(scrollContainer, 0, 500, 1000));
+      expect(screen.queryByTestId("scroll-arrow-left")).not.toBeInTheDocument();
+      expect(screen.getByTestId("scroll-arrow-right")).toBeInTheDocument();
+
+      act(() => simulateScrollLayout(scrollContainer, 200, 500, 1000));
+      expect(screen.getByTestId("scroll-arrow-left")).toBeInTheDocument();
+      expect(screen.getByTestId("scroll-arrow-right")).toBeInTheDocument();
+
+      act(() => simulateScrollLayout(scrollContainer, 500, 500, 1000));
+      expect(screen.getByTestId("scroll-arrow-left")).toBeInTheDocument();
+      expect(screen.queryByTestId("scroll-arrow-right")).not.toBeInTheDocument();
     });
   });
 });
