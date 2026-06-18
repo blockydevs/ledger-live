@@ -1,5 +1,4 @@
 import BigNumber from "bignumber.js";
-import { AmountRequired, InvalidAddress, NotEnoughBalance } from "@ledgerhq/errors";
 import { createBridges } from "@ledgerhq/coin-cosmos/bridge/index";
 import { CosmosCoinConfig } from "@ledgerhq/coin-cosmos/config";
 import {
@@ -60,7 +59,7 @@ describe("Babylon negative cases (getTransactionStatus, no devnet)", () => {
       fees: new BigNumber(5000),
     };
     const status = await accountBridge.getTransactionStatus(account, transaction);
-    expect(status.errors.amount).toBeInstanceOf(NotEnoughBalance);
+    expect(status.errors.amount?.name).toBe("NotEnoughBalance");
   });
 
   it("rejects a malformed recipient address with InvalidAddress", async () => {
@@ -73,7 +72,7 @@ describe("Babylon negative cases (getTransactionStatus, no devnet)", () => {
       fees: new BigNumber(5000),
     };
     const status = await accountBridge.getTransactionStatus(account, transaction);
-    expect(status.errors.recipient).toBeInstanceOf(InvalidAddress);
+    expect(status.errors.recipient?.name).toBe("InvalidAddress");
   });
 
   it("rejects a zero-amount delegate with AmountRequired", async () => {
@@ -85,7 +84,7 @@ describe("Babylon negative cases (getTransactionStatus, no devnet)", () => {
       fees: new BigNumber(5000),
     };
     const status = await accountBridge.getTransactionStatus(account, transaction);
-    expect(status.errors.amount).toBeInstanceOf(AmountRequired);
+    expect(status.errors.amount?.name).toBe("AmountRequired");
   });
 
   it("rejects a delegate with no validators with InvalidAddress", async () => {
@@ -97,6 +96,6 @@ describe("Babylon negative cases (getTransactionStatus, no devnet)", () => {
       fees: new BigNumber(5000),
     };
     const status = await accountBridge.getTransactionStatus(account, transaction);
-    expect(status.errors.recipient).toBeInstanceOf(InvalidAddress);
+    expect(status.errors.recipient?.name).toBe("InvalidAddress");
   });
 });
