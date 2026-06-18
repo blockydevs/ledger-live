@@ -104,7 +104,7 @@ function buildNoneParentOp(
  * @returns updatedCoinOperations – coin ops with `subOperations` filled in.
  * @returns tokenOperationsBySubAccountId – map from token account id to its operations.
  */
-function appendUniqueOperation(ops: AleoOperation[], op: AleoOperation): AleoOperation[] {
+function appendUniqueOperation<T extends { id: string }>(ops: T[], op: T): T[] {
   return ops.some(o => o.id === op.id) ? ops : [...ops, op];
 }
 
