@@ -17,7 +17,7 @@ const DragStrip = styled.div<{ $height: number }>`
 
 export default function AppRegionDrag() {
   const { pathname } = useLocation();
-  const height = pathname.startsWith("/recover") ? RECOVER_DRAG_HEIGHT : DEFAULT_DRAG_HEIGHT;
+  const height = pathname.includes("recover") ? RECOVER_DRAG_HEIGHT : DEFAULT_DRAG_HEIGHT;
 
   return <DragStrip $height={height} />;
 }
