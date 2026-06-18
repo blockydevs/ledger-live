@@ -128,31 +128,11 @@ const txToOps = (info: AccountShapeInfo, accountId: string, txs: CosmosTx[]): Co
 
     // simplify the message types
     const messages = tx.tx.body.messages.map((message: any) => {
-<<<<<<< HEAD
       const type = message["@type"].substring(message["@type"].lastIndexOf(".") + 1);
       // babylon x/epoching nests the real staking msg under `msg` (MsgWrapped*); unwrap so the
       // standard delegate/undelegate/redelegate handling below applies.
       if (message["@type"].startsWith("/babylon.epoching.") && message.msg) {
         return { ...message.msg, type: type.replace("Wrapped", "") };
-=======
-      const lastSegment = message["@type"].substring(message["@type"].lastIndexOf(".") + 1);
-      // Babylon wraps staking messages via x/epoching (LIVE-31839): the LCD
-      // nests the inner cosmos-sdk message under `.msg`. Lift it and strip
-      // "Wrapped" from the type so the existing MsgDelegate/MsgUndelegate/
-      // MsgBeginRedelegate cases handle Babylon. Guard on `message.msg` — if
-      // it's missing, keep the raw (wrapped) type so getMainMessage skips it
-      // rather than emitting an op with empty validators.
-      if (
-        message.msg &&
-        (lastSegment === "MsgWrappedDelegate" ||
-          lastSegment === "MsgWrappedUndelegate" ||
-          lastSegment === "MsgWrappedBeginRedelegate")
-      ) {
-        return {
-          ...message.msg,
-          type: lastSegment.replace("Wrapped", ""),
-        };
->>>>>>> 686df56879 (chore(coin-tester-cosmos): address Copilot review feedback)
       }
       return { ...message, type };
     });
