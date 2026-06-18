@@ -3344,6 +3344,7 @@
   "crypto": {
     "title": "Crypto",
     "stablecoinTitle": "Stablecoin",
+    "stocksTitle": "Stocks",
     "errorState": "An error occurred while loading your assets",
     "emptyState": "No assets to display"
   },
