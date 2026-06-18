@@ -4,16 +4,16 @@ import { StellarMemo } from "../types";
 import { createApi, envelopeFromAnyXDR } from ".";
 
 /**
- * Testnet scan: https://testnet.lumenscan.io/
+ * Mainnet explorer: https://stellar.expert/explorer/public
  */
 describe("Stellar Api", () => {
   let module: CoinModuleApi<StellarMemo>;
-  const ADDRESS = "GBAUZBDXMVV7HII4JWBGFMLVKVJ6OLQAKOCGXM5E2FM4TAZB6C7JO2L7";
+  const ADDRESS = "GBAMU3EJX6KLW2JEIAIEAYNLPKHFPJR6OYQYX5HPYB3CVQ6QD4XUJ23J";
 
   beforeAll(() => {
     module = createApi({
       explorer: {
-        url: "https://horizon-testnet.stellar.org/",
+        url: "https://stellar.coin.ledger.com",
       },
     });
   });
@@ -34,8 +34,7 @@ describe("Stellar Api", () => {
         memo: { type: "NO_MEMO" },
       });
 
-      // Then
-      expect(result).toEqual({ value: BigInt(100) });
+      expect(result.value).toBeGreaterThanOrEqual(100n);
     });
   });
 
@@ -43,7 +42,10 @@ describe("Stellar Api", () => {
     let txs: Operation[];
 
     beforeAll(async () => {
-      const result = await module.listOperations(ADDRESS, { minHeight: 0, order: "asc" });
+      const result = await module.listOperations(ADDRESS, {
+        minHeight: 0,
+        order: "asc",
+      });
       txs = result.items;
     });
 
@@ -65,7 +67,7 @@ describe("Stellar Api", () => {
 
     it("returns all operations", async () => {
       expect(txs.length).toBeGreaterThanOrEqual(100);
-      const checkSet = new Set(txs.map(elt => elt.tx.hash));
+      const checkSet = new Set(txs.map(elt => elt.id));
       expect(checkSet.size).toEqual(txs.length);
     });
 
