@@ -205,6 +205,29 @@ describe("useMarket", () => {
     });
   });
 
+  describe("pagination reset", () => {
+    it("resets page and currentPage when sort order changes", async () => {
+      const initialState = {
+        ...withFlagOverrides({ lldRefreshMarketData: { enabled: false } }),
+        settings: createSettingsState([]),
+        market: {
+          ...createMarketState([]),
+          marketParams: { ...createMarketState([]).marketParams, page: 3 },
+          currentPage: 3,
+        },
+      };
+
+      const { result } = renderHook(() => useMarket(), { initialState });
+
+      await act(async () => {
+        result.current.toggleSortBy();
+      });
+
+      expect(result.current.marketParams.page).toBe(1);
+      expect(result.current.marketCurrentPage).toBe(1);
+    });
+  });
+
   describe("time range options", () => {
     it("exposes full-label range options ordered shortest to longest", () => {
       const { result } = renderHook(() => useMarket(), {
