@@ -24,11 +24,23 @@ export const getWebviewIntent = (rawUrl?: string): EarnWebviewIntent | undefined
   return undefined;
 };
 
+/**
+ * Tri-state view of whether the webview is currently inside an earn intent flow.
+ *
+ * The intent is derived from {@link getWebviewIntent} so the two never disagree (a divergence here
+ * could bounce the user out of a flow the header still thinks it is in).
+ *
+ * - `true`  → on an intent route (deposit/withdraw/simulate).
+ * - `false` → on a known non-intent route (e.g. the dashboard) — the only signal that the user
+ *             has *left* the flow.
+ * - `null`  → route not yet known: no URL yet, or a non-http(s) URL (e.g. `about:blank` during
+ *             load). Callers must NOT treat `null` as "left the flow" — doing so bounces the user
+ *             out before the first real URL arrives.
+ */
 export const getIntentFlowState = (rawUrl?: string): boolean | null => {
   if (!rawUrl) return null;
   const url = safeUrl(rawUrl);
   if (!url) return null;
   if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-  if (isEarnWebviewIntent(url.searchParams.get("intent"))) return true;
-  return INTENT_FLOWS.some(segment => url.pathname.includes(segment));
+  return getWebviewIntent(rawUrl) !== undefined;
 };

@@ -33,4 +33,17 @@ describe("getIntentFlowState", () => {
     expect(getIntentFlowState(undefined)).toBeNull();
     expect(getIntentFlowState("about:blank")).toBeNull();
   });
+
+  it("returns true for the simulator route without an intent query param", () => {
+    expect(getIntentFlowState("https://earn.test/v2/android/earn-simulator")).toBe(true);
+  });
+
+  it("stays in lockstep with getWebviewIntent for routes that merely contain an intent word", () => {
+    // Regression: getIntentFlowState used to match a bare "deposit"/"simulate" substring, so a
+    // route like /predeposit-info read as "in flow" while getWebviewIntent saw no intent. The two
+    // are now derived from the same source and must never disagree.
+    const url = "https://earn.test/v2/ios/predeposit-info";
+    expect(getWebviewIntent(url)).toBeUndefined();
+    expect(getIntentFlowState(url)).toBe(false);
+  });
 });

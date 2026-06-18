@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import { render, screen, withFlagOverrides } from "@tests/test-renderer";
 import { EarnV2Webview } from "../index";
-import { NavigatorName } from "~/const";
+import { BASE_NAVIGATOR_ID, NavigatorName } from "~/const";
 import type { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
 
 const mockNavigate = jest.fn();
@@ -190,7 +190,13 @@ describe("EarnV2Webview", () => {
     // The header is driven imperatively via the parent navigator's options — NOT by mutating
     // route params (a cross-navigator merge-navigate wipes them and blanks the screen).
     expect(mockNavigate).not.toHaveBeenCalled();
-    expect(mockSetOptions).toHaveBeenCalledWith(expect.objectContaining({ headerShown: true }));
+    expect(mockGetParent).toHaveBeenCalledWith(BASE_NAVIGATOR_ID);
+    const options = mockSetOptions.mock.calls.at(-1)?.[0];
+    // Deposit-specific header: titled, non-closable, and (unlike simulate) no canvas headerStyle —
+    // proving the header tracked the webview's deposit route, not the entry simulate intent.
+    expect(options).toEqual(expect.objectContaining({ headerShown: true, closable: false }));
+    expect(options.headerTitle).toBeTruthy();
+    expect(options.headerStyle).toBeUndefined();
   });
 
   it("does not leave the intent flow presentation while the webview is still on the deposit route", () => {
