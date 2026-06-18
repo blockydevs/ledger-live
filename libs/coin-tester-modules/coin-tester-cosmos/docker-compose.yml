@@ -1,0 +1,52 @@
+services:
+  babylond:
+    container_name: babylond
+    platform: linux/amd64
+    image: coin-tester-babylond:latest
+    build:
+      context: .
+      dockerfile: babylond.Dockerfile
+    command: ["0"]
+    ports:
+      - "1317:1317"
+      - "26657:26657"
+      - "9090:9090"
+    volumes:
+      - testnet-data:/testnet
+    healthcheck:
+      # LCD `latest block` endpoint — only responds once the chain has produced
+      # a block, which requires both validators online and peered.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:1317/cosmos/base/tendermint/v1beta1/blocks/latest >/dev/null"]
+      interval: 5s
+      timeout: 10s
+      retries: 24
+      start_period: 30s
+
+  babylond-node1:
+    # Second validator. Shares the same image (built by the babylond service)
+    # and the same /testnet volume — node 0's init populates both nodes'
+    # genesis + config. No host port mapping; the scenario talks only to node 0.
+    container_name: babylond-node1
+    platform: linux/amd64
+    image: coin-tester-babylond:latest
+    command: ["1"]
+    volumes:
+      - testnet-data:/testnet
+    depends_on:
+      - babylond
+    healthcheck:
+      # Node 1 needs its own LCD healthcheck so `compose up --wait` actually
+      # validates it — otherwise --wait treats a missing healthcheck as "ready
+      # the moment the container starts" and a fast exit slips through silently.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:1317/cosmos/base/tendermint/v1beta1/blocks/latest >/dev/null"]
+      interval: 5s
+      timeout: 10s
+      retries: 24
+      # Node 1 idles until node 0 touches the init lock — give it room.
+      start_period: 60s
+
+volumes:
+  # Shared so node 0's init step (genesis copy + persistent_peers) is visible
+  # to node 1. killBabylond() runs `down --volumes`, so state is ephemeral
+  # across runs — each scenario sees a fresh chain.
+  testnet-data:

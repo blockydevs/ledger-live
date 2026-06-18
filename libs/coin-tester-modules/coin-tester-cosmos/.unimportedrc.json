@@ -1,0 +1,11 @@
+{
+  "ignoreUnresolved": [
+    "@jest/expect-utils",
+    "@jest/get-type",
+    "jest-util"
+  ],
+  "ignoreUnused": [
+    "expect"
+  ],
+  "ignoreUnimported": []
+}
