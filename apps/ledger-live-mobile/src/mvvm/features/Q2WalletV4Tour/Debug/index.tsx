@@ -27,7 +27,7 @@ function Q2WalletV4TourScreenDebug() {
         key: WALLET_40_FLAG,
         value: {
           ...lwmWallet40,
-          enabled: next ? true : lwmWallet40?.enabled ?? false,
+          enabled: next ? true : (lwmWallet40?.enabled ?? false),
           params: { ...(lwmWallet40?.params ?? {}), q2Tour: next },
         },
       }),
