@@ -39,6 +39,7 @@ import { NewSendModal } from "./modal/new.send.modal";
 import { PrivateBalanceModal } from "./modal/private.balance.modal";
 import { HistoryPage } from "./history.page";
 import { MainNavigationPage } from "./mainNavigation.page";
+import { SwapTransactionStatusDialog } from "./dialog/swap.transaction.status.dialog";
 
 export class Application extends PageHolder {
   public account = new AccountPage(this.page);
@@ -78,6 +79,7 @@ export class Application extends PageHolder {
   public marketBanner = new MarketBannerPage(this.page);
   public myWallet = new MyWalletPage(this.page);
   public fearAndGreedDialog = new FearAndGreedDialog(this.page);
+  public swapTransactionStatusDialog = new SwapTransactionStatusDialog(this.page);
   public history = new HistoryPage(this.page);
   public mainNavigation = new MainNavigationPage(this.page);
   public assets = new AssetsPage(this.page);
