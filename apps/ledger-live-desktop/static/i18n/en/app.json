@@ -9259,23 +9259,23 @@
       "refer": "Referral"
     },
     "backupHub": {
-      "title": "Wallet backups",
-      "description": "Protect your assets with a combination of backup solutions for your Seed Phrase Recovery.",
+      "title": "Backups of your Secret Recovery Phrase",
+      "description": "Don't lose access to your assets — back up your secret recovery phrase across multiple formats.",
       "back": "Back",
       "sections": {
-        "digital": "Digital ID-based backups",
+        "digital": "ID-linked digital backup",
         "physical": "Physical backups"
       },
       "recover": {
         "title": "Ledger Recover",
-        "notSubscribed": "Create a backup you can't lose",
+        "notSubscribed": "Restore access by verifying your ID.",
         "inProgress": "Complete activation",
         "done": "Manage your backup",
         "discover": "Discover"
       },
       "recoveryKey": {
         "title": "Ledger Recovery Key",
-        "description": "A PIN-protected smart card"
+        "description": "A PIN-protected smart card."
       },
       "secretRecoveryPhrase": {
         "title": "24-word metal storage",
