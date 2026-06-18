@@ -33,8 +33,18 @@ function applyCosmosHardening(path: number[]) {
   );
 }
 
+// BIP-39 seed derivation is PBKDF2 (expensive) and the mnemonic is fixed, so
+// compute the seed once and reuse it across every derivation/sign.
+let seedPromise: Promise<Uint8Array> | undefined;
+function getSeed(): Promise<Uint8Array> {
+  if (!seedPromise) {
+    seedPromise = Bip39.mnemonicToSeed(new EnglishMnemonic(DEV_MNEMONIC));
+  }
+  return seedPromise;
+}
+
 async function deriveFromNumberPath(path: number[]): Promise<DerivedKey> {
-  const seed = await Bip39.mnemonicToSeed(new EnglishMnemonic(DEV_MNEMONIC));
+  const seed = await getSeed();
   const { privkey } = Slip10.derivePath(
     Slip10Curve.Secp256k1,
     seed,
@@ -45,7 +55,7 @@ async function deriveFromNumberPath(path: number[]): Promise<DerivedKey> {
 }
 
 async function deriveFromStringPath(path: string): Promise<DerivedKey> {
-  const seed = await Bip39.mnemonicToSeed(new EnglishMnemonic(DEV_MNEMONIC));
+  const seed = await getSeed();
   const { privkey } = Slip10.derivePath(
     Slip10Curve.Secp256k1,
     seed,

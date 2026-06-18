@@ -61,21 +61,17 @@
     "@cosmjs/amino": "^0.36.0",
     "@cosmjs/crypto": "^0.36.1",
     "@cosmjs/encoding": "^0.36.0",
-    "@cosmjs/stargate": "^0.37.0",
     "@ledgerhq/coin-cosmos": "workspace:^",
     "@ledgerhq/coin-module-framework": "catalog:",
     "@ledgerhq/coin-tester": "workspace:^",
     "@ledgerhq/cryptoassets": "workspace:^",
-    "@ledgerhq/hw-app-cosmos": "workspace:^",
     "@ledgerhq/ledger-wallet-framework": "workspace:^",
     "@ledgerhq/types-cryptoassets": "workspace:^",
     "@ledgerhq/types-live": "workspace:^",
     "bignumber.js": "^9.1.2",
     "chalk": "^4.1.2",
-    "cosmjs-types": "0.2.1",
     "docker-compose": "^1.1.0",
-    "expect": "catalog:",
-    "msw": "catalog:"
+    "expect": "catalog:"
   },
   "devDependencies": {
     "@swc/core": "catalog:",

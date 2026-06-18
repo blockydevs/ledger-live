@@ -1,11 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# Two-validator devnet. The scenario's redelegate step needs a second
-# validator to redelegate to; with `--v 2` Tendermint splits voting power
-# 50/50, so both nodes have to be online for consensus to make progress
-# (each holds ~50% — neither alone hits 2/3). Each node starts from this
-# entrypoint with its index as the only argument.
+# Two-validator devnet. With `--v 2` Tendermint splits voting power 50/50, so
+# both nodes must be online for consensus to make progress (neither alone
+# reaches 2/3). Each node starts from this entrypoint with its index as the
+# only argument.
 NODE_INDEX="${1:-0}"
 CHAIN_ID="bbn-devnet"
 TESTNET_DIR="/testnet"

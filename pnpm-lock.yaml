@@ -6827,9 +6827,6 @@ importers:
       '@cosmjs/encoding':
         specifier: ^0.36.0
         version: 0.36.2
-      '@cosmjs/stargate':
-        specifier: ^0.37.0
-        version: 0.37.0
       '@ledgerhq/coin-cosmos':
         specifier: workspace:^
         version: link:../../coin-modules/coin-cosmos
@@ -6842,9 +6839,6 @@ importers:
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/cryptoassets
-      '@ledgerhq/hw-app-cosmos':
-        specifier: workspace:^
-        version: link:../../ledgerjs/packages/hw-app-cosmos
       '@ledgerhq/ledger-wallet-framework':
         specifier: workspace:^
         version: link:../../ledger-wallet-framework
@@ -6860,18 +6854,12 @@ importers:
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
-      cosmjs-types:
-        specifier: 0.2.1
-        version: 0.2.1
       docker-compose:
         specifier: ^1.1.0
         version: 1.1.0
       expect:
         specifier: 'catalog:'
         version: 30.2.0
-      msw:
-        specifier: 'catalog:'
-        version: 2.7.3(@types/node@24.12.0)(typescript@6.0.2)
     devDependencies:
       '@swc/core':
         specifier: 'catalog:'

@@ -23,8 +23,9 @@ const coinConfig = {
   status: { type: "active" as const },
 } satisfies CosmosCurrencyConfig & { status: { type: "active" } };
 
-// 1 BABY = 1e6 ubbn (the base unit getTransactionStatus works in).
-const BABY = (n: number): BigNumber => new BigNumber(n).times(1e6);
+// 1 BABY = 1e6 ubbn (the base unit getTransactionStatus works in). Accept a
+// string so non-integer amounts parse exactly (no JS float rounding).
+const BABY = (n: string | number): BigNumber => new BigNumber(n).times(1e6);
 
 describe("Babylon negative cases (getTransactionStatus, no devnet)", () => {
   let accountBridge: ReturnType<typeof createBridges>["accountBridge"];
@@ -68,7 +69,7 @@ describe("Babylon negative cases (getTransactionStatus, no devnet)", () => {
       mode: "send",
       // No bech32 separator → fails decode → InvalidAddress, independent of hrp.
       recipient: "not-a-valid-cosmos-address",
-      amount: BABY(0.1),
+      amount: BABY("0.1"),
       fees: new BigNumber(5000),
     };
     const status = await accountBridge.getTransactionStatus(account, transaction);
