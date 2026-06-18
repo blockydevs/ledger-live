@@ -28,7 +28,7 @@ function Q2WalletV4TourScreenDebug() {
         value: {
           ...lwmWallet40,
           enabled: next ? true : (lwmWallet40?.enabled ?? false),
-          params: { ...(lwmWallet40?.params ?? {}), q2Tour: next },
+          params: { ...lwmWallet40?.params, q2Tour: next },
         },
       }),
     );
@@ -37,6 +37,13 @@ function Q2WalletV4TourScreenDebug() {
   const handleToggleHasSeenQ2WalletV4Tour = useCallback(() => {
     dispatch(setHasSeenQ2WalletV4Tour(!hasSeenQ2WalletV4Tour));
   }, [dispatch, hasSeenQ2WalletV4Tour]);
+
+  let openDrawerLabel = "Open Drawer (enable q2Tour)";
+  if (canOpenDrawer) {
+    openDrawerLabel = "Open Drawer";
+  } else if (isQ2TourEnabled) {
+    openDrawerLabel = "Open Drawer (reset tour seen)";
+  }
 
   return (
     <>
@@ -94,11 +101,7 @@ function Q2WalletV4TourScreenDebug() {
               disabled={!canOpenDrawer}
               onPress={handleOpenDrawer}
             >
-              {canOpenDrawer
-                ? "Open Drawer"
-                : isQ2TourEnabled
-                  ? "Open Drawer (reset tour seen)"
-                  : "Open Drawer (enable q2Tour)"}
+              {openDrawerLabel}
             </Button>
           </Box>
         </Box>
@@ -109,6 +112,7 @@ function Q2WalletV4TourScreenDebug() {
         handleCloseDrawer={handleCloseDrawer}
         closeDrawer={closeDrawer}
         onSlideChange={onSlideChange}
+        source="Debug"
       />
     </>
   );

@@ -26,13 +26,16 @@ const AnimatedGestureHandlerFlatList = Animated.createAnimatedComponent(FlatList
 type Q2WalletV4TourDrawerProps = Omit<
   ReturnType<typeof useQ2WalletV4TourDrawerViewModel>,
   "handleOpenDrawer"
->;
+> & {
+  readonly source?: string;
+};
 
 export const Q2WalletV4TourDrawer = ({
   isDrawerOpen,
   handleCloseDrawer,
   closeDrawer,
   onSlideChange,
+  source = "Portfolio",
 }: Q2WalletV4TourDrawerProps) => {
   const { bottom: bottomInset } = useSafeAreaInsets();
   const styles = useStyleSheet(
@@ -65,7 +68,11 @@ export const Q2WalletV4TourDrawer = ({
       {isDrawerOpen ? (
         <BottomSheetView style={styles.content}>
           <BottomSheetHeader />
-          <TrackScreen page={PAGE_TRACKING_Q2_WALLET_V4_TOUR} source="Portfolio" />
+          <TrackScreen
+            category={PAGE_TRACKING_Q2_WALLET_V4_TOUR}
+            source={source}
+            refreshSource={false}
+          />
           <Slides
             bounces={false}
             as={AnimatedGestureHandlerFlatList}
