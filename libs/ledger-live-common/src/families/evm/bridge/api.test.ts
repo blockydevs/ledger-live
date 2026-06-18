@@ -1,7 +1,7 @@
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { getCryptoAssetsStore, setCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import evmBridge, { computeIntentType, getAssetFromToken, getTokenFromAsset } from "./bridge";
+import evmBridge, { computeIntentType, getAssetFromToken, getTokenFromAsset } from "./api";
 
 describe("evm bridge", () => {
   const ethereum = getCryptoCurrencyById("ethereum");

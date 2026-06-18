@@ -6,7 +6,7 @@ import resolver from "@ledgerhq/coin-solana/hw-getAddress";
 import {
   solanaGetAddress,
   SolanaSigner as CoinFrameworkSolanaSigner,
-} from "@ledgerhq/live-common/bridge/generic-coin-framework/families/solana/signer";
+} from "@ledgerhq/live-common/families/solana/signer";
 import { getCoinFrameworkCurrencyBridge } from "@ledgerhq/live-common/bridge/generic-coin-framework/currencyBridge";
 import { getCoinFrameworkAccountBridge } from "@ledgerhq/live-common/bridge/generic-coin-framework/accountBridge";
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";

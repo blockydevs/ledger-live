@@ -2,7 +2,7 @@
 import type { AssetInfo } from "@ledgerhq/coin-module-framework/api/types";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { CryptoAssetsStore } from "@ledgerhq/types-live";
-import { getAssetFromToken, getTokenFromAsset, computeIntentType } from "./bridge";
+import { getAssetFromToken, getTokenFromAsset, computeIntentType } from "./api";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets/currencies";
 
 jest.mock("@ledgerhq/cryptoassets/state");

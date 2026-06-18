@@ -3,8 +3,8 @@ import Transport from "@ledgerhq/hw-transport";
 import { convertSecp256k1DERToRaw, normalizePublicKeyForAddress } from "@ledgerhq/coin-tezos/utils";
 import type { GetAddressFn } from "@ledgerhq/ledger-wallet-framework/bridge/getAddressWrapper";
 import type { SignerContext } from "@ledgerhq/ledger-wallet-framework/signer";
-import type { CoinFrameworkSigner } from "../../types";
-import { CreateSigner, executeWithSigner } from "../../../setup";
+import type { CoinFrameworkSigner } from "../../bridge/generic-coin-framework/types";
+import { CreateSigner, executeWithSigner } from "../../bridge/setup";
 
 // Re-exported from coin-tezos (single source of truth) so existing importers keep working.
 export { convertSecp256k1DERToRaw, normalizeTo32Bytes } from "@ledgerhq/coin-tezos/utils";

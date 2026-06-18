@@ -1,6 +1,6 @@
-import resolver from "../../../../families/stellar/getAddress";
-import { CreateSigner, executeWithSigner } from "../../../setup";
-import type { CoinFrameworkSigner } from "../../types";
+import resolver from "./getAddress";
+import { CreateSigner, executeWithSigner } from "../../bridge/setup";
+import type { CoinFrameworkSigner } from "../../bridge/generic-coin-framework/types";
 import Transport from "@ledgerhq/hw-transport";
 import Stellar from "@ledgerhq/hw-app-str";
 import { StrKey } from "@stellar/stellar-sdk";

@@ -1,6 +1,6 @@
-import resolver from "../../../../families/xrp/getAddress";
-import { executeWithSigner } from "../../../setup";
-import type { CoinFrameworkSigner } from "../../types";
+import resolver from "./getAddress";
+import { executeWithSigner } from "../../bridge/setup";
+import type { CoinFrameworkSigner } from "../../bridge/generic-coin-framework/types";
 import Xrp from "@ledgerhq/hw-app-xrp";
 import Transport from "@ledgerhq/hw-transport";
 

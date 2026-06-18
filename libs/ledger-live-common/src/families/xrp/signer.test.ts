@@ -3,7 +3,7 @@ import Xrp from "@ledgerhq/hw-app-xrp";
 import Transport from "@ledgerhq/hw-transport";
 
 jest.mock("@ledgerhq/hw-app-xrp");
-jest.mock("../../../../families/xrp/getAddress", () => jest.fn());
+jest.mock("./getAddress", () => jest.fn());
 
 const MockedXrp = Xrp as jest.MockedClass<typeof Xrp>;
 const mockTransport = {} as Transport;
