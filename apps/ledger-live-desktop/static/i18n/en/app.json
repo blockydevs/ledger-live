@@ -8908,7 +8908,7 @@
     "search": {
       "noAssetFound": "No asset found",
       "error": "Connection failed",
-      "cryptos": "Cryptos",
+      "cryptos": "Crypto",
       "stocks": "Stocks"
     },
     "history": {
