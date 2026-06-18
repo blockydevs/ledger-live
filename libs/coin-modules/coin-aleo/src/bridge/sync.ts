@@ -5,7 +5,7 @@ import {
   makeSync,
   mergeOps,
 } from "@ledgerhq/ledger-wallet-framework/bridge/jsHelpers";
-import { encodeAccountId } from "@ledgerhq/ledger-wallet-framework/account/accountId";
+import { encodeAccountId, getSyncHash } from "@ledgerhq/ledger-wallet-framework/account";
 import { log } from "@ledgerhq/logs";
 import { concat, merge, Observable, of } from "rxjs";
 import { concatMap } from "rxjs/operators";
@@ -59,7 +59,7 @@ const privateSyncInFlight = new Set<string>();
  */
 export async function performPublicSync(
   info: AccountShapeInfo<AleoAccount>,
-  _syncConfig: SyncConfig,
+  syncConfig: SyncConfig,
 ): Promise<Partial<AleoAccount>> {
   const { initialAccount, address, derivationMode, currency } = info;
   const viewKey = initialAccount ? extractViewKey(initialAccount) : undefined;
@@ -89,7 +89,10 @@ export async function performPublicSync(
   const isTokenMigrationRequired =
     config.enableTokens && initialAccount?.aleoResources?.hasMigratedPublicTokens !== true;
 
-  const shouldSyncFromScratch = !initialAccount;
+  // we should sync again when new tokens are added or blacklist changes
+  const syncHash = await getSyncHash(currency.id, syncConfig.blacklistedTokenIds);
+  const shouldSyncFromScratch = !initialAccount || syncHash !== initialAccount?.syncHash;
+
   const allOldOperations = shouldSyncFromScratch ? [] : (initialAccount?.operations ?? []);
 
   // Keep public and private ops separate so each cursor is derived from the correct op type.
@@ -130,9 +133,10 @@ export async function performPublicSync(
     ? latestAccountPublicOperations.operations
     : (mergeOps(oldPublicOps, filteredLatestPublicOperations) as AleoOperation[]);
 
-  // Preserve existing private operations so the public-only result is complete.
-  // They will be replaced by performPrivateSync when the private sync runs.
-  const preservedPrivateOps = shouldSyncFromScratch ? [] : (oldPrivateOps as AleoOperation[]);
+  // Empty when shouldSyncFromScratch = true because allOldOperations is reset above.
+  // Private ops for removed CAL tokens are cleared this way; private sync rebuilds
+  // the rest from scratch on the next emission.
+  const preservedPrivateOps = oldPrivateOps as AleoOperation[];
 
   const preservedPrivateBalance = initialAccount?.aleoResources?.privateBalance ?? null;
   const totalBalance = transparentBalance.plus(preservedPrivateBalance ?? 0);
@@ -180,6 +184,7 @@ export async function performPublicSync(
     operationsCount: operations.length,
     subAccounts,
     lastSyncDate: new Date(),
+    syncHash,
     aleoResources: {
       transparentBalance,
       provableApi: initialAccount?.aleoResources?.provableApi ?? null,
@@ -234,6 +239,7 @@ export async function performPrivateSync(
   onProgress?: (progress: number) => void,
   signal?: AbortSignal,
   publicSubAccounts?: TokenAccount[],
+  freshSyncHash?: string,
 ): Promise<Partial<AleoAccount> | null> {
   const { initialAccount, address, derivationMode, currency } = info;
   invariant(initialAccount, "aleo: performPrivateSync requires initialAccount");
@@ -294,9 +300,16 @@ export async function performPrivateSync(
   const latestBlock = await lastBlock(currency);
   const blockHeight = latestBlock?.height ?? initialAccount?.blockHeight ?? 0;
 
-  const allOldOperations = initialAccount.operations ?? [];
+  // When the public sync ran from scratch (e.g. CAL change), reset private cursor to 0
+  // so all records are re-fetched and patchPublicOperations can re-patch the full history.
+  // Without this, only incremental records are available and older ops lose their patching.
+  // currentSyncHash being defined means this is a chained public→private run (not standalone).
+  const publicSyncWasFromScratch = freshSyncHash && freshSyncHash !== initialAccount.syncHash;
+  const allOldOperations = publicSyncWasFromScratch ? [] : (initialAccount.operations ?? []);
   const [oldPrivateOps] = splitPrivateAndPublicOperations(allOldOperations);
-  const lastPrivateBlockHeight = oldPrivateOps[0]?.blockHeight ?? 0;
+  const lastPrivateBlockHeight = publicSyncWasFromScratch
+    ? 0
+    : (oldPrivateOps[0]?.blockHeight ?? 0);
 
   const hasMigratedPrivateTokens = initialAccount.aleoResources?.hasMigratedPrivateTokens ?? false;
   const tokenSyncStartHeight =
@@ -499,6 +512,7 @@ export async function performPrivateSync(
     operationsCount: finalOperations.length,
     lastSyncDate: initialAccount?.lastSyncDate,
     subAccounts,
+    syncHash: freshSyncHash ?? initialAccount?.syncHash,
     aleoResources: {
       transparentBalance,
       provableApi,
@@ -519,6 +533,7 @@ export function createPrivateSyncObservable(
   publicOps: AleoOperation[],
   freshTransparentBalance?: BigNumber,
   publicSubAccounts?: TokenAccount[],
+  freshSyncHash?: string,
 ): Observable<Partial<AleoAccount>> {
   const { initialAccount } = info;
   const currencyId = info.currency.id;
@@ -553,6 +568,7 @@ export function createPrivateSyncObservable(
       onProgress,
       controller.signal,
       publicSubAccounts,
+      freshSyncHash,
     )
       .then(result => {
         releaseLock();
@@ -649,6 +665,7 @@ export function buildSyncObservables(
               splitPrivateAndPublicOperations(publicResult.operations ?? [])[1] as AleoOperation[],
               publicResult.aleoResources?.transparentBalance,
               publicResult.subAccounts,
+              publicResult.syncHash,
             ),
           ),
         ),

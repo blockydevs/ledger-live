@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import * as coinFrameworkAccount from "@ledgerhq/ledger-wallet-framework/account";
 import { encodeAccountId } from "@ledgerhq/ledger-wallet-framework/account/accountId";
 import { log } from "@ledgerhq/logs";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
@@ -38,6 +39,10 @@ import {
 import { apiClient } from "../network/api";
 import { buildSyncObservables, makeGetAccountShape } from "./sync";
 
+jest.mock("@ledgerhq/ledger-wallet-framework/account", () => ({
+  ...jest.requireActual("@ledgerhq/ledger-wallet-framework/account"),
+  getSyncHash: jest.fn(),
+}));
 jest.mock("../logic");
 jest.mock("../network/utils");
 jest.mock("../network/api");
@@ -49,6 +54,7 @@ jest.mock("@ledgerhq/logs", () => ({
   log: jest.fn(),
 }));
 
+const mockGetSyncHash = jest.mocked(coinFrameworkAccount.getSyncHash);
 const mockGetBalance = jest.mocked(getBalance);
 const mockLastBlock = jest.mocked(lastBlock);
 const mockListOperations = jest.mocked(listOperations);
@@ -78,11 +84,13 @@ describe("sync.ts", () => {
     freshAddress: MOCK_ALEO_ADDRESS,
     id: mockLedgerAccountId,
   });
+  const mockSyncHash = "mock-sync-hash";
   const mockSyncConfig: SyncConfig = {
     paginationConfig: {},
   };
   const mockInitialAccount: AleoAccount = {
     ...getMockedAccount({ freshAddress: MOCK_ALEO_ADDRESS, id: mockLedgerAccountId }),
+    syncHash: mockSyncHash,
     aleoResources: {
       transparentBalance: new BigNumber(500000),
       provableApi: null,
@@ -94,6 +102,7 @@ describe("sync.ts", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetSyncHash.mockResolvedValue(mockSyncHash);
     coinConfig.setCoinConfig(() => mockConfig);
 
     mockGetBalance.mockResolvedValue([
@@ -639,6 +648,84 @@ describe("sync.ts", () => {
           preservedOp.extra.patched,
       ).toBe(true);
     });
+
+    it("should include syncHash in public sync result", async () => {
+      const result = await performPublicSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: mockInitialAccount,
+        },
+        mockSyncConfig,
+      );
+
+      expect(mockGetSyncHash).toHaveBeenCalledWith(mockCurrency.id, undefined);
+      expect(result.syncHash).toBe(mockSyncHash);
+    });
+
+    it("should reset public sync cursor when syncHash has changed", async () => {
+      mockGetSyncHash.mockResolvedValue("new-sync-hash");
+      const publicOp = getMockedOperation({
+        blockHeight: 900,
+        extra: { transactionType: "public", functionId: "transfer_public" },
+      });
+      const accountWithOldSyncHash = {
+        ...mockInitialAccount,
+        syncHash: "old-sync-hash",
+        operations: [publicOp],
+      };
+
+      await performPublicSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: accountWithOldSyncHash,
+        },
+        mockSyncConfig,
+      );
+
+      expect(mockListOperations).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.not.objectContaining({ cursor: expect.anything() }),
+        }),
+      );
+    });
+
+    it("should pass cursor when syncHash matches initial account", async () => {
+      const publicOp = getMockedOperation({
+        blockHeight: 12345,
+        extra: { transactionType: "public", functionId: "transfer_public" },
+      });
+      const accountWithMatchingSyncHash = {
+        ...mockInitialAccount,
+        syncHash: mockSyncHash,
+        operations: [publicOp],
+      };
+
+      await performPublicSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: accountWithMatchingSyncHash,
+        },
+        mockSyncConfig,
+      );
+
+      expect(mockListOperations).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({ cursor: "12345" }),
+        }),
+      );
+    });
   });
 
   describe("accessProvableApi handling", () => {
@@ -925,6 +1012,64 @@ describe("sync.ts", () => {
       expect(mockFetchAllOwnedRecords).toHaveBeenCalledWith(
         expect.objectContaining({ start: 9999 }),
       );
+    });
+
+    it("should reset private sync cursor to 0 when freshSyncHash differs from initialAccount.syncHash", async () => {
+      mockAccessProvableApi.mockResolvedValueOnce(configuredProvableApi);
+      const privateOp = getMockedOperation({
+        blockHeight: 9999,
+        extra: { transactionType: "private", functionId: "transfer_private" },
+      });
+      const accountWithOldSyncHash = {
+        ...mockInitialAccount,
+        syncHash: "old-sync-hash",
+        operations: [privateOp],
+      };
+
+      await performPrivateSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: accountWithOldSyncHash,
+        },
+        mockSyncConfig,
+        [],
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        "new-sync-hash",
+      );
+
+      expect(mockFetchAllOwnedRecords).toHaveBeenCalledWith(expect.objectContaining({ start: 0 }));
+    });
+
+    it("should persist freshSyncHash in private sync result", async () => {
+      mockAccessProvableApi.mockResolvedValueOnce(configuredProvableApi);
+      const freshSyncHash = "new-sync-hash";
+
+      const result = await performPrivateSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: mockInitialAccount,
+        },
+        mockSyncConfig,
+        [],
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        freshSyncHash,
+      );
+
+      expect(result?.syncHash).toBe(freshSyncHash);
     });
 
     it("should use 0 as start cursor when previous private op has undefined blockHeight", async () => {
