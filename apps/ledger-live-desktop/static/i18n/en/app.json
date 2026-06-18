@@ -74,6 +74,8 @@
   "common": {
     "never": "Never",
     "new": "New",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
     "skip": "Skip",
     "apply": "Apply",
     "done": "Done",
@@ -8789,8 +8791,6 @@
     "title": "Market",
     "genericError": "Connection failed",
     "cta": "View all",
-    "scrollLeft": "Scroll left",
-    "scrollRight": "Scroll right",
     "ranking": {
       "trending": "Trending",
       "gainers": "Gainers",

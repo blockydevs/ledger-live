@@ -24,4 +24,10 @@ export type StocksSectionViewProps = StocksSection & {
   onSeeAll: () => void;
   /** Header affordance to render. Defaults to "showMore". */
   headerVariant?: StocksHeaderVariant;
+  /** Extra class on the horizontal-scroll wrapper (e.g. negative margin to full-bleed in a padded popover). */
+  listClassName?: string;
+  /** Extra class on the inner scroll container (e.g. padding to keep items aligned when full-bleeding). */
+  scrollContainerClassName?: string;
+  /** Hide the scroll edge gradient (keeps the hover chevron). */
+  hideListGradient?: boolean;
 };
