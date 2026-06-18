@@ -383,7 +383,7 @@ export function useBalanceGraphViewModel({
   // distinct from a genuine 0% (flat or scrubbed back to the range start).
   const displayedPriceChangePercentage = scrubVariation
     ? scrubVariation.percentage
-    : priceChangePercentage ?? Number.NaN;
+    : (priceChangePercentage ?? Number.NaN);
 
   const displayedFormattedPriceChange = useMemo(() => {
     if (scrubVariation == null) return formattedPriceChange;

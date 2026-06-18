@@ -11,8 +11,7 @@ const SLIDES = [
   },
   {
     title: "One balance for each asset",
-    subtitle:
-      "Multi-chain assets like USDT are now shown as one total. Simple, accurate, clear.",
+    subtitle: "Multi-chain assets like USDT are now shown as one total. Simple, accurate, clear.",
   },
   {
     title: "Your returns, front and center",
@@ -24,7 +23,8 @@ const SLIDES = [
   },
   {
     title: "More protocols, more rewards",
-    subtitle: "Stablecoins and top picks, surfaced right in your wallet. Less searching. More deciding.",
+    subtitle:
+      "Stablecoins and top picks, surfaced right in your wallet. Less searching. More deciding.",
   },
 ] as const;
 

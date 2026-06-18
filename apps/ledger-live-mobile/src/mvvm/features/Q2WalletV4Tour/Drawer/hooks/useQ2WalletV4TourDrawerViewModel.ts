@@ -25,13 +25,7 @@ export const useQ2WalletV4TourDrawerViewModel = (): Q2WalletV4TourDrawerViewMode
     isClosingRef.current = false;
     currentIndexRef.current = 0;
     setIsDrawerOpen(true);
-    screen(
-      PAGE_TRACKING_Q2_WALLET_V4_TOUR,
-      undefined,
-      { source: "Debug" },
-      true,
-      false,
-    );
+    screen(PAGE_TRACKING_Q2_WALLET_V4_TOUR, undefined, { source: "Debug" }, true, false);
     track("product_tour_card", {
       page: PAGE_TRACKING_Q2_WALLET_V4_TOUR,
       card: 1,
