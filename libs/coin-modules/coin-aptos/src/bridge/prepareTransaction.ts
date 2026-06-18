@@ -7,8 +7,10 @@ import type { AptosAccount, Transaction } from "../types";
 import {
   APTOS_DELEGATION_RESERVE_IN_OCTAS,
   APTOS_MINIMUM_RESTAKE_IN_OCTAS,
+  DEFAULT_GAS,
+  DEFAULT_GAS_PRICE,
   MIN_COINS_ON_SHARES_POOL_IN_OCTAS,
-} from "./../constants";
+} from "../constants";
 import { getEstimatedGas } from "./getFeesForTransaction";
 import { getMaxSendBalance } from "./logic";
 
@@ -88,13 +90,29 @@ const prepareTransaction = async (
     const gasPrice = BigNumber(estimate.gasUnitPrice);
 
     if (transaction.useAllAmount) {
+      if (transaction.mode === "send") {
+        // For "use max" sends, reserve the default gas limit to avoid too-tight simulation estimates.
+        const maxGas = BigNumber(DEFAULT_GAS);
+        const maxGasPrice = BigNumber(DEFAULT_GAS_PRICE);
+
+        transaction.amount = tokenAccount
+          ? getMaxSendBalance(tokenAccount, account, maxGas, maxGasPrice)
+          : getMaxSendBalance(account, undefined, maxGas, maxGasPrice);
+        transaction.fees = maxGas.multipliedBy(maxGasPrice);
+        transaction.options = {
+          maxGasAmount: maxGas.toString(),
+          gasUnitPrice: maxGasPrice.toString(),
+        };
+        transaction.errors = errors;
+
+        return transaction;
+      }
+
       const maxAmount = tokenAccount
         ? getMaxSendBalance(tokenAccount, account, gas, gasPrice)
         : getMaxSendBalance(account, undefined, gas, gasPrice);
 
-      if (transaction.mode === "send") {
-        transaction.amount = maxAmount;
-      } else if (
+      if (
         transaction.mode === "restake" ||
         transaction.mode === "unstake" ||
         transaction.mode === "withdraw"
