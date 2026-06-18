@@ -1,6 +1,6 @@
+import React from "react";
 import { useLocation } from "react-router";
 import styled from "styled-components";
-
 const DEFAULT_DRAG_HEIGHT = 40;
 
 /** Matches Recover header top padding. */
