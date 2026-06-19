@@ -8909,6 +8909,12 @@
   },
   "topBar": {
     "searchPlaceholder": "Search assets",
+    "searchPlaceholders": {
+      "crypto": "Search crypto",
+      "stablecoins": "Search stablecoins",
+      "stock": "Search stocks",
+      "addresses": "Search addresses"
+    },
     "search": {
       "noAssetFound": "No asset found",
       "error": "Connection failed",
