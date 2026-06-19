@@ -218,7 +218,7 @@ function buildParentMap(ops: APIOperation[]): Map<number, APITransactionType> {
 function keepNativeOp(
   op: APIOperation,
   address: string,
-): op is APITransactionType | APIDelegationType | APIRevealType | APIStakingType | APIOriginationType {
+): op is ConvertibleOperation {
   if (
     !(
       isAPITransactionType(op) ||
