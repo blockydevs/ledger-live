@@ -1,70 +1,65 @@
 # Repo commands
 
-## Commands
+## Setup
 
-### Setup
+Regardless of where you're working setup is the same:
 
 ```bash
 mise install    # Install pinned Node, pnpm, and other tools (see mise.toml)
-pnpm i          # Install all dependencies
+pnpm install    # Install all dependencies
 ```
 
-Tip: use `pnpm i --ignore-scripts` to skip long or app-specific postinstall steps.
+Tip: you can use `pnpm install --ignore-scripts` if hitting issues with postinstall steps that are unrelated to your needs.
 
-### Development
+## Prefer local READMEs
 
-```bash
-pnpm dev:lld            # Start Ledger Live Desktop
-pnpm dev:llm:ios        # Start mobile on iOS
-pnpm dev:llm:android    # Start mobile on Android
-```
+Always assume commands and instructions in local README takes priority over the guidance given here.
+
+For example, [apps/ledger-live-mobile/README.md](../apps/ledger-live-mobile/README.md) provides better guidance to work on mobile than you will find here.
+
+## Common recipes
 
 ### Building
 
+If a specific dependency isn't rebuilding automatically\*, you can try this:
+
 ```bash
-pnpm build:lld                      # Build desktop (builds deps first via Nx)
-pnpm build:llm:deps                 # Build all mobile dependencies
-pnpm build:libs                     # Build all libs
-pnpm nx run <package-name>:build    # Build a specific lib
+pnpm nx run <package-name>:build
 ```
+
+_\*If you're running commands through Nx dependencies should be rebuilt automatically._
 
 ### Linting & typechecking
 
 ```bash
-pnpm lint                                 # Lint entire monorepo
-pnpm lint:fix                             # Lint + auto-fix
-pnpm typecheck                            # Typecheck entire monorepo
-pnpm desktop typecheck                    # Typecheck desktop only
-pnpm mobile typecheck                     # Typecheck mobile only
-pnpm --filter <package-name> typecheck    # Typecheck a specific lib
+pnpm lint:fix                           # Lint entire monorepo + auto-fix
+pnpm format                             # Format + auto-fix
+pnpm typecheck                          # Typecheck entire monorepo
+pnpm nx run <package-name>:typecheck    # Typecheck a specific lib
 ```
 
 ### Testing
 
+Test libs:
+
 ```bash
-# Desktop (run from repo root)
-pnpm nx run ledger-live-desktop:test:jest --with-deps    # Run Jest on desktop
-pnpm desktop test:jest "filename"                        # Just rerun a specific test file
+pnpm nx run <package-name>:test
+pnpm nx run <package-name>:test --watch
+```
 
-# Mobile (run from repo root)
-pnpm nx run live-mobile:test:jest --with-deps    # Run all mobile Jest tests
-pnpm mobile test:jest "filename"                 # Just rerun a specific test file
+Run all tests for a coin/bridge family:
 
-# Watch mode (preferred for agentic tasks)
-pnpm desktop test:jest:watch
-pnpm mobile test:jest:watch
-
-# Library
-pnpm nx test @ledgerhq/<package-name>
-pnpm nx test @ledgerhq/<package-name> --watch
-
-# Family (run all tests for a coin/bridge family)
+```bash
 pnpm test:family evm        # Runs @ledgerhq/coin-evm, @ledgerhq/coin-tester-evm,
-                            #   @ledgerhq/live-signer-evm, @ledgerhq/evm-tools,
-                            #   and generic-coin-framework tests inside @ledgerhq/live-common
+                                # @ledgerhq/live-signer-evm, @ledgerhq/evm-tools,
+                                # and generic-coin-framework tests inside @ledgerhq/live-common
 pnpm test:family bitcoin    # All bitcoin-related packages
 pnpm test:family solana     # All solana-related packages
 ```
+
+## CI checks
+
+You can read YAML in [.github/workflows](../.github/workflows/) to find exactly what runs in CI. This might be useful for validating complex changes.
 
 ## Nx, filtering and aliases
 
