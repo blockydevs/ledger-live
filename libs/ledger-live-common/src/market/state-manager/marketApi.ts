@@ -157,12 +157,8 @@ export const marketApi = createApi({
       keepUnusedDataFor: (REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH) / 1000,
     }),
     getTrendingPerformers: build.query<MarketItemPerformer[], TrendingPerformersQueryParams>({
-      // `/v3/currencies/trending` is only served by the staging countervalues API for now, so this
-      // endpoint targets the staging base via absolute URLs (fetchBaseQuery leaves them untouched).
       async queryFn({ counterCurrency }, _api, _extra, fetchWithBQ) {
-        const stagingBaseUrl = getEnv("LEDGER_COUNTERVALUES_API_STAGING");
-
-        const trendingResult = await fetchWithBQ(`${stagingBaseUrl}/v3/currencies/trending`);
+        const trendingResult = await fetchWithBQ("/v3/currencies/trending");
         if (trendingResult.error) return { error: trendingResult.error };
 
         const parsed = TrendingCurrenciesResponseSchema.safeParse(trendingResult.data);
@@ -184,7 +180,7 @@ export const marketApi = createApi({
         if (supportedIds.length === 0) return { data: [] };
 
         const marketsResult = await fetchWithBQ({
-          url: `${stagingBaseUrl}/v3/markets`,
+          url: "/v3/markets",
           params: {
             to: counterCurrency,
             ids: supportedIds.join(","),

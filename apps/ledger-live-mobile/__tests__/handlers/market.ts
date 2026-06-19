@@ -74,9 +74,7 @@ const marketsResolver = ({ request }: { request: Request }) => {
 
 const handlers = [
   http.get("https://countervalues.live.ledger.com/v3/markets", marketsResolver),
-  // The "trending" ranking is served only by the staging countervalues API.
-  http.get("https://countervalues-service.api.ledger-test.com/v3/markets", marketsResolver),
-  http.get("https://countervalues-service.api.ledger-test.com/v3/currencies/trending", () => {
+  http.get("https://countervalues.live.ledger.com/v3/currencies/trending", () => {
     return HttpResponse.json(marketsMock.slice(0, 7).map(({ id }) => ({ id, supported: true })));
   }),
   http.get("https://countervalues.live.ledger.com/v3/categories/trending", () => {

@@ -30,16 +30,12 @@ const handlers = [
   http.get("https://countervalues.live.ledger.com/v3/categories/trending", () => {
     return HttpResponse.json([]);
   }),
-  // `/v3/currencies/trending` is only served by the staging countervalues API.
-  http.get("https://countervalues-service.api.ledger-test.com/v3/currencies/trending", () => {
+  http.get("https://countervalues.live.ledger.com/v3/currencies/trending", () => {
     return HttpResponse.json([
       { id: "bitcoin", supported: true },
       { id: "ethereum", supported: true },
       { id: "solana", supported: true },
     ]);
-  }),
-  http.get("https://countervalues-service.api.ledger-test.com/v3/markets", () => {
-    return HttpResponse.json(MarketMockedResponse.marketList);
   }),
 ];
 
