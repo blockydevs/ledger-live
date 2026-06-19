@@ -36,6 +36,10 @@ let recipientAddress = "";
 let validatorAddress = "";
 async function getBondedValidator(): Promise<string> {
   const res = await fetch(`${LOCAL_LCD}/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Failed to query bonded validators (${res.status} ${res.statusText}): ${body}`);
+  }
   const data = (await res.json()) as { validators?: Array<{ operator_address?: string }> };
   const operators = (data.validators ?? [])
     .map(v => v.operator_address)
