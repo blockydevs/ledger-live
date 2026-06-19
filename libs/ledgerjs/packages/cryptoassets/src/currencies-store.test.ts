@@ -11,7 +11,7 @@ import {
   findCryptoCurrencyByManagerAppName,
 } from "./currencies";
 import {
-  CryptoCurrenciesStore,
+  type CryptoCurrenciesStore,
   getInjectedCurrenciesStore,
   setCryptoCurrenciesStore,
 } from "./currencies-store";
@@ -63,6 +63,8 @@ describe("currencies-store: no store injected (bundled fallback)", () => {
   it("accessors resolve against the bundled registry", () => {
     expect(getCryptoCurrencyById("bitcoin")).toMatchObject({ id: "bitcoin" });
     expect(hasCryptoCurrencyId("bitcoin")).toBe(true);
+    // Inherited Object.prototype keys are not currency ids (own-property check).
+    expect(hasCryptoCurrencyId("toString")).toBe(false);
     // The injected sentinels are absent from the bundled data.
     expect(findCryptoCurrencyById(prodActive.id)).toBeUndefined();
   });

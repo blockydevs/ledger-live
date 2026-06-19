@@ -28,7 +28,7 @@ import {
   ExplorerView,
   Unit,
 } from "@ledgerhq/types-cryptoassets";
-import { CryptoCurrenciesStore, getInjectedCurrenciesStore } from "./currencies-store";
+import { type CryptoCurrenciesStore, getInjectedCurrenciesStore } from "./currencies-store";
 
 /**
  * Make an ExplorerView for a Blockscout based explorer
@@ -5473,7 +5473,7 @@ export const findCryptoCurrencyByManagerAppName = (
  * @param {*} id
  */
 export const hasCryptoCurrencyId = (id: string): boolean =>
-  id in activeCurrenciesStore().cryptocurrenciesById;
+  Object.prototype.hasOwnProperty.call(activeCurrenciesStore().cryptocurrenciesById, id);
 
 export function getCryptoCurrencyById(id: string): CryptoCurrency {
   const currency = findCryptoCurrencyById(id);
