@@ -1491,7 +1491,7 @@
     "searchPlaceholders": {
       "crypto": "Search crypto",
       "stablecoins": "Search stablecoins",
-      "stock": "Search stock",
+      "stock": "Search stocks",
       "addresses": "Search addresses"
     },
     "sections": {
