@@ -8912,7 +8912,7 @@
     "searchPlaceholders": {
       "crypto": "Search crypto",
       "stablecoins": "Search stablecoins",
-      "stock": "Search stocks",
+      "stocks": "Search stocks",
       "addresses": "Search addresses"
     },
     "search": {

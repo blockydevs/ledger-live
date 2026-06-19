@@ -37,7 +37,7 @@ export function AnimatedSearchPlaceholder({ visible, cycling, testId }: Props) {
     () => [
       t("topBar.searchPlaceholders.crypto"),
       t("topBar.searchPlaceholders.stablecoins"),
-      t("topBar.searchPlaceholders.stock"),
+      t("topBar.searchPlaceholders.stocks"),
       t("topBar.searchPlaceholders.addresses"),
     ],
     [t],
@@ -49,8 +49,11 @@ export function AnimatedSearchPlaceholder({ visible, cycling, testId }: Props) {
   const [outgoingIndex, setOutgoingIndex] = useState<number | null>(null);
 
   if (prevIndexRef.current !== index) {
-    setOutgoingIndex(animate ? prevIndexRef.current : null);
+    setOutgoingIndex(prevIndexRef.current);
     prevIndexRef.current = index;
+  }
+  if (!animate && outgoingIndex !== null) {
+    setOutgoingIndex(null);
   }
 
   const transitioning = animate && outgoingIndex !== null;

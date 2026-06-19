@@ -15,7 +15,7 @@ type SearchInputViewProps = {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
   isOpen: boolean;
-  animatedTitle?: boolean;
+  animatedTitle: boolean;
   testId?: string;
 } & Omit<ComponentPropsWithoutRef<"div">, "onChange" | "onKeyDown">;
 

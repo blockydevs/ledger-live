@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 import { ledgerLivePreset } from "@ledgerhq/lumen-design-core";
 
+const SEARCH_PLACEHOLDER_SLIDE = "400ms cubic-bezier(0, 0, 0.58, 1) forwards";
+
 const config = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -22,10 +24,8 @@ const config = {
         },
       },
       animation: {
-        "search-placeholder-slide-in":
-          "search-placeholder-slide-in 400ms cubic-bezier(0, 0, 0.58, 1) forwards",
-        "search-placeholder-slide-out":
-          "search-placeholder-slide-out 400ms cubic-bezier(0, 0, 0.58, 1) forwards",
+        "search-placeholder-slide-in": `search-placeholder-slide-in ${SEARCH_PLACEHOLDER_SLIDE}`,
+        "search-placeholder-slide-out": `search-placeholder-slide-out ${SEARCH_PLACEHOLDER_SLIDE}`,
       },
     },
   },
