@@ -28,6 +28,7 @@ import {
   ExplorerView,
   Unit,
 } from "@ledgerhq/types-cryptoassets";
+import { CryptoCurrenciesStore, getInjectedCurrenciesStore } from "./currencies-store";
 
 /**
  * Make an ExplorerView for a Blockscout based explorer
@@ -5354,6 +5355,23 @@ export function registerCryptoCurrency(currency: CryptoCurrency): void {
   }
 }
 
+// The bundled registry: references (not copies) of the module structures populated above.
+// The arrays are filled in place by the init loop, so these references stay valid.
+const bundledCurrenciesStore: CryptoCurrenciesStore = {
+  cryptocurrenciesById,
+  cryptocurrenciesByScheme,
+  cryptocurrenciesByTicker,
+  cryptocurrenciesArray,
+  prodCryptoArray,
+  cryptocurrenciesArrayWithoutTerminated,
+  prodCryptoArrayWithoutTerminated,
+};
+
+// All registry accessors read from the injected store when present, else the bundled data.
+function activeCurrenciesStore(): CryptoCurrenciesStore {
+  return getInjectedCurrenciesStore() ?? bundledCurrenciesStore;
+}
+
 /**
  *
  * @param {*} withDevCrypto
@@ -5363,13 +5381,14 @@ export function listCryptoCurrencies(
   withDevCrypto = false,
   withTerminated = false,
 ): CryptoCurrency[] {
+  const store = activeCurrenciesStore();
   return withTerminated
     ? withDevCrypto
-      ? cryptocurrenciesArray
-      : prodCryptoArray
+      ? store.cryptocurrenciesArray
+      : store.prodCryptoArray
     : withDevCrypto
-      ? cryptocurrenciesArrayWithoutTerminated
-      : prodCryptoArrayWithoutTerminated;
+      ? store.cryptocurrenciesArrayWithoutTerminated
+      : store.prodCryptoArrayWithoutTerminated;
 }
 
 /**
@@ -5379,7 +5398,7 @@ export function listCryptoCurrencies(
 export function findCryptoCurrency(
   f: (arg0: CryptoCurrency) => boolean,
 ): CryptoCurrency | null | undefined {
-  return cryptocurrenciesArray.find(f);
+  return activeCurrenciesStore().cryptocurrenciesArray.find(f);
 }
 
 /**
@@ -5387,7 +5406,7 @@ export function findCryptoCurrency(
  * @param {*} scheme
  */
 export function findCryptoCurrencyByScheme(scheme: string): CryptoCurrency | null | undefined {
-  return cryptocurrenciesByScheme[scheme];
+  return activeCurrenciesStore().cryptocurrenciesByScheme[scheme];
 }
 
 /**
@@ -5395,22 +5414,22 @@ export function findCryptoCurrencyByScheme(scheme: string): CryptoCurrency | nul
  * @param {*} ticker
  */
 export function findCryptoCurrencyByTicker(ticker: string): CryptoCurrency | null | undefined {
-  return cryptocurrenciesByTicker[ticker];
+  return activeCurrenciesStore().cryptocurrenciesByTicker[ticker];
 }
 
 export function findCryptoCurrencyById(id: string): CryptoCurrency | undefined {
-  return cryptocurrenciesById[id];
+  return activeCurrenciesStore().cryptocurrenciesById[id];
 }
 
 const testsMap = {
-  keywords: s =>
+  keywords: (s: string) =>
     findCryptoCurrency(c =>
       Boolean(c?.keywords?.map(k => k.replace(/ /, "").toLowerCase()).includes(s)),
     ),
-  name: s => findCryptoCurrency(c => c.name.replace(/ /, "").toLowerCase() === s),
-  id: s => findCryptoCurrencyById(s.toLowerCase()),
-  ticker: s => findCryptoCurrencyByTicker(s.toUpperCase()),
-  manager: s => findCryptoCurrencyByManagerAppName(s),
+  name: (s: string) => findCryptoCurrency(c => c.name.replace(/ /, "").toLowerCase() === s),
+  id: (s: string) => findCryptoCurrencyById(s.toLowerCase()),
+  ticker: (s: string) => findCryptoCurrencyByTicker(s.toUpperCase()),
+  manager: (s: string) => findCryptoCurrencyByManagerAppName(s),
 };
 
 /**
@@ -5453,7 +5472,8 @@ export const findCryptoCurrencyByManagerAppName = (
  *
  * @param {*} id
  */
-export const hasCryptoCurrencyId = (id: string): boolean => id in cryptocurrenciesById;
+export const hasCryptoCurrencyId = (id: string): boolean =>
+  id in activeCurrenciesStore().cryptocurrenciesById;
 
 export function getCryptoCurrencyById(id: string): CryptoCurrency {
   const currency = findCryptoCurrencyById(id);
