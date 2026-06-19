@@ -148,6 +148,66 @@ describe("listPrivateOperations", () => {
     expect(result.operations).toEqual([mockOp]);
   });
 
+  it("should enrich fee_private records but not produce operations from them", async () => {
+    const record = getMockedRecord({
+      program_name: PROGRAM_ID.CREDITS,
+      function_name: EXPLORER_TRANSFER_TYPES.FEE_PRIVATE,
+    });
+    const mockEnriched = getMockedEnrichedPrivateRecord({ rawRecord: record });
+
+    mockEnrichPrivateRecord.mockResolvedValue(mockEnriched);
+
+    const result = await listPrivateOperations({
+      currency: mockCurrency,
+      viewKey: mockViewKey,
+      address: mockAddress,
+      ledgerAccountId: mockLedgerAccountId,
+      privateRecords: [record],
+    });
+
+    expect(mockEnrichPrivateRecord).toHaveBeenCalledTimes(1);
+    expect(mockToPrivateBridgeOperation).not.toHaveBeenCalled();
+    expect(result.operations).toEqual([]);
+  });
+
+  it("should collect consumed record tags from fee_private records even though they produce no operation", async () => {
+    const record = getMockedRecord({
+      program_name: PROGRAM_ID.CREDITS,
+      function_name: EXPLORER_TRANSFER_TYPES.FEE_PRIVATE,
+    });
+    const mockEnriched = getMockedEnrichedPrivateRecord({
+      rawRecord: { ...record, sender: mockAddress },
+      details: {
+        execution: { transitions: [] },
+        fee: {
+          transition: {
+            id: "au1fee",
+            scm: "s",
+            tcm: "t",
+            tpk: "tpk1",
+            inputs: [{ id: "in0", type: "record", tag: "fee-consumed-tag" }],
+            outputs: [],
+            program: "credits.aleo",
+            function: "fee_private",
+          },
+        },
+      },
+    });
+
+    mockEnrichPrivateRecord.mockResolvedValue(mockEnriched);
+
+    const result = await listPrivateOperations({
+      currency: mockCurrency,
+      viewKey: mockViewKey,
+      address: mockAddress,
+      ledgerAccountId: mockLedgerAccountId,
+      privateRecords: [record],
+    });
+
+    expect(result.operations).toEqual([]);
+    expect(result.consumedRecordTags).toEqual(new Set(["fee-consumed-tag"]));
+  });
+
   it("should call toPrivateBridgeOperation with ledgerAccountId, enriched record, and address", async () => {
     const record = getMockedRecord({
       program_name: PROGRAM_ID.CREDITS,
