@@ -48,11 +48,12 @@ export const useQuickActionsRowViewModel = (): QuickActionsRowViewModel => {
 
   const hasDevice = lastConnectedDevice !== null;
 
-  const recoverLabel = isBackupHubEnabled
-    ? t("myWallet.quickActions.backup")
-    : hasDevice
-      ? t("myWallet.quickActions.recover")
-      : t("myWallet.quickActions.backup");
+  let recoverLabel: string;
+  if (isBackupHubEnabled || !hasDevice) {
+    recoverLabel = t("myWallet.quickActions.backup");
+  } else {
+    recoverLabel = t("myWallet.quickActions.recover");
+  }
 
   let recoverIcon: TileButtonProps["icon"];
   if (isBackupHubEnabled) {
