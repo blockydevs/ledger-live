@@ -69,6 +69,14 @@ export type AleoTransactionIntentData =
       priorityFee?: bigint;
       executionId: string;
       record: AleoDecryptedRecordResponse;
+    }
+  | {
+      type: typeof TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC;
+      programId: string;
+    }
+  | {
+      type: typeof TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE;
+      programId: string;
     };
 
 export type AleoTransactionIntent = TransactionIntent<MemoNotSupported, AleoTransactionIntentData>;
