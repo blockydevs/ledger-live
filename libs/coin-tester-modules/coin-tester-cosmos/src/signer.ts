@@ -77,8 +77,11 @@ export async function buildSigner(): Promise<CosmosSigner> {
         bech32_address: toBech32(hrp, rawAddr),
         // signOperation.ts reads this as raw bytes
         // (Buffer.from(compressed_pk).toString("base64")). The interface types it
-        // as string; cast to `any` to match DmkSignerCosmos.ts:68.
-        compressed_pk: Buffer.from(compressedPubKey) as any,
+        // as string; cast through unknown to the declared field type to keep the
+        // runtime bytes while preserving the API surface (matches DmkSignerCosmos.ts:68).
+        compressed_pk: Buffer.from(
+          compressedPubKey,
+        ) as unknown as CosmosGetAddressAndPubKeyRes["compressed_pk"],
         return_code: SW_OK,
         error_message: "",
       };

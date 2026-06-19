@@ -1,6 +1,5 @@
 services:
   babylond:
-    container_name: babylond
     platform: linux/amd64
     image: coin-tester-babylond:latest
     build:
@@ -26,7 +25,6 @@ services:
     # Second validator. Shares the same image (built by the babylond service)
     # and the same /testnet volume — node 0's init populates both nodes'
     # genesis + config. No host port mapping; the scenario talks only to node 0.
-    container_name: babylond-node1
     platform: linux/amd64
     image: coin-tester-babylond:latest
     command: ["1"]

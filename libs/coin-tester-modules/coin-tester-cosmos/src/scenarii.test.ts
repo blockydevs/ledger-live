@@ -11,7 +11,7 @@ describe("Cosmos Deterministic Tester", () => {
     try {
       await executeScenario(BabylonScenario);
     } catch (e) {
-      if (e != "done") {
+      if (e !== "done") {
         await killBabylond();
         throw e;
       }
@@ -19,8 +19,10 @@ describe("Cosmos Deterministic Tester", () => {
   });
 });
 
-["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].map(e =>
-  process.on(e, async () => {
-    await killBabylond();
-  }),
-);
+// `exit` (and some signal paths) won't await pending promises, so the handler
+// must trigger teardown synchronously rather than awaiting it.
+["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(event => {
+  process.on(event, () => {
+    void killBabylond();
+  });
+});

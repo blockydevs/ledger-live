@@ -55,4 +55,3 @@ local node covers both broadcasting and history.
 
 - @ledgerhq/coin-tester
 - @ledgerhq/coin-cosmos
-- @ledgerhq/hw-app-cosmos
