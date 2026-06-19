@@ -2524,6 +2524,12 @@ importers:
       '@ledgerhq/cryptoassets':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/cryptoassets
+      '@ledgerhq/device-management-kit':
+        specifier: 'catalog:'
+        version: 1.7.1(rxjs@7.8.2)
+      '@ledgerhq/device-transport-kit-web-hid':
+        specifier: 'catalog:'
+        version: 1.2.4(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))(rxjs@7.8.2)
       '@ledgerhq/domain-service':
         specifier: workspace:^
         version: link:../../libs/domain-service
@@ -2536,18 +2542,6 @@ importers:
       '@ledgerhq/hw-ledger-key-ring-protocol':
         specifier: workspace:^
         version: link:../../libs/hw-ledger-key-ring-protocol
-      '@ledgerhq/hw-transport':
-        specifier: workspace:*
-        version: link:../../libs/ledgerjs/packages/hw-transport
-      '@ledgerhq/hw-transport-http':
-        specifier: workspace:^
-        version: link:../../libs/ledgerjs/packages/hw-transport-http
-      '@ledgerhq/hw-transport-web-ble':
-        specifier: workspace:^
-        version: link:../../libs/ledgerjs/packages/hw-transport-web-ble
-      '@ledgerhq/hw-transport-webhid':
-        specifier: workspace:^
-        version: link:../../libs/ledgerjs/packages/hw-transport-webhid
       '@ledgerhq/ledger-key-ring-protocol':
         specifier: workspace:^
         version: link:../../libs/ledger-key-ring-protocol
@@ -2563,6 +2557,9 @@ importers:
       '@ledgerhq/live-countervalues':
         specifier: workspace:^
         version: link:../../libs/live-countervalues
+      '@ledgerhq/live-dmk-shared':
+        specifier: workspace:^
+        version: link:../../libs/live-dmk-shared
       '@ledgerhq/live-env':
         specifier: workspace:^
         version: link:../../libs/env
