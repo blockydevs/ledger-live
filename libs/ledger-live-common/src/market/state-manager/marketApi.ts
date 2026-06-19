@@ -27,10 +27,8 @@ import { format, formatPerformer } from "../utils/currencyFormatter";
 
 const MAX_TRENDING_CATEGORIES = 5;
 
-// The /v3/markets endpoint only accepts these discrete `pageSize` values.
-const MARKET_PAGE_SIZES = [1, 5, 20, 50];
-const resolveMarketPageSize = (count: number): number =>
-  MARKET_PAGE_SIZES.find(size => size >= count) ?? MARKET_PAGE_SIZES[MARKET_PAGE_SIZES.length - 1];
+// The /v3/markets endpoint only accepts pageSize 1 / 5 / 20 / 50; 50 covers the trending list.
+const TRENDING_MARKETS_PAGE_SIZE = 50;
 
 export const marketApi = createApi({
   reducerPath: "marketApi",
@@ -184,7 +182,7 @@ export const marketApi = createApi({
           params: {
             to: counterCurrency,
             ids: supportedIds.join(","),
-            pageSize: resolveMarketPageSize(supportedIds.length),
+            pageSize: TRENDING_MARKETS_PAGE_SIZE,
           },
         });
         if (marketsResult.error) return { error: marketsResult.error };

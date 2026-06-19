@@ -283,7 +283,7 @@ describe("marketApi", () => {
       expect(url.searchParams.get("to")).toBe("usd");
       expect(url.searchParams.get("ids")).toBe("solana,bitcoin,ethereum");
       // pageSize must be one of the discrete values the API accepts (1/5/20/50).
-      expect(url.searchParams.get("pageSize")).toBe("5");
+      expect(url.searchParams.get("pageSize")).toBe("50");
     });
 
     it("returns an empty list and skips the markets call when no trending id is supported", async () => {
