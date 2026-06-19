@@ -20,10 +20,17 @@ import {
   MarketPerformersQueryParams,
   MarketTrendingCategory,
   TrendingCategoriesResponseSchema,
+  TrendingCurrenciesResponseSchema,
+  TrendingPerformersQueryParams,
 } from "./types";
 import { format, formatPerformer } from "../utils/currencyFormatter";
 
 const MAX_TRENDING_CATEGORIES = 5;
+
+// The /v3/markets endpoint only accepts these discrete `pageSize` values.
+const MARKET_PAGE_SIZES = [1, 5, 20, 50];
+const resolveMarketPageSize = (count: number): number =>
+  MARKET_PAGE_SIZES.find(size => size >= count) ?? MARKET_PAGE_SIZES[MARKET_PAGE_SIZES.length - 1];
 
 export const marketApi = createApi({
   reducerPath: "marketApi",
@@ -36,6 +43,7 @@ export const marketApi = createApi({
     MarketDataTags.ChartData,
     MarketDataTags.GlobalData,
     MarketDataTags.TrendingCategories,
+    MarketDataTags.TrendingPerformers,
   ],
   endpoints: build => ({
     getMarketPerformers: build.query<MarketItemPerformer[], MarketPerformersQueryParams>({
@@ -148,6 +156,57 @@ export const marketApi = createApi({
       },
       keepUnusedDataFor: (REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH) / 1000,
     }),
+    getTrendingPerformers: build.query<MarketItemPerformer[], TrendingPerformersQueryParams>({
+      // `/v3/currencies/trending` is only served by the staging countervalues API for now, so this
+      // endpoint targets the staging base via absolute URLs (fetchBaseQuery leaves them untouched).
+      async queryFn({ counterCurrency }, _api, _extra, fetchWithBQ) {
+        const stagingBaseUrl = getEnv("LEDGER_COUNTERVALUES_API_STAGING");
+
+        const trendingResult = await fetchWithBQ(`${stagingBaseUrl}/v3/currencies/trending`);
+        if (trendingResult.error) return { error: trendingResult.error };
+
+        const parsed = TrendingCurrenciesResponseSchema.safeParse(trendingResult.data);
+        if (!parsed.success) {
+          log("market", "Invalid trending currencies response schema:", {
+            errors: parsed.error.issues,
+          });
+          return {
+            error: {
+              status: "CUSTOM_ERROR",
+              error: `[Market API] Trending currencies schema validation failed: ${parsed.error.issues
+                .map(e => `${e.path.join(".")}: ${e.message}`)
+                .join(", ")}`,
+            },
+          };
+        }
+
+        const supportedIds = parsed.data.filter(currency => currency.supported).map(({ id }) => id);
+        if (supportedIds.length === 0) return { data: [] };
+
+        const marketsResult = await fetchWithBQ({
+          url: `${stagingBaseUrl}/v3/markets`,
+          params: {
+            to: counterCurrency,
+            ids: supportedIds.join(","),
+            pageSize: resolveMarketPageSize(supportedIds.length),
+          },
+        });
+        if (marketsResult.error) return { error: marketsResult.error };
+
+        const marketById = new Map(
+          (marketsResult.data as MarketItemResponse[]).map(item => [item.id, item]),
+        );
+        // Preserve the trending order returned by the API rather than the markets response order.
+        const data = supportedIds
+          .map(id => marketById.get(id))
+          .filter((item): item is MarketItemResponse => item !== undefined)
+          .map(formatPerformer);
+
+        return { data };
+      },
+      providesTags: [MarketDataTags.TrendingPerformers],
+      keepUnusedDataFor: REFETCH_TIME_ONE_MINUTE / 1000,
+    }),
   }),
 });
 
@@ -157,4 +216,5 @@ export const {
   useGetAssetChartDataQuery,
   useGetGlobalMarketDataQuery,
   useGetTrendingCategoriesQuery,
+  useGetTrendingPerformersQuery,
 } = marketApi;
