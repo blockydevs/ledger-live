@@ -2548,9 +2548,6 @@ importers:
       '@ledgerhq/hw-transport-webhid':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/hw-transport-webhid
-      '@ledgerhq/hw-transport-webusb':
-        specifier: workspace:^
-        version: link:../../libs/ledgerjs/packages/hw-transport-webusb
       '@ledgerhq/ledger-key-ring-protocol':
         specifier: workspace:^
         version: link:../../libs/ledger-key-ring-protocol
