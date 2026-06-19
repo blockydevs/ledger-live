@@ -2,9 +2,10 @@ FROM --platform=linux/amd64 babylonlabs/babylond:v4.3.0
 
 USER root
 
-# jq patches genesis; bash runs the entrypoint (shebang #!/bin/bash + $SECONDS,
-# which busybox ash would break); wget backs the docker-compose healthcheck so
-# the image is self-contained (not relying on the base's busybox applet).
+# jq patches genesis; bash runs the entrypoint (shebang #!/bin/bash + `set -o
+# pipefail`, which busybox ash would break); wget backs the docker-compose
+# healthcheck so the image is self-contained (not relying on the base's busybox
+# applet).
 # babylonlabs/babylond:v4.3.0 is Alpine-based (apk); branch on apt-get so the
 # image keeps building if upstream ever switches base.
 RUN if command -v apk >/dev/null 2>&1; then \

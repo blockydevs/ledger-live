@@ -2,6 +2,7 @@ import { rawSecp256k1PubkeyToRawAddress } from "@cosmjs/amino";
 import {
   Bip39,
   EnglishMnemonic,
+  Random,
   Secp256k1,
   Secp256k1Signature,
   sha256,
@@ -17,7 +18,6 @@ import {
   CosmosSignature,
   CosmosSigner,
 } from "@ledgerhq/coin-cosmos/types/signer";
-import { DEV_MNEMONIC } from "./helpers";
 
 const SW_OK = 0x9000;
 
@@ -33,39 +33,41 @@ function applyCosmosHardening(path: number[]) {
   );
 }
 
-// BIP-39 seed derivation is PBKDF2 (expensive) and the mnemonic is fixed, so
-// compute the seed once and reuse it across every derivation/sign.
-let seedPromise: Promise<Uint8Array> | undefined;
-function getSeed(): Promise<Uint8Array> {
-  if (!seedPromise) {
-    seedPromise = Bip39.mnemonicToSeed(new EnglishMnemonic(DEV_MNEMONIC));
+// Like the device, the tester signs from a single seed for the whole run. The
+// seed is generated once per buildSigner() — random by default so each run
+// uses a fresh account (matching the other coin-testers), but accepts a fixed
+// mnemonic so unit tests can pin a known derivation vector. The devnet funds
+// whatever address this derives (see scenarii/*.ts → DEV_ADDRESS env), so the
+// seed never needs to match anything hardcoded on the chain side.
+//
+// BIP-39 seed derivation is PBKDF2 (expensive), so compute it once and reuse
+// it across every derivation/sign for the lifetime of this signer.
+export async function buildSigner(mnemonic?: string): Promise<CosmosSigner> {
+  const phrase = mnemonic
+    ? new EnglishMnemonic(mnemonic)
+    : Bip39.encode(Random.getBytes(32));
+  const seed = await Bip39.mnemonicToSeed(phrase);
+
+  async function deriveFromNumberPath(path: number[]): Promise<DerivedKey> {
+    const { privkey } = Slip10.derivePath(
+      Slip10Curve.Secp256k1,
+      seed,
+      applyCosmosHardening(path),
+    );
+    const { pubkey } = await Secp256k1.makeKeypair(privkey);
+    return { privKey: privkey, compressedPubKey: Secp256k1.compressPubkey(pubkey) };
   }
-  return seedPromise;
-}
 
-async function deriveFromNumberPath(path: number[]): Promise<DerivedKey> {
-  const seed = await getSeed();
-  const { privkey } = Slip10.derivePath(
-    Slip10Curve.Secp256k1,
-    seed,
-    applyCosmosHardening(path),
-  );
-  const { pubkey } = await Secp256k1.makeKeypair(privkey);
-  return { privKey: privkey, compressedPubKey: Secp256k1.compressPubkey(pubkey) };
-}
+  async function deriveFromStringPath(path: string): Promise<DerivedKey> {
+    const { privkey } = Slip10.derivePath(
+      Slip10Curve.Secp256k1,
+      seed,
+      stringToPath(path.startsWith("m/") ? path : `m/${path}`),
+    );
+    const { pubkey } = await Secp256k1.makeKeypair(privkey);
+    return { privKey: privkey, compressedPubKey: Secp256k1.compressPubkey(pubkey) };
+  }
 
-async function deriveFromStringPath(path: string): Promise<DerivedKey> {
-  const seed = await getSeed();
-  const { privkey } = Slip10.derivePath(
-    Slip10Curve.Secp256k1,
-    seed,
-    stringToPath(path.startsWith("m/") ? path : `m/${path}`),
-  );
-  const { pubkey } = await Secp256k1.makeKeypair(privkey);
-  return { privKey: privkey, compressedPubKey: Secp256k1.compressPubkey(pubkey) };
-}
-
-export async function buildSigner(): Promise<CosmosSigner> {
   return {
     async getAddressAndPubKey(
       path: number[],

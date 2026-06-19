@@ -18,8 +18,9 @@ export async function spawnBabylond(): Promise<void> {
   console.log("Starting babylond...");
   // `--build` keeps the image in sync with babylond.Dockerfile + entrypoint.sh
   // edits. Docker's layer cache makes this near-instant when nothing changed;
-  // without it, a stale image silently runs the previous entrypoint and the
-  // 2-node devnet either races on /testnet/node0 or skips node 1 entirely.
+  // without it, a stale image silently runs the previous entrypoint against a
+  // fresh genesis (e.g. wrong denom / missing dev account → the scenario fails
+  // confusingly instead of at the build).
   await compose.upAll({
     ...composeOptions,
     commandOptions: ["--wait", "--build"],

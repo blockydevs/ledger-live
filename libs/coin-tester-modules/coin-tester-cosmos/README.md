@@ -1,48 +1,59 @@
 # @ledgerhq/coin-tester-cosmos
 
-This package contains the deterministic testing infrastructure for Cosmos-SDK
-chains in Ledger Live. The first scenario exercises Babylon (`BABY`), reusing
-the cosmos coin module end to end.
+This package contains the testing infrastructure for Cosmos-SDK chains in Ledger
+Live, reusing the cosmos coin module end to end against local devnets. Two
+scenarios run:
+
+- **Cosmos Hub (`ATOM`)** — the canonical, non-epoched cosmos chain
+- **Babylon (`BABY`)** — an `x/epoching`-wrapped chain
 
 ## Features
 
-- Deterministic Babylon (`BABY`) scenario covering send, delegate, and claim
-  rewards end to end against a local node
+- Each scenario covers send, delegate, and claim rewards end to end against a
+  local node
 - Babylon staking is `x/epoching`-wrapped; the wrapped **delegate** is exercised
-  here. Wrapped **undelegate / redelegate** are crafted correctly but don't yet
+  there. Wrapped **undelegate / redelegate** are crafted correctly but don't yet
   execute on the devnet (accepted into a block but no-op at the epoch boundary —
   see the note in `src/scenarii/Babylon.ts`), so they're omitted pending a
-  follow-up investigation
-- Local software signer written in TypeScript (matches the DMK signer's wire output)
-- Docker-based two-validator `babylond` devnet (both validators are needed for
-  consensus) with a short epoch interval for fast tests
+  follow-up investigation. Cosmos Hub staking is immediate (no epoching)
+- Local software signer written in TypeScript (matches the DMK signer's wire
+  output). It generates a **fresh random seed each run**; the devnet pre-funds
+  whatever address it derives by reading `DEV_ADDRESS` from the environment at
+  genesis (see `src/scenarii/*.ts` and the entrypoints). Derivation correctness
+  is pinned separately by a fixed-vector unit test in `src/signer.test.ts`
+- Docker-based devnets: a single-validator `gaiad` node and a single-validator
+  `babylond` node (the latter with a short epoch interval for fast tests)
 
 ## Usage
 
 ```typescript
 import { executeScenario } from "@ledgerhq/coin-tester/main";
+import { CosmosScenario } from "@ledgerhq/coin-tester-cosmos/scenarii/Cosmos";
 import { BabylonScenario } from "@ledgerhq/coin-tester-cosmos/scenarii/Babylon";
 
+await executeScenario(CosmosScenario);
 await executeScenario(BabylonScenario);
 ```
 
 ## Development
 
-Run the scenario with `pnpm start`. The script spins up the Docker devnet, runs
-the Jest test, then tears the devnet down.
+Run the scenarios with `pnpm start`. The script spins up each Docker devnet,
+runs the Jest test, then tears the devnet down.
 
 ### Devnet topology
 
-`docker-compose.yml` brings up two `babylond` services that share a single
-named volume:
+Both are single-`gaiad`/`babylond`-service devnets: one validator with 100%
+voting power reaches the 2/3 quorum and finalises blocks alone, so no peering is
+needed. State lives in the container filesystem and is discarded on teardown.
 
-- `babylond` (node 0) — exposes LCD (1317), Tendermint RPC (26657), gRPC (9090)
-- `babylond-node1` — internal only, peers with node 0 over the compose network
+- **Cosmos Hub** (`docker-compose.gaia.yml`) — `gaiad init` + a self-delegation
+  gentx.
+- **Babylon** (`docker-compose.yml`) — `babylond testnet --v 1` bootstraps the
+  validator keys (cosmos + BLS) and a complete Babylon genesis in one call; the
+  entrypoint then patches a short epoch interval for fast tests.
 
-`babylond testnet --v 2` splits voting power evenly between the two validators,
-so both nodes must be online for Tendermint to reach the 2/3 quorum. node 0's
-entrypoint runs the chain init (genesis, dev account, epoch interval, peer
-discovery), then node 1 waits for the shared volume to be populated and starts.
+Each entrypoint funds the tester's dev account at genesis from the
+`DEV_ADDRESS` the scenario derives and exports before `compose up`.
 
 ### Why no mock indexer
 

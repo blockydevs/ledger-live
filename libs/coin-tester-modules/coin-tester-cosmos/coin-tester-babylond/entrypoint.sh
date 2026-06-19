@@ -1,22 +1,21 @@
 #!/bin/bash
 set -euo pipefail
 
-# Two-validator devnet. With `--v 2` Tendermint splits voting power 50/50, so
-# both nodes must be online for consensus to make progress (neither alone
-# reaches 2/3). Each node starts from this entrypoint with its index as the
-# only argument.
-NODE_INDEX="${1:-0}"
+# Single-validator devnet. One validator holds 100% of the voting power, so it
+# reaches the 2/3 quorum and finalises blocks on its own — no second node, P2P
+# peering, or genesis sharing needed.
 CHAIN_ID="bbn-devnet"
 TESTNET_DIR="/testnet"
-HOME_DIR="$TESTNET_DIR/node${NODE_INDEX}/babylond"
+HOME_DIR="$TESTNET_DIR/node0/babylond"
 KEYRING="test"
 DENOM="ubbn"
-INIT_LOCK="$TESTNET_DIR/.init.done"
 
-# Deterministic dev mnemonic — the tester's software signer derives its
-# account from the same one. Well-known BIP-39 test vector. Mirrored
-# verbatim in src/helpers.ts — when changing one, change both.
-DEV_MNEMONIC="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+# Address to pre-fund at genesis. The tester generates a fresh random seed each
+# run (src/signer.ts), derives this address, and passes it in via the
+# DEV_ADDRESS env (docker-compose.yml → scenarii/Babylon.ts). We fund the raw
+# address directly — no need to recover the seed inside the container, since
+# the tester's software signer (not babylond) does the signing.
+DEV_ADDRESS="${DEV_ADDRESS:?DEV_ADDRESS must be set (the tester-derived bbn1… address to fund at genesis)}"
 
 # Clear any inherited BLS password so it can't shadow the password file handed
 # to `start` below. `babylond testnet` writes an EIP-2335-encrypted bls_key.json
@@ -25,79 +24,42 @@ DEV_MNEMONIC="abandon abandon abandon abandon abandon abandon abandon abandon ab
 # set, `start` decrypts with it instead and panics with "invalid checksum".
 unset BABYLON_BLS_PASSWORD
 
-# Only node 0 runs chain init. node 1 waits for the shared volume to be
-# populated. INIT_LOCK is the handshake.
-if [ "$NODE_INDEX" = "0" ] && [ ! -f "$INIT_LOCK" ]; then
-  # `babylond testnet --v 2` bootstraps a 2-validator chain in one call:
-  # generates validator keys (cosmos + BLS) for both nodes, funds them, creates
-  # gentxs, collects them, and writes complete per-node genesis files with all
-  # Babylon-specific module schemas (mint, btccheckpoint, btclightclient,
-  # finality, btcstaking) populated correctly. Using this avoids re-implementing
-  # Babylon's e2e/initialization Go logic in shell.
-  babylond testnet \
-    --v 2 \
-    --chain-id "$CHAIN_ID" \
-    --output-dir "$TESTNET_DIR" \
-    --keyring-backend "$KEYRING" \
-    --time-between-blocks-seconds 1 \
-    --btc-network regtest
+# `babylond testnet --v 1` bootstraps a single-validator chain in one call:
+# generates the validator keys (cosmos + BLS), funds them, creates the gentx,
+# collects it, and writes a complete genesis with all Babylon-specific module
+# schemas (mint, btccheckpoint, btclightclient, finality, btcstaking) populated
+# correctly. Using this avoids re-implementing Babylon's e2e/initialization Go
+# logic in shell.
+babylond testnet \
+  --v 1 \
+  --chain-id "$CHAIN_ID" \
+  --output-dir "$TESTNET_DIR" \
+  --keyring-backend "$KEYRING" \
+  --time-between-blocks-seconds 1 \
+  --btc-network regtest
 
-  # Add a deterministic dev account on top of what testnet created. This is
-  # the account the software signer will use. add-genesis-account mutates only
-  # auth + bank balances — safe to call after testnet has finalized gentxs.
-  printf "%s\n\n" "$DEV_MNEMONIC" \
-    | babylond keys add dev --recover --keyring-backend "$KEYRING" --home "$HOME_DIR"
-  babylond add-genesis-account dev "1000000000000${DENOM}" \
-    --keyring-backend "$KEYRING" --home "$HOME_DIR"
+# Add the tester's dev account on top of what testnet created. The address is
+# supplied by the tester (DEV_ADDRESS); add-genesis-account accepts a raw
+# bech32 address as well as a key name, so no key import is needed. It mutates
+# only auth + bank balances — safe to call after testnet has finalized gentxs.
+babylond add-genesis-account "$DEV_ADDRESS" "1000000000000${DENOM}" \
+  --home "$HOME_DIR"
 
-  # The ONLY app_state mutation we need: short epoch so wait-for-epoch in the
-  # scenario completes in seconds, not minutes. Everything else stays at the
-  # values Babylon itself writes — no risk of schema drift.
-  GENESIS="$HOME_DIR/config/genesis.json"
-  TMP="$GENESIS.tmp"
-  jq '.app_state.epoching.params.epoch_interval = "10"' "$GENESIS" > "$TMP" && mv "$TMP" "$GENESIS"
+# The ONLY app_state mutation we need: short epoch so wait-for-epoch in the
+# scenario completes in seconds, not minutes. Everything else stays at the
+# values Babylon itself writes — no risk of schema drift.
+GENESIS="$HOME_DIR/config/genesis.json"
+TMP="$GENESIS.tmp"
+jq '.app_state.epoching.params.epoch_interval = "10"' "$GENESIS" > "$TMP" && mv "$TMP" "$GENESIS"
 
-  # Propagate node 0's mutated genesis (dev account + short epoch) to node 1.
-  # `babylond testnet` writes each node's own genesis; without this copy node 1
-  # would refuse to peer (different AppHash → consensus failure).
-  cp "$GENESIS" "$TESTNET_DIR/node1/babylond/config/genesis.json"
-
-  # Mesh node 0 ↔ node 1 over P2P so Tendermint reaches the 2/3 quorum.
-  NODE0_ID=$(babylond tendermint show-node-id --home "$TESTNET_DIR/node0/babylond")
-  NODE1_ID=$(babylond tendermint show-node-id --home "$TESTNET_DIR/node1/babylond")
-
-  for i in 0 1; do
-    APP_TOML="$TESTNET_DIR/node${i}/babylond/config/app.toml"
-    CONFIG_TOML="$TESTNET_DIR/node${i}/babylond/config/config.toml"
-
-    # Expose LCD + Tendermint RPC on all interfaces (default binds to localhost
-    # inside the container, which the host port-forward can't reach).
-    sed -i 's|^enable = false|enable = true|' "$APP_TOML"
-    sed -i 's|address = "tcp://localhost:1317"|address = "tcp://0.0.0.0:1317"|' "$APP_TOML"
-    sed -i 's|^enabled-unsafe-cors = false|enabled-unsafe-cors = true|' "$APP_TOML"
-    sed -i 's|laddr = "tcp://127.0.0.1:26657"|laddr = "tcp://0.0.0.0:26657"|' "$CONFIG_TOML"
-  done
-
-  # Hostnames are the docker-compose service names (babylond, babylond-node1).
-  sed -i "s|^persistent_peers = .*|persistent_peers = \"${NODE1_ID}@babylond-node1:26656\"|" \
-    "$TESTNET_DIR/node0/babylond/config/config.toml"
-  sed -i "s|^persistent_peers = .*|persistent_peers = \"${NODE0_ID}@babylond:26656\"|" \
-    "$TESTNET_DIR/node1/babylond/config/config.toml"
-
-  touch "$INIT_LOCK"
-elif [ "$NODE_INDEX" = "1" ]; then
-  echo "node1: waiting for node0 to finalize chain init..."
-  # Fail fast if node 0 never finishes init; otherwise this container would
-  # hang indefinitely and hide the real error in node 0's logs.
-  WAIT_DEADLINE=$((SECONDS + 120))
-  until [ -f "$INIT_LOCK" ]; do
-    if [ "$SECONDS" -gt "$WAIT_DEADLINE" ]; then
-      echo "node1: timed out after 120s waiting for node 0 to finish init" >&2
-      exit 1
-    fi
-    sleep 1
-  done
-fi
+# Expose LCD + Tendermint RPC on all interfaces (default binds to localhost
+# inside the container, which the host port-forward can't reach).
+APP_TOML="$HOME_DIR/config/app.toml"
+CONFIG_TOML="$HOME_DIR/config/config.toml"
+sed -i 's|^enable = false|enable = true|' "$APP_TOML"
+sed -i 's|address = "tcp://localhost:1317"|address = "tcp://0.0.0.0:1317"|' "$APP_TOML"
+sed -i 's|^enabled-unsafe-cors = false|enabled-unsafe-cors = true|' "$APP_TOML"
+sed -i 's|laddr = "tcp://127.0.0.1:26657"|laddr = "tcp://0.0.0.0:26657"|' "$CONFIG_TOML"
 
 # `babylond testnet` writes bls_key.json AND a sibling bls_password.txt with
 # the password it used to encrypt the key (EIP-2335 format). Point start at
