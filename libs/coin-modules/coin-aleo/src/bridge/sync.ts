@@ -234,16 +234,25 @@ export function createPublicSyncObservable(
  * @param freshTransparentBalance - The transparent balance from the current
  *   public sync cycle. Used to compute the correct total balance.
  */
-export async function performPrivateSync(
-  info: AccountShapeInfo<AleoAccount>,
-  _syncConfig: SyncConfig,
-  currentPublicOps: AleoOperation[],
-  freshTransparentBalance?: BigNumber,
-  onProgress?: (progress: number) => void,
-  signal?: AbortSignal,
-  publicSubAccounts?: TokenAccount[],
-  freshSyncHash?: string,
-): Promise<Partial<AleoAccount> | null> {
+export async function performPrivateSync({
+  info,
+  syncConfig: _syncConfig,
+  currentPublicOps,
+  freshTransparentBalance,
+  onProgress,
+  signal,
+  publicSubAccounts,
+  freshSyncHash,
+}: {
+  info: AccountShapeInfo<AleoAccount>;
+  syncConfig: SyncConfig;
+  currentPublicOps: AleoOperation[];
+  freshTransparentBalance?: BigNumber | undefined;
+  onProgress?: ((progress: number) => void) | undefined;
+  signal?: AbortSignal | undefined;
+  publicSubAccounts?: TokenAccount[] | undefined;
+  freshSyncHash?: string | undefined;
+}): Promise<Partial<AleoAccount> | null> {
   const { initialAccount, address, derivationMode, currency } = info;
   invariant(initialAccount, "aleo: performPrivateSync requires initialAccount");
 
@@ -563,16 +572,16 @@ export function createPrivateSyncObservable(
         }
       : undefined;
 
-    performPrivateSync(
+    performPrivateSync({
       info,
       syncConfig,
-      publicOps,
+      currentPublicOps: publicOps,
       freshTransparentBalance,
       onProgress,
-      controller.signal,
+      signal: controller.signal,
       publicSubAccounts,
       freshSyncHash,
-    )
+    })
       .then(result => {
         releaseLock();
         if (result) {
