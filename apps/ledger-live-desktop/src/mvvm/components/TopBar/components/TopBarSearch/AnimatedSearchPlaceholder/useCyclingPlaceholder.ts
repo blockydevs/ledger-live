@@ -5,7 +5,7 @@ export const PLACEHOLDER_INTERVAL_MS = 7000;
 function usePrefersReducedMotion(): boolean {
   const queryRef = useRef<MediaQueryList | null>(null);
   if (queryRef.current === null) {
-    queryRef.current = window.matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
+    queryRef.current = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
   }
   const [reduced, setReduced] = useState(() => queryRef.current?.matches ?? false);
 
