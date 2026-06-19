@@ -89,8 +89,11 @@ export async function performPublicSync(
   const isTokenMigrationRequired =
     config.enableTokens && initialAccount?.aleoResources?.hasMigratedPublicTokens !== true;
 
-  // we should sync again when new tokens are added or blacklist changes
-  const syncHash = await getSyncHash(currency.id, syncConfig.blacklistedTokenIds);
+  // Sync hash tracks CAL + blacklist; only meaningful when tokens are enabled.
+  // When disabled, preserve the stored hash so CAL changes don't trigger unnecessary full re-syncs.
+  const syncHash = config.enableTokens
+    ? await getSyncHash(currency.id, syncConfig.blacklistedTokenIds)
+    : initialAccount?.syncHash;
   const shouldSyncFromScratch = !initialAccount || syncHash !== initialAccount?.syncHash;
 
   const allOldOperations = shouldSyncFromScratch ? [] : (initialAccount?.operations ?? []);
@@ -303,7 +306,7 @@ export async function performPrivateSync(
   // When the public sync ran from scratch (e.g. CAL change), reset private cursor to 0
   // so all records are re-fetched and patchPublicOperations can re-patch the full history.
   // Without this, only incremental records are available and older ops lose their patching.
-  // currentSyncHash being defined means this is a chained public→private run (not standalone).
+  // freshSyncHash being defined means this is a chained public→private run (not standalone).
   const publicSyncWasFromScratch = freshSyncHash && freshSyncHash !== initialAccount.syncHash;
   const allOldOperations = publicSyncWasFromScratch ? [] : (initialAccount.operations ?? []);
   const [oldPrivateOps] = splitPrivateAndPublicOperations(allOldOperations);

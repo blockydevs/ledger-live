@@ -649,7 +649,43 @@ describe("sync.ts", () => {
       ).toBe(true);
     });
 
-    it("should include syncHash in public sync result", async () => {
+    it("should not trigger full re-sync on CAL change when tokens are disabled", async () => {
+      const publicOp = getMockedOperation({
+        blockHeight: 900,
+        extra: { transactionType: "public", functionId: "transfer_public" },
+      });
+      const accountWithStoredHash = {
+        ...mockInitialAccount,
+        syncHash: "stored-hash",
+        operations: [publicOp],
+      };
+
+      mockGetSyncHash.mockResolvedValue("cal-changed-hash");
+
+      const result = await performPublicSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: accountWithStoredHash,
+        },
+        mockSyncConfig,
+      );
+
+      expect(mockGetSyncHash).not.toHaveBeenCalled();
+      expect(result.syncHash).toBe(accountWithStoredHash.syncHash);
+      expect(mockListOperations).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({ cursor: publicOp.blockHeight?.toString() }),
+        }),
+      );
+    });
+
+    it("should call getSyncHash and include result as syncHash when tokens are enabled", async () => {
+      coinConfig.setCoinConfig(() => mockConfigWithTokens);
+
       const result = await performPublicSync(
         {
           index: mockAccount.index,
@@ -666,7 +702,8 @@ describe("sync.ts", () => {
       expect(result.syncHash).toBe(mockSyncHash);
     });
 
-    it("should reset public sync cursor when syncHash has changed", async () => {
+    it("should reset public sync cursor when syncHash has changed (tokens enabled)", async () => {
+      coinConfig.setCoinConfig(() => mockConfigWithTokens);
       mockGetSyncHash.mockResolvedValue("new-sync-hash");
       const publicOp = getMockedOperation({
         blockHeight: 900,
