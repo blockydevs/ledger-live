@@ -3,6 +3,7 @@ import { Order } from "@ledgerhq/live-common/market/utils/types";
 import { useMarket } from "../useMarket";
 import { addStarredMarketCoins } from "~/renderer/actions/settings";
 import { INITIAL_STATE as SETTINGS_INITIAL_STATE } from "~/renderer/reducers/settings";
+import { track } from "~/renderer/analytics/segment";
 
 jest.mock("@ledgerhq/live-common/market/hooks/useMarketDataProvider", () => ({
   useMarketData: () => ({
@@ -149,6 +150,38 @@ describe("useMarket", () => {
 
       await waitFor(() => {
         expect(result.current.starredMarketCoins).not.toContain("ethereum");
+      });
+    });
+
+    it("toggleStar tracks favourite button clicks", async () => {
+      const { result } = renderHook(() => useMarket(), {
+        initialState: {
+          ...withFlagOverrides({ lldRefreshMarketData: { enabled: false } }),
+          settings: createSettingsState([]),
+          market: createMarketState([]),
+        },
+      });
+
+      await act(async () => {
+        result.current.toggleStar("ethereum", false);
+      });
+
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "favourite",
+        currency: "ethereum",
+        page: "",
+        is_favourite: true,
+      });
+
+      await act(async () => {
+        result.current.toggleStar("ethereum", true);
+      });
+
+      expect(track).toHaveBeenCalledWith("button_clicked", {
+        button: "favourite",
+        currency: "ethereum",
+        page: "",
+        is_favourite: false,
       });
     });
   });

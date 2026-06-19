@@ -21,6 +21,8 @@ import {
   isDataStale,
 } from "~/renderer/screens/market/utils";
 import { addStarredMarketCoins, removeStarredMarketCoins } from "~/renderer/actions/settings";
+import { track } from "~/renderer/analytics/segment";
+import { getCurrentTrackingPage } from "~/renderer/analytics/screenRefs";
 import { useMarketCategories } from "LLD/features/Market/hooks/useMarketCategories";
 import {
   getMarketCategoriesParam,
@@ -213,6 +215,12 @@ export function useMarket() {
 
   const toggleStar = useCallback(
     (id: string, isStarred: boolean) => {
+      track("button_clicked", {
+        button: "favourite",
+        currency: id,
+        page: getCurrentTrackingPage(),
+        is_favourite: !isStarred,
+      });
       if (isStarred) {
         dispatch(removeStarredMarketCoins(id));
       } else {
