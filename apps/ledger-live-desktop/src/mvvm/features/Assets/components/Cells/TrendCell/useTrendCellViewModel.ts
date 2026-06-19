@@ -9,7 +9,7 @@ export function useTrendCellViewModel(trend: number | null | undefined) {
 
   const sign = trend > 0 ? "+" : "";
   const formattedTrend = discreet ? "***" : `${sign}${(trend * 100).toFixed(2)}%`;
-  const colorClass = trend >= 0 ? "text-success" : "text-error";
+  const colorClass = trend === 0 ? "text-muted" : trend > 0 ? "text-success" : "text-error";
 
   return { formattedTrend, colorClass };
 }
