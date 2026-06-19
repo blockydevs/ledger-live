@@ -77,10 +77,8 @@ export async function buildSigner(mnemonic?: string): Promise<CosmosSigner> {
       const rawAddr = rawSecp256k1PubkeyToRawAddress(compressedPubKey);
       return {
         bech32_address: toBech32(hrp, rawAddr),
-        // signOperation.ts reads this as raw bytes
-        // (Buffer.from(compressed_pk).toString("base64")). The interface types it
-        // as string; cast through unknown to the declared field type to keep the
-        // runtime bytes while preserving the API surface (matches DmkSignerCosmos.ts:68).
+        // Legacy consumer (signOperation.ts) expects the raw Buffer at runtime,
+        // though the interface types it as string — same as DmkSignerCosmos.ts:68.
         compressed_pk: Buffer.from(
           compressedPubKey,
         ) as unknown as CosmosGetAddressAndPubKeyRes["compressed_pk"],
