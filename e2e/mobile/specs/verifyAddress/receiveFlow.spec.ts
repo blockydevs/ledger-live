@@ -22,12 +22,11 @@ describe("Receive Flow", () => {
       },
     });
 
-    await app.portfolio.waitForPortfolioPageToLoad();
+    await app.mainNavigation.waitForWallet40Ready();
   });
 
   beforeEach(async () => {
-    await app.portfolio.openViaDeeplink();
-    await app.portfolio.waitForPortfolioPageToLoad();
+    await app.mainNavigation.openPortfolioViaDeeplink();
     if (isWallet40) {
       await app.portfolio.pressQuickActionTransferButton();
       await app.portfolio.pressTransferBottomSheetReceiveButton();
