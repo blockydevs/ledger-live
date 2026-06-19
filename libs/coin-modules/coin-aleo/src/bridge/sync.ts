@@ -5,7 +5,8 @@ import {
   makeSync,
   mergeOps,
 } from "@ledgerhq/ledger-wallet-framework/bridge/jsHelpers";
-import { encodeAccountId, getSyncHash } from "@ledgerhq/ledger-wallet-framework/account";
+import { getSyncHash } from "@ledgerhq/ledger-wallet-framework/account";
+import { encodeAccountId } from "@ledgerhq/ledger-wallet-framework/account/accountId";
 import { log } from "@ledgerhq/logs";
 import { concat, merge, Observable, of } from "rxjs";
 import { concatMap } from "rxjs/operators";
@@ -247,11 +248,11 @@ export async function performPrivateSync({
   info: AccountShapeInfo<AleoAccount>;
   syncConfig: SyncConfig;
   currentPublicOps: AleoOperation[];
-  freshTransparentBalance?: BigNumber | undefined;
-  onProgress?: ((progress: number) => void) | undefined;
-  signal?: AbortSignal | undefined;
-  publicSubAccounts?: TokenAccount[] | undefined;
-  freshSyncHash?: string | undefined;
+  freshTransparentBalance?: BigNumber;
+  onProgress?: (progress: number) => void;
+  signal?: AbortSignal;
+  publicSubAccounts?: TokenAccount[];
+  freshSyncHash?: string;
 }): Promise<Partial<AleoAccount> | null> {
   const { initialAccount, address, derivationMode, currency } = info;
   invariant(initialAccount, "aleo: performPrivateSync requires initialAccount");
@@ -316,7 +317,8 @@ export async function performPrivateSync({
   // so all records are re-fetched and patchPublicOperations can re-patch the full history.
   // Without this, only incremental records are available and older ops lose their patching.
   // freshSyncHash being defined means this is a chained public→private run (not standalone).
-  const publicSyncWasFromScratch = freshSyncHash && freshSyncHash !== initialAccount.syncHash;
+  const publicSyncWasFromScratch =
+    freshSyncHash !== undefined && freshSyncHash !== initialAccount.syncHash;
   const allOldOperations = publicSyncWasFromScratch ? [] : (initialAccount.operations ?? []);
   const [oldPrivateOps] = splitPrivateAndPublicOperations(allOldOperations);
   const lastPrivateBlockHeight = publicSyncWasFromScratch
@@ -576,11 +578,11 @@ export function createPrivateSyncObservable(
       info,
       syncConfig,
       currentPublicOps: publicOps,
-      freshTransparentBalance,
-      onProgress,
       signal: controller.signal,
-      publicSubAccounts,
-      freshSyncHash,
+      ...(freshTransparentBalance !== undefined && { freshTransparentBalance }),
+      ...(onProgress !== undefined && { onProgress }),
+      ...(publicSubAccounts !== undefined && { publicSubAccounts }),
+      ...(freshSyncHash !== undefined && { freshSyncHash }),
     })
       .then(result => {
         releaseLock();

@@ -1,8 +1,7 @@
 import BigNumber from "bignumber.js";
-import * as coinFrameworkAccount from "@ledgerhq/ledger-wallet-framework/account";
+import { encodeTokenAccountId, getSyncHash } from "@ledgerhq/ledger-wallet-framework/account";
 import { encodeAccountId } from "@ledgerhq/ledger-wallet-framework/account/accountId";
 import { log } from "@ledgerhq/logs";
-import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { SyncConfig, DerivationMode } from "@ledgerhq/types-live";
 import { firstValueFrom, toArray, type Observable } from "rxjs";
 import { SYNC_TYPE_TRANSPARENT, SYNC_TYPE_SHIELDED } from "@ledgerhq/types-live";
@@ -54,7 +53,7 @@ jest.mock("@ledgerhq/logs", () => ({
   log: jest.fn(),
 }));
 
-const mockGetSyncHash = jest.mocked(coinFrameworkAccount.getSyncHash);
+const mockGetSyncHash = jest.mocked(getSyncHash);
 const mockGetBalance = jest.mocked(getBalance);
 const mockLastBlock = jest.mocked(lastBlock);
 const mockListOperations = jest.mocked(listOperations);
