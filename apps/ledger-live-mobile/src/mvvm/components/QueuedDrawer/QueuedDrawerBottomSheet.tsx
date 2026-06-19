@@ -23,9 +23,9 @@ export type QueuedDrawerBottomSheetProps = {
   /** Callback when the drawer is closed. */
   onClose?: () => void;
   /**
-   * Callback when the header close button (X) is pressed. Unlike {@link onClose}, which fires
-   * once the close animation finishes for any closing reason, this fires only on an explicit
-   * header close press. Use it to track close intent accurately.
+   * Callback when the header close button (X) is pressed. Unlike {@link onClose}, which can fire
+   * for any closing reason (header, backdrop, gestures, or programmatic dismiss), this fires only
+   * on an explicit header close press. Use it to track close intent accurately.
    */
   onHeaderClosePressed?: () => void;
   /**

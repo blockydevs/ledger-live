@@ -38,13 +38,13 @@ export type DeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps> = {
   /**
    * Tracks the "Close" `button_clicked` event when the drawer header close button is pressed.
    * Wired to the drawer's `onHeaderClosePressed` so tracking reflects real user intent, unlike
-   * `onClose` which fires once the close animation finishes for any closing reason.
+   * `onClose` which can fire for any closing reason.
    */
   onHeaderClosePressed: () => void;
   /**
    * Tracks the "Close" `button_clicked` event when the drawer backdrop is pressed.
    * Wired to the drawer's `onBackdropPress` so tracking reflects real user intent, unlike
-   * `onClose` which fires once the close animation finishes for any closing reason.
+   * `onClose` which can fire for any closing reason.
    */
   onBackdropPress: () => void;
 };
