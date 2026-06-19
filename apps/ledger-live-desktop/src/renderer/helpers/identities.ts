@@ -44,10 +44,12 @@ export async function initIdentities(store: ReduxStore): Promise<boolean> {
   if (persisted) {
     let userId = persisted.userId;
     let datadogId = persisted.datadogId;
-    if (!shouldUsePersistedId(userId)) {
+    if (!shouldUsePersistedId(userId) || !shouldUsePersistedId(datadogId)) {
       const legacy = await readLegacyIds();
       if (legacy) {
-        userId = legacy.userId;
+        if (!shouldUsePersistedId(userId)) {
+          userId = legacy.userId;
+        }
         if (!shouldUsePersistedId(datadogId)) {
           datadogId = legacy.datadogId;
         }
