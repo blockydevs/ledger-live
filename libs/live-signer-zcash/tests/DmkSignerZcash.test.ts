@@ -1,4 +1,8 @@
-import { DeviceActionStatus, type DeviceManagementKit } from "@ledgerhq/device-management-kit";
+import {
+  DeviceActionStatus,
+  UserInteractionRequired,
+  type DeviceManagementKit,
+} from "@ledgerhq/device-management-kit";
 import { SignerZcashBuilder } from "@ledgerhq/device-signer-kit-zcash";
 import { DmkSignerZcash } from "../src/DmkSignerZcash";
 
@@ -41,6 +45,19 @@ describe("DmkSignerZcash", () => {
   const createTransportErrorObservable = (error: Error) => ({
     subscribe: ({ error: onError }: { error: (error: Error) => void }) => {
       onError(error);
+    },
+  });
+
+  // Emits the device action's intermediate states in order, then completes —
+  // mirroring how the DMK signTransaction action streams `Pending` states
+  // (carrying `requiredUserInteraction`) before the final signed output.
+  const createSigningObservable = <T>(
+    states: Array<{ status: DeviceActionStatus.Pending; intermediateValue: unknown }>,
+    output: T,
+  ) => ({
+    subscribe: ({ next }: { next: (state: unknown) => void }) => {
+      states.forEach(next);
+      next({ status: DeviceActionStatus.Completed, output });
     },
   });
 
@@ -289,6 +306,74 @@ describe("DmkSignerZcash", () => {
       });
 
       await expect(signer.createPaymentTransaction(baseArg)).rejects.toThrow("transport down");
+    });
+
+    it("fires device-signing callbacks so Ledger Live can show the on-device UI", async () => {
+      mockSignerZcash.signTransaction.mockReturnValue({
+        observable: createSigningObservable(
+          [
+            {
+              status: DeviceActionStatus.Pending,
+              intermediateValue: {
+                requiredUserInteraction: UserInteractionRequired.SignTransaction,
+              },
+            },
+          ],
+          "00signed",
+        ),
+      });
+
+      const onDeviceSignatureRequested = jest.fn();
+      const onDeviceSignatureGranted = jest.fn();
+
+      const result = await signer.createPaymentTransaction({
+        ...baseArg,
+        onDeviceSignatureRequested,
+        onDeviceSignatureGranted,
+      });
+
+      expect(result).toBe("00signed");
+      // Requested proactively (the DMK intermediate state is lost to the intent queue),
+      // granted on the terminal Completed state.
+      expect(onDeviceSignatureRequested).toHaveBeenCalledTimes(1);
+      expect(onDeviceSignatureGranted).toHaveBeenCalledTimes(1);
+    });
+
+    it("requests the signature exactly once and before the action completes", async () => {
+      const callOrder: string[] = [];
+      mockSignerZcash.signTransaction.mockReturnValue({
+        observable: createSigningObservable([], "00signed"),
+      });
+
+      const onDeviceSignatureRequested = jest.fn(() => callOrder.push("requested"));
+      const onDeviceSignatureGranted = jest.fn(() => callOrder.push("granted"));
+
+      await signer.createPaymentTransaction({
+        ...baseArg,
+        onDeviceSignatureRequested,
+        onDeviceSignatureGranted,
+      });
+
+      expect(onDeviceSignatureRequested).toHaveBeenCalledTimes(1);
+      expect(callOrder).toEqual(["requested", "granted"]);
+    });
+
+    it("does not throw when the device-signing callbacks are omitted", async () => {
+      mockSignerZcash.signTransaction.mockReturnValue({
+        observable: createSigningObservable(
+          [
+            {
+              status: DeviceActionStatus.Pending,
+              intermediateValue: {
+                requiredUserInteraction: UserInteractionRequired.SignTransaction,
+              },
+            },
+          ],
+          "00signed",
+        ),
+      });
+
+      await expect(signer.createPaymentTransaction(baseArg)).resolves.toBe("00signed");
     });
   });
 

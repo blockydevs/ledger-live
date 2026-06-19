@@ -14,10 +14,10 @@ import {
   type DeviceManagementKit,
 } from "@ledgerhq/device-management-kit";
 import {
-  GetAddressDAError,
-  GetFullViewingKeyDAError,
-  SignerZcash,
   SignerZcashBuilder,
+  type GetAddressDAError,
+  type GetFullViewingKeyDAError,
+  type SignerZcash,
   type LegacyCreateTransactionArg,
   type LegacyTransaction,
   type SignTransactionDAError,
@@ -140,16 +140,16 @@ export class DmkSignerZcash implements ZcashSigner {
         prevout: input.prevout,
         script: input.script,
         sequence: input.sequence,
-        ...(input.tree ? { tree: input.tree } : {}),
+        ...(input.tree !== undefined ? { tree: input.tree } : {}),
       })),
-      ...(tx.outputs
+      ...(tx.outputs !== undefined
         ? { outputs: tx.outputs.map(output => ({ amount: output.amount, script: output.script })) }
         : {}),
-      ...(tx.locktime ? { locktime: tx.locktime } : {}),
-      ...(tx.timestamp ? { timestamp: tx.timestamp } : {}),
-      ...(tx.nVersionGroupId ? { nVersionGroupId: tx.nVersionGroupId } : {}),
-      ...(tx.nExpiryHeight ? { nExpiryHeight: tx.nExpiryHeight } : {}),
-      ...(tx.extraData ? { extraData: tx.extraData } : {}),
+      ...(tx.locktime !== undefined ? { locktime: tx.locktime } : {}),
+      ...(tx.timestamp !== undefined ? { timestamp: tx.timestamp } : {}),
+      ...(tx.nVersionGroupId !== undefined ? { nVersionGroupId: tx.nVersionGroupId } : {}),
+      ...(tx.nExpiryHeight !== undefined ? { nExpiryHeight: tx.nExpiryHeight } : {}),
+      ...(tx.extraData !== undefined ? { extraData: tx.extraData } : {}),
     };
   }
 
@@ -175,16 +175,26 @@ export class DmkSignerZcash implements ZcashSigner {
       outputScriptHex: arg.outputScriptHex,
       additionals: arg.additionals,
       ...(arg.changePath !== undefined ? { changePath: arg.changePath } : {}),
+      ...(arg.lockTime !== undefined ? { lockTime: arg.lockTime } : {}),
       ...(arg.blockHeight !== undefined ? { blockHeight: arg.blockHeight } : {}),
       ...(arg.sigHashType !== undefined ? { sigHashType: arg.sigHashType } : {}),
-      ...(arg.expiryHeight ? { expiryHeight: arg.expiryHeight } : {}),
+      ...(arg.expiryHeight !== undefined ? { expiryHeight: arg.expiryHeight } : {}),
     };
 
+    const { onDeviceSignatureRequested, onDeviceSignatureGranted } = arg;
+
     const { observable } = this.signer.signTransaction(legacyArg, { skipOpenApp: true });
+
+    // The device action is already running by now; surface the on-device signature
+    // request to the UI (see method doc for why this can't be observed from state).
+    onDeviceSignatureRequested?.();
+
     const signedTx = await this.resolveDeviceAction<
       SignTransactionDAOutput,
       SignTransactionDAError
     >(observable);
+
+    onDeviceSignatureGranted?.();
 
     return signedTx.startsWith("0x") ? signedTx.slice(2) : signedTx;
   }
