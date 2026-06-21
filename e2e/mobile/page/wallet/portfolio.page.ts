@@ -39,7 +39,6 @@ export default class PortfolioPage {
   selectAssetsPageTitle = "select-crypto-header-step1-title";
   baseBigCurrency = "big-currency";
   bigCurrencyRowRegex = new RegExp(`^${this.baseBigCurrency}-row-.*$`);
-  graphCardBalanceDiffId = "graphCard-balance-delta";
   tabBarEarnButton = "tab-bar-earn";
   marketBannerList = "market-banner-list";
   marketBannerTileBase = "market-banner-tile-";
@@ -54,7 +53,9 @@ export default class PortfolioPage {
   quickActionBuyButtonV4 = "quick-action-buy";
   portfolioBalanceNoAccount = "portfolio-balance-noAccounts";
   portfolioBalanceNormal = "portfolio-balance-normal";
+  portfolioBalanceAmount = "portfolio-balance-amount";
   portfolioBalanceAnalyticsPill = "portfolio-balance-analytics-pill";
+  portfolioBalanceDelta = "portfolio-balance-delta";
   transferBottomSheetReceiveButton = "transfer-action-receive";
   transferBottomSheetSendButton = "transfer-action-send";
   transferBottomSheetBankTransferButton = "transfer-action-bank-transfer";
@@ -118,7 +119,7 @@ export default class PortfolioPage {
 
   @Step("Expect asset row to have the correct counter value")
   async expectAssetRowCounterValue(asset: string, counterValue: string) {
-    await this.expectAssetRowToBeVisible(asset);
+    await scrollToId(this.assetItemBalanceId(asset), this.accountsListView);
     const text = await getTextOfElement(this.assetItemBalanceId(asset));
     jestExpect(text).toContain(counterValue);
   }
@@ -130,20 +131,13 @@ export default class PortfolioPage {
 
   @Step("Expect total balance value")
   async expectTotalBalanceCounterValue(counterValue: string) {
-    const text = await getTextOfElement(this.graphCardBalanceId);
-    jestExpect(text).toContain(counterValue);
+    const label = await getLabelOfElement(this.portfolioBalanceAmount);
+    jestExpect(label).toContain(counterValue);
   }
 
   @Step("Expect balance diff to be visible")
   async expectBalanceDiffToBeVisible() {
-    await waitForElementById(this.graphCardBalanceDiffId);
-  }
-
-  @Step("Expect balance diff to have the correct counter value")
-  async expectBalanceDiffCounterValue(counterValue: string) {
-    await this.expectBalanceDiffToBeVisible();
-    const text = await getTextOfElement(this.graphCardBalanceDiffId);
-    jestExpect(text).toContain(counterValue);
+    await waitForElementById(this.portfolioBalanceDelta);
   }
 
   @Step("Expect operation row to be visible")

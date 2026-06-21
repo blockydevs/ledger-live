@@ -1,7 +1,6 @@
 import { Account } from "@ledgerhq/live-common/e2e/enum/Account";
 import { Team } from "@ledgerhq/live-common/e2e/enum/Team";
 import { ApplicationOptions } from "page";
-import { isWallet40 } from "../../helpers/commonHelpers";
 import { setTeamOwner } from "../../helpers/allure/allure-helper";
 
 async function initApp(options: ApplicationOptions) {
@@ -87,33 +86,30 @@ export function runUserCanSelectCounterValueToDisplayAmountInLedgerLive(
   tmsLinks: string[],
   tags: string[],
 ) {
-  (isWallet40 ? describe.skip : describe)(
-    "User can select counter value to display amount in Ledger Live",
-    () => {
-      beforeAll(async () => {
-        await initApp({
-          userdata: "skip-onboarding",
-          cliCommands: [liveDataCommand(account)],
-          speculosApp: account.currency.speculosApp,
-        });
+  describe("User can select counter value to display amount in Ledger Live", () => {
+    beforeAll(async () => {
+      await initApp({
+        userdata: "skip-onboarding",
+        cliCommands: [liveDataCommand(account)],
+        speculosApp: account.currency.speculosApp,
       });
+    });
 
-      setTeamOwner(Team.WALLET_XP);
-      tmsLinks.forEach(tmsLink => $TmsLink(tmsLink));
-      tags.forEach(tag => $Tag(tag));
-      test("Verify that user can select counter value to display amount in Ledger Live", async () => {
-        await app.portfolio.navigateToSettings();
-        await app.settings.navigateToGeneralSettings();
-        await app.settingsGeneral.changeCounterValue("Euro - EUR");
-        await app.settingsGeneral.expectCounterValue("EUR");
-        await app.mainNavigation.openPortfolioViaDeeplink();
-        await app.portfolio.expectTotalBalanceCounterValue("€");
-        await app.portfolio.expectBalanceDiffCounterValue("€");
-        await app.portfolio.expectAssetRowCounterValue(account.currency.name, "€");
-        await app.portfolio.expectOperationCounterValue("€");
-      });
-    },
-  );
+    setTeamOwner(Team.WALLET_XP);
+    tmsLinks.forEach(tmsLink => $TmsLink(tmsLink));
+    tags.forEach(tag => $Tag(tag));
+    test("Verify that user can select counter value to display amount in Ledger Live", async () => {
+      await app.portfolio.navigateToSettings();
+      await app.settings.navigateToGeneralSettings();
+      await app.settingsGeneral.changeCounterValue("Euro - EUR");
+      await app.settingsGeneral.expectCounterValue("EUR");
+      await app.mainNavigation.openPortfolioViaDeeplink();
+      await app.portfolio.expectTotalBalanceCounterValue("€");
+      await app.portfolio.expectBalanceDiffToBeVisible();
+      await app.portfolio.expectAssetRowCounterValue(account.currency.name, "€");
+      await app.portfolio.expectOperationCounterValue("€");
+    });
+  });
 }
 
 async function initPasswordTest() {
