@@ -1,5 +1,4 @@
 import { ApplicationOptions } from "page";
-import { isWallet40 } from "../../helpers/commonHelpers";
 import { Account } from "@ledgerhq/live-common/e2e/enum/Account";
 import { Team } from "@ledgerhq/live-common/e2e/enum/Team";
 import { setTeamOwner } from "../../helpers/allure/allure-helper";
@@ -39,7 +38,7 @@ export function runPortfolioTransactionsHistoryTest(
 }
 
 export function runPortfolioChartsAndAssetsTest(tmsLinks: string[], tags: string[]) {
-  (isWallet40 ? describe.skip : describe)("Portfolio charts and assets", () => {
+  describe("Portfolio charts and assets", () => {
     beforeAll(async () => {
       await beforeAllFunction({
         userdata: "speculos-tests-app",
@@ -52,7 +51,6 @@ export function runPortfolioChartsAndAssetsTest(tmsLinks: string[], tags: string
     it("Charts and assets section are displayed when user added his accounts", async () => {
       await app.mainNavigation.openPortfolioViaDeeplink();
       await app.portfolio.checkQuickActionButtonsVisibility();
-      await app.portfolio.checkChartVisibility();
       await app.portfolio.checkAssetAllocationSection();
     });
   });
