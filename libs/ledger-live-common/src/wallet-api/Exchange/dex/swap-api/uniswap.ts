@@ -1,4 +1,4 @@
-import axios from "axios";
+import network from "@ledgerhq/live-network";
 
 import { getSwapAPIBaseURL } from "../../../../exchange/swap";
 
@@ -33,18 +33,17 @@ export const getUniswapTransaction = async (
   input: UniswapSwapInput,
 ): Promise<UniswapCallDataResponse> => {
   const baseURL = getSwapAPIBaseURL();
-  const response = await axios.post<{
+  const response = await network<{
     uniswapCallDataResponse: UniswapCallDataResponse;
-  }>(
-    `${baseURL}/uniswap/swap`,
-    {
+  }>({
+    method: "POST",
+    url: `${baseURL}/uniswap/swap`,
+    data: {
       ...(input.customFields ?? {}),
       signature: input.permitSignature,
     },
-    {
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+    headers: { "Content-Type": "application/json" },
+  });
 
   return response.data.uniswapCallDataResponse;
 };

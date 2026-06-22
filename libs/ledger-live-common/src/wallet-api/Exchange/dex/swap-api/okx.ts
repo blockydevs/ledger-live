@@ -1,4 +1,4 @@
-import axios from "axios";
+import network from "@ledgerhq/live-network";
 
 import { getSwapAPIBaseURL } from "../../../../exchange/swap";
 
@@ -21,13 +21,12 @@ export const getOkxTransaction = async (
   input: OkxSwapInput,
 ): Promise<OkxSwapResponse> => {
   const baseURL = getSwapAPIBaseURL();
-  const response = await axios.post<{ swapResponse: OkxSwapResponse }>(
-    `${baseURL}/okx/swap`,
-    { ...(input.customFields ?? {}) },
-    {
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  const response = await network<{ swapResponse: OkxSwapResponse }>({
+    method: "POST",
+    url: `${baseURL}/okx/swap`,
+    data: { ...(input.customFields ?? {}) },
+    headers: { "Content-Type": "application/json" },
+  });
 
   return response.data.swapResponse;
 };

@@ -1,4 +1,4 @@
-import axios from "axios";
+import network from "@ledgerhq/live-network";
 import type BigNumber from "bignumber.js";
 
 import { getSwapAPIBaseURL } from "../../../../exchange/swap";
@@ -39,13 +39,12 @@ export const getVeloraTransaction = async (
   swapData: VeloraSwapData,
 ): Promise<VeloraSwapResponse> => {
   const baseURL = getSwapAPIBaseURL();
-  const response = await axios.post<{ swapResponse: VeloraSwapResponse }>(
-    `${baseURL}/velora/swap`,
-    swapData,
-    {
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  const response = await network<{ swapResponse: VeloraSwapResponse }>({
+    method: "POST",
+    url: `${baseURL}/velora/swap`,
+    data: swapData,
+    headers: { "Content-Type": "application/json" },
+  });
 
   return response.data.swapResponse;
 };

@@ -1,4 +1,4 @@
-import axios from "axios";
+import network from "@ledgerhq/live-network";
 import type BigNumber from "bignumber.js";
 
 import { getSwapAPIBaseURL } from "../../../../exchange/swap";
@@ -27,13 +27,12 @@ export const getOneinchTransaction = async (
   swapData: OneInchSwapData,
 ): Promise<OneInchSwapResponse> => {
   const baseURL = getSwapAPIBaseURL();
-  const response = await axios.post<{ swapResponse: OneInchSwapResponse }>(
-    `${baseURL}/oneinch/swap`,
-    swapData,
-    {
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  const response = await network<{ swapResponse: OneInchSwapResponse }>({
+    method: "POST",
+    url: `${baseURL}/oneinch/swap`,
+    data: swapData,
+    headers: { "Content-Type": "application/json" },
+  });
 
   return response.data.swapResponse;
 };
