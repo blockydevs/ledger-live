@@ -1,7 +1,8 @@
 import { MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
-import { StockSuggestion } from "LLD/features/Stocks/types";
+import type { AssetNavigationMarketState } from "LLD/features/Assets/types";
+import type { StockSuggestion } from "LLD/features/Stocks/types";
 
-export type SearchMode = "suggestions" | "results" | "noResults";
+export type SearchMode = "suggestions" | "results" | "noResults" | "error";
 
 export type AssetSuggestionSection = {
   data: MarketCurrencyData[];
@@ -15,18 +16,20 @@ export type StocksSuggestionSection = {
 
 export type SearchSuggestions = {
   cryptos: AssetSuggestionSection;
-  stablecoins: AssetSuggestionSection;
   stocks: StocksSuggestionSection;
 };
 
 export type SearchResults = {
   data: MarketCurrencyData[];
   isLoading: boolean;
+  loadNext?: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
 };
 
 export type SearchOverlayContextValue = {
   close: () => void;
-  navigateToAsset: (currencyId: string) => void;
+  navigateToAsset: (currencyId: string, marketState?: AssetNavigationMarketState) => void;
   navigateToMarket: () => void;
   navigateToStocksMarket: () => void;
   suggestions: SearchSuggestions;

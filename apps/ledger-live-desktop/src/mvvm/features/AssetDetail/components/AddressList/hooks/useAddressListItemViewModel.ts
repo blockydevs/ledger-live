@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import type { Account, AccountLike } from "@ledgerhq/types-live";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import { formatAddress } from "@ledgerhq/live-common/utils/addressUtils";
@@ -18,6 +19,7 @@ export type AddressListItemViewModel = Readonly<{
   networkTicker: string;
   onClick: () => void;
   rowTestId: string;
+  balanceTestId: string;
 }>;
 
 export function useAddressListItemViewModel(
@@ -32,7 +34,7 @@ export function useAddressListItemViewModel(
     account.type === "TokenAccount" ? lookupParentAccount(account.parentId) : undefined;
   const networkCurrency =
     account.type === "TokenAccount"
-      ? (parentAccount?.currency ?? account.token.parentCurrency)
+      ? (parentAccount?.currency ?? getCryptoCurrencyById(account.token.parentCurrencyId))
       : currency;
 
   const accountForDisplayName =
@@ -62,5 +64,6 @@ export function useAddressListItemViewModel(
     networkTicker: networkCurrency.ticker,
     onClick,
     rowTestId: `asset-detail-address-row-${account.id}`,
+    balanceTestId: `asset-detail-address-balance-${account.id}`,
   };
 }

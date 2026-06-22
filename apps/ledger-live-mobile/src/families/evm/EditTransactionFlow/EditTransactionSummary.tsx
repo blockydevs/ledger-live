@@ -6,7 +6,7 @@
 
 import { getEditTransactionStatus } from "@ledgerhq/coin-evm/editTransaction/index";
 import { Transaction as EvmTransaction, TransactionStatus } from "@ledgerhq/coin-evm/types/index";
-import { isCurrencySupported } from "@ledgerhq/ledger-wallet-framework/currencies/index";
+import { isCurrencySupported } from "@ledgerhq/live-common/currencies/index";
 import { NotEnoughGas } from "@ledgerhq/errors";
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
@@ -50,6 +50,7 @@ function EditTransactionSummaryContent({ navigation, route, transactionToUpdate 
     setTransaction,
     status: txStatus,
     bridgePending,
+    bridgeError,
   } = useBridgeTransaction(bridge, () => ({
     transaction: route.params.transaction,
     account,
@@ -103,7 +104,7 @@ function EditTransactionSummaryContent({ navigation, route, transactionToUpdate 
 
   const { amount, totalSpent, errors, warnings } = status;
 
-  const firstError = errors[Object.keys(errors)[0]];
+  const firstError = errors[Object.keys(errors)[0]] ?? bridgeError ?? undefined;
 
   let footerAction;
   if (firstError && firstError instanceof NotEnoughGas) {
@@ -150,7 +151,7 @@ function EditTransactionSummaryContent({ navigation, route, transactionToUpdate 
       }
       footerAction={footerAction}
       isContinueDisabled={bridgePending || !!firstError}
-      isContinuePending={bridgePending}
+      isContinuePending={bridgePending && !firstError}
       onContinue={onContinue}
       highFeesOpen={highFeesOpen}
       onRejectFees={onRejectFees}

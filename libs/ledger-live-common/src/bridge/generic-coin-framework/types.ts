@@ -1,4 +1,5 @@
 import type {
+  AccountBridge,
   Operation,
   OperationRaw,
   TransactionCommon,
@@ -51,6 +52,7 @@ export const GENERIC_TRANSACTION_MODE = [
   "undelegate",
   "unstake",
   "finalize_unstake",
+  "withdraw",
   "claimReward",
   "compoundReward",
 ] as const;
@@ -85,6 +87,7 @@ export type GenericTransaction = TransactionCommon & {
   sponsored?: boolean;
   valAddress?: string;
   valId?: string;
+  withdrawId?: string;
   dstValAddress?: string;
 };
 
@@ -116,6 +119,7 @@ export type GenericTransactionRaw = TransactionCommonRaw & {
   sponsored?: boolean;
   valAddress?: string;
   valId?: string;
+  withdrawId?: string;
   dstValAddress?: string;
 };
 
@@ -135,6 +139,11 @@ export type CoinFrameworkSigner<S = unknown> = {
   getAddress: GetAddressFn;
   signMessage?: (message: string) => Promise<string>;
   context: SignerContext<S>;
+};
+
+export type AccountRawAssignHooks = {
+  assignFromAccountRaw?: AccountBridge<GenericTransaction>["assignFromAccountRaw"];
+  assignToAccountRaw?: AccountBridge<GenericTransaction>["assignToAccountRaw"];
 };
 
 export type SignTransactionOptions = {

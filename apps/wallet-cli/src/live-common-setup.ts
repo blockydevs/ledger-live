@@ -1,5 +1,4 @@
 import { setupCalClientStore } from "@ledgerhq/cryptoassets/cal-client";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/currencies/index";
 import { walletCliConfig } from "./config";
 import { registerCoinModules } from "@ledgerhq/live-common/coin-modules/registry";
 import type { CoinModuleLoader } from "@ledgerhq/live-common/coin-modules/types";
@@ -33,6 +32,7 @@ process.env.LEDGER_CLIENT_VERSION = ledgerClientVersion;
 const walletCliLoaders: CoinModuleLoader[] = [
   {
     family: "bitcoin",
+    supportedCoins: ["bitcoin"],
     loadSetup: () => import("@ledgerhq/live-common/families/bitcoin/setup"),
     loadTransaction: () => import("@ledgerhq/coin-bitcoin/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
@@ -45,6 +45,7 @@ const walletCliLoaders: CoinModuleLoader[] = [
   },
   {
     family: "evm",
+    supportedCoins: ["ethereum"],
     loadSetup: () => import("@ledgerhq/live-common/families/evm/setup"),
     loadTransaction: () => import("@ledgerhq/coin-evm/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
@@ -55,13 +56,17 @@ const walletCliLoaders: CoinModuleLoader[] = [
       import("@ledgerhq/live-common/families/evm/platformAdapter").then(m => m.default),
     loadValidateAddress: () =>
       import("@ledgerhq/coin-evm/logic/validateAddress").then(m => m.validateAddress),
-    loadSigner: () =>
-      import("@ledgerhq/live-common/bridge/generic-coin-framework/families/evm/signer").then(
-        m => m.default,
-      ),
+    loadSigner: () => import("@ledgerhq/live-common/families/evm/signer").then(m => m.default),
+    loadBridgeApi: () =>
+      import("@ledgerhq/live-common/families/evm/bridge/api").then(m => m.default),
+    loadAccountRawAssign: () =>
+      import("@ledgerhq/live-common/families/evm/accountRawAssign").then(m => m.default),
+    loadLocalApi: () =>
+      import("@ledgerhq/live-common/families/evm/coinModuleApi").then(m => m.createLocalEvmApi),
   },
   {
     family: "solana",
+    supportedCoins: ["solana"],
     loadSetup: () =>
       import("@ledgerhq/live-common/families/solana/setup").then(setup => {
         // Set on the resolved instance lazily rather than eagerly at startup,
@@ -75,9 +80,12 @@ const walletCliLoaders: CoinModuleLoader[] = [
       import("@ledgerhq/coin-solana/deviceTransactionConfig").then(m => m.default),
     loadWalletApiAdapter: () =>
       import("@ledgerhq/live-common/families/solana/walletApiAdapter").then(m => m.default),
-    loadSigner: () =>
-      import("@ledgerhq/live-common/bridge/generic-coin-framework/families/solana/signer").then(
-        m => m.default,
+    loadSigner: () => import("@ledgerhq/live-common/families/solana/signer").then(m => m.default),
+    loadBridgeApi: () =>
+      import("@ledgerhq/live-common/families/solana/bridge/api").then(m => m.default),
+    loadLocalApi: () =>
+      import("@ledgerhq/live-common/families/solana/coinModuleApi").then(
+        m => m.createLocalSolanaApi,
       ),
   },
 ];
@@ -90,7 +98,6 @@ export const WALLET_CLI_SUPPORTED_CRYPTO_CURRENCY_IDS: readonly CryptoCurrencyId
 
 setWalletAPIVersion(WALLET_API_VERSION);
 registerCoinModules(walletCliLoaders);
-setSupportedCurrencies([...WALLET_CLI_SUPPORTED_CRYPTO_CURRENCY_IDS]);
 LiveConfig.setConfig(walletCliConfig);
 // TODO: wallet-cli should own its Redux store setup (createRtkCryptoAssetsStore + RTK middleware)
 // instead of relying on setupCalClientStore from @ledgerhq/cryptoassets/cal-client (test-helpers).

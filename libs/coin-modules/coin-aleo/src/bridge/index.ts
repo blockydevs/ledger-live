@@ -15,6 +15,7 @@ import type {
 import getAddressWrapper from "@ledgerhq/ledger-wallet-framework/bridge/getAddressWrapper";
 import type { Observable } from "rxjs";
 import aleoCoinConfig from "../config";
+import { ALEO_DUMMY_ADDRESS } from "../constants";
 import type { AleoAccount, AleoCoinConfig, Transaction as AleoTransaction } from "../types";
 import type { AleoSigner } from "../types/signer";
 import resolver from "../signer/getAddress";
@@ -24,7 +25,12 @@ import { estimateMaxSpendable } from "./estimateMaxSpendable";
 import { makeGetAccountShape, sync } from "./sync";
 import { createTransaction } from "./createTransaction";
 import { prepareTransaction } from "./prepareTransaction";
-import { assignFromAccountRaw, assignToAccountRaw } from "./serialization";
+import {
+  assignFromAccountRaw,
+  assignToAccountRaw,
+  assignToTokenAccountRaw,
+  assignFromTokenAccountRaw,
+} from "./serialization";
 import { getTransactionStatus } from "./getTransactionStatus";
 import { buildSignOperation } from "./signOperation";
 
@@ -63,8 +69,11 @@ export function buildAccountBridge(
     },
     broadcast,
     estimateMaxSpendable,
+    getEstimationRecipient: () => ALEO_DUMMY_ADDRESS,
     assignFromAccountRaw,
     assignToAccountRaw,
+    assignToTokenAccountRaw,
+    assignFromTokenAccountRaw,
     getSerializedAddressParameters,
     validateAddress,
   };

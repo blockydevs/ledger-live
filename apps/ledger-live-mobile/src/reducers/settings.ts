@@ -76,7 +76,9 @@ import type {
   SettingsIsOnboardingFlowReceiveSuccessPayload,
   SettingsIsPostOnboardingFlowPayload,
   SettingsSetHasSeenWalletV4TourPayload,
+  SettingsSetDoNotAskAgainSkipMemoPayload,
   SettingsSetProductTourCompletedPayload,
+  SettingsSetHasSeenQ2WalletV4TourPayload,
   SettingsSetAnalyticsConsentInfoPayload,
   SettingsSetHasClickedRecoverPayload,
 } from "../actions/types";
@@ -179,6 +181,8 @@ export const INITIAL_STATE: SettingsState = {
   generalTermsVersionAccepted: undefined,
   hasSeenWalletV4Tour: false,
   productTourCompleted: false,
+  hasSeenQ2WalletV4Tour: false,
+  doNotAskAgainSkipMemo: false,
   hasClickedRecover: false,
   deprecationDoNotRemind: [],
   analyticsConsentInfo: {
@@ -677,9 +681,19 @@ const handlers: ReducerMap<SettingsState, SettingsPayload> = {
     hasSeenWalletV4Tour: (action as Action<SettingsSetHasSeenWalletV4TourPayload>).payload,
   }),
 
+  [SettingsActionTypes.SET_DO_NOT_ASK_AGAIN_SKIP_MEMO]: (state, action) => ({
+    ...state,
+    doNotAskAgainSkipMemo: (action as Action<SettingsSetDoNotAskAgainSkipMemoPayload>).payload,
+  }),
+
   [SettingsActionTypes.SET_PRODUCT_TOUR_COMPLETED]: (state, action) => ({
     ...state,
     productTourCompleted: (action as Action<SettingsSetProductTourCompletedPayload>).payload,
+  }),
+
+  [SettingsActionTypes.SET_HAS_SEEN_Q2_WALLET_V4_TOUR]: (state, action) => ({
+    ...state,
+    hasSeenQ2WalletV4Tour: (action as Action<SettingsSetHasSeenQ2WalletV4TourPayload>).payload,
   }),
 
   [SettingsActionTypes.SET_HAS_CLICKED_RECOVER]: (state, action) => ({
@@ -927,6 +941,9 @@ export const mevProtectionSelector = (state: State) => state.settings.mevProtect
 export const selectedTabPortfolioAssetsSelector = (state: State) =>
   state.settings.selectedTabPortfolioAssets;
 export const hasSeenWalletV4TourSelector = (state: State) => state.settings.hasSeenWalletV4Tour;
+
+export const doNotAskAgainSkipMemoSelector = (state: State) => state.settings.doNotAskAgainSkipMemo;
 export const productTourCompletedSelector = (state: State) => state.settings.productTourCompleted;
+export const hasSeenQ2WalletV4TourSelector = (state: State) => state.settings.hasSeenQ2WalletV4Tour;
 export const analyticsConsentInfoSelector = (state: State) => state.settings.analyticsConsentInfo;
 export const hasClickedRecoverSelector = (state: State) => state.settings.hasClickedRecover;

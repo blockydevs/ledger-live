@@ -35,15 +35,21 @@ export const LWD_WALLET_40_Q2_FF_ENABLED: OptionalFeatureMap = {
       assetSection: true,
       operationsList: true,
       myWallet: true,
+      aggregatedAssets: true,
+      assetDiscoverability: true,
+      pnl: true,
     },
   },
 };
 
-export const useLocalEarnManifest = process.env.USE_LOCAL_EARN_MANIFEST === "1";
-
-export const EARN_V1_DESKTOP_FLAGS: OptionalFeatureMap = {
-  ptxEarnUi: { enabled: false, params: { value: "v1" } },
+// Wallet 4.0 Q2 flags with the analytics consent dialog forced OFF, so the
+// "Help us improve Ledger" prompt never interrupts portfolio-landing E2E flows.
+export const LWD_WALLET_40_Q2_FF_ENABLED_NO_ANALYTICS_CONSENT: OptionalFeatureMap = {
+  ...LWD_WALLET_40_Q2_FF_ENABLED,
+  analyticsOptIn: { enabled: false },
 };
+
+export const useLocalEarnManifest = process.env.USE_LOCAL_EARN_MANIFEST === "1";
 
 export const EARN_V2_DESKTOP_FLAGS: OptionalFeatureMap = {
   ...(useLocalEarnManifest && {
@@ -56,7 +62,7 @@ export const FF_STAKE_PROGRAMS_MODAL: OptionalFeatureMap = {
   stakePrograms: {
     enabled: true,
     params: {
-      list: ["ethereum", "cosmos"],
+      list: ["cosmos"],
       redirects: {
         "ethereum/erc20/usd__coin": {
           platform: "earn",
@@ -65,6 +71,15 @@ export const FF_STAKE_PROGRAMS_MODAL: OptionalFeatureMap = {
             cryptoAssetId: "ethereum/erc20/usd__coin",
             intent: "deposit",
             deposit: "stablecoin",
+          },
+        },
+        ethereum: {
+          platform: "earn",
+          name: "Earn - Deposit",
+          queryParams: {
+            cryptoAssetId: "ethereum",
+            intent: "deposit",
+            ethDepositCohort: "basic_sorting",
           },
         },
       },

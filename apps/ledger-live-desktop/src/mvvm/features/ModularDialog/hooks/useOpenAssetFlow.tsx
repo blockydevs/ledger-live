@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { Account, AccountLike } from "@ledgerhq/types-live";
 import {
   useModularDrawerVisibility,
@@ -26,15 +27,16 @@ import { useFeature } from "@features/platform-feature-flags";
 function selectCurrencyDialog(
   dispatch: ReturnType<typeof useDispatch>,
   onAssetSelected: (currency: CryptoOrTokenCurrency) => void,
-  currencies?: CryptoOrTokenCurrency[],
+  currencyIds?: string[],
   onClose?: () => void,
   dialogConfiguration?: EnhancedModularDrawerConfiguration,
 ): void {
-  const filteredCurrencies = currencies?.map(currency => currency.id) ?? [];
+  const filteredCurrencies = currencyIds ?? [];
 
   dispatch(
     openDialog({
       currencies: filteredCurrencies,
+      areCurrenciesFiltered: filteredCurrencies.length > 0,
       onAssetSelected,
       dialogConfiguration: dialogConfiguration ?? {
         assets: { leftElement: "undefined", rightElement: "balance" },
@@ -102,7 +104,9 @@ export function useOpenAssetFlow(
         );
       } else {
         const cryptoCurrency =
-          currency.type === "CryptoCurrency" ? currency : currency.parentCurrency;
+          currency.type === "CryptoCurrency"
+            ? currency
+            : getCryptoCurrencyById(currency.parentCurrencyId);
         if (autoCloseDrawer) {
           setDrawer();
         }
@@ -124,14 +128,14 @@ export function useOpenAssetFlow(
   );
 
   const openAssetFlow = useCallback(
-    (dialogConfiguration?: EnhancedModularDrawerConfiguration) => {
+    (dialogConfiguration?: EnhancedModularDrawerConfiguration, currencyIds?: string[]) => {
       if (isModularDrawerVisible(modularDrawerVisibleParams)) {
         dispatch(setFlowValue(modularDrawerVisibleParams.location));
         dispatch(setSourceValue(source));
         selectCurrencyDialog(
           dispatch,
           openAddAccountFlow,
-          undefined,
+          currencyIds,
           handleClose,
           dialogConfiguration,
         );

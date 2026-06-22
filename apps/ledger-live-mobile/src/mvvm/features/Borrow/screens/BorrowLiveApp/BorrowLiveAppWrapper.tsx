@@ -4,6 +4,9 @@ import type { BorrowSwapNavigationParams } from "@ledgerhq/live-common/wallet-ap
 import React, { useEffect, useMemo } from "react";
 import { BorrowLiveAppView } from ".";
 import { useBorrowLiveAppViewModel } from "LLM/features/Borrow/screens/BorrowLiveApp/useBorrowLiveAppViewModel";
+import { useDispatch } from "~/context/hooks";
+import { createOpenBorrowInfoBottomSheetHandler } from "LLM/features/Borrow/handlers/borrowDialogHandlers";
+import { createOpenBorrowErrorBottomSheetHandler } from "LLM/features/Borrow/handlers/borrowErrorBottomSheetStore";
 
 type BorrowLiveAppWrapperProps = Readonly<{
   action?: "go-back";
@@ -30,6 +33,7 @@ export function BorrowLiveAppWrapper({
     webviewInputs,
   } = useBorrowLiveAppViewModel();
   const isSetupAmountStep = webviewState.url.includes("/loan");
+  const dispatch = useDispatch();
 
   const customHandlers = useMemo<WalletAPICustomHandlers>(
     () => ({
@@ -37,8 +41,10 @@ export function BorrowLiveAppWrapper({
         onGoBack: onWalletApiGoBack,
         onGoToSwap: onWalletApiGoToSwap,
       }),
+      "custom.bottomSheet.info": createOpenBorrowInfoBottomSheetHandler(dispatch),
+      "custom.bottomSheet.error": createOpenBorrowErrorBottomSheetHandler(dispatch),
     }),
-    [onWalletApiGoBack, onWalletApiGoToSwap],
+    [dispatch, onWalletApiGoBack, onWalletApiGoToSwap],
   );
 
   useEffect(() => {

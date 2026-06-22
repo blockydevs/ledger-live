@@ -1,5 +1,7 @@
 import BigNumber from "bignumber.js";
 import type { TransactionIntent } from "@ledgerhq/coin-module-framework/api/types";
+import { log } from "@ledgerhq/logs";
+import { setupMockCryptoAssetsStore } from "@ledgerhq/cryptoassets/cal-client/test-helpers";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import aleoConfig from "../config";
 import {
@@ -7,7 +9,11 @@ import {
   MAX_PRIVATE_RECORDS_PER_TRANSACTION,
   TRANSACTION_TYPE,
 } from "../constants";
-import { getMockedCurrency } from "../__tests__/fixtures/currency.fixture";
+import {
+  getMockedCurrency,
+  getMockedTokenCurrency,
+  MOCK_TOKEN_PROGRAM_ID,
+} from "../__tests__/fixtures/currency.fixture";
 import { getMockedConfig } from "../__tests__/fixtures/config.fixture";
 import {
   getMockedAccount,
@@ -32,11 +38,17 @@ import {
   mockTxIntentTransferPrivate,
   mockTxIntentTransferPrivate2,
   mockTxIntentTransferPublic,
+  mockTxIntentTransferTokenPublic,
+  mockTxIntentConvertTokenPublicToPrivate,
 } from "../__tests__/fixtures/transaction.fixture";
 import type { AleoOperationExtra, ProvableApi } from "../types";
 import {
   getNetworkConfig,
   parseMicrocredits,
+  parseAmount,
+  normalizeAleoPlaintext,
+  isAleoAddressPlaintext,
+  isAleoAmountPlaintext,
   determineTransactionType,
   patchAccountWithViewKey,
   toCoinFrameworkOperation,
@@ -59,6 +71,9 @@ import {
   isSelfTransferTransaction,
   isPublicTransaction,
   isPrivateTransaction,
+  isTokenTransaction,
+  derivePublicTransactionMode,
+  derivePrivateTransactionMode,
   createTransactionIntent,
   createFeeTransactionIntent,
   getRecordByCommitment,
@@ -69,13 +84,18 @@ import {
   selectPrivateRecordsForAmount,
   getEstimatedSigningTime,
   sumPrivateRecords,
+  getCalTokens,
 } from "./utils";
 
 jest.mock("../config");
+jest.mock("@ledgerhq/logs", () => ({
+  log: jest.fn(),
+}));
 
 const mockedAleoConfig = jest.mocked(aleoConfig);
 
 const mockCurrency = getMockedCurrency();
+const mockTokenCurrency = getMockedTokenCurrency();
 const mockConfig = getMockedConfig("mainnet");
 
 const supportedPublicTransactionModes = [
@@ -116,50 +136,96 @@ describe("getNetworkConfig", () => {
 });
 
 describe("parseMicrocredits", () => {
-  it("should parse valid microcredits string and remove u64 suffix", () => {
-    const result = parseMicrocredits("1000000u64");
-
-    expect(result).toBe("1000000");
+  it.each([
+    ["1000000u32", "1000000"],
+    ["1000000u64", "1000000"],
+    ["250000u128", "250000"],
+    ["0u64", "0"],
+    ["999999999999999u64", "999999999999999"],
+  ])("should parse %s", (input, expected) => {
+    expect(parseMicrocredits(input)).toBe(expected);
   });
 
-  it("should parse valid private microcredits string and remove u64.private suffix", () => {
-    const result = parseMicrocredits("1000000u64.private");
-
-    expect(result).toBe("1000000");
+  it.each([
+    ["1000000u32.private", "1000000"],
+    ["1000000u64.private", "1000000"],
+    ["250000u128.public", "250000"],
+    ["42u128.constant", "42"],
+    ["0u64.private", "0"],
+  ])("should strip visibility suffix from %s", (input, expected) => {
+    expect(parseMicrocredits(input)).toBe(expected);
   });
 
-  it("should parse zero microcredits", () => {
-    const result = parseMicrocredits("0u64");
-
-    expect(result).toBe("0");
+  it("should trim whitespace before parsing", () => {
+    expect(parseMicrocredits("  1000000u64.private  ")).toBe("1000000");
   });
 
-  it("should parse zero private microcredits", () => {
-    const result = parseMicrocredits("0u64.private");
-
-    expect(result).toBe("0");
-  });
-
-  it("should parse large microcredits values", () => {
-    const result = parseMicrocredits("999999999999999u64");
-
-    expect(result).toBe("999999999999999");
-  });
-
-  it("should parse microcredits with .private suffix", () => {
-    const result = parseMicrocredits("1000000u64.private");
-
-    expect(result).toBe("1000000");
-  });
-
-  it("should throw error when u64 suffix is missing", () => {
-    const value = "1000000";
+  it.each(["1000000", "1000000u"])("should throw for invalid format (%s)", value => {
     expect(() => parseMicrocredits(value)).toThrow(`aleo: invalid microcredits format (${value})`);
   });
+});
 
-  it("should throw error for invalid format", () => {
-    const value = "1000000u32";
-    expect(() => parseMicrocredits(value)).toThrow(`aleo: invalid microcredits format (${value})`);
+describe("parseAleoAmount", () => {
+  it("should return zero for null input", () => {
+    expect(parseAmount(null).toString()).toBe("0");
+  });
+
+  it.each([
+    ["250000u128", "250000"],
+    ["1000000u64.private", "1000000"],
+    ["  1000000u32.public  ", "1000000"],
+  ])("should parse %s into BigNumber", (input, expected) => {
+    expect(parseAmount(input).toString()).toBe(expected);
+  });
+
+  it("should return zero for invalid input", () => {
+    expect(parseAmount("invalid").toString()).toBe("0");
+  });
+});
+
+describe("normalizeAleoPlaintext", () => {
+  it.each([
+    ["1000000u64", "1000000u64"],
+    ["1000000u64.private", "1000000u64"],
+    ["250000u128.public", "250000u128"],
+    ["42u32.constant", "42u32"],
+  ])("should strip Aleo visibility suffix from %s", (input, expected) => {
+    expect(normalizeAleoPlaintext(input)).toBe(expected);
+  });
+
+  it("should trim surrounding whitespace", () => {
+    expect(normalizeAleoPlaintext("  1000000u64.private  ")).toBe("1000000u64");
+  });
+
+  it("should not strip visibility suffixes that are not at the end", () => {
+    expect(normalizeAleoPlaintext("1000000.private.extra")).toBe("1000000.private.extra");
+  });
+});
+
+describe("isAleoAddressPlaintext", () => {
+  it.each([
+    ["aleo1test123address456", true],
+    ["aleo1test123address456.public", true],
+    ["  ALEO1TEST123ADDRESS456.private  ", true],
+    ["1000000u64", false],
+    ["aleo2notvalid", false],
+    ["", false],
+  ])("(%j) → %s", (input, expected) => {
+    expect(isAleoAddressPlaintext(input)).toBe(expected);
+  });
+});
+
+describe("isAleoAmountPlaintext", () => {
+  it.each([
+    ["500000u64", true],
+    ["250000u128.public", true],
+    ["  42u32.private  ", true],
+    ["aleo1test123address456", false],
+    ["1000000", false],
+    ["500000u64.extra", false],
+    ["", false],
+  ])("(%j) → %s", (input, expected) => {
+    expect(isAleoAmountPlaintext(input)).toBe(expected);
   });
 });
 
@@ -353,6 +419,10 @@ describe("toBridgeOperation", () => {
   const recipientAddress = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
   const senderAddress = "aleo1a2ehlgqhvs3p7d4hqhs0tvgk954dr8gafu9kxse2mzu9a5sqxvpsrn98pr";
 
+  beforeEach(() => {
+    jest.mocked(log).mockClear();
+  });
+
   it("should produce an operation with encoded id and accountId", () => {
     const rawTx = getMockedPublicTransaction();
     const expectedId = encodeOperationId(ledgerAccountId, rawTx.transaction_id, "IN");
@@ -398,6 +468,41 @@ describe("toBridgeOperation", () => {
 
     expect(result.type).toBe("OUT");
     expect(result.id).toBe(encodeOperationId(ledgerAccountId, rawTx.transaction_id, "OUT"));
+  });
+
+  it("should attach programId when the transaction is a token transfer", () => {
+    const rawTx = getMockedPublicTransaction({
+      program_id: "usdcx_stablecoin.aleo",
+    });
+
+    const result = toBridgeOperation(ledgerAccountId, rawTx, recipientAddress, true);
+
+    expect(result.extra.programId).toBe("usdcx_stablecoin.aleo");
+  });
+
+  it.each([
+    ["NaN amount", { amount: NaN as number }],
+    ["zero amount", { amount: 0 }],
+    ["negative amount", { amount: -1 }],
+  ])("should log invalid raw transaction details for %s", (_label, amountOverride) => {
+    const rawTx = getMockedPublicTransaction(amountOverride);
+
+    const result = toBridgeOperation(ledgerAccountId, rawTx, recipientAddress);
+
+    expect(log).toHaveBeenCalledWith(
+      "aleo/toBridgeOperation",
+      `Invalid raw transaction details for ${recipientAddress}`,
+      rawTx,
+    );
+    expect(result.value).toEqual(new BigNumber(rawTx.amount));
+  });
+
+  it("should not log when amount is valid", () => {
+    const rawTx = getMockedPublicTransaction();
+
+    toBridgeOperation(ledgerAccountId, rawTx, recipientAddress);
+
+    expect(log).not.toHaveBeenCalled();
   });
 });
 
@@ -1087,6 +1192,44 @@ describe("mapTransactionIntentToSdkIntent", () => {
     );
   });
 
+  it("should map transfer_token_public intent to SDK intent with correct fields", () => {
+    const intent = mockTxIntentTransferTokenPublic;
+
+    const result = mapTransactionIntentToSdkIntent(intent);
+
+    expect(result).toEqual({
+      type: "transfer_token_public",
+      amount: intent.amount.toString(),
+      to: intent.recipient,
+      program_id: MOCK_TOKEN_PROGRAM_ID,
+    });
+  });
+
+  it("should map convert_token_public_to_private intent to SDK intent with correct fields", () => {
+    const intent = mockTxIntentConvertTokenPublicToPrivate;
+
+    const result = mapTransactionIntentToSdkIntent(intent);
+
+    expect(result).toEqual({
+      type: "transfer_token_public_to_private",
+      amount: intent.amount.toString(),
+      to: intent.recipient,
+      program_id: MOCK_TOKEN_PROGRAM_ID,
+    });
+  });
+
+  it.each([
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC, mockTxIntentTransferTokenPublic],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE, mockTxIntentConvertTokenPublicToPrivate],
+  ] as const)("should throw when %s intent has no matching data", (type, baseIntent) => {
+    const intent = { ...baseIntent, type };
+    delete (intent as { data?: unknown }).data;
+
+    expect(() => mapTransactionIntentToSdkIntent(intent)).toThrow(
+      `aleo: intent data is required for ${type}`,
+    );
+  });
+
   it("should throw for unsupported intent type", () => {
     const intent = {
       ...mockTxIntentTransferPublic,
@@ -1242,6 +1385,50 @@ describe("isPrivateTransaction", () => {
   });
 });
 
+describe("derivePublicTransactionMode", () => {
+  it.each([
+    [TRANSACTION_TYPE.TRANSFER_PUBLIC, false, false],
+    [TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE, false, true],
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC, true, false],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE, true, true],
+  ] as const)(
+    "returns %s for isTokenTx=%s and isSelfTransfer=%s",
+    (expectedMode, isTokenTx, isSelfTransfer) => {
+      expect(derivePublicTransactionMode({ isTokenTx, isSelfTransfer })).toBe(expectedMode);
+    },
+  );
+});
+
+describe("isTokenTransaction", () => {
+  it.each([
+    [true, TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC],
+    [true, TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE],
+    [true, TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE],
+    [true, TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC],
+    [false, TRANSACTION_TYPE.TRANSFER_PUBLIC],
+    [false, TRANSACTION_TYPE.TRANSFER_PRIVATE],
+    [false, "other_type" as never],
+  ] as const)("should return %s for mode '%s'", (expected, mode) => {
+    const transaction = getMockedTransaction({ mode });
+
+    expect(isTokenTransaction(transaction)).toBe(expected);
+  });
+});
+
+describe("derivePrivateTransactionMode", () => {
+  it.each([
+    [TRANSACTION_TYPE.TRANSFER_PRIVATE, false, false],
+    [TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC, false, true],
+    [TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE, true, false],
+    [TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC, true, true],
+  ] as const)(
+    "returns %s for isTokenTx=%s and isSelfTransfer=%s",
+    (expectedMode, isTokenTx, isSelfTransfer) => {
+      expect(derivePrivateTransactionMode({ isTokenTx, isSelfTransfer })).toBe(expectedMode);
+    },
+  );
+});
+
 describe("createTransactionIntent", () => {
   const mockAccount = getMockedAccount({
     aleoResources: {
@@ -1366,6 +1553,57 @@ describe("createTransactionIntent", () => {
 
     expect(() => createTransactionIntent({ account: mockAccount, transaction })).toThrow(
       `aleo: too many amount records selected (max: ${MAX_PRIVATE_RECORDS_PER_TRANSACTION})`,
+    );
+  });
+
+  it.each([
+    TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC,
+    TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE,
+  ] as const)("should create a public token transaction intent with programId for %s", mode => {
+    const tokenSubAccount = getMockedTokenAccount();
+    const account = getMockedAccount({ subAccounts: [tokenSubAccount] });
+    const transaction = getMockedTransaction({
+      mode,
+      subAccountId: tokenSubAccount.id,
+      amount: new BigNumber(500000),
+      recipient: "aleo1recipient",
+    });
+
+    const result = createTransactionIntent({ account, transaction });
+
+    expect(result).toEqual({
+      intentType: "transaction",
+      asset: { type: "native" },
+      type: mode,
+      amount: BigInt(transaction.amount.toString()),
+      recipient: transaction.recipient,
+      sender: account.freshAddress,
+      data: {
+        type: mode,
+        programId: tokenSubAccount.token.contractAddress,
+      },
+    });
+  });
+
+  it("should throw when public token transaction has no matching sub-account", () => {
+    const transaction = getMockedTransaction({
+      mode: TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC,
+      subAccountId: "non-existent-sub-account-id",
+    });
+
+    expect(() => createTransactionIntent({ account: mockAccount, transaction })).toThrow(
+      "aleo: token sub-account is required for public token transaction",
+    );
+  });
+
+  it.each([
+    TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE,
+    TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC,
+  ] as const)("should throw for private token transaction mode %s", mode => {
+    const transaction = getMockedTransaction({ mode });
+
+    expect(() => createTransactionIntent({ account: mockAccount, transaction })).toThrow(
+      "aleo: private token transactions are not supported yet",
     );
   });
 });
@@ -1594,6 +1832,10 @@ describe("getFunctionNameFromTransactionType", () => {
     ["transfer_private", TRANSACTION_TYPE.TRANSFER_PRIVATE],
     ["transfer_public_to_private", TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE],
     ["transfer_private_to_public", TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC],
+    ["transfer_token_public", TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC],
+    ["transfer_token_private", TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE],
+    ["transfer_token_public_to_private", TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE],
+    ["transfer_token_private_to_public", TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC],
   ])("should return '%s' for transaction type '%s'", (expected, transactionType) => {
     expect(getFunctionNameFromTransactionType(transactionType)).toBe(expected);
   });
@@ -1955,5 +2197,29 @@ describe("sumPrivateRecords", () => {
       { ...mockUnspentRecord1, microcredits: "58" },
     ];
     expect(sumPrivateRecords(records).isEqualTo(new BigNumber(100))).toBe(true);
+  });
+});
+
+describe("getCalTokens", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockCryptoAssetsStore({
+      findTokenByAddressInCurrency: jest.fn().mockImplementation(async (programName: string) => {
+        if (programName === MOCK_TOKEN_PROGRAM_ID) {
+          return mockTokenCurrency;
+        }
+        return undefined;
+      }),
+    });
+  });
+
+  it("should resolve known program names from CAL and omit unknown ones", async () => {
+    const result = await getCalTokens({
+      currencyId: mockCurrency.id,
+      programNames: [MOCK_TOKEN_PROGRAM_ID, "unknown_token.aleo", MOCK_TOKEN_PROGRAM_ID],
+    });
+
+    expect(result.size).toBe(1);
+    expect(result.get(MOCK_TOKEN_PROGRAM_ID)).toEqual(mockTokenCurrency);
   });
 });

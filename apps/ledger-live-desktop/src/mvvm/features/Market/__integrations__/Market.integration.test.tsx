@@ -6,6 +6,7 @@ import { Order } from "@ledgerhq/live-common/market/utils/types";
 import { MOCK_MARKET_CURRENCY_DATA } from "@ledgerhq/live-common/market/utils/fixtures";
 
 const MARKET_API_ENDPOINT = "https://countervalues.live.ledger.com/v3/markets";
+const TRENDING_CATEGORIES_ENDPOINT = "https://countervalues.live.ledger.com/v3/categories/trending";
 
 const mockNavigate = jest.fn();
 
@@ -40,9 +41,12 @@ jest.mock("LLD/features/Market/hooks/useMarketListVirtualization.ts", () => ({
         })),
       getTotalSize: () => (marketData?.length ?? 0) * LIST_ITEM_HEIGHT,
     });
+    const rowVirtualizer = createVirtualizer();
     return {
       parentRef: { current: null },
-      rowVirtualizer: createVirtualizer(),
+      rowVirtualizer,
+      virtualItems: rowVirtualizer.getVirtualItems(),
+      totalSize: rowVirtualizer.getTotalSize(),
     };
   },
 }));
@@ -60,6 +64,7 @@ const createMarketState = (overrides = {}) => ({
     ...overrides,
   },
   currentPage: 1,
+  category: "all" as const,
 });
 
 const createSettingsState = (starredMarketCoins: string[] = []) => ({
@@ -363,6 +368,149 @@ describe("Market Integration", () => {
     const sellButton = screen.getByTestId("market-BTC-sell-button");
     expect(sellButton).toBeInTheDocument();
     expect(sellButton).toBeVisible();
+  });
+
+  it("should reset sort to default when switching category tab", async () => {
+    const marketRequests: URL[] = [];
+
+    server.use(
+      http.get(TRENDING_CATEGORIES_ENDPOINT, () => {
+        return HttpResponse.json([]);
+      }),
+      http.get(MARKET_API_ENDPOINT, ({ request }) => {
+        marketRequests.push(new URL(request.url));
+        return HttpResponse.json(MOCK_MARKET_CURRENCY_DATA);
+      }),
+    );
+
+    const { user } = render(<Market />, {
+      withRampCatalog: true,
+      initialState: {
+        market: createMarketState(),
+        settings: createSettingsState(),
+        ...marketWithTopCardsOn,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-sort-volume")).toBeVisible();
+    });
+
+    await user.click(screen.getByTestId("market-sort-volume"));
+
+    await waitFor(() => {
+      expect(marketRequests.some(url => url.searchParams.get("sort") === "total-volume-desc")).toBe(
+        true,
+      );
+    });
+
+    await user.click(screen.getByTestId("market-category-switcher-stocks"));
+
+    await waitFor(() => {
+      expect(
+        marketRequests.some(
+          url =>
+            url.searchParams.get("categories") === "tokenized-stock" &&
+            url.searchParams.get("sort") === "market-cap-rank",
+        ),
+      ).toBe(true);
+    });
+
+    await user.click(screen.getByTestId("market-category-switcher-all"));
+
+    await waitFor(() => {
+      expect(
+        marketRequests.some(
+          url =>
+            !url.searchParams.get("categories") &&
+            url.searchParams.get("sort") === "market-cap-rank",
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it("should still show results after sorting when paginated", async () => {
+    const marketRequests: URL[] = [];
+    const pageSize = 50;
+
+    server.use(
+      http.get(TRENDING_CATEGORIES_ENDPOINT, () => {
+        return HttpResponse.json([]);
+      }),
+      http.get(MARKET_API_ENDPOINT, ({ request }) => {
+        const url = new URL(request.url);
+        marketRequests.push(url);
+        const page = Number(url.searchParams.get("page") ?? 0);
+        const start = page * pageSize;
+        return HttpResponse.json(MOCK_MARKET_CURRENCY_DATA.slice(start, start + pageSize));
+      }),
+    );
+
+    const { user } = render(<Market />, {
+      withRampCatalog: true,
+      initialState: {
+        market: createMarketState({ page: 3 }),
+        settings: createSettingsState(),
+        ...marketWithTopCardsOn,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-list-data")).toBeVisible();
+    });
+
+    await user.click(screen.getByTestId("market-sort-volume"));
+
+    await waitFor(() => {
+      expect(
+        marketRequests.some(
+          url =>
+            url.searchParams.get("sort") === "total-volume-desc" &&
+            url.searchParams.get("page") === "0",
+        ),
+      ).toBe(true);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-list-data")).toBeVisible();
+    });
+  });
+
+  it("should append trending categories after the built-in tabs and filter the list when selected", async () => {
+    const marketRequests: URL[] = [];
+
+    server.use(
+      http.get(TRENDING_CATEGORIES_ENDPOINT, () => {
+        return HttpResponse.json([{ id: "infrastructure", name: "Infrastructure" }]);
+      }),
+      http.get(MARKET_API_ENDPOINT, ({ request }) => {
+        marketRequests.push(new URL(request.url));
+        return HttpResponse.json(MOCK_MARKET_CURRENCY_DATA);
+      }),
+    );
+
+    const { user } = render(<Market />, {
+      withRampCatalog: true,
+      initialState: {
+        market: createMarketState(),
+        settings: createSettingsState(),
+        ...marketWithTopCardsOn,
+      },
+    });
+
+    const trendingChip = await screen.findByTestId("market-category-switcher-infrastructure");
+    expect(trendingChip).toHaveTextContent("Infrastructure");
+    expect(screen.getByTestId("market-category-switcher-all")).toBeVisible();
+    expect(screen.getByTestId("market-category-switcher-stocks")).toBeVisible();
+    expect(screen.getByTestId("market-category-switcher-starred")).toBeVisible();
+
+    await user.click(trendingChip);
+
+    await waitFor(() => {
+      expect(
+        marketRequests.some(url => url.searchParams.get("categories") === "infrastructure"),
+      ).toBe(true);
+    });
   });
 
   it("should navigate to exchange with sell state when sell button is clicked", async () => {

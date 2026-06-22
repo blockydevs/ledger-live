@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useMarketData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
+import { useMarketDataProvider } from "@ledgerhq/live-common/cg-client/hooks/useCoingeckoDataProvider";
 import { useLocale, useTranslation } from "~/context/Locale";
 import { useSelector } from "~/context/hooks";
 import { counterValueCurrencySelector } from "~/reducers/settings";
@@ -21,7 +22,6 @@ import {
   getMarketAssets,
   getMarketDataForDisplay,
 } from "./marketAssetsHelpers";
-import { getMarketFilter } from "@ledgerhq/live-common/market/utils/category";
 import { useMarketAssetCategoryState } from "./useMarketAssetCategoryState";
 import {
   getNextPaginationState,
@@ -42,6 +42,7 @@ export type MarketAssetsParams = {
 export interface MarketAssetsResult {
   assets: MarketAssetDisplayData[];
   loading: boolean;
+  isFetchingNextPage: boolean;
   isError: boolean;
   emptyState: EmptyState;
   onEndReached: () => void;
@@ -56,8 +57,15 @@ export function useMarketAssets({
 }: MarketAssetsParams = {}): MarketAssetsResult {
   const { locale } = useLocale();
   const { t } = useTranslation();
+  const { supportedCounterCurrencies } = useMarketDataProvider();
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
-  const counterCurrency = counterValueCurrency.ticker.toLowerCase();
+  const settingsCounterValue = counterValueCurrency.ticker.toLowerCase();
+  // While the supported list is still loading we keep the user's counter value, and only fall
+  // back to usd once we know it is unsupported — otherwise a request fires with usd first.
+  const counterCurrency =
+    supportedCounterCurrencies && !supportedCounterCurrencies.includes(settingsCounterValue)
+      ? "usd"
+      : settingsCounterValue;
   const counterValueUnit = counterValueCurrency.units[0];
   const normalizedSearch = search.trim();
   const {
@@ -95,7 +103,6 @@ export function useMarketAssets({
     liveCompatible: true,
     page: requestedPage,
     search: normalizedSearch,
-    filter: getMarketFilter(isStocksCategory),
     categories: marketCategoriesParam,
     starred: sortedFavoriteIds,
   });
@@ -105,14 +112,13 @@ export function useMarketAssets({
     () =>
       getMarketAssets({
         marketData,
-        isStocksCategory,
         counterCurrency,
         counterValueUnit,
         displayRange,
         locale,
         t,
       }),
-    [counterCurrency, counterValueUnit, displayRange, isStocksCategory, locale, marketData, t],
+    [counterCurrency, counterValueUnit, displayRange, locale, marketData, t],
   );
 
   const hasData = assets.length > 0;
@@ -147,6 +153,7 @@ export function useMarketAssets({
   return {
     assets,
     loading,
+    isFetchingNextPage,
     isError: shouldFetchAssets && result.isError,
     emptyState: getEmptyState({ isFavoritesCategory, hasFavoriteIds, isStocksCategory }),
     onEndReached,

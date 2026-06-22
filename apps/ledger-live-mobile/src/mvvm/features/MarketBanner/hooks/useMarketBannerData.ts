@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useMarketPerformers } from "@ledgerhq/live-common/market/hooks/useMarketPerformers";
+import { useTrendingPerformers } from "@ledgerhq/live-common/market/hooks/useTrendingPerformers";
 import { useMarketData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
 import { filterMarketPerformersByAvailability } from "@ledgerhq/live-common/market/utils/index";
 import {
@@ -22,6 +23,9 @@ import type { MarketBannerRanking } from "~/reducers/types";
 import { MARKET_BANNER_TILE_COUNT } from "../constants";
 
 const LIMIT = MARKET_BANNER_TILE_COUNT * 2;
+
+/** `useMarketData` (the /v3/markets endpoint) only accepts pageSize 1 / 5 / 20 / 50. */
+const MARKET_BANNER_FAVORITES_LIMIT = 50;
 
 export type MarketBannerItems = {
   items: MarketItemPerformer[];
@@ -70,19 +74,25 @@ function useMarketAvailabilityFilter() {
  * Performers-based rankings (trending / gainers → positive change, losers → negative).
  * Backed by RTK Query — no React Query dependency.
  */
-export function usePerformersBannerItems(ranking: MarketBannerRanking): MarketBannerItems {
+export function usePerformersBannerItems(
+  ranking: MarketBannerRanking,
+  options?: { skip?: boolean },
+): MarketBannerItems {
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const filterItems = useMarketAvailabilityFilter();
 
-  const { data, isError, isFetching } = useMarketPerformers({
-    sort: ranking === "losers" ? "desc" : "asc",
-    counterCurrency: counterValueCurrency.ticker,
-    range: TIME_RANGE,
-    limit: LIMIT,
-    top: MARKET_BANNER_TOP,
-    supported: MARKET_PERFORMERS_SUPPORTED,
-    refreshRate: MARKET_BANNER_REFRESH_RATE,
-  });
+  const { data, isError, isFetching } = useMarketPerformers(
+    {
+      sort: ranking === "losers" ? "desc" : "asc",
+      counterCurrency: counterValueCurrency.ticker,
+      range: TIME_RANGE,
+      limit: LIMIT,
+      top: MARKET_BANNER_TOP,
+      supported: MARKET_PERFORMERS_SUPPORTED,
+      refreshRate: MARKET_BANNER_REFRESH_RATE,
+    },
+    { skip: options?.skip },
+  );
 
   const items = useMemo(() => filterItems(data ?? []), [filterItems, data]);
 
@@ -90,29 +100,49 @@ export function usePerformersBannerItems(ranking: MarketBannerRanking): MarketBa
 }
 
 /**
+ * Trending ranking → the dedicated `/v3/currencies/trending` endpoint, which returns a curated,
+ * ordered list. Availability filtering is intentionally not applied so the banner mirrors what is
+ * trending in the market. Only mounted when the trending ranking is active.
+ */
+export function useTrendingBannerItems(): MarketBannerItems {
+  const counterValueCurrency = useSelector(counterValueCurrencySelector);
+
+  const { data, isError, isFetching } = useTrendingPerformers({
+    counterCurrency: counterValueCurrency.ticker,
+    refreshRate: MARKET_BANNER_REFRESH_RATE,
+  });
+
+  const items = useMemo(() => (data ?? []).slice(0, MARKET_BANNER_TILE_COUNT), [data]);
+
+  return { items, isError: isError && !isFetching };
+}
+
+/**
  * Favorites ranking → the user's starred assets. Backed by React Query (`useMarketData`),
  * so this hook must only be mounted when the favorites ranking is actually active.
+ * Availability filtering is bypassed so a starred coin shows even when not buyable/swappable.
  */
 export function useFavoritesBannerItems(): MarketBannerItems {
   const counterValueCurrency = useSelector(counterValueCurrencySelector);
   const starredMarketCoins = useSelector(starredMarketCoinsSelector);
-  const filterItems = useMarketAvailabilityFilter();
 
   const sortedStarredIds = useMemo(
     () => [...starredMarketCoins].sort((a, b) => a.localeCompare(b)),
     [starredMarketCoins],
   );
 
-  const { data, isError } = useMarketData({
-    counterCurrency: counterValueCurrency.ticker.toLowerCase(),
-    range: "24h",
-    order: Order.MarketCapDesc,
-    limit: LIMIT,
-    liveCompatible: true,
-    starred: sortedStarredIds,
-  });
+  const { data, isError, isFetching } = useMarketData(
+    {
+      counterCurrency: counterValueCurrency.ticker.toLowerCase(),
+      range: "24h",
+      order: Order.MarketCapDesc,
+      limit: MARKET_BANNER_FAVORITES_LIMIT,
+      starred: sortedStarredIds,
+    },
+    { enabled: sortedStarredIds.length > 0 },
+  );
 
-  const items = useMemo(() => filterItems(data.map(toPerformer)), [filterItems, data]);
+  const items = useMemo(() => data.map(toPerformer).slice(0, MARKET_BANNER_TILE_COUNT), [data]);
 
-  return { items, isError };
+  return { items, isError: isError && !isFetching };
 }

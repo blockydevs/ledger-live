@@ -64,7 +64,9 @@ import {
   SettingsIsOnboardingFlowReceiveSuccessPayload,
   SettingsIsPostOnboardingFlowPayload,
   SettingsSetHasSeenWalletV4TourPayload,
+  SettingsSetDoNotAskAgainSkipMemoPayload,
   SettingsSetProductTourCompletedPayload,
+  SettingsSetHasSeenQ2WalletV4TourPayload,
   SettingsSetAnalyticsConsentInfoPayload,
   SettingsSetHasClickedRecoverPayload,
 } from "./types";
@@ -289,8 +291,16 @@ export const setHasSeenWalletV4Tour = createAction<SettingsSetHasSeenWalletV4Tou
   SettingsActionTypes.SET_HAS_SEEN_WALLET_V4_TOUR,
 );
 
+export const setDoNotAskAgainSkipMemo = createAction<SettingsSetDoNotAskAgainSkipMemoPayload>(
+  SettingsActionTypes.SET_DO_NOT_ASK_AGAIN_SKIP_MEMO,
+);
+
 export const setProductTourCompleted = createAction<SettingsSetProductTourCompletedPayload>(
   SettingsActionTypes.SET_PRODUCT_TOUR_COMPLETED,
+);
+
+export const setHasSeenQ2WalletV4Tour = createAction<SettingsSetHasSeenQ2WalletV4TourPayload>(
+  SettingsActionTypes.SET_HAS_SEEN_Q2_WALLET_V4_TOUR,
 );
 
 export const setHasClickedRecover = createAction<SettingsSetHasClickedRecoverPayload>(

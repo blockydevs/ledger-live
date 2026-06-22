@@ -46,6 +46,8 @@ const emptyCategorizedAssets = () => ({
   stablecoinTickers: new Set<string>(),
   isLoadingStablecoinTickers: false,
   isStablecoinTickersError: false,
+  isLoadingStocks: false,
+  isStocksError: false,
 });
 
 describe("useCryptoViewModel", () => {
@@ -123,6 +125,24 @@ describe("useCryptoViewModel", () => {
 
       expect(result.current.assetsToDisplay).toHaveLength(1);
       expect(result.current.assetsToDisplay[0].currency.name).toBe("Tether");
+    });
+  });
+
+  describe("assetsToDisplay — variant: stocks", () => {
+    it("returns only stock assets", () => {
+      const stockItem = makeCategorizedItem("Apple", "apple-stock", "TokenCurrency");
+
+      mockCategorizedAssets.mockReturnValue({
+        ...emptyCategorizedAssets(),
+        categorizedAssets: { cryptos: [], stablecoins: [], stocks: [stockItem] },
+      });
+
+      const { result } = renderHook(() =>
+        useCryptoViewModel({ sourceScreenName: ScreenName.Portfolio, variant: "stocks" }),
+      );
+
+      expect(result.current.assetsToDisplay).toHaveLength(1);
+      expect(result.current.assetsToDisplay[0].currency.name).toBe("Apple");
     });
   });
 

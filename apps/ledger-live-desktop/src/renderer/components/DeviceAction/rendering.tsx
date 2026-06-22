@@ -58,6 +58,8 @@ import { isCounterfeitError } from "@ledgerhq/live-common/hw/isCounterfeitError"
 import { urls } from "~/config/urls";
 import { closeAllModal } from "~/renderer/actions/modals";
 import { closePlatformAppDrawer } from "~/renderer/actions/UI";
+import { setShouldResumeAddAccountAfterOnboarding } from "~/renderer/reducers/onboarding";
+import { HOOKS_TRACKING_LOCATIONS } from "~/renderer/analytics/hooks/variables";
 import { track } from "~/renderer/analytics/segment";
 import TrackPage, { setTrackingSource } from "~/renderer/analytics/TrackPage";
 import Animation from "~/renderer/animations";
@@ -748,7 +750,15 @@ export const renderAlreadySendingApduError = ({
 };
 
 export const DeviceNotOnboardedErrorComponent = withV3StyleProvider(
-  ({ t, device }: { t: TFunction; device?: Device | null }) => {
+  ({
+    t,
+    device,
+    location,
+  }: {
+    t: TFunction;
+    device?: Device | null;
+    location?: HOOKS_TRACKING_LOCATIONS;
+  }) => {
     const productName = device ? getDeviceModel(device.modelId).productName : null;
     const navigate = useNavigate();
     const { setDrawer } = useContext(context);
@@ -756,6 +766,11 @@ export const DeviceNotOnboardedErrorComponent = withV3StyleProvider(
 
     const redirectToOnboarding = useCallback(() => {
       setTrackingSource("device action open onboarding button");
+      // The Add Account flow brought the user here without a usable device. Remember the
+      // intent so we can resume it once the user lands back on the portfolio after onboarding.
+      if (location === HOOKS_TRACKING_LOCATIONS.addAccountModal) {
+        dispatch(setShouldResumeAddAccountAfterOnboarding(true));
+      }
       dispatch(closeAllModal());
       setDrawer(undefined);
       if (!device?.modelId) {
@@ -767,7 +782,7 @@ export const DeviceNotOnboardedErrorComponent = withV3StyleProvider(
             : "/onboarding",
         );
       }
-    }, [device?.modelId, dispatch, navigate, setDrawer]);
+    }, [device?.modelId, dispatch, location, navigate, setDrawer]);
 
     return (
       <Wrapper id="error-device-not-onboarded">
@@ -1091,11 +1106,49 @@ export const ConnectYourDevice = ({
   );
 };
 
-const OpenSwapBtn = () => {
+export const SWAP_NANO_S_INCOMPATIBILITY_PAGE = "Swap Nano S Incompatibility";
+
+export type SwapNanoSIncompatibilityVariant = "provider" | "currency";
+
+const getSwapNanoSIncompatibilityTrackingProperties = (
+  variant?: SwapNanoSIncompatibilityVariant,
+  provider?: string,
+  sourceCurrency?: string,
+  targetCurrency?: string,
+) => ({
+  flow: "swap",
+  deviceModel: "nanoS",
+  ...(variant ? { variant } : {}),
+  ...(provider ? { provider } : {}),
+  ...(sourceCurrency ? { sourceCurrency } : {}),
+  ...(targetCurrency ? { targetCurrency } : {}),
+});
+
+const OpenSwapBtn = ({
+  variant,
+  provider,
+  sourceCurrency,
+  targetCurrency,
+}: {
+  variant?: SwapNanoSIncompatibilityVariant;
+  provider?: string;
+  sourceCurrency?: string;
+  targetCurrency?: string;
+}) => {
   const { setDrawer } = useContext(context);
   const dispatch = useDispatch();
 
   const onClick = () => {
+    track("button_clicked", {
+      button: "swap_with_another_provider",
+      page: SWAP_NANO_S_INCOMPATIBILITY_PAGE,
+      ...getSwapNanoSIncompatibilityTrackingProperties(
+        variant,
+        provider,
+        sourceCurrency,
+        targetCurrency,
+      ),
+    });
     setTrackingSource("device action open swap button");
     dispatch(closePlatformAppDrawer());
     setDrawer(undefined);
@@ -1120,12 +1173,30 @@ export const HardwareUpdate = ({
   i18nKeyTitle,
   i18nKeyDescription,
   i18nKeyValues,
+  variant,
+  provider,
+  sourceCurrency,
+  targetCurrency,
 }: {
   i18nKeyTitle: string;
   i18nKeyDescription: string;
   i18nKeyValues?: Record<string, string>;
+  variant?: SwapNanoSIncompatibilityVariant;
+  provider?: string;
+  sourceCurrency?: string;
+  targetCurrency?: string;
 }) => (
   <Wrapper>
+    <TrackPage
+      category={SWAP_NANO_S_INCOMPATIBILITY_PAGE}
+      refreshSource={false}
+      {...getSwapNanoSIncompatibilityTrackingProperties(
+        variant,
+        provider,
+        sourceCurrency,
+        targetCurrency,
+      )}
+    />
     <Header>
       <Image resource={Nano} alt="NanoS" style={{ marginBottom: 40 }} />
     </Header>
@@ -1146,6 +1217,16 @@ export const HardwareUpdate = ({
           ml="40px"
           mr="40px"
           onClick={() => {
+            track("button_clicked", {
+              button: "explore_compatible_devices",
+              page: SWAP_NANO_S_INCOMPATIBILITY_PAGE,
+              ...getSwapNanoSIncompatibilityTrackingProperties(
+                variant,
+                provider,
+                sourceCurrency,
+                targetCurrency,
+              ),
+            });
             openURL("https://shop.ledger.com/pages/hardware-wallet");
           }}
         >
@@ -1153,7 +1234,12 @@ export const HardwareUpdate = ({
         </ButtonV3>
       </ButtonContainer>
       <ButtonContainer width="100%">
-        <OpenSwapBtn />
+        <OpenSwapBtn
+          variant={variant}
+          provider={provider}
+          sourceCurrency={sourceCurrency}
+          targetCurrency={targetCurrency}
+        />
       </ButtonContainer>
     </ButtonFooter>
   </Wrapper>

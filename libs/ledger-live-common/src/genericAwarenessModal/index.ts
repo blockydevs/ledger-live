@@ -7,6 +7,15 @@ export {
   isGenericAwarenessModalContentCardReady,
 } from "./campaignCompleteness";
 export { getGenericAwarenessModalContentCard } from "./getGenericAwarenessModalContentCard";
+export { hasAwarenessModalActionButton } from "./hasAwarenessModalActionButton";
+export { resolveCarouselNavigationButtonLabel } from "./resolveCarouselNavigationButtonLabel";
+export {
+  createThemedImageUrls,
+  hasThemedImage,
+  resolveThemedImageUrl,
+  type ThemedImageUrls,
+  type ThemeVariant,
+} from "./resolveThemedImageUrl";
 
 export { FeatureIntroRole, GenericAwarenessModalLayout } from "./types";
 export type {

@@ -20,6 +20,7 @@ export enum HEDERA_TRANSACTION_MODES {
 export enum HEDERA_TRANSACTION_NAMES {
   ContractCall = "CONTRACTCALL",
   UpdateAccount = "CRYPTOUPDATEACCOUNT",
+  TokenAssociate = "TOKENASSOCIATE",
 }
 
 /**
@@ -32,6 +33,8 @@ export enum HEDERA_OPERATION_TYPES {
   TokenAssociate = "TokenAssociate",
   ContractCall = "ContractCall",
 }
+
+export const HEDERA_DUMMY_ADDRESS = "0.0.163372";
 
 export const TINYBAR_SCALE = 8;
 
@@ -160,3 +163,9 @@ export const OP_TYPES_EXCLUDING_FEES: OperationType[] = [
  * Since staking rewards on Hedera are not represented as separate transactions, we need to create synthetic operations for them.
  */
 export const STAKING_REWARD_HASH_SUFFIX = "-staking-reward";
+
+export const MAP_TX_NAME_TO_CUSTOM_OPERATION_TYPE: Record<string, OperationType> = {
+  [HEDERA_TRANSACTION_NAMES.TokenAssociate]: "ASSOCIATE_TOKEN",
+  [HEDERA_TRANSACTION_NAMES.ContractCall]: "CONTRACT_CALL",
+  [HEDERA_TRANSACTION_NAMES.UpdateAccount]: "UPDATE_ACCOUNT",
+};

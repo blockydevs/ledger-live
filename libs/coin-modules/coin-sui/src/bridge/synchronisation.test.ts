@@ -232,6 +232,41 @@ describe("getAccountShape", () => {
     expect(shape.operations).toEqual(expect.arrayContaining(apiOperations));
   });
 
+  it("keeps short-form SUI ops and drops long-form SUI ops on the main account", async () => {
+    // GIVEN
+    const initialAccount = createFixtureAccount({ operations: [] });
+    mockGetAccountBalances.mockResolvedValue([createAccountBalance()]);
+    const LONG_SUI = "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI";
+    const shortOp = createFixtureOperation({
+      id: "sui:short-form-sui",
+      extra: { coinType: DEFAULT_COIN_TYPE },
+    });
+    const longOp = createFixtureOperation({
+      id: "sui:long-form-sui",
+      extra: { coinType: LONG_SUI },
+    });
+    mockGetOperations.mockResolvedValue([shortOp, longOp]);
+    mockGetStakesRaw.mockResolvedValue([]);
+
+    // WHEN
+    const shape = await getAccountShape(
+      {
+        index: 0,
+        derivationPath: "44'/784'/0'/0'/0'",
+        currency: getCryptoCurrencyById("sui"),
+        address: "0x6e143fe0a8ca010a86580dafac44298e5b1b7d73efc345356a59a15f0d7824f0",
+        initialAccount,
+        derivationMode: "sui",
+      },
+      { blacklistedTokenIds: [], paginationConfig: {} },
+    );
+
+    // THEN — only the short-form (canonical) SUI op survives into the main account
+    const ids = (shape.operations ?? []).map(op => op.id);
+    expect(ids).toContain("sui:short-form-sui");
+    expect(ids).not.toContain("sui:long-form-sui");
+  });
+
   it("handles multiple token balances and creates subAccounts", async () => {
     // GIVEN
     const initialAccount = createFixtureAccount();
@@ -274,10 +309,10 @@ describe("getAccountShape", () => {
         countervalueTicker: "TEST",
         id: `sui/coin/${address}`,
         name: "Test Token",
-        parentCurrency: { id: "sui" },
+        parentCurrencyId: "sui",
         standard: "SUI-20",
         ticker: "TEST",
-        tokenType: "sui",
+        tokenType: "coin",
       } as unknown as TokenCurrency;
     });
 
@@ -325,10 +360,10 @@ describe("getAccountShape", () => {
           countervalueTicker: "TEST",
           id: `sui/coin/${accountBalanceCoinType}`,
           name: "Test Token",
-          parentCurrency: { id: "sui" },
+          parentCurrencyId: "sui",
           standard: "SUI-20",
           ticker: "TEST",
-          tokenType: "sui",
+          tokenType: "coin",
         },
         type: "TokenAccount",
       },
@@ -353,10 +388,10 @@ describe("getAccountShape", () => {
           countervalueTicker: "TEST",
           id: `sui/coin/${accountBalanceCoinType2}`,
           name: "Test Token",
-          parentCurrency: { id: "sui" },
+          parentCurrencyId: "sui",
           standard: "SUI-20",
           ticker: "TEST",
-          tokenType: "sui",
+          tokenType: "coin",
         },
         type: "TokenAccount",
       },

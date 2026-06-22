@@ -20,9 +20,9 @@ import {
 } from "../utils/types";
 import { GlobalMarketDataRequestParams } from "../state-manager/types";
 
-export const useCurrencyData = ({ id, counterCurrency }: MarketCurrencyRequestParams) =>
+export const useCurrencyData = ({ id, ledgerIds, counterCurrency }: MarketCurrencyRequestParams) =>
   useGetCurrencyDataQuery(
-    { id, counterCurrency },
+    { id, ledgerIds, counterCurrency },
     {
       pollingInterval: REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH,
     },
@@ -106,7 +106,12 @@ function combineMarketData(
   });
 
   return {
-    data: results.flatMap(result => result.data?.formattedData ?? []),
+    data: results
+      .filter((result): result is typeof result & { data: NonNullable<typeof result.data> } =>
+        Boolean(result.data),
+      )
+      .sort((a, b) => a.data.page - b.data.page)
+      .flatMap(result => result.data.formattedData),
     isPending: results.some(result => result.isPending),
     isFetching: results.some(result => result.isFetching),
     isLoading: results.some(result => result.isLoading),

@@ -7,11 +7,13 @@ import accounts from "./accounts";
 import appstate from "./appstate";
 import auth from "./auth";
 import ble from "./ble";
+import borrow from "./borrow";
 import countervalues from "./countervalues";
 import deeplinkInstallApp from "./deeplinkInstallApp";
 import dynamicContent from "./dynamicContent";
 import earn from "./earn";
 import genericAwarenessModal from "./genericAwarenessModal";
+import backupHubFeatureIntro from "./backupHubFeatureIntro";
 import history from "./history";
 import inView from "./inView";
 import knownDevices from "./knownDevices";
@@ -47,12 +49,14 @@ const appReducer = combineReducers({
   appstate,
   auth,
   ble,
+  borrow,
   countervalues,
   deeplinkInstallApp,
   dynamicContent,
   earn,
   featureFlags,
   genericAwarenessModal,
+  backupHubFeatureIntro,
   history,
   identities: identitiesSlice.reducer,
   inView,

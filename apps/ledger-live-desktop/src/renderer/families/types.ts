@@ -30,6 +30,7 @@ import { StepProps as AddAccountsStepProps } from "../modals/AddAccounts";
 import { ModularDrawerAddAccountFlowManagerProps } from "LLD/features/AddAccountDrawer/ModularDrawerAddAccountFlowManager";
 import type { SplitAddressProps } from "../components/OperationsList/AddressCellShared";
 import type { Step } from "~/renderer/components/Stepper";
+import type { CoinModalKey } from "./modals-loaders";
 
 export type AddressCellProps<O extends Operation> = {
   operation: O;
@@ -141,6 +142,26 @@ export type LLDCoinFamily<
      * Override the displayed operation amount (list + details drawer)
      */
     getAmount?: (operation: O) => BigNumber;
+
+    /**
+     * Override the currency used to display operation fees in the details drawer
+     * (e.g. Celo CIP-64 fees paid in a non-native token). Called during render
+     * and may invoke React hooks; return undefined to fall back to
+     * `getFeesCurrency(mainAccount)`.
+     */
+    useFeesCurrency?: (operation: O, account: A) => CryptoCurrency | TokenCurrency | undefined;
+
+    /**
+     * Override the raw fee value when the on-chain magnitude differs from the
+     * fee currency's native unit (e.g. Celo CIP-64 stores fees in 18-decimal
+     * normalized units regardless of token decimals). Return undefined to fall
+     * back to `operation.fee`.
+     */
+    getDisplayFee?: (
+      operation: O,
+      account: A,
+      currency: CryptoCurrency | TokenCurrency,
+    ) => BigNumber | undefined;
 
     /**
      * Change operation first cell (mostly icons)
@@ -303,6 +324,18 @@ export type LLDCoinFamily<
    * Allow to override the "Amount" step in the Send modal.
    */
   SendStepAmount?: React.ComponentType<SendStepProps>;
+
+  /**
+   * Allow to add a family-specific component above the recipient field in the
+   * Send modal (e.g. Zcash transparent/shielded "transfer from" selector).
+   * The component is responsible for its own gating (feature flags, currency
+   * checks) and should render nothing when it does not apply.
+   */
+  SendStepRecipientFromSelector?: React.ComponentType<{
+    account: A;
+    transaction: T;
+    onChange: (t: T) => void;
+  }>;
 
   /**
    * Allow to add component below recipient field
@@ -492,6 +525,9 @@ export type LLDCoinFamily<
    * Component allowing to fully customize the add account flow in the drawer
    */
   ModularDrawerAddAccountFlowManager?: React.ComponentType<ModularDrawerAddAccountFlowManagerProps>;
+
+  /** Modal chunks to warm when this family loads, so the first open is instant. */
+  modalsToPreload?: CoinModalKey[];
 };
 
 export type FieldComponentProps<

@@ -9,6 +9,7 @@ import { DeviceModelId as DMKDeviceModelId } from "@ledgerhq/device-management-k
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import { track } from "~/analytics";
 import { currentRouteNameRef } from "~/analytics/screenRefs";
+import { useKeepScreenAwake } from "~/hooks/useKeepScreenAwake";
 import type { InitializerConfig } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
 import { PAGE_CONNECT_APP } from "./utils/trackDeviceIntent";
@@ -22,7 +23,12 @@ jest.mock("~/analytics", () => {
   };
 });
 
+jest.mock("~/hooks/useKeepScreenAwake", () => ({
+  useKeepScreenAwake: jest.fn(),
+}));
+
 const mockedTrack = jest.mocked(track);
+const mockedUseKeepScreenAwake = jest.mocked(useKeepScreenAwake);
 
 const layerABaseProperties = {
   deviceUxV2: true,
@@ -44,7 +50,6 @@ function makeProps(overrides: Partial<Props> = {}): Props {
     onIntentJobComplete: jest.fn(),
     onIntentJobError: jest.fn(),
     enabled: true,
-    cancellableUI: true,
     onUserCancel: jest.fn(),
     cancelIntentRequestId: undefined,
     sourceFlow: "swap",
@@ -311,8 +316,44 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
     });
   });
 
-  describe("GIVEN a ViewModel that has not yet completed", () => {
-    it("WHEN the user cancels THEN it tracks the Close button click", () => {
+  describe("GIVEN the drawer close interaction is triggered", () => {
+    it("WHEN the header close button is pressed THEN it tracks the Close button click", () => {
+      // GIVEN
+      const { result } = renderViewModel();
+      mockedTrack.mockClear();
+
+      // WHEN
+      act(() => {
+        result.current.onHeaderClosePressed();
+      });
+
+      // THEN
+      expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+        button: "Close",
+      });
+    });
+
+    it("WHEN the backdrop is pressed THEN it tracks the Close button click", () => {
+      // GIVEN
+      const { result } = renderViewModel();
+      mockedTrack.mockClear();
+
+      // WHEN
+      act(() => {
+        result.current.onBackdropPress();
+      });
+
+      // THEN
+      expect(mockedTrack).toHaveBeenCalledWith("button_clicked", {
+        ...layerABaseProperties,
+        sourceFlow: "swap",
+        button: "Close",
+      });
+    });
+
+    it("WHEN the user cancels (onClose) THEN it does NOT track the Close button click", () => {
       // GIVEN
       const { result } = renderViewModel();
       mockedTrack.mockClear();
@@ -323,13 +364,11 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
       });
 
       // THEN
-      expect(mockedTrack).toHaveBeenNthCalledWith(1, "button_clicked", {
-        ...layerABaseProperties,
-        sourceFlow: "swap",
-        button: "Close",
-      });
+      expect(mockedTrack).not.toHaveBeenCalledWith("button_clicked", expect.anything());
     });
+  });
 
+  describe("GIVEN a ViewModel that has not yet completed", () => {
     it("WHEN the user cancels from a non-blocking page THEN it fires deviceflow_aborted and forwards to the original onUserCancel", () => {
       // GIVEN
       const onUserCancel = jest.fn();
@@ -387,5 +426,21 @@ describe("useDeviceIntentExecutorLWMViewModel", () => {
       expect(mockedTrack).not.toHaveBeenCalledWith("deviceflow_aborted", expect.anything());
       expect(onUserCancel).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("GIVEN the flow is enabled WHEN the ViewModel renders THEN it keeps the screen awake", () => {
+    // WHEN
+    renderViewModel({ enabled: true });
+
+    // THEN
+    expect(mockedUseKeepScreenAwake).toHaveBeenCalledWith(true);
+  });
+
+  it("GIVEN the flow is disabled WHEN the ViewModel renders THEN it does not keep the screen awake", () => {
+    // WHEN
+    renderViewModel({ enabled: false });
+
+    // THEN
+    expect(mockedUseKeepScreenAwake).toHaveBeenCalledWith(false);
   });
 });

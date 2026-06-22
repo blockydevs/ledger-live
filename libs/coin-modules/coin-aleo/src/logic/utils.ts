@@ -1,19 +1,21 @@
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { log } from "@ledgerhq/logs";
-import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
-import type { Account, Operation, OperationType } from "@ledgerhq/types-live";
+import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
 import type {
   Operation as CoinFrameworkOperation,
   MemoNotSupported,
   TransactionIntent,
 } from "@ledgerhq/coin-module-framework/api/index";
-import { findSubAccountById } from "@ledgerhq/ledger-wallet-framework/account";
 import {
   decodeAccountId,
   encodeAccountId,
+  encodeTokenAccountId,
 } from "@ledgerhq/ledger-wallet-framework/account/accountId";
 import { decodeOperationId, encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
+import { getCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
+import { promiseAllBatched } from "@ledgerhq/live-promise";
 import aleoConfig from "../config";
 import {
   EXPLORER_TRANSFER_TYPES,
@@ -33,6 +35,7 @@ import type {
   ProvableApi,
   TransactionSelfTransfer,
   AleoAccount,
+  AleoTokenAccount,
   Intent,
   AleoTransactionIntentData,
   AleoPublicTransaction,
@@ -41,16 +44,29 @@ import type {
   TransactionPrivate,
   AleoCoinConfig,
   AleoUnspentRecord,
-  AleoTokenAccount,
   AleoTransactionIntent,
 } from "../types";
 
-export function parseMicrocredits(microcreditsU64: string): string {
-  const value = microcreditsU64.split(".")[0];
-  const expectedSuffix = "u64";
-  const hasValidSuffix = value.endsWith(expectedSuffix);
-  invariant(hasValidSuffix, `aleo: invalid microcredits format (${microcreditsU64})`);
-  return value.replace(expectedSuffix, "");
+const MICROCREDITS_REGEX = /^(\d+)u\d+$/;
+
+export function normalizeAleoPlaintext(v: string): string {
+  return v.trim().replace(/\.(private|public|constant)$/, "");
+}
+
+function matchAleoPlaintextAmount(raw: string): string | null {
+  const match = MICROCREDITS_REGEX.exec(normalizeAleoPlaintext(raw));
+  return match?.[1] ?? null;
+}
+
+export function parseMicrocredits(microcredits: string): string {
+  const amount = matchAleoPlaintextAmount(microcredits);
+  invariant(amount !== null, `aleo: invalid microcredits format (${microcredits})`);
+  return amount;
+}
+
+export function parseAmount(raw: string | null): BigNumber {
+  if (!raw) return new BigNumber(0);
+  return new BigNumber(matchAleoPlaintextAmount(raw) ?? 0);
 }
 
 export function getNetworkConfig(currency: CryptoCurrency) {
@@ -65,29 +81,57 @@ export function getNetworkConfig(currency: CryptoCurrency) {
 
 export function patchAccountWithViewKey(account: Account, viewKey: string): Account {
   invariant(viewKey, `aleo: viewKey is missing in patchAccountWithViewKey ${account.freshAddress}`);
-  const accountIdParams = decodeAccountId(account.id);
+
   const updatedAccountId = encodeAccountId({
-    ...accountIdParams,
+    ...decodeAccountId(account.id),
     customData: viewKey,
   });
 
-  const updateOperations = (ops: Operation[]) =>
+  // Single source of truth for old → new sub-account IDs.
+  const subAccountIdMap = new Map<string, string>(
+    account.subAccounts?.map(sub => [sub.id, encodeTokenAccountId(updatedAccountId, sub.token)]) ??
+      [],
+  );
+
+  const updateOps = (ops: Operation[], targetAccountId: string): Operation[] =>
     ops.map(op => {
       const { hash, type } = decodeOperationId(op.id);
-      const updatedOperationId = encodeOperationId(updatedAccountId, hash, type);
+
+      const updatedSubOperations = op.subOperations?.map(subOp => {
+        const newSubAccountId = subAccountIdMap.get(subOp.accountId) ?? subOp.accountId;
+        const { hash: subHash, type: subType } = decodeOperationId(subOp.id);
+        return {
+          ...subOp,
+          id: encodeOperationId(newSubAccountId, subHash, subType),
+          accountId: newSubAccountId,
+        };
+      });
 
       return {
         ...op,
-        id: updatedOperationId,
-        accountId: updatedAccountId,
+        id: encodeOperationId(targetAccountId, hash, type),
+        accountId: targetAccountId,
+        ...(updatedSubOperations && { subOperations: updatedSubOperations }),
       };
     });
+
+  const updatedSubAccounts = account.subAccounts?.map((sub: TokenAccount) => {
+    const newTokenAccountId = subAccountIdMap.get(sub.id)!;
+    return {
+      ...sub,
+      id: newTokenAccountId,
+      parentId: updatedAccountId,
+      operations: updateOps(sub.operations, newTokenAccountId),
+      pendingOperations: updateOps(sub.pendingOperations, newTokenAccountId),
+    };
+  });
 
   return {
     ...account,
     id: updatedAccountId,
-    operations: updateOperations(account.operations),
-    pendingOperations: updateOperations(account.pendingOperations),
+    operations: updateOps(account.operations, updatedAccountId),
+    pendingOperations: updateOps(account.pendingOperations, updatedAccountId),
+    ...(updatedSubAccounts && { subAccounts: updatedSubAccounts }),
   };
 }
 
@@ -165,6 +209,7 @@ export const toBridgeOperation = (
   ledgerAccountId: string,
   rawTx: AleoPublicTransaction,
   address: string,
+  isTokenTx?: boolean,
 ): AleoOperation => {
   const value = new BigNumber(rawTx.amount);
   const { type, fee, blockHash, transactionType, date, hasFailed } = parseTransactionFields(
@@ -192,6 +237,7 @@ export const toBridgeOperation = (
     extra: {
       functionId: rawTx.function_id,
       transactionType,
+      ...(isTokenTx && { programId: rawTx.program_id }),
     },
   };
 };
@@ -245,9 +291,15 @@ export function getTransactionType(intent: TransactionIntent): TransactionType {
 
 export function getAleoSubAccount(
   account: AleoAccount,
-  subAccountId: string | null | undefined,
+  subAccountId: string | null | undefined = "",
 ): AleoTokenAccount | undefined {
-  return findSubAccountById(account, subAccountId ?? "") as AleoTokenAccount | undefined;
+  if (!subAccountId) {
+    return undefined;
+  }
+
+  return account.subAccounts?.find(
+    (subAccount): subAccount is AleoTokenAccount => subAccount.id === subAccountId,
+  );
 }
 
 function getAmountToSpend({
@@ -316,6 +368,24 @@ export function getOperationTransactionType(transactionType: TransactionType): A
   }
 }
 
+export function isPublicTokenTransaction(transaction: Pick<Transaction, "mode">): boolean {
+  return (
+    transaction.mode === TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC ||
+    transaction.mode === TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE
+  );
+}
+
+export function isPrivateTokenTransaction(transaction: Pick<Transaction, "mode">): boolean {
+  return (
+    transaction.mode === TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE ||
+    transaction.mode === TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC
+  );
+}
+
+export function isTokenTransaction(transaction: Pick<Transaction, "mode">): boolean {
+  return isPublicTokenTransaction(transaction) || isPrivateTokenTransaction(transaction);
+}
+
 export function isSelfTransferTransaction(
   transaction: Transaction,
 ): transaction is TransactionSelfTransfer {
@@ -331,8 +401,7 @@ export function isPublicTransaction(transaction: Transaction): transaction is Tr
   return (
     transaction.mode === TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE ||
     transaction.mode === TRANSACTION_TYPE.TRANSFER_PUBLIC ||
-    transaction.mode === TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE ||
-    transaction.mode === TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC
+    isPublicTokenTransaction(transaction)
   );
 }
 
@@ -340,9 +409,48 @@ export function isPrivateTransaction(transaction: Transaction): transaction is T
   return (
     transaction.mode === TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC ||
     transaction.mode === TRANSACTION_TYPE.TRANSFER_PRIVATE ||
-    transaction.mode === TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC ||
-    transaction.mode === TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE
+    isPrivateTokenTransaction(transaction)
   );
+}
+
+/**
+ * Workaround for useBridgeTransaction.setAccount preserving the previous mode and only patching subAccountId.
+ * Switching between main/sub-account can leave a native mode on a token tx (or vice versa).
+ */
+export function derivePublicTransactionMode({
+  isTokenTx,
+  isSelfTransfer,
+}: {
+  isTokenTx: boolean;
+  isSelfTransfer: boolean;
+}): TransactionPublic["mode"] {
+  if (isTokenTx) {
+    return isSelfTransfer
+      ? TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE
+      : TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC;
+  }
+
+  return isSelfTransfer
+    ? TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE
+    : TRANSACTION_TYPE.TRANSFER_PUBLIC;
+}
+
+export function derivePrivateTransactionMode({
+  isTokenTx,
+  isSelfTransfer,
+}: {
+  isTokenTx: boolean;
+  isSelfTransfer: boolean;
+}): TransactionPrivate["mode"] {
+  if (isTokenTx) {
+    return isSelfTransfer
+      ? TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC
+      : TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE;
+  }
+
+  return isSelfTransfer
+    ? TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC
+    : TRANSACTION_TYPE.TRANSFER_PRIVATE;
 }
 
 export function findBestRecordForFee({
@@ -498,6 +606,24 @@ export function mapTransactionIntentToSdkIntent(
         record: txIntent.data.record,
       };
     }
+    case TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC: {
+      invariant(hasSpecificIntentData(txIntent, type), `aleo: intent data is required for ${type}`);
+      return {
+        type: "transfer_token_public",
+        amount,
+        to,
+        program_id: txIntent.data.programId,
+      };
+    }
+    case TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE: {
+      invariant(hasSpecificIntentData(txIntent, type), `aleo: intent data is required for ${type}`);
+      return {
+        type: "transfer_token_public_to_private",
+        amount,
+        to,
+        program_id: txIntent.data.programId,
+      };
+    }
     default: {
       throw new Error(`aleo: unsupported intent type: ${type}`);
     }
@@ -636,6 +762,10 @@ export function createTransactionIntent({
 }): AleoTransactionIntent {
   const base = buildTransactionIntentBase(account, transaction);
 
+  if (isPrivateTokenTransaction(transaction)) {
+    throw new Error("aleo: private token transactions are not supported yet");
+  }
+
   switch (transaction.mode) {
     case TRANSACTION_TYPE.TRANSFER_PUBLIC:
     case TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE:
@@ -657,13 +787,22 @@ export function createTransactionIntent({
       };
 
     case TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC:
-    case TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE:
-    case TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE:
-    case TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC:
-      throw new Error("aleo: tokens are not supported yet");
+    case TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE: {
+      const tokenSubAccount = getAleoSubAccount(account, transaction.subAccountId);
+      invariant(
+        tokenSubAccount,
+        "aleo: token sub-account is required for public token transaction",
+      );
+      return {
+        ...base,
+        data: {
+          type: transaction.mode,
+          programId: tokenSubAccount.token.contractAddress,
+        },
+      };
+    }
 
     default:
-      // @ts-expect-error - runtime check to ensure all transaction types are handled
       throw new Error(`aleo: unsupported tx mode for transaction intent: ${transaction.mode}`);
   }
 }
@@ -758,6 +897,14 @@ export function getFunctionNameFromTransactionType(transactionType: TransactionT
       return "transfer_public_to_private";
     case TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC:
       return "transfer_private_to_public";
+    case TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC:
+      return "transfer_token_public";
+    case TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE:
+      return "transfer_token_private";
+    case TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE:
+      return "transfer_token_public_to_private";
+    case TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC:
+      return "transfer_token_private_to_public";
     default:
       throw new Error(`aleo: unsupported transaction type: ${transactionType}`);
   }
@@ -852,3 +999,36 @@ export const getEstimatedSigningTime = (
   const minutes = flooredSeconds / 60;
   return `~${minutes} ${minuteShort}`;
 };
+
+/** CAL lookup by Aleo program name (contract address). Missing programs are omitted. */
+export async function getCalTokens({
+  currencyId,
+  programNames,
+}: {
+  currencyId: string;
+  programNames: string[];
+}): Promise<Map<string, TokenCurrency>> {
+  const calTokens = new Map<string, TokenCurrency>();
+  const uniqueProgramNames = [...new Set(programNames)];
+
+  await promiseAllBatched(4, uniqueProgramNames, async programName => {
+    const token = await getCryptoAssetsStore().findTokenByAddressInCurrency(
+      programName,
+      currencyId,
+    );
+
+    if (token) {
+      calTokens.set(programName, token);
+    }
+  });
+
+  return calTokens;
+}
+
+export function isAleoAddressPlaintext(v: string): boolean {
+  return normalizeAleoPlaintext(v).toLowerCase().startsWith("aleo1");
+}
+
+export function isAleoAmountPlaintext(v: string): boolean {
+  return /^\d+u\d+$/.test(normalizeAleoPlaintext(v));
+}

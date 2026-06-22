@@ -124,6 +124,8 @@ export interface AleoResources {
   privateBalance: BigNumber | null;
   unspentPrivateRecords: AleoUnspentRecord[] | null;
   lastPrivateSyncDate: Date | null;
+  hasMigratedPublicTokens?: boolean;
+  hasMigratedPrivateTokens?: boolean;
 }
 
 export interface AleoResourcesRaw {
@@ -132,6 +134,8 @@ export interface AleoResourcesRaw {
   privateBalance: string | null;
   unspentPrivateRecords: string | null;
   lastPrivateSyncDate: string | null;
+  hasMigratedPublicTokens?: boolean;
+  hasMigratedPrivateTokens?: boolean;
 }
 
 export type AleoAccount = Account & {
@@ -160,6 +164,8 @@ export type AleoOperationExtra = {
   transactionType: AleoTransactionType;
   // this field is used to indicate that semi-public operation has been patched with private data after private sync
   patched?: boolean;
+  // token program id for token operations (CAL lookup, sub-account routing)
+  programId?: string;
 };
 
 export type OperationDetailsExtraField = {

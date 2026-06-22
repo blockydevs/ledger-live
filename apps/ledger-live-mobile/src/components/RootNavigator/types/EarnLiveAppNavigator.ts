@@ -11,13 +11,16 @@ export type EarnLiveAppNavigatorParamList = {
       | "info-modal"
       | "menu-modal"
       | "go-back"
-      | "deposit";
+      | "deposit"
+      | "simulate";
     currencyId?: string;
     learnMore?: string;
     message?: string;
     messageTitle?: string;
     platform?: string;
-    intent?: "deposit" | "withdraw";
+    intent?: "deposit" | "withdraw" | "simulate";
     cryptoAssetId?: TokenCurrency["id"]; // Only for deposit/withdraw flows
+    customDappURL?: string;
+    customDappUrl?: string;
   };
 };

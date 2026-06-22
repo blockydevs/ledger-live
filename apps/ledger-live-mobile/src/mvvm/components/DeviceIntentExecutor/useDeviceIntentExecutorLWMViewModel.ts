@@ -15,6 +15,7 @@ import {
 } from "./utils/trackDeviceIntent";
 import type { InitializerConfig } from "./DeviceContextInitializerComponentLWM";
 import type { InitializationInput } from "./types";
+import { useKeepScreenAwake } from "~/hooks/useKeepScreenAwake";
 import { useDeviceIntentExecutorHeaderOverrideRequests } from "./hooks/useDeviceIntentExecutorHeaderOverrideRequests";
 import type { DeviceIntentExecutorHeaderContextValue } from "./utils/DeviceIntentExecutorHeaderContext";
 import type { SourceFlow } from "./utils/SourceFlowContext";
@@ -34,6 +35,18 @@ export type DeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps> = {
   wrappedProps: Props<JobState, Input, ExtraProps>;
   hasHeaderOverride: boolean;
   headerContextValue: DeviceIntentExecutorHeaderContextValue;
+  /**
+   * Tracks the "Close" `button_clicked` event when the drawer header close button is pressed.
+   * Wired to the drawer's `onHeaderClosePressed` so tracking reflects real user intent, unlike
+   * `onClose` which can fire for any closing reason.
+   */
+  onHeaderClosePressed: () => void;
+  /**
+   * Tracks the "Close" `button_clicked` event when the drawer backdrop is pressed.
+   * Wired to the drawer's `onBackdropPress` so tracking reflects real user intent, unlike
+   * `onClose` which can fire for any closing reason.
+   */
+  onBackdropPress: () => void;
 };
 
 type ConnectionTrackingInfo = {
@@ -55,14 +68,16 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
 
   const flowStartedRef = useRef(false);
   const initializationCompletedRef = useRef(false);
-  const closeTrackedRef = useRef(false);
+  const cancelTrackedRef = useRef(false);
   const { hasHeaderOverride, headerContextValue } = useDeviceIntentExecutorHeaderOverrideRequests();
+
+  useKeepScreenAwake(enabled);
 
   useEffect(() => {
     if (!enabled) {
       flowStartedRef.current = false;
       initializationCompletedRef.current = false;
-      closeTrackedRef.current = false;
+      cancelTrackedRef.current = false;
       return;
     }
 
@@ -85,10 +100,13 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
     [enabled, onExecutorStateChanged, sourceFlow],
   );
 
+  const trackClose = useCallback(() => {
+    trackDrawerCloseButtonClicked({ sourceFlow });
+  }, [sourceFlow]);
+
   const wrappedOnUserCancel = useCallback(() => {
-    if (!closeTrackedRef.current) {
-      closeTrackedRef.current = true;
-      trackDrawerCloseButtonClicked({ sourceFlow });
+    if (!cancelTrackedRef.current) {
+      cancelTrackedRef.current = true;
       if (!initializationCompletedRef.current) {
         trackDeviceflowCanceled({ sourceFlow });
       }
@@ -100,6 +118,8 @@ export function useDeviceIntentExecutorLWMViewModel<JobState, Input, ExtraProps>
     sourceFlow,
     hasHeaderOverride,
     headerContextValue,
+    onHeaderClosePressed: trackClose,
+    onBackdropPress: trackClose,
     wrappedProps: {
       ...props,
       onExecutorStateChanged: wrappedOnExecutorStateChanged,

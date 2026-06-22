@@ -139,8 +139,8 @@ const envDefinitions = {
   },
   API_POLKADOT_SIDECAR: {
     parser: stringParser,
-    def: "https://polkadot-sidecar.coin.ledger.com",
-    desc: "Polkadot Sidecar API url",
+    def: "https://polkadot-mainnet-rest-api.coin.ledger.com/v1/rc",
+    desc: "Polkadot rest-api base URL",
   },
   API_POLKADOT_SIDECAR_CREDENTIALS: {
     parser: stringParser,
@@ -506,11 +506,6 @@ const envDefinitions = {
     def: false,
     parser: boolParser,
     desc: "enable experimental support of Bluetooth",
-  },
-  EXPERIMENTAL_CURRENCIES: {
-    def: "",
-    parser: stringParser,
-    desc: "enable experimental support of currencies (comma separated)",
   },
   EXPERIMENTAL_EXPLORERS: {
     def: false,

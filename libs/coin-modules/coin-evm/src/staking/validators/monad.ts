@@ -3,6 +3,7 @@ import network from "@ledgerhq/live-network";
 import { makeLRUCache } from "@ledgerhq/live-network/cache";
 import type { Cursor, Page } from "@ledgerhq/coin-module-framework/api/index";
 import type { AssetInfo, Stake, StakeState } from "@ledgerhq/coin-module-framework/api/types";
+
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
@@ -362,7 +363,13 @@ const fetchStakeForValId = async (
     delegator,
   );
 
-  if (activeStake === 0n && deltaStakes === 0n &&  unclaimedRewards === 0n && withdrawals.length === 0) return [];
+  if (
+    activeStake === 0n &&
+    deltaStakes === 0n &&
+    unclaimedRewards === 0n &&
+    withdrawals.length === 0
+  )
+    return [];
 
   const validator = await callGetValidator(provider, iface, contractAddress, valId).catch(
     () => null,
@@ -408,14 +415,15 @@ const fetchStakeForValId = async (
   if (deltaStakes !== 0n) {
     stakes.push(makeStake("activating", deltaStakes));
   }
-  
+
   for (const { withdrawId, withdrawalAmount, withdrawEpoch } of withdrawals) {
     const completionDate = epochToDate(withdrawEpoch, currentEpoch);
+    const canWithdraw = currentEpoch !== null && withdrawEpoch <= currentEpoch;
     stakes.push({
       uid: `${contractAddress}-${valId.toString()}-${delegator}-withdraw-${withdrawId}`,
       address: delegator,
       ...(validatorAddress ? { delegate: validatorAddress } : {}),
-      state: "deactivating",
+      state: canWithdraw ? "withdrawable" : "deactivating",
       ...(completionDate ? { stateUpdatedAt: completionDate } : {}),
       asset,
       amount: withdrawalAmount,

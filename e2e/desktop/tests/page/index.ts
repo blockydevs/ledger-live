@@ -4,12 +4,12 @@ import { AnalyticsPage } from "./analytics.page";
 import { AssetsPage } from "./assets.page";
 import { AddAccountModal } from "./modal/add.account.modal";
 import { AssetDrawer } from "./drawer/asset.drawer";
+import { AssetDetailPage } from "./assetDetail.page";
 import { AssetPage } from "./asset.page";
 import { BuyAndSellPage } from "./buyAndSell.page";
 import { DelegateDrawer } from "./drawer/delegate.drawer";
 import { DelegateModal } from "./modal/delegate.modal";
 import { Drawer } from "tests/component/drawer.component";
-import { EarnPage } from "./earn.dashboard.page";
 import { EarnV2Page } from "./earn.v2.dashboard.page";
 import { Layout } from "tests/component/layout.component";
 import { LedgerSyncDrawer } from "./drawer/ledger.sync.drawer";
@@ -40,6 +40,7 @@ import { NewSendModal } from "./modal/new.send.modal";
 import { PrivateBalanceModal } from "./modal/private.balance.modal";
 import { HistoryPage } from "./history.page";
 import { MainNavigationPage } from "./mainNavigation.page";
+import { SwapTransactionStatusDialog } from "./dialog/swap.transaction.status.dialog";
 
 export class Application extends PageHolder {
   public account = new AccountPage(this.page);
@@ -47,12 +48,12 @@ export class Application extends PageHolder {
   public analytics = new AnalyticsPage(this.page);
   public addAccount = new AddAccountModal(this.page);
   public assetDrawer = new AssetDrawer(this.page);
+  public assetDetail = new AssetDetailPage(this.page);
   public assetPage = new AssetPage(this.page);
   public buyAndSell = new BuyAndSellPage(this.page, this.electronApp);
   public delegate = new DelegateModal(this.page);
   public delegateDrawer = new DelegateDrawer(this.page);
   public drawer = new Drawer(this.page);
-  public earnDashboard = new EarnPage(this.page, this.electronApp);
   public earnV2Dashboard = new EarnV2Page(this.page, this.electronApp);
   public layout = new Layout(this.page);
   public ledgerSync = new LedgerSyncDrawer(this.page);
@@ -80,6 +81,7 @@ export class Application extends PageHolder {
   public marketBanner = new MarketBannerPage(this.page);
   public myWallet = new MyWalletPage(this.page);
   public fearAndGreedDialog = new FearAndGreedDialog(this.page);
+  public swapTransactionStatusDialog = new SwapTransactionStatusDialog(this.page);
   public history = new HistoryPage(this.page);
   public mainNavigation = new MainNavigationPage(this.page);
   public assets = new AssetsPage(this.page);

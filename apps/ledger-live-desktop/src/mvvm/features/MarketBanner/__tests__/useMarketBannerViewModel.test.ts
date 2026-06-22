@@ -1,26 +1,40 @@
-import { renderHook } from "tests/testSetup";
+import { renderHook, withFlagOverrides } from "tests/testSetup";
 import {
   usePerformersBannerItems,
   useFavoritesBannerItems,
+  useTrendingBannerItems,
   useMarketBannerViewModel,
 } from "../hooks/useMarketBannerViewModel";
 import { useMarketPerformers } from "@ledgerhq/live-common/market/hooks/useMarketPerformers";
+import { useTrendingPerformers } from "@ledgerhq/live-common/market/hooks/useTrendingPerformers";
 import { useMarketData } from "@ledgerhq/live-common/market/hooks/useMarketDataProvider";
 import { useRampCatalog } from "@ledgerhq/live-common/platform/providers/RampCatalogProvider/useRampCatalog";
 import { useFetchCurrencyAll } from "@ledgerhq/live-common/exchange/swap/hooks/index";
 import {
   MOCK_MARKET_PERFORMERS,
   createMockMarketCurrencyData,
+  createMockMarketPerformer,
 } from "@ledgerhq/live-common/market/utils/fixtures";
 import { MarketItemPerformer, MarketCurrencyData } from "@ledgerhq/live-common/market/utils/types";
+import { selectMarketBannerRanking } from "~/renderer/reducers/marketBanner";
 import { MARKET_BANNER_ITEMS_COUNT } from "../utils/constants";
 
 jest.mock("@ledgerhq/live-common/market/hooks/useMarketPerformers");
+jest.mock("@ledgerhq/live-common/market/hooks/useTrendingPerformers");
 jest.mock("@ledgerhq/live-common/market/hooks/useMarketDataProvider");
 jest.mock("@ledgerhq/live-common/platform/providers/RampCatalogProvider/useRampCatalog");
 jest.mock("@ledgerhq/live-common/exchange/swap/hooks/index");
 
+const assetDiscoverabilityOn = withFlagOverrides({
+  lwdWallet40: { enabled: true, params: { assetDiscoverability: true } },
+});
+
+const assetDiscoverabilityOff = withFlagOverrides({
+  lwdWallet40: { enabled: false },
+});
+
 const mockedUseMarketPerformers = jest.mocked(useMarketPerformers);
+const mockedUseTrendingPerformers = jest.mocked(useTrendingPerformers);
 const mockedUseMarketData = jest.mocked(useMarketData);
 
 function mockPerformersQuery(
@@ -38,6 +52,23 @@ function mockPerformersQuery(
     isError: false,
     ...overrides,
   } as ReturnType<typeof useMarketPerformers>);
+}
+
+function mockTrendingQuery(
+  overrides: Partial<{
+    data: MarketItemPerformer[];
+    isLoading: boolean;
+    isFetching: boolean;
+    isError: boolean;
+  }>,
+) {
+  mockedUseTrendingPerformers.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    ...overrides,
+  } as ReturnType<typeof useTrendingPerformers>);
 }
 
 function mockMarketDataQuery(
@@ -63,6 +94,10 @@ describe("MarketBanner view models", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // The view model always calls every ranking hook (skipping the inactive ones), so provide a
+    // safe default for trending to avoid destructuring an undefined query result.
+    mockTrendingQuery({});
+
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     jest.mocked(useRampCatalog).mockReturnValue({
       isCurrencyAvailable: () => true,
@@ -79,7 +114,7 @@ describe("MarketBanner view models", () => {
       it("should be true during the initial load (no cached data)", () => {
         mockPerformersQuery({ isLoading: true, isFetching: true });
 
-        const { result } = renderHook(() => usePerformersBannerItems("trending"));
+        const { result } = renderHook(() => usePerformersBannerItems("gainers"));
 
         expect(result.current.isLoading).toBe(true);
         expect(result.current.items).toEqual([]);
@@ -88,7 +123,7 @@ describe("MarketBanner view models", () => {
       it("should be true when fetching without any cached data", () => {
         mockPerformersQuery({ isFetching: true });
 
-        const { result } = renderHook(() => usePerformersBannerItems("trending"));
+        const { result } = renderHook(() => usePerformersBannerItems("gainers"));
 
         expect(result.current.isLoading).toBe(true);
       });
@@ -96,7 +131,7 @@ describe("MarketBanner view models", () => {
       it("should be false during a background refetch when data already exists", () => {
         mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS, isFetching: true });
 
-        const { result } = renderHook(() => usePerformersBannerItems("trending"));
+        const { result } = renderHook(() => usePerformersBannerItems("gainers"));
 
         expect(result.current.isLoading).toBe(false);
         expect(result.current.items.length).toBeGreaterThan(0);
@@ -105,7 +140,7 @@ describe("MarketBanner view models", () => {
       it("should be false when data is loaded and the query is idle", () => {
         mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
 
-        const { result } = renderHook(() => usePerformersBannerItems("trending"));
+        const { result } = renderHook(() => usePerformersBannerItems("gainers"));
 
         expect(result.current.isLoading).toBe(false);
         expect(result.current.items.length).toBeGreaterThan(0);
@@ -116,7 +151,7 @@ describe("MarketBanner view models", () => {
       it("should be true when the query errors and is not refetching", () => {
         mockPerformersQuery({ isError: true });
 
-        const { result } = renderHook(() => usePerformersBannerItems("trending"));
+        const { result } = renderHook(() => usePerformersBannerItems("gainers"));
 
         expect(result.current.isError).toBe(true);
       });
@@ -124,26 +159,23 @@ describe("MarketBanner view models", () => {
       it("should be suppressed while a refetch is in progress", () => {
         mockPerformersQuery({ isError: true, isFetching: true });
 
-        const { result } = renderHook(() => usePerformersBannerItems("trending"));
+        const { result } = renderHook(() => usePerformersBannerItems("gainers"));
 
         expect(result.current.isError).toBe(false);
       });
     });
 
     describe("ranking → sort mapping", () => {
-      it.each(["trending", "gainers"] as const)(
-        "should request ascending order for %s",
-        ranking => {
-          mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
+      it("should request ascending order for gainers", () => {
+        mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
 
-          renderHook(() => usePerformersBannerItems(ranking));
+        renderHook(() => usePerformersBannerItems("gainers"));
 
-          expect(mockedUseMarketPerformers).toHaveBeenCalledWith(
-            expect.objectContaining({ sort: "asc" }),
-            expect.anything(),
-          );
-        },
-      );
+        expect(mockedUseMarketPerformers).toHaveBeenCalledWith(
+          expect.objectContaining({ sort: "asc" }),
+          expect.anything(),
+        );
+      });
 
       it("should request descending order for losers", () => {
         mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
@@ -221,6 +253,49 @@ describe("MarketBanner view models", () => {
     });
   });
 
+  describe("useTrendingBannerItems", () => {
+    it("caps the result to MARKET_BANNER_ITEMS_COUNT and preserves order", () => {
+      const data = Array.from({ length: MARKET_BANNER_ITEMS_COUNT + 5 }, (_, i) =>
+        createMockMarketPerformer({ id: `coin-${i}` }),
+      );
+      mockTrendingQuery({ data });
+
+      const { result } = renderHook(() => useTrendingBannerItems());
+
+      expect(result.current.items).toHaveLength(MARKET_BANNER_ITEMS_COUNT);
+      expect(result.current.items[0].id).toBe("coin-0");
+    });
+
+    it("does not apply availability filtering", () => {
+      const notTradeable = createMockMarketPerformer({
+        id: "some-token",
+        ledgerIds: ["some-token"],
+      });
+      mockTrendingQuery({ data: [notTradeable] });
+
+      jest.mocked(useRampCatalog).mockReturnValue({
+        isCurrencyAvailable: () => false,
+      } as unknown as ReturnType<typeof useRampCatalog>);
+      jest.mocked(useFetchCurrencyAll).mockReturnValue({
+        data: [],
+      } as unknown as ReturnType<typeof useFetchCurrencyAll>);
+
+      const { result } = renderHook(() => useTrendingBannerItems());
+
+      expect(result.current.items.map(item => item.id)).toEqual(["some-token"]);
+    });
+
+    it("is loading on first fetch and surfaces errors when not refetching", () => {
+      mockTrendingQuery({ isLoading: true, isFetching: true });
+      const { result: loading } = renderHook(() => useTrendingBannerItems());
+      expect(loading.current.isLoading).toBe(true);
+
+      mockTrendingQuery({ isError: true });
+      const { result: errored } = renderHook(() => useTrendingBannerItems());
+      expect(errored.current.isError).toBe(true);
+    });
+  });
+
   describe("useMarketBannerViewModel", () => {
     it("returns favorites data and skips the performers query when ranking is favorites", () => {
       mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
@@ -228,6 +303,7 @@ describe("MarketBanner view models", () => {
 
       const { result } = renderHook(() => useMarketBannerViewModel(), {
         initialState: {
+          ...assetDiscoverabilityOn,
           marketBanner: { ranking: "favorites" },
           settings: { starredMarketCoins: ["bitcoin"] },
         },
@@ -237,12 +313,94 @@ describe("MarketBanner view models", () => {
       expect(result.current.items.map(item => item.id)).toEqual(["bitcoin"]);
     });
 
+    it("resets a stale favorites ranking to trending and runs the trending query when no coin is starred", () => {
+      mockPerformersQuery({});
+      mockTrendingQuery({ data: MOCK_MARKET_PERFORMERS });
+      mockMarketDataQuery({});
+
+      const { result, store } = renderHook(() => useMarketBannerViewModel(), {
+        initialState: {
+          ...assetDiscoverabilityOn,
+          marketBanner: { ranking: "favorites" },
+          settings: { starredMarketCoins: [] },
+        },
+      });
+
+      expect(selectMarketBannerRanking(store.getState())).toBe("trending");
+      expect(mockedUseTrendingPerformers).toHaveBeenCalledWith(expect.anything(), { skip: false });
+      expect(mockedUseMarketPerformers).toHaveBeenCalledWith(expect.anything(), { skip: true });
+      expect(mockedUseMarketData).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ enabled: false }),
+      );
+      expect(result.current.items.length).toBeGreaterThan(0);
+    });
+
+    it("returns trending data and skips the performers and favorites queries when ranking is trending", () => {
+      mockPerformersQuery({});
+      mockTrendingQuery({ data: MOCK_MARKET_PERFORMERS });
+      mockMarketDataQuery({});
+
+      const { result } = renderHook(() => useMarketBannerViewModel(), {
+        initialState: {
+          ...assetDiscoverabilityOn,
+          marketBanner: { ranking: "trending" },
+        },
+      });
+
+      expect(mockedUseTrendingPerformers).toHaveBeenCalledWith(expect.anything(), { skip: false });
+      expect(mockedUseMarketPerformers).toHaveBeenCalledWith(expect.anything(), { skip: true });
+      expect(mockedUseMarketData).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ enabled: false }),
+      );
+      expect(result.current.items.length).toBeGreaterThan(0);
+    });
+
+    it("falls back to the gainers performers query when the trending query errors", () => {
+      mockTrendingQuery({ isError: true });
+      mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
+      mockMarketDataQuery({});
+
+      const { result } = renderHook(() => useMarketBannerViewModel(), {
+        initialState: {
+          ...assetDiscoverabilityOn,
+          marketBanner: { ranking: "trending" },
+        },
+      });
+
+      // Fallback active: the performers query is enabled with the ascending (gainers) sort.
+      expect(mockedUseMarketPerformers).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: "asc" }),
+        { skip: false },
+      );
+      expect(result.current.items.length).toBeGreaterThan(0);
+    });
+
+    it("keeps the favorites ranking when at least one coin is starred", () => {
+      mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
+      mockMarketDataQuery({ data: [createMockMarketCurrencyData({ id: "bitcoin" })] });
+
+      const { store } = renderHook(() => useMarketBannerViewModel(), {
+        initialState: {
+          ...assetDiscoverabilityOn,
+          marketBanner: { ranking: "favorites" },
+          settings: { starredMarketCoins: ["bitcoin"] },
+        },
+      });
+
+      expect(selectMarketBannerRanking(store.getState())).toBe("favorites");
+    });
+
     it("returns performers data and disables the favorites query for a performers ranking", () => {
       mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
       mockMarketDataQuery({});
 
       const { result } = renderHook(() => useMarketBannerViewModel(), {
-        initialState: { marketBanner: { ranking: "losers" } },
+        initialState: {
+          ...assetDiscoverabilityOn,
+          marketBanner: { ranking: "losers" },
+        },
       });
 
       expect(mockedUseMarketData).toHaveBeenCalledWith(
@@ -254,6 +412,51 @@ describe("MarketBanner view models", () => {
         { skip: false },
       );
       expect(result.current.items.length).toBeGreaterThan(0);
+    });
+
+    describe("asset discoverability feature flag", () => {
+      it("uses the persisted ranking when the flag is enabled", () => {
+        mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
+        mockMarketDataQuery({ data: [createMockMarketCurrencyData({ id: "bitcoin" })] });
+
+        renderHook(() => useMarketBannerViewModel(), {
+          initialState: {
+            ...assetDiscoverabilityOn,
+            marketBanner: { ranking: "favorites" },
+            settings: { starredMarketCoins: ["bitcoin"] },
+          },
+        });
+
+        // favorites ranking is honored: performers query is skipped, favorites query runs
+        expect(mockedUseMarketPerformers).toHaveBeenCalledWith(expect.anything(), { skip: true });
+        expect(mockedUseMarketData).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ enabled: true }),
+        );
+      });
+
+      it("falls back to the default ranking and ignores the persisted ranking when the flag is disabled", () => {
+        mockPerformersQuery({ data: MOCK_MARKET_PERFORMERS });
+        mockMarketDataQuery({ data: [createMockMarketCurrencyData({ id: "bitcoin" })] });
+
+        const { result } = renderHook(() => useMarketBannerViewModel(), {
+          initialState: {
+            ...assetDiscoverabilityOff,
+            marketBanner: { ranking: "favorites" },
+            settings: { starredMarketCoins: ["bitcoin"] },
+          },
+        });
+
+        expect(mockedUseMarketPerformers).toHaveBeenCalledWith(
+          expect.objectContaining({ sort: "asc" }),
+          { skip: false },
+        );
+        expect(mockedUseMarketData).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ enabled: false }),
+        );
+        expect(result.current.items.length).toBeGreaterThan(0);
+      });
     });
   });
 });

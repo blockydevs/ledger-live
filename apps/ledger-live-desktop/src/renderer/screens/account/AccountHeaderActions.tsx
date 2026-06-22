@@ -16,6 +16,7 @@ import { setTrackingSource } from "~/renderer/analytics/TrackPage";
 import { RECEIVE_SOURCE_PAGE } from "LLD/features/Receive/types";
 import Box, { Tabbable } from "~/renderer/components/Box";
 import Star from "~/renderer/components/Stars/Star";
+import { useWalletFeaturesConfig } from "@features/platform-feature-flags";
 import Tooltip from "~/renderer/components/Tooltip";
 import useTheme from "~/renderer/hooks/useTheme";
 import IconAccountSettings from "~/renderer/icons/AccountSettings";
@@ -33,7 +34,7 @@ import {
 } from "./AccountActionsDefault";
 import { useGetSwapTrackingProperties } from "~/renderer/screens/exchange/Swap2/utils/index";
 import { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { getLLDCoinFamily } from "~/renderer/families";
+import { useLLDCoinFamily } from "~/renderer/families";
 import { ManageAction } from "~/renderer/families/types";
 import { getAvailableProviders } from "@ledgerhq/live-common/exchange/swap/index";
 import { useFetchCurrencyAll } from "@ledgerhq/live-common/exchange/swap/hooks/index";
@@ -136,6 +137,7 @@ const AccountHeaderSettingsButtonComponent = ({ account, parentAccount, openModa
   const mainAccount = getMainAccount(account, parentAccount);
   const currency = getAccountCurrency(account);
   const navigate = useNavigate();
+  const { shouldDisplayAssetDiscoverability } = useWalletFeaturesConfig("desktop");
   const onWalletConnectLiveApp = useCallback(() => {
     setTrackingSource("account header actions");
     const params = {
@@ -150,9 +152,11 @@ const AccountHeaderSettingsButtonComponent = ({ account, parentAccount, openModa
 
   return (
     <Box horizontal alignItems="center" justifyContent="flex-end" flow={2}>
-      <Tooltip content={t("stars.tooltip")}>
-        <Star accountId={account.id} yellow rounded />
-      </Tooltip>
+      {!shouldDisplayAssetDiscoverability && (
+        <Tooltip content={t("stars.tooltip")}>
+          <Star accountId={account.id} yellow rounded />
+        </Tooltip>
+      )}
       {isWalletConnectActionDisplayable ? (
         <Tooltip content={t("walletconnect.titleAccount")}>
           <ButtonSettings onClick={onWalletConnectLiveApp}>
@@ -193,7 +197,7 @@ const AccountHeaderActions = ({ account, parentAccount, openModal }: Props) => {
   const swapDefaultTrack = useGetSwapTrackingProperties();
   const navigate = useNavigate();
   const location = useLocation();
-  const specific = getLLDCoinFamily(mainAccount.currency.family);
+  const specific = useLLDCoinFamily(mainAccount.currency.family);
   const openSendFlow = useOpenSendFlow();
   const { isEnabledForFamily, getFamilyFromAccount, getCurrencyIdFromAccount } =
     useNewSendFlowFeature();

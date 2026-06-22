@@ -74,6 +74,8 @@
   "common": {
     "never": "Never",
     "new": "New",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
     "skip": "Skip",
     "apply": "Apply",
     "done": "Done",
@@ -406,6 +408,42 @@
         "finished": "Finished",
         "unknown": "Processing",
         "refunded": "Refunded"
+      }
+    },
+    "modals": {
+      "transactionStatus": {
+        "title": "Swap {{sendTicker}} → {{receiveTicker}}",
+        "sections": {
+          "status": {
+            "heading": "Status",
+            "sendPending": "Sending {{ticker}}",
+            "sendCompleted": "Sent {{ticker}}",
+            "receivePending": "Receiving {{ticker}}",
+            "receiveCompleted": "Received {{ticker}}"
+          },
+          "details": {
+            "networkFees": "Network fees",
+            "receiveAccount": "Receive account",
+            "provider": "Provider",
+            "swapId": "Swap ID"
+          }
+        },
+        "statusLabels": {
+          "pending": "Ongoing",
+          "onhold": "On hold",
+          "expired": "Expired",
+          "finished": "Completed",
+          "refunded": "Refunded",
+          "cancelled": "Cancelled",
+          "unknown": "Unknown"
+        },
+        "actions": {
+          "viewInExplorer": "View in explorer",
+          "copied": "Copied"
+        },
+        "accessibility": {
+          "copySwapId": "Copy swap ID"
+        }
       }
     },
     "exchangeDrawer": {
@@ -1639,6 +1677,21 @@
       "applyFilters": "Apply filters",
       "clearAll": "Clear all"
     },
+    "assetsTitle": "Assets",
+    "marketTable": {
+      "crypto": "Name",
+      "price": "Market price",
+      "volume": "Volume",
+      "change": "Change",
+      "marketCap": "Market cap",
+      "actions": "Actions",
+      "menu": {
+        "more": "More",
+        "buySell": "Buy/Sell",
+        "addToFavourites": "Add to favorites",
+        "removeFromFavourites": "Remove from favorites"
+      }
+    },
     "marketList": {
       "crypto": "Crypto",
       "price": "Price",
@@ -1653,7 +1706,11 @@
         "stocks": "Stocks",
         "favorites": "Favorites"
       },
-      "emptyFavorites": "No favorites yet"
+      "emptyFavorites": "No favorites yet",
+      "noAssets": {
+        "title": "No assets available",
+        "description": "Sorry, there are no assets available in this category."
+      }
     },
     "detailsPage": {
       "priceStatistics": "Price stats",
@@ -4403,6 +4460,8 @@
         "header": "Undelegation(s)",
         "headerTooltip": "Available after the {{numberOfDays}}-day timelock",
         "inactiveTooltip": "Undelegated amounts do not generate rewards.",
+        "timelockTooltip": "Still within the timelock. These funds are not yet available to withdraw.",
+        "readyTooltip": "The timelock has ended. These funds are ready to withdraw.",
         "flow": {
           "title": "Stop staking",
           "steps": {
@@ -5102,6 +5161,10 @@
           "title": "Stablecoin preset",
           "desc": "Generate Ethereum, Arbitrum, Optimism, Base, Solana, Tron and Algorand accounts with top stablecoins (max 5 per network)"
         },
+        "stocksGenerate": {
+          "title": "Stocks preset",
+          "desc": "Generate accounts with the top tokenized stocks from DADA (category=stocks) as sub-accounts under their network"
+        },
         "currencySelector": {
           "placeholder": "Choose currencies...",
           "searchPlaceholder": "Search",
@@ -5120,7 +5183,10 @@
           "generateAccountsQuick": "Generate {{count}} accounts",
           "generateEmptyAccount": "Generate empty account",
           "generateStablecoinAccounts": "Generate {{count}} stablecoin account",
-          "generateStablecoinAccounts_other": "Generate {{count}} stablecoin accounts"
+          "generateStablecoinAccounts_other": "Generate {{count}} stablecoin accounts",
+          "generateStockAccounts": "Generate {{count}} stock account",
+          "generateStockAccounts_other": "Generate {{count}} stock accounts",
+          "loadingStocks": "Loading stock data…"
         },
         "alerts": {
           "selectCurrency": "Please select at least one currency",
@@ -7487,6 +7553,10 @@
     "TaprootNotActivated": {
       "title": "Sending to a taproot address is unsafe before mainnet activation"
     },
+    "RbfBuildError": {
+      "title": "Cannot replace this transaction",
+      "description": "The fee increase required to replace this transaction can't be applied with the current parameters. Try a different fee amount or cancel the operation."
+    },
     "SolanaAccountNotFunded": {
       "title": "Account not funded"
     },
@@ -8726,11 +8796,9 @@
     "noDeviceTitle": "Your secure crypto wallet"
   },
   "marketBanner": {
-    "title": "Explore the market",
+    "title": "Market",
     "genericError": "Connection failed",
     "cta": "View all",
-    "scrollLeft": "Scroll left",
-    "scrollRight": "Scroll right",
     "ranking": {
       "trending": "Trending",
       "gainers": "Gainers",
@@ -8752,7 +8820,7 @@
     "dialog": {
       "title": "Mood index",
       "content": "Shows overall market sentiment from 0 to 100, based notably on volatility, market momentum and social trends. Lower values indicate fear, higher values indicate greed.",
-      "disclaimer": "Data is sourced from CoinMarketCap's Fear and Greed Index and provided for informational purposes only.",
+      "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
       "cta": "Got it"
     }
   },
@@ -8760,6 +8828,7 @@
     "dialog": {
       "title": "Total market cap",
       "content": "The total market cap represents the market capitalization of all cryptocurrencies combined.",
+      "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
       "cta": "Got it"
     }
   },
@@ -8767,7 +8836,7 @@
     "dialog": {
       "title": "Altcoin index",
       "content": "The Altcoin index shows how Bitcoin is performing compared to alternative cryptocurrencies. The higher the number, the better altcoins are doing compared to Bitcoin.",
-      "disclaimer": "Data is sourced from CoinMarketCap's Altcoin Season Index and provided for informational purposes only.",
+      "disclaimer": "Data is sourced from CoinMarketCap. Provided for informational purposes only.",
       "cta": "Got it"
     }
   },
@@ -8782,6 +8851,7 @@
   "assets": {
     "cryptos": "Crypto",
     "stablecoins": "Stablecoins",
+    "stocks": "Stocks",
     "cryptoAccounts": "Crypto accounts",
     "accountsCount_one": "{{count}} account",
     "accountsCount_other": "{{count}} accounts",
@@ -8828,7 +8898,7 @@
     "title": "Crypto assets"
   },
   "stocks": {
-    "explore": "Explore"
+    "explore": "Explore all"
   },
   "nftEntryPoint": {
     "title": "NFT (Non Fungible Tokens)",
@@ -8839,10 +8909,16 @@
   },
   "topBar": {
     "searchPlaceholder": "Search assets",
+    "searchPlaceholders": {
+      "crypto": "Search crypto",
+      "stablecoins": "Search stablecoins",
+      "stocks": "Search stocks",
+      "addresses": "Search addresses"
+    },
     "search": {
-      "noResults": "No results for \"{{query}}\"",
-      "cryptos": "Cryptos",
-      "stablecoins": "Stablecoins",
+      "noAssetFound": "No asset found",
+      "error": "Connection failed",
+      "cryptos": "Crypto",
       "stocks": "Stocks"
     },
     "history": {
@@ -8886,6 +8962,20 @@
       "privateBalanceTooltip": "Balance that is hidden from the public"
     },
     "shielded": {
+      "send": {
+        "transferFrom": {
+          "label": "Transfer from",
+          "public": {
+            "title": "Public balance",
+            "subtitle": "Transparent"
+          },
+          "private": {
+            "title": "Private balance",
+            "subtitle": "Shielded",
+            "unavailable": "Private balance unavailable"
+          }
+        }
+      },
       "state": {
         "showBalance": "Show balance",
         "startSync": "Start sync",
@@ -9085,6 +9175,35 @@
       "explore": "Explore my new portfolio"
     }
   },
+  "q2Tour": {
+    "slides": {
+      "welcome": {
+        "title": "Smarter portfolio management. Clearer paths to growth",
+        "description": ""
+      },
+      "aggregatedBalance": {
+        "title": "One balance for each asset",
+        "description": "Multi-chain assets like USDT are now shown as one total. Simple, accurate, clear."
+      },
+      "pnl": {
+        "title": "Your returns, front and center",
+        "description": "See profit and loss on every asset, across your portfolio and analytics page."
+      },
+      "earnSimulator": {
+        "title": "Test your earn potential",
+        "description": "Simulate what rewards you can earn and build a growth plan that fits your goals."
+      },
+      "earnUpselling": {
+        "title": "More protocols, more rewards",
+        "description": "Stablecoins and top picks, surfaced right in your wallet. Less searching. More deciding."
+      }
+    },
+    "cta": {
+      "seeWhatsNew": "See what's new",
+      "next": "Next",
+      "gotIt": "Got it"
+    }
+  },
   "productTour": {
     "cta": {
       "continue": "Continue",
@@ -9164,7 +9283,32 @@
     "actionsList": {
       "help": "Help",
       "recover": "[L] Recover",
+      "backup": "Backup",
       "refer": "Referral"
+    },
+    "backupHub": {
+      "title": "Backups of your Secret Recovery Phrase",
+      "description": "Don't lose access to your assets — back up your secret recovery phrase across multiple formats.",
+      "back": "Back",
+      "sections": {
+        "digital": "ID-linked digital backup",
+        "physical": "Physical backups"
+      },
+      "recover": {
+        "title": "Ledger Recover",
+        "notSubscribed": "Restore access by verifying your ID.",
+        "inProgress": "Complete activation",
+        "done": "Manage your backup",
+        "discover": "Discover"
+      },
+      "recoveryKey": {
+        "title": "Ledger Recovery Key",
+        "description": "A PIN-protected smart card."
+      },
+      "secretRecoveryPhrase": {
+        "title": "24-word metal storage",
+        "description": "Fire and water resistant protection."
+      }
     },
     "myLedger": {
       "title": "My Ledger",
@@ -9208,6 +9352,9 @@
     "tradingVolume24h": "24h trading volume",
     "tradingVolume24hTooltip": "The total amount traded in the last 24 hours.",
     "marketStatsDisclaimer": "Market stats sourced from CoinGecko",
+    "fallbackBanner": {
+      "title": "Swap and Buy are not supported for this asset."
+    },
     "day": "1 day",
     "week": "1 week",
     "month": "1 month",

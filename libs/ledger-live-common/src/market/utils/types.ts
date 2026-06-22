@@ -9,6 +9,8 @@ export enum Order {
   MarketCapAsc = "asc",
   topLosers = "topLosers",
   topGainers = "topGainers",
+  VolumeDesc = "volume-desc",
+  VolumeAsc = "volume-asc",
 }
 
 export type MarketListRequestParams = {
@@ -48,6 +50,8 @@ export type HashMapBody = {
 
 export type MarketCurrencyRequestParams = {
   id?: string;
+  /** Ledger currency ids to resolve via the /v3/markets `ledgerIds` filter. */
+  ledgerIds?: string[];
   counterCurrency?: string;
   range?: string;
 };
@@ -105,6 +109,11 @@ export type MarketPerformersParams = {
   range: PortfolioRange;
   counterCurrency: string;
   supported: boolean;
+  refreshRate?: number;
+};
+
+export type TrendingPerformersParams = {
+  counterCurrency: string;
   refreshRate?: number;
 };
 

@@ -6,6 +6,7 @@ import SearchOverlayContext from "./SearchOverlayContext";
 import { SearchOverlayDefault } from "./content/SearchOverlayDefault";
 import { SearchResultsList } from "./content/SearchResultsList";
 import { SearchEmptyState } from "./content/SearchEmptyState";
+import { SearchErrorState } from "./content/SearchErrorState";
 import { SearchMode, SearchOverlayContextValue } from "./types";
 
 const side = "bottom";
@@ -19,19 +20,21 @@ type SearchOverlayViewProps = Readonly<{
   onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
   mode: SearchMode;
   contextValue: SearchOverlayContextValue;
+  animatedTitle: boolean;
 }>;
 
 type SearchOverlayContentProps = Readonly<{
   mode: SearchMode;
-  query: string;
 }>;
 
-function SearchOverlayContent({ mode, query }: SearchOverlayContentProps) {
+function SearchOverlayContent({ mode }: SearchOverlayContentProps) {
   switch (mode) {
     case "results":
       return <SearchResultsList />;
     case "noResults":
-      return <SearchEmptyState query={query} />;
+      return <SearchEmptyState />;
+    case "error":
+      return <SearchErrorState />;
     case "suggestions":
     default:
       return <SearchOverlayDefault />;
@@ -46,6 +49,7 @@ export function SearchOverlayView({
   onKeyDown,
   mode,
   contextValue,
+  animatedTitle,
 }: SearchOverlayViewProps) {
   const { t } = useTranslation();
 
@@ -58,6 +62,8 @@ export function SearchOverlayView({
             placeholder={t("topBar.searchPlaceholder")}
             onChange={onChangeQuery}
             onKeyDown={onKeyDown}
+            isOpen={open}
+            animatedTitle={animatedTitle}
             testId="topbar-search-input"
           />
         }
@@ -70,7 +76,7 @@ export function SearchOverlayView({
       >
         <SearchOverlayContext.Provider value={contextValue}>
           <div className="flex flex-col gap-12" data-testid="topbar-search-popover">
-            <SearchOverlayContent mode={mode} query={query} />
+            <SearchOverlayContent mode={mode} />
           </div>
         </SearchOverlayContext.Provider>
       </PopoverContent>

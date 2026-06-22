@@ -7,7 +7,7 @@ import { useTranslation } from "~/context/Locale";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useTheme } from "styled-components/native";
 import { useSelector } from "~/context/hooks";
-import { ScreenName, NavigatorName } from "~/const";
+import { ScreenName, NavigatorName, BASE_NAVIGATOR_ID } from "~/const";
 import * as families from "~/families";
 import OperationDetails from "~/screens/OperationDetails";
 import EditDeviceName from "~/screens/EditDeviceName";
@@ -24,6 +24,7 @@ import UnfreezeNavigator from "./UnfreezeNavigator";
 import ClaimRewardsNavigator from "./ClaimRewardsNavigator";
 import ExchangeLiveAppNavigator from "./ExchangeLiveAppNavigator";
 import { CardLiveAppNavigator } from "LLM/features/Card";
+import { useTheme as useLumenTheme } from "@ledgerhq/lumen-ui-rnative/styles";
 import BorrowLiveAppNavigator from "./BorrowLiveAppNavigator";
 import EarnLiveAppNavigator from "./EarnLiveAppNavigator";
 import PlatformExchangeNavigator from "./PlatformExchangeNavigator";
@@ -94,6 +95,7 @@ import Web3HubTabNavigator from "LLM/features/Web3Hub/TabNavigator";
 import { useFeature } from "@features/platform-feature-flags";
 import MyLedgerNavigator from "./MyLedgerNavigator";
 import MyWalletNavigator from "LLM/features/MyWallet/Navigator";
+import BackupHubNavigator from "LLM/features/BackupHub/Navigator";
 import DiscoverNavigator from "./DiscoverNavigator";
 import AddAccountsV2Navigator from "LLM/features/Accounts/Navigator";
 import DeviceSelectionNavigator from "LLM/features/DeviceSelection/Navigator";
@@ -102,11 +104,11 @@ import AssetsListNavigator from "LLM/features/Assets/Navigator";
 import AnalyticsNavigator from "LLM/features/Analytics/Navigator";
 import OperationsHistoryNavigator from "LLM/features/OperationsHistory/Navigator";
 import FeesNavigator from "./FeesNavigator";
-import { getStakeLabelLocaleBased } from "~/helpers/getStakeLabelLocaleBased";
+import { getEarnScreenOptions } from "./getEarnScreenOptions";
 import SignRawTransactionNavigator from "./SignRawTransactionNavigator";
 import LiveAppModalScreen from "LLM/features/LiveAppModal";
 
-const Stack = createNativeStackNavigator<BaseNavigatorStackParamList>();
+const Stack = createNativeStackNavigator<BaseNavigatorStackParamList, typeof BASE_NAVIGATOR_ID>();
 
 type OperationDetailsRouteProp = RouteProp<
   BaseNavigatorStackParamList,
@@ -179,6 +181,10 @@ export default function BaseNavigator() {
     }>
   >();
   const { colors } = useTheme();
+  // The Rewards simulator's design uses the live-app canvas (pure black in Wallet 4.0 dark) for the
+  // whole screen — same canvas `getStackNavigationConfigV4` paints from (`theme.colors.bg.canvas`).
+  const { theme: lumenTheme } = useLumenTheme();
+  const liveAppCanvasColor = lumenTheme.colors.bg.canvas;
   const stackNavigationConfig = useMemo(() => getStackNavigatorConfig(colors, true), [colors]);
   const nativeStackScreenOptions: Partial<NativeStackNavigationOptions> = stackNavigationConfig;
   const noNanoBuyNanoWallScreenOptions = useNoNanoBuyNanoWallScreenOptions();
@@ -190,7 +196,7 @@ export default function BaseNavigator() {
   return (
     <>
       <RootDrawer drawer={route.params?.drawer} />
-      <Stack.Navigator screenOptions={nativeStackScreenOptions}>
+      <Stack.Navigator id={BASE_NAVIGATOR_ID} screenOptions={nativeStackScreenOptions}>
         <Stack.Screen name={NavigatorName.Main} component={Main} options={{ headerShown: false }} />
         <Stack.Screen
           name={NavigatorName.MyLedger}
@@ -200,6 +206,12 @@ export default function BaseNavigator() {
         <Stack.Screen
           name={NavigatorName.MyWallet}
           component={MyWalletNavigator}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name={NavigatorName.BackupHub}
+          component={BackupHubNavigator}
           options={{ headerShown: false }}
         />
 
@@ -580,19 +592,12 @@ export default function BaseNavigator() {
         <Stack.Screen
           name={NavigatorName.Earn}
           component={EarnLiveAppNavigator}
-          options={props => {
-            const stakeLabel = getStakeLabelLocaleBased();
-            const intent = props.route?.params?.params?.intent;
-
-            return intent === "deposit" || intent === "withdraw"
-              ? {
-                  headerShown: true,
-                  closable: false,
-                  headerTitle: t(stakeLabel),
-                  headerRight: () => null,
-                }
-              : { headerShown: false };
-          }}
+          // Initial header from the entry `intent` param (first paint). Once the live-app loads,
+          // `useEarnIntentFlowPresentation` becomes the live owner and overrides this imperatively
+          // via `getParent(BASE_NAVIGATOR_ID).setOptions` as the webview route changes.
+          options={props =>
+            getEarnScreenOptions(props.route?.params?.params?.intent, t, liveAppCanvasColor)
+          }
         />
         <Stack.Screen
           name={NavigatorName.Borrow}
