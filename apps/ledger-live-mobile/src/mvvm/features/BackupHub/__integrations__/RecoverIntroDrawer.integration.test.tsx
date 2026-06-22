@@ -9,7 +9,11 @@ import {
 } from "~/reducers/backupHubFeatureIntro";
 import { handleBackupHubDeeplink } from "~/navigation/deeplinks/handleBackupHubDeeplink";
 import { RecoverIntroDrawer } from "../components/RecoverIntroDrawer";
-import { BACKUP_HUB_FEATURE_INTRO_PAGE, BACKUP_HUB_FEATURE_INTRO_SOURCE } from "../analytics";
+import {
+  BACKUP_HUB_FEATURE_INTRO_PAGE,
+  BACKUP_HUB_FEATURE_INTRO_SOURCE,
+  resetBackupHubFeatureIntroViewTracking,
+} from "../analytics";
 
 jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
   useCustomURI: jest.fn(
@@ -20,6 +24,7 @@ jest.mock("@ledgerhq/live-common/hooks/recoverFeatureFlag", () => ({
 describe("RecoverIntroDrawer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetBackupHubFeatureIntroViewTracking();
     jest.useFakeTimers();
   });
 
@@ -61,6 +66,30 @@ describe("RecoverIntroDrawer", () => {
       name: BACKUP_HUB_FEATURE_INTRO_PAGE,
       source: BACKUP_HUB_FEATURE_INTRO_SOURCE,
     });
+  });
+
+  it("should track the feature intro screen view only once when mounted multiple times", async () => {
+    render(
+      <>
+        <RecoverIntroDrawer />
+        <RecoverIntroDrawer />
+      </>,
+      {
+        overrideInitialState: withFlagOverrides(
+          {
+            lwmBackupHub: { enabled: true },
+            protectServicesMobile: { enabled: true, params: { protectId: "protect-prod" } },
+          },
+          withBackupHubFeatureIntro({ isOpen: true }),
+        ),
+      },
+    );
+
+    act(() => jest.runOnlyPendingTimers());
+
+    expect(
+      analyticsScreen.mock.calls.filter(([page]) => page === BACKUP_HUB_FEATURE_INTRO_PAGE),
+    ).toHaveLength(1);
   });
 
   it("should open Recover resume activate when primary CTA is pressed", async () => {
