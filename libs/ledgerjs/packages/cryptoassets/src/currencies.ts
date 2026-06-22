@@ -5328,16 +5328,7 @@ const bundledCurrenciesStore: CryptoCurrenciesStore = {
 };
 
 for (const cryptoCurrency of Object.values(cryptocurrenciesById)) {
-  registerCryptoCurrency(cryptoCurrency);
-}
-
-/**
- *
- * @param {string} id
- * @param {CryptoCurrency} currency
- */
-export function registerCryptoCurrency(currency: CryptoCurrency): void {
-  registerCurrencyInStore(bundledCurrenciesStore, currency);
+  registerCurrencyInStore(bundledCurrenciesStore, cryptoCurrency);
 }
 
 // All registry accessors read from the injected store when present, else the bundled data.

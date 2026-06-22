@@ -31,9 +31,11 @@ declare global {
 
 function emptyCurrenciesStore(): CryptoCurrenciesStore {
   return {
-    cryptocurrenciesById: {},
-    cryptocurrenciesByScheme: {},
-    cryptocurrenciesByTicker: {},
+    // Null-prototype maps: keys come from external (injected) currency data, so an id/scheme/ticker
+    // like "__proto__" or "constructor" stays a plain own key and can't mutate the prototype chain.
+    cryptocurrenciesById: Object.create(null),
+    cryptocurrenciesByScheme: Object.create(null),
+    cryptocurrenciesByTicker: Object.create(null),
     cryptocurrenciesArray: [],
     prodCryptoArray: [],
     cryptocurrenciesArrayWithoutTerminated: [],
@@ -56,12 +58,12 @@ export function registerCurrencyInStore(
 
   if (!currency.isTestnetFor) {
     const currencyAlreadySet = store.cryptocurrenciesByTicker[currency.ticker];
-    const curencyHasTickerinKeywords = Boolean(currency?.keywords?.includes(currency.ticker));
+    const currencyHasTickerInKeywords = Boolean(currency?.keywords?.includes(currency.ticker));
 
     if (
       !currencyAlreadySet ||
       // In case of duplicates, we prioritize currencies with the ticker as a keyword of the currency
-      (currencyAlreadySet && curencyHasTickerinKeywords)
+      (currencyAlreadySet && currencyHasTickerInKeywords)
     ) {
       store.cryptocurrenciesByTicker[currency.ticker] = currency;
     }
