@@ -29,14 +29,10 @@ export const usePortfolioBannersSectionViewModel = ({
 
   const hasAssets = showAssets === true;
 
-  const contentCardsPaddingTop: PortfolioBannersSectionViewModelResult["contentCardsPaddingTop"] =
-    !hasTopWalletDisplayableCards
-      ? undefined
-      : shouldDisplayRecover
-        ? "s24"
-        : shouldDisplayQuickActionCtas && hasAssets
-          ? "s12"
-          : "s24";
+  let contentCardsPaddingTop: PortfolioBannersSectionViewModelResult["contentCardsPaddingTop"];
+  if (hasTopWalletDisplayableCards) {
+    contentCardsPaddingTop = shouldDisplayQuickActionCtas ? "s12" : "s24";
+  }
 
   const onScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
