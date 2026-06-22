@@ -10,13 +10,9 @@ import {
   findCryptoCurrencyByKeyword,
   findCryptoCurrencyByManagerAppName,
 } from "./currencies";
-import {
-  type CryptoCurrenciesStore,
-  getInjectedCurrenciesStore,
-  setCryptoCurrenciesStore,
-} from "./currencies-store";
+import { getInjectedCurrenciesStore, setCryptoCurrenciesStore } from "./currencies-store";
 
-const makeCurrency = (id: string): CryptoCurrency =>
+const makeCurrency = (id: string, extra: Partial<CryptoCurrency> = {}): CryptoCurrency =>
   ({
     id,
     name: `${id} name`,
@@ -24,29 +20,21 @@ const makeCurrency = (id: string): CryptoCurrency =>
     scheme: id,
     managerAppName: `${id} App`,
     keywords: [`${id}-kw`],
+    ...extra,
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   }) as unknown as CryptoCurrency;
 
-// One sentinel per list bucket so we can assert listCryptoCurrencies selects the right array.
+// One sentinel per list bucket: the dev/prod split is `!isTestnetFor`, terminated is `terminated`.
 const prodActive = makeCurrency("inj_prod_active");
-const devActive = makeCurrency("inj_dev_active");
-const prodTerminated = makeCurrency("inj_prod_terminated");
-const devTerminated = makeCurrency("inj_dev_terminated");
+const devActive = makeCurrency("inj_dev_active", { isTestnetFor: "inj_prod_active" });
+const prodTerminated = makeCurrency("inj_prod_terminated", { terminated: { link: "https://x" } });
+const devTerminated = makeCurrency("inj_dev_terminated", {
+  isTestnetFor: "inj_prod_active",
+  terminated: { link: "https://x" },
+});
 
-const injectedStore: CryptoCurrenciesStore = {
-  cryptocurrenciesById: {
-    [prodActive.id]: prodActive,
-    [devActive.id]: devActive,
-    [prodTerminated.id]: prodTerminated,
-    [devTerminated.id]: devTerminated,
-  },
-  cryptocurrenciesByScheme: { [prodActive.scheme]: prodActive },
-  cryptocurrenciesByTicker: { [prodActive.ticker]: prodActive },
-  prodCryptoArrayWithoutTerminated: [prodActive],
-  cryptocurrenciesArrayWithoutTerminated: [prodActive, devActive],
-  prodCryptoArray: [prodActive, prodTerminated],
-  cryptocurrenciesArray: [prodActive, devActive, prodTerminated, devTerminated],
-};
+// The caller only passes the list; the store derives every index/array from it.
+const injectedCurrencies = [prodActive, devActive, prodTerminated, devTerminated];
 
 function clearInjectedStore() {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -71,11 +59,12 @@ describe("currencies-store: no store injected (bundled fallback)", () => {
 });
 
 describe("currencies-store: store injected", () => {
-  beforeEach(() => setCryptoCurrenciesStore(injectedStore));
+  beforeEach(() => setCryptoCurrenciesStore(injectedCurrencies));
   afterEach(clearInjectedStore);
 
   it("reads the injected registry and ignores bundled data", () => {
-    expect(getInjectedCurrenciesStore()).toBe(injectedStore);
+    // The derived store is computed from the list (not the list object itself).
+    expect(getInjectedCurrenciesStore()?.cryptocurrenciesArray).toEqual(injectedCurrencies);
     expect(getCryptoCurrencyById(prodActive.id)).toBe(prodActive);
     expect(findCryptoCurrencyById(prodActive.id)).toBe(prodActive);
     // bitcoin is bundled-only — now invisible.

@@ -1,12 +1,13 @@
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 
 /**
- * Injectable source of crypto-currency registry *data*.
+ * Internal, derived shape consumed by the accessors in `currencies.ts`.
  *
- * The lookup algorithms (by id/ticker/scheme/keyword/manager-app, predicate search and the
- * dev/terminated filtering of `listCryptoCurrencies`) live in `currencies.ts` and run over
- * whichever store is active. A store therefore only needs to provide the indexed data — the
- * by-id map, the two indices and the four arrays — mirroring the bundled structures.
+ * It is **not** the injection contract: callers pass a `CryptoCurrency[]` to
+ * {@link setCryptoCurrenciesStore} and the indices/arrays below are derived here, so they cannot
+ * drift out of sync. The lookup algorithms (by id/ticker/scheme/keyword/manager-app, predicate
+ * search and the dev/terminated filtering of `listCryptoCurrencies`) live in `currencies.ts` and
+ * run over whichever store is active.
  */
 export type CryptoCurrenciesStore = {
   cryptocurrenciesById: Record<string, CryptoCurrency>;
@@ -28,16 +29,77 @@ declare global {
   }
 }
 
+function emptyCurrenciesStore(): CryptoCurrenciesStore {
+  return {
+    cryptocurrenciesById: {},
+    cryptocurrenciesByScheme: {},
+    cryptocurrenciesByTicker: {},
+    cryptocurrenciesArray: [],
+    prodCryptoArray: [],
+    cryptocurrenciesArrayWithoutTerminated: [],
+    prodCryptoArrayWithoutTerminated: [],
+  };
+}
+
 /**
- * Injects the crypto-currency registry store.
+ * Indexes a single currency into `store`, deriving every map and array from it.
+ *
+ * This is the one place the derived structures are built — shared by the bundled registry
+ * (`currencies.ts`) and by {@link buildCryptoCurrenciesStore}.
+ */
+export function registerCurrencyInStore(
+  store: CryptoCurrenciesStore,
+  currency: CryptoCurrency,
+): void {
+  store.cryptocurrenciesById[currency.id] = currency;
+  store.cryptocurrenciesByScheme[currency.scheme] = currency;
+
+  if (!currency.isTestnetFor) {
+    const currencyAlreadySet = store.cryptocurrenciesByTicker[currency.ticker];
+    const curencyHasTickerinKeywords = Boolean(currency?.keywords?.includes(currency.ticker));
+
+    if (
+      !currencyAlreadySet ||
+      // In case of duplicates, we prioritize currencies with the ticker as a keyword of the currency
+      (currencyAlreadySet && curencyHasTickerinKeywords)
+    ) {
+      store.cryptocurrenciesByTicker[currency.ticker] = currency;
+    }
+    store.prodCryptoArray.push(currency);
+
+    if (!currency.terminated) {
+      store.prodCryptoArrayWithoutTerminated.push(currency);
+    }
+  }
+
+  store.cryptocurrenciesArray.push(currency);
+
+  if (!currency.terminated) {
+    store.cryptocurrenciesArrayWithoutTerminated.push(currency);
+  }
+}
+
+function buildCryptoCurrenciesStore(currencies: CryptoCurrency[]): CryptoCurrenciesStore {
+  const store = emptyCurrenciesStore();
+  for (const currency of currencies) {
+    registerCurrencyInStore(store, currency);
+  }
+  return store;
+}
+
+/**
+ * Injects the crypto-currency registry from the canonical currency list.
  * This should be called once during application initialization.
+ *
+ * The caller only provides the currencies; the by-id/ticker/scheme indices and the
+ * dev/terminated arrays are derived here so they stay consistent by construction.
  *
  * Uses globalThis to ensure a single shared reference across all module instances,
  * which is critical when coin-modules are lazy-loaded and may resolve to separate
  * module copies.
  */
-export function setCryptoCurrenciesStore(store: CryptoCurrenciesStore): void {
-  globalThis.__ledgerCryptoCurrenciesStore = store;
+export function setCryptoCurrenciesStore(currencies: CryptoCurrency[]): void {
+  globalThis.__ledgerCryptoCurrenciesStore = buildCryptoCurrenciesStore(currencies);
 }
 
 /**

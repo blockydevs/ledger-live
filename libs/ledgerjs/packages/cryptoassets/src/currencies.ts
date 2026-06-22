@@ -28,7 +28,11 @@ import {
   ExplorerView,
   Unit,
 } from "@ledgerhq/types-cryptoassets";
-import { type CryptoCurrenciesStore, getInjectedCurrenciesStore } from "./currencies-store";
+import {
+  type CryptoCurrenciesStore,
+  getInjectedCurrenciesStore,
+  registerCurrencyInStore,
+} from "./currencies-store";
 
 /**
  * Make an ExplorerView for a Blockscout based explorer
@@ -5310,12 +5314,18 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
   },
 };
 
-const cryptocurrenciesByScheme: Record<string, CryptoCurrency> = {};
-const cryptocurrenciesByTicker: Record<string, CryptoCurrency> = {};
-const cryptocurrenciesArray: CryptoCurrency[] = [];
-const prodCryptoArray: CryptoCurrency[] = [];
-const cryptocurrenciesArrayWithoutTerminated: CryptoCurrency[] = [];
-const prodCryptoArrayWithoutTerminated: CryptoCurrency[] = [];
+// The bundled registry. Reuses the exported `cryptocurrenciesById` literal as its by-id map so
+// direct importers of that map (and `registerCryptoCurrency`) stay in sync; the derived indices
+// and arrays start empty and are filled in place by the init loop below.
+const bundledCurrenciesStore: CryptoCurrenciesStore = {
+  cryptocurrenciesById,
+  cryptocurrenciesByScheme: {},
+  cryptocurrenciesByTicker: {},
+  cryptocurrenciesArray: [],
+  prodCryptoArray: [],
+  cryptocurrenciesArrayWithoutTerminated: [],
+  prodCryptoArrayWithoutTerminated: [],
+};
 
 for (const cryptoCurrency of Object.values(cryptocurrenciesById)) {
   registerCryptoCurrency(cryptoCurrency);
@@ -5327,45 +5337,8 @@ for (const cryptoCurrency of Object.values(cryptocurrenciesById)) {
  * @param {CryptoCurrency} currency
  */
 export function registerCryptoCurrency(currency: CryptoCurrency): void {
-  cryptocurrenciesById[currency.id] = currency;
-  cryptocurrenciesByScheme[currency.scheme] = currency;
-
-  if (!currency.isTestnetFor) {
-    const currencyAlreadySet = cryptocurrenciesByTicker[currency.ticker];
-    const curencyHasTickerinKeywords = Boolean(currency?.keywords?.includes(currency.ticker));
-
-    if (
-      !currencyAlreadySet ||
-      // In case of duplicates, we prioritize currencies with the ticker as a keyword of the currency
-      (currencyAlreadySet && curencyHasTickerinKeywords)
-    ) {
-      cryptocurrenciesByTicker[currency.ticker] = currency;
-    }
-    prodCryptoArray.push(currency);
-
-    if (!currency.terminated) {
-      prodCryptoArrayWithoutTerminated.push(currency);
-    }
-  }
-
-  cryptocurrenciesArray.push(currency);
-
-  if (!currency.terminated) {
-    cryptocurrenciesArrayWithoutTerminated.push(currency);
-  }
+  registerCurrencyInStore(bundledCurrenciesStore, currency);
 }
-
-// The bundled registry: references (not copies) of the module structures populated above.
-// The arrays are filled in place by the init loop, so these references stay valid.
-const bundledCurrenciesStore: CryptoCurrenciesStore = {
-  cryptocurrenciesById,
-  cryptocurrenciesByScheme,
-  cryptocurrenciesByTicker,
-  cryptocurrenciesArray,
-  prodCryptoArray,
-  cryptocurrenciesArrayWithoutTerminated,
-  prodCryptoArrayWithoutTerminated,
-};
 
 // All registry accessors read from the injected store when present, else the bundled data.
 function activeCurrenciesStore(): CryptoCurrenciesStore {
