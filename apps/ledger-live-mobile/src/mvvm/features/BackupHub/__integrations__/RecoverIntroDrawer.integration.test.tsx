@@ -62,10 +62,14 @@ describe("RecoverIntroDrawer", () => {
     act(() => jest.runOnlyPendingTimers());
 
     expect(await screen.findByText("Create a backup you can't lose")).toBeOnTheScreen();
-    expect(analyticsScreen).toHaveBeenCalledWith(BACKUP_HUB_FEATURE_INTRO_PAGE, undefined, {
-      name: BACKUP_HUB_FEATURE_INTRO_PAGE,
-      source: BACKUP_HUB_FEATURE_INTRO_SOURCE,
-    });
+    expect(jest.mocked(analyticsScreen)).toHaveBeenCalledWith(
+      BACKUP_HUB_FEATURE_INTRO_PAGE,
+      undefined,
+      {
+        name: BACKUP_HUB_FEATURE_INTRO_PAGE,
+        source: BACKUP_HUB_FEATURE_INTRO_SOURCE,
+      },
+    );
   });
 
   it("should track the feature intro screen view only once when mounted multiple times", async () => {
@@ -88,7 +92,9 @@ describe("RecoverIntroDrawer", () => {
     act(() => jest.runOnlyPendingTimers());
 
     expect(
-      analyticsScreen.mock.calls.filter(([page]) => page === BACKUP_HUB_FEATURE_INTRO_PAGE),
+      jest
+        .mocked(analyticsScreen)
+        .mock.calls.filter(([page]) => page === BACKUP_HUB_FEATURE_INTRO_PAGE),
     ).toHaveLength(1);
   });
 

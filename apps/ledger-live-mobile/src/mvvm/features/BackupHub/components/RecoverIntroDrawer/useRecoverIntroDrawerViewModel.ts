@@ -148,6 +148,10 @@ export function useRecoverIntroDrawerViewModel(): UseRecoverIntroDrawerViewModel
     }
 
     trackBackupHubFeatureIntroViewed();
+
+    return () => {
+      resetBackupHubFeatureIntroViewTracking();
+    };
   }, [isOpen]);
 
   useEffect(() => {

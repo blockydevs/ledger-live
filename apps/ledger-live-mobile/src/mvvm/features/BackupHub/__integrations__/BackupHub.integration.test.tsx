@@ -93,12 +93,18 @@ describe("BackupHub screen (mobile)", () => {
       page: BACKUP_HUB_TRACKING_PAGE_NAME,
       status: "New",
     });
-    expect(analyticsScreen).toHaveBeenCalledWith(BACKUP_HUB_FEATURE_INTRO_PAGE, undefined, {
-      name: BACKUP_HUB_FEATURE_INTRO_PAGE,
-      source: BACKUP_HUB_FEATURE_INTRO_SOURCE,
-    });
+    expect(jest.mocked(analyticsScreen)).toHaveBeenCalledWith(
+      BACKUP_HUB_FEATURE_INTRO_PAGE,
+      undefined,
+      {
+        name: BACKUP_HUB_FEATURE_INTRO_PAGE,
+        source: BACKUP_HUB_FEATURE_INTRO_SOURCE,
+      },
+    );
     expect(
-      analyticsScreen.mock.calls.filter(([page]) => page === BACKUP_HUB_FEATURE_INTRO_PAGE),
+      jest
+        .mocked(analyticsScreen)
+        .mock.calls.filter(([page]) => page === BACKUP_HUB_FEATURE_INTRO_PAGE),
     ).toHaveLength(1);
   });
 
