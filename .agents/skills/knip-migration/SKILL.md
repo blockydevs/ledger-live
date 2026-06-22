@@ -9,8 +9,8 @@ description: |
 # Dead-code detection: explicit exports + knip (not unimported)
 
 The repo is migrating dead-code / unused-dependency detection from the legacy **`unimported`**
-tool to **`knip`**, one package at a time (initiative **LIVE-32873**). knip is configured
-centrally in the root [`knip.json`](../../../knip.json) (one `workspaces` entry per package).
+tool to **`knip`**, one package at a time. knip is configured centrally in the root
+[`knip.json`](../../../knip.json) (one `workspaces` entry per package).
 
 ## Why this isn't just "swap the tool"
 
