@@ -1463,7 +1463,6 @@
       "cta": "Clear cache"
     },
     "migrate": "Ledger Wallet accounts update available",
-    "genericTerminatedCrypto": "{{coinName}} is not supported anymore",
     "valentine": {
       "title": "Valentine’s day",
       "description": "As a proof of our love, Ledger is reducing buy & sell fees on Ledger Wallet"
