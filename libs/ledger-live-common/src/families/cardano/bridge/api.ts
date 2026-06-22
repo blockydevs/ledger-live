@@ -2,18 +2,19 @@ import type { AssetInfo } from "@ledgerhq/coin-module-framework/api/types";
 import { getCryptoAssetsStore } from "@ledgerhq/cryptoassets/state";
 import { BridgeApi } from "@ledgerhq/ledger-wallet-framework/api/types";
 import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { isTokenAsset } from "@ledgerhq/coin-cardano/logic";
 
-// Cardano native assets are keyed by `<policyId><assetName>` — the same assetReference
-// getBalance/listOperations/craftTransaction use — stored on the TokenCurrency's contractAddress.
-// A Cardano asset is a token iff it carries an assetReference (mirrors coin-cardano's isTokenAsset,
-// which can't be imported across the package boundary): `asset.type` is unreliable here — CAL types
-// native tokens as tokenType "native" (so intent assets are type "native") while getBalance emits
-// them as type "token". Only plain ADA ever lacks an assetReference.
+// A Cardano asset is a token iff it carries an assetReference — keyed by `<policyId><assetName>`, the
+// same reference getBalance/listOperations/craftTransaction use (stored on contractAddress). Reuse
+// coin-cardano's isTokenAsset so craft/validate/bridge classify identically: `asset.type` is unreliable
+// here — CAL types native tokens as tokenType "native" (so intent assets are type "native") while
+// getBalance emits them as type "token"; only plain ADA ever lacks an assetReference. The explicit
+// assetReference check additionally narrows the type for findTokenByAddressInCurrency.
 export async function getTokenFromAsset(
   currency: CryptoCurrency,
   asset: AssetInfo,
 ): Promise<TokenCurrency | undefined> {
-  if (!("assetReference" in asset) || !asset.assetReference) {
+  if (!isTokenAsset(asset) || !("assetReference" in asset) || !asset.assetReference) {
     return undefined;
   }
   return getCryptoAssetsStore().findTokenByAddressInCurrency(asset.assetReference, currency.id);

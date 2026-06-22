@@ -33,8 +33,7 @@ function expectFixedSend(amount: BigNumber) {
 }
 
 // Native ADA sends against a real Yaci devnet (testnet). Staking stays on the in-memory mock
-// (scenarii/cardano.ts) — real-node staking needs multi-witness signing, deferred (see
-// docs/cardano/coin-tester-node-backend.md).
+// (scenarii/cardano.ts) — real-node staking needs multi-witness signing (deferred).
 export const scenarioCardanoYaci: Scenario<GenericTransaction, Account> = {
   name: "Cardano native sends (Yaci devnet)",
 

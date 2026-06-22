@@ -65,7 +65,7 @@ export const scenarioCardanoTokenYaci: Scenario<GenericTransaction, Account> = {
       type: "TokenCurrency",
       id: `cardano_testnet/native/${assetReference}`,
       contractAddress: assetReference,
-      parentCurrency: CARDANO_TESTNET,
+      parentCurrencyId: CARDANO_TESTNET.id,
       tokenType: "native",
       name: "Coin Tester Token",
       ticker: "CTT",

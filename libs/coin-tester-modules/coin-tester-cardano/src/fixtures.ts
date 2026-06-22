@@ -24,7 +24,7 @@ export const TEST_TOKEN: TokenCurrency = {
   type: "TokenCurrency",
   id: `cardano/native/${TEST_TOKEN_POLICY_ID}${TEST_TOKEN_ASSET_NAME}`,
   contractAddress: `${TEST_TOKEN_POLICY_ID}${TEST_TOKEN_ASSET_NAME}`,
-  parentCurrency: CARDANO,
+  parentCurrencyId: CARDANO.id,
   tokenType: "native",
   name: "Coin Tester Token",
   ticker: "CTT",
