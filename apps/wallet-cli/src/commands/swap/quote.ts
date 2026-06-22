@@ -59,11 +59,13 @@ export default defineCommand({
   description: "Fetch swap quotes",
   options: {
     from: option(z.string().min(1, "Source currency is required"), {
-      description: "Source currency ID",
+      description:
+        "Source currency ID — native (e.g. ethereum) or token <network>/erc20/<slug> (e.g. ethereum/erc20/usd_tether__erc20_)",
       short: "f",
     }),
     to: option(z.string().min(1, "Destination currency is required"), {
-      description: "Destination currency ID",
+      description:
+        "Destination currency ID — native (e.g. bitcoin) or token <network>/erc20/<slug> (e.g. ethereum/erc20/usd_tether__erc20_)",
       short: "t",
     }),
     "from-account": option(z.string().min(1, "Source account is required"), {
