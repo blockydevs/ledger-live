@@ -9,18 +9,20 @@ import {
   FieldKeySwitch,
 } from "LLD/features/AnalyticsOptInPrompt/types/AnalyticsOptInPromptNavigator";
 import { track } from "~/renderer/analytics/segment";
-import { useAnalyticsOptInPrompt } from "./useCommonLogic";
-import { AB_TESTING_VARIANTS } from "../types/variants";
-import { steps } from "LLD/features/AnalyticsOptInPrompt/const/steps";
+import { useAnalyticsOptInPrompt } from "../../hooks/useCommonLogic";
+import { steps } from "../../const/steps";
 
-interface UseVariantAProps {
+interface UseAnalyticsOptInViewModelProps {
   onSubmit?: () => void;
   entryPoint: EntryPoint;
   setStep: (value: number) => void;
 }
 
-const useVariantA = ({ onSubmit, entryPoint, setStep }: UseVariantAProps) => {
-  const variant = AB_TESTING_VARIANTS.A;
+const useAnalyticsOptInViewModel = ({
+  onSubmit,
+  entryPoint,
+  setStep,
+}: UseAnalyticsOptInViewModelProps) => {
   const dispatch = useDispatch();
 
   const [preferences, setPreferences] = useState<Record<FieldKeySwitch, boolean>>({
@@ -32,15 +34,15 @@ const useVariantA = ({ onSubmit, entryPoint, setStep }: UseVariantAProps) => {
 
   const onManagePreferencesClick = () => {
     setStep(1);
-    trackClick("Manage Preferences", shouldWeTrack, steps.variantA.main);
+    trackClick("Manage Preferences", shouldWeTrack, steps.main);
   };
 
   const handleShareAnalyticsChange = (value: boolean) => {
     dispatch(setSharePersonalizedRecommendations(value));
     dispatch(setShareAnalytics(value));
     onSubmit?.();
-    if (value) trackClick("Accept All", true, steps.variantA.main);
-    else trackClick("Refuse All", shouldWeTrack, steps.variantA.main);
+    if (value) trackClick("Accept All", true, steps.main);
+    else trackClick("Refuse All", shouldWeTrack, steps.main);
   };
 
   const handleShareCustomAnalyticsChange = (value: boolean) => {
@@ -49,7 +51,7 @@ const useVariantA = ({ onSubmit, entryPoint, setStep }: UseVariantAProps) => {
       dispatch(setShareAnalytics(AnalyticsData));
       dispatch(setSharePersonalizedRecommendations(PersonalizationData));
       onSubmit?.();
-      trackClick("Share", shouldWeTrack, steps.variantA.preferences);
+      trackClick("Share", shouldWeTrack, steps.preferences);
     }
   };
 
@@ -69,7 +71,6 @@ const useVariantA = ({ onSubmit, entryPoint, setStep }: UseVariantAProps) => {
       "button_clicked",
       {
         button,
-        variant,
         flow,
         page,
       },
@@ -84,9 +85,8 @@ const useVariantA = ({ onSubmit, entryPoint, setStep }: UseVariantAProps) => {
         toggle:
           field === FieldKeySwitch.AnalyticsData ? "Analytics" : "Personalised Recommendations",
         value,
-        variant,
         flow,
-        page: steps.variantA.preferences,
+        page: steps.preferences,
       },
       shouldWeTrack,
     );
@@ -102,4 +102,4 @@ const useVariantA = ({ onSubmit, entryPoint, setStep }: UseVariantAProps) => {
   };
 };
 
-export default useVariantA;
+export default useAnalyticsOptInViewModel;

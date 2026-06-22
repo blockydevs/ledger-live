@@ -1,19 +1,19 @@
 import React from "react";
-import Main from "LLD/features/AnalyticsOptInPrompt/screens/VariantA/Main";
-import ManagePreferences from "LLD/features/AnalyticsOptInPrompt/screens/VariantA/ManagePreferences";
-import { ManagePreferencesFooter } from "LLD/features/AnalyticsOptInPrompt/screens/VariantA/ManagePreferences/components";
-import { MainFooter } from "LLD/features/AnalyticsOptInPrompt/screens/VariantA/Main/components";
-import useVariantA from "LLD/features/AnalyticsOptInPrompt/hooks/useVariantA";
+import Main from "LLD/features/AnalyticsOptInPrompt/screens/AnalyticsOptInScreen/Main";
+import ManagePreferences from "LLD/features/AnalyticsOptInPrompt/screens/AnalyticsOptInScreen/ManagePreferences";
+import { ManagePreferencesFooter } from "LLD/features/AnalyticsOptInPrompt/screens/AnalyticsOptInScreen/ManagePreferences/components";
+import { MainFooter } from "LLD/features/AnalyticsOptInPrompt/screens/AnalyticsOptInScreen/Main/components";
 import { EntryPoint } from "LLD/features/AnalyticsOptInPrompt/types/AnalyticsOptInPromptNavigator";
+import useAnalyticsOptInViewModel from "./useAnalyticsOptInViewModel";
 
-interface VariantAProps {
+interface AnlyticsOptInProps {
   onSubmit?: () => void;
   entryPoint: EntryPoint;
   step: number;
   setStep: (value: number) => void;
 }
 
-const VariantA = ({ onSubmit, entryPoint, step, setStep }: VariantAProps) => {
+const AnalyticsOptIn = ({ onSubmit, entryPoint, step, setStep }: AnlyticsOptInProps) => {
   const {
     onManagePreferencesClick,
     handleShareAnalyticsChange,
@@ -21,7 +21,7 @@ const VariantA = ({ onSubmit, entryPoint, step, setStep }: VariantAProps) => {
     handlePreferencesChange,
     shouldWeTrack,
     handleOpenPrivacyPolicy,
-  } = useVariantA({
+  } = useAnalyticsOptInViewModel({
     onSubmit,
     entryPoint,
     setStep,
@@ -47,4 +47,4 @@ const VariantA = ({ onSubmit, entryPoint, step, setStep }: VariantAProps) => {
   );
 };
 
-export default VariantA;
+export default AnalyticsOptIn;
