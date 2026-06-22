@@ -974,7 +974,6 @@ type Feature_Wallet40_Params = {
   assetDiscoverability: boolean;
   // Specifics
   brazePlacement?: boolean;
-  newReceiveDialog?: boolean;
   earnUpselling?: boolean;
   earnSimulator?: boolean;
   q2Tour?: boolean;
@@ -983,11 +982,7 @@ type Feature_Wallet40_Params = {
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["lwmWallet40"]` from `@shared/feature-flags` instead. */
 export type Feature_LwmWallet40 = Feature<Feature_Wallet40_Params>;
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["lwdWallet40"]` from `@shared/feature-flags` instead. */
-export type Feature_LwdWallet40 = Feature<
-  {
-    newReceiveDialog: boolean;
-  } & Feature_Wallet40_Params
->;
+export type Feature_LwdWallet40 = Feature<Feature_Wallet40_Params>;
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["lwmNewWordingOptInNotificationsDrawer"]` from `@shared/feature-flags` instead. */
 export type Feature_LwmNewWordingOptInNotificationsDrawer = Feature<{
   variant: ABTestingVariants;
