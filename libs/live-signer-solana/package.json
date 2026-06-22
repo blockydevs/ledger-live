@@ -1,6 +1,6 @@
 {
   "name": "@ledgerhq/live-signer-solana",
-  "version": "0.15.5-next.1",
+  "version": "0.15.5",
   "private": true,
   "description": "Ledger Hardware Wallet Solana Application API",
   "keywords": [
