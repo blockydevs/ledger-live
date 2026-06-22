@@ -1,8 +1,24 @@
 import React from "react";
-import { render, screen, waitFor } from "tests/testSetup";
+import { render, screen, waitFor, act } from "tests/testSetup";
 import { SearchOverlay } from "..";
 import { useAssetSearchBar } from "../useAssetSearchBar";
 import { SearchMode, SearchResults, SearchSuggestions } from "../types";
+
+function simulateScrollLayout(
+  container: Element,
+  scrollLeft: number,
+  clientWidth: number,
+  scrollWidth: number,
+) {
+  Object.defineProperty(container, "scrollLeft", {
+    value: scrollLeft,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(container, "clientWidth", { value: clientWidth, configurable: true });
+  Object.defineProperty(container, "scrollWidth", { value: scrollWidth, configurable: true });
+  container.dispatchEvent(new Event("scroll"));
+}
 
 jest.mock("../useAssetSearchBar");
 
@@ -54,10 +70,12 @@ function mockSearchBar({
   mode,
   query = "",
   results = EMPTY_RESULTS,
+  suggestions = EMPTY_SUGGESTIONS,
 }: {
   mode: SearchMode;
   query?: string;
   results?: SearchResults;
+  suggestions?: SearchSuggestions;
 }) {
   mockedUseAssetSearchBar.mockReturnValue({
     query,
@@ -67,7 +85,7 @@ function mockSearchBar({
     open: jest.fn(),
     close: jest.fn(),
     mode,
-    suggestions: EMPTY_SUGGESTIONS,
+    suggestions,
     results,
   });
 }
@@ -82,6 +100,38 @@ describe("SearchOverlayView", () => {
 
     expect(screen.getByTestId("topbar-search-popover")).toBeInTheDocument();
     expect(screen.getByTestId("search-overlay-default")).toBeInTheDocument();
+  });
+
+  it("renders horizontal scroll edges on the stocks suggestions when they overflow", () => {
+    mockSearchBar({
+      mode: "suggestions",
+      suggestions: {
+        cryptos: EMPTY_SECTION,
+        stocks: {
+          isLoading: false,
+          data: [
+            {
+              id: "applex",
+              name: "Apple xStock",
+              ticker: "AAPLX",
+              ledgerId: "solana/spl/applex",
+              navigationId: "apple-xstock",
+            },
+          ],
+        },
+      },
+    });
+
+    render(<SearchOverlay />);
+
+    const scrollContainer = screen.getByTestId("stocks-scroll-container");
+
+    act(() => simulateScrollLayout(scrollContainer, 200, 500, 1000));
+
+    expect(screen.getByTestId("scroll-arrow-left")).toBeInTheDocument();
+    expect(screen.getByTestId("scroll-arrow-right")).toBeInTheDocument();
+    expect(screen.getByTestId("scroll-arrow-left").querySelector(".bg-gradient-to-r")).toBeNull();
+    expect(screen.getByTestId("scroll-arrow-right").querySelector(".bg-gradient-to-l")).toBeNull();
   });
 
   it("renders the general skeleton while the results are loading in `results` mode", () => {

@@ -13,6 +13,10 @@ import { selectCurrency } from "@ledgerhq/live-common/dada-client/utils/currency
 import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
 import { applyDadaMarketFallback } from "../utils/applyDadaMarketFallback";
 import { resolveDadaMarket } from "../utils/resolveDadaMarket";
+import {
+  buildMarketCurrencyQueryArgs,
+  resolveCoingeckoIdForIdsQuery,
+} from "../utils/resolveMarketCurrencyQuery";
 import type { AssetMarketDataInput, AssetMarketDataResult } from "../types";
 
 export function useAssetMarketData({
@@ -25,17 +29,21 @@ export function useAssetMarketData({
   knownMarketId,
   enabled = true,
 }: AssetMarketDataInput): AssetMarketDataResult {
+  const { args: currencyQueryArgs, skip: skipMarketQueryBase } = useMemo(
+    () => buildMarketCurrencyQueryArgs({ marketApiId, knownLedgerIds, counterCurrency }),
+    [marketApiId, knownLedgerIds, counterCurrency],
+  );
+
+  const skipMarketQuery = !enabled || skipMarketQueryBase;
+
   const {
     data: marketFromHook,
     isLoading: isLoadingMarket,
     isError: isErrorMarket,
-  } = useGetCurrencyDataQuery(
-    { id: marketApiId ?? "", counterCurrency },
-    {
-      skip: !enabled || !marketApiId,
-      pollingInterval: REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH,
-    },
-  );
+  } = useGetCurrencyDataQuery(currencyQueryArgs, {
+    skip: skipMarketQuery,
+    pollingInterval: REFETCH_TIME_ONE_MINUTE * BASIC_REFETCH,
+  });
 
   const effectiveLedgerIds = useMemo<readonly string[] | undefined>(
     () => knownLedgerIds ?? marketFromHook?.ledgerIds,
@@ -106,7 +114,7 @@ export function useAssetMarketData({
 
   return {
     marketCurrencyData,
-    marketId: marketFromHook?.id ?? knownMarketId,
+    marketId: marketFromHook?.id ?? resolveCoingeckoIdForIdsQuery(knownMarketId),
     ledgerCurrencyFromDada,
     ledgerIds,
     isLoading: isLoadingMarket || isLoadingDada || (!!dadaMarket && rateStatus === "loading"),
