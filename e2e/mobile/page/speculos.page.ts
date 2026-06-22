@@ -11,7 +11,7 @@ import {
   verifyAmountsAndRejectSwap,
   approveToken,
   signTypedMessage as signTypedMessageDevice,
-  acceptEnableTransactionCheck,
+  acceptEnableTransactionCheck as acceptEnableTransactionCheckDevice,
 } from "@ledgerhq/live-common/e2e/speculos";
 import { setExchangeDependencies } from "../utils/speculosUtils";
 import { TransactionType } from "@ledgerhq/live-common/e2e/models/Transaction";
@@ -85,7 +85,7 @@ export default class SpeculosPage {
 
   @Step("Check and accept if available enable transaction check")
   async acceptEnableTransactionCheck() {
-    await acceptEnableTransactionCheck();
+    await acceptEnableTransactionCheckDevice();
   }
 
   async setExchangeDependencies(swapOrFromAccount: SwapType | Account, toAccount?: Account) {
