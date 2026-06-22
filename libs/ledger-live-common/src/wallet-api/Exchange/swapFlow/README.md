@@ -134,7 +134,7 @@ function createCliPorts(deps: {
       },
       initInput: CLI_INIT_INPUT,
     }),
-    createSignSwapIntent: ({ account, transactionData, hwAppId }) => ({
+    createSignSwapIntent: ({ account, transactionData, appName }) => ({
       intent: {
         kind: "sign-swap",
         run: () => deps.signEvmSwapOnDevice({ account, transactionData }),
@@ -143,7 +143,7 @@ function createCliPorts(deps: {
       // 1inch / Velora / Ethereum for OKX). Mobile reuses the same
       // init input for the follow-up broadcast so the device stays on
       // the partner app.
-      initInput: { appName: hwAppId },
+      initInput: { appName },
     }),
     createBroadcastIntent: ({ signedTxHex, currencyId, initInput }) => ({
       intent: {
@@ -155,11 +155,11 @@ function createCliPorts(deps: {
       initInput,
     }),
     buildSwapTransactionData: async ({ provider, context }) => {
-      const { transactionData, hwAppId } = await buildProviderTransactionData(
+      const { transactionData, appName } = await buildProviderTransactionData(
         provider,
         context,
       );
-      return { transactionData, hwAppId };
+      return { transactionData, appName };
     },
   };
 }

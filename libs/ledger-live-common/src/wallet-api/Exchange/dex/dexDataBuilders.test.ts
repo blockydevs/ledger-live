@@ -52,7 +52,7 @@ describe("dexDataBuilders gas normalization", () => {
 
     const result = await buildProviderTransactionData("uniswap", baseContext);
 
-    expect(result.hwAppId).toBe("Uniswap");
+    expect(result.appName).toBe("Uniswap");
     expect(result.partner).toBe("uniswap");
     expect(result.transactionData.gasLimit).toBe("1300");
   });
@@ -67,7 +67,7 @@ describe("dexDataBuilders gas normalization", () => {
 
     const result = await buildProviderTransactionData("velora", baseContext);
 
-    expect(result.hwAppId).toBe("Velora");
+    expect(result.appName).toBe("Velora");
     expect(result.partner).toBe("velora");
     expect(result.transactionData.gasLimit).toBe("2600");
   });
@@ -82,7 +82,7 @@ describe("dexDataBuilders gas normalization", () => {
 
     const result = await buildProviderTransactionData("oneinch", baseContext);
 
-    expect(result.hwAppId).toBe("1inch");
+    expect(result.appName).toBe("1inch");
     expect(result.partner).toBe("oneinch");
     expect(result.transactionData.gasLimit).toBe("1500000");
   });

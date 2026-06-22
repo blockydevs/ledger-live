@@ -205,13 +205,13 @@ export type SignSwapIntentInput = {
   currencyId: string;
   derivationPath: string;
   /**
-   * Hardware-wallet app id returned by the DEX builder
+   * Device app name returned by the DEX builder
    * (`"Uniswap" | "1inch" | "Velora" | "Ethereum"` for OKX). Hosts use
    * it to pick the right embedded app when opening the device for the
    * swap leg; the subsequent broadcast phase reuses the same init input
    * so the device stays on the partner app.
    */
-  hwAppId: string;
+  appName: string;
 };
 
 export type SignPermit2IntentInput = {
@@ -295,14 +295,14 @@ export type SwapFlowPorts<TIntent, TInitInput> = {
   };
   /**
    * Async fetch of provider calldata (`buildProviderTransactionData`).
-   * Returns the swap calldata blob plus the partner's hardware-wallet
-   * app id so the host can open the right embedded app for the swap
+   * Returns the swap calldata blob plus the partner's device app name
+   * so the host can open the right embedded app for the swap
    * leg ("Uniswap" / "1inch" / "Velora" / "Ethereum" for OKX).
    */
   buildSwapTransactionData: (input: {
     provider: DexProvider;
     context: DexBuildContext;
-  }) => Promise<{ transactionData: DexTransactionData; hwAppId: string }>;
+  }) => Promise<{ transactionData: DexTransactionData; appName: string }>;
 };
 
 /**

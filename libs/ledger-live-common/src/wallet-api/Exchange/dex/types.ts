@@ -46,11 +46,11 @@ export interface DexBuildContext {
 
 /**
  * Output of a provider DEX builder: the transaction blob plus the
- * hardware-wallet app id and partner tag the wallet uses for analytics and
+ * device app name and partner tag the wallet uses for analytics and
  * for picking the right embedded app.
  */
 export interface DexProviderTransactionData {
   transactionData: DexTransactionData;
-  hwAppId: string;
+  appName: string;
   partner: string;
 }

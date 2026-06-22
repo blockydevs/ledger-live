@@ -50,7 +50,7 @@ async function buildUniswapTransactionData(
   });
 
   return {
-    hwAppId: "Uniswap",
+    appName: "Uniswap",
     partner: "uniswap",
     transactionData: {
       to: response.swap.to,
@@ -90,7 +90,7 @@ async function buildOneinchTransactionData(
   const response = await getOneinchTransaction(swapData);
 
   return {
-    hwAppId: "1inch",
+    appName: "1inch",
     partner: "oneinch",
     transactionData: {
       to: response.to,
@@ -137,7 +137,7 @@ async function buildVeloraTransactionData(
   const response = await getVeloraTransaction(swapData);
 
   return {
-    hwAppId: "Velora",
+    appName: "Velora",
     partner: "velora",
     transactionData: {
       to: response.to,
@@ -158,7 +158,7 @@ async function buildOkxTransactionData(ctx: DexBuildContext): Promise<DexProvide
   const response = await getOkxTransaction({ customFields });
 
   return {
-    hwAppId: "Ethereum",
+    appName: "Ethereum",
     partner: "okx",
     transactionData: {
       to: response.to,
