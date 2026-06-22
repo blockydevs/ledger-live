@@ -254,7 +254,6 @@ export type Features = CurrencyFeatures & {
   lldMemoTag: Feature_MemoTag;
   ldmkTransport: Feature_LdmkTransport;
   llCounterValueGranularitiesRates: Feature_LlCounterValueGranularitiesRates;
-  llmRebornLP: Feature_LlmRebornLP;
   llmAccountListUI: DefaultFeature;
   llmLedgerSyncEntryPoints: Feature_LlmLedgerSyncEntryPoints;
   lldLedgerSyncEntryPoints: Feature_LldLedgerSyncEntryPoints;
@@ -901,11 +900,6 @@ export type Feature_PtxSwapExodusProvider = DefaultFeature;
 
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["ptxSwapDetailedView"]` from `@shared/feature-flags` instead. */
 export type Feature_PtxSwapDetailedView = Feature<{
-  variant: ABTestingVariants;
-}>;
-
-/** @deprecated Moved to `@shared/feature-flags`. Use `Features["llmRebornLP"]` from `@shared/feature-flags` instead. */
-export type Feature_LlmRebornLP = Feature<{
   variant: ABTestingVariants;
 }>;
 

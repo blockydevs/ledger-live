@@ -1,4 +1,5 @@
 ---
+"@ledgerhq/types-live": minor
 "@shared/feature-flags": minor
 "live-mobile": minor
 "ledger-live-desktop": patch
