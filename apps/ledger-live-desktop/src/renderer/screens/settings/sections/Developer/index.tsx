@@ -44,6 +44,8 @@ import GenericAwarenessModalDevTool from "./GenericAwarenessModalDevTool";
 import GenericAwarenessModalDevScreen from "./GenericAwarenessModalDevTool/screens/GenericAwarenessModalDevScreen";
 import InfoStateDevTool from "./InfoStateDevTool";
 import InfoStateDevScreen from "./InfoStateDevTool/screens/InfoStateDevScreen";
+import DeviceActionContentDevTool from "./DeviceActionContentDevTool";
+import DeviceActionContentDevScreen from "./DeviceActionContentDevTool/screens/DeviceActionContentDevScreen";
 
 const Default = () => {
   const { t } = useTranslation();
@@ -150,6 +152,7 @@ const Default = () => {
       <AnalyticsConsentOptInDevTool />
       <GenericAwarenessModalDevTool />
       <InfoStateDevTool />
+      <DeviceActionContentDevTool />
       <ModularDrawerDevTool />
       <CryptoAssetsListDevTool />
       <MockAccountGeneratorSection />
@@ -165,6 +168,7 @@ const SectionDeveloper = () => (
       <Route path="analytics-consent-opt-in-qa" element={<AnalyticsConsentOptInDevScreen />} />
       <Route path="generic-awareness-modal-qa" element={<GenericAwarenessModalDevScreen />} />
       <Route path="info-state-qa" element={<InfoStateDevScreen />} />
+      <Route path="device-action-content-qa" element={<DeviceActionContentDevScreen />} />
       <Route path="*" element={<Default />} />
     </Routes>
   </>
