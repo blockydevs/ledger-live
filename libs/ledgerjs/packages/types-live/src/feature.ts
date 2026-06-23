@@ -235,7 +235,6 @@ export type Features = CurrencyFeatures & {
   ptxEarnDrawerConfiguration: Feature_PtxEarnDrawerConfiguration;
   ptxEarnUi: Feature_PtxEarnUi;
   ptxSwapReceiveTRC20WithoutTrx: Feature_PtxSwapReceiveTRC20WithoutTrx;
-  flexibleContentCards: Feature_FlexibleContentCards;
   analyticsOptIn: DefaultFeature;
   ptxSwapMoonpayProvider: Feature_PtxSwapMoonpayProvider;
   ptxSwapExodusProvider: Feature_PtxSwapExodusProvider;
@@ -864,8 +863,6 @@ export type Feature_PtxServiceCtaScreens = DefaultFeature;
 export type Feature_PortfolioExchangeBanner = DefaultFeature;
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["ptxSwapReceiveTRC20WithoutTrx"]` from `@shared/feature-flags` instead. */
 export type Feature_PtxSwapReceiveTRC20WithoutTrx = DefaultFeature;
-/** @deprecated Moved to `@shared/feature-flags`. Use `Features["flexibleContentCards"]` from `@shared/feature-flags` instead. */
-export type Feature_FlexibleContentCards = DefaultFeature;
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["myLedgerDisplayAppDeveloperName"]` from `@shared/feature-flags` instead. */
 export type Feature_MyLedgerDisplayAppDeveloperName = DefaultFeature;
 /** @deprecated Moved to `@shared/feature-flags`. Use `Features["lldChatbotSupport"]` from `@shared/feature-flags` instead. */
