@@ -1463,7 +1463,6 @@
       "cta": "Clear cache"
     },
     "migrate": "Ledger Wallet accounts update available",
-    "genericTerminatedCrypto": "{{coinName}} is not supported anymore",
     "valentine": {
       "title": "Valentine’s day",
       "description": "As a proof of our love, Ledger is reducing buy & sell fees on Ledger Wallet"
@@ -7477,6 +7476,9 @@
     "InvalidXRPTag": {
       "title": "Invalid XRP Destination tag"
     },
+    "XrpDestinationTagRequired": {
+      "title": "A destination tag is required for this recipient"
+    },
     "InvalidExplorerResponse": {
       "title": "Invalid response from {{currencyName}} explorer"
     },
@@ -7595,6 +7597,9 @@
     },
     "SolanaUseAllAmountStakeWarning": {
       "title": "Ensure you have enough balance left for future transactions fees"
+    },
+    "SolanaStakeAccountAmountTooLow": {
+      "title": "Amount is too low for staking. Minimum is {{minimumAmount}}."
     },
     "SolanaTxSimulationFailedWhilePendingOp": {
       "title": "Your previous transaction hasn't been processed yet. Please wait a moment then check the transaction history before trying again."

@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@domain/entity-currency-crypto": "workspace:^",
+    "@domain/entity-currency-fiat": "workspace:^",
     "@ledgerhq/types-cryptoassets": "workspace:^",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",

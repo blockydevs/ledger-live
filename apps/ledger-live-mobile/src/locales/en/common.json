@@ -910,9 +910,6 @@
     "DustLimit": {
       "title": "Amount is lower than dust limit"
     },
-    "StratisDown2021Warning": {
-      "description": "The Stratis blockchain evolved and may no longer work correctly. Support for the original Stratis blockchain will be maintained until 16 October 2021."
-    },
     "SwapExchangeRateAmountTooLow": {
       "title": "Amount must be higher than {{minAmountFromFormatted}}"
     },
@@ -1006,6 +1003,9 @@
     },
     "SolanaUseAllAmountStakeWarning": {
       "title": "Ensure you have enough balance left for future transactions fees"
+    },
+    "SolanaStakeAccountAmountTooLow": {
+      "title": "Amount is too low for staking. Minimum is {{minimumAmount}}."
     },
     "SolanaTxSimulationFailedWhilePendingOp": {
       "title": "Your previous transaction hasn't been processed yet. Please wait a moment then check the transaction history before trying again."
@@ -1172,6 +1172,9 @@
     },
     "XrpInvalidMemo": {
       "title": "Memo format is wrong, it should be less than 4294967296"
+    },
+    "XrpDestinationTagRequired": {
+      "title": "A destination tag is required for this recipient"
     },
     "HederaMemoExceededSizeError": {
       "title": "Invalid memo size, maximum allowed is 100 characters"
@@ -8992,8 +8995,7 @@
     "setPreferencesCTA": "Set preferences",
     "refuseCTA": "Refuse all",
     "acceptCTA": "Accept all",
-    "privacyPolicy": "You can revoke your consent anytime in settings.",
-    "privacyPolicyCTA": "Privacy policy",
+    "privacyPolicy": "You can revoke your consent anytime in settings. <PrivacyPolicy>Privacy policy</PrivacyPolicy>",
     "setPreferences": {
       "title": "Set preferences",
       "performance": "App performance",
