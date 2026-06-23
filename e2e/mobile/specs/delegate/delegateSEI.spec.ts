@@ -11,7 +11,7 @@ const DELEGATION_AMOUNT = "2";
 const delegation = new Delegate(Account.SEI_EVM_1, DELEGATION_AMOUNT, "first-available");
 
 const tmsLinks: string[] = ["B2CQA-5740"];
-const tags = ["@Stax", "@Flex", "@NanoGen5", "@sei_evm", "@family-evm"];
+const tags = ["@NanoSP", "@NanoX", "@Stax", "@Flex", "@NanoGen5", "@sei_evm", "@family-evm"];
 
 describe("SEI EVM Native Staking - Delegate flow", () => {
   setTeamOwner(Team.COIN_INTEGRATION);

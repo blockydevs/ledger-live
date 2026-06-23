@@ -24,7 +24,7 @@ test.describe("SEI EVM Native Staking - Delegate flow", () => {
   test(
     `[${delegation.account.currency.name}] Delegate: start delegate, validator list shown, validator selected, reach device validation`,
     {
-      tag: ["@Flex", "@Stax", "@NanoGen5", "@sei_evm", "@family-evm"],
+      tag: ["@NanoSP", "@NanoX", "@Flex", "@Stax", "@NanoGen5", "@sei_evm", "@family-evm"],
       annotation: {
         type: "TMS",
         description: "B2CQA-5964",
