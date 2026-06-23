@@ -343,7 +343,6 @@ export type Features = CurrencyFeatures & {
   lwdWallet40: Feature_LwdWallet40;
   addressPoisoningOperationsFilter: Feature_AddressPoisoningOperationsFilter;
   concordiumIdAppLinks: Feature_ConcordiumIdAppLinks;
-  concordiumVerifyAddress: DefaultFeature;
   lldHideSmallValueTokenOperations: Feature_LldHideSmallValueTokenOperations;
   llmTransferButtonCopyVariant: Feature_LlmTransferButtonCopyVariant;
   lldTezosStaking: DefaultFeature;
