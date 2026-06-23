@@ -451,6 +451,51 @@ describe("testing prepareTransaction", () => {
     });
   });
 
+  it("should return a new transaction from the raw transaction and the template id when user provide it", async () => {
+    const templateId = "084c694669";
+    const estimatedFees = 0.00005;
+    const rawTransaction = transaction({
+      raw: "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEDNzWs4isgmR+LEHY8ZcgBBLMnC4ckD1iuhSa2/Y+69I91oyGFaAZ/9w4srgx9KoqiHtPM6Vur7h4D6XVoSgrEhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALt5JNk+MAN8BXYrlkxMEL1C/sM3+ZFYwZw4eofBOKp4BAgIAAQwCAAAAgJaYAAAAAAA=",
+      templateId,
+    });
+    const chainAPI = api(estimatedFees);
+    const getFeeForMessageSpy = jest.spyOn(chainAPI, "getFeeForMessage");
+
+    // When
+    const preparedTransaction = await prepareTransaction(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as SolanaAccount,
+      rawTransaction,
+      chainAPI,
+    );
+
+    // Then
+    expect(preparedTransaction).not.toBe(rawTransaction);
+
+    expect(getFeeForMessageSpy).toHaveBeenCalledTimes(1);
+
+    expect(preparedTransaction).toMatchObject({
+      templateId,
+      raw: rawTransaction.raw,
+      family: "solana",
+      amount: BigNumber(0),
+      recipient: "",
+      model: {
+        kind: "raw",
+        uiState: {},
+        commandDescriptor: {
+          command: {
+            kind: "raw",
+            raw: rawTransaction.raw,
+          },
+          fee: estimatedFees,
+          warnings: {},
+          errors: {},
+        },
+      },
+    });
+  });
+
   it("should return a new transaction when user does not provide a raw one", async () => {
     const nonRawTransaction = transaction();
     const preparedTransaction = await prepareTransaction(
