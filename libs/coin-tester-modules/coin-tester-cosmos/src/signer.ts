@@ -25,7 +25,7 @@ type DerivedKey = { privKey: Uint8Array; compressedPubKey: Uint8Array };
 
 // Cosmos convention: BIP44 purpose/coin_type/account are hardened (first 3
 // segments); change and address_index are not. The bridge strips the `'`
-// markers before calling the signer (signOperation.ts:57), so we re-apply
+// markers before calling the signer (see signOperation.ts), so we re-apply
 // the hardening here.
 function applyCosmosHardening(path: number[]) {
   return path.map((n, i) =>
@@ -91,7 +91,7 @@ export async function buildSigner(mnemonic?: string): Promise<CosmosSigner> {
       const { privKey } = await deriveFromNumberPath(path);
       const ext = await Secp256k1.createSignature(sha256(buffer), privKey);
       // ExtendedSecp256k1Signature emits 65-byte r||s||v; strip recovery and
-      // re-encode as DER — the bridge will fromDer() it (signOperation.ts:85).
+      // re-encode as DER — the bridge will fromDer() it (see signOperation.ts).
       const rs = ext.toFixedLength().slice(0, 64);
       const der = Secp256k1Signature.fromFixedLength(rs).toDer();
       return { signature: Buffer.from(der), return_code: SW_OK };

@@ -13,7 +13,7 @@ describe("buildSigner", () => {
   it("derives the known address from a fixed mnemonic under the standard Cosmos path", async () => {
     const signer = await buildSigner(KNOWN_MNEMONIC);
     // Standard Cosmos derivation: m/44'/118'/0'/0/0. The bridge passes the
-    // path with `'` stripped — see signOperation.ts:57.
+    // path with `'` stripped — see signOperation.ts.
     const result = await signer.getAddressAndPubKey([44, 118, 0, 0, 0], "bbn");
     expect(result.bech32_address).toBe(KNOWN_BBN_ADDRESS);
     expect(result.return_code).toBe(0x9000);
