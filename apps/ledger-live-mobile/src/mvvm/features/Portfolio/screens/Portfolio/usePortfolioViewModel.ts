@@ -8,7 +8,7 @@ import { useSharedValue } from "react-native-reanimated";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
 import type { Features } from "@shared/feature-flags";
 
-import { useRefreshAccountsOrdering } from "~/actions/general";
+import { useRefreshAccountsOrderingAfterInteractions } from "~/actions/general";
 import { track } from "~/analytics";
 import { usePortfolioBalance } from "LLM/hooks/usePortfolioBalance";
 import { useBorrowLiveConfig } from "LLM/features/Borrow/hooks/useBorrowLiveConfig";
@@ -100,6 +100,9 @@ const usePortfolioViewModel = (navigation: {
 
   usePortfolioAnalyticsOptInPrompt();
 
+  const refreshAccountsOrdering = useRefreshAccountsOrderingAfterInteractions();
+  useFocusEffect(refreshAccountsOrdering);
+
   const openAddModal = useCallback(() => {
     track("button_clicked", {
       button: "Add Account",
@@ -108,8 +111,6 @@ const usePortfolioViewModel = (navigation: {
   }, []);
 
   const closeAddModal = useCallback(() => setAddModalOpened(false), []);
-  const refreshAccountsOrdering = useRefreshAccountsOrdering();
-  useFocusEffect(refreshAccountsOrdering);
 
   useEffect(() => {
     if (!llmDatadog?.enabled) return;
