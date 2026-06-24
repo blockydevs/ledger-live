@@ -268,13 +268,14 @@ const OperationDetailsExtra = ({
               <Trans i18nKey={"operationDetails.extra.rewardFrom"} />
             </OpDetailsTitle>
             <OpDetailsData>
-              <Box flex={1} alignItems="flex-end">
+              <Box flex={1} style={{ minWidth: 0 }}>
                 {validators.map((validatorReward: { amount: BigNumber; address: string }) => (
                   <Box
                     horizontal
                     key={validatorReward.address}
                     alignItems="center"
-                    style={{ gap: 8 }}
+                    justifyContent="flex-end"
+                    style={{ gap: 8, width: "100%" }}
                   >
                     <Address
                       onClick={redirectAddress(currency, validatorReward.address)}
@@ -283,17 +284,20 @@ const OperationDetailsExtra = ({
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        maxWidth: "100%",
+                        minWidth: 0,
+                        flexShrink: 1,
                       }}
                     >
                       {getValidatorName(validatorReward.address)}
                     </Address>
-                    <FormattedVal
-                      unit={unit}
-                      showCode
-                      val={validatorReward.amount}
-                      color="neutral.c80"
-                    />
+                    <Box style={{ flexShrink: 0 }}>
+                      <FormattedVal
+                        unit={unit}
+                        showCode
+                        val={validatorReward.amount}
+                        color="neutral.c80"
+                      />
+                    </Box>
                   </Box>
                 ))}
               </Box>
