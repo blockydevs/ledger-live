@@ -3,7 +3,7 @@ import os from "node:os";
 import pkg from "../../package.json" with { type: "json" };
 
 export const WALLET_CLI_USER_ID = "f3c373cd-c661-46bb-8577-3bc2bce98b5b";
-export const WALLET_CLI_WRITE_KEY = "70VZSoB5kr9tiTHJMqKwxUjvZEPbrnBO";
+const WALLET_CLI_WRITE_KEY = process.env.SEGMENT_WRITE_KEY ?? "70VZSoB5kr9tiTHJMqKwxUjvZEPbrnBO";
 
 const osType = os.type();
 const osVersion = os.release();
