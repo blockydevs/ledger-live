@@ -261,47 +261,38 @@ const OperationDetailsExtra = ({
         break;
       }
       case "REWARD": {
-        const { validators } = extra;
-        ret = !validators ? null : (
+        ret = (
           <OpDetailsSection>
             <OpDetailsTitle>
               <Trans i18nKey={"operationDetails.extra.rewardFrom"} />
             </OpDetailsTitle>
-            <OpDetailsData>
-              <Box flex={1} style={{ minWidth: 0 }}>
-                {validators.map((validatorReward: { amount: BigNumber; address: string }) => (
-                  <Box
-                    horizontal
-                    key={validatorReward.address}
-                    alignItems="center"
-                    justifyContent="flex-end"
-                    style={{ gap: 8, width: "100%" }}
+            <Box flex={1} style={{ minWidth: 0 }}>
+              {validators.map((validatorReward: CosmosDelegationInfo) => (
+                <OpDetailsData key={validatorReward.address} style={{ gap: 8, width: "100%" }}>
+                  <Address
+                    onClick={redirectAddress(currency, validatorReward.address)}
+                    style={{
+                      wordBreak: "keep-all",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      minWidth: 0,
+                      flexShrink: 1,
+                    }}
                   >
-                    <Address
-                      onClick={redirectAddress(currency, validatorReward.address)}
-                      style={{
-                        wordBreak: "keep-all",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        minWidth: 0,
-                        flexShrink: 1,
-                      }}
-                    >
-                      {getValidatorName(validatorReward.address)}
-                    </Address>
-                    <Box style={{ flexShrink: 0 }}>
-                      <FormattedVal
-                        unit={unit}
-                        showCode
-                        val={validatorReward.amount}
-                        color="neutral.c80"
-                      />
-                    </Box>
+                    {getValidatorName(validatorReward.address)}
+                  </Address>
+                  <Box style={{ flexShrink: 0 }}>
+                    <FormattedVal
+                      unit={unit}
+                      showCode
+                      val={validatorReward.amount}
+                      color="neutral.c80"
+                    />
                   </Box>
-                ))}
-              </Box>
-            </OpDetailsData>
+                </OpDetailsData>
+              ))}
+            </Box>
           </OpDetailsSection>
         );
 
