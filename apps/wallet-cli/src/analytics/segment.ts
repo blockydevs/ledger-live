@@ -71,5 +71,9 @@ export const updateIdentify = (traits?: Record<string, unknown>): void => {
 export async function disposeAnalytics(): Promise<void> {
   const current = analytics;
   analytics = null;
-  await current?.closeAndFlush();
+  try {
+    await current?.closeAndFlush();
+  } catch {
+    // ignore
+  }
 }
