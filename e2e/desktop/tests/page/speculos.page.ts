@@ -98,6 +98,11 @@ export class SpeculosPage extends AppPage {
     await approveToken();
   }
 
+  @step("Sign EVM contract transaction")
+  async signEvmContractTransaction() {
+    await approveToken();
+  }
+
   @step("Sign typed message on device")
   async signTypedMessage() {
     await signTypedMessageDevice();

@@ -10,6 +10,7 @@ export class EvmDelegateModal extends Modal {
   private amountField = this.page.getByTestId("modal-amount-field");
   private amountContinueButton = this.page.locator("#send-amount-continue-button");
   private transactionConfirm = this.page.getByTestId("device-action-transaction-confirm");
+  private successMessageLabel = this.page.getByTestId("success-message-label");
 
   @step("Start EVM delegation flow from account empty state")
   async startFromEmptyState() {
@@ -41,5 +42,10 @@ export class EvmDelegateModal extends Modal {
   @step("Expect device validation (sign transaction) screen to be displayed")
   async expectDeviceValidationScreen() {
     await expect(this.transactionConfirm).toBeVisible();
+  }
+
+  @step("Expect EVM delegation success message")
+  async expectSuccessMessage() {
+    await expect(this.successMessageLabel).toBeVisible();
   }
 }

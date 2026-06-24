@@ -22,7 +22,7 @@ test.use({
 
 test.describe("SEI EVM Native Staking - Delegate flow", () => {
   test(
-    `[${delegation.account.currency.name}] Delegate: start delegate, validator list shown, validator selected, reach device validation`,
+    `[${delegation.account.currency.name}] Delegate: start delegate, validator selected, confirm transaction`,
     {
       tag: ["@NanoSP", "@NanoX", "@Flex", "@Stax", "@NanoGen5", "@sei_evm", "@family-evm"],
       annotation: {
@@ -44,6 +44,8 @@ test.describe("SEI EVM Native Staking - Delegate flow", () => {
       await app.speculos.acceptEnableTransactionCheck();
 
       await app.evmDelegate.expectDeviceValidationScreen();
+      await app.speculos.signEvmContractTransaction();
+      await app.evmDelegate.expectSuccessMessage();
     },
   );
 });
