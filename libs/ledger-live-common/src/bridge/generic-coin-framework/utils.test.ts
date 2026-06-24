@@ -7,6 +7,7 @@ import {
   extractBalance,
   extractBalances,
   findCryptoCurrencyByNetwork,
+  toGasOptionsFromUnknown,
   transactionToIntent,
 } from "./utils";
 import BigNumber from "bignumber.js";
@@ -28,6 +29,125 @@ jest.mock("@ledgerhq/coin-module-framework/logic/craftTransactionData", () => {
 describe("coin-framework utils", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe("toGasOptionsFromUnknown", () => {
+    it.each([undefined, null, "", 0, "str", [], { foo: "bar" }])(
+      "returns undefined for invalid value %j",
+      value => {
+        expect(toGasOptionsFromUnknown(value)).toBeUndefined();
+      },
+    );
+
+    it.each([
+      [{ slow: {} }, "slow"],
+      [{ medium: {}, fast: {} }, "medium"],
+      [{ slow: {}, fast: {} }, "fast"],
+    ])("returns undefined when %s key is missing", (value, _missingKey) => {
+      expect(toGasOptionsFromUnknown(value)).toBeUndefined();
+    });
+
+    it("converts bigint fee fields to BigNumber", () => {
+      const apiGasOptions = {
+        slow: {
+          gasPrice: 10n,
+          maxFeePerGas: 20n,
+          maxPriorityFeePerGas: 2n,
+          nextBaseFee: 15n,
+        },
+        medium: {
+          gasPrice: 12n,
+          maxFeePerGas: 24n,
+          maxPriorityFeePerGas: 3n,
+          nextBaseFee: 18n,
+        },
+        fast: {
+          gasPrice: 15n,
+          maxFeePerGas: 30n,
+          maxPriorityFeePerGas: 5n,
+          nextBaseFee: 22n,
+        },
+      };
+
+      expect(toGasOptionsFromUnknown(apiGasOptions)).toEqual({
+        slow: {
+          gasPrice: new BigNumber(10),
+          maxFeePerGas: new BigNumber(20),
+          maxPriorityFeePerGas: new BigNumber(2),
+          nextBaseFee: new BigNumber(15),
+        },
+        medium: {
+          gasPrice: new BigNumber(12),
+          maxFeePerGas: new BigNumber(24),
+          maxPriorityFeePerGas: new BigNumber(3),
+          nextBaseFee: new BigNumber(18),
+        },
+        fast: {
+          gasPrice: new BigNumber(15),
+          maxFeePerGas: new BigNumber(30),
+          maxPriorityFeePerGas: new BigNumber(5),
+          nextBaseFee: new BigNumber(22),
+        },
+      });
+    });
+
+    it("converts number and string fee fields to BigNumber", () => {
+      const apiGasOptions = {
+        slow: { gasPrice: 10, maxFeePerGas: "20" },
+        medium: { gasPrice: 12, maxFeePerGas: "24" },
+        fast: { gasPrice: 15, maxFeePerGas: "30" },
+      };
+
+      expect(toGasOptionsFromUnknown(apiGasOptions)).toEqual({
+        slow: {
+          gasPrice: new BigNumber(10),
+          maxFeePerGas: new BigNumber(20),
+          maxPriorityFeePerGas: null,
+          nextBaseFee: null,
+        },
+        medium: {
+          gasPrice: new BigNumber(12),
+          maxFeePerGas: new BigNumber(24),
+          maxPriorityFeePerGas: null,
+          nextBaseFee: null,
+        },
+        fast: {
+          gasPrice: new BigNumber(15),
+          maxFeePerGas: new BigNumber(30),
+          maxPriorityFeePerGas: null,
+          nextBaseFee: null,
+        },
+      });
+    });
+
+    it("returns FeeData with null fields when strategy objects are empty", () => {
+      const apiGasOptions = {
+        slow: {},
+        medium: {},
+        fast: {},
+      };
+
+      expect(toGasOptionsFromUnknown(apiGasOptions)).toEqual({
+        slow: {
+          gasPrice: null,
+          maxFeePerGas: null,
+          maxPriorityFeePerGas: null,
+          nextBaseFee: null,
+        },
+        medium: {
+          gasPrice: null,
+          maxFeePerGas: null,
+          maxPriorityFeePerGas: null,
+          nextBaseFee: null,
+        },
+        fast: {
+          gasPrice: null,
+          maxFeePerGas: null,
+          maxPriorityFeePerGas: null,
+          nextBaseFee: null,
+        },
+      });
+    });
   });
 
   describe("bigNumberToBigIntDeep", () => {
