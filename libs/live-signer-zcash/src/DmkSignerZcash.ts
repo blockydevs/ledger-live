@@ -191,6 +191,13 @@ export class DmkSignerZcash implements ZcashSigner {
       ...(arg.expiryHeight !== undefined ? { expiryHeight: arg.expiryHeight } : {}),
     };
 
+    // `onDeviceStreaming` (declared on the arg for legacy parity) is intentionally
+    // not invoked here: DMK's `signTransaction` device action exposes no per-chunk
+    // progress — its `SignTransactionDAIntermediateValue` carries only
+    // `requiredUserInteraction`, with no progress/index/total to report. The legacy
+    // hw-app-btc path derives those numbers from raw APDU round-trips, which DMK
+    // abstracts away. The on-device signing milestone is surfaced instead via the
+    // signature-requested/granted callbacks below.
     const { onDeviceSignatureRequested, onDeviceSignatureGranted } = arg;
 
     const { observable } = this.signer.signTransaction(legacyArg, { skipOpenApp: true });
