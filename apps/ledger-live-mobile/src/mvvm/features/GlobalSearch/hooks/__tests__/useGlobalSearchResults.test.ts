@@ -1,4 +1,4 @@
-import { renderHook, act } from "@tests/test-renderer";
+import { renderHook, act, withFlagOverrides } from "@tests/test-renderer";
 import { setEnv } from "@ledgerhq/live-env";
 import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import { selectCurrencyForMetaId } from "@ledgerhq/live-common/dada-client/utils/currencySelection";
@@ -25,6 +25,20 @@ const buildData = (ids: string[]) =>
       ids.map(id => [id, { id, name: id, ticker: id.toUpperCase(), assetsIds: { ethereum: id } }]),
     ),
     markets: Object.fromEntries(ids.map((id, i) => [id, { id, marketCapRank: i + 1, price: 1 }])),
+  }) as never;
+
+const buildDataOnNetwork = (network: string) =>
+  ({
+    currenciesOrder: { metaCurrencyIds: ["amdx"], key: "marketCap", order: "desc" },
+    cryptoAssets: {
+      amdx: {
+        id: "amdx",
+        name: "AMD",
+        ticker: "AMDX",
+        assetsIds: { [network]: `${network}/erc20/amd` },
+      },
+    },
+    markets: { amdx: { id: "amdx", marketCapRank: 1, price: 1 } },
   }) as never;
 
 describe("useGlobalSearchResults", () => {
@@ -69,6 +83,33 @@ describe("useGlobalSearchResults", () => {
     expect(mockedAssets).toHaveBeenLastCalledWith(
       expect.objectContaining({ includeTestNetworks: true }),
     );
+  });
+
+  it("hides a result whose only network currency flag is off", () => {
+    mockedAssets.mockReturnValue({
+      data: buildDataOnNetwork("robinhood_testnet"),
+      isLoading: false,
+    } as never);
+
+    const { result } = renderHook(() => useGlobalSearchResults());
+    act(() => result.current.setSearch("amd"));
+
+    expect(result.current.searchResults).toEqual([]);
+    expect(result.current.hasNoResults).toBe(true);
+  });
+
+  it("shows the result when its network currency flag is on", () => {
+    mockedAssets.mockReturnValue({
+      data: buildDataOnNetwork("robinhood_testnet"),
+      isLoading: false,
+    } as never);
+
+    const { result } = renderHook(() => useGlobalSearchResults(), {
+      overrideInitialState: withFlagOverrides({ currencyRobinhoodTestnet: { enabled: true } }),
+    });
+    act(() => result.current.setSearch("amd"));
+
+    expect(result.current.searchResults).toHaveLength(1);
   });
 
   it("tracks search_query when the debounced query changes", () => {
