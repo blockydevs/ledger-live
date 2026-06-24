@@ -35,11 +35,6 @@
   "exports": {
     "./lib/*": "./lib/*.js",
     "./lib-es/*": "./lib-es/*.js",
-    "./*": {
-      "@ledgerhq/source": "./src/*.ts",
-      "require": "./lib/*.js",
-      "default": "./lib-es/*.js"
-    },
     "./package.json": "./package.json"
   },
   "license": "Apache-2.0",
