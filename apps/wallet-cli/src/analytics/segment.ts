@@ -1,14 +1,12 @@
 import { Analytics } from "@segment/analytics-node";
 import os from "node:os";
-import { randomUUID } from "node:crypto";
 import pkg from "../../package.json" with { type: "json" };
 
-export const WALLET_CLI_USER_ID = "wallet-cli";
+export const WALLET_CLI_USER_ID = "f3c373cd-c661-46bb-8577-3bc2bce98b5b";
 export const WALLET_CLI_WRITE_KEY = "70VZSoB5kr9tiTHJMqKwxUjvZEPbrnBO";
 
 const osType = os.type();
 const osVersion = os.release();
-const sessionId = randomUUID();
 
 const getContext = () => ({
   ip: "0.0.0.0",
@@ -19,7 +17,6 @@ const extraProperties = () => ({
   platform: "wallet-cli",
   osType,
   osVersion,
-  sessionId,
 });
 
 type IdentifyParams = Parameters<Analytics["identify"]>[0];
