@@ -236,6 +236,16 @@ function keepNativeOp(
       return false;
     }
   }
+  // Filter out internal (contract-to-contract/contract-to-third-party) transactions:
+  // TzKT returns these under the initiator's account, but they don't impact the
+  // initiator's native balance — the top-level operation already accounts for it.
+  if (isAPITransactionType(op)) {
+    const isSender = op.sender?.address === address;
+    const isTarget = op.target?.address === address;
+    if (!isSender && !isTarget) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -556,11 +566,6 @@ function convertTokenOperation(
     type = "IN";
   }
 
-  const fee = parent
-    ? BigInt(parent.storageFee ?? 0) +
-      BigInt(parent.bakerFee ?? 0) +
-      BigInt(parent.allocationFee ?? 0)
-    : 0n;
   const feesPayer = parent?.initiator?.address ?? parent?.sender?.address;
 
   const tokenId = transfer.token.tokenId ?? "0";
@@ -584,7 +589,9 @@ function convertTokenOperation(
     },
     tx: {
       hash: transfer.hash,
-      fees: fee,
+      // Fee is already on the parent native operation; setting 0 avoids
+      // double-counting when A4 sums fees across sub-operations (FeeAggregationMode.Sum).
+      fees: 0n,
       ...(feesPayer ? { feesPayer } : {}),
       block: {
         hash: transfer.block ?? parent?.block ?? "",

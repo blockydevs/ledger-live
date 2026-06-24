@@ -168,6 +168,7 @@ describe("listOperations", () => {
     id: 333,
     initiator: null,
     type: "transaction",
+    status: "applied",
     target: { address: someDestinationAddress },
   };
 
@@ -188,8 +189,8 @@ describe("listOperations", () => {
     async (_label, operation, expectedType, expectedLedgerOpType, expectedAmount) => {
       // Given
       mockGetAccountOperations.mockResolvedValue([operation]);
-      // When
-      const [results] = await listOperations("any address", options);
+      // When — use someSenderAddress so transaction ops pass the sender/target filter
+      const [results] = await listOperations(someSenderAddress, options);
       // Then
       expect(results).toEqual([
         {
@@ -237,7 +238,7 @@ describe("listOperations", () => {
       // Given
       mockGetAccountOperations.mockResolvedValue([operation]);
       // When
-      const [results, token] = await listOperations("any address", {
+      const [results, token] = await listOperations(someSenderAddress, {
         ...options,
         limit: 1,
         sort: "Descending",
@@ -264,7 +265,7 @@ describe("listOperations", () => {
       // Given
       mockGetAccountOperations.mockResolvedValue([operation]);
       // When
-      const [results, _] = await listOperations("any address", options);
+      const [results, _] = await listOperations(someSenderAddress, options);
       // Then
       expect(results.length).toEqual(1);
       expect(results[0].details).toEqual({
@@ -283,7 +284,7 @@ describe("listOperations", () => {
     // Given
     mockGetAccountOperations.mockResolvedValue([operation]);
     // When
-    const [results, token] = await listOperations("any address", options);
+    const [results, token] = await listOperations(someSenderAddress, options);
     // Then
     expect(results.length).toEqual(1);
     expect(results[0].recipients).toEqual([]);
@@ -298,7 +299,7 @@ describe("listOperations", () => {
     // Given
     mockGetAccountOperations.mockResolvedValue([operation]);
     // When
-    const [results, _] = await listOperations("any address", options);
+    const [results, _] = await listOperations(someSenderAddress, options);
     // Then
     expect(results.length).toEqual(1);
     expect(results[0].tx.fees).toEqual(BigInt(6));
@@ -336,7 +337,7 @@ describe("listOperations", () => {
         target: { address: someDestinationAddress },
       };
       mockGetAccountOperations.mockResolvedValue([internalTx]);
-      const [results] = await listOperations("any address", options);
+      const [results] = await listOperations(someDestinationAddress, options);
       expect(results[0]).toMatchObject({
         tx: {
           feesPayer: initiatorAddress,
@@ -354,7 +355,7 @@ describe("listOperations", () => {
         sender: null,
       };
       mockGetAccountOperations.mockResolvedValue([txNoSender]);
-      const [results] = await listOperations("any address", options);
+      const [results] = await listOperations(someDestinationAddress, options);
       expect(results[0].tx.feesPayer).toBeUndefined();
       expect(results[0]).toMatchObject({
         senders: [],
@@ -434,7 +435,7 @@ describe("listOperations", () => {
       },
       tx: {
         hash: someHash,
-        fees: 6n,
+        fees: 0n,
         feesPayer: someSenderAddress,
         failed: false,
         block: { hash: "BMJ1ZQ6", height: 100, time: new Date(fa2.timestamp) },
