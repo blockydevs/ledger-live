@@ -78,6 +78,11 @@ export default class SpeculosPage {
     await approveToken();
   }
 
+  @Step("Sign EVM contract transaction on device")
+  async signEvmContractTransaction() {
+    await approveToken();
+  }
+
   @Step("Sign typed message on device")
   async signTypedMessage() {
     await signTypedMessageDevice();

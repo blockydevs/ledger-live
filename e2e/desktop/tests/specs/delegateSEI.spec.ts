@@ -46,6 +46,15 @@ test.describe("SEI EVM Native Staking - Delegate flow", () => {
       await app.evmDelegate.expectDeviceValidationScreen();
       await app.speculos.signEvmContractTransaction();
       await app.evmDelegate.expectSuccessMessage();
+      await app.delegate.clickViewDetailsButton();
+
+      await app.drawer.waitForDrawerToBeVisible();
+      await app.delegateDrawer.verifyTxTypeIsVisible();
+
+      await app.delegateDrawer.providerIsVisible(delegation);
+      await app.delegateDrawer.amountValueIsVisible(delegation.account.currency.ticker);
+      await app.delegateDrawer.operationTypeIsCorrect("Delegated");
+      await app.drawer.closeDrawer();
     },
   );
 });

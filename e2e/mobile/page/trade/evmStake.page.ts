@@ -1,6 +1,9 @@
 import { Step } from "jest-allure2-reporter/api";
 
 const VALIDATOR_ROW_REGEX = /^evm-validator-row-.+$/;
+// The staking quick-action testID suffix depends on account state: `cta` when the account has no
+// delegation yet, `addDelegation` once it already delegates. Both navigate to the validator list.
+const START_DELEGATE_CTA_REGEX = /^account-quick-action-button-(cta|addDelegation)$/;
 const FEE_ESTIMATION_TIMEOUT = 120000;
 
 export default class EvmStakePage {
@@ -10,11 +13,13 @@ export default class EvmStakePage {
   useMaxButtonId = "evm-delegation-use-max";
   amountContinueButtonId = "enabled-evm-delegation-amount-continue";
   delegationSummaryLabel = "Delegated assets";
+  successScreenId = "validate-success-screen";
 
   @Step("Start EVM delegation flow from account quick actions")
   async startDelegate() {
-    await waitForElementById(this.startStakingCtaId);
-    await tapById(this.startStakingCtaId);
+    await waitForElement(getElementById(START_DELEGATE_CTA_REGEX));
+    const ctaId = await getIdByRegexp(START_DELEGATE_CTA_REGEX);
+    await tapById(ctaId);
   }
 
   @Step("Tap on Add delegation CTA")
@@ -78,5 +83,11 @@ export default class EvmStakePage {
   async expectAddDelegationCtaVisible() {
     await waitForElementById(this.addDelegationCtaId);
     await detoxExpect(getElementById(this.addDelegationCtaId)).toBeVisible();
+  }
+
+  @Step("Expect EVM delegation success message")
+  async expectSuccessMessage() {
+    await waitForElementById(this.successScreenId);
+    await detoxExpect(getElementById(this.successScreenId)).toBeVisible();
   }
 }

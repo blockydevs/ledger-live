@@ -4,6 +4,7 @@ import { Team } from "@ledgerhq/live-common/e2e/enum/Team";
 import { Delegate } from "@ledgerhq/live-common/e2e/models/Delegate";
 import { setEnv } from "@ledgerhq/live-env";
 import { setTeamOwner } from "../../helpers/allure/allure-helper";
+import { verifyStakeOperationDetailsInfo } from "../../models/stake";
 
 setEnv("DISABLE_TRANSACTION_BROADCAST", true);
 
@@ -34,6 +35,8 @@ describe("SEI EVM Native Staking - Delegate flow", () => {
   });
 
   it(`Delegate on ${delegation.account.currency.name}: start delegate, validator list shown, validator selected`, async () => {
+    const amountWithCode = DELEGATION_AMOUNT + " " + delegation.account.currency.ticker;
+
     await app.portfolio.goToAccounts(delegation.account.currency.name);
     await app.common.goToAccountByName(delegation.account.accountName);
 
@@ -44,5 +47,10 @@ describe("SEI EVM Native Staking - Delegate flow", () => {
     await app.speculos.acceptEnableTransactionCheck();
 
     await app.deviceValidation.expectDeviceValidationScreen();
+    await app.speculos.signEvmContractTransaction();
+    await app.evmStake.expectSuccessMessage();
+    await app.common.successViewDetails();
+
+    await verifyStakeOperationDetailsInfo(delegation, amountWithCode);
   });
 });
