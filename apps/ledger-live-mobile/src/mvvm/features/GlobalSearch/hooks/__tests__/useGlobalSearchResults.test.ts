@@ -1,4 +1,5 @@
 import { renderHook, act } from "@tests/test-renderer";
+import { setEnv } from "@ledgerhq/live-env";
 import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import { selectCurrencyForMetaId } from "@ledgerhq/live-common/dada-client/utils/currencySelection";
 import { track } from "~/analytics";
@@ -33,6 +34,10 @@ describe("useGlobalSearchResults", () => {
     mockedAssets.mockReturnValue({ data: undefined, isLoading: false } as never);
   });
 
+  afterEach(() => {
+    setEnv("MANAGER_DEV_MODE", false);
+  });
+
   it("is inactive with no results before typing", () => {
     const { result } = renderHook(() => useGlobalSearchResults());
 
@@ -50,7 +55,19 @@ describe("useGlobalSearchResults", () => {
     expect(result.current.isSearchActive).toBe(true);
     expect(result.current.searchResults.map(r => r.ticker)).toEqual(["BTC", "ETH"]);
     expect(mockedAssets).toHaveBeenLastCalledWith(
-      expect.objectContaining({ search: "b", skip: false }),
+      expect.objectContaining({ search: "b", skip: false, includeTestNetworks: false }),
+    );
+  });
+
+  it("includes testnets in the query only in developer mode", () => {
+    setEnv("MANAGER_DEV_MODE", true);
+    mockedAssets.mockReturnValue({ data: buildData(["btc"]), isLoading: false } as never);
+
+    const { result } = renderHook(() => useGlobalSearchResults());
+    act(() => result.current.setSearch("b"));
+
+    expect(mockedAssets).toHaveBeenLastCalledWith(
+      expect.objectContaining({ includeTestNetworks: true }),
     );
   });
 
