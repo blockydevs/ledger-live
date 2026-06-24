@@ -263,20 +263,29 @@ const OperationDetailsExtra = ({
       case "REWARD": {
         const { validators } = extra;
         ret = !validators ? null : (
-          <>
-            <OpDetailsSection>
-              <OpDetailsTitle>
-                <Trans i18nKey={"operationDetails.extra.rewardFrom"} />
-              </OpDetailsTitle>
-            </OpDetailsSection>
-            {validators.map((validatorReward: { amount: BigNumber; address: string }) => (
-              <>
-                <OpDetailsSection
-                  key={validatorReward.address}
-                  style={{ justifyContent: "flex-end" }}
-                >
-                  <OpDetailsData style={{ maxWidth: "fit-content" }}>
-                    <Address onClick={redirectAddress(currency, validatorReward.address)}>
+          <OpDetailsSection>
+            <OpDetailsTitle>
+              <Trans i18nKey={"operationDetails.extra.rewardFrom"} />
+            </OpDetailsTitle>
+            <OpDetailsData>
+              <Box flex={1} alignItems="flex-end">
+                {validators.map((validatorReward: { amount: BigNumber; address: string }) => (
+                  <Box
+                    horizontal
+                    key={validatorReward.address}
+                    alignItems="center"
+                    style={{ gap: 8 }}
+                  >
+                    <Address
+                      onClick={redirectAddress(currency, validatorReward.address)}
+                      style={{
+                        wordBreak: "keep-all",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: "100%",
+                      }}
+                    >
                       {getValidatorName(validatorReward.address)}
                     </Address>
                     <FormattedVal
@@ -285,11 +294,11 @@ const OperationDetailsExtra = ({
                       val={validatorReward.amount}
                       color="neutral.c80"
                     />
-                  </OpDetailsData>
-                </OpDetailsSection>
-              </>
-            ))}
-          </>
+                  </Box>
+                ))}
+              </Box>
+            </OpDetailsData>
+          </OpDetailsSection>
         );
 
         break;
