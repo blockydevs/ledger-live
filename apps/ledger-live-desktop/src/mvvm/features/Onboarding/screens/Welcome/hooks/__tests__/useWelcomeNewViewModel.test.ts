@@ -20,6 +20,10 @@ jest.mock("~/renderer/linking", () => ({
   openURL: jest.fn(),
 }));
 
+jest.mock("~/renderer/hooks/useLocalizedUrls", () => ({
+  useLocalizedUrl: (url: string) => url,
+}));
+
 jest.mock("LLD/features/AnalyticsOptInPrompt/hooks/useCommonLogic", () => ({
   useAnalyticsOptInPrompt: jest.fn(() => ({
     analyticsOptInPromptProps: {},
