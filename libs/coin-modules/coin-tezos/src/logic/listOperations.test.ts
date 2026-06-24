@@ -388,6 +388,38 @@ describe("listOperations", () => {
     });
   });
 
+  it("filters out internal sub-transactions where account is neither sender nor target", async () => {
+    const contractAddress = "KT1WPEis2WhAc2FciM2tZVn8qe6pCBe9HkDp";
+    const thirdPartyAddress = "tz1Pci9FqMTqADRXqgD3ZDsdfEFcPqMTqA8D";
+
+    // Top-level: user sends to contract
+    const topLevelTx: APITransactionType = {
+      ...transfer,
+      id: 700,
+      amount: 100000,
+      target: { address: contractAddress },
+    };
+
+    // Internal: contract forwards to a third party (neither sender nor target is our account)
+    const internalTx: APITransactionType = {
+      ...transfer,
+      id: 701,
+      amount: 90000,
+      initiator: { address: someSenderAddress },
+      sender: { address: contractAddress },
+      target: { address: thirdPartyAddress },
+    };
+
+    mockGetAccountOperations.mockResolvedValue([topLevelTx, internalTx]);
+    const [results] = await listOperations(someSenderAddress, options);
+
+    // Only the top-level tx should be kept; the internal sub-tx is filtered out
+    expect(results).toHaveLength(1);
+    expect(results[0].senders).toEqual([someSenderAddress]);
+    expect(results[0].recipients).toEqual([contractAddress]);
+    expect(results[0].value).toEqual(100000n);
+  });
+
   it("FA2 token transfers (tokenId 0), attributes fees from parent tx", async () => {
     const fa2: APITokenTransfer & { hash: string } = {
       id: 9001,
