@@ -72,16 +72,7 @@ export const getValidatorGroups = async (): Promise<CeloValidatorGroup[]> => {
   return customValidatorGroupsOrder(result);
 };
 
-const customValidatorGroupsOrder = (
-  validatorGroups: CeloValidatorGroup[],
-): CeloValidatorGroup[] => {
-  const defaultValidatorGroup = validatorGroups.find(isDefaultValidatorGroup);
-
-  const sortedValidatorGroups = [...validatorGroups]
-    .sort((a, b) => b.votes.comparedTo(a.votes))
-    .filter(group => !isDefaultValidatorGroup(group));
-
-  return defaultValidatorGroup
-    ? [defaultValidatorGroup, ...sortedValidatorGroups]
-    : sortedValidatorGroups;
-};
+const customValidatorGroupsOrder = (validatorGroups: CeloValidatorGroup[]): CeloValidatorGroup[] =>
+  [...validatorGroups]
+    .filter(group => !isDefaultValidatorGroup(group)) // Excludes the deprecated "Ledger by Figment"
+    .sort((a, b) => b.votes.comparedTo(a.votes));
