@@ -8,6 +8,8 @@ import type {
   SignerTransactionLike,
   BitcoinCreateTransactionLike,
 } from "./types";
+import { lastValueFrom, type Observable } from "rxjs";
+import { UserRefusedOnDevice } from "@ledgerhq/errors";
 import {
   DeviceActionStatus,
   type DeviceActionState,
@@ -43,30 +45,38 @@ export class DmkSignerZcash implements ZcashSigner {
   }
 
   private mapError<E extends { _tag: string }>(error: E): Error {
+    if ("errorCode" in error && (error as { errorCode?: unknown }).errorCode === "6985") {
+      return new UserRefusedOnDevice();
+    }
     return new Error(error._tag);
   }
 
-  private resolveDeviceAction<T, E extends { _tag: string }>(observable: {
-    subscribe: (observer: {
-      next: (state: DeviceActionState<T, E, unknown>) => void;
-      error: (err: unknown) => void;
-    }) => unknown;
-  }): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      observable.subscribe({
-        next: state => {
-          if (state.status === DeviceActionStatus.Error) {
-            reject(this.mapError(state.error));
-          }
-          if (state.status === DeviceActionStatus.Completed) {
-            resolve(state.output);
-          }
-        },
-        error: err => {
-          reject(err);
-        },
-      });
-    });
+  private mapResult<T, E extends { _tag: string }>(state: DeviceActionState<T, E, unknown>): T {
+    switch (state.status) {
+      case DeviceActionStatus.Completed:
+        return state.output;
+      case DeviceActionStatus.Error:
+        throw this.mapError(state.error);
+      case DeviceActionStatus.Stopped:
+      case DeviceActionStatus.NotStarted:
+      case DeviceActionStatus.Pending:
+      default:
+        throw new Error(`Unexpected device action status: ${state.status}`);
+    }
+  }
+
+  /**
+   * Awaits a DMK device action to completion.
+   *
+   * `lastValueFrom` resolves with the action's final state once the observable
+   * completes (and rejects if it errors or completes without emitting), so any
+   * terminal status — including `Stopped` — settles the promise instead of
+   * hanging. `mapResult` then turns that final state into the output or an error.
+   */
+  private async resolveDeviceAction<T, E extends { _tag: string }>(
+    observable: Observable<DeviceActionState<T, E, unknown>>,
+  ): Promise<T> {
+    return this.mapResult(await lastValueFrom(observable));
   }
 
   async getAppConfig(): Promise<ZcashAppConfig> {

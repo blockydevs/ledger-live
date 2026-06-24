@@ -1,3 +1,4 @@
+import { of, throwError } from "rxjs";
 import {
   DeviceActionStatus,
   UserInteractionRequired,
@@ -22,31 +23,20 @@ describe("DmkSignerZcash", () => {
   let signer: DmkSignerZcash;
   let buildMock: jest.Mock;
 
-  const createCompletedObservable = <T>(output: T) => ({
-    subscribe: ({
-      next,
-    }: {
-      next: (state: { status: DeviceActionStatus.Completed; output: T }) => void;
-    }) => {
-      next({ status: DeviceActionStatus.Completed, output });
-    },
-  });
+  // Real RxJS observables that emit then complete, mirroring how DMK device
+  // actions stream states before completing the stream. The signer consumes
+  // them via `lastValueFrom`, which relies on the observable completing.
+  const createCompletedObservable = <T>(output: T) =>
+    of({ status: DeviceActionStatus.Completed, output });
 
-  const createErrorStatusObservable = <E extends { _tag: string }>(error: E) => ({
-    subscribe: ({
-      next,
-    }: {
-      next: (state: { status: DeviceActionStatus.Error; error: E }) => void;
-    }) => {
-      next({ status: DeviceActionStatus.Error, error });
-    },
-  });
+  const createErrorStatusObservable = <E extends { _tag: string }>(error: E) =>
+    of({ status: DeviceActionStatus.Error, error });
 
-  const createTransportErrorObservable = (error: Error) => ({
-    subscribe: ({ error: onError }: { error: (error: Error) => void }) => {
-      onError(error);
-    },
-  });
+  const createTransportErrorObservable = (error: Error) => throwError(() => error);
+
+  // A terminal `Stopped` state followed by completion — DMK signals an aborted
+  // action this way, and the signer must reject rather than hang.
+  const createStoppedObservable = () => of({ status: DeviceActionStatus.Stopped });
 
   // Emits the device action's intermediate states in order, then completes —
   // mirroring how the DMK signTransaction action streams `Pending` states
@@ -54,12 +44,7 @@ describe("DmkSignerZcash", () => {
   const createSigningObservable = <T>(
     states: Array<{ status: DeviceActionStatus.Pending; intermediateValue: unknown }>,
     output: T,
-  ) => ({
-    subscribe: ({ next }: { next: (state: unknown) => void }) => {
-      states.forEach(next);
-      next({ status: DeviceActionStatus.Completed, output });
-    },
-  });
+  ) => of(...states, { status: DeviceActionStatus.Completed, output });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -130,6 +115,26 @@ describe("DmkSignerZcash", () => {
       });
 
       await expect(signer.getAddress("44'/133'/0'/0/0")).rejects.toThrow("transport error");
+    });
+
+    it("should reject instead of hanging when the device action is stopped", async () => {
+      mockSignerZcash.getAddress.mockReturnValue({
+        observable: createStoppedObservable(),
+      });
+
+      await expect(signer.getAddress("44'/133'/0'/0/0")).rejects.toThrow(
+        "Unexpected device action status: stopped",
+      );
+    });
+
+    it("rejects with UserRefusedOnDevice (drives the 'Action rejected' UI) on the 6985 status word", async () => {
+      mockSignerZcash.getAddress.mockReturnValue({
+        observable: createErrorStatusObservable({ _tag: "ZcashAppCommandError", errorCode: "6985" }),
+      });
+
+      await expect(signer.getAddress("44'/133'/0'/0/0")).rejects.toMatchObject({
+        name: "UserRefusedOnDevice",
+      });
     });
   });
 
@@ -306,6 +311,29 @@ describe("DmkSignerZcash", () => {
       });
 
       await expect(signer.createPaymentTransaction(baseArg)).rejects.toThrow("transport down");
+    });
+
+    it("rejects instead of hanging when the device action is stopped", async () => {
+      mockSignerZcash.signTransaction.mockReturnValue({
+        observable: createStoppedObservable(),
+      });
+
+      await expect(signer.createPaymentTransaction(baseArg)).rejects.toThrow(
+        "Unexpected device action status: stopped",
+      );
+    });
+
+    it("rejects with UserRefusedOnDevice (drives the 'Action rejected' UI) when the user declines signing", async () => {
+      mockSignerZcash.signTransaction.mockReturnValue({
+        observable: createErrorStatusObservable({
+          _tag: "ZcashAppCommandError",
+          errorCode: "6985",
+        }),
+      });
+
+      await expect(signer.createPaymentTransaction(baseArg)).rejects.toMatchObject({
+        name: "UserRefusedOnDevice",
+      });
     });
 
     it("fires device-signing callbacks so Ledger Live can show the on-device UI", async () => {
