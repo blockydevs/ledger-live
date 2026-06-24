@@ -1,6 +1,11 @@
 import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import { CRYPTO_CURRENCIES_REGISTRY } from "@domain/entity-currency-crypto";
-import { listCryptoCurrencies } from "./currencies";
+import {
+  findCryptoCurrencyByScheme,
+  findCryptoCurrencyByTicker,
+  listCryptoCurrencies,
+} from "./currencies";
+import { setCryptoCurrenciesStore } from "./currencies-store";
 
 /**
  * Parity guard between the legacy bundled registry (`@ledgerhq/cryptoassets`) and the
@@ -34,5 +39,55 @@ describe("@domain/entity-currency-crypto parity with @ledgerhq/cryptoassets", ()
 
   it.each(sortedLegacyIds)("matches the legacy definition for %s", id => {
     expect(CRYPTO_CURRENCIES_REGISTRY[id]).toEqual(legacyById.get(id));
+  });
+});
+
+// Snapshot bundled lookup results at module-eval time (before any store injection).
+const bundledSchemeById = new Map(
+  legacyCurrencies.map(c => [c.scheme, findCryptoCurrencyByScheme(c.scheme)?.id]),
+);
+
+// Reversed domain array — proves that resolution is order-independent after the fix.
+const domainArrayReversed = [...Object.values(CRYPTO_CURRENCIES_REGISTRY)].reverse();
+
+const AMBIGUOUS_TICKERS = [
+  { ticker: "ETH", expectedId: "ethereum" },
+  { ticker: "BNB", expectedId: "bsc" },
+  { ticker: "DOT", expectedId: "polkadot" },
+  { ticker: "XTZ", expectedId: "tezos" },
+  { ticker: "CRO", expectedId: "crypto_org" },
+] as const;
+
+function clearInjectedStore() {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  (globalThis as Record<string, unknown>).__ledgerCryptoCurrenciesStore = undefined;
+}
+
+describe("lookup parity: bundled store vs injected domain array", () => {
+  describe("bundled store", () => {
+    it.each(AMBIGUOUS_TICKERS)(
+      'findCryptoCurrencyByTicker("$ticker") → $expectedId',
+      ({ ticker, expectedId }) => {
+        expect(findCryptoCurrencyByTicker(ticker)?.id).toBe(expectedId);
+      },
+    );
+  });
+
+  describe("injected domain store (reversed — proves order-independence)", () => {
+    beforeEach(() => setCryptoCurrenciesStore(domainArrayReversed));
+    afterEach(clearInjectedStore);
+
+    it.each(AMBIGUOUS_TICKERS)(
+      'findCryptoCurrencyByTicker("$ticker") → $expectedId',
+      ({ ticker, expectedId }) => {
+        expect(findCryptoCurrencyByTicker(ticker)?.id).toBe(expectedId);
+      },
+    );
+
+    it("findCryptoCurrencyByScheme is identical to bundled for all currencies", () => {
+      for (const [scheme, bundledId] of bundledSchemeById) {
+        expect(findCryptoCurrencyByScheme(scheme)?.id).toBe(bundledId);
+      }
+    });
   });
 });
