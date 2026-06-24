@@ -5,6 +5,8 @@ import { selectCurrencyForMetaId } from "@ledgerhq/live-common/dada-client/utils
 import { useSearchCommon } from "@ledgerhq/live-common/modularDrawer/hooks/useSearch";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
 import { useUsdToFiatRate } from "@ledgerhq/live-common/counterValues/hooks/useUsdToFiatRate";
+import useEnv from "@ledgerhq/live-common/hooks/useEnv";
+import { useFeature } from "@features/platform-feature-flags";
 import type { MarketAssetDisplayData } from "LLM/components/AssetListItem";
 import { mapDadaMarketToDisplayData } from "LLM/features/GlobalSearch/utils/mapDadaMarketToDisplayData";
 import { track } from "~/analytics";
@@ -36,6 +38,10 @@ export function useGlobalSearchResults(): GlobalSearchResults {
   const { rate: usdToFiatRate, status: rateStatus } = useUsdToFiatRate(counterValueCurrency.ticker);
   const version = VersionNumber.appVersion ?? "";
 
+  const modularDrawer = useFeature("llmModularDrawer");
+  const isStaging = modularDrawer?.params?.backendEnvironment === "STAGING";
+  const includeTestNetworks = useEnv("MANAGER_DEV_MODE");
+
   const handleTrackSearch = useCallback(
     (query: string) => track("search_query", { query, page: ScreenName.GlobalSearch }),
     [],
@@ -63,6 +69,8 @@ export function useGlobalSearchResults(): GlobalSearchResults {
     version,
     search: query,
     skip: query.length === 0,
+    isStaging,
+    includeTestNetworks,
   });
 
   const searchResults = useMemo<MarketAssetDisplayData[]>(() => {
