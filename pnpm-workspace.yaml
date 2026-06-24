@@ -203,7 +203,7 @@ catalog:
   # Modules published by coin-modules
   "@ledgerhq/coin-module-framework": 3.5.1
   "@ledgerhq/coin-xrp": 7.23.5
-  detox: 20.51.1
+  detox: 20.51.3
 
 overrides:
   node-abi: ^4.9.0
