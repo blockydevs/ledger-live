@@ -33,6 +33,16 @@
     }
   },
   "exports": {
+    "./scenarii/Babylon": {
+      "@ledgerhq/source": "./src/scenarii/Babylon.ts",
+      "require": "./lib/scenarii/Babylon.js",
+      "default": "./lib-es/scenarii/Babylon.js"
+    },
+    "./scenarii/Cosmos": {
+      "@ledgerhq/source": "./src/scenarii/Cosmos.ts",
+      "require": "./lib/scenarii/Cosmos.js",
+      "default": "./lib-es/scenarii/Cosmos.js"
+    },
     "./lib/*": "./lib/*.js",
     "./lib-es/*": "./lib-es/*.js",
     "./package.json": "./package.json"
