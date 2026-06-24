@@ -1519,7 +1519,7 @@ describe("createTransactionIntent", () => {
     });
 
     expect(() => createTransactionIntent({ account: mockAccount, transaction })).toThrow(
-      "aleo: missing amount records",
+      "aleo: no amount records found for given commitments",
     );
   });
 
@@ -1592,18 +1592,18 @@ describe("createTransactionIntent", () => {
     });
 
     expect(() => createTransactionIntent({ account: mockAccount, transaction })).toThrow(
-      "aleo: token sub-account is required for public token transaction",
+      "aleo: token account is missing",
     );
   });
 
   it.each([
     TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE,
     TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC,
-  ] as const)("should throw for private token transaction mode %s", mode => {
+  ] as const)("should throw when token account is missing for private token mode %s", mode => {
     const transaction = getMockedTransaction({ mode });
 
     expect(() => createTransactionIntent({ account: mockAccount, transaction })).toThrow(
-      "aleo: private token transactions are not supported yet",
+      "aleo: token account is missing",
     );
   });
 });
