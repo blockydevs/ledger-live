@@ -43,7 +43,7 @@ describe("@domain/entity-currency-crypto parity with @ledgerhq/cryptoassets", ()
 });
 
 // Snapshot bundled lookup results at module-eval time (before any store injection).
-const bundledSchemeById = new Map(
+const bundledIdByScheme = new Map(
   legacyCurrencies.map(c => [c.scheme, findCryptoCurrencyByScheme(c.scheme)?.id]),
 );
 
@@ -85,7 +85,7 @@ describe("lookup parity: bundled store vs injected domain array", () => {
     );
 
     it("findCryptoCurrencyByScheme is identical to bundled for all currencies", () => {
-      for (const [scheme, bundledId] of bundledSchemeById) {
+      for (const [scheme, bundledId] of bundledIdByScheme) {
         expect(findCryptoCurrencyByScheme(scheme)?.id).toBe(bundledId);
       }
     });
