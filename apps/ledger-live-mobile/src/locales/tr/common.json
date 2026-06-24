@@ -3736,10 +3736,8 @@
   },
   "notifications" : {
     "prompt" : {
-      "title" : "Bildirimleri aç",
-      "titleVariantB" : "Önemli bilgileri kaçırmayın",
-      "desc" : "Ledger Wallet, Ledger ürünleri ve piyasalar hakkındaki son haberleri ve kişiye özel öneriler alın. Ayarları değiştirerek istediğiniz zaman abonelikten çıkabilirsiniz",
-      "descVariantB" : "Yeni token’lar, kazanç fırsatları ve piyasa değişimleri hakkında gerçek zamanlı uyarılar alın. İstediğiniz zaman devre dışı bırakabilirsiniz.",
+      "title" : "Önemli bilgileri kaçırmayın",
+      "desc" : "Yeni token’lar, kazanç fırsatları ve piyasa değişimleri hakkında gerçek zamanlı uyarılar alın. İstediğiniz zaman devre dışı bırakabilirsiniz.",
       "allow" : "Bildirimlere izin ver",
       "later" : "Belki sonra",
       "transactionsAlerts" : {

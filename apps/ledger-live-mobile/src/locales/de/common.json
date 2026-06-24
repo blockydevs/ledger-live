@@ -3736,10 +3736,8 @@
   },
   "notifications" : {
     "prompt" : {
-      "title" : "Benachrichtigungen aktivieren",
-      "titleVariantB" : "Verpasse nichts Wichtiges",
-      "desc" : "Erhalte die neuesten Updates zu Ledger Wallet, Ledger-Produkten, dem Markt und personalisierte Empfehlungen. Du kannst dich jederzeit in den Einstellungen wieder abmelden",
-      "descVariantB" : "Erhalte Echtzeit-Benachrichtigungen zu neuen Token, Ertragschancen und Marktbewegungen. Abmeldung jederzeit möglich.",
+      "title" : "Verpasse nichts Wichtiges",
+      "desc" : "Erhalte Echtzeit-Benachrichtigungen zu neuen Token, Ertragschancen und Marktbewegungen. Abmeldung jederzeit möglich.",
       "allow" : "Benachrichtigungen zulassen",
       "later" : "Vielleicht später",
       "transactionsAlerts" : {
