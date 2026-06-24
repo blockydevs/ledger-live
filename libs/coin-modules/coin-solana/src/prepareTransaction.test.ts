@@ -718,9 +718,7 @@ describe("testing prepareTransaction", () => {
 
       const amountError = preparedTransaction.model.commandDescriptor?.errors.amount;
       expect(amountError).toBeInstanceOf(SolanaStakeAccountAmountTooLow);
-      expect(
-        (amountError as Error & { minimumAmount?: string })?.minimumAmount,
-      ).toBe("1 SOL");
+      expect((amountError as Error & { minimumAmount?: string })?.minimumAmount).toBe("1 SOL");
     });
 
     it("should derive stake.split command with seed <= 32 bytes", async () => {

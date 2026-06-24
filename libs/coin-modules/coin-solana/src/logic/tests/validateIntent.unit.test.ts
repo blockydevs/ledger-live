@@ -258,9 +258,9 @@ describe("validateIntent", () => {
         );
 
         expect(result.errors.amount).toBeInstanceOf(SolanaStakeAccountAmountTooLow);
-        expect(
-          (result.errors.amount as Error & { minimumAmount?: string })?.minimumAmount,
-        ).toBe("1 SOL");
+        expect((result.errors.amount as Error & { minimumAmount?: string })?.minimumAmount).toBe(
+          "1 SOL",
+        );
       });
 
       it("should error when useAllAmount yields a value below the stake minimum delegation", async () => {
@@ -350,9 +350,7 @@ describe("validateIntent", () => {
 
       it("should return validation errors instead of rejecting when getStakeMinimumDelegation would fail and recipient is invalid", async () => {
         const api = {
-          getStakeMinimumDelegation: jest
-            .fn()
-            .mockRejectedValue(new Error("RPC unreachable")),
+          getStakeMinimumDelegation: jest.fn().mockRejectedValue(new Error("RPC unreachable")),
         } as unknown as ChainAPI;
 
         await expect(
@@ -370,9 +368,7 @@ describe("validateIntent", () => {
 
       it("skips the minimum-delegation check when the RPC call fails (best-effort)", async () => {
         const api = {
-          getStakeMinimumDelegation: jest
-            .fn()
-            .mockRejectedValue(new Error("RPC unreachable")),
+          getStakeMinimumDelegation: jest.fn().mockRejectedValue(new Error("RPC unreachable")),
         } as unknown as ChainAPI;
 
         const result = await validateIntentRaw(
