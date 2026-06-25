@@ -537,6 +537,7 @@
     "src/families/evm/getTokenAllowance.ts",
     "src/families/evm/platformAdapter.ts",
     "src/families/evm/setup.ts",
+    "src/families/evm/staking/ledgerValidator.ts",
     "src/families/evm/staking/logic.ts",
     "src/families/evm/staking/react.ts",
     "src/families/evm/staking/types.ts",
