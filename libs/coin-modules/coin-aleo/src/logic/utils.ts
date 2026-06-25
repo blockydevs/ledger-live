@@ -957,8 +957,9 @@ export function getRecordByCommitment({
   commitment: string;
   tokenAccount?: AleoTokenAccount;
 }): AleoUnspentRecord | null {
-  const records =
-    tokenAccount?.unspentPrivateRecords ?? account.aleoResources?.unspentPrivateRecords ?? [];
+  const records = tokenAccount
+    ? (tokenAccount.unspentPrivateRecords ?? [])
+    : (account.aleoResources?.unspentPrivateRecords ?? []);
 
   return records.find(record => record.commitment === commitment) ?? null;
 }
