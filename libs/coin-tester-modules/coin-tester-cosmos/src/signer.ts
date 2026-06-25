@@ -1,7 +1,6 @@
 import { rawSecp256k1PubkeyToRawAddress } from "@cosmjs/amino";
 import {
   Bip39,
-  EnglishMnemonic,
   Random,
   Secp256k1,
   Secp256k1Signature,
@@ -34,18 +33,15 @@ function applyCosmosHardening(path: number[]) {
 }
 
 // Like the device, the tester signs from a single seed for the whole run. The
-// seed is generated once per buildSigner() — random by default so each run
-// uses a fresh account (matching the other coin-testers), but accepts a fixed
-// mnemonic so unit tests can pin a known derivation vector. The devnet funds
-// whatever address this derives (see scenarii/*.ts → DEV_ADDRESS env), so the
-// seed never needs to match anything hardcoded on the chain side.
+// seed is generated once per buildSigner() with a fresh random mnemonic, so
+// each run uses a new account (matching the other coin-testers). The devnet
+// funds whatever address this derives (see scenarii/*.ts → DEV_ADDRESS env), so
+// the seed never needs to match anything hardcoded on the chain side.
 //
 // BIP-39 seed derivation is PBKDF2 (expensive), so compute it once and reuse
 // it across every derivation/sign for the lifetime of this signer.
-export async function buildSigner(mnemonic?: string): Promise<CosmosSigner> {
-  const phrase = mnemonic
-    ? new EnglishMnemonic(mnemonic)
-    : Bip39.encode(Random.getBytes(32));
+export async function buildSigner(): Promise<CosmosSigner> {
+  const phrase = Bip39.encode(Random.getBytes(32));
   const seed = await Bip39.mnemonicToSeed(phrase);
 
   async function deriveFromNumberPath(path: number[]): Promise<DerivedKey> {

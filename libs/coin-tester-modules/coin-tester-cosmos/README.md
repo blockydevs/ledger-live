@@ -19,8 +19,7 @@ scenarios run:
 - Local software signer written in TypeScript (matches the DMK signer's wire
   output). It generates a **fresh random seed each run**; the devnet pre-funds
   whatever address it derives by reading `DEV_ADDRESS` from the environment at
-  genesis (see `src/scenarii/*.ts` and the entrypoints). Derivation correctness
-  is pinned separately by a fixed-vector unit test in `src/signer.test.ts`
+  genesis (see `src/scenarii/*.ts` and the entrypoints)
 - Docker-based devnets: a single-validator `gaiad` node and a single-validator
   `babylond` node (the latter with a short epoch interval for fast tests)
 
