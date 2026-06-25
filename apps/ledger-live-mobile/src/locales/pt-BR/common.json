@@ -3736,8 +3736,10 @@
   },
   "notifications" : {
     "prompt" : {
-      "title" : "Não perca o que é importante",
-      "desc" : "Receba alertas em tempo real sobre novos tokens, oportunidades de ganhos e mudanças no mercado. Cancele a qualquer momento.",
+      "title" : "Ativar Notificações",
+      "titleVariantB" : "Não perca o que é importante",
+      "desc" : "Receba as últimas atualizações sobre a Ledger Wallet, os produtos Ledger, o mercado e recomendações personalizadas. Cancele a qualquer momento nas configurações",
+      "descVariantB" : "Receba alertas em tempo real sobre novos tokens, oportunidades de ganhos e mudanças no mercado. Cancele a qualquer momento.",
       "allow" : "Permitir Notificações",
       "later" : "Talvez mais tarde",
       "transactionsAlerts" : {

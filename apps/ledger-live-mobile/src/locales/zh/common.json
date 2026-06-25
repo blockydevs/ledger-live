@@ -3736,8 +3736,10 @@
   },
   "notifications" : {
     "prompt" : {
-      "title" : "不要错过重要信息",
-      "desc" : "获取有关新代币、收益机会和市场变动的实时提醒。您可随时决定退出。",
+      "title" : "打开通知",
+      "titleVariantB" : "不要错过重要信息",
+      "desc" : "获取关于 Ledger Wallet、Ledger 产品、市场的最新资讯以及个性化推荐。在设置中随时选择停用",
+      "descVariantB" : "获取有关新代币、收益机会和市场变动的实时提醒。您可随时决定退出。",
       "allow" : "允许通知",
       "later" : "以后再说",
       "transactionsAlerts" : {

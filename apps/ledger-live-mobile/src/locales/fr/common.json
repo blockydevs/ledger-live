@@ -3736,8 +3736,10 @@
   },
   "notifications" : {
     "prompt" : {
-      "title" : "Ne passez pas à côté de l’essentiel",
-      "desc" : "Recevez des alertes en temps réel sur les nouvelles cryptos, les opportunités de rendement et les mouvements du marché. Vous pouvez les désactiver à tout moment.",
+      "title" : "Activez les notifications",
+      "titleVariantB" : "Ne passez pas à côté de l’essentiel",
+      "desc" : "Ne manquez plus rien sur Ledger Wallet, les produits Ledger, le marché, et recevez des recommandations personnalisées. Vous pouvez vous désinscrire à tout moment dans les Paramètres.",
+      "descVariantB" : "Recevez des alertes en temps réel sur les nouvelles cryptos, les opportunités de rendement et les mouvements du marché. Vous pouvez les désactiver à tout moment.",
       "allow" : "Autoriser les notifications",
       "later" : "Plus tard",
       "transactionsAlerts" : {
