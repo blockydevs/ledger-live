@@ -2911,6 +2911,7 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
     ticker: "XTZ",
     scheme: "tezos",
     color: "#007BFF",
+    keywords: ["xtz", "tezos"],
     family: "tezos",
     blockAvgTime: 60,
     units: [
@@ -3325,6 +3326,7 @@ export const cryptocurrenciesById: Record<CryptoCurrencyId, CryptoCurrency> = {
     ticker: "CRO",
     scheme: "crypto_org",
     color: "#0e1c37",
+    keywords: ["cro", "cronos pos chain"],
     family: "cosmos",
     units: [
       {

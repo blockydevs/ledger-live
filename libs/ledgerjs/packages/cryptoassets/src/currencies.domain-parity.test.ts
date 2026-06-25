@@ -47,8 +47,10 @@ const bundledIdByScheme = new Map(
   legacyCurrencies.map(c => [c.scheme, findCryptoCurrencyByScheme(c.scheme)?.id]),
 );
 
-// Reversed domain array — proves that resolution is order-independent after the fix.
-const domainArrayReversed = [...Object.values(CRYPTO_CURRENCIES_REGISTRY)].reverse();
+// Domain array in the order LIVE-32900 will inject (alphabetical by id — the regression scenario).
+const domainArray = Object.values(CRYPTO_CURRENCIES_REGISTRY);
+// Reversed to exercise the opposite ordering and confirm full order-independence.
+const domainArrayReversed = [...domainArray].reverse();
 
 const AMBIGUOUS_TICKERS = [
   { ticker: "ETH", expectedId: "ethereum" },
@@ -73,8 +75,11 @@ describe("lookup parity: bundled store vs injected domain array", () => {
     );
   });
 
-  describe("injected domain store (reversed — proves order-independence)", () => {
-    beforeEach(() => setCryptoCurrenciesStore(domainArrayReversed));
+  describe.each([
+    ["alphabetical order (real injection scenario)", domainArray],
+    ["reversed order (order-independence check)", domainArrayReversed],
+  ] as const)("injected domain store — %s", (_, currencies) => {
+    beforeEach(() => setCryptoCurrenciesStore([...currencies]));
     afterEach(clearInjectedStore);
 
     it.each(AMBIGUOUS_TICKERS)(
