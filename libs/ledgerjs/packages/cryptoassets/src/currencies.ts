@@ -5177,8 +5177,9 @@ export function findCryptoCurrencyByScheme(scheme: string): CryptoCurrency | nul
 }
 
 /**
- *
- * @param {*} ticker
+ * @deprecated Tickers are not unique across currencies, so the result is ambiguous and arbitrary.
+ * Look up by id with {@link findCryptoCurrencyById} instead.
+ * @param ticker
  */
 export function findCryptoCurrencyByTicker(ticker: string): CryptoCurrency | null | undefined {
   return activeCurrenciesStore().cryptocurrenciesByTicker[ticker];
