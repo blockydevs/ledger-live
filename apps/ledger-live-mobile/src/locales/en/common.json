@@ -4470,6 +4470,7 @@
       "addressNotFound": "Address not found",
       "account": "Account",
       "alreadyUsed": "Already used · {{date}}",
+      "notInRecentHistory": "Not in your recent history",
       "relativeDate": {
         "justNow": "Just now",
         "minutesAgo_one": "1 min ago",
@@ -4480,8 +4481,10 @@
         "daysAgo_other": "{{count}} days ago"
       },
       "firstInteraction": {
-        "title": "You’re sending to a new address",
-        "description": "Verify that the address is correct. In case of doubt send a small amount first."
+        "description": "This address isn’t in your recent history. In case of doubt try a small amount first.",
+        "learnMore": "Learn more",
+        "helpTitle": "Recent send history",
+        "helpDescription": "Your recent history allows you to instantly see if you’ve already sent to a specific address or not. This could prevent potential copy/paste errors or hacks. Your history contains the last 12 addresses you sent crypto to using Ledger Wallet."
       },
       "enterTag": "Enter {{tag}}",
       "sanctioned": {
