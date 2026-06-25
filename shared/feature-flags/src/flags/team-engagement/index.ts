@@ -20,7 +20,6 @@ export * from "./llmOnboardingEnableSync";
 export * from "./llmRebornABtest";
 export * from "./llmSyncOnboardingIncr1";
 export * from "./lwmNotificationsOptIn";
-export * from "./lwmNewWordingOptInNotificationsDrawer";
 export * from "./lwmProductTour";
 export * from "./nanoOnboardingFundWallet";
 export * from "./newsfeedPage";
