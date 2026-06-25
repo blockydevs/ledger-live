@@ -646,6 +646,52 @@ export function mapTransactionIntentToSdkIntent(
         program_id: txIntent.data.programId,
       };
     }
+    case TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE: {
+      invariant(hasSpecificIntentData(txIntent, type), `aleo: intent data is required for ${type}`);
+      const records = txIntent.data.records;
+      validateRecordsCount(type, records.length);
+
+      if (records.length === 1) {
+        return {
+          type: "transfer_token_private",
+          amount,
+          to,
+          record: records[0],
+          program_id: txIntent.data.programId,
+        };
+      }
+
+      return {
+        type: `transfer_token_private_${records.length}`,
+        amount,
+        to,
+        records,
+        program_id: txIntent.data.programId,
+      };
+    }
+    case TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC: {
+      invariant(hasSpecificIntentData(txIntent, type), `aleo: intent data is required for ${type}`);
+      const records = txIntent.data.records;
+      validateRecordsCount(type, records.length);
+
+      if (records.length === 1) {
+        return {
+          type: "transfer_token_private_to_public",
+          amount,
+          to,
+          record: records[0],
+          program_id: txIntent.data.programId,
+        };
+      }
+
+      return {
+        type: `transfer_token_private_to_public_${records.length}`,
+        amount,
+        to,
+        records,
+        program_id: txIntent.data.programId,
+      };
+    }
     default: {
       throw new Error(`aleo: unsupported intent type: ${type}`);
     }
