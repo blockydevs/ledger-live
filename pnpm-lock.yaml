@@ -11980,8 +11980,11 @@ importers:
         specifier: 'catalog:'
         version: 1.7.1(rxjs@7.8.2)
       '@ledgerhq/device-signer-kit-zcash':
-        specifier: 0.2.0
-        version: 0.2.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
+        specifier: 0.3.0
+        version: 0.3.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
+      '@ledgerhq/errors':
+        specifier: workspace:^
+        version: link:../ledgerjs/packages/errors
       rxjs:
         specifier: 'catalog:'
         version: 7.8.2
@@ -17630,10 +17633,10 @@ packages:
     peerDependencies:
       '@ledgerhq/device-management-kit': ^1.5.1
 
-  '@ledgerhq/device-signer-kit-zcash@0.2.0':
-    resolution: {integrity: sha512-VE+wb64WXBkvVwMF7SwzAU1UQwlJ1Hb/dNJeuLSlpTWmsY9x0WZnQKTH5U/CLvnfoLXadl21tdthSQb0XlCDPA==}
+  '@ledgerhq/device-signer-kit-zcash@0.3.0':
+    resolution: {integrity: sha512-+wgFuOGe/BC1cZzJS/0MC9P37C3QYQ33BX+6gmqSwsSZveDyHAvPXxSeZ+6pmzgYHDIC2aO+4LU4vQI1+R5luQ==}
     peerDependencies:
-      '@ledgerhq/device-management-kit': ^1.4.1
+      '@ledgerhq/device-management-kit': ^1.7.1
 
   '@ledgerhq/device-transport-kit-react-native-ble@1.3.2':
     resolution: {integrity: sha512-NX/Ml23AR/8iQ5pUPQqum3qjQpValxNhZSbp+Zm/lSl8W0HETLMFK03w/4lj2nfPjiwBy3U+uPhzYNDzdROYQg==}
@@ -45810,10 +45813,11 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@ledgerhq/device-signer-kit-zcash@0.2.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))':
+  '@ledgerhq/device-signer-kit-zcash@0.3.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))':
     dependencies:
       '@ledgerhq/device-management-kit': 1.7.1(rxjs@7.8.2)
       '@ledgerhq/signer-utils': 1.2.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
+      '@noble/hashes': 1.8.0
       inversify: 7.5.1(reflect-metadata@0.2.2)
       purify-ts: 2.1.0
       reflect-metadata: 0.2.2
