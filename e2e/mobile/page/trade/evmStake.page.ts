@@ -7,7 +7,6 @@ const START_DELEGATE_CTA_REGEX = /^account-quick-action-button-(cta|addDelegatio
 const FEE_ESTIMATION_TIMEOUT = 120000;
 
 export default class EvmStakePage {
-  startStakingCtaId = "account-quick-action-button-cta";
   addDelegationCtaId = "account-quick-action-button-addDelegation";
   amountInputId = "evm-delegation-amount-input";
   useMaxButtonId = "evm-delegation-use-max";
