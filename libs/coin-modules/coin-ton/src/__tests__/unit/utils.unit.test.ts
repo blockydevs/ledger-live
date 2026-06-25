@@ -130,6 +130,10 @@ describe("Build TON transaction", () => {
     mockServer.listen();
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   afterAll(() => {
     mockServer.close();
   });
@@ -151,6 +155,7 @@ describe("Build TON transaction", () => {
   });
 
   test("Build TON transaction when useAllAmount is true and there is a comment", () => {
+    jest.spyOn(Date, "now").mockReturnValue(1_000_000_000_000);
     const transaction = {
       ...baseTransaction,
       comment: { text: "valid comment", isEncrypted: false },
