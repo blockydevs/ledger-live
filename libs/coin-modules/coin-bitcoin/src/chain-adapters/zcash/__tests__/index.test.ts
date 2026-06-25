@@ -78,7 +78,6 @@ describe("zcash chain adapter — privateInfo serialization", () => {
     adapter.assignToAccountRaw!(account, accountRaw);
 
     const raw = (accountRaw as ZcashAccountRaw).privateInfo!;
-    expect(raw).toBeDefined();
     expect(raw.saplingBalance).toBe("1234");
     expect(raw.orchardBalance).toBe("5678");
     expect(raw.ufvk).toBe("uview1key");
@@ -113,7 +112,6 @@ describe("zcash chain adapter — privateInfo serialization", () => {
     adapter.assignFromAccountRaw!(accountRaw, account);
 
     const restored = (account as ZcashAccount).privateInfo!;
-    expect(restored).toBeDefined();
     expect(restored.saplingBalance).toEqual(new BigNumber(1234));
     expect(restored.orchardBalance).toEqual(new BigNumber(5678));
     expect(restored.ufvk).toBe("uview1key");
