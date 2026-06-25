@@ -472,6 +472,7 @@ tools/actions/composites/merge-e2e-detox-timings/                           @led
 **/tsconfig*                                          @ledgerhq/platform
 **/jest.config*                                       @ledgerhq/platform
 **/knip.json                                          @ledgerhq/platform
+mise.toml                                             @ledgerhq/platform
 
 # CI — Nx
 /nx.json                                              @ledgerhq/platform @ledgerhq/wallet-ci
