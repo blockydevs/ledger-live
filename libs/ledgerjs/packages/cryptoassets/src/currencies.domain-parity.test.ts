@@ -42,10 +42,10 @@ describe("@domain/entity-currency-crypto parity with @ledgerhq/cryptoassets", ()
   });
 });
 
-// Snapshot bundled lookup results at module-eval time (before any store injection).
-const bundledIdByScheme = new Map(
-  legacyCurrencies.map(c => [c.scheme, findCryptoCurrencyByScheme(c.scheme)?.id]),
-);
+// Authoritative scheme → id mapping built straight from the legacy data, not via
+// findCryptoCurrencyByScheme — otherwise a regression in that accessor would be baked into the
+// expected values and the injected-store assertion below could still pass.
+const bundledIdByScheme = new Map(legacyCurrencies.map(c => [c.scheme, c.id]));
 
 // id-sorted (deterministic, unlike Object.values insertion order) puts the non-canonical currency
 // first for every ambiguous ticker (arbitrum < ethereum, cronos < crypto_org), so this pass fails

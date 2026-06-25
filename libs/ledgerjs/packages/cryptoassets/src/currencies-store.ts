@@ -52,8 +52,9 @@ export function registerCurrencyInStore(
 
   if (!currency.isTestnetFor) {
     const currencyAlreadySet = store.cryptocurrenciesByTicker[currency.ticker];
+    const tickerLower = currency.ticker.toLowerCase();
     const currencyHasTickerInKeywords = Boolean(
-      currency.keywords?.some(k => k.toLowerCase() === currency.ticker.toLowerCase()),
+      currency.keywords?.some(k => k.toLowerCase() === tickerLower),
     );
 
     if (
