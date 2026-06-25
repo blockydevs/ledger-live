@@ -47,10 +47,14 @@ const bundledIdByScheme = new Map(
   legacyCurrencies.map(c => [c.scheme, findCryptoCurrencyByScheme(c.scheme)?.id]),
 );
 
-// Domain array in the order LIVE-32900 will inject (alphabetical by id — the regression scenario).
-const domainArray = Object.values(CRYPTO_CURRENCIES_REGISTRY);
+// id-sorted (deterministic, unlike Object.values insertion order) puts the non-canonical currency
+// first for every ambiguous ticker (arbitrum < ethereum, cronos < crypto_org), so this pass fails
+// if the keyword tiebreak regresses to first-in-array-wins.
+const domainArraySortedById = [...Object.values(CRYPTO_CURRENCIES_REGISTRY)].sort((a, b) =>
+  a.id.localeCompare(b.id),
+);
 // Reversed to exercise the opposite ordering and confirm full order-independence.
-const domainArrayReversed = [...domainArray].reverse();
+const domainArrayReversed = [...domainArraySortedById].reverse();
 
 const AMBIGUOUS_TICKERS = [
   { ticker: "ETH", expectedId: "ethereum" },
@@ -76,7 +80,7 @@ describe("lookup parity: bundled store vs injected domain array", () => {
   });
 
   describe.each([
-    ["alphabetical order (real injection scenario)", domainArray],
+    ["id-sorted order (non-canonical currency first)", domainArraySortedById],
     ["reversed order (order-independence check)", domainArrayReversed],
   ] as const)("injected domain store — %s", (_, currencies) => {
     beforeEach(() => setCryptoCurrenciesStore([...currencies]));
