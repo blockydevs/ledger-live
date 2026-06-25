@@ -243,7 +243,7 @@ async function blockTransactionForHash(
   const txCtx: TxContext = {
     memo: decodeMemo(tx),
     sequence: parseSequence(tx.source_account_sequence),
-    feeCharged: new BigNumber(tx.fee_charged).toString(),
+    feeCharged: new BigNumber(tx.fee_charged || "0").toString(),
   };
 
   let blockOperations: BlockOperation[] = [];
