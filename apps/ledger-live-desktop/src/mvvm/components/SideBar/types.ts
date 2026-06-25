@@ -35,7 +35,6 @@ export interface SideBarViewModel {
   readonly isAccountsDisabled: boolean;
   readonly isLiveAppTabSelected: boolean;
   readonly isMarketBannerEnabled: boolean;
-  readonly isQuickActionCtasEnabled: boolean;
   readonly isWallet40MainNavEnabled: boolean;
   readonly isMyWalletEnabled: boolean;
   readonly referralProgramConfig: ReferralProgramConfig | null;

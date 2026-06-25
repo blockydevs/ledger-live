@@ -209,7 +209,6 @@ const MainSideBar = () => {
   const {
     pathname: locationPathname,
     collapsed,
-    navigationLocked,
     noAccounts,
     totalStarredAccounts,
     displayBlueDot,
@@ -217,7 +216,6 @@ const MainSideBar = () => {
     isCardDisabled,
     isLiveAppTabSelected,
     isMarketBannerEnabled,
-    isQuickActionCtasEnabled,
     isWallet40MainNavEnabled,
     referralProgramConfig,
     getMinHeightForStarredAccountsList,
@@ -227,7 +225,6 @@ const MainSideBar = () => {
     handleClickAccounts,
     handleClickManager,
     handleClickCatalog,
-    handleClickExchange,
     handleClickEarn,
     handleClickSwap,
     handleClickPerps,
@@ -235,8 +232,6 @@ const MainSideBar = () => {
     handleClickCardWallet,
     handleClickRefer,
     handleClickRecover,
-    handleOpenSendModal,
-    handleOpenReceiveModal,
   } = viewModel;
 
   return (
@@ -298,28 +293,7 @@ const MainSideBar = () => {
                   disabled={noAccounts}
                   collapsed={secondAnim}
                 />
-                {!isQuickActionCtasEnabled && (
-                  <SideBarListItem
-                    id={"send"}
-                    label={t("send.title")}
-                    icon={Icons.ArrowUp}
-                    iconActiveColor="wallet"
-                    onClick={handleOpenSendModal}
-                    disabled={noAccounts || navigationLocked}
-                    collapsed={secondAnim}
-                  />
-                )}
-                {!isQuickActionCtasEnabled && (
-                  <SideBarListItem
-                    id={"receive"}
-                    label={t("receive.title")}
-                    icon={Icons.ArrowDown}
-                    iconActiveColor="wallet"
-                    onClick={handleOpenReceiveModal}
-                    disabled={noAccounts || navigationLocked}
-                    collapsed={secondAnim}
-                  />
-                )}
+
                 <SideBarListItem
                   id={"swap"}
                   label={t("sidebar.swap")}
@@ -356,18 +330,7 @@ const MainSideBar = () => {
                   isActive={locationPathname === "/earn"}
                   collapsed={secondAnim}
                 />
-                {!isQuickActionCtasEnabled && (
-                  <SideBarListItem
-                    id={"exchange"}
-                    label={t("sidebar.exchange")}
-                    icon={Icons.Dollar}
-                    iconActiveColor="wallet"
-                    onClick={handleClickExchange}
-                    isActive={locationPathname === "/exchange"}
-                    disabled={noAccounts}
-                    collapsed={secondAnim}
-                  />
-                )}
+
                 <SideBarListItem
                   id={"catalog"}
                   label={t("sidebar.catalog")}
