@@ -40,10 +40,10 @@ describe("coin-framework utils", () => {
     );
 
     it.each([
-      [{ slow: {} }, "slow"],
-      [{ medium: {}, fast: {} }, "medium"],
-      [{ slow: {}, fast: {} }, "fast"],
-    ])("returns undefined when %s key is missing", (value, _missingKey) => {
+      ["slow", { medium: {}, fast: {} }],
+      ["medium", { slow: {}, fast: {} }],
+      ["fast", { slow: {}, medium: {} }],
+    ])("returns undefined when %s key is missing", (_missingKey, value) => {
       expect(toGasOptionsFromUnknown(value)).toBeUndefined();
     });
 
