@@ -501,6 +501,18 @@ describe("validateIntent", () => {
 
         expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
       });
+
+      it("keeps the returned amount clamped to 0 even when errors are set", async () => {
+        const result = await validateIntent(
+          makeWithdrawIntent({ amount: -1_000n }),
+          makeBalances(3000n, 0n),
+          { value: 5000n },
+        );
+
+        expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+        expect(result.amount).toBe(0n);
+        expect(result.totalSpent).toBe(5000n);
+      });
     });
   });
 
