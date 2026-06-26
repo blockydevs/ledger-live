@@ -381,4 +381,42 @@ describe("listOperations — mainnet origination ops", () => {
     const totalFees = originations.reduce((sum, op) => sum + op.tx.fees, 0n);
     expect(totalFees).toBeGreaterThanOrEqual(5_480_510n);
   });
+
+  it("native ops (including internal sub-tx fees) sum to the on-chain balance", async () => {
+    // Paginate until all ops are fetched
+    let allOps: Awaited<ReturnType<typeof listOperations>>[0] = [];
+    let token: string | undefined;
+    do {
+      const [ops, next] = await listOperations(ORIGINATOR, {
+        sort: "Ascending",
+        minHeight: 0,
+        limit: 200,
+        token,
+      });
+      allOps = allOps.concat(ops);
+      token = next || undefined;
+    } while (token);
+
+    const nativeOps = allOps.filter(op => op.asset.type === "native");
+
+    let balance = 0n;
+    for (const op of nativeOps) {
+      if (op.type === "IN") balance += op.value;
+      else if (op.type === "OUT") balance -= op.value;
+    }
+
+    // Subtract fees only when this account is the fee payer
+    for (const op of nativeOps) {
+      if (op.tx.feesPayer === ORIGINATOR && op.tx.fees > 0n) {
+        balance -= op.tx.fees;
+      }
+    }
+
+    const explorerUrl = mainnetConfig().explorer.url;
+    const resp = await fetch(`${explorerUrl}/v1/accounts/${ORIGINATOR}`);
+    if (!resp.ok) throw new Error(`TzKT returned ${resp.status}: ${await resp.text()}`);
+    const account = await resp.json();
+
+    expect(balance).toEqual(BigInt(account.balance));
+  }, 60_000);
 });
