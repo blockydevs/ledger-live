@@ -153,7 +153,10 @@ const createPortfolioMock = (countervalueChange: {
   countervalueChange,
 });
 
-const defaultPortfolioMock = createPortfolioMock({ percentage: 0.0542, value: 5000 });
+const defaultPortfolioMock = createPortfolioMock({
+  percentage: 0.0542,
+  value: 5000,
+});
 
 describe("PortfolioView", () => {
   const defaultProps = {
@@ -164,7 +167,6 @@ describe("PortfolioView", () => {
     hasExchangeBannerCTA: true,
     shouldDisplayMarketBanner: true,
     shouldDisplayGraphRework: true,
-    shouldDisplayQuickActionCtas: true,
     shouldDisplayAssetSection: true,
     shouldDisplayAssetDiscoverability: false,
     shouldDisplayOperationsList: true,
@@ -475,14 +477,9 @@ describe("PortfolioView", () => {
   });
 
   describe("QuickActions", () => {
-    it("should render QuickActions when shouldDisplayQuickActionCtas is true", () => {
-      render(<PortfolioView {...defaultProps} shouldDisplayQuickActionCtas={true} />);
+    it("should render QuickActions ", () => {
+      render(<PortfolioView {...defaultProps} />);
       expect(screen.getByTestId("quick-actions-actions-list")).toBeVisible();
-    });
-
-    it("should not render QuickActions when shouldDisplayQuickActionCtas is false", () => {
-      render(<PortfolioView {...defaultProps} shouldDisplayQuickActionCtas={false} />);
-      expect(screen.queryByTestId("quick-actions-actions-list")).toBeNull();
     });
   });
 

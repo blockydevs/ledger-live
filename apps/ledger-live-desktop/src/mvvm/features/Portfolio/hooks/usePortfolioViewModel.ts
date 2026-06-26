@@ -20,7 +20,6 @@ export interface PortfolioViewModelResult {
   readonly hasExchangeBannerCTA: boolean;
   readonly shouldDisplayMarketBanner: boolean;
   readonly shouldDisplayGraphRework: boolean;
-  readonly shouldDisplayQuickActionCtas: boolean;
   readonly shouldDisplayAssetSection: boolean;
   readonly shouldDisplayAssetDiscoverability: boolean;
   readonly shouldDisplayBorrowSection: boolean;
@@ -43,7 +42,6 @@ export const usePortfolioViewModel = (): PortfolioViewModelResult => {
   const {
     shouldDisplayMarketBanner,
     shouldDisplayGraphRework,
-    shouldDisplayQuickActionCtas,
     shouldDisplayAssetSection,
     shouldDisplayAssetDiscoverability,
     shouldDisplayOperationsList,
@@ -92,7 +90,6 @@ export const usePortfolioViewModel = (): PortfolioViewModelResult => {
     hasExchangeBannerCTA,
     shouldDisplayMarketBanner,
     shouldDisplayGraphRework,
-    shouldDisplayQuickActionCtas,
     shouldDisplayAssetSection,
     shouldDisplayAssetDiscoverability,
     shouldDisplayBorrowSection,

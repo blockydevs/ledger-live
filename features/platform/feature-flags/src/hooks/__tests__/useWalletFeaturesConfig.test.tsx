@@ -115,7 +115,6 @@ describe("useWalletFeaturesConfig hook", () => {
       it.each<[string, Wallet40Params, Partial<WalletFeaturesConfig>]>([
         ["marketBanner", { marketBanner: true }, { shouldDisplayMarketBanner: true }],
         ["graphRework", { graphRework: true }, { shouldDisplayGraphRework: true }],
-        ["quickActionCtas", { quickActionCtas: true }, { shouldDisplayQuickActionCtas: true }],
         ["mainNavigation", { mainNavigation: true }, { shouldDisplayWallet40MainNav: true }],
         ["lazyOnboarding", { lazyOnboarding: true }, { shouldUseLazyOnboarding: true }],
         [
