@@ -1,6 +1,4 @@
 import { Step } from "jest-allure2-reporter/api";
-import type { Features } from "@shared/feature-flags";
-import { getFlags } from "../../bridge/server";
 import { Account } from "@ledgerhq/live-common/e2e/enum/Account";
 
 export default class ModularDrawer {
@@ -25,23 +23,6 @@ export default class ModularDrawer {
   searchBar = () => getElementById(this.searchBarId);
   assetItemByTicker = (ticker: string) => new RegExp(`asset-item-${ticker}`, "i");
   networkItemIdMAD = (networkId: string) => new RegExp(`network-item-${networkId}`, "i");
-
-  private flags: Features["llmModularDrawer"] | null = null;
-
-  resetFlags(): void {
-    this.flags = null;
-  }
-
-  private async loadFlags(): Promise<void> {
-    this.flags ??= JSON.parse(await getFlags()).llmModularDrawer;
-  }
-
-  async isFlowEnabled<K extends keyof NonNullable<Features["llmModularDrawer"]["params"]>>(
-    flow: K,
-  ): Promise<boolean> {
-    await this.loadFlags();
-    return this.flags!.enabled && Boolean(this.flags!.params?.[flow]);
-  }
 
   getNetworkNameForAccount(account: Account): string {
     return account?.parentAccount === undefined
