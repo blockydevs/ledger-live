@@ -127,4 +127,35 @@ describe("permissionHelpers", () => {
     expect(buildPromptableError).not.toHaveBeenCalled();
     expect(buildManualSettingsError).toHaveBeenCalledWith([bluetoothScanPermission], retry);
   });
+
+  it("GIVEN multiple missing permissions with a mixed native status, WHEN running preflight, THEN it should return a manual settings error", async () => {
+    // GIVEN
+    const permissions = [bluetoothScanPermission, bluetoothConnectPermission];
+    const retry = jest.fn<Promise<true | DiscoveryError>, []>();
+    const promptableError = { type: "promptable" } as unknown as DiscoveryError;
+    const manualSettingsError = { type: "manual-settings" } as unknown as DiscoveryError;
+    const buildPromptableError = jest.fn(() => promptableError);
+    const buildManualSettingsError = jest.fn(() => manualSettingsError);
+    const requestMultipleResult = {
+      [bluetoothScanPermission]: RESULTS.DENIED,
+      [bluetoothConnectPermission]: RESULTS.NEVER_ASK_AGAIN,
+    } as Awaited<ReturnType<typeof PermissionsAndroid.requestMultiple>>;
+    jest.mocked(PermissionsAndroid.check).mockResolvedValue(false);
+    jest.mocked(PermissionsAndroid.requestMultiple).mockResolvedValue(requestMultipleResult);
+
+    // WHEN
+    const result = await runPermissionPreflight({
+      permissions,
+      retry,
+      buildPromptableError,
+      buildManualSettingsError,
+    });
+
+    // THEN
+    expect(result).toEqual({ success: false, discoveryError: manualSettingsError });
+    expect(PermissionsAndroid.request).not.toHaveBeenCalled();
+    expect(PermissionsAndroid.requestMultiple).toHaveBeenCalledWith(permissions);
+    expect(buildPromptableError).not.toHaveBeenCalled();
+    expect(buildManualSettingsError).toHaveBeenCalledWith(permissions, retry);
+  });
 });
