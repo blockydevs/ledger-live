@@ -25,11 +25,7 @@ const e2eDelegationAccounts = [
     xrayTicket: "B2CQA-2740, B2CQA-2770",
   },
   {
-    delegate: new Delegate(
-      Account.NEAR_1,
-      "0.01",
-      "ledgerbyfigment.poolv1.near",
-    ),
+    delegate: new Delegate(Account.NEAR_1, "0.01", "ledgerbyfigment.poolv1.near"),
     xrayTicket: "B2CQA-2741",
   },
   {
@@ -68,11 +64,7 @@ const validators = [
     xrayTicket: "B2CQA-2730, B2CQA-2764",
   },
   {
-    delegate: new Delegate(
-      Account.NEAR_2,
-      "0.01",
-      "ledgerbyfigment.poolv1.near",
-    ),
+    delegate: new Delegate(Account.NEAR_2, "0.01", "ledgerbyfigment.poolv1.near"),
     xrayTicket: "B2CQA-2732, B2CQA-2765",
   },
   {
@@ -141,17 +133,13 @@ for (const account of e2eDelegationAccounts) {
         annotation: { type: "TMS", description: account.xrayTicket },
       },
       async ({ app }) => {
-        await addTmsLink(
-          getDescription(test.info().annotations, "TMS").split(", "),
-        );
+        await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
         if (account.bugTicket) {
           await addBugLink([account.bugTicket]);
         }
 
         await app.mainNavigation.openTargetFromMainNavigation("accounts");
-        await app.accounts.navigateToAccountByName(
-          account.delegate.account.accountName,
-        );
+        await app.accounts.navigateToAccountByName(account.delegate.account.accountName);
 
         if (account.delegate.account.currency.name == Currency.INJ.name) {
           await app.speculos.activateExpertMode();
@@ -177,15 +165,11 @@ for (const account of e2eDelegationAccounts) {
         await app.delegateDrawer.verifyTxTypeIsVisible();
 
         const transactionType =
-          account.delegate.account.currency.name === Currency.NEAR.name
-            ? "Staked"
-            : "Delegated";
+          account.delegate.account.currency.name === Currency.NEAR.name ? "Staked" : "Delegated";
         await app.delegateDrawer.verifyTxTypeIs(transactionType);
 
         await app.delegateDrawer.providerIsVisible(account.delegate);
-        await app.delegateDrawer.amountValueIsVisible(
-          account.delegate.account.currency.ticker,
-        );
+        await app.delegateDrawer.amountValueIsVisible(account.delegate.account.currency.ticker);
         await app.delegateDrawer.operationTypeIsCorrect(transactionType);
         await app.drawer.closeDrawer();
 
@@ -218,9 +202,7 @@ for (const account of e2eDelegationAccountsWithoutBroadcast) {
       {
         tag: [
           "@NanoSP",
-          ...(account.delegate.account.currency.id !== Currency.MULTIVERS_X.id
-            ? ["@LNS"]
-            : []),
+          ...(account.delegate.account.currency.id !== Currency.MULTIVERS_X.id ? ["@LNS"] : []),
           "@NanoX",
           "@Stax",
           "@Flex",
@@ -231,14 +213,10 @@ for (const account of e2eDelegationAccountsWithoutBroadcast) {
         annotation: { type: "TMS", description: account.xrayTicket },
       },
       async ({ app }) => {
-        await addTmsLink(
-          getDescription(test.info().annotations, "TMS").split(", "),
-        );
+        await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
 
         await app.mainNavigation.openTargetFromMainNavigation("accounts");
-        await app.accounts.navigateToAccountByName(
-          account.delegate.account.accountName,
-        );
+        await app.accounts.navigateToAccountByName(account.delegate.account.accountName);
 
         await app.account.startStakingFlowFromMainStakeButton();
 
@@ -283,17 +261,13 @@ for (const account of e2eDelegationAccountsWithoutBroadcast) {
           await app.delegate.clickViewDetailsButton();
 
           const transactionType =
-            account.delegate.account.currency.name === Currency.APT.name
-              ? "Staked"
-              : "Delegated";
+            account.delegate.account.currency.name === Currency.APT.name ? "Staked" : "Delegated";
 
           await app.drawer.waitForDrawerToBeVisible();
           await app.delegateDrawer.verifyTxTypeIsVisible();
           await app.delegateDrawer.verifyTxTypeIs(transactionType);
           await app.delegateDrawer.providerIsVisible(account.delegate);
-          await app.delegateDrawer.amountValueIsVisible(
-            account.delegate.account.currency.ticker,
-          );
+          await app.delegateDrawer.amountValueIsVisible(account.delegate.account.currency.ticker);
           await app.delegateDrawer.operationTypeIsCorrect(transactionType);
           await app.drawer.closeDrawer();
         }
@@ -333,9 +307,7 @@ test.describe("e2e delegation - Tezos", () => {
       },
     },
     async ({ app }) => {
-      await addTmsLink(
-        getDescription(test.info().annotations, "TMS").split(", "),
-      );
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
       await app.mainNavigation.openTargetFromMainNavigation("accounts");
       await app.accounts.navigateToAccountByName(account.account.accountName);
       await app.account.startStakingFlowFromMainStakeButton();
@@ -384,9 +356,7 @@ test.describe("e2e delegation - Celo", () => {
       },
     },
     async ({ app }) => {
-      await addTmsLink(
-        getDescription(test.info().annotations, "TMS").split(", "),
-      );
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
       await addBugLink(["NAPPS-1128"]);
       await app.mainNavigation.openTargetFromMainNavigation("accounts");
       await app.accounts.navigateToAccountByName(account.account.accountName);
@@ -418,18 +388,14 @@ for (const validator of validators) {
       cliCommands: [liveDataCommand(validator.delegate.account)],
     });
 
-    const family = getFamilyByCurrencyId(
-      validator.delegate.account.currency.id,
-    );
+    const family = getFamilyByCurrencyId(validator.delegate.account.currency.id);
 
     test(
       `[${validator.delegate.account.currency.name}] - Select validator`,
       {
         tag: [
           "@NanoSP",
-          ...(validator.delegate.account.currency.id !== Currency.MULTIVERS_X.id
-            ? ["@LNS"]
-            : []),
+          ...(validator.delegate.account.currency.id !== Currency.MULTIVERS_X.id ? ["@LNS"] : []),
           "@NanoX",
           "@Stax",
           "@Flex",
@@ -440,41 +406,27 @@ for (const validator of validators) {
         annotation: { type: "TMS", description: validator.xrayTicket },
       },
       async ({ app }) => {
-        await addTmsLink(
-          getDescription(test.info().annotations, "TMS").split(", "),
-        );
+        await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
         if (validator.bugTicket) {
           await addBugLink([validator.bugTicket]);
         }
 
         await app.mainNavigation.openTargetFromMainNavigation("accounts");
-        await app.accounts.navigateToAccountByName(
-          validator.delegate.account.accountName,
-        );
+        await app.accounts.navigateToAccountByName(validator.delegate.account.accountName);
 
         await app.account.startStakingFlowFromMainStakeButton();
         await app.delegate.continue();
 
-        if (
-          validator.delegate.account.currency.name == Currency.MULTIVERS_X.name
-        ) {
+        if (validator.delegate.account.currency.name == Currency.MULTIVERS_X.name) {
           await app.delegate.verifyContinueDisabled();
           await app.delegate.checkValidatorListIsVisible();
-          await app.delegate.selectProviderOnRow(
-            Number.parseInt(validator.delegate.provider, 10),
-          );
-          await app.delegate.closeProviderList(
-            Number.parseInt(validator.delegate.provider, 10),
-          );
+          await app.delegate.selectProviderOnRow(Number.parseInt(validator.delegate.provider, 10));
+          await app.delegate.closeProviderList(Number.parseInt(validator.delegate.provider, 10));
         } else {
-          await app.delegate.verifyFirstProviderName(
-            validator.delegate.provider,
-          );
+          await app.delegate.verifyFirstProviderName(validator.delegate.provider);
           if (validator.delegate.account.currency.name == Currency.SOL.name) {
             await app.delegate.verifyContinueDisabled();
-            await app.delegate.selectProviderByName(
-              validator.delegate.provider,
-            );
+            await app.delegate.selectProviderByName(validator.delegate.provider);
             await app.delegate.verifyProviderTC(validator.delegate.provider);
           } else await app.delegate.verifyContinueEnabled();
         }
@@ -489,11 +441,7 @@ for (const validator of validators) {
 }
 
 test.describe("Staking flow from different entry point", () => {
-  const delegateAccount = new Delegate(
-    Account.ATOM_1,
-    "0.001",
-    "Ledger by Chorus One",
-  );
+  const delegateAccount = new Delegate(Account.ATOM_1, "0.001", "Ledger by Chorus One");
   test.use({
     teamOwner: Team.EARN,
     userdata: "skip-onboarding-with-last-seen-device",
@@ -522,14 +470,10 @@ test.describe("Staking flow from different entry point", () => {
       },
     },
     async ({ app }) => {
-      await addTmsLink(
-        getDescription(test.info().annotations, "TMS").split(", "),
-      );
+      await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
       await app.marketBanner.clickExploreMarketHeader();
       await app.market.search(delegateAccount.account.currency.ticker);
-      await app.market.stakeButtonClick(
-        delegateAccount.account.currency.ticker,
-      );
+      await app.market.stakeButtonClick(delegateAccount.account.currency.ticker);
 
       const selector = await getModularSelector(app, "ACCOUNT");
       if (selector) {
@@ -572,21 +516,15 @@ for (const currency of liveApps) {
         annotation: { type: "TMS", description: currency.xrayTicket },
       },
       async ({ app }) => {
-        await addTmsLink(
-          getDescription(test.info().annotations, "TMS").split(", "),
-        );
+        await addTmsLink(getDescription(test.info().annotations, "TMS").split(", "));
 
         await app.mainNavigation.openTargetFromMainNavigation("accounts");
-        await app.accounts.navigateToAccountByName(
-          currency.delegate.account.accountName,
-        );
+        await app.accounts.navigateToAccountByName(currency.delegate.account.accountName);
 
         await app.account.startStakingFlowFromMainStakeButton();
         if (currency.delegate.account.currency.name == Currency.ETH.name) {
           await app.earnV2Dashboard.verifyDepositFlowVisible();
-          await app.earnV2Dashboard.selectEthProvider(
-            currency.delegate.provider,
-          );
+          await app.earnV2Dashboard.selectEthProvider(currency.delegate.provider);
         } else {
           await app.liveApp.verifyLiveAppTitle(currency.delegate.provider);
         }
