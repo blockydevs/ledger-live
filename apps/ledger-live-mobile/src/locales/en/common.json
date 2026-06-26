@@ -3132,7 +3132,8 @@
       "targetStakingNodeId": "Target node ID",
       "previousStakingNodeId": "Previous node ID",
       "gasConsumed": "Gas consumed",
-      "gasUsed": "Gas used"
+      "gasUsed": "Gas used",
+      "functionId": "Function ID"
     },
     "multipleAddresses": "Why multiple addresses?"
   },
