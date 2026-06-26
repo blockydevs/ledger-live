@@ -1,5 +1,5 @@
 import { PermissionsAndroid, type Permission } from "react-native";
-import type { DiscoveryError } from "../../../types";
+import type { MobileDiscoveryError } from "../../../types";
 import { requestPermission, requestPermissions, runPermissionPreflight } from "./permissionHelpers";
 
 jest.mock("react-native", () => ({
@@ -82,9 +82,9 @@ describe("permissionHelpers", () => {
 
   it("GIVEN missing permission remains promptable, WHEN running preflight, THEN it should return a promptable error", async () => {
     // GIVEN
-    const retry = jest.fn<Promise<true | DiscoveryError>, []>();
-    const promptableError = { type: "promptable" } as unknown as DiscoveryError;
-    const manualSettingsError = { type: "manual-settings" } as unknown as DiscoveryError;
+    const retry = jest.fn<Promise<true | MobileDiscoveryError>, []>();
+    const promptableError = { type: "promptable" } as unknown as MobileDiscoveryError;
+    const manualSettingsError = { type: "manual-settings" } as unknown as MobileDiscoveryError;
     const buildPromptableError = jest.fn(() => promptableError);
     const buildManualSettingsError = jest.fn(() => manualSettingsError);
     jest.mocked(PermissionsAndroid.check).mockResolvedValue(false);
@@ -106,9 +106,9 @@ describe("permissionHelpers", () => {
 
   it("GIVEN missing permission can no longer be prompted, WHEN running preflight, THEN it should return a manual settings error", async () => {
     // GIVEN
-    const retry = jest.fn<Promise<true | DiscoveryError>, []>();
-    const promptableError = { type: "promptable" } as unknown as DiscoveryError;
-    const manualSettingsError = { type: "manual-settings" } as unknown as DiscoveryError;
+    const retry = jest.fn<Promise<true | MobileDiscoveryError>, []>();
+    const promptableError = { type: "promptable" } as unknown as MobileDiscoveryError;
+    const manualSettingsError = { type: "manual-settings" } as unknown as MobileDiscoveryError;
     const buildPromptableError = jest.fn(() => promptableError);
     const buildManualSettingsError = jest.fn(() => manualSettingsError);
     jest.mocked(PermissionsAndroid.check).mockResolvedValue(false);
@@ -131,9 +131,9 @@ describe("permissionHelpers", () => {
   it("GIVEN multiple missing permissions with a mixed native status, WHEN running preflight, THEN it should return a manual settings error", async () => {
     // GIVEN
     const permissions = [bluetoothScanPermission, bluetoothConnectPermission];
-    const retry = jest.fn<Promise<true | DiscoveryError>, []>();
-    const promptableError = { type: "promptable" } as unknown as DiscoveryError;
-    const manualSettingsError = { type: "manual-settings" } as unknown as DiscoveryError;
+    const retry = jest.fn<Promise<true | MobileDiscoveryError>, []>();
+    const promptableError = { type: "promptable" } as unknown as MobileDiscoveryError;
+    const manualSettingsError = { type: "manual-settings" } as unknown as MobileDiscoveryError;
     const buildPromptableError = jest.fn(() => promptableError);
     const buildManualSettingsError = jest.fn(() => manualSettingsError);
     const requestMultipleResult = {
