@@ -8102,6 +8102,9 @@ importers:
       '@ledgerhq/device-management-kit':
         specifier: 'catalog:'
         version: 1.7.1(rxjs@7.8.2)
+      '@ledgerhq/device-signer-kit-ethereum':
+        specifier: 'catalog:'
+        version: 1.16.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
       '@ledgerhq/devices':
         specifier: workspace:*
         version: link:../ledgerjs/packages/devices
@@ -45948,6 +45951,20 @@ snapshots:
   '@ledgerhq/device-signer-kit-ethereum@1.16.0(@ledgerhq/context-module@2.1.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2)))(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))':
     dependencies:
       '@ledgerhq/context-module': 2.1.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
+      '@ledgerhq/device-management-kit': 1.7.1(rxjs@7.8.2)
+      '@ledgerhq/signer-utils': 1.2.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
+      ethers: 6.15.0
+      inversify: 7.5.1(reflect-metadata@0.2.2)
+      purify-ts: 2.1.0
+      reflect-metadata: 0.2.2
+      semver: 7.7.2
+      xstate: 5.19.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@ledgerhq/device-signer-kit-ethereum@1.16.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))':
+    dependencies:
       '@ledgerhq/device-management-kit': 1.7.1(rxjs@7.8.2)
       '@ledgerhq/signer-utils': 1.2.0(@ledgerhq/device-management-kit@1.7.1(rxjs@7.8.2))
       ethers: 6.15.0
