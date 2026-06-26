@@ -33,12 +33,16 @@ let analytics: AnalyticsClient | null = null;
 export const startAnalytics = (): void => {
   if (analytics) return;
 
-  analytics = new Analytics({ writeKey: WALLET_CLI_WRITE_KEY });
-  analytics.identify({
-    userId: WALLET_CLI_USER_ID,
-    traits: extraProperties(),
-    context: getContext(),
-  });
+  try {
+    analytics = new Analytics({ writeKey: WALLET_CLI_WRITE_KEY });
+    analytics.identify({
+      userId: WALLET_CLI_USER_ID,
+      traits: extraProperties(),
+      context: getContext(),
+    });
+  } catch {
+    analytics = null;
+  }
 };
 
 export const track = (eventName: string, properties?: Record<string, unknown> | null): void => {
