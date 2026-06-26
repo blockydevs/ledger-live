@@ -379,7 +379,7 @@ export class InitializationManager {
           live_app: true,
           live_apps_allowlist: [],
           live_apps_blocklist: ["revoke-cash"],
-          receive_flow: true,
+          receive_flow: false,
           send_flow: false,
           enableModularization: true,
           searchDebounceTime: 300,
