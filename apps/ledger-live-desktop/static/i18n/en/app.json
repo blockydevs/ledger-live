@@ -9119,7 +9119,11 @@
       "type": {
         "public": "Public",
         "private": "Private"
-      }
+      },
+      "operationTypes": {
+        "WITHDRAW_UNBONDED": "Claim"
+      },
+      "claimAmountEstimated": "Estimated amount"
     },
     "operationTypes": {
       "WITHDRAW_UNBONDED": "Claim"
