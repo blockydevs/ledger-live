@@ -9121,6 +9121,9 @@
         "private": "Private"
       }
     },
+    "operationTypes": {
+      "WITHDRAW_UNBONDED": "Claim"
+    },
     "send": {
       "stepRecipient": {
         "selectLabel": "Send from"
