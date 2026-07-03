@@ -23,6 +23,7 @@ import {
   MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION,
   PROGRAM_ID,
   SINGLE_CALL_SIGNING_TIME,
+  STAKING_OPERATION_TYPE,
   TRANSACTION_TYPE,
 } from "../constants";
 import type {
@@ -135,6 +136,11 @@ export function patchAccountWithViewKey(account: Account, viewKey: string): Acco
   };
 }
 
+export const getStakingOperationType = (functionId: string): OperationType | undefined =>
+  Object.hasOwn(STAKING_OPERATION_TYPE, functionId)
+    ? STAKING_OPERATION_TYPE[functionId]
+    : undefined;
+
 export const determineTransactionType = (
   functionId: string,
   operationType: OperationType,
@@ -164,11 +170,53 @@ function parseTransactionFields(rawTx: AleoPublicTransaction, address: string) {
 
   if (rawTx.program_id === PROGRAM_ID.CREDITS) {
     type = address === rawTx.recipient_address ? "IN" : "OUT";
+    const stakingType = getStakingOperationType(rawTx.function_id);
+    if (stakingType) type = stakingType;
   }
 
   const transactionType = determineTransactionType(rawTx.function_id, type);
 
   return { type, fee, blockHash, transactionType, date, hasFailed };
+}
+
+/**
+ * Shared predicate for "no usable sender was recorded" — a single source of truth so
+ * resolveSenderAddress (raw indexer sender_address) and backfillStakingSenders (already
+ * bridge-mapped op.senders) cannot drift on what counts as blank.
+ */
+function isBlankSenderValue(sender: string | null | undefined): boolean {
+  return !sender;
+}
+
+/**
+ * The indexer's transaction-list `sender_address` can come back empty for staking calls
+ * (bond_public/unbond_public/claim_unbond_public), unlike transfers. Since these functions can
+ * only appear in an account's history when that account is the staker itself, fall back to the
+ * synced account's own address rather than showing a blank sender.
+ */
+function resolveSenderAddress(rawTx: AleoPublicTransaction, address: string): string {
+  if (!isBlankSenderValue(rawTx.sender_address)) return rawTx.sender_address;
+  return getStakingOperationType(rawTx.function_id) !== undefined ? address : rawTx.sender_address;
+}
+
+/**
+ * Incremental sync only refetches transactions above the previous sync's cursor, so a staking
+ * op cached before the resolveSenderAddress fallback existed (blank sender_address) never gets
+ * refetched and stays blank forever. Backfill it in place from the already-cached operations
+ * instead of relying on a full resync.
+ *
+ * This is a one-time cache repair: callers should gate it on a persisted per-account flag
+ * (see `hasBackfilledStakingSenders` in bridge/sync.ts) rather than invoking it on every sync.
+ */
+export function backfillStakingSenders(ops: AleoOperation[], address: string): AleoOperation[] {
+  return ops.map(op => {
+    const functionId = op.extra?.functionId;
+    const hasBlankSender = op.senders.every(isBlankSenderValue);
+    if (!hasBlankSender || !functionId || getStakingOperationType(functionId) === undefined) {
+      return op;
+    }
+    return { ...op, senders: [address] };
+  });
 }
 
 export const toCoinFrameworkOperation = (
@@ -179,12 +227,15 @@ export const toCoinFrameworkOperation = (
     rawTx,
     address,
   );
+  const senderAddress = resolveSenderAddress(rawTx, address);
+  const isStakingTx = getStakingOperationType(rawTx.function_id) !== undefined;
+  const value = isStakingTx ? BigInt(fee.toFixed(0)) : BigInt(rawTx.amount.toFixed(0));
   return {
     id: rawTx.transaction_id,
     type,
     recipients: [rawTx.recipient_address],
-    senders: [rawTx.sender_address],
-    value: BigInt(rawTx.amount.toFixed(0)),
+    senders: [senderAddress],
+    value,
     asset: { type: "native" },
     details: {
       functionId: rawTx.function_id,
@@ -211,11 +262,12 @@ export const toBridgeOperation = (
   address: string,
   isTokenTx?: boolean,
 ): AleoOperation => {
-  const value = new BigNumber(rawTx.amount);
   const { type, fee, blockHash, transactionType, date, hasFailed } = parseTransactionFields(
     rawTx,
     address,
   );
+  const isStakingTx = getStakingOperationType(rawTx.function_id) !== undefined;
+  const value = isStakingTx ? new BigNumber(fee) : new BigNumber(rawTx.amount);
 
   if (value.isNaN() || value.lte(0)) {
     log("aleo/toBridgeOperation", `Invalid raw transaction details for ${address}`, rawTx);
@@ -224,7 +276,7 @@ export const toBridgeOperation = (
   return {
     id: encodeOperationId(ledgerAccountId, rawTx.transaction_id, type),
     recipients: [rawTx.recipient_address],
-    senders: [rawTx.sender_address],
+    senders: [resolveSenderAddress(rawTx, address)],
     value,
     type,
     hasFailed,
@@ -237,6 +289,7 @@ export const toBridgeOperation = (
     extra: {
       functionId: rawTx.function_id,
       transactionType,
+      transitionId: rawTx.transition_id,
       ...(isTokenTx && { programId: rawTx.program_id }),
     },
   };
@@ -340,6 +393,11 @@ function getAmountToSpend({
     return tokenAccount?.transparentBalance ?? new BigNumber(0);
   }
 
+  // unbonding spends the bonded position; the fee is paid from the transparent balance
+  if (transaction.mode === TRANSACTION_TYPE.UNBOND_PUBLIC) {
+    return account.aleoResources?.bondedBalance ?? new BigNumber(0);
+  }
+
   const transparentBalance = account.aleoResources?.transparentBalance ?? new BigNumber(0);
 
   return BigNumber.max(0, transparentBalance.minus(estimatedFees));
@@ -418,6 +476,9 @@ export function isPublicTransaction(transaction: Transaction): transaction is Tr
   return (
     transaction.mode === TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE ||
     transaction.mode === TRANSACTION_TYPE.TRANSFER_PUBLIC ||
+    transaction.mode === TRANSACTION_TYPE.BOND_PUBLIC ||
+    transaction.mode === TRANSACTION_TYPE.UNBOND_PUBLIC ||
+    transaction.mode === TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC ||
     isPublicTokenTransaction(transaction)
   );
 }
@@ -440,7 +501,12 @@ export function derivePublicTransactionMode({
 }: {
   isTokenTx: boolean;
   isSelfTransfer: boolean;
-}): TransactionPublic["mode"] {
+}): Exclude<
+  TransactionPublic["mode"],
+  | typeof TRANSACTION_TYPE.BOND_PUBLIC
+  | typeof TRANSACTION_TYPE.UNBOND_PUBLIC
+  | typeof TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC
+> {
   if (isTokenTx) {
     return isSelfTransfer
       ? TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE
@@ -692,6 +758,28 @@ export function mapTransactionIntentToSdkIntent(
         program_id: txIntent.data.programId,
       };
     }
+    case TRANSACTION_TYPE.BOND_PUBLIC: {
+      invariant(hasSpecificIntentData(txIntent, type), `aleo: intent data is required for ${type}`);
+      return {
+        type: "bond_public",
+        amount,
+        validator: to,
+        withdrawal: txIntent.data.withdrawal,
+      };
+    }
+    case TRANSACTION_TYPE.UNBOND_PUBLIC: {
+      return {
+        type: "unbond_public",
+        amount,
+        staker: to,
+      };
+    }
+    case TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC: {
+      return {
+        type: "claim_unbond_public",
+        staker: to,
+      };
+    }
     default: {
       throw new Error(`aleo: unsupported intent type: ${type}`);
     }
@@ -713,6 +801,17 @@ export const getOperationDetailsExtraFields = (
 };
 
 /**
+ * Unbonded funds become claimable once the chain reaches the height stored in the
+ * credits.aleo `unbonding` mapping. Uses the account's last synced blockHeight.
+ */
+export function getClaimableStakingBalance(account: AleoAccount): BigNumber {
+  const { unbondingBalance, unbondingHeight } = account.aleoResources ?? {};
+  if (!unbondingBalance || unbondingHeight === null || unbondingHeight === undefined)
+    return new BigNumber(0);
+  return account.blockHeight >= unbondingHeight ? unbondingBalance : new BigNumber(0);
+}
+
+/**
  * Returns the spendable balance for a given Aleo transaction mode.
  *
  * Aleo accounts maintain two balances:
@@ -726,7 +825,12 @@ export function getAvailableBalance(account: AleoAccount, transaction: Transacti
     // spending public native balance
     case TRANSACTION_TYPE.TRANSFER_PUBLIC:
     case TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE:
+    case TRANSACTION_TYPE.BOND_PUBLIC:
       return account.aleoResources?.transparentBalance ?? new BigNumber(0);
+    case TRANSACTION_TYPE.UNBOND_PUBLIC:
+      return account.aleoResources?.bondedBalance ?? new BigNumber(0);
+    case TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC:
+      return getClaimableStakingBalance(account);
     // spending private native balance
     case TRANSACTION_TYPE.TRANSFER_PRIVATE:
     case TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC: {
@@ -857,6 +961,27 @@ export function createTransactionIntent({
             findRecord: commitment => getRecordByCommitment({ account, commitment }),
           }),
         },
+      };
+
+    case TRANSACTION_TYPE.BOND_PUBLIC:
+      return {
+        ...base,
+        data: {
+          type: TRANSACTION_TYPE.BOND_PUBLIC,
+          withdrawal: transaction.withdrawal,
+        },
+      };
+
+    case TRANSACTION_TYPE.UNBOND_PUBLIC:
+      return {
+        ...base,
+        data: { type: TRANSACTION_TYPE.UNBOND_PUBLIC },
+      };
+
+    case TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC:
+      return {
+        ...base,
+        data: { type: TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC },
       };
 
     case TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC:
@@ -997,6 +1122,12 @@ export function getFunctionNameFromTransactionType(transactionType: TransactionT
       return "transfer_token_public_to_private";
     case TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC:
       return "transfer_token_private_to_public";
+    case TRANSACTION_TYPE.BOND_PUBLIC:
+      return "bond_public";
+    case TRANSACTION_TYPE.UNBOND_PUBLIC:
+      return "unbond_public";
+    case TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC:
+      return "claim_unbond_public";
     default:
       throw new Error(`aleo: unsupported transaction type: ${transactionType}`);
   }

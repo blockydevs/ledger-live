@@ -22,16 +22,23 @@ import aleoCoinConfig from "../config";
 import {
   MAX_PRIVATE_RECORDS_PER_TRANSACTION,
   MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION,
+  MIN_BOND_AMOUNT,
+  MIN_STAKE_AMOUNT,
   TRANSACTION_TYPE,
 } from "../constants";
 import {
   AleoAmountRecordRequired,
   AleoAmountTooLargeForTransaction,
+  AleoBondAmountTooLow,
+  AleoClosedValidator,
+  AleoStakeAmountTooLow,
   AleoFeeRecordInsufficientBalance,
   AleoFeeRecordRequired,
+  AleoNoClaimableAmount,
   AleoTooManyRecordsSelected,
   AleoTwoRecordsRequired,
 } from "../errors";
+import { getValidators } from "../logic";
 import { getTransactionStatus } from "./getTransactionStatus";
 
 jest.mock("../config");
@@ -45,6 +52,7 @@ const mockEstimateFees = jest.mocked(estimateFees);
 const mockValidateAddress = jest.mocked(validateAddress);
 const mockCalculateAmount = jest.mocked(calculateAmount);
 const mockAleoConfig = jest.mocked(aleoCoinConfig);
+const mockGetValidators = jest.mocked(getValidators);
 
 describe("getTransactionStatus", () => {
   const mockFees = new BigNumber(5000);
@@ -85,6 +93,7 @@ describe("getTransactionStatus", () => {
       amount: mockAmount,
       totalSpent: mockAmount.plus(mockFees),
     });
+    mockGetValidators.mockResolvedValue([]);
   });
 
   it("should return empty errors and warnings for valid transaction", async () => {
@@ -871,6 +880,368 @@ describe("getTransactionStatus", () => {
       const result = await getTransactionStatus(mockAccount, transaction);
 
       expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
+    });
+  });
+
+  describe("bond_public", () => {
+    beforeEach(() => mockValidateAddress.mockResolvedValue(true));
+
+    it("reports errors.withdrawal for an invalid withdrawal address", async () => {
+      mockValidateAddress.mockImplementation(async (address: string) => {
+        // Only the validator address passes; the withdrawal address fails
+        return address !== "not-an-address";
+      });
+
+      const transaction: Transaction = {
+        family: "aleo",
+        amount: new BigNumber(10),
+        useAllAmount: false,
+        recipient: "aleo1validator00000000000000000000000000000000000000000000000q",
+        fees: new BigNumber(1),
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: "not-an-address",
+      };
+
+      const result = await getTransactionStatus(mockAccount, transaction);
+
+      expect(result.errors.withdrawal).toBeInstanceOf(InvalidAddress);
+    });
+
+    it("does not report errors.withdrawal for a valid withdrawal address", async () => {
+      const transaction: Transaction = {
+        family: "aleo",
+        amount: new BigNumber(10),
+        useAllAmount: false,
+        recipient: "aleo1validator00000000000000000000000000000000000000000000000q",
+        fees: new BigNumber(1),
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: "aleo1validwithdrawal000000000000000000000000000000000000000000q",
+      };
+
+      const result = await getTransactionStatus(mockAccount, transaction);
+
+      expect(result.errors.withdrawal).toBeUndefined();
+    });
+
+    it("reports errors.amount when the amount is below the minimum bond amount", async () => {
+      mockCalculateAmount.mockReturnValue({
+        amount: new BigNumber(MIN_BOND_AMOUNT).minus(1),
+        totalSpent: new BigNumber(MIN_BOND_AMOUNT),
+      });
+
+      const transaction: Transaction = {
+        family: "aleo",
+        amount: new BigNumber(MIN_BOND_AMOUNT).minus(1),
+        useAllAmount: false,
+        recipient: "aleo1validator00000000000000000000000000000000000000000000000q",
+        fees: new BigNumber(1),
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: "aleo1validwithdrawal000000000000000000000000000000000000000000q",
+      };
+
+      const result = await getTransactionStatus(mockAccount, transaction);
+
+      expect(result.errors.amount).toBeInstanceOf(AleoBondAmountTooLow);
+    });
+
+    it("does not report a too-low amount error when the amount meets the minimum bond amount", async () => {
+      mockCalculateAmount.mockReturnValue({
+        amount: new BigNumber(MIN_BOND_AMOUNT),
+        totalSpent: new BigNumber(MIN_BOND_AMOUNT),
+      });
+
+      const transaction: Transaction = {
+        family: "aleo",
+        amount: new BigNumber(MIN_BOND_AMOUNT),
+        useAllAmount: false,
+        recipient: "aleo1validator00000000000000000000000000000000000000000000000q",
+        fees: new BigNumber(1),
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: "aleo1validwithdrawal000000000000000000000000000000000000000000q",
+      };
+
+      const result = await getTransactionStatus(mockAccount, transaction);
+
+      expect(result.errors.amount).not.toBeInstanceOf(AleoBondAmountTooLow);
+    });
+
+    it("reports AmountRequired when useAllAmount resolves the bond amount to zero", async () => {
+      mockCalculateAmount.mockReturnValue({
+        amount: new BigNumber(0),
+        totalSpent: new BigNumber(1),
+      });
+
+      const transaction: Transaction = {
+        family: "aleo",
+        amount: new BigNumber(0),
+        useAllAmount: true,
+        recipient: "aleo1validator00000000000000000000000000000000000000000000000q",
+        fees: new BigNumber(1),
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: "aleo1validwithdrawal000000000000000000000000000000000000000000q",
+      };
+
+      const result = await getTransactionStatus(mockAccount, transaction);
+
+      expect(result.errors.amount).toBeInstanceOf(AmountRequired);
+    });
+
+    const bondTransaction = (amount: BigNumber): Transaction => ({
+      family: "aleo",
+      amount,
+      useAllAmount: false,
+      recipient: "aleo1validator00000000000000000000000000000000000000000000000q",
+      fees: new BigNumber(1),
+      mode: TRANSACTION_TYPE.BOND_PUBLIC,
+      withdrawal: "aleo1validwithdrawal000000000000000000000000000000000000000000q",
+    });
+
+    // transparentBalance must cover the bond amount so NotEnoughBalance does not
+    // mask the stake-amount validation we are asserting on.
+    const fundedBond = (bondedBalance: BigNumber) =>
+      getMockedAccount({
+        balance: mockBalance,
+        aleoResources: {
+          ...mockAleoResources,
+          transparentBalance: new BigNumber(MIN_STAKE_AMOUNT).times(2),
+          bondedBalance,
+        },
+      });
+
+    it("reports errors.amount when the projected total stake is below the minimum stake amount", async () => {
+      const amount = new BigNumber(MIN_STAKE_AMOUNT).minus(1);
+      mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount });
+
+      const result = await getTransactionStatus(
+        fundedBond(new BigNumber(0)),
+        bondTransaction(amount),
+      );
+
+      expect(result.errors.amount).toBeInstanceOf(AleoStakeAmountTooLow);
+    });
+
+    it("does not report a too-low stake error when the projected total stake meets the minimum", async () => {
+      const amount = new BigNumber(MIN_STAKE_AMOUNT);
+      mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount });
+
+      const result = await getTransactionStatus(
+        fundedBond(new BigNumber(0)),
+        bondTransaction(amount),
+      );
+
+      expect(result.errors.amount).not.toBeInstanceOf(AleoStakeAmountTooLow);
+    });
+
+    it("allows a top-up below the minimum stake when already bonded above the minimum", async () => {
+      const amount = new BigNumber(MIN_BOND_AMOUNT);
+      mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount });
+
+      const result = await getTransactionStatus(
+        fundedBond(new BigNumber(MIN_STAKE_AMOUNT)),
+        bondTransaction(amount),
+      );
+
+      expect(result.errors.amount).not.toBeInstanceOf(AleoStakeAmountTooLow);
+    });
+
+    const validatorAddress = "aleo1validator00000000000000000000000000000000000000000000000q";
+
+    it("reports errors.recipient with AleoClosedValidator when bonding to a closed validator", async () => {
+      mockGetValidators.mockResolvedValue([
+        { address: validatorAddress, stake: 1000, isOpen: false, commission: 5 },
+      ]);
+
+      const result = await getTransactionStatus(mockAccount, bondTransaction(new BigNumber(10)));
+
+      expect(result.errors.recipient).toBeInstanceOf(AleoClosedValidator);
+    });
+
+    it("does not report AleoClosedValidator when bonding to an open validator", async () => {
+      mockGetValidators.mockResolvedValue([
+        { address: validatorAddress, stake: 1000, isOpen: true, commission: 5 },
+      ]);
+
+      const result = await getTransactionStatus(mockAccount, bondTransaction(new BigNumber(10)));
+
+      expect(result.errors.recipient).toBeUndefined();
+    });
+
+    it("does not block the bond when the validator list is unavailable (fetch fails)", async () => {
+      mockGetValidators.mockRejectedValue(new Error("committee endpoint down"));
+
+      const result = await getTransactionStatus(mockAccount, bondTransaction(new BigNumber(10)));
+
+      expect(result.errors.recipient).toBeUndefined();
+    });
+
+    it("does not block the bond when the validator is absent from the committee list", async () => {
+      mockGetValidators.mockResolvedValue([
+        {
+          address: "aleo1other0000000000000000000000000000000000000000000000000000q",
+          stake: 1000,
+          isOpen: false,
+          commission: 5,
+        },
+      ]);
+
+      const result = await getTransactionStatus(mockAccount, bondTransaction(new BigNumber(10)));
+
+      expect(result.errors.recipient).toBeUndefined();
+    });
+  });
+
+  describe("getTransactionStatus unbond/claim", () => {
+    beforeEach(() => mockValidateAddress.mockResolvedValue(true));
+
+    // blockHeight on mockAccount is 1234 (see account.fixture.ts); unbondingHeight 1000 is matured.
+    const stakingAccount = getMockedAccount({
+      balance: mockBalance,
+      aleoResources: {
+        ...mockAleoResources,
+        transparentBalance: mockTransparentBalance,
+        privateBalance: mockPrivateBalance,
+        bondedBalance: new BigNumber(2_000_000),
+        unbondingBalance: new BigNumber(2_000_000),
+        unbondingHeight: 1000,
+      },
+    });
+
+    it("unbond_public with positive amount and self recipient has no errors", async () => {
+      const status = await getTransactionStatus(stakingAccount, {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: new BigNumber(1000000),
+      } as never);
+      expect(status.errors.amount).toBeUndefined();
+      expect(status.errors.recipient).toBeUndefined();
+    });
+
+    it("unbond_public with zero amount raises AmountRequired", async () => {
+      const status = await getTransactionStatus(stakingAccount, {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: new BigNumber(0),
+      } as never);
+      expect(status.errors.amount).toBeInstanceOf(AmountRequired);
+    });
+
+    it("unbond_public with useAllAmount resolving to zero raises AmountRequired", async () => {
+      mockCalculateAmount.mockReturnValue({
+        amount: new BigNumber(0),
+        totalSpent: new BigNumber(0),
+      });
+
+      const status = await getTransactionStatus(stakingAccount, {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: new BigNumber(0),
+        useAllAmount: true,
+      } as never);
+      expect(status.errors.amount).toBeInstanceOf(AmountRequired);
+    });
+
+    it("claim_unbond_public with zero amount and self recipient has no amount/recipient errors", async () => {
+      const status = await getTransactionStatus(stakingAccount, {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: new BigNumber(0),
+      } as never);
+      expect(status.errors.amount).toBeUndefined();
+      expect(status.errors.recipient).toBeUndefined();
+    });
+
+    it("unbond_public with amount exceeding transparentBalance does NOT raise NotEnoughBalance", async () => {
+      // transparentBalance is 1_000_000; unbond draws from the bonded pool (2_000_000), not liquid balance
+      const unbondAmount = mockTransparentBalance.plus(500000); // 1_500_000 > transparentBalance, < bondedBalance
+      mockCalculateAmount.mockReturnValue({
+        amount: unbondAmount,
+        totalSpent: unbondAmount.plus(mockFees),
+      });
+
+      const status = await getTransactionStatus(stakingAccount, {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: unbondAmount,
+      } as never);
+
+      expect(status.errors.amount).toBeUndefined();
+    });
+
+    it("errors with NotEnoughBalance when unbond amount exceeds bonded balance", async () => {
+      const unbondAmount = new BigNumber(3_000_000); // > bondedBalance (2_000_000)
+      mockCalculateAmount.mockReturnValue({
+        amount: unbondAmount,
+        totalSpent: unbondAmount.plus(mockFees),
+      });
+
+      const transaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: unbondAmount,
+      };
+
+      const status = await getTransactionStatus(stakingAccount, transaction);
+      expect(status.errors.amount).toBeInstanceOf(NotEnoughBalance);
+    });
+
+    it("accepts an unbond amount within the bonded balance", async () => {
+      const unbondAmount = new BigNumber(500_000); // < bondedBalance (2_000_000)
+      mockCalculateAmount.mockReturnValue({
+        amount: unbondAmount,
+        totalSpent: unbondAmount.plus(mockFees),
+      });
+
+      const transaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: unbondAmount,
+      };
+
+      const status = await getTransactionStatus(stakingAccount, transaction);
+      expect(status.errors.amount).toBeUndefined();
+    });
+
+    it("errors with AleoNoClaimableAmount when claiming with nothing matured", async () => {
+      const immatureAccount = getMockedAccount({
+        balance: mockBalance,
+        aleoResources: {
+          ...mockAleoResources,
+          transparentBalance: mockTransparentBalance,
+          privateBalance: mockPrivateBalance,
+          unbondingBalance: new BigNumber(2_000_000),
+          unbondingHeight: 5000, // account.blockHeight (1234) < 5000, not matured yet
+        },
+      });
+
+      const transaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC,
+        recipient: immatureAccount.freshAddress,
+        amount: new BigNumber(0),
+      };
+
+      const status = await getTransactionStatus(immatureAccount, transaction);
+      expect(status.errors.amount?.name).toBe("AleoNoClaimableAmount");
+      expect(status.errors.amount).toBeInstanceOf(AleoNoClaimableAmount);
+    });
+
+    it("accepts a claim when the unbonding has matured", async () => {
+      const transaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC,
+        recipient: stakingAccount.freshAddress,
+        amount: new BigNumber(0),
+      };
+
+      const status = await getTransactionStatus(stakingAccount, transaction);
+      expect(status.errors.amount).toBeUndefined();
     });
   });
 });

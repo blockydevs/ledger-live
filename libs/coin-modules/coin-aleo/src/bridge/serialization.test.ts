@@ -9,6 +9,7 @@ import {
 } from "../__tests__/fixtures/account.fixture";
 import { getMockedTokenCurrency } from "../__tests__/fixtures/currency.fixture";
 import type { AleoAccount, AleoAccountRaw, AleoResources, AleoResourcesRaw } from "../types";
+import type { AleoOperationExtraRaw } from "../types/bridge";
 import {
   assignFromAccountRaw,
   assignFromTokenAccountRaw,
@@ -16,6 +17,8 @@ import {
   assignToTokenAccountRaw,
   toAleoResourcesRaw,
   fromAleoResourcesRaw,
+  fromOperationExtraRaw,
+  toOperationExtraRaw,
 } from "./serialization";
 
 describe("serialization", () => {
@@ -172,5 +175,73 @@ describe("serialization", () => {
       assignFromTokenAccountRaw(tokenAccountRaw, restoredTokenAccount);
       expect(restoredTokenAccount.transparentBalance).toEqual(new BigNumber(123456));
     });
+  });
+});
+
+describe("operation extra serialization", () => {
+  describe("operation extra transitionId round-trip", () => {
+    it("preserves transitionId through toOperationExtraRaw/fromOperationExtraRaw", () => {
+      const raw = toOperationExtraRaw({
+        functionId: "transfer_public",
+        transactionType: "public",
+        transitionId: "au1roundtrip",
+      });
+      expect(raw).toMatchObject({ transitionId: "au1roundtrip" });
+
+      const back = fromOperationExtraRaw(raw);
+      expect(back).toMatchObject({ transitionId: "au1roundtrip" });
+    });
+
+    it("omits transitionId when absent", () => {
+      const raw = toOperationExtraRaw({
+        functionId: "transfer_public",
+        transactionType: "public",
+      }) as AleoOperationExtraRaw;
+      expect(raw.transitionId).toBeUndefined();
+    });
+  });
+});
+
+describe("staking fields round-trip", () => {
+  it("serializes and deserializes staking fields", () => {
+    const resources: AleoResources = {
+      transparentBalance: new BigNumber(100),
+      provableApi: null,
+      privateBalance: null,
+      unspentPrivateRecords: null,
+      lastPrivateSyncDate: null,
+      bondedBalance: new BigNumber(5000000),
+      bondedValidator: "aleo1validator",
+      unbondingBalance: new BigNumber(2000000),
+      unbondingHeight: 17655195,
+    };
+
+    const raw = toAleoResourcesRaw(resources);
+    expect(raw.bondedBalance).toBe("5000000");
+    expect(raw.bondedValidator).toBe("aleo1validator");
+    expect(raw.unbondingBalance).toBe("2000000");
+    expect(raw.unbondingHeight).toBe(17655195);
+
+    const restored = fromAleoResourcesRaw(raw);
+    expect(restored.bondedBalance).toEqual(new BigNumber(5000000));
+    expect(restored.bondedValidator).toBe("aleo1validator");
+    expect(restored.unbondingBalance).toEqual(new BigNumber(2000000));
+    expect(restored.unbondingHeight).toBe(17655195);
+  });
+
+  it("defaults staking fields when absent from raw (legacy persisted account)", () => {
+    const legacyRaw: AleoResourcesRaw = {
+      transparentBalance: "100",
+      provableApi: null,
+      privateBalance: null,
+      unspentPrivateRecords: null,
+      lastPrivateSyncDate: null,
+    };
+
+    const restored = fromAleoResourcesRaw(legacyRaw);
+    expect(restored.bondedBalance).toEqual(new BigNumber(0));
+    expect(restored.bondedValidator).toBeNull();
+    expect(restored.unbondingBalance).toEqual(new BigNumber(0));
+    expect(restored.unbondingHeight).toBeNull();
   });
 });

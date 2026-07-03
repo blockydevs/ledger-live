@@ -11,6 +11,8 @@ import type {
   AleoGetProvePublicKeyResponse,
   AleoPrivateRecord,
   DelegatedProvingResponse,
+  AleoCommitteeResponse,
+  AleoValidatorMetadataResponse,
 } from "../types/api";
 import { getNetworkConfig } from "../logic/utils";
 import { PROGRAM_ID } from "../constants";
@@ -35,6 +37,55 @@ async function getAccountBalance(
   const res = await network<string | null>({
     method: "GET",
     url: `${nodeUrl}/v2/${networkType}/program/${PROGRAM_ID.CREDITS}/mapping/account/${address}`,
+  });
+
+  return res.data;
+}
+
+async function getBondedMapping(currency: CryptoCurrency, address: string): Promise<string | null> {
+  const { nodeUrl, networkType } = getNetworkConfig(currency);
+
+  const res = await network<string | null>({
+    method: "GET",
+    url: `${nodeUrl}/v2/${networkType}/program/${PROGRAM_ID.CREDITS}/mapping/bonded/${address}`,
+  });
+
+  return res.data;
+}
+
+async function getUnbondingMapping(
+  currency: CryptoCurrency,
+  address: string,
+): Promise<string | null> {
+  const { nodeUrl, networkType } = getNetworkConfig(currency);
+
+  const res = await network<string | null>({
+    method: "GET",
+    url: `${nodeUrl}/v2/${networkType}/program/${PROGRAM_ID.CREDITS}/mapping/unbonding/${address}`,
+  });
+
+  return res.data;
+}
+
+async function getCommittee(currency: CryptoCurrency): Promise<AleoCommitteeResponse> {
+  const { nodeUrl, networkType } = getNetworkConfig(currency);
+
+  const res = await network<AleoCommitteeResponse>({
+    method: "GET",
+    url: `${nodeUrl}/v2/${networkType}/committee/latest`,
+  });
+
+  return res.data;
+}
+
+async function getValidatorMetadata(
+  currency: CryptoCurrency,
+): Promise<AleoValidatorMetadataResponse> {
+  const { nodeUrl, networkType } = getNetworkConfig(currency);
+
+  const res = await network<AleoValidatorMetadataResponse>({
+    method: "GET",
+    url: `${nodeUrl}/v2/${networkType}/committee/validator-metadata`,
   });
 
   return res.data;
@@ -286,6 +337,10 @@ async function submitEncryptedDelegatedProvingRequest({
 export const apiClient = {
   getLatestBlock,
   getAccountBalance,
+  getBondedMapping,
+  getUnbondingMapping,
+  getCommittee,
+  getValidatorMetadata,
   getTokenBalance,
   getTransactionById,
   getAccountPublicTransactions,

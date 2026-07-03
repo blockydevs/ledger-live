@@ -14,6 +14,7 @@ import { getCalTokens, toCoinFrameworkOperation, toBridgeOperation } from "./uti
 import { listOperations } from "./listOperations";
 
 jest.mock("../network/utils");
+jest.mock("../network/api");
 jest.mock("./utils");
 
 const mockFetchAccountTransactionsFromHeight = jest.mocked(fetchAccountTransactionsFromHeight);

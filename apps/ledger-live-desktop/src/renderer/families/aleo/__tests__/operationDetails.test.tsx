@@ -25,3 +25,13 @@ describe("OperationDetailsExtra", () => {
     expect(screen.queryByText("patched")).not.toBeInTheDocument();
   });
 });
+
+describe("amountCellExtra", () => {
+  it("is not exported (no second amount column for staking rows)", () => {
+    expect(operationDetails).not.toHaveProperty("amountCellExtra");
+  });
+
+  it("does not export a getAmount override (staking rows use -fee)", () => {
+    expect(operationDetails).not.toHaveProperty("getAmount");
+  });
+});

@@ -5,7 +5,7 @@ import { log } from "@ledgerhq/logs";
 import { SyncConfig, DerivationMode } from "@ledgerhq/types-live";
 import { firstValueFrom, toArray, type Observable } from "rxjs";
 import { SYNC_TYPE_TRANSPARENT, SYNC_TYPE_SHIELDED } from "@ledgerhq/types-live";
-import { getBalance, lastBlock, listOperations } from "../logic";
+import { getBalance, lastBlock, listOperations, getStakingPosition } from "../logic";
 import {
   getMockedCurrency,
   getMockedTokenCurrency,
@@ -34,6 +34,7 @@ import {
   createPrivateSyncObservable,
   createPublicSyncObservable,
   postSync,
+  collectPendingEvictions,
 } from "./sync";
 import { apiClient } from "../network/api";
 import { buildSyncObservables, makeGetAccountShape } from "./sync";
@@ -56,6 +57,7 @@ jest.mock("@ledgerhq/logs", () => ({
 const mockGetSyncHash = jest.mocked(getSyncHash);
 const mockGetBalance = jest.mocked(getBalance);
 const mockLastBlock = jest.mocked(lastBlock);
+const mockGetStakingPosition = jest.mocked(getStakingPosition);
 const mockListOperations = jest.mocked(listOperations);
 const mockAccessProvableApi = jest.mocked(accessProvableApi);
 const mockFetchAllOwnedRecords = jest.mocked(fetchAllOwnedRecords);
@@ -129,6 +131,12 @@ describe("sync.ts", () => {
     mockListPrivateOperations.mockResolvedValue({ operations: [], consumedRecordTags: new Set() });
     mockGetPrivateBalance.mockResolvedValue({ balance: new BigNumber(0), unspentRecords: [] });
     mockPatchPublicOperations.mockResolvedValue([]);
+    mockGetStakingPosition.mockResolvedValue({
+      bondedBalance: new BigNumber(0),
+      bondedValidator: null,
+      unbondingBalance: new BigNumber(0),
+      unbondingHeight: null,
+    });
   });
 
   describe("performPublicSync", () => {
@@ -360,6 +368,54 @@ describe("sync.ts", () => {
       expect(result.operations).toEqual([
         expect.objectContaining({ id: "op2", blockHeight: 200 }),
         expect.objectContaining({ id: "op1", blockHeight: 100 }),
+      ]);
+    });
+
+    it("should backfill a blank sender on a cached staking op that predates the resolveSenderAddress fallback", async () => {
+      const staleUnbondOp = getMockedOperation({
+        id: "op1",
+        hash: "hash1",
+        type: "UNBOND",
+        blockHeight: 100,
+        accountId: mockInitialAccount.id,
+        senders: [""],
+        extra: { functionId: "unbond_public", transactionType: "public" },
+        date: new Date("2023-01-02"),
+      });
+
+      const accountWithOperations = {
+        ...mockInitialAccount,
+        operations: [staleUnbondOp],
+      };
+
+      mockGetBalance.mockResolvedValue([
+        {
+          asset: { type: "native" as const },
+          value: BigInt(1000),
+        },
+      ]);
+
+      mockListOperations.mockResolvedValue({
+        operations: [],
+        tokenOperations: [],
+        calTokens: new Map(),
+        nextCursor: null,
+      });
+
+      const result = await performPublicSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: accountWithOperations,
+        },
+        mockSyncConfig,
+      );
+
+      expect(result.operations).toEqual([
+        expect.objectContaining({ id: "op1", senders: [mockAccount.freshAddress] }),
       ]);
     });
 
@@ -761,6 +817,35 @@ describe("sync.ts", () => {
           options: expect.objectContaining({ cursor: "12345" }),
         }),
       );
+    });
+
+    it("stores the staking position in aleoResources and includes it in balance", async () => {
+      mockGetStakingPosition.mockResolvedValue({
+        bondedBalance: new BigNumber(5_000_000),
+        bondedValidator: "aleo1validator",
+        unbondingBalance: new BigNumber(2_000_000),
+        unbondingHeight: 12345,
+      });
+
+      const result = await performPublicSync(
+        {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: mockInitialAccount,
+        },
+        mockSyncConfig,
+      );
+
+      expect(mockGetStakingPosition).toHaveBeenCalledWith(mockCurrency, mockAccount.freshAddress);
+      expect(result.aleoResources?.bondedBalance).toEqual(new BigNumber(5_000_000));
+      expect(result.aleoResources?.bondedValidator).toBe("aleo1validator");
+      expect(result.aleoResources?.unbondingBalance).toEqual(new BigNumber(2_000_000));
+      expect(result.aleoResources?.unbondingHeight).toBe(12345);
+      // balance includes staking, spendable does not
+      expect(result.balance).toEqual(result.spendableBalance!.plus(7_000_000));
     });
   });
 
@@ -1413,6 +1498,78 @@ describe("sync.ts", () => {
         privateRecords: [unspentRecord],
         oldUnspentRecords: [],
       });
+    });
+
+    it("preserves staking fields from the initial account and includes them in balance", async () => {
+      mockAccessProvableApi.mockResolvedValueOnce(configuredProvableApi);
+      const initialWithStaking: AleoAccount = {
+        ...mockInitialAccount,
+        aleoResources: {
+          ...mockInitialAccount.aleoResources!,
+          bondedBalance: new BigNumber(5_000_000),
+          bondedValidator: "aleo1validator",
+          unbondingBalance: new BigNumber(2_000_000),
+          unbondingHeight: 12345,
+        },
+      };
+
+      const result = await performPrivateSync({
+        info: {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: initialWithStaking,
+        },
+        syncConfig: mockSyncConfig,
+        currentPublicOps: [],
+      });
+
+      expect(result?.aleoResources?.bondedBalance).toEqual(new BigNumber(5_000_000));
+      expect(result?.aleoResources?.unbondingHeight).toBe(12345);
+      expect(result?.balance).toEqual(result?.spendableBalance!.plus(7_000_000));
+    });
+
+    it("uses the fresh staking position from the current public cycle over stale initialAccount", async () => {
+      mockAccessProvableApi.mockResolvedValueOnce(configuredProvableApi);
+      // initialAccount holds the PREVIOUS cycle's (stale) staking values
+      const initialWithStaleStaking: AleoAccount = {
+        ...mockInitialAccount,
+        aleoResources: {
+          ...mockInitialAccount.aleoResources!,
+          bondedBalance: new BigNumber(1_000_000),
+          bondedValidator: "aleo1stale",
+          unbondingBalance: new BigNumber(0),
+          unbondingHeight: null,
+        },
+      };
+
+      const result = await performPrivateSync({
+        info: {
+          index: mockAccount.index,
+          derivationPath: mockAccount.freshAddressPath,
+          address: mockAccount.freshAddress,
+          currency: mockCurrency,
+          derivationMode: mockDerivationMode,
+          initialAccount: initialWithStaleStaking,
+        },
+        syncConfig: mockSyncConfig,
+        currentPublicOps: [],
+        // fresh values fetched by this cycle's public sync
+        freshStakingPosition: {
+          bondedBalance: new BigNumber(5_000_000),
+          bondedValidator: "aleo1fresh",
+          unbondingBalance: new BigNumber(2_000_000),
+          unbondingHeight: 12345,
+        },
+      });
+
+      expect(result?.aleoResources?.bondedBalance).toEqual(new BigNumber(5_000_000));
+      expect(result?.aleoResources?.bondedValidator).toBe("aleo1fresh");
+      expect(result?.aleoResources?.unbondingBalance).toEqual(new BigNumber(2_000_000));
+      expect(result?.aleoResources?.unbondingHeight).toBe(12345);
+      expect(result?.balance).toEqual(result?.spendableBalance!.plus(7_000_000));
     });
   });
 
@@ -2160,6 +2317,266 @@ describe("sync.ts", () => {
       };
 
       expect(postSync(synced, synced)).toBe(synced);
+    });
+
+    it("evicts a stuck pending op once its reverted tx is confirmed (via transition id)", async () => {
+      const failedConfirmed = getMockedOperation({
+        id: "js:2:aleo:addr:at1feeid-OUT",
+        hash: "at1feeid",
+        hasFailed: true,
+        blockHeight: 90,
+        extra: {
+          functionId: "claim_unbond_public",
+          transactionType: "public",
+          transitionId: "au1revert",
+        },
+      });
+      const pendingOp = getMockedOperation({
+        id: "js:2:aleo:addr:at1execid-OUT",
+        hash: "at1execid",
+        blockHeight: null,
+      });
+
+      mockListOperations.mockResolvedValue({
+        operations: [failedConfirmed as any],
+        tokenOperations: [],
+        calTokens: new Map(),
+        nextCursor: null,
+      });
+      mockApiClient.getTransactionById.mockResolvedValue({
+        execution: { transitions: [{ id: "au1revert" }] },
+      } as any);
+
+      const initialAccount: AleoAccount = {
+        ...mockInitialAccount,
+        pendingOperations: [pendingOp],
+      };
+
+      const shape = await performPublicSync(
+        {
+          currency: mockCurrency,
+          address: MOCK_ALEO_ADDRESS,
+          derivationMode: mockDerivationMode,
+          index: 0,
+          initialAccount,
+        } as any,
+        mockSyncConfig,
+      );
+
+      const synced: AleoAccount = {
+        ...initialAccount,
+        ...shape,
+        id: mockLedgerAccountId,
+        pendingOperations: [pendingOp],
+      } as AleoAccount;
+
+      const result = postSync(synced, synced);
+
+      expect(result.pendingOperations).toEqual([]);
+      // the natural failed row is preserved untouched
+      expect(result.operations.some(o => o.id === failedConfirmed.id && o.hasFailed)).toBe(true);
+    });
+
+    it("retains a pending op when no confirmed op shares its transition id (lag)", async () => {
+      const pendingOp = getMockedOperation({
+        id: "js:2:aleo:addr:at1execid-OUT",
+        hash: "at1execid",
+        blockHeight: null,
+      });
+      mockListOperations.mockResolvedValue({
+        operations: [],
+        tokenOperations: [],
+        calTokens: new Map(),
+        nextCursor: null,
+      });
+      mockApiClient.getTransactionById.mockResolvedValue({
+        execution: { transitions: [{ id: "au1revert" }] },
+      } as any);
+
+      const initialAccount: AleoAccount = { ...mockInitialAccount, pendingOperations: [pendingOp] };
+
+      const shape = await performPublicSync(
+        {
+          currency: mockCurrency,
+          address: MOCK_ALEO_ADDRESS,
+          derivationMode: mockDerivationMode,
+          index: 0,
+          initialAccount,
+        } as any,
+        mockSyncConfig,
+      );
+
+      const synced: AleoAccount = {
+        ...initialAccount,
+        ...shape,
+        id: mockLedgerAccountId,
+        pendingOperations: [pendingOp],
+      } as AleoAccount;
+
+      const result = postSync(synced, synced);
+      expect(result.pendingOperations).toEqual([expect.objectContaining({ id: pendingOp.id })]);
+    });
+
+    it("consumes pendingEvictionIds from the shape and strips it so it never persists", () => {
+      const pendingOp = getMockedOperation({
+        id: "js:2:aleo:addr:at1execid-OUT",
+        hash: "at1execid",
+        blockHeight: null,
+      });
+
+      const synced: AleoAccount = {
+        ...mockInitialAccount,
+        operations: [],
+        pendingOperations: [pendingOp],
+        pendingEvictionIds: [pendingOp.id],
+      };
+
+      const result = postSync(synced, synced);
+
+      // evicted purely off the threaded ids (no confirmed op matches by id)
+      expect(result.pendingOperations).toEqual([]);
+      // transient field must not survive into the returned (persisted) account
+      expect(result.pendingEvictionIds).toBeUndefined();
+    });
+  });
+
+  describe("collectPendingEvictions", () => {
+    const currency = getMockedCurrency();
+
+    const detailsWithTransition = (transitionId: string) =>
+      ({ execution: { transitions: [{ id: transitionId }] } }) as any;
+
+    it("evicts a pending op when a confirmed op shares its transition id but has a different id", async () => {
+      const confirmed = getMockedOperation({
+        id: "confirmed-feeid-OUT",
+        hash: "at1feeid",
+        extra: {
+          functionId: "claim_unbond_public",
+          transactionType: "public",
+          transitionId: "au1shared",
+        },
+      });
+      const pending = getMockedOperation({ id: "pending-execid-OUT", hash: "at1execid" });
+      mockApiClient.getTransactionById.mockResolvedValue(detailsWithTransition("au1shared"));
+
+      const result = await collectPendingEvictions(currency, [confirmed], [pending]);
+
+      expect(mockApiClient.getTransactionById).toHaveBeenCalledWith(currency, "at1execid");
+      expect([...result]).toEqual(["pending-execid-OUT"]);
+    });
+
+    it("evicts a pending op when the node resolves its hash to a rejected fee-type tx matching a confirmed op's hash", async () => {
+      // Real node behavior for a reverted tx: looking up the original broadcast id
+      // returns the fee-derived transaction — type "fee", NO execution field, and the
+      // top-level id is the confirmed (failed) op's hash.
+      const confirmed = getMockedOperation({
+        id: "confirmed-feeid-BOND",
+        hash: "at1feeid",
+        hasFailed: true,
+        extra: { functionId: "bond_public", transactionType: "public" },
+      });
+      const pending = getMockedOperation({ id: "pending-execid-BOND", hash: "at1execid" });
+      mockApiClient.getTransactionById.mockResolvedValue({
+        type: "fee",
+        id: "at1feeid",
+        fee: { transition: { id: "au1feetransition" } },
+      } as any);
+
+      const result = await collectPendingEvictions(currency, [confirmed], [pending]);
+
+      expect(mockApiClient.getTransactionById).toHaveBeenCalledWith(currency, "at1execid");
+      expect([...result]).toEqual(["pending-execid-BOND"]);
+    });
+
+    it("does not evict when the transition id matches an op with the SAME id (already handled by id match)", async () => {
+      const shared = getMockedOperation({
+        id: "same-OUT",
+        hash: "at1x",
+        extra: {
+          functionId: "transfer_public",
+          transactionType: "public",
+          transitionId: "au1same",
+        },
+      });
+      const pending = getMockedOperation({ id: "same-OUT", hash: "at1execid" });
+      mockApiClient.getTransactionById.mockResolvedValue(detailsWithTransition("au1same"));
+
+      const result = await collectPendingEvictions(currency, [shared], [pending]);
+      expect(result.size).toBe(0);
+    });
+
+    it("does not evict when no confirmed op shares the transition id (indexer lag)", async () => {
+      const confirmed = getMockedOperation({
+        id: "confirmed-OUT",
+        extra: {
+          functionId: "transfer_public",
+          transactionType: "public",
+          transitionId: "au1other",
+        },
+      });
+      const pending = getMockedOperation({ id: "pending-OUT", hash: "at1execid" });
+      mockApiClient.getTransactionById.mockResolvedValue(detailsWithTransition("au1nomatch"));
+
+      const result = await collectPendingEvictions(currency, [confirmed], [pending]);
+      expect(result.size).toBe(0);
+    });
+
+    it("does not evict and does not throw when getTransactionById rejects", async () => {
+      const confirmed = getMockedOperation({
+        id: "confirmed-OUT",
+        extra: {
+          functionId: "transfer_public",
+          transactionType: "public",
+          transitionId: "au1shared",
+        },
+      });
+      const pending = getMockedOperation({ id: "pending-OUT", hash: "at1execid" });
+      mockApiClient.getTransactionById.mockRejectedValue(new Error("404"));
+
+      const result = await collectPendingEvictions(currency, [confirmed], [pending]);
+      expect(result.size).toBe(0);
+    });
+
+    it("skips pending ops with an empty hash", async () => {
+      const pending = getMockedOperation({ id: "pending-nohash-OUT", hash: "" });
+      const result = await collectPendingEvictions(currency, [], [pending]);
+      expect(mockApiClient.getTransactionById).not.toHaveBeenCalled();
+      expect(result.size).toBe(0);
+    });
+
+    it("skips the on-chain lookup for a pending op already confirmed under the same id (plain send), avoiding a redundant call", async () => {
+      const confirmed = getMockedOperation({
+        id: "same-id-OUT",
+        hash: "at1x",
+        extra: { functionId: "transfer_public", transactionType: "public" },
+      });
+      const pending = getMockedOperation({ id: "same-id-OUT", hash: "at1x" });
+
+      const result = await collectPendingEvictions(currency, [confirmed], [pending]);
+
+      // already resolvable by id match in postSync — no need for the extra API call
+      expect(mockApiClient.getTransactionById).not.toHaveBeenCalled();
+      expect(result.size).toBe(0);
+    });
+
+    it("still performs the lookup for a reverted plain send (different id, not staking) so eviction is not staking-only", async () => {
+      const confirmed = getMockedOperation({
+        id: "confirmed-feeid-OUT",
+        hash: "at1feeid",
+        extra: { functionId: "transfer_public", transactionType: "public" },
+        hasFailed: true,
+      });
+      const pending = getMockedOperation({ id: "pending-execid-OUT", hash: "at1execid" });
+      mockApiClient.getTransactionById.mockResolvedValue({
+        type: "fee",
+        id: "at1feeid",
+        fee: { transition: { id: "au1feetransition" } },
+      } as any);
+
+      const result = await collectPendingEvictions(currency, [confirmed], [pending]);
+
+      expect(mockApiClient.getTransactionById).toHaveBeenCalledWith(currency, "at1execid");
+      expect([...result]).toEqual(["pending-execid-OUT"]);
     });
   });
 });

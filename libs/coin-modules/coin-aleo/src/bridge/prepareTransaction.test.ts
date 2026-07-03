@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import aleoConfig from "../config";
 import { TRANSACTION_TYPE } from "../constants";
-import { estimateFees } from "../logic";
+import { estimateFeesBN } from "../logic";
 import { calculateAmount, findBestRecordForFee } from "../logic/utils";
 import {
   getMockedAccount,
@@ -25,7 +25,7 @@ jest.mock("../logic/utils", () => ({
 
 const mockConfig = getMockedConfig("mainnet");
 const mockAleoConfig = jest.mocked(aleoConfig);
-const mockEstimateFees = jest.mocked(estimateFees);
+const mockEstimateFees = jest.mocked(estimateFeesBN);
 const mockCalculateAmount = jest.mocked(calculateAmount);
 const mockFindBestRecordForFee = jest.mocked(findBestRecordForFee);
 
@@ -59,7 +59,7 @@ describe("prepareTransaction", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAleoConfig.getCoinConfig.mockReturnValue(mockConfig);
-    mockEstimateFees.mockReturnValue({ value: BigInt(mockFees.toString()) });
+    mockEstimateFees.mockReturnValue(mockFees);
     mockCalculateAmount.mockReturnValue({
       amount: mockAmount,
       totalSpent: mockAmount.plus(mockFees),
@@ -635,6 +635,70 @@ describe("prepareTransaction", () => {
       properties: {
         amountRecordCommitments: [mockUnspentTokenRecord1.commitment],
       },
+    });
+  });
+
+  describe("bond_public", () => {
+    it("keeps bond_public mode and defaults withdrawal to freshAddress when withdrawal is empty", async () => {
+      const bondTransaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: "",
+      };
+
+      const result = await prepareTransaction(mockAccount, bondTransaction);
+
+      expect(result).toMatchObject({
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: mockAccount.freshAddress,
+      });
+      expect(result.fees.gt(0)).toBe(true);
+    });
+
+    it("preserves withdrawal when already set for bond_public", async () => {
+      const customWithdrawal = "aleo1custom000000000000000000000000000000000000000000000000000000";
+      const bondTransaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: customWithdrawal,
+      };
+
+      const result = await prepareTransaction(mockAccount, bondTransaction);
+
+      expect(result).toMatchObject({
+        mode: TRANSACTION_TYPE.BOND_PUBLIC,
+        withdrawal: customWithdrawal,
+      });
+    });
+  });
+
+  describe("prepareTransaction unbond/claim", () => {
+    it("prepares unbond_public preserving the input amount", async () => {
+      const tx: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.UNBOND_PUBLIC,
+        amount: new BigNumber(1000000),
+      };
+
+      const prepared = await prepareTransaction(mockAccount, tx as never);
+
+      expect(prepared.amount.toString()).toBe(mockAmount.toString());
+      expect(prepared.fees.gt(0)).toBe(true);
+      expect(prepared.mode).toBe(TRANSACTION_TYPE.UNBOND_PUBLIC);
+      expect("withdrawal" in prepared).toBe(false);
+    });
+
+    it("prepares claim_unbond_public with zero amount", async () => {
+      const tx: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.CLAIM_UNBOND_PUBLIC,
+        amount: new BigNumber(0),
+      };
+
+      const prepared = await prepareTransaction(mockAccount, tx as never);
+
+      expect(prepared.amount.toString()).toBe("0");
+      expect(prepared.fees.gt(0)).toBe(true);
     });
   });
 });
