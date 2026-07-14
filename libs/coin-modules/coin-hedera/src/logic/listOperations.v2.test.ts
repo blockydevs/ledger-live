@@ -217,7 +217,7 @@ describe("listOperationsV2", () => {
         type: "FEES",
         fee: expect.any(Object),
         senders: [mockMirrorAccount.account],
-        recipients: ["0.0.67890"],
+        recipients: ["0.0.3"],
       },
     ]);
     expect(result.tokenOperations).toMatchObject([
@@ -234,6 +234,84 @@ describe("listOperationsV2", () => {
           consensusTimestamp: "1625097600.000000000",
         },
       },
+    ]);
+  });
+
+  it("attributes the FEES op of an incoming transfer with user-paid fee to payer -> node", async () => {
+    // user receives HBAR but is the fee payer (transaction_id starts with user's account)
+    const fee = 100000;
+    const mockTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: "1625097600.000000000",
+      transaction_hash: "hash1",
+      charged_tx_fee: fee,
+      node: "0.0.3",
+      transaction_id: `${mockMirrorAccount.account}-1625097600.000000000`,
+      staking_reward_transfers: [],
+      token_transfers: [],
+      transfers: [
+        { account: mockMirrorAccount.account, amount: 500000 - fee },
+        { account: "0.0.9999", amount: -500000 },
+        { account: "0.0.3", amount: fee },
+      ],
+      name: "CRYPTOTRANSFER",
+    });
+
+    (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+      transactions: [mockTransaction],
+      nextCursor: null,
+    });
+    (utils.extractFeesPayer as jest.Mock).mockReturnValue(mockMirrorAccount.account);
+
+    const result = await listOperations(makeListOperationsParams());
+
+    expect(result.coinOperations).toMatchObject([
+      { type: "IN", senders: ["0.0.9999"], recipients: [mockMirrorAccount.account] },
+      { type: "FEES", senders: [mockMirrorAccount.account], recipients: ["0.0.3"] },
+    ]);
+  });
+
+  it("creates no FEES op for a multi-asset tx and keeps token ops un-nested", async () => {
+    // HBAR value + HTS transfer in one CryptoTransfer => OUT coin op only
+    const mockTokenHTS = getMockedHTSTokenCurrency();
+    const mockTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: "1625097600.000000000",
+      transaction_hash: "hash1",
+      charged_tx_fee: 100000,
+      node: "0.0.3",
+      transaction_id: `${mockMirrorAccount.account}-1625097600.000000000`,
+      staking_reward_transfers: [],
+      transfers: [
+        { account: mockMirrorAccount.account, amount: -600000 },
+        { account: "0.0.67890", amount: 500000 },
+        { account: "0.0.3", amount: 100000 },
+      ],
+      token_transfers: [
+        {
+          token_id: mockTokenHTS.contractAddress,
+          account: mockMirrorAccount.account,
+          amount: -1000,
+        },
+        { token_id: mockTokenHTS.contractAddress, account: "0.0.67890", amount: 1000 },
+      ],
+      name: "CRYPTOTRANSFER",
+    });
+
+    (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+      transactions: [mockTransaction],
+      nextCursor: null,
+    });
+    (utils.extractFeesPayer as jest.Mock).mockReturnValue(mockMirrorAccount.account);
+
+    setupMockCryptoAssetsStore({
+      findTokenByAddressInCurrency: jest.fn().mockResolvedValue(mockTokenHTS),
+    });
+
+    const result = await listOperations(makeListOperationsParams());
+
+    expect(result.coinOperations).toEqual([expect.objectContaining({ type: "OUT" })]);
+    expect(result.coinOperations.find(op => op.type === "FEES")).toBeUndefined();
+    expect(result.tokenOperations).toEqual([
+      expect.objectContaining({ type: "OUT", standard: "hts" }),
     ]);
   });
 
@@ -323,6 +401,69 @@ describe("listOperationsV2", () => {
         type: "FEES",
         value: new BigNumber(300000),
         hash: sharedHash,
+      }),
+    ]);
+  });
+
+  it("attributes the ERC20 FEES op to payer -> node, not to the token transfer parties", async () => {
+    const mockTokenERC20 = getMockedERC20TokenCurrency();
+    const sharedHash = "erc20-fees-hash";
+    const sharedTimestamp = "1625097600.000000000";
+
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: sharedTimestamp,
+      transaction_hash: sharedHash,
+      transaction_id: `${mockMirrorAccount.account}-1625097600.000000000`,
+      charged_tx_fee: 300000,
+      result: "SUCCESS",
+      name: "CONTRACTCALL",
+      node: "0.0.3",
+      staking_reward_transfers: [],
+      token_transfers: [],
+      transfers: [{ account: mockMirrorAccount.account, amount: -300000 }],
+    });
+    const mockERC20Transfer = getMockedERC20TokenTransfer({
+      token_evm_address: mockTokenERC20.contractAddress,
+      transaction_hash: sharedHash,
+      consensus_timestamp: Number(sharedTimestamp.split(".")[0]) * 10 ** 9,
+      sender_account_id: 12345,
+      receiver_account_id: 67890,
+      sender_evm_address: mockMirrorAccount.evm_address,
+      receiver_evm_address: "0xrecipient",
+      payer_account_id: 12345,
+      amount: 5000000,
+    });
+    const mockContractCallResult = getMockedMirrorContractCallResult();
+    const mockEnrichedERC20Transfer = getMockedEnrichedERC20Transfer({
+      mirrorTransaction: mockMirrorTransaction,
+      contractCallResult: mockContractCallResult,
+      transfers: [mockERC20Transfer],
+    });
+
+    jest.spyOn(networkUtils, "enrichERC20Transfers").mockResolvedValue([mockEnrichedERC20Transfer]);
+    (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+      transactions: [],
+      nextCursor: null,
+    });
+    (hgraphClient.getERC20Transfers as jest.Mock).mockResolvedValue([mockERC20Transfer]);
+    (hgraphClient.getLatestIndexedConsensusTimestamp as jest.Mock).mockResolvedValue(
+      new BigNumber(sharedTimestamp),
+    );
+    (utils.extractFeesPayer as jest.Mock).mockReturnValue(mockMirrorAccount.account);
+
+    setupMockCryptoAssetsStore({
+      findTokenByAddressInCurrency: jest.fn().mockResolvedValue(mockTokenERC20),
+    });
+
+    const result = await listOperations(
+      makeListOperationsParams({ tokenEvmAddresses: [mockTokenERC20.contractAddress] }),
+    );
+
+    expect(result.coinOperations).toEqual([
+      expect.objectContaining({
+        type: "FEES",
+        senders: [mockMirrorAccount.account],
+        recipients: ["0.0.3"],
       }),
     ]);
   });

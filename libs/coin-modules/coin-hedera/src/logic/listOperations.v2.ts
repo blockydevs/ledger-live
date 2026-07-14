@@ -187,6 +187,7 @@ async function processERC20TokenTransfer({
   // create FEES operation for outgoing ERC20 transfer
   const outgoingTransfer = tokenOperations.find(transfer => transfer.type === "OUT");
   if (outgoingTransfer) {
+    const node = enrichedERC20Transfer.mirrorTransaction.node;
     coinOperation = {
       ...commonData,
       id: `${commonData.hash}:FEES`,
@@ -196,8 +197,8 @@ async function processERC20TokenTransfer({
       ...(outgoingTransfer.standard && { standard: outgoingTransfer.standard }),
       blockHeight: outgoingTransfer.blockHeight,
       blockHash: outgoingTransfer.blockHash,
-      senders: outgoingTransfer.senders,
-      recipients: outgoingTransfer.recipients,
+      senders: commonData.extra.feesPayer ? [commonData.extra.feesPayer] : [],
+      recipients: node ? [node] : [],
       fee: outgoingTransfer.fee,
       value: outgoingTransfer.fee,
       extra: outgoingTransfer.extra,
@@ -461,7 +462,8 @@ function processCoinTransfers({
   const isPayer = extractFeesPayer(rawTx) === address;
   const valueDelta = netAmount.plus(isPayer ? fee : new BigNumber(0));
 
-  const pushFeesOperation = (parties?: Pick<Operation, "senders" | "recipients">) => {
+  // A FEES op depicts the fee flow itself: payer -> node that processed the tx.
+  const pushFeesOperation = () => {
     coinOperations.push(
       buildCoinOperation({
         commonData,
@@ -469,10 +471,8 @@ function processCoinTransfers({
         idSuffix: "FEES",
         type: "FEES",
         value: fee,
-        senders: parties?.senders ?? senders,
-        recipients:
-          parties?.recipients ??
-          (recipients.length === 0 && rawTx.node ? [rawTx.node] : recipients),
+        senders: commonData.extra.feesPayer ? [commonData.extra.feesPayer] : [],
+        recipients: rawTx.node ? [rawTx.node] : [],
         extra: { ...commonData.extra },
       }),
     );
@@ -538,11 +538,8 @@ function processCoinTransfers({
       pushFeesOperation();
     }
   } else if (isPayer && fee.gt(0)) {
-    // token-only send: no HBAR leg, but attribute the FEES op to the token transfer's parties
-    const tokenTransfers = rawTx.token_transfers ?? [];
-    pushFeesOperation(
-      tokenTransfers.length > 0 ? parseTransfers(tokenTransfers, address) : undefined,
-    );
+    // token-only send: no HBAR value leg, the fee is the only HBAR movement
+    pushFeesOperation();
   }
 
   return coinOperations;
