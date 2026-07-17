@@ -184,10 +184,14 @@ export function createHederaFlowTestNavigator<
     navigation: NativeStackNavigationProp<RootStackParamList>;
   }) {
     useEffect(() => {
-      navigation.navigate(options.navigatorName, {
+      const navigate = navigation.navigate as (
+        screen: NavigatorKey,
+        params: NavigatorScreenParams<ParamList>,
+      ) => void;
+      navigate(options.navigatorName, {
         screen: options.entryScreen,
         params: options.entryParams,
-      } as never);
+      });
     }, [navigation]);
     return null;
   }

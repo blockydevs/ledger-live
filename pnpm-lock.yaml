@@ -2122,6 +2122,9 @@ importers:
       '@ledgerhq/coin-cardano':
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-cardano
+      '@ledgerhq/coin-hedera':
+        specifier: workspace:^
+        version: link:../../libs/coin-modules/coin-hedera
       '@ledgerhq/live-common':
         specifier: workspace:^
         version: link:../../libs/ledger-live-common
