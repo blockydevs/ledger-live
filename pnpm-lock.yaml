@@ -1238,9 +1238,6 @@ importers:
       '@jest/globals':
         specifier: 'catalog:'
         version: 30.2.0
-      '@ledgerhq/coin-hedera':
-        specifier: workspace:^
-        version: link:../../libs/coin-modules/coin-hedera
       '@ledgerhq/hw-transport-mocker':
         specifier: workspace:^
         version: link:../../libs/ledgerjs/packages/hw-transport-mocker
@@ -2122,9 +2119,6 @@ importers:
       '@ledgerhq/coin-cardano':
         specifier: workspace:^
         version: link:../../libs/coin-modules/coin-cardano
-      '@ledgerhq/coin-hedera':
-        specifier: workspace:^
-        version: link:../../libs/coin-modules/coin-hedera
       '@ledgerhq/live-common':
         specifier: workspace:^
         version: link:../../libs/ledger-live-common

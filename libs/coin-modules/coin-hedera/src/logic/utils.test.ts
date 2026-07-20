@@ -1,3 +1,4 @@
+import { getMockedRpcClient as mockGetMockedRpcClient } from "../test/fixtures/rpc.fixture";
 import { createHash } from "crypto";
 import { Transaction as SDKTransaction, TransactionId } from "@hashgraph/sdk";
 import type { AssetInfo, TransactionIntent } from "@ledgerhq/coin-module-framework/api/types";
@@ -85,7 +86,7 @@ import {
 jest.mock("../config");
 jest.mock("../network/api");
 jest.mock("../network/rpc", () => ({
-  rpcClient: require("../test/fixtures/rpc.fixture").getMockedRpcClient(),
+  rpcClient: mockGetMockedRpcClient(),
 }));
 
 const mockedHederaConfig = jest.mocked(hederaConfig);

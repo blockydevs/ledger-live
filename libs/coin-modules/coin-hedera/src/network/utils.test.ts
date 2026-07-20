@@ -1,3 +1,4 @@
+import { getMockedRpcClient as mockGetMockedRpcClient } from "../test/fixtures/rpc.fixture";
 import { InvalidAddress } from "@ledgerhq/errors";
 import { getEnv } from "@ledgerhq/live-env";
 import BigNumber from "bignumber.js";
@@ -36,7 +37,7 @@ import {
 jest.mock("./api");
 jest.mock("./hgraph");
 jest.mock("./rpc", () => ({
-  rpcClient: require("../test/fixtures/rpc.fixture").getMockedRpcClient(),
+  rpcClient: mockGetMockedRpcClient(),
 }));
 
 describe("network utils", () => {

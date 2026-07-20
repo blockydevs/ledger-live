@@ -208,7 +208,6 @@
   "devDependencies": {
     "@electron/notarize": "3.1.1",
     "@jest/globals": "catalog:",
-    "@ledgerhq/coin-hedera": "workspace:^",
     "@ledgerhq/hw-transport-mocker": "workspace:^",
     "@ledgerhq/live-cli": "workspace:^",
     "@ledgerhq/live-e2e-shared": "workspace:^",

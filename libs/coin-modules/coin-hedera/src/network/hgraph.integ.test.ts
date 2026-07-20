@@ -3,26 +3,23 @@ import { MAINNET_TEST_ACCOUNTS } from "../test/fixtures/account.fixture";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { hgraphClient } from "./hgraph";
 
-/**
- * Pinned lower bound for the amUSDC mint/burn history of `accountIdWithErc20`.
- * Same cursor as api/index.integ.test.ts, which pins the same account's history.
- * MUST keep exactly 9 digits after the dot: hgraph.ts strips the dot to build a
- * nanosecond bigint, so a shorter fraction silently shifts the order of magnitude.
- */
+// MUST keep exactly 9 digits after the dot: hgraph.ts strips the dot to build a nanosecond bigint
 const ERC20_TRANSFERS_CURSOR = "1749584382.000000000";
 
-/** amUSDC. Held by `accountIdWithErc20` — NOT the same token as fixture `erc20Token`. */
+// amUSDC, held by `accountIdWithErc20` — not the same token as fixture `erc20Token`
 const AM_USDC_EVM_ADDRESS = "0xb7687538c7f4cad022d5e97cc778d0b46457c5db";
 
-/**
- * A window of finalized history containing exactly 4 global ERC20 transfers
- * (2 transactions x mint+burn leg). getERC20TransfersByTimestampRange does not
- * filter by account, so the window is deliberately narrow.
- */
+// narrow window holding exactly 4 global ERC20 transfers (the query does not filter by account)
 const RANGE_START = "1749789662.000000000";
 const RANGE_END = "1749789700.000000000";
 
-describe("hgraphClient [network]", () => {
+// shortly before mainnet launch: every consensus timestamp is strictly after this
+const HEDERA_MAINNET_LAUNCH_TIMESTAMP_NS = new BigNumber("1567296000000000000");
+
+// 15 minutes in nanoseconds; measured indexer lag is ~5-7s
+const MAX_INDEXER_LAG_NS = new BigNumber(900_000_000_000);
+
+describe("hgraphClient", () => {
   const config = getMockedConfig();
 
   describe("getLatestIndexedConsensusTimestamp", () => {
@@ -31,9 +28,12 @@ describe("hgraphClient [network]", () => {
         configOrCurrencyId: config,
       });
 
-      // moving target: structural assertions only
+      const nowNs = new BigNumber(Date.now()).multipliedBy(1e6);
+
       expect(timestamp).toBeInstanceOf(BigNumber);
-      expect(timestamp.isGreaterThan(0)).toBe(true);
+      expect(timestamp.isGreaterThan(HEDERA_MAINNET_LAUNCH_TIMESTAMP_NS)).toBe(true);
+      expect(timestamp.isLessThanOrEqualTo(nowNs)).toBe(true);
+      expect(timestamp.isGreaterThan(nowNs.minus(MAX_INDEXER_LAG_NS))).toBe(true);
     });
   });
 
@@ -49,10 +49,11 @@ describe("hgraphClient [network]", () => {
       );
 
       expect(balances.length).toBeGreaterThan(0);
-      // token association is immutable once created -> exact assertion
-      expect(erc20Token).toBeDefined();
-      // balance itself is a moving target
-      expect(erc20Token?.balance).toEqual(expect.any(Number));
+      // the association is immutable once created; the balance is a moving target
+      expect(erc20Token).toMatchObject({
+        token_evm_address: MAINNET_TEST_ACCOUNTS.withTokens.erc20Token,
+        balance: expect.any(Number),
+      });
     });
   });
 
@@ -79,9 +80,7 @@ describe("hgraphClient [network]", () => {
         fetchAllPages: false,
       });
 
-      // pinned lower bound + ascending order => the first page is finalized history.
-      // Keyed on transaction_hash: consensus_timestamp is typed `number` and these
-      // nanosecond values exceed 2^53, so they are not safe to compare literally.
+      // keyed on transaction_hash: consensus_timestamp exceeds 2^53, so it can't be compared literally
       expect(transfers).toHaveLength(10);
       expect(transfers.map(t => t.transaction_hash)).toEqual([
         "0xd4477745f84537455023215f52b9258edb15f42cdbcd836ddcb26aa90c87b1b8",
@@ -120,7 +119,6 @@ describe("hgraphClient [network]", () => {
         endTimestamp: RANGE_END,
       });
 
-      // bounded on both sides over finalized history => fully deterministic.
       // Two transactions, each contributing a mint leg and a burn leg.
       expect(transfers).toHaveLength(4);
       expect(transfers.map(t => t.transaction_hash)).toEqual([

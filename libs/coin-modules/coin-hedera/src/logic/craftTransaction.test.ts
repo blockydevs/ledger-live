@@ -1,3 +1,4 @@
+import { getMockedRpcClient as mockGetMockedRpcClient } from "../test/fixtures/rpc.fixture";
 import * as sdk from "@hashgraph/sdk";
 import type { FeeEstimation, TransactionIntent } from "@ledgerhq/coin-module-framework/api/index";
 import invariant from "invariant";
@@ -19,7 +20,7 @@ jest.mock("./utils", () => ({
   serializeTransaction: jest.fn(),
 }));
 jest.mock("../network/rpc", () => ({
-  rpcClient: require("../test/fixtures/rpc.fixture").getMockedRpcClient(),
+  rpcClient: mockGetMockedRpcClient(),
 }));
 jest.mock("../network/utils", () => ({
   ...jest.requireActual("../network/utils"),

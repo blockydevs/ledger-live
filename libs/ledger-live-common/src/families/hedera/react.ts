@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   getCurrentHederaPreloadData,
   getHederaPreloadData,
+  setHederaPreloadData,
 } from "@ledgerhq/coin-hedera/preload-data";
 import { getDelegationStatus, filterValidatorBySearchTerm } from "./utils";
 import { useObservable } from "../../observable";
@@ -14,6 +15,8 @@ import type {
   HederaDelegation,
   HederaEnrichedDelegation,
 } from "./types";
+
+export { setHederaPreloadData }; // test-only seam: no app depends on @ledgerhq/coin-hedera directly
 
 export function useHederaPreloadData(
   currency: CryptoCurrency,

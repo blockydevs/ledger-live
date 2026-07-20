@@ -21,17 +21,13 @@ const buildInfo = (address: string): AccountShapeInfo<HederaAccount> => ({
   derivationPath: "44/3030",
 });
 
-describe("getAccountShape [network]", () => {
-  // One sync per account, shared across scenarios: each sync hits three live services
-  // (mirror node, hgraph, CAL) with fetchAllPages, and sharing the result also means the
-  // balance cannot move between assertions about the same account.
+describe("getAccountShape", () => {
+  // one sync per account, reused so the balance can't move between assertions about it
   let withTokensShape: Partial<HederaAccount>;
   let withoutTokensShape: Partial<HederaAccount>;
 
   beforeAll(async () => {
     hederaCoinConfig.setCoinConfig(() => getMockedConfig());
-    // real CAL API client: getAccountShape resolves tokens through it, so without it
-    // subAccounts would come back empty
     setupCalClientStore();
 
     [withTokensShape, withoutTokensShape] = await Promise.all([
@@ -49,13 +45,13 @@ describe("getAccountShape [network]", () => {
       expect(withoutTokensShape.subAccounts).toEqual([]);
       // hedera has no blocks; the shape pins a constant so operations count as confirmed
       expect(withoutTokensShape.blockHeight).toBe(HARDCODED_BLOCK_HEIGHT);
-      expect(withoutTokensShape.syncHash).toEqual(expect.any(String));
+      // getSyncHash (ledger-wallet-framework) hex-encodes an imurmurhash 32-bit result
+      expect(withoutTokensShape.syncHash).toMatch(/^0x[0-9a-f]{1,8}$/);
     });
 
     it("returns a spendable balance equal to the account balance", () => {
-      // moving target: structural assertions only
-      expect(withoutTokensShape.balance).toBeInstanceOf(BigNumber);
-      expect(withoutTokensShape.balance!.isGreaterThanOrEqualTo(0)).toBe(true);
+      // never stakes (staked_node_id null), so the balance is fixed and can be pinned exactly
+      expect(withoutTokensShape.balance).toEqual(new BigNumber(1_000_000));
       expect(withoutTokensShape.spendableBalance).toEqual(withoutTokensShape.balance);
     });
 
@@ -72,7 +68,7 @@ describe("getAccountShape [network]", () => {
       const contractAddresses = withTokensShape.subAccounts!.map(sa => sa.token.contractAddress);
 
       expect(withTokensShape.subAccounts!.length).toBeGreaterThan(0);
-      // token associations are immutable once created -> exact assertions
+      // token associations are immutable once created, so these can be exact
       expect(contractAddresses).toContain(
         MAINNET_TEST_ACCOUNTS.withTokens.associatedTokenWithBalance,
       );
@@ -84,9 +80,14 @@ describe("getAccountShape [network]", () => {
         expect(subAccount.parentId).toBe(withTokensShape.id);
         expect(subAccount.token.parentCurrencyId).toBe("hedera");
         expect(["hts", "erc20"]).toContain(subAccount.token.tokenType);
-        // amounts move: structural only
         expect(subAccount.balance).toBeInstanceOf(BigNumber);
       }
+    });
+
+    it("returns a spendable balance equal to the account balance", () => {
+      // account stakes, balance moves with every reward payout — can't pin exact value
+      expect(withTokensShape.balance!.isGreaterThan(0)).toBe(true);
+      expect(withTokensShape.spendableBalance).toEqual(withTokensShape.balance);
     });
 
     it("enables auto token association", () => {
@@ -102,9 +103,7 @@ describe("getAccountShape [network]", () => {
       expect(withTokensShape.operations!.length).toBeGreaterThan(0);
       expect(new Set(ids).size).toBe(ids.length);
       expect(withTokensShape.operationsCount).toBe(withTokensShape.operations!.length);
-      // NONE operations are excluded on purpose: makeCoinOperationForOrphanChildOperation
-      // leaves their accountId empty even though it derives the correct one to build their
-      // id. Asserting over them would freeze that inconsistency into a test.
+      // NONE ops have an empty accountId by design, so they're excluded from this check
       expect(
         withTokensShape
           .operations!.filter(op => op.type !== "NONE")
@@ -115,14 +114,12 @@ describe("getAccountShape [network]", () => {
 
   describe("delegation", () => {
     it("reports the delegation of a staking account", () => {
-      const delegation = withTokensShape.hederaResources!.delegation;
-
-      expect(delegation).not.toBeNull();
       // nodeId is 0 for this account, so any "> 0" assertion would be wrong
-      expect(delegation!.nodeId).toEqual(expect.any(Number));
-      expect(delegation!.delegated).toBeInstanceOf(BigNumber);
-      expect(delegation!.pendingReward).toBeInstanceOf(BigNumber);
-      expect(delegation!.delegated).toEqual(withTokensShape.balance);
+      expect(withTokensShape.hederaResources!.delegation).toEqual({
+        nodeId: expect.any(Number),
+        delegated: withTokensShape.balance,
+        pendingReward: expect.any(BigNumber),
+      });
     });
 
     it("reports no delegation for a non staking account", () => {
@@ -139,11 +136,8 @@ describe("getAccountShape [network]", () => {
         syncConfig,
       );
 
-      // The shape carries syncHash, so the second pass syncs incrementally rather than
-      // from scratch. Its cursor is floored to a whole second while the latest operation
-      // has non-zero nanoseconds, and the pagination direction is "gt" -- so the latest
-      // operation is fetched again and mergeOps has to deduplicate it. This assertion is
-      // therefore not vacuous.
+      // the incremental cursor is floored to a whole second, so the latest op is refetched
+      // and mergeOps has to deduplicate it
       const ids = second.operations!.map(op => op.id);
 
       expect(second.syncHash).toBe(first.syncHash);
@@ -152,72 +146,72 @@ describe("getAccountShape [network]", () => {
     });
   });
 
-  describe("buildIterateResult", () => {
-    it("resolves the account owned by a public key", async () => {
-      const iterate = await buildIterateResult({
-        result: {
-          publicKey: MAINNET_TEST_ACCOUNTS.withTokens.publicKey,
-          address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
-          path: "44/3030",
-        },
-        derivationMode: "" as const,
-        derivationScheme: "44'/3030'/<account>'/0/0",
-      });
+  it("returns an empty shape for a pristine account that never transacted", async () => {
+    const shape = await getAccountShape(
+      buildInfo(MAINNET_TEST_ACCOUNTS.pristine.accountId),
+      syncConfig,
+    );
 
-      const result = await iterate({
-        currency,
-        derivationMode: "" as const,
-        index: 0,
-        derivationsCache: {},
-        derivationScheme: "44'/3030'/<account>'/0/0",
-        deviceId: "",
-      });
+    expect(shape.operations).toEqual([]);
+    expect(shape.operationsCount).toBe(0);
+    expect(shape.subAccounts).toEqual([]);
+    expect(shape.balance).toEqual(new BigNumber(0));
+    expect(shape.hederaResources!.delegation).toBeNull();
+  });
+});
 
-      // an account id is immutable once created -> exact assertion. The path comes from
-      // runDerivationScheme (hedera's own scheme), not the caller-supplied derivationScheme.
-      expect(result).toMatchObject({
+describe("buildIterateResult", () => {
+  beforeAll(() => {
+    hederaCoinConfig.setCoinConfig(() => getMockedConfig());
+  });
+
+  it("resolves the account owned by a public key", async () => {
+    const iterate = await buildIterateResult({
+      result: {
+        publicKey: MAINNET_TEST_ACCOUNTS.withTokens.publicKey,
         address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
-        path: "44'/3030'/0'/0/0",
-      });
+        path: "44/3030",
+      },
+      derivationMode: "" as const,
+      derivationScheme: "44'/3030'/<account>'/0/0",
     });
 
-    it("returns null when the public key owns no account at that index", async () => {
-      const iterate = await buildIterateResult({
-        result: {
-          publicKey: MAINNET_TEST_ACCOUNTS.withTokens.publicKey,
-          address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
-          path: "44/3030",
-        },
-        derivationMode: "" as const,
-        derivationScheme: "44'/3030'/<account>'/0/0",
-      });
+    const result = await iterate({
+      currency,
+      derivationMode: "" as const,
+      index: 0,
+      derivationsCache: {},
+      derivationScheme: "44'/3030'/<account>'/0/0",
+      deviceId: "",
+    });
 
-      const result = await iterate({
-        currency,
-        derivationMode: "" as const,
-        index: 999,
-        derivationsCache: {},
-        derivationScheme: "44'/3030'/<account>'/0/0",
-        deviceId: "",
-      });
-
-      expect(result).toBeNull();
+    // path comes from hedera's own derivation scheme, not the caller-supplied one
+    expect(result).toMatchObject({
+      address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
+      path: "44'/3030'/0'/0/0",
     });
   });
 
-  describe("pristine account", () => {
-    it("returns an empty shape for an account that never transacted", async () => {
-      const shape = await getAccountShape(
-        buildInfo(MAINNET_TEST_ACCOUNTS.pristine.accountId),
-        syncConfig,
-      );
-
-      // never transacted -> frozen in practice -> exact assertions
-      expect(shape.operations).toEqual([]);
-      expect(shape.operationsCount).toBe(0);
-      expect(shape.subAccounts).toEqual([]);
-      expect(shape.balance).toEqual(new BigNumber(0));
-      expect(shape.hederaResources!.delegation).toBeNull();
+  it("returns null when the public key owns no account at that index", async () => {
+    const iterate = await buildIterateResult({
+      result: {
+        publicKey: MAINNET_TEST_ACCOUNTS.withTokens.publicKey,
+        address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
+        path: "44/3030",
+      },
+      derivationMode: "" as const,
+      derivationScheme: "44'/3030'/<account>'/0/0",
     });
+
+    const result = await iterate({
+      currency,
+      derivationMode: "" as const,
+      index: 999,
+      derivationsCache: {},
+      derivationScheme: "44'/3030'/<account>'/0/0",
+      deviceId: "",
+    });
+
+    expect(result).toBeNull();
   });
 });

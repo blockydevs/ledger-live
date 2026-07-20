@@ -1,3 +1,4 @@
+import { getMockedRpcClient as mockGetMockedRpcClient } from "../test/fixtures/rpc.fixture";
 import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
@@ -65,7 +66,7 @@ jest.mock("../preload-data", () => ({
 }));
 
 jest.mock("../network/rpc", () => ({
-  rpcClient: require("../test/fixtures/rpc.fixture").getMockedRpcClient(),
+  rpcClient: mockGetMockedRpcClient(),
 }));
 
 import { getTransactionStatus } from "./getTransactionStatus";
