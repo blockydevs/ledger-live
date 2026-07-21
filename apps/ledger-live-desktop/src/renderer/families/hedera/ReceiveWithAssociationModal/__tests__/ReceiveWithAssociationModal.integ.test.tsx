@@ -111,7 +111,7 @@ describe("ReceiveWithAssociationModal [component]", () => {
     },
   });
 
-  it("associates a token: account -> device -> success (happy path)", async () => {
+  it("associates a token: account -> device -> success", async () => {
     const { user } = render(<ReceiveWithAssociationModal />, {
       initialState: buildInitialState(),
     });
@@ -156,10 +156,7 @@ describe("ReceiveWithAssociationModal [component]", () => {
 
     expect(await screen.findByText("device sign rejected")).toBeVisible();
 
-    // The success copy only renders on the broadcast branch.
     expect(screen.queryByText("Transaction sent")).not.toBeInTheDocument();
-
-    // StepAssociationConfirmationFooter only renders a Retry button on the error branch.
     expect(screen.getByRole("button", { name: /retry/i })).toBeVisible();
   });
 });

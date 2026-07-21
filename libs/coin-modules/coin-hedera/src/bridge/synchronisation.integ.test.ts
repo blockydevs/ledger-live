@@ -114,7 +114,6 @@ describe("getAccountShape", () => {
 
   describe("delegation", () => {
     it("reports the delegation of a staking account", () => {
-      // nodeId is 0 for this account, so any "> 0" assertion would be wrong
       expect(withTokensShape.hederaResources!.delegation).toEqual({
         nodeId: expect.any(Number),
         delegated: withTokensShape.balance,

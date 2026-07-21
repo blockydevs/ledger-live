@@ -15,7 +15,6 @@ import { HEDERA_VALIDATOR_1 } from "../../__mocks__/validator.mock";
 import DelegationFlowModal from "../index";
 
 // "mock" prefix required: hoisted jest.mock factories may only close over variables named so.
-// eslint-disable-next-line prefer-const
 let mockStatusErrors: Record<string, Error> = {};
 
 // Stub only the transaction/status source; the step machine and the real bridge
@@ -80,7 +79,7 @@ describe("DelegationFlowModal [component]", () => {
     },
   });
 
-  it("delegates to a validator: validator -> amount -> device -> success (happy path)", async () => {
+  it("delegates to a validator: validator -> amount -> device -> success", async () => {
     const { user } = render(<DelegationFlowModal />, {
       initialState: buildInitialState(),
     });
@@ -155,12 +154,9 @@ describe("DelegationFlowModal [component]", () => {
 
     expect(await screen.findByText("device sign rejected")).toBeVisible();
 
-    // The success copy only renders on the broadcast branch.
     expect(
       screen.queryByText("You have successfully delegated your assets"),
     ).not.toBeInTheDocument();
-
-    // StepConfirmationFooter only renders a Retry button on the error branch.
     expect(screen.getByRole("button", { name: /retry/i })).toBeVisible();
   });
 });
