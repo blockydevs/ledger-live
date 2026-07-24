@@ -1,5 +1,5 @@
 import type { Scenario } from "@ledgerhq/coin-tester/main";
-import type { Transaction, HederaAccount } from "@ledgerhq/coin-hedera/types";
+import type { Transaction, HederaAccount, HederaOperationExtra } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
 import BigNumber from "bignumber.js";
 import { RECIPIENT, makeHederaAccount } from "../fixtures";
@@ -33,6 +33,25 @@ function makeTransactions(): HederaScenarioTransaction[] {
     },
   };
 
+  const sendOneHbarWithMemo: HederaScenarioTransaction = {
+    name: "Send 1 HBAR with a memo to an existing recipient",
+    family: "hedera",
+    mode: HEDERA_TRANSACTION_MODES.Send,
+    amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
+    recipient: RECIPIENT,
+    memo: "ledger-live e2e",
+    expect: (previous, current) => {
+      expect(current.operations.length).toBeGreaterThan(0);
+      const [latest] = current.operations;
+      expect(latest.type).toBe("OUT");
+      expect(latest.recipients).toContain(RECIPIENT);
+      expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
+      const memoExtra = latest.extra as HederaOperationExtra;
+      expect(memoExtra.memo).toBeDefined();            // fail => "Solo returned no memo"
+      expect(memoExtra.memo).toBe("ledger-live e2e");  // fail => "memo came back, but wrong"
+    },
+  };
+
   const sendMaxHbar: HederaScenarioTransaction = {
     name: "Send max HBAR (drains the account)",
     family: "hedera",
@@ -61,7 +80,7 @@ function makeTransactions(): HederaScenarioTransaction[] {
     },
   };
 
-  return [sendOneHbar, sendMaxHbar];
+  return [sendOneHbar, sendOneHbarWithMemo, sendMaxHbar];
 }
 
 export const scenarioHedera: Scenario<Transaction, HederaAccount> = {

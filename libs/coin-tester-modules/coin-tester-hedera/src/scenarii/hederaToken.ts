@@ -87,7 +87,28 @@ function makeTransactions(): HederaScenarioTransaction[] {
     },
   };
 
-  return [associate, sendToken];
+  const sendMaxLlt: HederaScenarioTransaction = {
+    name: `Send max ${TOKEN_SYMBOL} (drains the sub-account)`,
+    family: "hedera",
+    mode: HEDERA_TRANSACTION_MODES.Send,
+    subAccountId: encodeTokenAccountId(makeHederaAccount(accountId, "").id, token),
+    useAllAmount: true,
+    recipient: tokenRecipientId,
+    expect: (previous, current) => {
+      const previousSub = findTokenSubAccount(previous);
+      const currentSub = findTokenSubAccount(current);
+      expect(previousSub).toBeDefined();
+      expect(currentSub).toBeDefined();
+      if (!previousSub || !currentSub) return; // retryable mirror-node lag, not a TypeError
+      expect(currentSub.operations.length).toBeGreaterThan(previousSub.operations.length);
+      const [latest] = currentSub.operations;
+      expect(latest.type).toBe("OUT");
+      expect(latest.value.toString()).toBe(previousSub.balance.toString()); // drained whole balance
+      expect(currentSub.balance.toString()).toBe("0");                      // zero-balance sub survives
+    },
+  };
+
+  return [associate, sendToken, sendMaxLlt];
 }
 
 export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {

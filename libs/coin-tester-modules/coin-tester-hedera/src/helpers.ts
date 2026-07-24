@@ -66,7 +66,10 @@ export async function getBridges(signer: HederaSigner): Promise<{
  * installed), builds a fresh signer and bridges, derives the account-under-test's address, starts
  * the MSW handlers, and funds the account from the genesis operator.
  */
-export async function setupHederaScenario(tokens: TokenCurrency[]): Promise<{
+export async function setupHederaScenario(
+  tokens: TokenCurrency[],
+  maxAutomaticTokenAssociations?: number,
+): Promise<{
   currencyBridge: CurrencyBridge;
   accountBridge: AccountBridge<Transaction, HederaAccount, TransactionStatus>;
   publicKey: string;
@@ -86,7 +89,11 @@ export async function setupHederaScenario(tokens: TokenCurrency[]): Promise<{
 
   const close = initMswHandlers();
 
-  const accountId = await createFundedAccount(publicKey, INITIAL_BALANCE_HBAR);
+  const accountId = await createFundedAccount(
+    publicKey,
+    INITIAL_BALANCE_HBAR,
+    maxAutomaticTokenAssociations,
+  );
 
   return { currencyBridge, accountBridge, publicKey, accountId, close };
 }
