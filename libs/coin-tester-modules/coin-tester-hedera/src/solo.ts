@@ -42,11 +42,15 @@ const oneShotOutputDir = () =>
  * the deploy. Never throws: a diagnostic must not mask the real test outcome.
  */
 async function logDiskUsage(label: string): Promise<void> {
+  // `df` on a reused cluster returns byte-identical output across deploys; jest's buffered console
+  // collapses identical messages, so a bare `df` dump would print only on the first deploy. Prefix
+  // a timestamp to keep every line unique (and to show *when* in the run it was sampled).
+  const at = new Date().toISOString();
   try {
     const { stdout: host } = await execFileAsync("df", ["-h", "/"], EXEC_OPTS);
-    console.log(chalk.dim(`[disk:${label}] runner /\n${host.trim()}`));
+    console.log(chalk.dim(`[disk:${label} ${at}] runner /\n${host.trim()}`));
   } catch (err) {
-    console.warn(`[disk:${label}] host df failed (ignored):`, err);
+    console.warn(`[disk:${label} ${at}] host df failed (ignored):`, err);
   }
   try {
     // one-shot falcon's kind cluster is `solo-cluster`, so its single node container is
@@ -56,7 +60,7 @@ async function logDiskUsage(label: string): Promise<void> {
       ["exec", "solo-cluster-control-plane", "df", "-h", "/"],
       EXEC_OPTS,
     );
-    console.log(chalk.dim(`[disk:${label}] kind node /\n${node.trim()}`));
+    console.log(chalk.dim(`[disk:${label} ${at}] kind node /\n${node.trim()}`));
   } catch {
     // Node container not up yet (pre-deploy) or docker unavailable — nothing to report.
   }
