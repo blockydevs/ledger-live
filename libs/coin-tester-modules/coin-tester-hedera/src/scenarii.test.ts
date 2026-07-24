@@ -21,8 +21,8 @@ jest.setTimeout(360_000);
 );
 
 describe("Hedera", () => {
-  // Cluster bring-up belongs to the environment, not to a scenario: in beforeAll a kube failure
-  // reports as an environment failure instead of blaming whichever scenario happens to run first.
+  // Cluster bring-up belongs to the environment: a kube failure here reports as an environment
+  // failure instead of blaming whichever scenario happens to run first.
   beforeAll(async () => {
     await deploySolo();
   }, CLUSTER_BRING_UP_TIMEOUT_MS);

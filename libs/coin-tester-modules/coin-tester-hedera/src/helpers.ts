@@ -60,12 +60,7 @@ export async function getBridges(signer: HederaSigner): Promise<{
   return { currencyBridge, accountBridge, getAddress };
 }
 
-/**
- * Shared scenario preamble: installs the crypto-assets store (unskippable — `tokens` is required,
- * so a scenario can never forget it and silently inherit whatever the previous scenario left
- * installed), builds a fresh signer and bridges, derives the account-under-test's address, starts
- * the MSW handlers, and funds the account from the genesis operator.
- */
+/** Shared scenario preamble: installs the crypto-assets store, builds a signer and bridges, and funds the account. */
 export async function setupHederaScenario(
   tokens: TokenCurrency[],
   maxAutomaticTokenAssociations?: number,

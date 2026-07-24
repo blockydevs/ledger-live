@@ -8,10 +8,7 @@ export function getHgraphObserver(): { callCount: number; queries: string[] } {
   return observer;
 }
 
-/**
- * Response shape is picked by matching the query text against a fixed set of shapes.
- * `ethereum_transaction` must stay non-empty — coin-hedera's invariant would throw otherwise.
- */
+/** `ethereum_transaction` must stay non-empty — coin-hedera's invariant would throw otherwise. */
 async function hgraphHandler(request: Request): Promise<Response> {
   const body = (await request.clone().json()) as { query?: string };
   const query = body.query ?? "";
@@ -44,10 +41,8 @@ export function initMswHandlers(): () => void {
     http.get("https://global.api.prd.ledger.com/cal/*", () => HttpResponse.json([])),
     http.get("https://nft.api.live.ledger.com/*", () => HttpResponse.json([])),
     http.get("https://earn.api.live.ledger.com/*", () => HttpResponse.json([])),
-    // Must be a real number, not []: getCurrencyToUSDRate swallows failures and returns null
-    // (coin-hedera network/utils.ts:218-220), which sends estimateFees down the DEFAULT_TINYBAR_FEE
-    // fallback and makes HTS association fail the HEDERA_TOKEN_ASSOCIATION_MIN_USD check.
-    // The key is inferCurrencyAPIID(currency) === currency.id (live-countervalues helpers.ts:17).
+    // Must be a real number: an empty response makes estimateFees fall back to
+    // DEFAULT_TINYBAR_FEE and fails the HEDERA_TOKEN_ASSOCIATION_MIN_USD check.
     http.get("https://countervalues.live.ledger.com/v3/spot/simple", () =>
       HttpResponse.json({ [HEDERA.id]: HBAR_USD_RATE }),
     ),

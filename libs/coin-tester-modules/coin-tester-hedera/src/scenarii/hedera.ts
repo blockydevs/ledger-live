@@ -1,3 +1,4 @@
+import { PrivateKey } from "@hashgraph/sdk";
 import type { Scenario } from "@ledgerhq/coin-tester/main";
 import type { Transaction, HederaAccount, HederaOperationExtra } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
@@ -8,12 +9,12 @@ import { getHgraphObserver } from "../indexer";
 
 const ONE_HBAR_IN_TINYBAR = 100_000_000;
 
+/** A never-funded ED25519 alias; sending HBAR to it exercises Hedera's auto-account-creation. */
+const AUTO_CREATE_ALIAS = PrivateKey.generateED25519().publicKey.toAccountId(0, 0).toString();
+
 let closeMswHandlers: (() => void) | undefined;
 
 function makeTransactions(): HederaScenarioTransaction[] {
-  // Note for send max: getTransactionStatus checks `balance < totalSpent`, and totalSpent works out
-  // to exactly `(balance − fee) + fee === balance`. It passes on equality with zero margin — any
-  // rounding that pushes totalSpent up becomes a NotEnoughBalance the runner will not retry.
   const sendOneHbar: HederaScenarioTransaction = {
     name: "Send 1 HBAR to an existing recipient",
     family: "hedera",
@@ -21,14 +22,12 @@ function makeTransactions(): HederaScenarioTransaction[] {
     amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
     recipient: RECIPIENT,
     expect: (previous, current) => {
-      // Assert (not destructure) so an empty list from mirror-node lag is a retryable
-      // Jest failure, not a hard TypeError.
+      // Assert, don't destructure: an empty list from mirror-node lag stays retryable.
       expect(current.operations.length).toBeGreaterThan(0);
       const [latest] = current.operations;
       expect(latest.type).toBe("OUT");
       expect(latest.recipients).toContain(RECIPIENT);
-      // `value` already includes the fee (mirror node reports the fee-inclusive net change);
-      // subtracting `fee` too would double-count it.
+      // `value` is fee-inclusive; subtracting `fee` too would double-count it.
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
     },
   };
@@ -52,6 +51,22 @@ function makeTransactions(): HederaScenarioTransaction[] {
     },
   };
 
+  const sendToAutoCreatedAccount: HederaScenarioTransaction = {
+    name: "Send 1 HBAR to a fresh alias (auto-creates the recipient account)",
+    family: "hedera",
+    mode: HEDERA_TRANSACTION_MODES.Send,
+    amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
+    recipient: AUTO_CREATE_ALIAS,
+    expect: (previous, current) => {
+      expect(current.operations.length).toBeGreaterThan(previous.operations.length);
+      const [latest] = current.operations;
+      expect(latest.type).toBe("OUT");
+      // A resolved numeric recipient (0.0.N, never the alias hex) proves the alias auto-created.
+      expect(latest.recipients.some(r => /^0\.0\.\d+$/.test(r))).toBe(true);
+      expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
+    },
+  };
+
   const sendMaxHbar: HederaScenarioTransaction = {
     name: "Send max HBAR (drains the account)",
     family: "hedera",
@@ -63,24 +78,17 @@ function makeTransactions(): HederaScenarioTransaction[] {
       const [latest] = current.operations;
       expect(latest.type).toBe("OUT");
       expect(latest.recipients).toContain(RECIPIENT);
-      // `value` is fee-inclusive, as sendOneHbar already relies on.
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
-      // Send max leaves behind the fee *estimate* minus the fee actually charged — not zero.
-      // estimateMaxSpendable subtracts an estimate; Solo charges the real schedule. The bound is
-      // the fee the mirror node reports (charged_tx_fee, listOperations.v2.ts:41), never the
-      // stubbed USD rate: that keeps the assertion independent of the mock while still catching
-      // both an ignored useAllAmount (residue ≈ the whole balance) and a wildly-off estimate.
+      // Send max leaves behind the fee *estimate* minus the actual fee charged — never zero.
       expect(current.balance.toNumber()).toBeLessThanOrEqual(
         latest.fee.multipliedBy(10).toNumber(),
       );
-      // A mirror-node balance is never negative, so isGreaterThanOrEqualTo(0) can't fail — it was
-      // vacuous. What actually catches an ignored `useAllAmount` (which would leave most of the
-      // balance behind) is the residual being a tiny fraction of what was there before the send.
+      // Catches an ignored `useAllAmount`: the residual would then be most of the prior balance.
       expect(current.balance.toNumber()).toBeLessThan(previous.balance.toNumber() * 0.01);
     },
   };
 
-  return [sendOneHbar, sendOneHbarWithMemo, sendMaxHbar];
+  return [sendOneHbar, sendOneHbarWithMemo, sendToAutoCreatedAccount, sendMaxHbar];
 }
 
 export const scenarioHedera: Scenario<Transaction, HederaAccount> = {

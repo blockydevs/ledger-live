@@ -15,13 +15,9 @@ const TOKEN_INITIAL_SUPPLY = 1_000 * UNIT;
 const TOKEN2_INJECTED = 50 * UNIT;
 const TOKEN3_INJECTED = 70 * UNIT;
 const MAX_AUTO_ASSOCIATIONS = 10; // >= the 2 tokens; NOT the -1 sentinel
-// A fixed partial send, deliberately NOT `useAllAmount`. A native send-max here fails on-chain with
-// INSUFFICIENT_ACCOUNT_BALANCE: `useAllAmount` computes amount = syncedBalance − estimatedFee, but
-// the account's real spendable balance is a touch lower than the balance the sync reports right
-// after the preceding send, so amount + actual fee exceeds it and the whole transfer is rejected
-// (only the fee is charged). A fixed amount well under balance can't hit that edge, and still proves
-// the property under test: a native HBAR movement leaves the token sub-accounts untouched. The pure
-// send-max drain is already covered by scenarii/hedera.ts.
+// Fixed partial send, not `useAllAmount`: a send-max here would fail on-chain since the account's
+// real spendable balance runs a touch below what the post-send sync reports. Send-max itself is
+// already covered by scenarii/hedera.ts; this scenario only checks that HBAR sends preserve tokens.
 const HBAR_SENT = 50 * ONE_HBAR_IN_TINYBAR;
 
 let closeMswHandlers: (() => void) | undefined;
@@ -64,15 +60,10 @@ function makeTransactions(): HederaScenarioTransaction[] {
       const [latest] = current.operations;
       expect(latest.type).toBe("OUT");
       expect(latest.recipients).toContain(RECIPIENT);
-      // The send moved exactly HBAR_SENT. `value` is the fee-inclusive net change (amount + fee),
-      // so `value − fee === amount`. Asserted off the operation itself rather than as a
-      // `current === previous − value` balance delta: the sync that produces `previous` right after
-      // the preceding send can lag the real balance (that lag is what breaks a naive send-max), and
-      // this scenario's point is token preservation, not native-HBAR balance accounting (which
-      // scenarii/hedera.ts already checks rigorously).
+      // Asserted off the operation itself, not a previous/current balance delta, since `previous`
+      // can lag the real balance right after a send (native-HBAR accounting is already covered
+      // by scenarii/hedera.ts — this scenario only cares about token preservation).
       expect(latest.value.minus(latest.fee).toString()).toBe(String(HBAR_SENT));
-      // both token sub-accounts preserved — equality to the pre-send (previous) balance, never > 0,
-      // so any change to a token balance during the native send fails the test.
       expect(findSub(current, token2.id)?.balance.toString()).toBe(
         findSub(previous, token2.id)?.balance.toString(),
       );
@@ -89,9 +80,7 @@ export const scenarioHederaMultiToken: Scenario<Transaction, HederaAccount> = {
   name: "Ledger Live Hedera — multiple HTS tokens via auto-association",
 
   setup: async () => {
-    // Created before `setupHederaScenario` so both tokens are known when the crypto-assets store
-    // is installed — installing the store is unskippable and takes the token list as a required
-    // argument.
+    // Created first so both tokens are known when the crypto-assets store is installed.
     const tokenId2 = await createHtsToken({
       decimals: TOKEN_DECIMALS,
       symbol: "LLT2",
@@ -115,9 +104,7 @@ export const scenarioHederaMultiToken: Scenario<Transaction, HederaAccount> = {
     closeMswHandlers = close;
     accountId = newAccountId;
 
-    // The account was created with auto-association, so a treasury transfer auto-associates on
-    // receipt — no account key, no bridge tx needed. Wait for indexing so the first sync sees the
-    // balances.
+    // Auto-association means a treasury transfer associates on receipt; wait for indexing.
     await transferToken(tokenId2, accountId, TOKEN2_INJECTED);
     await transferToken(tokenId3, accountId, TOKEN3_INJECTED);
     await waitForMirrorNodeTokenBalance(accountId, tokenId2, TOKEN2_INJECTED);

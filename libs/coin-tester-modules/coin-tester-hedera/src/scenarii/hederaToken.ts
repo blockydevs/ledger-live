@@ -28,10 +28,7 @@ let accountId: string;
 let tokenRecipientId: string;
 /** Guards the one-shot treasury→account injection performed in `beforeEach`. */
 let injected = false;
-/**
- * Counts `beforeEach` invocations so the injection is keyed on transaction position rather than on
- * probing the sub-account's shape (see the comment on `beforeEach` below).
- */
+/** Counts `beforeEach` invocations so the injection is keyed on transaction position, not shape. */
 let beforeEachCallIndex = 0;
 
 function findTokenSubAccount(account: HederaAccount): TokenAccount | undefined {
@@ -52,8 +49,7 @@ function makeTransactions(): HederaScenarioTransaction[] {
     recipient: accountId,
     expect: (previous, current) => {
       expect(current.operations.length).toBeGreaterThan(previous.operations.length);
-      // getSubAccounts builds this from mirrorTokens alone — an associated HTS token with no
-      // operations and a zero balance still yields a sub-account (bridge/utils.ts:234-274).
+      // An associated HTS token with no operations and a zero balance still yields a sub-account.
       const subAccount = findTokenSubAccount(current);
       expect(subAccount).toBeDefined();
       if (!subAccount) return;
@@ -71,11 +67,7 @@ function makeTransactions(): HederaScenarioTransaction[] {
     expect: (previous, current) => {
       const previousSub = findTokenSubAccount(previous);
       const currentSub = findTokenSubAccount(current);
-      // Assert (not destructure) so an empty/missing sub-account from mirror-node lag is a
-      // retryable Jest failure, not a hard TypeError — mirrors the guard in scenarii/hedera.ts.
-      // A token sub-account with `operations: []` is a normal constructible state
-      // (bridge/utils.ts:235-273 builds it from mirrorTokens alone), so it must be checked
-      // explicitly before destructuring `operations[0]`.
+      // Assert, don't destructure: a missing sub-account from mirror-node lag stays retryable.
       expect(previousSub).toBeDefined();
       expect(currentSub).toBeDefined();
       if (!previousSub || !currentSub) return;
@@ -115,10 +107,7 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
   name: "Ledger Live Hedera — HTS association and transfer",
 
   setup: async () => {
-    // Created before `setupHederaScenario` so the token is known when the crypto-assets store is
-    // installed — installing the store is unskippable and takes the token list as a required
-    // argument. `createHtsToken` only needs the genesis client, not the account under test, so
-    // this ordering doesn't change what gets created, only when.
+    // Created before `setupHederaScenario` so the token is known when the crypto-assets store is installed.
     tokenId = await createHtsToken({
       decimals: TOKEN_DECIMALS,
       symbol: TOKEN_SYMBOL,
@@ -136,9 +125,8 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
     closeMswHandlers = close;
     accountId = newAccountId;
 
-    // A separate fixture account, associated via the raw SDK, so the send under test targets an
-    // account that is genuinely associated. RECIPIENT (0.0.1002) is Solo-created and its key is
-    // not ours, so it cannot be associated and an HTS transfer to it would fail.
+    // Separate fixture account, associated via the raw SDK: RECIPIENT's key isn't ours, so it
+    // can't be associated and an HTS transfer to it would fail.
     const recipientKey = PrivateKey.generateED25519();
     tokenRecipientId = await createFundedAccount(recipientKey.publicKey.toStringRaw(), 1);
     await associateToken(tokenRecipientId, recipientKey, tokenId);
@@ -155,16 +143,10 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
     };
   },
 
-  // HTS requires the receiver to be associated first, so the treasury cannot pre-fund the account
-  // in setup(); the injection has to sit between the two transactions. The runner calls `beforeEach`
-  // once per transaction in order, so the first call precedes `associate` (nothing to inject yet)
-  // and the second precedes `sendToken` (inject here). This is keyed on that call position rather
-  // than on probing whether the sub-account exists yet: probing fails open — if the associate
-  // assertion were ever relaxed or sub-account resolution regressed, a shape-based guard would
-  // silently skip the injection and the failure would surface two steps later as a non-retried
-  // NotEnoughBalance from `getTransactionStatus`, pointing at the send rather than the missing
-  // injection. Keying on position instead lets a miss throw with a message naming the cause.
-  // Reorder `associate` and `sendToken` and this stops firing correctly.
+  // HTS requires the receiver to be associated first, so the treasury injection has to sit between
+  // `associate` and `sendToken`. Keyed on call position rather than probing sub-account shape: a
+  // shape-based guard could silently skip the injection and surface as a NotEnoughBalance pointing
+  // at the send instead of the real cause. Reorder `associate`/`sendToken` and this stops firing.
   beforeEach: async account => {
     const callIndex = beforeEachCallIndex++;
     if (callIndex === 0) return; // precedes `associate`: the sub-account cannot exist yet.
@@ -181,9 +163,7 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
     }
 
     await transferToken(tokenId, account.freshAddress, TOKEN_INJECTED);
-    // The runner syncs right after this and then calls getTransactionStatus, which is *not*
-    // retried: without waiting for indexing, the sub-account reads 0 and the send fails with
-    // NotEnoughBalance (getTransactionStatus.ts:160).
+    // getTransactionStatus right after is not retried: without this, the sub-account reads 0.
     await waitForMirrorNodeTokenBalance(account.freshAddress, tokenId, TOKEN_INJECTED);
     injected = true;
   },

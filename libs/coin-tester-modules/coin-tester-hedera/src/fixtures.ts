@@ -14,39 +14,22 @@ import type { HederaAccount } from "@ledgerhq/coin-hedera/types";
 
 export const HEDERA = getCryptoCurrencyById("hedera");
 
-/**
- * Local Solo's consensus endpoint; the port can differ between Solo versions — confirm
- * against the live deploy output before running.
- */
+/** Local Solo's consensus endpoint; the port can differ between Solo versions. */
 export const LOCAL_CONSENSUS_NODES: Record<string, string> = { "127.0.0.1:35211": "0.0.3" };
 export const LOCAL_MIRROR_NODE_URL = "http://127.0.0.1:38081";
 
 export const GENESIS_ACCOUNT_ID = "0.0.2";
 
-/**
- * Canonical genesis operator key of a local Hedera network — a public constant, not a secret.
- * Solo writes exactly this value to `~/.solo/<deployment>/accounts.json` (unchanged across the
- * versions we've run, 0.68 → 0.83).
- */
+/** Canonical genesis operator key of a local Hedera network — a public constant, not a secret. */
 export const GENESIS_OPERATOR_KEY =
   "302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137";
 
-/**
- * Fake hgraph URL served only by indexer.ts's MSW handler — must resolve to something
- * since coin-hedera calls hgraph unconditionally.
- */
+/** Fake hgraph URL served only by indexer.ts's MSW handler; coin-hedera calls hgraph unconditionally. */
 export const FAKE_HGRAPH_URL = "http://127.0.0.1:19999/hgraph";
 
-/**
- * An existing Solo-funded account used only as the send recipient. Its own
- * key is irrelevant — the recipient never signs anything in this scenario.
- */
+/** An existing Solo-funded account used only as the send recipient; its key is never needed. */
 export const RECIPIENT = "0.0.1002";
 
-/**
- * `accountId` comes from the AccountCreateTransaction receipt, never hard-coded.
- * `seedIdentifier` is the raw Ed25519 public key hex.
- */
 export function makeHederaAccount(accountId: string, publicKey: string): HederaAccount {
   const id = encodeAccountId({
     type: "js",
@@ -93,11 +76,7 @@ export const TOKEN_SYMBOL = "LLT";
 /** Stubbed HBAR/USD rate. Fee estimates derive from it, so no assertion may depend on its value. */
 export const HBAR_USD_RATE = 0.1;
 
-/**
- * A `TokenCurrency` for a token minted on the local Solo network. It exists in no CAL, so the
- * tester has to describe it itself. `contractAddress` must be the mirror-node `token_id`
- * (e.g. "0.0.1234"): that is the key `buildCalTokenMap` looks the token up by.
- */
+/** A `TokenCurrency` for a locally-minted token; `contractAddress` must be the mirror-node `token_id`. */
 export function makeLocalHtsToken(tokenId: string): TokenCurrency {
   return {
     type: "TokenCurrency",
@@ -111,11 +90,7 @@ export function makeLocalHtsToken(tokenId: string): TokenCurrency {
   };
 }
 
-/**
- * Installs a crypto-assets store backed by an explicit token list. HBAR-only scenarios pass `[]`,
- * which reproduces the previous "resolve nothing" stub. This is process-global: every scenario
- * installs its own, so the scenarios are isolated in account state, not in module state.
- */
+/** Installs a crypto-assets store backed by an explicit token list; HBAR-only scenarios pass `[]`. */
 export function installCryptoAssetsStore(tokens: TokenCurrency[]): void {
   const byAddress = new Map(tokens.map(t => [t.contractAddress.toLowerCase(), t]));
   const byId = new Map(tokens.map(t => [t.id, t]));

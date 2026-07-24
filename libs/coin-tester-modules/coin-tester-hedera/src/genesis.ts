@@ -25,13 +25,7 @@ const MIRROR_NODE_POLL_INTERVAL_MS = 1_000;
 
 let client: Client | undefined;
 
-/**
- * Genesis-operator client, memoised alongside the deployment it belongs to.
- *
- * `scheduleNetworkUpdate: false` — Solo exposes consensus on a custom port (35211); the SDK's
- * periodic address-book refresh would otherwise replace the topology with the default 50211/50212.
- * There is no address book to fetch on a one-shot local node anyway.
- */
+/** Genesis-operator client, memoised alongside the deployment it belongs to. */
 export async function getGenesisClient(): Promise<Client> {
   if (!client) {
     await deploySolo(); // free once the suite's beforeAll has run; guards direct use in isolation
@@ -61,10 +55,7 @@ async function pollMirrorNode(
   throw new Error(`hedera genesis: ${describeFailure} within ${MIRROR_NODE_POLL_TIMEOUT_MS}ms`);
 }
 
-/**
- * Mirror node indexes accounts asynchronously; `evm_address` can be unset right after the receipt
- * returns, and coin-hedera's `getAccountShape` throws hard on that with no retry.
- */
+/** `evm_address` can be unset right after account creation; coin-hedera's `getAccountShape` throws hard on that. */
 async function waitForMirrorNodeEvmAddress(accountId: string): Promise<void> {
   await pollMirrorNode(
     `/api/v1/accounts/${accountId}`,
@@ -73,11 +64,7 @@ async function waitForMirrorNodeEvmAddress(accountId: string): Promise<void> {
   );
 }
 
-/**
- * Waits for a token balance to be indexed. Required because the runner's retry loop wraps only
- * `expect`: a sync that races ahead of indexing leaves the sub-account at 0, and
- * `getTransactionStatus` then returns NotEnoughBalance, which is thrown once and never retried.
- */
+/** Waits for a token balance to be indexed; the runner's retry loop wraps only `expect`, not this. */
 export async function waitForMirrorNodeTokenBalance(
   accountId: string,
   tokenId: string,
@@ -94,10 +81,7 @@ export async function waitForMirrorNodeTokenBalance(
   );
 }
 
-/**
- * The consensus node to stake to, read from the network rather than hardcoded. Note this cannot come
- * from the bridge's preload data: `sortValidators` reorders that list by active stake.
- */
+/** The consensus node to stake to. Can't use the bridge's preload data: `sortValidators` reorders it. */
 export async function getFirstNodeId(): Promise<number> {
   const res = await fetch(`${LOCAL_MIRROR_NODE_URL}/api/v1/network/nodes?limit=1&order=asc`);
   if (!res.ok) {
@@ -172,10 +156,7 @@ export async function createHtsToken({
   return tokenId;
 }
 
-/**
- * Associates a *fixture* account with a token, signing with that account's own key. The account
- * under test associates through the bridge instead — that is the behaviour being tested.
- */
+/** Associates a *fixture* account with a token via its own key; the account under test associates through the bridge instead. */
 export async function associateToken(
   accountId: string,
   key: PrivateKey,

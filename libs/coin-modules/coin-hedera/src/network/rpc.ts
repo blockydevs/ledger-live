@@ -46,10 +46,7 @@ function applySdkClientOptions(client: Client, config: HederaCoinConfig): void {
 
 async function createClient(config: HederaCoinConfig): Promise<Client> {
   const client = config.consensusNodes
-    ? // A custom consensusNodes override points the SDK at a local/emulated
-      // network (e.g. Solo) on non-default ports. Disable the periodic
-      // address-book refresh so it cannot overwrite that topology with the
-      // canonical mainnet/testnet ports.
+    ? // Disable periodic address-book refresh so it can't overwrite a custom topology (e.g. Solo).
       Client.forNetwork(config.consensusNodes, { scheduleNetworkUpdate: false })
     : config.networkType === "mainnet"
       ? await Client.forMainnetAsync()

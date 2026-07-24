@@ -2,14 +2,9 @@ import { PrivateKey } from "@hashgraph/sdk";
 import type { HederaSigner } from "@ledgerhq/coin-hedera/types";
 
 /**
- * One signer per account under test. Each scenario owns a separate account, so each builds its own
- * signer; passing an explicit key lets a scenario's fixture code sign for the same account with the
- * raw SDK (e.g. associating a token on a counterparty account).
- *
- * `getPublicKey` returns the raw 32-byte Ed25519 hex, not DER: it becomes the account's
- * `seedIdentifier`, which `coin-hedera`'s `combine()` feeds straight into `PublicKey.fromString`
- * when assembling the signed transaction. The 64-char guard below exists to catch the SDK ever
- * changing its default encoding to DER, which `combine()` would otherwise fail on far from here.
+ * One signer per account under test; an explicit key lets fixture code sign for the same account
+ * with the raw SDK. `getPublicKey` must return the raw 32-byte Ed25519 hex, not DER — it becomes
+ * `seedIdentifier`, which `combine()` feeds into `PublicKey.fromString`.
  */
 export function buildHederaSigner(
   privateKey: PrivateKey = PrivateKey.generateED25519(),

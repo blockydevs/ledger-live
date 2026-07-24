@@ -7,10 +7,7 @@ export interface HederaConfig {
   /** When true, valid-start time comes from the latest network block instead of the local clock. */
   useNetworkTimestamp: boolean;
   networkType: "mainnet" | "testnet";
-  /**
-   * Overrides the consensus gRPC topology (`Client.forNetwork` shape: `"host:port" → "0.0.x"`),
-   * e.g. to point at a local Solo deploy. `networkType` still governs mirror node behavior.
-   */
+  /** Overrides the consensus gRPC topology, e.g. to point at a local Solo deploy. */
   consensusNodes?: Record<string, string>;
   sdkClientOptions?: {
     maxAttempts?: number;

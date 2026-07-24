@@ -15,11 +15,9 @@ const ONE_HBAR_IN_TINYBAR = 100_000_000;
 const NEGATIVE_CASES_SETUP_TIMEOUT_MS = 120_000;
 
 /**
- * Bridge-level validation runner for cases that `executeScenario` cannot cover — it broadcasts
- * and throws on any status error, so these are asserted directly against `getTransactionStatus`
- * instead. Meant to be called from *inside* the existing `describe("Hedera")` in
- * `scenarii.test.ts` (a nested `describe` never triggers a second Solo bring-up), so it shares
- * the one already-running Solo cluster. Does not deploy/tear down Solo itself.
+ * Bridge-level validation runner for cases `executeScenario` cannot cover: asserts directly
+ * against `getTransactionStatus` instead of broadcasting. Call from inside the existing
+ * `describe("Hedera")` in scenarii.test.ts so it shares that Solo cluster.
  */
 export function describeNegativeCases(): void {
   describe("negative cases", () => {
@@ -47,8 +45,7 @@ export function describeNegativeCases(): void {
       closeMswHandlers = close;
       accountBridge = ab;
 
-      // Inject the sender's token balance (auto-associates on receipt), then wait for indexing:
-      // the sync below must observe it, or case 3's HTS transfer cannot be built.
+      // Inject the sender's token balance, then wait for indexing so the sync below observes it.
       await transferToken(tokenId, accountId, TOKEN_INJECTED);
       await waitForMirrorNodeTokenBalance(accountId, tokenId, TOKEN_INJECTED);
 
@@ -58,7 +55,7 @@ export function describeNegativeCases(): void {
         currencyBridge.hydrate?.(data, initial.currency);
       }
 
-      // Fold the sync observable into a synced account without importing rxjs (not a direct dep).
+      // Fold the sync observable into a synced account without importing rxjs.
       account = await new Promise<HederaAccount>((resolve, reject) => {
         let acc = initial;
         accountBridge.sync(initial, { paginationConfig: {} }).subscribe({
@@ -110,6 +107,16 @@ export function describeNegativeCases(): void {
       expect(status.warnings.missingAssociation?.name).toBe(
         "HederaRecipientTokenAssociationRequired",
       );
+    });
+
+    it("flags an HTS transfer above the held token balance (NotEnoughBalance)", async () => {
+      // Exercises the HTS-specific insufficient-funds branch, distinct from the native-HBAR one above.
+      const status = await buildStatus({
+        subAccountId: tokenSubAccountId,
+        recipient: RECIPIENT, // valid existing account, so the token amount is the isolated error
+        amount: new BigNumber(TOKEN_INJECTED + UNIT), // one unit over the injected sub-account balance
+      });
+      expect(status.errors.amount?.name).toBe("NotEnoughBalance");
     });
   });
 }

@@ -11,27 +11,17 @@ const EXEC_OPTS = { env: process.env, maxBuffer: 1024 * 1024 * 64 } as const;
 
 const SOLO_BIN = "solo"; // resolved from the package's own node_modules/.bin via pnpm
 
-/**
- * Dedicated deployment + namespace. Keeps our cluster state cleanly separated from Solo's default
- * `one-shot` name — and from any leftover state on the machine.
- */
+/** Dedicated deployment + namespace, kept separate from Solo's default `one-shot` name. */
 const DEPLOYMENT_NAME = "coin-tester-hedera";
 
 /**
- * Memoised deployment. The suite's `beforeAll` pays the 7–10 minute bring-up; `getGenesisClient()`
- * reaches `deploySolo()` too and must get it for free. The *promise* is stored rather than the
- * resolved value so two concurrent callers cannot start two deploys.
- *
- * A failed bring-up is cached on purpose: a kube/Solo failure is an environment fault, so every
- * caller should fail on it immediately rather than each spending ~10 min on a retry that will fail
- * the same way and exhaust the per-test budget.
+ * Memoised deployment: the *promise* is stored (not the resolved value) so concurrent callers
+ * can't start two deploys. A failed bring-up is cached too — a kube/Solo failure is an
+ * environment fault, so every caller should fail immediately rather than retry for ~10 min.
  */
 let deployment: Promise<void> | undefined;
 
-/**
- * `solo one-shot falcon deploy` writes account material to
- * `<SOLO_HOME>/one-shot-<deployment>/accounts.json`.
- */
+/** `solo one-shot falcon deploy` writes account material to `<SOLO_HOME>/one-shot-<deployment>/accounts.json`. */
 const oneShotOutputDir = () =>
   join(process.env.SOLO_HOME ?? join(homedir(), ".solo"), `one-shot-${DEPLOYMENT_NAME}`);
 
@@ -43,16 +33,12 @@ export function deploySolo(): Promise<void> {
 async function runDeploy(): Promise<void> {
   console.log("Deploying Hiero Solo (one-shot falcon, single node)…");
 
-  // This `falcon deploy` path registers `--no-deploy-relay` / `--no-deploy-explorer` to skip the
-  // JSON-RPC relay (~170 MB) and the explorer. The tester only ever talks to the consensus node
-  // (35211) and the mirror node REST API (38081), so both would otherwise ride along unused;
-  // dropping them cuts two pods off the RAM peak.
+  // `--no-deploy-relay`/`--no-deploy-explorer` skip the JSON-RPC relay and explorer pods — the
+  // tester only ever talks to the consensus node and mirror node REST API.
   //
-  // No pre-deploy cleanup here: like every sibling tester (anvil/agave/flextesa/yaci), bring-up
-  // only starts things. All teardown lives in `teardownSolo` (afterAll + the process-exit handlers
-  // in scenarii.test.ts). Trade-off: a run killed by SIGKILL/OOM/power-loss bypasses those handlers
-  // and leaves registered state that a later `deploy --quiet-mode` rejects — recover once by hand
-  // with `solo one-shot falcon destroy --deployment coin-tester-hedera`.
+  // No pre-deploy cleanup: like every sibling tester, bring-up only starts things; teardown lives
+  // in `teardownSolo`. A SIGKILL/OOM/power-loss run bypasses that and leaves state a later
+  // `deploy --quiet-mode` rejects — recover by hand with `solo one-shot falcon destroy --deployment coin-tester-hedera`.
   await execFileAsync(
     SOLO_BIN,
     [
@@ -77,19 +63,13 @@ export async function teardownSolo(): Promise<void> {
   deployment = undefined;
   console.log("Tearing down Hiero Solo…");
   await destroyQuietly();
-  // `destroy` skips its own "Remove output directory" step whenever Solo's local config lists no
-  // deployment ("No deployments found in local config") — exactly the state a hard-killed or
-  // foreign run leaves behind. The stale accounts.json then keeps tripping the next
-  // `deploy --quiet-mode` guard forever. The directory is per-deployment scratch Solo rewrites on
-  // every deploy, so removing it ourselves is safe and keeps teardown's slate truly clean.
+  // `destroy` skips removing the output dir when Solo's local config lists no deployment — the
+  // state a hard-killed run leaves behind. Remove it ourselves: Solo rewrites it on every deploy.
   await rm(oneShotOutputDir(), { recursive: true, force: true });
   await killPortForwards();
 }
 
-/**
- * `solo one-shot falcon destroy`, best-effort: it must never throw when tearing down — that would
- * mask the real test outcome (matches the yaci.ts/flextesa.ts convention in sibling testers).
- */
+/** Best-effort: must never throw during teardown, or it would mask the real test outcome. */
 async function destroyQuietly(): Promise<void> {
   try {
     await execFileAsync(
@@ -102,11 +82,7 @@ async function destroyQuietly(): Promise<void> {
   }
 }
 
-/**
- * Solo's `--force-port-forward` tunnels outlive `destroy` (cluster teardown only) — spawned
- * `detached`, they get reparented to init and keep holding 35211/38081. A leftover tunnel makes
- * the next run misdiagnose a stale connection as a consensus-node failure. Best-effort: never throws.
- */
+/** Solo's tunnels are spawned `detached` and outlive `destroy`, holding 35211/38081. Never throws. */
 async function killPortForwards(): Promise<void> {
   if (process.platform === "win32") {
     console.warn(
@@ -116,10 +92,8 @@ async function killPortForwards(): Promise<void> {
     return;
   }
 
-  // Both patterns are scoped to our dedicated `coin-tester-hedera` namespace, so this cannot reach
-  // unrelated port-forwards; and `kill` only ever reaches processes owned by the invoking user.
-  // Order matters: `persist-port-forward` is designed to respawn a dropped tunnel, so its kubectl
-  // child must not be killed first.
+  // Order matters: `persist-port-forward` respawns a dropped tunnel, so its kubectl child must
+  // not be killed first.
   const patterns = [
     `persist-port-forward.* ${DEPLOYMENT_NAME} `,
     `port-forward .*${DEPLOYMENT_NAME}`,
@@ -141,13 +115,12 @@ async function killMatching(pattern: string, signal: "SIGTERM" | "SIGKILL"): Pro
     const { stdout } = await execFileAsync("pgrep", ["-f", pattern], EXEC_OPTS);
     pids = stdout.split("\n").map(Number).filter(Boolean);
   } catch {
-    // pgrep exits 1 when nothing matched: the common, healthy case. Also covers hosts without
-    // pgrep, where we can do nothing anyway.
+    // pgrep exits 1 when nothing matched — the common, healthy case.
     return;
   }
 
-  // `-f` matches whole command lines, so a shell merely *mentioning* the pattern matches too —
-  // that's how a manual `pkill` once killed the calling shell itself. Never signal our own tree.
+  // `-f` matches whole command lines, so a shell merely mentioning the pattern matches too.
+  // Never signal our own tree.
   const ownTree = await ancestorPids();
 
   for (const pid of pids) {
