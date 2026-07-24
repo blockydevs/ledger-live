@@ -110,13 +110,23 @@ export async function getFirstNodeId(): Promise<number> {
   return nodeId;
 }
 
-export async function createFundedAccount(publicKey: string, hbar: number): Promise<string> {
+export async function createFundedAccount(
+  publicKey: string,
+  hbar: number,
+  maxAutomaticTokenAssociations?: number,
+): Promise<string> {
   const genesis = await getGenesisClient();
 
-  const receipt = await new AccountCreateTransaction()
+  const transaction = new AccountCreateTransaction()
     .setKeyWithoutAlias(PublicKey.fromString(publicKey))
     .setInitialBalance(new Hbar(hbar))
-    .setTransactionId(TransactionId.generate(GENESIS_ACCOUNT_ID))
+    .setTransactionId(TransactionId.generate(GENESIS_ACCOUNT_ID));
+
+  if (maxAutomaticTokenAssociations && maxAutomaticTokenAssociations > 0) {
+    transaction.setMaxAutomaticTokenAssociations(maxAutomaticTokenAssociations);
+  }
+
+  const receipt = await transaction
     .execute(genesis)
     .then(response => response.getReceipt(genesis));
 
