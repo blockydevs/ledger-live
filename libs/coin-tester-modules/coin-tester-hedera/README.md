@@ -107,15 +107,3 @@ public-key encoding and the hgraph `invariant` are both silent-failure modes tha
 only surface deep inside a 10-minute scenario run. `solo.test.ts` guards `deploySolo()`'s
 memoisation, whose regression costs about 20 extra minutes per run instead of failing loudly.
 `pnpm start`'s `src/*.test.ts` glob picks them up alongside the scenario.
-
-## CI gap
-
-`hedera` is listed in `.github/workflows/test-coin-tester.yml`'s `COIN_TESTER_CURRENCIES`, so it
-enters the matrix — but the runner side is **not** done. Solo needs a k8s-capable runner (kind +
-kubectl + helm, 12 GB RAM / 6 CPU) and `public-ledgerhq-shared-small` provides none of that, so the
-job is expected to fail until it does. The `coin-tester` job sets `continue-on-error: true`, so this
-does not block PRs, but it will show up as a red-but-ignored leg.
-
-Still to do: a conditional kind/kubectl/helm install step guarded on `matrix.chain == 'hedera'`,
-plus a `runs-on` swap to a larger existing runner label. Until then, `pnpm coin:tester:hedera start`
-on a suitable host is the only way this actually runs green.

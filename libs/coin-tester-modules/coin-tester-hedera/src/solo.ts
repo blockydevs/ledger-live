@@ -35,6 +35,33 @@ let deployment: Promise<void> | undefined;
 const oneShotOutputDir = () =>
   join(process.env.SOLO_HOME ?? join(homedir(), ".solo"), `one-shot-${DEPLOYMENT_NAME}`);
 
+/**
+ * Best-effort disk report. The one-shot deploy's image-load step is what runs the runner out of
+ * space on the small CI tier (`ENOSPC` while loading images into the kind node's containerd), so we
+ * print the runner's disk and — once the node exists — the containerd store inside it, bracketing
+ * the deploy. Never throws: a diagnostic must not mask the real test outcome.
+ */
+async function logDiskUsage(label: string): Promise<void> {
+  try {
+    const { stdout: host } = await execFileAsync("df", ["-h", "/"], EXEC_OPTS);
+    console.log(chalk.dim(`[disk:${label}] runner /\n${host.trim()}`));
+  } catch (err) {
+    console.warn(`[disk:${label}] host df failed (ignored):`, err);
+  }
+  try {
+    // one-shot falcon's kind cluster is `solo-cluster`, so its single node container is
+    // `solo-cluster-control-plane`. `df /` inside it reports the same overlay the load writes to.
+    const { stdout: node } = await execFileAsync(
+      "docker",
+      ["exec", "solo-cluster-control-plane", "df", "-h", "/"],
+      EXEC_OPTS,
+    );
+    console.log(chalk.dim(`[disk:${label}] kind node /\n${node.trim()}`));
+  } catch {
+    // Node container not up yet (pre-deploy) or docker unavailable — nothing to report.
+  }
+}
+
 export function deploySolo(): Promise<void> {
   deployment ??= runDeploy();
   return deployment;
@@ -42,6 +69,7 @@ export function deploySolo(): Promise<void> {
 
 async function runDeploy(): Promise<void> {
   console.log("Deploying Hiero Solo (one-shot falcon, single node)…");
+  await logDiskUsage("pre-deploy");
 
   // This `falcon deploy` path registers `--no-deploy-relay` / `--no-deploy-explorer` to skip the
   // JSON-RPC relay (~170 MB) and the explorer. The tester only ever talks to the consensus node
@@ -71,6 +99,7 @@ async function runDeploy(): Promise<void> {
   );
 
   console.log(chalk.bgBlueBright(" -  SOLO READY ✅  - "));
+  await logDiskUsage("post-deploy");
 }
 
 export async function teardownSolo(): Promise<void> {
