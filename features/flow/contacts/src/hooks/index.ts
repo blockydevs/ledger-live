@@ -1,3 +1,2 @@
 export { useContacts } from "./useContacts";
-export { useContactsListViewModel } from "./useContactsListViewModel";
 export { useContactsMeContact } from "./useContactsMeContact";

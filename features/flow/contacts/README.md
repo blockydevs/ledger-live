@@ -1,7 +1,6 @@
 # @features/flow-contacts
 
-> [!CAUTION]
-> **Status: UNSTABLE** — In active development as part of the Contacts feature.
+> [!CAUTION] > **Status: UNSTABLE** — In active development as part of the Contacts feature.
 
 Shared Contacts flow package for Desktop and Mobile.
 
@@ -9,6 +8,8 @@ Shared Contacts flow package for Desktop and Mobile.
 
 - Feature-flag configuration (`useContactsFeature`, resolvers)
 - `useContacts` and `useContactsMeContact` hooks (`@domain/entity-contact`)
+- Empty contact detail selection and native presentation
+- `useAddContactViewModel` and `useContactsFeatureIntroductionState` (app wiring injects ports)
 - Shared UI components (`.web.tsx` / `.native.tsx`)
 - Empty, populated, and search Contacts list view models and their Desktop and Mobile page shells
 
@@ -20,32 +21,62 @@ Consume the package from `@features/flow-contacts`. The root entry point resolve
 appropriate Web or React Native API. Folders under `src/` are internal implementation details
 and are not exported as package subpaths.
 
-Web and React Native export their respective `ContactsPage` implementations through the root
-entry point. The native entry also exports `ContactsAddContactHeaderButton` via `list/native.ts`.
+Each user-facing screen lives under `src/steps/` and follows the MVVM split used by the app
+features (View + ViewModel + types + colocated components). Web and React Native export their
+respective `ContactsListView` implementations through the root entry point. The native entry also
+exports `ContactsAddContactHeaderButton` and `ContactDetailView` via the step `native.ts` barrels.
 
 ## Testing
 
 - **Component behavior**: test in this package (see `features/flow/README.md` for the cross-flow testing strategy).
-- **Mobile Jest stub**: `src/jest.native.ts` re-exports logic only (feature flags, hooks, list view models). Mobile Jest maps `@features/flow-contacts` to this entry via `moduleNameMapper`.
-- **App wiring**: mobile `__integrations__` tests spread `jest.requireActual("@features/flow-contacts")` and overlay lightweight UI stubs for Lumen RN components.
+- **Mobile Jest entry**: `src/jest.native.ts` re-exports the native Flow API used by Mobile integration tests. Mobile Jest maps `@features/flow-contacts` to this entry via `moduleNameMapper`.
+- **App wiring**: mobile `__integrations__` tests render the Flow components and mock only app-owned external wiring when required.
 
 ## Structure
 
+Each `steps/<Step>/` is an MVVM screen: `index.ts` (neutral barrel) + `web.ts` / `native.ts`
+(platform Views) + `XxxView.web/.native.tsx` (dumb View) + `types.ts` + colocated `components/`,
+mirroring the app `mvvm/features/*` folders. View-model logic lives at the step root for small
+steps (e.g. `AddContact`) or is grouped into `model/` (pure builders) and `hooks/` (React hooks)
+for larger steps (e.g. `List`). Every folder under `components/` is a PascalCase UI concept; a
+"block" owns its sub-parts as nested folders.
+
 ```
 src/
-├── components/
-│   └── ContactsButton/   # My Wallet entry
-├── hooks/
-├── list/                 # Shared list view models and page shells
-│   ├── components/
-│   │   ├── ContactsList/         # Web only
-│   │   ├── ContactsPage/         # Web page and Ledger Sync loading variants
-│   │   ├── ContactsLedgerSyncIntroduction/
-│   │   └── ContactsPageLayout/   # Web only
-│   ├── web.ts            # Web ContactsPage export
-│   └── native.ts         # Native ContactsPage + header button exports
-├── jest.native.ts        # Mobile Jest logic-only entry
+├── steps/
+│   ├── List/                            # Contacts home screen (ex list/ + page/)
+│   │   ├── ContactsListView.web/.native.tsx  # dumb Views + types.ts
+│   │   ├── model/                       # viewModel.ts (pure list/search view-model builders)
+│   │   ├── hooks/                       # useContactsListViewModel / useContactsSearchViewModel
+│   │   ├── components/                  # one PascalCase folder per UI concept
+│   │   │   ├── ContactsList/            # list block: ListItems/ + Search/ + Section/
+│   │   │   ├── ListHeader/              # native header + add-contact button
+│   │   │   ├── LedgerSyncLoadingPane/   # web loading pane
+│   │   │   └── PageLayout/              # web page layout (Header, ListPane, DetailPane)
+│   │   ├── utils/                       # createContactsListSections, getContactAvatarColorClass
+│   │   └── index.ts / web.ts / native.ts
+│   ├── AddContact/                      # Web dialog + native drawer
+│   │   ├── ContactsAddContactDialog.web.tsx / ContactsAddContactDrawer.native.tsx
+│   │   ├── useAddContactViewModel.ts / useAddContactDrawerViewModel.ts / types.ts
+│   │   ├── components/ContactNameInput/ (web + native)
+│   │   ├── model/                       # Contact-name validation and creation contract
+│   │   └── index.ts / web.ts / native.ts
+│   ├── Introduction/                    # Feature intro + Ledger Sync intro (ex featureIntroduction)
+│   │   ├── Feature/ (web dialog + native content) / LedgerSync/ (web dialog + native content)
+│   │   ├── useContactsFeatureIntroductionState.ts / resolver.ts / ports.ts / constants.ts / types.ts
+│   │   ├── internals/useSingleFireDismiss.ts
+│   │   └── index.ts / web.ts / native.ts
+│   └── Detail/                          # Native detail screen (consumed by Mobile)
+│       ├── ContactDetailView.native.tsx / useEmptyContactDetail.ts / types.ts
+│       ├── components/                  # Header, EmptyState, Avatar (native)
+│       └── index.ts / native.ts
+├── components/                          # Cross-step shared UI
+│   ├── ContactsButton/                  # My Wallet entry (web + native)
+│   └── ContactAvatar/                   # Shared native list and detail avatar
+├── hooks/                               # useContacts, useContactsMeContact
+├── utils/                               # getContactInitial (shared List + AddContact)
+├── jest.native.ts                       # Mobile Jest entry (re-exports ./index.native)
 ├── featureFlags.ts
-├── index.ts              # Web public API
-└── index.native.ts       # React Native public API
+├── index.ts                             # Web public API
+└── index.native.ts                      # React Native public API
 ```
