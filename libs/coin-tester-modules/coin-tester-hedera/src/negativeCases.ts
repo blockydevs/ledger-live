@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import type { AccountBridge } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Transaction, HederaAccount, TransactionStatus } from "@ledgerhq/coin-hedera/types";
+import { HEDERA_MAX_MEMO_SIZE } from "@ledgerhq/coin-hedera/logic/validateMemo";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import {
   TOKEN_DECIMALS,
@@ -30,6 +31,15 @@ const ERC20_SEED_AMOUNT = 100 * UNIT;
 const MAX_AUTO_ASSOCIATIONS = 10;
 const ONE_HBAR_IN_TINYBAR = 100_000_000;
 const NEGATIVE_CASES_SETUP_TIMEOUT_MS = 120_000;
+
+/**
+ * Well-formed but nonexistent account. `toEVMAddress` (coin-hedera network/utils.ts:303-320)
+ * catches the mirror-node 404 and returns null, which is the only deterministic way into the
+ * craft-time `invariant(recipientEvmAddress, ...)`. RECIPIENT (0.0.1002) will NOT do: it is a
+ * Solo-funded account created without an alias, and the mirror node reports a long-zero
+ * evm_address for such accounts.
+ */
+const NONEXISTENT_RECIPIENT = "0.0.999999999";
 
 /**
  * Fold the sync observable into a synced account without importing rxjs. Shared by the HTS and
@@ -227,8 +237,8 @@ export function describeNegativeCases(): void {
       });
 
       it("flags an ERC20 transfer above the held token balance (NotEnoughBalance)", async () => {
-        // RECIPIENT (no evm_address) is safe here, unlike in the send scenario: this block only
-        // exercises status/validation, which never reaches the craft-time toEVMAddress invariant.
+        // RECIPIENT is safe here despite having no alias: this block only exercises
+        // status/validation, and that path never reaches the craft-time toEVMAddress invariant.
         const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
           subAccountId: erc20TokenSubAccountId,
           recipient: RECIPIENT,
@@ -236,6 +246,90 @@ export function describeNegativeCases(): void {
         });
 
         expect(status.errors.amount?.name).toBe("NotEnoughBalance");
+        // Not a validation rule — handleERC20TokenTransaction sets this warning unconditionally.
+        // Asserted here rather than in its own `it` because all it proves is that we entered the
+        // ERC20 branch instead of the HBAR or HTS one, which this case already relies on.
+        expect(status.warnings.unverifiedEvmAddress?.name).toBe(
+          "HederaRecipientEvmAddressVerificationRequired",
+        );
+      });
+
+      it("flags a zero-amount ERC20 transfer (AmountRequired)", async () => {
+        const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
+          subAccountId: erc20TokenSubAccountId,
+          recipient: RECIPIENT,
+          amount: new BigNumber(0),
+        });
+
+        expect(status.errors.amount?.name).toBe("AmountRequired");
+      });
+
+      it("flags an over-long ERC20 memo (HederaMemoExceededSizeError)", async () => {
+        const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
+          subAccountId: erc20TokenSubAccountId,
+          recipient: RECIPIENT,
+          amount: new BigNumber(UNIT),
+          memo: "x".repeat(HEDERA_MAX_MEMO_SIZE + 1),
+        });
+
+        expect(status.errors.transaction?.name).toBe("HederaMemoExceededSizeError");
+      });
+
+      // Deliberately duplicates the parent block's HBAR InvalidAddress case: the ERC20 branch
+      // calls validateRecipient through its own code path, so a regression can hit one branch
+      // and not the other. Costs nothing — no broadcast, no cluster contact.
+      it("flags a malformed recipient on the ERC20 branch (InvalidAddress)", async () => {
+        const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
+          subAccountId: erc20TokenSubAccountId,
+          recipient: "not-an-account",
+          amount: new BigNumber(UNIT),
+        });
+
+        expect(status.errors.recipient?.name).toBe("InvalidAddress");
+      });
+
+      it("flags an ERC20 transfer with no HBAR left to pay gas (NotEnoughBalance)", async () => {
+        // Purely in-memory: the account is not drained on chain. buildStatusFor takes the account
+        // as an argument, so a shallow copy with a 1-tinybar balance is enough to hit
+        // `account.balance.isLessThan(estimatedFees.tinybars)`.
+        const noGasAccount = { ...erc20Account, balance: new BigNumber(1) };
+
+        // The amount MUST stay inside the sub-account balance. Both the sub-account check and the
+        // parent HBAR check write errors.amount, so an over-balance amount here would go green
+        // for the wrong reason and the case would never test what it claims to.
+        const status = await buildStatusFor(erc20AccountBridge, noGasAccount, {
+          subAccountId: erc20TokenSubAccountId,
+          recipient: RECIPIENT,
+          amount: new BigNumber(UNIT),
+        });
+
+        expect(status.errors.amount?.name).toBe("NotEnoughBalance");
+      });
+
+      it("rejects crafting an ERC20 transfer to a recipient with no evm_address", async () => {
+        let transaction = erc20AccountBridge.createTransaction(erc20Account);
+        transaction = {
+          ...transaction,
+          subAccountId: erc20TokenSubAccountId,
+          recipient: NONEXISTENT_RECIPIENT,
+          amount: new BigNumber(UNIT),
+        } as Transaction;
+        transaction = await erc20AccountBridge.prepareTransaction(erc20Account, transaction);
+
+        // signOperation calls craftTransaction directly, skipping getTransactionStatus, so this is
+        // the only reachable assertion for the craft-time invariant. Folded into a promise rather
+        // than importing rxjs, matching syncAccount above.
+        const signed = new Promise<void>((resolve, reject) => {
+          erc20AccountBridge
+            .signOperation({ account: erc20Account, transaction, deviceId: "" })
+            .subscribe({ next: () => {}, error: reject, complete: () => resolve() });
+        });
+
+        // The exact message matters: without it the case would also pass if crafting failed for an
+        // unrelated reason.
+        await expect(signed).rejects.toThrow(
+          `hedera: EVM address is missing ${NONEXISTENT_RECIPIENT}`,
+        );
       });
     });
   });
