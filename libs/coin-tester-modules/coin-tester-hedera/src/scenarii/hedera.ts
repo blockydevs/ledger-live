@@ -57,12 +57,24 @@ function makeTransactions(): HederaScenarioTransaction[] {
     amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
     recipient: AUTO_CREATE_ALIAS,
     expect: (previous, current) => {
-      expect(current.operations.length).toBeGreaterThan(previous.operations.length);
-      const [latest] = current.operations;
-      expect(latest.type).toBe("OUT");
+      // Auto-creation bills the sender through two mirror-node transactions (CRYPTOTRANSFER +
+      // CRYPTOCREATEACCOUNT), both as OUT operations.
+      const previousIds = new Set(previous.operations.map(op => op.id));
+      const created = current.operations.filter(op => !previousIds.has(op.id));
+      expect(created.length).toBe(2);
+      const transfer = created.find(op => op.value.minus(op.fee).isEqualTo(ONE_HBAR_IN_TINYBAR));
+      const accountCreation = created.find(op => op.value.isEqualTo(op.fee));
+      expect(transfer).toBeDefined();
+      expect(accountCreation).toBeDefined();
+      if (!transfer || !accountCreation) return;
+      expect(transfer.type).toBe("OUT");
       // A resolved numeric recipient (0.0.N, never the alias hex) proves the alias auto-created.
-      expect(latest.recipients.some(r => /^0\.0\.\d+$/.test(r))).toBe(true);
-      expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
+      expect(transfer.recipients.some(r => /^0\.0\.\d+$/.test(r))).toBe(true);
+      expect(accountCreation.type).toBe("OUT");
+      expect(accountCreation.value.isGreaterThan(0)).toBe(true);
+      expect(current.balance).toStrictEqual(
+        previous.balance.minus(transfer.value).minus(accountCreation.value),
+      );
     },
   };
 
