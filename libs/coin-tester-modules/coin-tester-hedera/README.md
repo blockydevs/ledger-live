@@ -6,7 +6,7 @@ pure-software Ed25519 key (no Speculos, no device).
 
 ## Scope
 
-Four scenarios, each on its own account funded from the genesis operator (`0.0.2`), all sharing a
+Five scenarios, each on its own account funded from the genesis operator (`0.0.2`), all sharing a
 single Solo deployment, plus a bridge-level negative-cases block:
 
 1. **Native HBAR sends** (`scenarii/hedera.ts`) — send 1 HBAR to an existing recipient; send 1 HBAR
@@ -20,17 +20,27 @@ single Solo deployment, plus a bridge-level negative-cases block:
 4. **Multiple HTS tokens via auto-association** (`scenarii/hederaMultiToken.ts`) — two tokens land
    on the account via auto-association (no explicit `associate` transaction), then a plain HBAR send
    is asserted to leave both token sub-accounts untouched.
+5. **ERC20 transfer** (`scenarii/hederaErc20.ts`) — deploy `LedgerLiveTestToken` (see "The ERC20
+   contract artifact" below), seed the account under test directly from the genesis operator, then
+   send part of the balance through the bridge. See "ERC20 coverage" below for exactly what this
+   asserts and what it doesn't — **this scenario has never been run in this environment** (no
+   Kubernetes cluster available here); it is unexercised pending a cluster run.
 
-All four sign with a pure-software Ed25519 key (no Speculos, no device) and follow the same loop:
+All five sign with a pure-software Ed25519 key (no Speculos, no device) and follow the same loop:
 sync → craft → status → sign → broadcast → re-sync → assert.
 
 On top of the scenarios, `src/negativeCases.ts` (`describeNegativeCases()`, wired into the same
 `describe("Hedera")` in `scenarii.test.ts`) asserts directly against `getTransactionStatus` —
 without broadcasting — for cases a broadcast-based scenario can't cover: insufficient HBAR balance,
-a malformed recipient accountId, an HTS transfer to an unassociated recipient (warning), and an HTS
-transfer above the held token balance.
+a malformed recipient accountId, an HTS transfer to an unassociated recipient (warning), an HTS
+transfer above the held token balance, and (in a nested `describe("erc20 negative cases")`, its own
+Solo contract deploy and its own msw server) an ERC20 transfer above the held token balance. That
+nested block registers both an HTS token and an ERC20 token on the same account, which exercises
+the `[...mirrorTokens, ...erc20Tokens]` merge in `coin-hedera/src/bridge/utils.ts` — an account
+holding both kinds of token simultaneously is constructed there, but nothing in that block asserts
+on the merge itself.
 
-Out of scope (deferred): ERC20 transfers, `ClaimRewards`, and making `coin-hedera`'s hgraph
+Out of scope (deferred): `ClaimRewards`, memo edge cases, and making `coin-hedera`'s hgraph
 dependency optional. CI wiring is now partially done — see "CI" below.
 
 ## Running locally
@@ -122,20 +132,112 @@ every sync (`getERC20BalancesForAccountV2`, `getLatestIndexedConsensusTimestamp`
 open-source server and cannot be booted locally, so this package mocks it via MSW (`src/indexer.ts`)
 rather than hitting a real instance. The mock is an *observer*, not a hard assertion on hgraph's
 query shape — asserting that shape would couple this tester to `coin-hedera`'s internal query
-pattern. The negative guarantee ("nothing external but the fake hgraph is hit") comes from the
-MSW `onUnhandledRequest` throwing on any non-local, non-hgraph request.
+pattern. `indexer.ts` routes each request on `body.variables` (each of the three queries the fake
+answers has a distinguishable shape) and then cross-checks the chosen branch against the query
+text itself, so a routing/variables mismatch fails loudly instead of silently answering the wrong
+query. The negative guarantee ("nothing external but the fake hgraph is hit") comes from the MSW
+`onUnhandledRequest` throwing on any non-local, non-hgraph request — narrowed specifically to the
+local mirror-node port (`LOCAL_MIRROR_NODE_PORT`), not all of localhost, so no other local traffic
+is waved through unnoticed.
 
 Making hgraph optional in `coin-hedera` itself (so this mock is unnecessary) is a separate,
 deferred change — see the PR description for scope.
 
+## The stateful hgraph fake
+
+`src/hgraphFake.ts` doesn't invent data: it translates real responses from the Solo mirror node
+into the hgraph GraphQL response shapes `coin-hedera` consumes, so the ERC20 scenario and negative
+case are backed by an actual local network rather than fixed fixtures. It answers the three
+queries `coin-hedera` sends, each on a different refresh model:
+
+- **`erc_token_account` (balances) — live on every query.** `getErcTokenAccountRows` calls the
+  mirror node's `/api/v1/contracts/call` (`balanceOf`) directly, once per registered token, on
+  every request. No caching, no snapshot.
+- **`erc_token_transfer` — a snapshot taken in `refresh()`.** `refresh()` re-scans every top-level
+  `CONTRACTCALL` transaction from the mirror node, joins each to its logs, and decodes `Transfer`
+  events into a frozen, sorted array (`transferSnapshot`). `getErcTokenTransferRows` only ever
+  filters and paginates that frozen array — it never talks to the network itself. `refresh()` is
+  called from the ERC20 scenario's `beforeSync` (which runs inside `executeScenario`'s retry loop,
+  so a not-yet-indexed transfer gets picked up on a later attempt) and, in the negative-case block,
+  explicitly before the manual sync since no `beforeSync` hook exists there.
+- **`ethereum_transaction` (latest indexed timestamp) — live, with a floor.**
+  `getLatestEthereumTransactionTimestamp` reads the mirror node's latest contract result and
+  returns `max(that timestamp, wall clock)`. The floor exists because three scenarios — `hedera`,
+  `hedera token` and `hedera staking` — share one Solo cluster and run *before* any ERC20 contract
+  exists. Without it, `GET /api/v1/contracts/results?limit=1&order=desc` would return an empty
+  list, and `coin-hedera`'s `getLatestIndexedConsensusTimestamp` would hit
+  `invariant(..., "No transactions found in Hgraph")`, capsizing those three otherwise-green
+  scenarios. The wall-clock floor also keeps the value from ever answering with a timestamp behind
+  a call just made.
+
+### A known `coin-hedera` pagination bug, deliberately reproduced rather than fixed
+
+`getERC20Transfers` always calls with `fetchAllPages: true` and no explicit `order`, so
+`getPaginationDirection(true, "desc")` returns `_gt` unconditionally while the query is actually
+sorted `desc` — the cursor advances backwards through a `> cursor` filter, walking *away* from the
+rows it should be paging into. For an account with more than 100 ERC20 transfers, that mismatch
+would make the real client's pagination loop repeat the same page forever; the only thing that
+would end it is a page short enough to look like the end of the data. This is a real bug in
+`coin-hedera`, out of scope for this tester to fix (Global Constraint 1) — `hgraphFake.ts`
+reproduces the real hgraph contract faithfully (`> cursor`, sorted desc, sliced to `limit`) rather
+than defending against the caller's own `_gt`/`desc` mismatch. To keep that fidelity from turning
+into a genuine infinite loop under test, the fake carries its own page counter
+(`MAX_TRANSFER_PAGES`, reset by `refresh()`) and throws a named `HgraphFakeGuardError` after 50
+pages — converting a hang into a diagnosable failure instead of a 6-minute Jest timeout with no
+clue why.
+
+## The ERC20 contract artifact
+
+`src/fixtures/LedgerLiveTestToken.json` is committed **compiled-only** — bytecode and ABI, no
+`.sol` file anywhere in the repo. A Solidity source file that CI never compiles would silently
+drift from the bytecode sitting next to it, which is worse than not having the source checked in
+at all. The full source and the exact `solc` invocation used to produce the artifact
+(`solc-js 0.8.36`, `--optimize --bin --abi`) live in the artifact's own `origin` field, so
+refreshing it is a matter of pasting that source into a `.sol` file and re-running the documented
+command. The contract itself is deliberately minimal (`transfer`/`balanceOf`/`Transfer` event only,
+no pause/owner/blacklist hooks) so nothing in it can fire unpredictably against the bridge under
+test.
+
+## ERC20 coverage
+
+ERC20 support landed in this tester, but **it has never been run against a real Solo cluster in
+this environment** — there is no Kubernetes host available here, so the ERC20 scenario
+(`scenarii/hederaErc20.ts`) and the ERC20 negative case (`negativeCases.ts`'s
+`describe("erc20 negative cases")`) are, as of this writing, unexercised beyond the unit tests
+(`hgraphFake.test.ts`, `indexer.test.ts`) that don't need a cluster. Anyone picking this up should
+run `pnpm coin:tester:hedera start` on a k8s-capable host before trusting that the scenario passes.
+
+What the code does, honestly stated:
+
+- **HTS — unchanged.** Association, send, send-max, multi-token auto-association, and the HTS
+  negative cases all predate this work and are untouched by it.
+- **ERC20 — covered by the new scenario and negative case:** contract deploy
+  (`deployErc20Token`), seeding a balance from the genesis operator, a bridge-level send, the fee
+  landing as its own `FEES` operation (ERC20 has no HTS equivalent — a plain HBAR-value transfer
+  has none), balance validation (the ERC20 negative case), and a gas-estimate sanity check via an
+  `extra.gasLimit` sentinel assertion (asserted `!= DEFAULT_GAS_LIMIT` and `> 0`, not against an
+  upper bound — Solo's real intrinsic-cost overhead on top of the estimate is unmeasured).
+- **Constructed but not asserted on:** the ERC20 negative-case block registers both an HTS token
+  and an ERC20 token on the same account, which exercises the `[...mirrorTokens, ...erc20Tokens]`
+  merge in `coin-hedera/src/bridge/utils.ts` (an account holding both kinds of token
+  simultaneously) — but nothing in that block asserts anything about the merged result itself.
+- **Still uncovered:** ERC20 send-max, a third party receiving an ERC20 transfer with no
+  operations of its own on the account under test, and hgraph pagination beyond 100 transfers (see
+  the pagination bug above).
+
 ## Unit tests for the harness itself
 
 Unlike every sibling coin-tester, this package ships unit tests for its own harness:
-`signer.test.ts`, `indexer.test.ts` and `solo.test.ts`. The first two exist because the SDK's
-public-key encoding and the hgraph `invariant` are both silent-failure modes that would otherwise
-only surface deep inside a 10-minute scenario run. `solo.test.ts` guards `deploySolo()`'s
-memoisation, whose regression costs about 20 extra minutes per run instead of failing loudly.
-`pnpm start`'s `src/*.test.ts` glob picks them up alongside the scenario.
+`signer.test.ts`, `indexer.test.ts`, `solo.test.ts`, `fixtures.test.ts` and `hgraphFake.test.ts`.
+The first two exist because the SDK's public-key encoding and the hgraph `invariant` are both
+silent-failure modes that would otherwise only surface deep inside a 10-minute scenario run.
+`solo.test.ts` guards `deploySolo()`'s memoisation, whose regression costs about 20 extra minutes
+per run instead of failing loudly. `hgraphFake.test.ts` is the main non-cluster guarantee for the
+whole ERC20 feature: it exercises the mirror-node → hgraph mapping directly — cursor slicing,
+long-zero address decoding, zero-address mint/burn handling, and the `ethereum_transaction`
+floor — all wrong-not-loud failure modes that would otherwise only show up as a confusing scenario
+failure minutes into a cluster run. `pnpm start`'s `src/*.test.ts` glob picks them all up alongside
+the scenario.
 
 ## CI
 

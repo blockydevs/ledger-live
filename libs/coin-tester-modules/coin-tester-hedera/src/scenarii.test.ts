@@ -5,6 +5,7 @@ import { scenarioHedera } from "./scenarii/hedera";
 import { scenarioHederaToken } from "./scenarii/hederaToken";
 import { scenarioHederaStaking } from "./scenarii/hederaStaking";
 import { scenarioHederaMultiToken } from "./scenarii/hederaMultiToken";
+import { scenarioHederaErc20 } from "./scenarii/hederaErc20";
 import { describeNegativeCases } from "./negativeCases";
 
 /** Solo cold start is 7–10 min; the hook gets its own budget so it is not charged to a scenario. */
@@ -36,6 +37,7 @@ describe("Hedera", () => {
   it("scenario hedera staking", () => executeScenario(scenarioHederaStaking));
 
   it("scenario hedera token multi", () => executeScenario(scenarioHederaMultiToken));
+  it("scenario hedera erc20", () => executeScenario(scenarioHederaErc20));
 
   describeNegativeCases();
 });

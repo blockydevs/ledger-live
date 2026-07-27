@@ -17,6 +17,8 @@ export const HEDERA = getCryptoCurrencyById("hedera");
 /** Local Solo's consensus endpoint; the port can differ between Solo versions. */
 export const LOCAL_CONSENSUS_NODES: Record<string, string> = { "127.0.0.1:35211": "0.0.3" };
 export const LOCAL_MIRROR_NODE_URL = "http://127.0.0.1:38081";
+/** Port Solo's mirror node listens on; derived so it tracks LOCAL_MIRROR_NODE_URL if it ever drifts. */
+export const LOCAL_MIRROR_NODE_PORT = new URL(LOCAL_MIRROR_NODE_URL).port;
 
 export const GENESIS_ACCOUNT_ID = "0.0.2";
 
@@ -24,8 +26,13 @@ export const GENESIS_ACCOUNT_ID = "0.0.2";
 export const GENESIS_OPERATOR_KEY =
   "302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137";
 
-/** Fake hgraph URL served only by indexer.ts's MSW handler; coin-hedera calls hgraph unconditionally. */
-export const FAKE_HGRAPH_URL = "http://127.0.0.1:19999/hgraph";
+/**
+ * Fake hgraph URL served only by indexer.ts's MSW handler; coin-hedera calls hgraph unconditionally.
+ * A `.mock` domain that resolves nowhere — if a request ever escapes the MSW handler it fails
+ * instantly and locally instead of leaving the machine (unlike a localhost port, which the msw
+ * carve-out for the real mirror node would otherwise wave through).
+ */
+export const FAKE_HGRAPH_URL = "https://hedera-coin-tester.mock/hgraph";
 
 /** An existing Solo-funded account used only as the send recipient; its key is never needed. */
 export const RECIPIENT = "0.0.1002";
@@ -84,6 +91,21 @@ export function makeLocalHtsToken(tokenId: string): TokenCurrency {
     contractAddress: tokenId,
     parentCurrencyId: HEDERA.id,
     tokenType: "hts",
+    name: "Ledger Live Test Token",
+    ticker: TOKEN_SYMBOL,
+    units: [{ name: "Ledger Live Test Token", code: TOKEN_SYMBOL, magnitude: TOKEN_DECIMALS }],
+  };
+}
+
+/** A `TokenCurrency` for the locally-deployed ERC20 fixture; `contractAddress` must be the `0x`-prefixed EVM address. */
+export function makeLocalErc20Token(evmAddress: string): TokenCurrency {
+  const contractAddress = evmAddress.toLowerCase();
+  return {
+    type: "TokenCurrency",
+    id: `hedera/erc20/${contractAddress}`,
+    contractAddress,
+    parentCurrencyId: HEDERA.id,
+    tokenType: "erc20",
     name: "Ledger Live Test Token",
     ticker: TOKEN_SYMBOL,
     units: [{ name: "Ledger Live Test Token", code: TOKEN_SYMBOL, magnitude: TOKEN_DECIMALS }],

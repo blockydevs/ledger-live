@@ -71,7 +71,8 @@
     "@ledgerhq/types-live": "workspace:^",
     "bignumber.js": "^9.1.2",
     "chalk": "^4.1.2",
-    "msw": "catalog:"
+    "msw": "catalog:",
+    "viem": "^2.27.0"
   },
   "devDependencies": {
     "@hiero-ledger/solo": "0.83.0",
