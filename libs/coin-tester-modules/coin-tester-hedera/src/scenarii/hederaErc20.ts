@@ -19,9 +19,14 @@ import { registerErc20Token, resetErc20Tokens, refresh } from "../hgraphFake";
 
 const UNIT = 10 ** TOKEN_DECIMALS;
 // bridge/utils.ts:254 drops a zero-balance, no-operations ERC20 sub-account, so the seed must
-// survive one SEND_AMOUNT send without hitting 0.
+// survive the first send without hitting 0. The send-max transaction below drains it to zero on
+// purpose — by then the sub-account has operations, so it stays visible.
 const SEED_AMOUNT = 100 * UNIT;
 const SEND_AMOUNT = 10 * UNIT;
+const MEMO_SEND_AMOUNT = 5 * UNIT;
+/** What is left after the two fixed sends; send-max must drain exactly this. */
+const SEND_MAX_AMOUNT = SEED_AMOUNT - SEND_AMOUNT - MEMO_SEND_AMOUNT;
+const MEMO = "ledger-live coin-tester erc20 memo";
 
 let closeMswHandlers: (() => void) | undefined;
 let token: TokenCurrency;
@@ -49,6 +54,14 @@ function makeTransactions(): HederaScenarioTransaction[] {
       expect(previousSub).toBeDefined();
       expect(currentSub).toBeDefined();
       if (!previousSub || !currentSub) return; // retryable: mirror-node/hgraph-fake lag, not a TypeError
+
+      // The genesis seed is an incoming ERC20 transfer, and the opening beforeSync refreshed the
+      // snapshot before the first sync, so `previous` must already carry it as an IN operation.
+      // Free coverage of the IN branch — no extra transaction, no extra wall-clock.
+      const seedIn = previousSub.operations.find(op => op.type === "IN");
+      expect(seedIn).toBeDefined();
+      if (!seedIn) return;
+      expect(seedIn.value.toString()).toBe(String(SEED_AMOUNT));
 
       expect(currentSub.balance.toString()).toBe(
         previousSub.balance.minus(SEND_AMOUNT).toString(),
@@ -79,7 +92,72 @@ function makeTransactions(): HederaScenarioTransaction[] {
     },
   };
 
-  return [sendErc20];
+  const sendErc20WithMemo: HederaScenarioTransaction = {
+    name: `Send ${MEMO_SEND_AMOUNT / UNIT} ${TOKEN_SYMBOL} (ERC20) with a memo`,
+    family: "hedera",
+    mode: HEDERA_TRANSACTION_MODES.Send,
+    subAccountId: encodeTokenAccountId(makeHederaAccount(accountId, "").id, token),
+    amount: new BigNumber(MEMO_SEND_AMOUNT),
+    recipient: recipientId,
+    memo: MEMO,
+    expect: (previous, current) => {
+      const currentSub = findErc20SubAccount(current);
+      expect(currentSub).toBeDefined();
+      if (!currentSub) return;
+
+      // Absolute, not a delta off `previous`: `previous` is frozen at the opening sync of this
+      // transaction and never re-read on retry, so a lagging snapshot there would fail forever.
+      expect(currentSub.balance.toString()).toBe(String(SEED_AMOUNT - SEND_AMOUNT - MEMO_SEND_AMOUNT));
+
+      const [latestSub] = currentSub.operations;
+      expect(latestSub).toBeDefined();
+      if (!latestSub) return;
+      expect(latestSub.type).toBe("OUT");
+      expect(latestSub.value.toString()).toBe(String(MEMO_SEND_AMOUNT));
+
+      // The memo survives craft (.setTransactionMemo, craftTransaction.ts:145) and comes back
+      // through memo_base64 on the mirror transaction (listOperations.v2.ts:44,51), landing in
+      // extra. Asserting the value, not merely that validation let it through.
+      const { memo } = latestSub.extra as HederaOperationExtra;
+      expect(memo).toBe(MEMO);
+    },
+  };
+
+  const sendErc20Max: HederaScenarioTransaction = {
+    name: `Send max ${TOKEN_SYMBOL} (ERC20)`,
+    family: "hedera",
+    mode: HEDERA_TRANSACTION_MODES.Send,
+    subAccountId: encodeTokenAccountId(makeHederaAccount(accountId, "").id, token),
+    // `amount` is the value we expect calculateAmount to arrive at; prepareTransaction overwrites
+    // it with the real sub-account balance anyway. Stated explicitly so a drift between the
+    // scenario's arithmetic and the chain shows up as a status error rather than a silent pass.
+    amount: new BigNumber(SEND_MAX_AMOUNT),
+    useAllAmount: true,
+    recipient: recipientId,
+    expect: (previous, current) => {
+      const currentSub = findErc20SubAccount(current);
+      // Not knife-edge, unlike an HBAR send-max: calculateTokenAmount returns
+      // `totalSpent: amount` with no fee added (bridge/utils.ts:51-67), and estimateMaxSpendable
+      // returns the bare token balance for a token account (estimateMaxSpendable.ts:17-19). The
+      // fee is paid in HBAR from the parent account.
+      //
+      // The drained sub-account must STAY visible: operationsByToken (bridge/utils.ts:197) builds
+      // it from operations regardless of balance — `if (!balance) continue` does not fire for
+      // BigNumber(0), which is a truthy object — and the zero-balance drop at utils.ts:254 only
+      // guards the second loop, over tokens with no operations. Easy to assume the opposite.
+      expect(currentSub).toBeDefined();
+      if (!currentSub) return;
+      expect(currentSub.balance.toString()).toBe("0");
+
+      const [latestSub] = currentSub.operations;
+      expect(latestSub).toBeDefined();
+      if (!latestSub) return;
+      expect(latestSub.type).toBe("OUT");
+      expect(latestSub.value.toString()).toBe(String(SEND_MAX_AMOUNT));
+    },
+  };
+
+  return [sendErc20, sendErc20WithMemo, sendErc20Max];
 }
 
 export const scenarioHederaErc20: Scenario<Transaction, HederaAccount> = {
