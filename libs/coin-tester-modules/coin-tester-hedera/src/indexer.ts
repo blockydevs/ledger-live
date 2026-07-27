@@ -8,7 +8,6 @@ export function getHgraphObserver(): { callCount: number; queries: string[] } {
   return observer;
 }
 
-/** `ethereum_transaction` must stay non-empty — coin-hedera's invariant would throw otherwise. */
 async function hgraphHandler(request: Request): Promise<Response> {
   const body = (await request.clone().json()) as { query?: string };
   const query = body.query ?? "";

@@ -36,9 +36,8 @@ async function runDeploy(): Promise<void> {
   // `--no-deploy-relay`/`--no-deploy-explorer` skip the JSON-RPC relay and explorer pods — the
   // tester only ever talks to the consensus node and mirror node REST API.
   //
-  // No pre-deploy cleanup: like every sibling tester, bring-up only starts things; teardown lives
-  // in `teardownSolo`. A SIGKILL/OOM/power-loss run bypasses that and leaves state a later
-  // `deploy --quiet-mode` rejects — recover by hand with `solo one-shot falcon destroy --deployment coin-tester-hedera`.
+  // A hard-killed run bypasses `teardownSolo` and leaves state a later `deploy --quiet-mode`
+  // rejects — recover with `solo one-shot falcon destroy --deployment coin-tester-hedera`.
   await execFileAsync(
     SOLO_BIN,
     [

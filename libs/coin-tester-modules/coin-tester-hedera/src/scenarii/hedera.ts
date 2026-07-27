@@ -22,7 +22,6 @@ function makeTransactions(): HederaScenarioTransaction[] {
     amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
     recipient: RECIPIENT,
     expect: (previous, current) => {
-      // Assert, don't destructure: an empty list from mirror-node lag stays retryable.
       expect(current.operations.length).toBeGreaterThan(0);
       const [latest] = current.operations;
       expect(latest.type).toBe("OUT");
@@ -46,8 +45,8 @@ function makeTransactions(): HederaScenarioTransaction[] {
       expect(latest.recipients).toContain(RECIPIENT);
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
       const memoExtra = latest.extra as HederaOperationExtra;
-      expect(memoExtra.memo).toBeDefined();            // fail => "Solo returned no memo"
-      expect(memoExtra.memo).toBe("ledger-live e2e");  // fail => "memo came back, but wrong"
+      expect(memoExtra.memo).toBeDefined();
+      expect(memoExtra.memo).toBe("ledger-live e2e");
     },
   };
 
@@ -118,7 +117,6 @@ export const scenarioHedera: Scenario<Transaction, HederaAccount> = {
     );
   },
 
-  // Cluster teardown lives in scenarii.test.ts's afterAll — no scenario may tear it down.
   teardown: () => {
     closeMswHandlers?.();
   },

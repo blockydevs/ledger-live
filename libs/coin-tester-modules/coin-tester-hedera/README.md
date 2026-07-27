@@ -6,19 +6,32 @@ pure-software Ed25519 key (no Speculos, no device).
 
 ## Scope
 
-Three scenarios, each on its own account funded from the genesis operator (`0.0.2`), all sharing a
-single Solo deployment:
+Four scenarios, each on its own account funded from the genesis operator (`0.0.2`), all sharing a
+single Solo deployment, plus a bridge-level negative-cases block:
 
-1. **Native HBAR sends** — send 1 HBAR to an existing recipient; send max (drains the account).
-2. **HTS association and transfer** — associate a locally minted fungible token through the bridge,
-   then send part of the balance to a separate, pre-associated fixture account.
-3. **Delegate and undelegate** — stake to Solo's consensus node, then unstake.
+1. **Native HBAR sends** (`scenarii/hedera.ts`) — send 1 HBAR to an existing recipient; send 1 HBAR
+   with a memo (asserts the memo round-trips through sync); send to a never-funded ED25519 alias to
+   exercise Hedera's auto-account-creation; send max (drains the account).
+2. **HTS association and transfer** (`scenarii/hederaToken.ts`) — associate a locally minted
+   fungible token through the bridge, inject a treasury transfer, then send part of the balance to
+   a separate, pre-associated fixture account, and finally send max (drains the sub-account).
+3. **Delegate and undelegate** (`scenarii/hederaStaking.ts`) — stake to Solo's consensus node, then
+   unstake.
+4. **Multiple HTS tokens via auto-association** (`scenarii/hederaMultiToken.ts`) — two tokens land
+   on the account via auto-association (no explicit `associate` transaction), then a plain HBAR send
+   is asserted to leave both token sub-accounts untouched.
 
-All three sign with a pure-software Ed25519 key (no Speculos, no device) and follow the same loop:
+All four sign with a pure-software Ed25519 key (no Speculos, no device) and follow the same loop:
 sync → craft → status → sign → broadcast → re-sync → assert.
 
-Out of scope (deferred): ERC20 transfers, `ClaimRewards`, memo edge cases, CI wiring, and making
-`coin-hedera`'s hgraph dependency optional.
+On top of the scenarios, `src/negativeCases.ts` (`describeNegativeCases()`, wired into the same
+`describe("Hedera")` in `scenarii.test.ts`) asserts directly against `getTransactionStatus` —
+without broadcasting — for cases a broadcast-based scenario can't cover: insufficient HBAR balance,
+a malformed recipient accountId, an HTS transfer to an unassociated recipient (warning), and an HTS
+transfer above the held token balance.
+
+Out of scope (deferred): ERC20 transfers, `ClaimRewards`, and making `coin-hedera`'s hgraph
+dependency optional. CI wiring is now partially done — see "CI" below.
 
 ## Running locally
 
@@ -33,27 +46,38 @@ The small-memory profile is on by default and passing `--values-file` would disa
 pnpm coin:tester:hedera start
 ```
 
-Cold start is ~7–10 minutes; the suite's `jest.setTimeout` is raised to 20 minutes to absorb it.
+Cold start is ~7–10 minutes. That budget is split in two: cluster bring-up runs in the suite's
+`beforeAll` under its own `CLUSTER_BRING_UP_TIMEOUT_MS` (15 minutes), separate from the per-test
+`jest.setTimeout(360_000)` (6 minutes) — deploy is no longer inside a test, so a hung scenario now
+fails in 6 minutes instead of being charged against, or hidden by, the cluster's own budget.
 `teardown` runs unconditionally after every run (deploy + destroy every time — no persistence, by
 design, to match every other coin-tester package in this workspace).
 
 The cluster is brought up once in the suite's `beforeAll` and torn down in its `afterAll`. No
-scenario may tear it down — doing so would leave the remaining scenarios talking to a deleted pod.
+scenario (and no negative case) may tear it down — doing so would leave the remaining scenarios
+talking to a deleted pod.
 
-## Solo's undeclared `reflect-metadata` dependency
+## Solo's undeclared `reflect-metadata` and `protobufjs` dependencies
 
 Solo bare-imports `reflect-metadata` in its `dist/src/index.js` (it needs the polyfill for
 `tsyringe-neo`'s decorator-based DI), but **no published version declares it** — 0.57.0 through
 0.83.0 all omit it from `dependencies`, `peerDependencies` and `optionalDependencies`, and
 `tsyringe-neo` doesn't pull it in either. It only works upstream because flat npm/yarn layouts hoist
 it. Under pnpm's strict layout Solo fails immediately with `ERR_MODULE_NOT_FOUND: reflect-metadata`,
-before it ever reaches the cluster.
+before it ever reaches the cluster. `protobufjs` has the same undeclared-dependency shape (a
+transitive Solo/Hedera-SDK need that isn't in anyone's manifest) and fails the same way under pnpm's
+strict layout, so it gets the same treatment.
 
-The fix is a `pnpm.packageExtensions` entry in the **root `package.json`**, declaring the dependency
-on Solo's behalf:
+The fix is a `pnpm.packageExtensions` entry in the **root `package.json`**, declaring both
+dependencies on Solo's behalf:
 
 ```json
-"@hiero-ledger/solo": { "dependencies": { "reflect-metadata": "^0.2.2" } }
+"@hiero-ledger/solo": {
+  "dependencies": {
+    "reflect-metadata": "^0.2.2",
+    "protobufjs": "^8.0.1"
+  }
+}
 ```
 
 Notes for whoever touches this next:
@@ -73,18 +97,23 @@ fix is a one-liner in Solo's own `package.json`; once it lands, this entry can b
 
 Solo exposes the consensus node (`35211`) and mirror node (`38081`) with `--force-port-forward`,
 spawning `persist-port-forward.js` / `kubectl port-forward` as **detached** processes. `solo one-shot
-single destroy` tears down cluster resources only, and jest's `--forceExit` can't reach them either —
+falcon destroy` tears down cluster resources only, and jest's `--forceExit` can't reach them either —
 they survive every run, including green ones, reparented to init.
 
 Left alone they don't just occupy the ports: the next run can connect to a tunnel pointing at a
 deleted pod and time out, which reads as a Hedera/consensus-node failure rather than as leftover
 state. That misdiagnosis is expensive.
 
-`solo.ts` therefore calls `killPortForwards()` both before `deploy` (in case a previous run was
-killed hard) and after `destroy`. It is best-effort and namespace-scoped — see the comments there for
-why it targets `pgrep`/`kill` rather than the more obvious `pkill -f`. It is a no-op on Windows;
-clean up by hand there if the next run can't bind. Arguably Solo's own `destroy` should do this — the
-same "worth an upstream issue" caveat as `reflect-metadata` above.
+`solo.ts` calls `killPortForwards()` **only after `destroy`**, not before `deploy` — deliberately.
+Like every sibling coin-tester, bring-up only starts things; teardown is where cleanup lives. A
+SIGKILL/OOM/power-loss run bypasses `teardownSolo()` entirely and can leave both the deployment and
+its port-forwards behind; recover by hand with
+`solo one-shot falcon destroy --deployment coin-tester-hedera` (this also clears the namespace so
+the next `deploy --quiet-mode` doesn't reject it). `killPortForwards()` itself is best-effort and
+namespace-scoped — see the comments in `solo.ts` for why it targets `pgrep`/`kill` rather than the
+more obvious `pkill -f`. It is a no-op on Windows; clean up by hand there if the next run can't bind.
+Arguably Solo's own `destroy` should do this — the same "worth an upstream issue" caveat as
+`reflect-metadata` above.
 
 ## The hgraph limitation
 
@@ -108,14 +137,28 @@ only surface deep inside a 10-minute scenario run. `solo.test.ts` guards `deploy
 memoisation, whose regression costs about 20 extra minutes per run instead of failing loudly.
 `pnpm start`'s `src/*.test.ts` glob picks them up alongside the scenario.
 
-## CI gap
+## CI
 
 `hedera` is listed in `.github/workflows/test-coin-tester.yml`'s `COIN_TESTER_CURRENCIES`, so it
-enters the matrix — but the runner side is **not** done. Solo needs a k8s-capable runner (kind +
-kubectl + helm, 12 GB RAM / 6 CPU) and `public-ledgerhq-shared-small` provides none of that, so the
-job is expected to fail until it does. The `coin-tester` job sets `continue-on-error: true`, so this
-does not block PRs, but it will show up as a red-but-ignored leg.
+enters the matrix. The whole `coin-tester` job moved from `public-ledgerhq-shared-small` to
+`ledger-live-linux-8CPU-32RAM`, because the Hedera leg brings up a local kind cluster that the shared
+small runner cannot host (~4 GB RAM peak, see "Running locally" above).
 
-Still to do: a conditional kind/kubectl/helm install step guarded on `matrix.chain == 'hedera'`,
-plus a `runs-on` swap to a larger existing runner label. Until then, `pnpm coin:tester:hedera start`
-on a suitable host is the only way this actually runs green.
+No tooling-install step is needed, and adding one would be wasted work: Solo ships a
+`DependencyManager` per binary (`dist/src/core/dependency-managers/` covers kubectl, kind, helm,
+crane, podman) and resolves each one in the order *its own `~/.solo/bin`* → *`PATH`, but only if the
+version matches what Solo pins* → *download from the upstream release URL*. A pre-installed binary of
+the wrong version is simply ignored and re-downloaded, so `helm/kind-action` and friends buy nothing.
+What the runner **does** have to provide is a working container engine (Docker or Podman) for kind to
+create the cluster in — that is an image-level prerequisite, not something a workflow step can fix.
+
+The job still sets `continue-on-error: true`, so a red Hedera leg won't block a PR while this is
+being shaken out.
+
+Note that the matrix filter matches chains with `grep -qw "$coin"` against the affected paths. Since
+`-` is not a word character, `hedera` matches every `libs/coin-modules/coin-hedera/**` path, so any
+change to the coin module schedules this leg. That is intended: the tester exists to guard exactly
+those changes.
+
+`pnpm coin:tester:hedera start` on a suitable local host remains the fastest way to iterate without
+waiting on CI.

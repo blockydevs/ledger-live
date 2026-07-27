@@ -8,7 +8,6 @@ describe("initMswHandlers", () => {
     close?.();
   });
 
-  // Pins coin-hedera's invariant that ethereum_transaction must never be empty.
   it("answers getLatestIndexedConsensusTimestamp with a non-empty ethereum_transaction row", async () => {
     close = initMswHandlers();
 

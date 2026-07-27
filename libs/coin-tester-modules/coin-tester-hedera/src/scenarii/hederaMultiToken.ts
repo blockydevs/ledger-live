@@ -16,8 +16,7 @@ const TOKEN2_INJECTED = 50 * UNIT;
 const TOKEN3_INJECTED = 70 * UNIT;
 const MAX_AUTO_ASSOCIATIONS = 10; // >= the 2 tokens; NOT the -1 sentinel
 // Fixed partial send, not `useAllAmount`: a send-max here would fail on-chain since the account's
-// real spendable balance runs a touch below what the post-send sync reports. Send-max itself is
-// already covered by scenarii/hedera.ts; this scenario only checks that HBAR sends preserve tokens.
+// real spendable balance runs a touch below what the post-send sync reports.
 const HBAR_SENT = 50 * ONE_HBAR_IN_TINYBAR;
 
 let closeMswHandlers: (() => void) | undefined;
@@ -26,9 +25,9 @@ let token3: TokenCurrency;
 let accountId: string;
 
 function findSub(account: HederaAccount, tokenId: string): TokenAccount | undefined {
-  return account.subAccounts?.find(
-    sa => sa.type === "TokenAccount" && sa.token.id === tokenId,
-  ) as TokenAccount | undefined;
+  return account.subAccounts?.find(sa => sa.type === "TokenAccount" && sa.token.id === tokenId) as
+    | TokenAccount
+    | undefined;
 }
 
 function makeTransactions(): HederaScenarioTransaction[] {
@@ -60,9 +59,8 @@ function makeTransactions(): HederaScenarioTransaction[] {
       const [latest] = current.operations;
       expect(latest.type).toBe("OUT");
       expect(latest.recipients).toContain(RECIPIENT);
-      // Asserted off the operation itself, not a previous/current balance delta, since `previous`
-      // can lag the real balance right after a send (native-HBAR accounting is already covered
-      // by scenarii/hedera.ts — this scenario only cares about token preservation).
+      // Asserted off the operation, not a previous/current delta: `previous` can lag the real
+      // balance right after a send.
       expect(latest.value.minus(latest.fee).toString()).toBe(String(HBAR_SENT));
       expect(findSub(current, token2.id)?.balance.toString()).toBe(
         findSub(previous, token2.id)?.balance.toString(),

@@ -26,9 +26,7 @@ let token: TokenCurrency;
 let tokenId: string;
 let accountId: string;
 let tokenRecipientId: string;
-/** Guards the one-shot treasury→account injection performed in `beforeEach`. */
 let injected = false;
-/** Counts `beforeEach` invocations so the injection is keyed on transaction position, not shape. */
 let beforeEachCallIndex = 0;
 
 function findTokenSubAccount(account: HederaAccount): TokenAccount | undefined {
@@ -67,7 +65,6 @@ function makeTransactions(): HederaScenarioTransaction[] {
     expect: (previous, current) => {
       const previousSub = findTokenSubAccount(previous);
       const currentSub = findTokenSubAccount(current);
-      // Assert, don't destructure: a missing sub-account from mirror-node lag stays retryable.
       expect(previousSub).toBeDefined();
       expect(currentSub).toBeDefined();
       if (!previousSub || !currentSub) return;
@@ -95,8 +92,8 @@ function makeTransactions(): HederaScenarioTransaction[] {
       expect(currentSub.operations.length).toBeGreaterThan(previousSub.operations.length);
       const [latest] = currentSub.operations;
       expect(latest.type).toBe("OUT");
-      expect(latest.value.toString()).toBe(previousSub.balance.toString()); // drained whole balance
-      expect(currentSub.balance.toString()).toBe("0");                      // zero-balance sub survives
+      expect(latest.value.toString()).toBe(previousSub.balance.toString());
+      expect(currentSub.balance.toString()).toBe("0");
     },
   };
 
@@ -144,9 +141,7 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
   },
 
   // HTS requires the receiver to be associated first, so the treasury injection has to sit between
-  // `associate` and `sendToken`. Keyed on call position rather than probing sub-account shape: a
-  // shape-based guard could silently skip the injection and surface as a NotEnoughBalance pointing
-  // at the send instead of the real cause. Reorder `associate`/`sendToken` and this stops firing.
+  // `associate` and `sendToken` — hence the call-position key. Reordering them stops it firing.
   beforeEach: async account => {
     const callIndex = beforeEachCallIndex++;
     if (callIndex === 0) return; // precedes `associate`: the sub-account cannot exist yet.

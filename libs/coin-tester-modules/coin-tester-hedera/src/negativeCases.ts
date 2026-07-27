@@ -3,7 +3,13 @@ import type { AccountBridge } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Transaction, HederaAccount, TransactionStatus } from "@ledgerhq/coin-hedera/types";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
-import { TOKEN_DECIMALS, TOKEN_SYMBOL, RECIPIENT, makeHederaAccount, makeLocalHtsToken } from "./fixtures";
+import {
+  TOKEN_DECIMALS,
+  TOKEN_SYMBOL,
+  RECIPIENT,
+  makeHederaAccount,
+  makeLocalHtsToken,
+} from "./fixtures";
 import { setupHederaScenario } from "./helpers";
 import { createHtsToken, transferToken, waitForMirrorNodeTokenBalance } from "./genesis";
 
@@ -45,7 +51,6 @@ export function describeNegativeCases(): void {
       closeMswHandlers = close;
       accountBridge = ab;
 
-      // Inject the sender's token balance, then wait for indexing so the sync below observes it.
       await transferToken(tokenId, accountId, TOKEN_INJECTED);
       await waitForMirrorNodeTokenBalance(accountId, tokenId, TOKEN_INJECTED);
 
@@ -84,8 +89,8 @@ export function describeNegativeCases(): void {
 
     it("flags insufficient funds (NotEnoughBalance)", async () => {
       const status = await buildStatus({
-        recipient: RECIPIENT, // valid existing account, so amount is the only error
-        amount: account.balance.plus(ONE_HBAR_IN_TINYBAR), // > balance
+        recipient: RECIPIENT,
+        amount: account.balance.plus(ONE_HBAR_IN_TINYBAR),
       });
       expect(status.errors.amount?.name).toBe("NotEnoughBalance");
     });
@@ -93,7 +98,7 @@ export function describeNegativeCases(): void {
     it("flags a malformed recipient accountId (InvalidAddress)", async () => {
       const status = await buildStatus({
         recipient: "not-an-account",
-        amount: new BigNumber(ONE_HBAR_IN_TINYBAR), // small valid amount, so recipient is the isolated error
+        amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
       });
       expect(status.errors.recipient?.name).toBe("InvalidAddress");
     });
@@ -102,7 +107,7 @@ export function describeNegativeCases(): void {
       const status = await buildStatus({
         subAccountId: tokenSubAccountId,
         recipient: RECIPIENT, // 0.0.1002 exists but is NOT associated with this token
-        amount: new BigNumber(UNIT), // > 0 and <= injected balance, so it isolates the association warning
+        amount: new BigNumber(UNIT),
       });
       expect(status.warnings.missingAssociation?.name).toBe(
         "HederaRecipientTokenAssociationRequired",
@@ -110,10 +115,9 @@ export function describeNegativeCases(): void {
     });
 
     it("flags an HTS transfer above the held token balance (NotEnoughBalance)", async () => {
-      // Exercises the HTS-specific insufficient-funds branch, distinct from the native-HBAR one above.
       const status = await buildStatus({
         subAccountId: tokenSubAccountId,
-        recipient: RECIPIENT, // valid existing account, so the token amount is the isolated error
+        recipient: RECIPIENT,
         amount: new BigNumber(TOKEN_INJECTED + UNIT), // one unit over the injected sub-account balance
       });
       expect(status.errors.amount?.name).toBe("NotEnoughBalance");

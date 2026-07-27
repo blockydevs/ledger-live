@@ -12,9 +12,15 @@ jest.mock("child_process", () => ({
   },
 }));
 
+const rmMock = jest.fn();
+
+jest.mock("fs/promises", () => ({
+  ...jest.requireActual("fs/promises"),
+  rm: (...args: unknown[]) => rmMock(...args),
+}));
+
 import { deploySolo, teardownSolo } from "./solo";
 
-// `killPortForwards()` runs pgrep/ps/kill through the same mock; only the deploy call is of interest.
 const deployCalls = () => execFileMock.mock.calls.filter(([, args]) => args[2] === "deploy");
 
 describe("deploySolo memoisation", () => {
@@ -69,6 +75,7 @@ describe("deploySolo memoisation", () => {
   it("tears down via `solo one-shot falcon destroy`", async () => {
     await deploySolo();
     execFileMock.mockClear();
+    rmMock.mockClear();
     await teardownSolo();
 
     const destroyCalls = execFileMock.mock.calls.filter(([, args]) => args[2] === "destroy");
@@ -81,5 +88,9 @@ describe("deploySolo memoisation", () => {
       "coin-tester-hedera",
       "--quiet-mode",
     ]);
+    expect(rmMock).toHaveBeenCalledWith(
+      expect.stringContaining("one-shot-coin-tester-hedera"),
+      expect.objectContaining({ recursive: true, force: true }),
+    );
   });
 });

@@ -90,7 +90,6 @@ export function makeLocalHtsToken(tokenId: string): TokenCurrency {
   };
 }
 
-/** Installs a crypto-assets store backed by an explicit token list; HBAR-only scenarios pass `[]`. */
 export function installCryptoAssetsStore(tokens: TokenCurrency[]): void {
   const byAddress = new Map(tokens.map(t => [t.contractAddress.toLowerCase(), t]));
   const byId = new Map(tokens.map(t => [t.id, t]));

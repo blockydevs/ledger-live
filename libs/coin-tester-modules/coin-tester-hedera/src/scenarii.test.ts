@@ -10,7 +10,7 @@ import { describeNegativeCases } from "./negativeCases";
 /** Solo cold start is 7–10 min; the hook gets its own budget so it is not charged to a scenario. */
 const CLUSTER_BRING_UP_TIMEOUT_MS = 900_000;
 
-// Per *test*, not per suite. Deploy is no longer inside a test, so a hung scenario fails in 6 min.
+// Per *test*, not per suite: a hung scenario fails in 6 min.
 jest.setTimeout(360_000);
 
 ["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
@@ -21,8 +21,6 @@ jest.setTimeout(360_000);
 );
 
 describe("Hedera", () => {
-  // Cluster bring-up belongs to the environment: a kube failure here reports as an environment
-  // failure instead of blaming whichever scenario happens to run first.
   beforeAll(async () => {
     await deploySolo();
   }, CLUSTER_BRING_UP_TIMEOUT_MS);

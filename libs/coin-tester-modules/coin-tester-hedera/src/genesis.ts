@@ -28,7 +28,7 @@ let client: Client | undefined;
 /** Genesis-operator client, memoised alongside the deployment it belongs to. */
 export async function getGenesisClient(): Promise<Client> {
   if (!client) {
-    await deploySolo(); // free once the suite's beforeAll has run; guards direct use in isolation
+    await deploySolo();
     const created = Client.forNetwork(LOCAL_CONSENSUS_NODES, { scheduleNetworkUpdate: false });
     created.setOperator(GENESIS_ACCOUNT_ID, PrivateKey.fromStringED25519(GENESIS_OPERATOR_KEY));
     client = created;
@@ -110,9 +110,7 @@ export async function createFundedAccount(
     transaction.setMaxAutomaticTokenAssociations(maxAutomaticTokenAssociations);
   }
 
-  const receipt = await transaction
-    .execute(genesis)
-    .then(response => response.getReceipt(genesis));
+  const receipt = await transaction.execute(genesis).then(response => response.getReceipt(genesis));
 
   const accountId = receipt.accountId?.toString();
   if (!accountId) {
