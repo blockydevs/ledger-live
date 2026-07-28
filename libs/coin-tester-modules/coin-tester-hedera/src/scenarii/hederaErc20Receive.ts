@@ -31,8 +31,6 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
   name: "Ledger Live Hedera — ERC20 received from a 3rd party",
 
   setup: async () => {
-    // Defensive, same as the send scenario: makes setup self-contained instead of dependent on a
-    // predecessor's teardown having run.
     resetErc20Tokens();
     scenarioStartedAt = new Date();
 
@@ -43,21 +41,14 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
     token = makeLocalErc20Token(evmAddress);
 
     // No seeding: the whole point is that the account starts with a zero balance for this token.
-    const {
-      currencyBridge,
-      accountBridge,
-      publicKey,
-      accountId,
-      close,
-    } = await setupHederaScenario([token]);
+    const { currencyBridge, accountBridge, publicKey, accountId, close } =
+      await setupHederaScenario([token]);
     closeMswHandlers = close;
 
     accountEvmAddress = await waitForMirrorNodeEvmAddress(accountId);
 
-    // The ONLY refresh() this scenario ever performs, and it is not about seeing any transfer: a
-    // null snapshot makes getErcTokenTransferRows throw HgraphFakeGuardError, which is a
-    // programming-error guard and escapes the retry wrapper. After this the feed stays frozen and
-    // empty for our account, which is exactly the state the tested branch requires.
+    // refresh() must run once here, or getErcTokenTransferRows throws on a null snapshot. After
+    // this the feed stays frozen and empty for our account, which is what this scenario tests.
     await refresh();
 
     return {
@@ -65,18 +56,16 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
       retryInterval: 2000,
-      // Must stay well under MAX_TRANSFER_PAGES (50, hgraphFake.ts:292): transferPageCount only
-      // resets on a successful refresh(), and getERC20Transfers issues one page request per sync.
+      // Must stay well under MAX_TRANSFER_PAGES: transferPageCount only resets on a successful
+      // refresh(), and each sync issues one page request.
       retryLimit: 20,
     };
   },
 
-  // Deliberately no beforeSync. Nothing may refresh the transfer snapshot after setup, otherwise
-  // the received transfer would show up as an operation and the branch under test would be missed.
+  // No beforeSync here: refreshing after setup would populate the transfer feed that this
+  // scenario needs to stay empty.
 
   beforeAll: account => {
-    // Asserted here rather than as a transaction: an absence assertion gains nothing from retry,
-    // and under mirror-node lag a retried version could pass for entirely the wrong reason.
     expect(
       account.subAccounts?.some(sa => sa.type === "TokenAccount" && sa.token.id === token.id),
     ).toBe(false);
@@ -85,8 +74,8 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
   getTransactions: () => [],
 
   getInternalTransactions: async (): Promise<HederaScenarioTransaction[]> => {
-    // Awaited by the runner at main.ts:156, before the (empty) regular-transaction loop. No
-    // refresh() follows, so the balance moves live while the transfer feed stays empty.
+    // Awaited by the runner before the (empty) regular-transaction loop. No refresh() follows,
+    // so the balance moves live while the transfer feed stays empty.
     await transferErc20(tokenEvmAddress, accountEvmAddress, RECEIVE_AMOUNT);
     await waitForErc20Balance(tokenEvmAddress, accountEvmAddress, RECEIVE_AMOUNT);
 
@@ -100,12 +89,12 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
           if (!sub) return; // retryable: mirror-node lag, not a TypeError
 
           expect(sub.balance.toString()).toBe(String(RECEIVE_AMOUNT));
-          // The branch under test (bridge/utils.ts:235-268) builds the sub-account from the
-          // balance alone, so it must carry no operations at all.
+          // The branch under test builds the sub-account from balance alone, so it carries no
+          // operations.
           expect(sub.operations).toHaveLength(0);
           expect(sub.operationsCount).toBe(0);
-          // creationDate is `new Date()` on this branch (utils.ts:265), so the only meaningful
-          // assertion is that it was minted during this scenario.
+          // creationDate is `new Date()` on this branch, so only the scenario window can be
+          // asserted.
           expect(sub.creationDate.getTime()).toBeGreaterThanOrEqual(scenarioStartedAt.getTime());
         },
       },

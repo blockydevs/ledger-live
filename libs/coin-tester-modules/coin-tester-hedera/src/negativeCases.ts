@@ -32,19 +32,11 @@ const MAX_AUTO_ASSOCIATIONS = 10;
 const ONE_HBAR_IN_TINYBAR = 100_000_000;
 const NEGATIVE_CASES_SETUP_TIMEOUT_MS = 120_000;
 
-/**
- * Well-formed but nonexistent account. `toEVMAddress` (coin-hedera network/utils.ts:303-320)
- * catches the mirror-node 404 and returns null, which is the only deterministic way into the
- * craft-time `invariant(recipientEvmAddress, ...)`. RECIPIENT (0.0.1002) will NOT do: it is a
- * Solo-funded account created without an alias, and the mirror node reports a long-zero
- * evm_address for such accounts.
- */
+// toEVMAddress returns null for a nonexistent account, reaching the craft-time invariant.
+// RECIPIENT (0.0.1002) won't do: it has no alias, so the mirror node reports a long-zero
+// evm_address for it instead.
 const NONEXISTENT_RECIPIENT = "0.0.999999999";
 
-/**
- * Fold the sync observable into a synced account without importing rxjs. Shared by the HTS and
- * ERC20 negative-case setups so a future fix to this logic doesn't have to land twice.
- */
 async function syncAccount(
   accountBridge: AccountBridge<Transaction, HederaAccount, TransactionStatus>,
   initial: HederaAccount,
@@ -61,12 +53,6 @@ async function syncAccount(
   });
 }
 
-/**
- * Shared shape behind every negative case in this file: build a transaction, patch it, prepare
- * it, and read back its status — never broadcast. Parameterised over bridge/account so both the
- * HTS and ERC20 blocks (each with their own bridge/account pair) can share it instead of
- * reimplementing these four steps.
- */
 async function buildStatusFor(
   accountBridge: AccountBridge<Transaction, HederaAccount, TransactionStatus>,
   account: HederaAccount,
@@ -78,11 +64,7 @@ async function buildStatusFor(
   return accountBridge.getTransactionStatus(account, tx);
 }
 
-/**
- * Bridge-level validation runner for cases `executeScenario` cannot cover: asserts directly
- * against `getTransactionStatus` instead of broadcasting. Call from inside the existing
- * `describe("Hedera")` in scenarii.test.ts so it shares that Solo cluster.
- */
+// Call from inside scenarii.test.ts's `describe("Hedera")` so it shares that Solo cluster.
 export function describeNegativeCases(): void {
   describe("negative cases", () => {
     let closeMswHandlers: (() => void) | undefined;
@@ -162,13 +144,13 @@ export function describeNegativeCases(): void {
       const status = await buildStatus({
         subAccountId: tokenSubAccountId,
         recipient: RECIPIENT,
-        amount: new BigNumber(TOKEN_INJECTED + UNIT), // one unit over the injected sub-account balance
+        amount: new BigNumber(TOKEN_INJECTED + UNIT),
       });
       expect(status.errors.amount?.name).toBe("NotEnoughBalance");
     });
 
-    // Deploys its own ERC20 contract rather than reusing scenarioHederaErc20's, to avoid coupling
-    // this block to that scenario having run first.
+    // Deploys its own ERC20 contract instead of reusing scenarioHederaErc20's, so this block
+    // doesn't depend on that scenario having run first.
     describe("erc20 negative cases", () => {
       let closeErc20MswHandlers: (() => void) | undefined;
       let erc20AccountBridge: AccountBridge<Transaction, HederaAccount, TransactionStatus>;
@@ -183,8 +165,8 @@ export function describeNegativeCases(): void {
 
         const erc20Token = makeLocalErc20Token(evmAddress);
 
-        // Stands up a second msw server while the outer block's is still live: Jest guarantees all
-        // outer `it`s finish before this nested `describe` runs, so they never overlap in practice.
+        // Jest runs all outer `it`s before this nested `describe`, so this second msw server
+        // never overlaps with the outer block's.
         const {
           currencyBridge,
           accountBridge: ab,
@@ -197,22 +179,20 @@ export function describeNegativeCases(): void {
 
         const accountEvmAddress = await waitForMirrorNodeEvmAddress(accountId);
 
-        // Fixture seeding: fund the account under test directly from the genesis operator,
-        // bypassing the bridge entirely.
+        // Fund the account under test directly from the genesis operator, bypassing the bridge.
         await transferErc20(evmAddress, accountEvmAddress, ERC20_SEED_AMOUNT);
 
         // The seed must be confirmed as a balance, not a transfer: only addresses with a balance
-        // row enter calTokenByAddress, and the transfer feed is derived from that map.
+        // row enter calTokenByAddress, which the transfer feed is derived from.
         await waitForErc20Balance(evmAddress, accountEvmAddress, ERC20_SEED_AMOUNT);
 
-        // No beforeSync hook exists in this block, so the transfer snapshot must be taken
-        // explicitly here, before the manual sync below.
+        // No beforeSync in this block, so refresh() must run explicitly before the sync below.
         await refresh();
 
         const initial = makeHederaAccount(accountId, publicKey);
 
         // Re-runs preload/hydrate against this setup's currencyBridge (token list [token,
-        // erc20Token]) since the outer beforeAll's only covered the HTS token.
+        // erc20Token]): the outer beforeAll's only covered the HTS token.
         if (currencyBridge.preload) {
           const data = await currencyBridge.preload(initial.currency);
           currencyBridge.hydrate?.(data, initial.currency);
@@ -222,12 +202,7 @@ export function describeNegativeCases(): void {
 
         erc20TokenSubAccountId = encodeTokenAccountId(erc20Account.id, erc20Token);
 
-        // If the sub-account never materialised, prepareTransaction falls through to the plain-HBAR
-        // branch and the test below would fail on balance validation instead of naming the real
-        // problem, so assert it explicitly here.
-        expect(
-          erc20Account.subAccounts?.some(sa => sa.id === erc20TokenSubAccountId),
-        ).toBe(true);
+        expect(erc20Account.subAccounts?.some(sa => sa.id === erc20TokenSubAccountId)).toBe(true);
       }, NEGATIVE_CASES_SETUP_TIMEOUT_MS);
 
       afterAll(() => {
@@ -237,18 +212,16 @@ export function describeNegativeCases(): void {
       });
 
       it("flags an ERC20 transfer above the held token balance (NotEnoughBalance)", async () => {
-        // RECIPIENT is safe here despite having no alias: this block only exercises
-        // status/validation, and that path never reaches the craft-time toEVMAddress invariant.
+        // RECIPIENT is safe here: this only exercises status/validation, which never reaches
+        // the craft-time toEVMAddress invariant.
         const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
           subAccountId: erc20TokenSubAccountId,
           recipient: RECIPIENT,
-          amount: new BigNumber(ERC20_SEED_AMOUNT + UNIT), // one unit over the seeded sub-account balance
+          amount: new BigNumber(ERC20_SEED_AMOUNT + UNIT),
         });
 
         expect(status.errors.amount?.name).toBe("NotEnoughBalance");
-        // Not a validation rule — handleERC20TokenTransaction sets this warning unconditionally.
-        // Asserted here rather than in its own `it` because all it proves is that we entered the
-        // ERC20 branch instead of the HBAR or HTS one, which this case already relies on.
+        // Not a validation rule: handleERC20TokenTransaction sets this warning unconditionally.
         expect(status.warnings.unverifiedEvmAddress?.name).toBe(
           "HederaRecipientEvmAddressVerificationRequired",
         );
@@ -275,9 +248,6 @@ export function describeNegativeCases(): void {
         expect(status.errors.transaction?.name).toBe("HederaMemoExceededSizeError");
       });
 
-      // Deliberately duplicates the parent block's HBAR InvalidAddress case: the ERC20 branch
-      // calls validateRecipient through its own code path, so a regression can hit one branch
-      // and not the other. Costs nothing — no broadcast, no cluster contact.
       it("flags a malformed recipient on the ERC20 branch (InvalidAddress)", async () => {
         const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
           subAccountId: erc20TokenSubAccountId,
@@ -289,14 +259,12 @@ export function describeNegativeCases(): void {
       });
 
       it("flags an ERC20 transfer with no HBAR left to pay gas (NotEnoughBalance)", async () => {
-        // Purely in-memory: the account is not drained on chain. buildStatusFor takes the account
-        // as an argument, so a shallow copy with a 1-tinybar balance is enough to hit
-        // `account.balance.isLessThan(estimatedFees.tinybars)`.
+        // In-memory only: buildStatusFor takes the account as data, so a shallow copy with a
+        // 1-tinybar balance is enough.
         const noGasAccount = { ...erc20Account, balance: new BigNumber(1) };
 
-        // The amount MUST stay inside the sub-account balance. Both the sub-account check and the
-        // parent HBAR check write errors.amount, so an over-balance amount here would go green
-        // for the wrong reason and the case would never test what it claims to.
+        // amount must stay inside the sub-account balance: both that check and the parent HBAR
+        // check write errors.amount, so an over-balance amount would pass for the wrong reason.
         const status = await buildStatusFor(erc20AccountBridge, noGasAccount, {
           subAccountId: erc20TokenSubAccountId,
           recipient: RECIPIENT,
@@ -316,17 +284,14 @@ export function describeNegativeCases(): void {
         } as Transaction;
         transaction = await erc20AccountBridge.prepareTransaction(erc20Account, transaction);
 
-        // signOperation calls craftTransaction directly, skipping getTransactionStatus, so this is
-        // the only reachable assertion for the craft-time invariant. Folded into a promise rather
-        // than importing rxjs, matching syncAccount above.
+        // signOperation calls craftTransaction directly, skipping getTransactionStatus — this is
+        // the only reachable assertion for the craft-time invariant.
         const signed = new Promise<void>((resolve, reject) => {
           erc20AccountBridge
             .signOperation({ account: erc20Account, transaction, deviceId: "" })
             .subscribe({ next: () => {}, error: reject, complete: () => resolve() });
         });
 
-        // The exact message matters: without it the case would also pass if crafting failed for an
-        // unrelated reason.
         await expect(signed).rejects.toThrow(
           `hedera: EVM address is missing ${NONEXISTENT_RECIPIENT}`,
         );
