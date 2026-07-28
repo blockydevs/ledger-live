@@ -2,8 +2,13 @@ import type { Scenario } from "@ledgerhq/coin-tester/main";
 import type { Transaction, HederaAccount } from "@ledgerhq/coin-hedera/types";
 import type { TokenAccount } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
-import { TOKEN_DECIMALS, TOKEN_SYMBOL, makeHederaAccount, makeLocalErc20Token } from "../fixtures";
-import { type HederaScenarioTransaction, setupHederaScenario } from "../helpers";
+import { TOKEN_SYMBOL, TOKEN_UNIT, makeHederaAccount, makeLocalErc20Token } from "../fixtures";
+import {
+  type HederaScenarioTransaction,
+  SCENARIO_RETRY_POLICY,
+  findTokenSubAccount,
+  setupHederaScenario,
+} from "../helpers";
 import {
   deployErc20Token,
   transferErc20,
@@ -12,8 +17,7 @@ import {
 } from "../genesis";
 import { registerErc20Token, resetErc20Tokens, refresh } from "../hgraphFake";
 
-const UNIT = 10 ** TOKEN_DECIMALS;
-const RECEIVE_AMOUNT = 42 * UNIT;
+const RECEIVE_AMOUNT = 42 * TOKEN_UNIT;
 
 let closeMswHandlers: (() => void) | undefined;
 let token: TokenCurrency;
@@ -22,9 +26,7 @@ let accountEvmAddress: string;
 let scenarioStartedAt: Date;
 
 function findErc20SubAccount(account: HederaAccount): TokenAccount | undefined {
-  return account.subAccounts?.find(sa => sa.type === "TokenAccount" && sa.token.id === token.id) as
-    | TokenAccount
-    | undefined;
+  return findTokenSubAccount(account, token.id);
 }
 
 export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = {
@@ -55,10 +57,9 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
       currencyBridge,
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
-      retryInterval: 2000,
-      // Must stay well under MAX_TRANSFER_PAGES: transferPageCount only resets on a successful
-      // refresh(), and each sync issues one page request.
-      retryLimit: 20,
+      // retryLimit must stay well under MAX_TRANSFER_PAGES: transferPageCount only resets on a
+      // successful refresh(), and each sync issues one page request.
+      ...SCENARIO_RETRY_POLICY,
     };
   },
 
@@ -81,7 +82,7 @@ export const scenarioHederaErc20Receive: Scenario<Transaction, HederaAccount> = 
 
     return [
       {
-        name: `Receive ${RECEIVE_AMOUNT / UNIT} ${TOKEN_SYMBOL} (ERC20) from a 3rd party`,
+        name: `Receive ${RECEIVE_AMOUNT / TOKEN_UNIT} ${TOKEN_SYMBOL} (ERC20) from a 3rd party`,
         family: "hedera",
         expect: (previous, current) => {
           const sub = findErc20SubAccount(current);

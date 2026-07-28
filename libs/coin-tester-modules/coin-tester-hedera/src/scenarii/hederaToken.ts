@@ -6,8 +6,19 @@ import type { TokenAccount } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import BigNumber from "bignumber.js";
-import { TOKEN_DECIMALS, TOKEN_SYMBOL, makeHederaAccount, makeLocalHtsToken } from "../fixtures";
-import { type HederaScenarioTransaction, setupHederaScenario } from "../helpers";
+import {
+  TOKEN_DECIMALS,
+  TOKEN_SYMBOL,
+  TOKEN_UNIT,
+  makeHederaAccount,
+  makeLocalHtsToken,
+} from "../fixtures";
+import {
+  type HederaScenarioTransaction,
+  SCENARIO_RETRY_POLICY,
+  findTokenSubAccount,
+  setupHederaScenario,
+} from "../helpers";
 import {
   associateToken,
   createFundedAccount,
@@ -16,10 +27,9 @@ import {
   waitForMirrorNodeTokenBalance,
 } from "../genesis";
 
-const UNIT = 10 ** TOKEN_DECIMALS;
-const TOKEN_INITIAL_SUPPLY = 1_000 * UNIT;
-const TOKEN_INJECTED = 100 * UNIT;
-const TOKEN_SENT = 10 * UNIT;
+const TOKEN_INITIAL_SUPPLY = 1_000 * TOKEN_UNIT;
+const TOKEN_INJECTED = 100 * TOKEN_UNIT;
+const TOKEN_SENT = 10 * TOKEN_UNIT;
 
 let closeMswHandlers: (() => void) | undefined;
 let token: TokenCurrency;
@@ -29,10 +39,8 @@ let tokenRecipientId: string;
 let injected = false;
 let beforeEachCallIndex = 0;
 
-function findTokenSubAccount(account: HederaAccount): TokenAccount | undefined {
-  return account.subAccounts?.find(sa => sa.type === "TokenAccount" && sa.token.id === token.id) as
-    | TokenAccount
-    | undefined;
+function findSubAccount(account: HederaAccount): TokenAccount | undefined {
+  return findTokenSubAccount(account, token.id);
 }
 
 function makeTransactions(): HederaScenarioTransaction[] {
@@ -48,7 +56,7 @@ function makeTransactions(): HederaScenarioTransaction[] {
     expect: (previous, current) => {
       expect(current.operations.length).toBeGreaterThan(previous.operations.length);
       // An associated HTS token with no operations and a zero balance still yields a sub-account.
-      const subAccount = findTokenSubAccount(current);
+      const subAccount = findSubAccount(current);
       expect(subAccount).toBeDefined();
       if (!subAccount) return;
       expect(subAccount.balance.toString()).toBe("0");
@@ -56,15 +64,15 @@ function makeTransactions(): HederaScenarioTransaction[] {
   };
 
   const sendToken: HederaScenarioTransaction = {
-    name: `Send ${TOKEN_SENT / UNIT} ${TOKEN_SYMBOL} to a freshly associated account`,
+    name: `Send ${TOKEN_SENT / TOKEN_UNIT} ${TOKEN_SYMBOL} to a freshly associated account`,
     family: "hedera",
     mode: HEDERA_TRANSACTION_MODES.Send,
     subAccountId: encodeTokenAccountId(makeHederaAccount(accountId, "").id, token),
     amount: new BigNumber(TOKEN_SENT),
     recipient: tokenRecipientId,
     expect: (previous, current) => {
-      const previousSub = findTokenSubAccount(previous);
-      const currentSub = findTokenSubAccount(current);
+      const previousSub = findSubAccount(previous);
+      const currentSub = findSubAccount(current);
       expect(previousSub).toBeDefined();
       expect(currentSub).toBeDefined();
       if (!previousSub || !currentSub) return;
@@ -84,8 +92,8 @@ function makeTransactions(): HederaScenarioTransaction[] {
     useAllAmount: true,
     recipient: tokenRecipientId,
     expect: (previous, current) => {
-      const previousSub = findTokenSubAccount(previous);
-      const currentSub = findTokenSubAccount(current);
+      const previousSub = findSubAccount(previous);
+      const currentSub = findSubAccount(current);
       expect(previousSub).toBeDefined();
       expect(currentSub).toBeDefined();
       if (!previousSub || !currentSub) return; // retryable mirror-node lag, not a TypeError
@@ -135,8 +143,7 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
       currencyBridge,
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
-      retryInterval: 2000,
-      retryLimit: 20,
+      ...SCENARIO_RETRY_POLICY,
     };
   },
 
@@ -147,7 +154,7 @@ export const scenarioHederaToken: Scenario<Transaction, HederaAccount> = {
     if (callIndex === 0) return; // precedes `associate`: the sub-account cannot exist yet.
     if (injected) return;
 
-    const subAccount = findTokenSubAccount(account);
+    const subAccount = findSubAccount(account);
     if (!subAccount) {
       throw new Error(
         `hederaToken scenario: expected the ${TOKEN_SYMBOL} sub-account to exist before injecting ` +

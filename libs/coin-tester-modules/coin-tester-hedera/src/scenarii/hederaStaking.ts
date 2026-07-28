@@ -3,7 +3,11 @@ import type { Transaction, HederaAccount } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
 import BigNumber from "bignumber.js";
 import { makeHederaAccount } from "../fixtures";
-import { type HederaScenarioTransaction, setupHederaScenario } from "../helpers";
+import {
+  type HederaScenarioTransaction,
+  SCENARIO_RETRY_POLICY,
+  setupHederaScenario,
+} from "../helpers";
 import { getFirstNodeId } from "../genesis";
 
 let closeMswHandlers: (() => void) | undefined;
@@ -65,8 +69,7 @@ export const scenarioHederaStaking: Scenario<Transaction, HederaAccount> = {
       currencyBridge,
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
-      retryInterval: 2000,
-      retryLimit: 20,
+      ...SCENARIO_RETRY_POLICY,
     };
   },
 

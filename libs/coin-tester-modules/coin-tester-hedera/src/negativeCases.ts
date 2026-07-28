@@ -5,8 +5,11 @@ import type { Transaction, HederaAccount, TransactionStatus } from "@ledgerhq/co
 import { HEDERA_MAX_MEMO_SIZE } from "@ledgerhq/coin-hedera/logic/validateMemo";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import {
+  MAX_AUTO_ASSOCIATIONS,
+  ONE_HBAR_IN_TINYBAR,
   TOKEN_DECIMALS,
   TOKEN_SYMBOL,
+  TOKEN_UNIT,
   RECIPIENT,
   makeHederaAccount,
   makeLocalHtsToken,
@@ -24,12 +27,9 @@ import {
 } from "./genesis";
 import { registerErc20Token, resetErc20Tokens, refresh } from "./hgraphFake";
 
-const UNIT = 10 ** TOKEN_DECIMALS;
-const TOKEN_INITIAL_SUPPLY = 1_000 * UNIT;
-const TOKEN_INJECTED = 100 * UNIT;
-const ERC20_SEED_AMOUNT = 100 * UNIT;
-const MAX_AUTO_ASSOCIATIONS = 10;
-const ONE_HBAR_IN_TINYBAR = 100_000_000;
+const TOKEN_INITIAL_SUPPLY = 1_000 * TOKEN_UNIT;
+const TOKEN_INJECTED = 100 * TOKEN_UNIT;
+const ERC20_SEED_AMOUNT = 100 * TOKEN_UNIT;
 const NEGATIVE_CASES_SETUP_TIMEOUT_MS = 120_000;
 
 // toEVMAddress returns null for a nonexistent account, reaching the craft-time invariant.
@@ -133,7 +133,7 @@ export function describeNegativeCases(): void {
       const status = await buildStatus({
         subAccountId: tokenSubAccountId,
         recipient: RECIPIENT, // 0.0.1002 exists but is NOT associated with this token
-        amount: new BigNumber(UNIT),
+        amount: new BigNumber(TOKEN_UNIT),
       });
       expect(status.warnings.missingAssociation?.name).toBe(
         "HederaRecipientTokenAssociationRequired",
@@ -144,7 +144,7 @@ export function describeNegativeCases(): void {
       const status = await buildStatus({
         subAccountId: tokenSubAccountId,
         recipient: RECIPIENT,
-        amount: new BigNumber(TOKEN_INJECTED + UNIT),
+        amount: new BigNumber(TOKEN_INJECTED + TOKEN_UNIT),
       });
       expect(status.errors.amount?.name).toBe("NotEnoughBalance");
     });
@@ -217,7 +217,7 @@ export function describeNegativeCases(): void {
         const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
           subAccountId: erc20TokenSubAccountId,
           recipient: RECIPIENT,
-          amount: new BigNumber(ERC20_SEED_AMOUNT + UNIT),
+          amount: new BigNumber(ERC20_SEED_AMOUNT + TOKEN_UNIT),
         });
 
         expect(status.errors.amount?.name).toBe("NotEnoughBalance");
@@ -241,7 +241,7 @@ export function describeNegativeCases(): void {
         const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
           subAccountId: erc20TokenSubAccountId,
           recipient: RECIPIENT,
-          amount: new BigNumber(UNIT),
+          amount: new BigNumber(TOKEN_UNIT),
           memo: "x".repeat(HEDERA_MAX_MEMO_SIZE + 1),
         });
 
@@ -252,7 +252,7 @@ export function describeNegativeCases(): void {
         const status = await buildStatusFor(erc20AccountBridge, erc20Account, {
           subAccountId: erc20TokenSubAccountId,
           recipient: "not-an-account",
-          amount: new BigNumber(UNIT),
+          amount: new BigNumber(TOKEN_UNIT),
         });
 
         expect(status.errors.recipient?.name).toBe("InvalidAddress");
@@ -268,7 +268,7 @@ export function describeNegativeCases(): void {
         const status = await buildStatusFor(erc20AccountBridge, noGasAccount, {
           subAccountId: erc20TokenSubAccountId,
           recipient: RECIPIENT,
-          amount: new BigNumber(UNIT),
+          amount: new BigNumber(TOKEN_UNIT),
         });
 
         expect(status.errors.amount?.name).toBe("NotEnoughBalance");
@@ -280,7 +280,7 @@ export function describeNegativeCases(): void {
           ...transaction,
           subAccountId: erc20TokenSubAccountId,
           recipient: NONEXISTENT_RECIPIENT,
-          amount: new BigNumber(UNIT),
+          amount: new BigNumber(TOKEN_UNIT),
         } as Transaction;
         transaction = await erc20AccountBridge.prepareTransaction(erc20Account, transaction);
 

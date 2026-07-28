@@ -238,6 +238,9 @@
     },
     "./libs/coin-tester-modules/coin-tester-multiversx": {
       "entry": ["src/scenarii/multiversx.ts"]
+    },
+    "./libs/coin-tester-modules/coin-tester-hedera": {
+      "entry": ["src/scenarii/*.ts", "src/negativeCases.ts"]
     }
   }
 }

@@ -48,16 +48,17 @@ export function closeGenesisClient(): void {
   client = undefined;
 }
 
-async function pollMirrorNode(
+/** `T` is the caller's assertion about the mirror-node payload, as in `getFirstNodeId` below. */
+async function pollMirrorNode<T>(
   path: string,
-  isReady: (body: any) => boolean,
+  isReady: (body: T) => boolean,
   describeFailure: string,
   init?: RequestInit,
 ): Promise<void> {
   const deadline = Date.now() + MIRROR_NODE_POLL_TIMEOUT_MS;
   while (Date.now() < deadline) {
     const res = await fetch(`${LOCAL_MIRROR_NODE_URL}${path}`, init).catch(() => undefined);
-    if (res?.ok && isReady(await res.json())) return;
+    if (res?.ok && isReady((await res.json()) as T)) return;
     await new Promise(resolve => setTimeout(resolve, MIRROR_NODE_POLL_INTERVAL_MS));
   }
   throw new Error(`hedera genesis: ${describeFailure} within ${MIRROR_NODE_POLL_TIMEOUT_MS}ms`);
@@ -70,7 +71,7 @@ async function pollMirrorNode(
  */
 export async function waitForMirrorNodeEvmAddress(accountId: string): Promise<string> {
   let evmAddress: string | undefined;
-  await pollMirrorNode(
+  await pollMirrorNode<{ evm_address?: string }>(
     `/api/v1/accounts/${accountId}`,
     body => {
       evmAddress = body?.evm_address;
@@ -87,13 +88,9 @@ export async function waitForMirrorNodeTokenBalance(
   tokenId: string,
   atLeast: number,
 ): Promise<void> {
-  await pollMirrorNode(
+  await pollMirrorNode<{ tokens?: { token_id: string; balance: number }[] }>(
     `/api/v1/accounts/${accountId}/tokens`,
-    body =>
-      (body?.tokens ?? []).some(
-        (t: { token_id: string; balance: number }) =>
-          t.token_id === tokenId && t.balance >= atLeast,
-      ),
+    body => (body?.tokens ?? []).some(t => t.token_id === tokenId && t.balance >= atLeast),
     `mirror node never reported a balance of ${atLeast} for token ${tokenId} on ${accountId}`,
   );
 }
@@ -246,7 +243,7 @@ export async function deployErc20Token(): Promise<{ contractId: string; evmAddre
   }
 
   let evmAddress: string | undefined;
-  await pollMirrorNode(
+  await pollMirrorNode<{ evm_address?: string }>(
     `/api/v1/contracts/${contractId}`,
     body => {
       evmAddress = body?.evm_address;
@@ -284,7 +281,7 @@ export async function waitForErc20Balance(
   accountEvmAddress: string,
   expected: number,
 ): Promise<void> {
-  await pollMirrorNode(
+  await pollMirrorNode<{ result?: string }>(
     "/api/v1/contracts/call",
     body => typeof body?.result === "string" && BigInt(body.result) >= BigInt(expected),
     `mirror node never reported a balance of ${expected} for ${accountEvmAddress} on contract ${evmAddress}`,

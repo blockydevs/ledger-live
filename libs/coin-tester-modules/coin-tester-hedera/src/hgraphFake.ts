@@ -283,7 +283,10 @@ export async function refresh(): Promise<void> {
     transferSnapshot = rows;
     transferPageCount = 0;
   } catch (err) {
-    console.error("hgraphFake: refresh() failed against the mirror node, keeping previous snapshot:", err);
+    console.error(
+      "hgraphFake: refresh() failed against the mirror node, keeping previous snapshot:",
+      err,
+    );
   }
 }
 

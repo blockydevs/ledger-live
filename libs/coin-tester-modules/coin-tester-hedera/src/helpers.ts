@@ -1,4 +1,4 @@
-import type { AccountBridge, CurrencyBridge } from "@ledgerhq/types-live";
+import type { AccountBridge, CurrencyBridge, TokenAccount } from "@ledgerhq/types-live";
 import type { GetAddressFn } from "@ledgerhq/ledger-wallet-framework/bridge/getAddressWrapper";
 import type { SignerContext } from "@ledgerhq/ledger-wallet-framework/signer";
 import { createBridges } from "@ledgerhq/coin-hedera/bridge/index";
@@ -10,7 +10,7 @@ import type {
   HederaAccount,
   HederaSigner,
 } from "@ledgerhq/coin-hedera/types";
-import type { ScenarioTransaction } from "@ledgerhq/coin-tester/main";
+import type { Scenario, ScenarioTransaction } from "@ledgerhq/coin-tester/main";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { registerCoinModules } from "@ledgerhq/live-common/coin-modules/registry";
 import { coinModuleLoaders } from "@ledgerhq/live-common/coin-modules/loaders";
@@ -29,6 +29,24 @@ import { initMswHandlers } from "./indexer";
 const INITIAL_BALANCE_HBAR = 100;
 
 export type HederaScenarioTransaction = ScenarioTransaction<Transaction, HederaAccount>;
+
+type ScenarioSetupResult = Awaited<ReturnType<Scenario<Transaction, HederaAccount>["setup"]>>;
+
+/** Absorbs the mirror node's lag behind consensus — for `expect` only, nothing earlier. */
+export const SCENARIO_RETRY_POLICY: Pick<ScenarioSetupResult, "retryInterval" | "retryLimit"> = {
+  retryInterval: 2000,
+  retryLimit: 20,
+};
+
+/** Finds the sub-account for a given token id, however the caller has that token at hand. */
+export function findTokenSubAccount(
+  account: HederaAccount,
+  tokenId: string,
+): TokenAccount | undefined {
+  return account.subAccounts?.find(sa => sa.type === "TokenAccount" && sa.token.id === tokenId) as
+    | TokenAccount
+    | undefined;
+}
 
 registerCoinModules(coinModuleLoaders);
 

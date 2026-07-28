@@ -79,6 +79,12 @@ export function makeHederaAccount(accountId: string, publicKey: string): HederaA
 
 export const TOKEN_DECIMALS = 2;
 export const TOKEN_SYMBOL = "LLT";
+export const TOKEN_UNIT = 10 ** TOKEN_DECIMALS;
+
+export const ONE_HBAR_IN_TINYBAR = 100_000_000;
+
+/** Headroom above any scenario's token count — deliberately NOT the -1 "unlimited" sentinel. */
+export const MAX_AUTO_ASSOCIATIONS = 10;
 
 /** Stubbed HBAR/USD rate. Fee estimates derive from it, so no assertion may depend on its value. */
 export const HBAR_USD_RATE = 0.1;

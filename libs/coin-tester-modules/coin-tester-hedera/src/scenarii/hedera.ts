@@ -3,11 +3,13 @@ import type { Scenario } from "@ledgerhq/coin-tester/main";
 import type { Transaction, HederaAccount, HederaOperationExtra } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
 import BigNumber from "bignumber.js";
-import { RECIPIENT, makeHederaAccount } from "../fixtures";
-import { type HederaScenarioTransaction, setupHederaScenario } from "../helpers";
+import { ONE_HBAR_IN_TINYBAR, RECIPIENT, makeHederaAccount } from "../fixtures";
+import {
+  type HederaScenarioTransaction,
+  SCENARIO_RETRY_POLICY,
+  setupHederaScenario,
+} from "../helpers";
 import { getHgraphObserver } from "../indexer";
-
-const ONE_HBAR_IN_TINYBAR = 100_000_000;
 
 /** A never-funded ED25519 alias; sending HBAR to it exercises Hedera's auto-account-creation. */
 const AUTO_CREATE_ALIAS = PrivateKey.generateED25519().publicKey.toAccountId(0, 0).toString();
@@ -114,9 +116,7 @@ export const scenarioHedera: Scenario<Transaction, HederaAccount> = {
       currencyBridge,
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
-      // Absorbs the mirror node's lag behind consensus — for `expect` only, nothing earlier.
-      retryInterval: 2000,
-      retryLimit: 20,
+      ...SCENARIO_RETRY_POLICY,
     };
   },
 

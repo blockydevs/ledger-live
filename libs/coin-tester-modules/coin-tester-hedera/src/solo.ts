@@ -62,9 +62,7 @@ export async function teardownSolo(): Promise<void> {
   deployment = undefined;
   console.log("Tearing down Hiero Solo…");
   await destroyQuietly();
-  // `destroy` skips removing the output dir when Solo's local config lists no deployment — the
-  // state a hard-killed run leaves behind. Remove it ourselves: Solo rewrites it on every deploy.
-  await rm(oneShotOutputDir(), { recursive: true, force: true });
+  await removeOneShotOutputDirQuietly();
   await killPortForwards();
 }
 
@@ -78,6 +76,19 @@ async function destroyQuietly(): Promise<void> {
     );
   } catch (err) {
     console.error("solo.ts: `one-shot falcon destroy` failed (ignored):", err);
+  }
+}
+
+/**
+ * `destroy` skips removing the output dir when Solo's local config lists no deployment — the state
+ * a hard-killed run leaves behind. Remove it ourselves: Solo rewrites it on every deploy.
+ * Best-effort like the rest of teardown: `force` swallows ENOENT but not EACCES/EBUSY.
+ */
+async function removeOneShotOutputDirQuietly(): Promise<void> {
+  try {
+    await rm(oneShotOutputDir(), { recursive: true, force: true });
+  } catch (err) {
+    console.error("solo.ts: could not remove the one-shot output dir (ignored):", err);
   }
 }
 

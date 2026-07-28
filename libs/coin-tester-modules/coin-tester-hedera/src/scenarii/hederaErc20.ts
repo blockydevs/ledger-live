@@ -6,8 +6,13 @@ import type { TokenAccount } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import BigNumber from "bignumber.js";
-import { TOKEN_DECIMALS, TOKEN_SYMBOL, makeHederaAccount, makeLocalErc20Token } from "../fixtures";
-import { type HederaScenarioTransaction, setupHederaScenario } from "../helpers";
+import { TOKEN_SYMBOL, TOKEN_UNIT, makeHederaAccount, makeLocalErc20Token } from "../fixtures";
+import {
+  type HederaScenarioTransaction,
+  SCENARIO_RETRY_POLICY,
+  findTokenSubAccount,
+  setupHederaScenario,
+} from "../helpers";
 import {
   createFundedAccount,
   deployErc20Token,
@@ -17,12 +22,11 @@ import {
 } from "../genesis";
 import { registerErc20Token, resetErc20Tokens, refresh } from "../hgraphFake";
 
-const UNIT = 10 ** TOKEN_DECIMALS;
 // A zero-balance ERC20 sub-account with no operations gets dropped by the bridge, so the seed
 // must not hit zero on the first send (send-max, later, drains it once it has operations).
-const SEED_AMOUNT = 100 * UNIT;
-const SEND_AMOUNT = 10 * UNIT;
-const MEMO_SEND_AMOUNT = 5 * UNIT;
+const SEED_AMOUNT = 100 * TOKEN_UNIT;
+const SEND_AMOUNT = 10 * TOKEN_UNIT;
+const MEMO_SEND_AMOUNT = 5 * TOKEN_UNIT;
 /** What is left after the two fixed sends; send-max must drain exactly this. */
 const SEND_MAX_AMOUNT = SEED_AMOUNT - SEND_AMOUNT - MEMO_SEND_AMOUNT;
 const MEMO = "ledger-live coin-tester erc20 memo";
@@ -34,14 +38,12 @@ let accountId: string;
 let recipientId: string;
 
 function findErc20SubAccount(account: HederaAccount): TokenAccount | undefined {
-  return account.subAccounts?.find(sa => sa.type === "TokenAccount" && sa.token.id === token.id) as
-    | TokenAccount
-    | undefined;
+  return findTokenSubAccount(account, token.id);
 }
 
 function makeTransactions(): HederaScenarioTransaction[] {
   const sendErc20: HederaScenarioTransaction = {
-    name: `Send ${SEND_AMOUNT / UNIT} ${TOKEN_SYMBOL} (ERC20)`,
+    name: `Send ${SEND_AMOUNT / TOKEN_UNIT} ${TOKEN_SYMBOL} (ERC20)`,
     family: "hedera",
     mode: HEDERA_TRANSACTION_MODES.Send,
     subAccountId: encodeTokenAccountId(makeHederaAccount(accountId, "").id, token),
@@ -89,7 +91,7 @@ function makeTransactions(): HederaScenarioTransaction[] {
   };
 
   const sendErc20WithMemo: HederaScenarioTransaction = {
-    name: `Send ${MEMO_SEND_AMOUNT / UNIT} ${TOKEN_SYMBOL} (ERC20) with a memo`,
+    name: `Send ${MEMO_SEND_AMOUNT / TOKEN_UNIT} ${TOKEN_SYMBOL} (ERC20) with a memo`,
     family: "hedera",
     mode: HEDERA_TRANSACTION_MODES.Send,
     subAccountId: encodeTokenAccountId(makeHederaAccount(accountId, "").id, token),
@@ -192,8 +194,7 @@ export const scenarioHederaErc20: Scenario<Transaction, HederaAccount> = {
       currencyBridge,
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
-      retryInterval: 2000,
-      retryLimit: 20,
+      ...SCENARIO_RETRY_POLICY,
     };
   },
 

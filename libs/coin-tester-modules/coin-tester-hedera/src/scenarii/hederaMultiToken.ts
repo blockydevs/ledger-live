@@ -1,20 +1,28 @@
 import type { Scenario } from "@ledgerhq/coin-tester/main";
 import type { Transaction, HederaAccount } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
-import type { TokenAccount } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import BigNumber from "bignumber.js";
-import { TOKEN_DECIMALS, RECIPIENT, makeHederaAccount, makeLocalHtsToken } from "../fixtures";
-import { type HederaScenarioTransaction, setupHederaScenario } from "../helpers";
+import {
+  MAX_AUTO_ASSOCIATIONS,
+  ONE_HBAR_IN_TINYBAR,
+  RECIPIENT,
+  TOKEN_DECIMALS,
+  TOKEN_UNIT,
+  makeHederaAccount,
+  makeLocalHtsToken,
+} from "../fixtures";
+import {
+  type HederaScenarioTransaction,
+  SCENARIO_RETRY_POLICY,
+  findTokenSubAccount,
+  setupHederaScenario,
+} from "../helpers";
 import { createHtsToken, transferToken, waitForMirrorNodeTokenBalance } from "../genesis";
 
-const ONE_HBAR_IN_TINYBAR = 100_000_000;
-
-const UNIT = 10 ** TOKEN_DECIMALS;
-const TOKEN_INITIAL_SUPPLY = 1_000 * UNIT;
-const TOKEN2_INJECTED = 50 * UNIT;
-const TOKEN3_INJECTED = 70 * UNIT;
-const MAX_AUTO_ASSOCIATIONS = 10; // >= the 2 tokens; NOT the -1 sentinel
+const TOKEN_INITIAL_SUPPLY = 1_000 * TOKEN_UNIT;
+const TOKEN2_INJECTED = 50 * TOKEN_UNIT;
+const TOKEN3_INJECTED = 70 * TOKEN_UNIT;
 // Fixed partial send, not `useAllAmount`: a send-max here would fail on-chain since the account's
 // real spendable balance runs a touch below what the post-send sync reports.
 const HBAR_SENT = 50 * ONE_HBAR_IN_TINYBAR;
@@ -24,12 +32,6 @@ let token2: TokenCurrency;
 let token3: TokenCurrency;
 let accountId: string;
 
-function findSub(account: HederaAccount, tokenId: string): TokenAccount | undefined {
-  return account.subAccounts?.find(sa => sa.type === "TokenAccount" && sa.token.id === tokenId) as
-    | TokenAccount
-    | undefined;
-}
-
 function makeTransactions(): HederaScenarioTransaction[] {
   const assertTokensPresent: HederaScenarioTransaction = {
     name: "Both LLT2 and LLT3 sub-accounts resolve with their injected balances",
@@ -38,8 +40,8 @@ function makeTransactions(): HederaScenarioTransaction[] {
     amount: new BigNumber(ONE_HBAR_IN_TINYBAR),
     recipient: RECIPIENT,
     expect: (previous, current) => {
-      const sub2 = findSub(current, token2.id);
-      const sub3 = findSub(current, token3.id);
+      const sub2 = findTokenSubAccount(current, token2.id);
+      const sub3 = findTokenSubAccount(current, token3.id);
       expect(sub2).toBeDefined();
       expect(sub3).toBeDefined();
       if (!sub2 || !sub3) return; // retryable: mirror-node lag, not a TypeError
@@ -62,11 +64,11 @@ function makeTransactions(): HederaScenarioTransaction[] {
       // Asserted off the operation, not a previous/current delta: `previous` can lag the real
       // balance right after a send.
       expect(latest.value.minus(latest.fee).toString()).toBe(String(HBAR_SENT));
-      expect(findSub(current, token2.id)?.balance.toString()).toBe(
-        findSub(previous, token2.id)?.balance.toString(),
+      expect(findTokenSubAccount(current, token2.id)?.balance.toString()).toBe(
+        findTokenSubAccount(previous, token2.id)?.balance.toString(),
       );
-      expect(findSub(current, token3.id)?.balance.toString()).toBe(
-        findSub(previous, token3.id)?.balance.toString(),
+      expect(findTokenSubAccount(current, token3.id)?.balance.toString()).toBe(
+        findTokenSubAccount(previous, token3.id)?.balance.toString(),
       );
     },
   };
@@ -112,8 +114,7 @@ export const scenarioHederaMultiToken: Scenario<Transaction, HederaAccount> = {
       currencyBridge,
       accountBridge,
       account: makeHederaAccount(accountId, publicKey),
-      retryInterval: 2000,
-      retryLimit: 20,
+      ...SCENARIO_RETRY_POLICY,
     };
   },
 
