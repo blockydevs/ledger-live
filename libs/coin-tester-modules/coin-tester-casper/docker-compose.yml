@@ -1,0 +1,43 @@
+services:
+  casper-devnet:
+    image: ghcr.io/veles-labs/casper-devnet:v0.10.1@sha256:c691d3f30e1c75c6366e80fa6e3be2baddae5fa0eaca07b91c1cefc3f87a39bc
+    container_name: coin-tester-casper
+    # The image is amd64-only; pin it so an arm64 host fails the pull with an
+    # architecture error instead of exec-ing a foreign-format binary.
+    platform: linux/amd64
+    command:
+      - casper-devnet
+      - start
+      - --network-name
+      - casper
+      # min_peers_for_initialization = 3 is baked into the image's asset
+      # template and has no override flag, so anything below 4 stalls
+      # awaiting peers.
+      - --node-count
+      - "4"
+      # Two users: sender and recipient for the follow-up transfer scenario.
+      - --users
+      - "2"
+      - --delay
+      - "3"
+    # Only JSON-RPC is published, and only to the host loopback: the endpoint
+    # is unauthenticated and the genesis keys are prefunded, so it should not
+    # be reachable from the LAN for the duration of a test run. The module
+    # builds a HttpHandler over API_CASPER_NODE_ENDPOINT and uses nothing
+    # else, so REST (14101), SSE (18101) and the binary port (28101) stay
+    # internal.
+    ports:
+      - "127.0.0.1:11101:11101"
+    # Exit 0 only once the network has observed a block. Both "not ready yet"
+    # and "assets for <name> not found" are exit 1, so a mistyped
+    # --network-name never reports healthy. The budget is wide because
+    # getting 4 casper-node processes through genesis, peer discovery and a
+    # first block on a constrained CI runner can take substantially longer
+    # than on a local machine; --wait returns on the first healthy check, so
+    # widening this costs nothing on the happy path.
+    healthcheck:
+      test: ["CMD-SHELL", "casper-devnet network casper is-ready"]
+      interval: 3s
+      timeout: 10s
+      retries: 60
+      start_period: 30s

@@ -18,6 +18,7 @@ A workspace directory of coin-specific end-to-end test packages for Ledger Live.
 |---|---|
 | `@ledgerhq/coin-tester-bitcoin` | Bitcoin |
 | `@ledgerhq/coin-tester-cardano` | Cardano |
+| `@ledgerhq/coin-tester-casper` | Casper |
 | `@ledgerhq/coin-tester-cosmos` | Cosmos |
 | `@ledgerhq/coin-tester-evm` | EVM chains (Ethereum, etc.) |
 | `@ledgerhq/coin-tester-polkadot` | Polkadot |
