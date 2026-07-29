@@ -95,6 +95,7 @@ export default function Summary({ navigation, route }: Props) {
         </Alert>
         <Button
           event="HederaAssociateTokenSummaryContinue"
+          testID="hedera-associate-summary-continue-button"
           type="primary"
           title={<Trans i18nKey="common.continue" />}
           containerStyle={styles.continueButton}
