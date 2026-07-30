@@ -11,6 +11,12 @@ pnpm coin:tester:casper start
 
 `DEBUG=1` streams docker compose output.
 
+The signer test needs neither Docker nor RPC and runs on its own:
+
+```sh
+pnpm --filter @ledgerhq/coin-tester-casper exec jest src/signer.test.ts
+```
+
 ## What runs
 
 `ghcr.io/veles-labs/casper-devnet` ships `casper-node` and `casper-sidecar` in one
@@ -40,6 +46,8 @@ for reproducibility.
 | `state_get_balance` | still served, despite being deprecated in 2.x docs |
 | `network <name> is-ready` | exit 0 = ready; exit 1 for both "not ready" and "assets not found" |
 | Peak container memory | ~168 MiB (cgroup `memory.peak`, sampled across a full test-suite run) — 4 `casper-node` + 4 `casper-sidecar` processes, one sidecar per node |
+| Native transfer cost | `[system_costs.mint_costs] transfer = 100_000_000` motes, exactly `CASPER_FEES_MOTES`. Measured on a real 10 CSPR transfer: `cost = consumed = limit = 100000000` |
+| Fee economics | `pricing_handling = payment_limited`, `fee_handling = burn`, `refund_handling = refund 75%`, `min_gas_price = max_gas_price = 1` — the charge has no dynamic component |
 
 `derive --secret-key` prints a multi-line, CRLF-terminated PEM block, not bare
 hex; only `derive --public-key` and `derive --account-hash` print bare hex.
@@ -53,6 +61,30 @@ unprefixed form, matching the CLI.
 `docker-compose@1.1.0`'s `exec` splits a string command on whitespace with no
 quote-awareness, so `src/casperDevnet.ts` passes the derive command as an
 array — the derivation path contains `'` characters.
+
+## Signer
+
+`signOperation` hands the signer `Transaction.toBytes()`, not a hash. A signature
+over those bytes fails `validate()` with `invalid signature`. The bytes carry the
+hash inside them: `toBytes()` is a calltable serialization —
+`[u8 version][u32 field count][(u16 index, u32 offset) × N][u32 blob length][blob]`
+— whose field 0 is the 32-byte hash and field 1 the payload, with
+`blake2b256(field 1) === field 0`.
+
+`src/signer.ts` reads the header, checks that identity, and signs field 0. The
+result is byte-for-byte what `tx.sign(privateKey)` produces. The device app gets
+the same bytes and derives the hash the same way, so `signOperation` needs no
+change.
+
+`CalltableSerialization` exists in casper-js-sdk but the package does not export
+it from its single entry point (`dist/lib.node.js`), so the header parser is our
+own. Offsets are read from the header, never assumed. They were measured on a
+native transfer; other transaction shapes were not checked.
+
+`derive --secret-key` prints a SEC1 `EC PRIVATE KEY` block with CRLF line
+endings. `PrivateKey.fromPem` accepts it as printed and after `trim()`.
+`publicKey.bytes()` returns the 34-byte tagged form, so the signer returns
+`bytes().subarray(1)` — the module's resolver re-adds the `02` tag.
 
 ## Constraints
 
@@ -69,6 +101,55 @@ The image is third-party and unaffiliated with Casper Labs.
 
 ## Scope
 
-Infrastructure only: no signer, no `Scenario` wiring, no indexer mock, no staking.
-`API_CASPER_INDEXER` points at `http://127.0.0.1:1/` so an accidental `fetchTxs`
-fails fast instead of hanging.
+`src/devnet.test.ts` checks the infrastructure. `src/scenarii.test.ts` runs one
+transfer from user 0 to user 1 through the full bridge path and asserts the OUT
+operation on the sender and the IN operation on the recipient.
+
+The two are deliberately separate, and each boots its own devnet. A genesis
+failure in one does not blur the other's result. `killDevnet` runs
+`down --volumes`, so the second start goes through a full genesis — about a
+minute on CI.
+
+Still out of scope: staking, and an indexer that reads the chain.
+
+### What the indexer mock does and does not prove
+
+`getAccountShape` reads balance and block height from the node RPC, but takes
+operations only from the indexer. The devnet has no indexer, so `src/indexer.ts`
+serves `accounts/<publicKey>/ledgerlive-deploys` from `msw` and indexes one
+deploy under both parties' public keys, the way the real indexer does.
+
+The entry's content comes from Ledger Live's own optimistic operation, not from
+the chain. The scenario therefore checks how the indexer's shape maps to
+operations. It does not check that indexer data agrees with the real
+transaction, and the entry alone cannot detect a transaction the chain rejected.
+Only the two balance assertions — the sender's drop and the recipient's gain —
+detect that.
+
+The scenario points `API_CASPER_INDEXER` at `http://casper-indexer.mock/`.
+`src/devnet.test.ts` keeps `http://127.0.0.1:1/`, so an accidental `fetchTxs`
+there fails fast on a dead port instead of hanging.
+
+### Pinned module behaviour
+
+These assertions record what `@ledgerhq/coin-casper` does today. They are not
+statements about what is correct.
+
+| Behaviour | Where |
+| --- | --- |
+| `fee` on both operations comes from the `CASPER_FEES_MOTES` constant (0.1 CSPR), never from the chain | `mapTxToOps` |
+| `fee` is set on the IN operation too, although the recipient pays nothing | `mapTxToOps` |
+| `blockHeight` is hardcoded to `1`; the scenario does not assert it | `mapTxToOps` |
+
+Both balance assertions are equalities. The sender drops the operation's full
+`value`, the recipient gains the bare `amount`. That works because the devnet
+charges a flat fee for a native transfer, and it happens to equal the module's
+constant — see the table above. The sender's equality therefore does double duty:
+it waits for the chain to settle, and it pins `CASPER_FEES_MOTES` against the
+chain's real cost. If an image bump changes that cost, this assertion fails, and
+the module's hardcoded fee is what needs the fix.
+
+`mapTxToOps` reads `txArgs.id` inside a `try` whose `catch` turns any error into
+a warning and an empty operation list. If an entry lacks `args.id`, accessing it
+throws a `TypeError`. `src/indexer.ts` declares its factory's return type as
+`ITxnHistoryData`, where `args.id` is required, so the compiler guards that.
