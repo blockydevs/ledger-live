@@ -2,28 +2,17 @@ import BigNumber from "bignumber.js";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { setCoinConfig } from "@ledgerhq/coin-casper/config";
 import { fetchAccountStateInfo, fetchBalance, fetchBlockHeight } from "@ledgerhq/coin-casper/api";
-import { GENESIS_USER_BALANCE_MOTES, localCoinConfig } from "./fixtures";
-import { deriveUser, killDevnet, rawAccountInfo, spawnDevnet } from "./casperDevnet";
+import { DEVNET_SANITY_USER_INDEX, GENESIS_USER_BALANCE_MOTES, localCoinConfig } from "./fixtures";
+import { deriveUser, rawAccountInfo } from "./casperDevnet";
 
 global.console = require("console");
 jest.setTimeout(600_000);
-
-// Best-effort teardown, matching the other testers. This covers SIGTERM from
-// CI and uncaughtException. It does not reliably cover Ctrl-C: `docker compose
-// down` cannot complete from a handler that runs after the event loop has
-// stopped — `afterAll` is the path that actually works there.
-["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
-  process.on(e, () => {
-    killDevnet().catch(() => {});
-  }),
-);
 
 describe("Casper devnet infrastructure", () => {
   let userPublicKey: string;
   let userAccountHash: string;
 
   beforeAll(async () => {
-    await spawnDevnet();
     setCoinConfig(() => localCoinConfig);
     LiveConfig.setConfig({
       config_currency_casper: {
@@ -31,13 +20,9 @@ describe("Casper devnet infrastructure", () => {
         default: localCoinConfig,
       },
     });
-    const user = await deriveUser(0);
+    const user = await deriveUser(DEVNET_SANITY_USER_INDEX);
     userPublicKey = user.publicKey;
     userAccountHash = user.accountHash;
-  });
-
-  afterAll(async () => {
-    await killDevnet();
   });
 
   it("serves JSON-RPC to the module's own client", async () => {

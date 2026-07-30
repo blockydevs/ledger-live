@@ -15,9 +15,11 @@ services:
       # awaiting peers.
       - --node-count
       - "4"
-      # Two users: sender and recipient for the follow-up transfer scenario.
+      # Three users: sender and recipient for the transfer scenario, plus a spare
+      # devnet.test.ts uses for its genesis-balance check so that assertion holds
+      # regardless of which suite the shared devnet runs first.
       - --users
-      - "2"
+      - "3"
       - --delay
       - "3"
     # Only JSON-RPC is published, and only to the host loopback: the endpoint

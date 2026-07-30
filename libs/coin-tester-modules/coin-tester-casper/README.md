@@ -105,10 +105,10 @@ The image is third-party and unaffiliated with Casper Labs.
 transfer from user 0 to user 1 through the full bridge path and asserts the OUT
 operation on the sender and the IN operation on the recipient.
 
-The two are deliberately separate, and each boots its own devnet. A genesis
-failure in one does not blur the other's result. `killDevnet` runs
-`down --volumes`, so the second start goes through a full genesis — about a
-minute on CI.
+The two share one devnet, booted once by `src/globalSetup.ts` and torn down by
+`src/globalTeardown.ts` for jest's `devnet` project. `devnet.test.ts` derives
+`DEVNET_SANITY_USER_INDEX` (fixtures.ts) instead of the scenario's sender index,
+so its exact genesis-balance assertion holds no matter which suite runs first.
 
 Still out of scope: staking, and an indexer that reads the chain.
 

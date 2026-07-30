@@ -91,6 +91,13 @@ async function derive(derivationPath: string, flag: string): Promise<string> {
   return out.trim();
 }
 
+// Best-effort teardown on exit/interrupt (matches flextesa/anvil/yaci) so an aborted run doesn't leak.
+["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
+  process.on(e, () => {
+    killDevnet().catch(() => {});
+  }),
+);
+
 /** The only RPC call this package makes outside the module, used purely for diagnosis. */
 export async function rawAccountInfo(publicKey: string): Promise<string> {
   const response = await fetch(DEVNET_RPC_URL, {

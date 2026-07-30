@@ -62,6 +62,13 @@ export const localCoinConfig: ReturnType<CasperCoinConfig> = {
 export const SENDER_USER_INDEX = 0;
 export const RECIPIENT_USER_INDEX = 1;
 
+/**
+ * devnet.test.ts and scenarii.test.ts share one devnet. This index stays untouched by
+ * the transfer scenario so devnet.test.ts's exact genesis-balance assertion holds
+ * regardless of which suite the shared-devnet project runs first.
+ */
+export const DEVNET_SANITY_USER_INDEX = 2;
+
 export const ONE_CSPR_MOTES = new BigNumber(1e9);
 
 /** Above CASPER_MINIMUM_VALID_AMOUNT_MOTES (2.5 CSPR). */

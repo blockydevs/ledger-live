@@ -8,7 +8,14 @@ jest.setTimeout(600_000);
 
 describe("Casper Deterministic Tester", () => {
   it("scenario Casper", async () => {
-    await executeScenario(scenarioCasper);
+    try {
+      await executeScenario(scenarioCasper);
+    } catch (e) {
+      if (e !== "done") {
+        await killDevnet();
+        throw e;
+      }
+    }
   });
 });
 

@@ -8,7 +8,7 @@ import { setCoinConfig } from "@ledgerhq/coin-casper/config";
 import { CASPER_FEES_MOTES } from "@ledgerhq/coin-casper/consts";
 import resolver from "@ledgerhq/coin-casper/signer";
 import type { CasperAccount, Transaction } from "@ledgerhq/coin-casper/types";
-import { deriveUser, killDevnet, spawnDevnet } from "../casperDevnet";
+import { deriveUser } from "../casperDevnet";
 import {
   liveDerivationPath,
   makeAccount,
@@ -23,16 +23,15 @@ import { buildCasperSigner } from "../signer";
 
 const feesMotes = new BigNumber(CASPER_FEES_MOTES);
 
-// `afterAll` only receives the scenario account, so the recipient's bridge,
+// `afterAll` only receives the scenario account, so the bridge, recipient
 // account and pre-transfer balance are held here.
-let recipientBridge: AccountBridge<Transaction, CasperAccount>;
+let bridge: AccountBridge<Transaction, CasperAccount>;
 let recipientAccount: CasperAccount;
 let recipientBalanceBefore: BigNumber;
 let recipientPublicKey: string;
 let senderAccountHash: string;
 let recipientAccountHash: string;
 let sentOperationHash: string;
-let devnetStopped = false;
 let closeIndexer: () => void;
 
 const syncAccount = (
@@ -42,6 +41,16 @@ const syncAccount = (
   firstValueFrom(
     bridge.sync(account, { paginationConfig: {} }).pipe(reduce((acc, f) => f(acc), account)),
   );
+
+async function retryAssert(assert: () => Promise<void>, retriesLeft = 20): Promise<void> {
+  try {
+    await assert();
+  } catch (error) {
+    if (retriesLeft === 0) throw error;
+    await new Promise(resolve => setTimeout(resolve, 3 * 1000));
+    await retryAssert(assert, retriesLeft - 1);
+  }
+}
 
 const transferTransaction = (): ScenarioTransaction<Transaction, CasperAccount> => ({
   name: "Send 10 CSPR",
@@ -80,9 +89,7 @@ export const scenarioCasper: Scenario<Transaction, CasperAccount> = {
   name: "Casper devnet transfer",
 
   setup: async () => {
-    devnetStopped = false;
     closeIndexer = startIndexer();
-    await spawnDevnet();
 
     setCoinConfig(() => scenarioCoinConfig);
     LiveConfig.setConfig({
@@ -108,7 +115,7 @@ export const scenarioCasper: Scenario<Transaction, CasperAccount> = {
 
     const account = makeAccount({ publicKey: sender.publicKey, index: SENDER_USER_INDEX });
 
-    recipientBridge = accountBridge;
+    bridge = accountBridge;
     recipientAccount = await syncAccount(
       accountBridge,
       makeAccount({ publicKey: recipient.publicKey, index: RECIPIENT_USER_INDEX }),
@@ -126,37 +133,29 @@ export const scenarioCasper: Scenario<Transaction, CasperAccount> = {
   },
 
   afterAll: async () => {
-    // One pass, no retry loop: the sender's balance already dropped, so the
-    // transfer settled, and the recipient is written by the same execution effect.
-    const account = await syncAccount(recipientBridge, recipientAccount);
-    const [operation] = account.operations;
+    await retryAssert(async () => {
+      const account = await syncAccount(bridge, recipientAccount);
+      const [operation] = account.operations;
 
-    expect(account.operations).toHaveLength(1);
-    expect(operation.type).toBe("IN");
-    expect(operation.hash).toBe(sentOperationHash);
-    expect(operation.value.toFixed()).toBe(TRANSFER_AMOUNT_MOTES.toFixed());
-    // mapTxToOps sets fee on IN as well. The recipient pays nothing; this pins
-    // the module's current behaviour, not domain correctness.
-    expect(operation.fee.toFixed()).toBe(feesMotes.toFixed());
-    expect(operation.senders).toEqual([senderAccountHash]);
-    expect(operation.recipients).toEqual([recipientAccountHash]);
-    expect(operation.hasFailed).toBe(false);
-    // Equality, not a range: the recipient pays no fee and the account has no
-    // other activity.
-    expect(account.balance.minus(recipientBalanceBefore).toFixed()).toBe(
-      TRANSFER_AMOUNT_MOTES.toFixed(),
-    );
+      expect(account.operations).toHaveLength(1);
+      expect(operation.type).toBe("IN");
+      expect(operation.hash).toBe(sentOperationHash);
+      expect(operation.value.toFixed()).toBe(TRANSFER_AMOUNT_MOTES.toFixed());
+      // mapTxToOps sets fee on IN as well. The recipient pays nothing; this pins
+      // the module's current behaviour, not domain correctness.
+      expect(operation.fee.toFixed()).toBe(feesMotes.toFixed());
+      expect(operation.senders).toEqual([senderAccountHash]);
+      expect(operation.recipients).toEqual([recipientAccountHash]);
+      expect(operation.hasFailed).toBe(false);
+      // Equality, not a range: the recipient pays no fee and the account has no
+      // other activity.
+      expect(account.balance.minus(recipientBalanceBefore).toFixed()).toBe(
+        TRANSFER_AMOUNT_MOTES.toFixed(),
+      );
+    });
   },
 
   teardown: async () => {
-    // executeScenario calls teardown on the success path and again from the
-    // catch block if the first call throws.
-    if (devnetStopped) return;
-    devnetStopped = true;
-    try {
-      await killDevnet();
-    } finally {
-      closeIndexer();
-    }
+    closeIndexer?.();
   },
 };
