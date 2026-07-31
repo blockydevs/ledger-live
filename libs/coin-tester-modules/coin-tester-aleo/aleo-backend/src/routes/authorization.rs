@@ -247,7 +247,6 @@ pub async fn handle_create_authorization(
     request.request.program_id
   );
 
-  // Process the authorization based on the network
   let tlv_version = TLVVersion::try_from(request.tlv_version)?;
 
   let response = match network {

@@ -7,7 +7,7 @@ import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAs
 import type { AleoAccount, Transaction as AleoTransaction } from "@ledgerhq/coin-aleo/types";
 import {
   ALEO,
-  DEVNODE_TRANSFER_PUBLIC_FEE_RANGE,
+  PUBLIC_DEVNODE_FEE_RANGE,
   FUNDING_AMOUNT_MICROCREDITS,
   TRANSFER_AMOUNT_MICROCREDITS,
   buildAleoCoinConfig,
@@ -70,22 +70,25 @@ const sendPublic: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     const [latest] = newOperations;
 
     expect(latest.type).toBe("OUT");
-    expect(latest.hasFailed).toBeFalsy();
+    expect(latest.hasFailed).toBe(false);
     expect(latest.recipients).toStrictEqual([recipient.address]);
     // IN/OUT follows only from address === recipient_address, so a wrong
     // sender_address would not break classification — hence the explicit check.
     expect(latest.senders).toStrictEqual([sender.address]);
-    expect(latest.value).toStrictEqual(new BigNumber(TRANSFER_AMOUNT_MICROCREDITS));
 
-    // The confirmed operation's fee comes from the chain, priced by the wasm that
-    // builds the devnode transaction, so it tracks the consensus version and cost
-    // table of whatever @provablehq/sdk is installed. Only the order of magnitude
-    // is asserted here; the 34060 the bridge bills is checked exactly, on the fee
-    // authorization inside the prove handler.
-    expect(latest.fee.toNumber()).toBeGreaterThanOrEqual(DEVNODE_TRANSFER_PUBLIC_FEE_RANGE.min);
-    expect(latest.fee.toNumber()).toBeLessThanOrEqual(DEVNODE_TRANSFER_PUBLIC_FEE_RANGE.max);
+    // The chain-priced fee tracks whatever @provablehq/sdk's consensus version and
+    // cost table happen to be, so only the order of magnitude is checked here; the
+    // exact 34060 the bridge bills is checked on the fee authorization in the prove handler.
+    expect(latest.fee.toNumber()).toBeGreaterThanOrEqual(PUBLIC_DEVNODE_FEE_RANGE.min);
+    expect(latest.fee.toNumber()).toBeLessThanOrEqual(PUBLIC_DEVNODE_FEE_RANGE.max);
 
-    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value).minus(latest.fee));
+    // An OUT operation's value is fee-inclusive, so it pins the amount exactly
+    // and the fee only within the window the two assertions above bound it to.
+    expect(latest.value).toStrictEqual(
+      new BigNumber(TRANSFER_AMOUNT_MICROCREDITS).plus(latest.fee),
+    );
+
+    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
     expect(current.pendingOperations).toStrictEqual([]);
   },
 };
@@ -142,10 +145,8 @@ export const scenarioTransferPublic: Scenario<AleoTransaction, AleoAccount> = {
     };
   },
 
-  // There is no consensus behind a devnode and the harness owns the sync/retry
-  // loop, so the block has to be sealed here: beforeSync runs before every
-  // synchronization, retries included. A spare block is harmless; a missing one
-  // would hang the scenario until retryLimit.
+  // A devnode has no consensus, so beforeSync must seal the block itself on every
+  // synchronization (retries included); a spare block is harmless, a missing one hangs until retryLimit.
   beforeSync: async () => {
     await advanceBlocks(1);
   },
@@ -170,13 +171,16 @@ export const scenarioTransferPublic: Scenario<AleoTransaction, AleoAccount> = {
     // by hand here, mirroring what sendPublic.expect already checks for OUT.
     const recipientAccount = await firstValueFrom(
       accountBridge
-        .sync(makeAleoAccount(recipient.address, recipient.viewKey), { paginationConfig: {} })
+        .sync(makeAleoAccount(recipient.address, recipient.viewKey), {
+          paginationConfig: {},
+        })
         .pipe(reduce((acc, f) => f(acc), makeAleoAccount(recipient.address, recipient.viewKey))),
     );
 
+    expect(recipientAccount.operations).toHaveLength(1);
     const [latest] = recipientAccount.operations;
     expect(latest.type).toBe("IN");
-    expect(latest.hasFailed).toBeFalsy();
+    expect(latest.hasFailed).toBe(false);
     expect(latest.senders).toStrictEqual([sender.address]);
     expect(latest.recipients).toStrictEqual([recipient.address]);
     expect(latest.value).toStrictEqual(new BigNumber(TRANSFER_AMOUNT_MICROCREDITS));

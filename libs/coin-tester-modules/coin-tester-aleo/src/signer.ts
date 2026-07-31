@@ -7,22 +7,23 @@ import type {
   AleoTvk,
   AleoViewKey,
 } from "@ledgerhq/coin-aleo/types";
-import { decodeRequestTlv } from "./tlv/decodeRequest";
+import { decodeRequestTlv, type ResolveRecord } from "./tlv/decodeRequest";
 import { encodeSignatureTlv } from "./tlv/encodeSignature";
+import { isRecordInputId } from "./recordInputId";
 import { loadAleoWasm } from "./wasm";
 
 const NOT_IMPLEMENTED = "aleo coin-tester: not implemented for public transfers";
 
 /**
- * Stands in for the device app.
+ * Stands in for the device app: decodes the backend's TLV, signs it, and
+ * re-encodes, so the signature covers what the bridge actually built.
  *
- * The device signs the TLV it is handed, not fields read out of an HTTP
- * response, so this does the same: decode the backend's TLV, sign, re-encode.
- * The signature therefore covers what the bridge actually built.
+ * `resolveRecord` looks up the plaintext behind a record input's commitment;
+ * omit it for public transfers, which have no record inputs (`gammas: []`).
  */
-export function buildMockAleoSigner(privateKey: string): AleoSigner {
+export function buildMockAleoSigner(privateKey: string, resolveRecord?: ResolveRecord): AleoSigner {
   async function signIntent(intent: Buffer): Promise<string> {
-    const decoded = await decodeRequestTlv(intent.toString("hex"));
+    const decoded = await decodeRequestTlv(intent.toString("hex"), { resolveRecord });
     const wasm = await loadAleoWasm();
 
     const request = wasm.ExecutionRequest.sign(
@@ -38,12 +39,18 @@ export function buildMockAleoSigner(privateKey: string): AleoSigner {
       false,
     );
 
+    // Read gammas off the signed request rather than computing them: this
+    // wasm's Group has no scalar multiplication and PrivateKey exposes no sk_sig.
+    const gammas = request
+      .input_ids()
+      .filter(isRecordInputId)
+      .map(([, gamma]) => gamma.toBytesLe());
+
     return encodeSignatureTlv({
       signature: request.signature().toBytesLe(),
       tvk: request.tvk().toBytesLe(),
       tpk: request.to_tpk().toBytesLe(),
-      // transfer_public has no record inputs, so there are no gammas.
-      gammas: [],
+      gammas,
     });
   }
 
@@ -60,8 +67,7 @@ export function buildMockAleoSigner(privateKey: string): AleoSigner {
       return { viewKey: wasm.PrivateKey.from_string(privateKey).to_view_key().to_string() };
     },
 
-    // The signer holds the private key, so it could derive these — the throw is
-    // about scope, not capability: nothing verifies them yet.
+    // Unimplemented because nothing exercises them yet, not for lack of the key.
     getTvk: (): Promise<AleoTvk> => Promise.reject(new Error(`${NOT_IMPLEMENTED}: getTvk`)),
     signNestedCall: (): Promise<never> =>
       Promise.reject(new Error(`${NOT_IMPLEMENTED}: signNestedCall`)),

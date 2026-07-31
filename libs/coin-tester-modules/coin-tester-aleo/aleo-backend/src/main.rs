@@ -4,41 +4,32 @@ use salvo::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  // Load configuration
   let config = AppConfig::load().map_err(|e| anyhow!("Failed to load configuration: {}", e))?;
 
   // Publish the Aleo node URLs for handlers (used to fetch freeze lists).
   config.aleo.clone().install_global();
 
-  // Initialize telemetry (tracing + OpenTelemetry)
   logger::setup_telemetry(config.log_level())?;
   tracing::info!(
     config = ?config,
     "Starting Aleo backend service"
   );
 
-  // Create API router with OpenAPI documentation
   let router = routes::create_router();
-
-  // Create Salvo service
   let service = Service::new(router);
 
-  // Start the server with configured address
   let bind_addr = config.bind_address();
   let acceptor = TcpListener::new(bind_addr).bind().await;
 
-  // Handle graceful shutdown
   let server = Server::new(acceptor);
   let handle = server.handle();
 
-  // Spawn shutdown signal handler
   tokio::spawn(async move {
     tokio::signal::ctrl_c().await.ok();
     tracing::info!("Received shutdown signal, gracefully shutting down...");
     handle.stop_graceful(std::time::Duration::from_secs(5));
   });
 
-  // Run the server
   server.serve(service).await;
 
   // Flush OpenTelemetry traces before exit

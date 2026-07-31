@@ -54,6 +54,25 @@ export type DevnodeBlock = {
   transactions: DevnodeConfirmedTransaction[];
 };
 
+/**
+ * Reads the caller out of a transition's `future` output.
+ *
+ * Every finalize-scope credits.aleo transition binds `self.signer` as an
+ * argument there, and a future is the only place that survives past
+ * broadcast into the block JSON.
+ */
+export function parseFutureSender(transition: DevnodeTransition): string {
+  const future = transition.outputs.find(output => output.type === "future");
+  const match = future?.value ? /arguments:\s*\[\s*([^,\]\s]+)/.exec(future.value) : null;
+  const sender = match?.[1];
+  if (!sender?.startsWith("aleo1")) {
+    throw new Error(
+      `aleo coin-tester: could not read the sender address from the future of ${transition.id}`,
+    );
+  }
+  return sender;
+}
+
 async function get(path: string): Promise<Response> {
   const response = await fetch(`${BASE}/${path}`);
   if (!response.ok) {
@@ -73,6 +92,37 @@ export async function getBlock(height: number): Promise<DevnodeBlock> {
 export async function getProgramSource(programId: string): Promise<string> {
   // The route answers with a JSON string, not a bare body.
   return (await (await get(`program/${programId}`)).json()) as string;
+}
+
+/**
+ * Reads every `import <id>;` line off `source`, fetches each one's deployed
+ * source, and recurses into its own imports. Mirrors what
+ * NetworkClient.getProgramImports does in @provablehq/sdk, without needing a
+ * live NetworkClient instance — this package builds transactions with the
+ * raw wasm class instead (see msw/prove.ts).
+ *
+ * Prevents infinite recursion on circular import graphs by tracking visited
+ * programs across all recursive calls.
+ */
+export async function resolveProgramImports(
+  source: string,
+  visited: Set<string> = new Set(),
+): Promise<Record<string, string>> {
+  const importIds = [...source.matchAll(/^import\s+([\w.]+);/gm)].map(match => match[1]);
+  const imports: Record<string, string> = {};
+
+  for (const id of importIds) {
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const importedSource = await getProgramSource(id);
+    imports[id] = importedSource;
+    const nested = await resolveProgramImports(importedSource, visited);
+    for (const [nestedId, nestedSource] of Object.entries(nested)) {
+      imports[nestedId] = nestedSource;
+    }
+  }
+
+  return imports;
 }
 
 export async function getTransaction(id: string): Promise<DevnodeTransaction> {

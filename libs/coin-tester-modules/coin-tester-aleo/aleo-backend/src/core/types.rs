@@ -8,10 +8,7 @@ use snarkvm::console::program::{Identifier, ProgramID, Value, ValueType};
 use snarkvm::console::types::Field;
 use snarkvm::prelude::{Group, Signature};
 
-/// A prepared request containing all data needed for signing
-///
-/// This structure is created from a user intent and contains
-/// the serialized transaction data that will be signed by a hardware wallet.
+/// Data needed to sign an Aleo transaction, built from a user intent for a hardware wallet.
 #[derive(Debug, Clone)]
 pub struct PreparedRequest<N: Network> {
   /// Whether this is the root request (true) or a nested call (false)
@@ -88,10 +85,7 @@ impl<N: Network> PreparedRequest<N> {
   }
 }
 
-/// Signature data for a signed request
-///
-/// Contains all cryptographic data produced by signing a PreparedRequest,
-/// including the signature itself and auxiliary data needed for authorization.
+/// Cryptographic data produced by signing a `PreparedRequest`, needed for authorization.
 #[derive(Debug, Clone)]
 pub struct RequestSignature<N: Network> {
   /// The Aleo signature over the request
@@ -106,9 +100,7 @@ pub struct RequestSignature<N: Network> {
   pub nested_calls: Vec<RequestSignature<N>>,
 }
 
-/// A signed request ready for authorization
-///
-/// Combines the original prepared request with its signature data.
+/// A prepared request combined with its signature data, ready for authorization.
 #[derive(Debug, Clone)]
 pub struct SignedRequest<N: Network> {
   /// The original prepared request

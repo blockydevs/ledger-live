@@ -6,7 +6,7 @@ import {
   runDerivationScheme,
 } from "@ledgerhq/ledger-wallet-framework/derivation";
 import { TRANSACTION_TYPE } from "@ledgerhq/coin-aleo/constants";
-import type { AleoAccount, AleoCoinConfig } from "@ledgerhq/coin-aleo/types";
+import type { AleoAccount, AleoCoinConfig, AleoResources } from "@ledgerhq/coin-aleo/types";
 import { loadAleoWasm } from "./wasm";
 
 /** REST endpoint the devnode serves. */
@@ -19,26 +19,19 @@ export const ALEO_NETWORK_TYPE = "testnet";
 export const ALEO_LOCAL_SDK = `http://127.0.0.1:3031/network/${ALEO_NETWORK_TYPE}`;
 
 /**
- * Origin the tester points `apiUrls.node` at.
- *
- * Deliberately not localhost: MSW's `onUnhandledRequest` lets 127.0.0.1 through
- * so the real SDK backend stays reachable, which means an unhandled node route
- * on localhost would silently hit the devnode instead of failing.
+ * Origin the tester points `apiUrls.node` at. Not localhost: MSW's
+ * `onUnhandledRequest` lets 127.0.0.1 through, so an unhandled node route
+ * there would silently hit the devnode instead of failing.
  */
 export const ALEO_FAKE_NODE = "http://aleo-node.test";
 
 /**
  * The devnode's genesis account — the only prefunded one, and the account
- * scenarios fund from.
- *
- * `leo devnode start` takes a single `--private-key` and builds genesis around
- * it, so unlike a `leo devnet` (four committee members, each holding a share of
- * the supply) there is exactly one spendable balance here. This is the key leo
- * itself recommends for local use; the Dockerfile passes the same one.
- *
- * `assertGenesisAccountIsFunded` re-reads the balance from the running node
- * before any scenario spends from it, so a change in how devnode seeds genesis
- * fails loudly instead of silently funding nothing.
+ * scenarios fund from. `leo devnode start` builds genesis around a single
+ * `--private-key`, so unlike `leo devnet` there is exactly one spendable
+ * balance; this is the key leo recommends for local use, and the Dockerfile
+ * passes the same one. `assertGenesisAccountIsFunded` re-reads its balance
+ * from the running node so a change to how devnode seeds genesis fails loudly.
  */
 export const GENESIS_ACCOUNT = {
   privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
@@ -95,14 +88,19 @@ export const RECIPIENT_ACCOUNT = {
 export const PROBE_ADDRESS = "aleo1nfhry9rq4tjgp75e0kt9dm6ttxejxrndqtrd598575cmexp8q58qzpucsx";
 
 /**
- * Bounds on the fee a devnode charges `transfer_public` when built by
- * `buildDevnodeExecutionTransaction`. The exact amount depends on which
- * `ConsensusVersion` the wasm resolves for the devnode's block height and on the
- * cost table that version carries, so it moves with any `@provablehq/sdk` bump —
- * the window spans both the oldest table (`execution_cost_v1`, no ARC-0005
- * discount) and a modern discounted one.
+ * Bounds on the fee a devnode charges `fee_public` (`transfer_public` and the
+ * `transfer_public_to_private` conversions). The exact amount depends on the
+ * `ConsensusVersion`'s cost table, so this window spans both the oldest table
+ * (`execution_cost_v1`, no ARC-0005 discount) and a modern discounted one.
  */
-export const DEVNODE_TRANSFER_PUBLIC_FEE_RANGE = { min: 1_000, max: 100_000 };
+export const PUBLIC_DEVNODE_FEE_RANGE = { min: 1_000, max: 100_000 };
+
+/**
+ * Bounds on the fee a devnode charges `fee_private`. Priced well below
+ * PUBLIC_DEVNODE_FEE_RANGE since a private transition skips the public
+ * finalize cost, so it needs its own floor.
+ */
+export const PRIVATE_DEVNODE_FEE_RANGE = { min: 500, max: 100_000 };
 
 /** Amount the scenario transfers, in microcredits. */
 export const TRANSFER_AMOUNT_MICROCREDITS = 1_000_000;
@@ -110,19 +108,33 @@ export const TRANSFER_AMOUNT_MICROCREDITS = 1_000_000;
 /**
  * What the scenario funds its sender with before the tracked transfer, in
  * microcredits. Must clear TRANSFER_AMOUNT_MICROCREDITS plus whatever the
- * devnode charges as a fee, so it carries the same headroom as
- * DEVNODE_TRANSFER_PUBLIC_FEE_RANGE.max.
+ * devnode charges as a `fee_public`, so it carries the same headroom as
+ * PUBLIC_DEVNODE_FEE_RANGE.max.
  */
 export const FUNDING_AMOUNT_MICROCREDITS =
-  TRANSFER_AMOUNT_MICROCREDITS + DEVNODE_TRANSFER_PUBLIC_FEE_RANGE.max * 2;
+  TRANSFER_AMOUNT_MICROCREDITS + PUBLIC_DEVNODE_FEE_RANGE.max * 2;
+
+/**
+ * Record big enough to cover TRANSFER_AMOUNT_MICROCREDITS plus a `fee_private`
+ * paid from the change: the private-transfer scenario spends this one as the
+ * amount record.
+ */
+export const RECORD_A_MICROCREDITS = TRANSFER_AMOUNT_MICROCREDITS + PRIVATE_DEVNODE_FEE_RANGE.max;
+
+/**
+ * Record reserved for `fee_private`. Sized as headroom against underflow in
+ * `fee_private`'s `sub`, not as a fee measurement — `validatePrivateFeeRecord`
+ * only checks against the billed 2308, so a tighter record would still fail
+ * on-chain despite passing validation.
+ */
+export const RECORD_B_MICROCREDITS = PRIVATE_DEVNODE_FEE_RANGE.max * 2;
 
 export type GeneratedAleoAccount = { privateKey: string; viewKey: string; address: string };
 
 /**
- * A fresh keypair unknown to the chain. Scenarios that need both an OUT and an
- * IN side use this instead of the pinned GENESIS_ACCOUNT/RECIPIENT_ACCOUNT, so
- * the sender itself has to be funded first and its balance is exact rather
- * than inherited from unrelated prior runs.
+ * A fresh keypair unknown to the chain, used instead of the pinned
+ * GENESIS_ACCOUNT/RECIPIENT_ACCOUNT when a scenario needs an exact balance
+ * rather than one inherited from prior runs.
  */
 export async function generateAleoAccount(): Promise<GeneratedAleoAccount> {
   const wasm = await loadAleoWasm();
@@ -137,17 +149,19 @@ export async function generateAleoAccount(): Promise<GeneratedAleoAccount> {
 /** Base fee coin-aleo bills for `transfer_public`, in microcredits. */
 export const TRANSFER_PUBLIC_BASE_FEE = 34060;
 
+/** Base fee coin-aleo bills for `transfer_private`, in microcredits. */
+export const TRANSFER_PRIVATE_BASE_FEE = 2308;
+
+/** Base fee coin-aleo bills for `transfer_public_to_private`, in microcredits. */
+export const CONVERT_PUBLIC_TO_PRIVATE_BASE_FEE = 17972;
+
 export const ALEO = getCryptoCurrencyById("aleo_testnet");
 
 /**
  * Production values from libs/ledger-live-common/src/families/aleo/config.ts,
- * with two deliberate deviations:
- *  - isFeeSponsored: false, because sponsorship needs a Ledger service that does
- *    not exist locally. With false the fee is signed by the signer and the
- *    fee_public path enters the test's scope;
- *  - useEncryptedProve: false, which routes broadcast at /prove/{net}/prove and
- *    drops /prove/pubkey and /prove/prove/encrypted from scope. The encrypted
- *    path would mean opening a crypto_box sealed box in TypeScript.
+ * with two deviations: isFeeSponsored: false, since sponsorship needs a
+ * Ledger service unavailable locally; useEncryptedProve: false, to avoid
+ * opening a crypto_box sealed box in TypeScript.
  */
 export function buildAleoCoinConfig(): AleoCoinConfig {
   return {
@@ -159,8 +173,8 @@ export function buildAleoCoinConfig(): AleoCoinConfig {
     },
     feeByTransactionType: {
       [TRANSACTION_TYPE.TRANSFER_PUBLIC]: TRANSFER_PUBLIC_BASE_FEE,
-      [TRANSACTION_TYPE.TRANSFER_PRIVATE]: 2308,
-      [TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE]: 17972,
+      [TRANSACTION_TYPE.TRANSFER_PRIVATE]: TRANSFER_PRIVATE_BASE_FEE,
+      [TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE]: CONVERT_PUBLIC_TO_PRIVATE_BASE_FEE,
       [TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC]: 18494,
       [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC]: 34060,
       [TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE]: 2308,
@@ -225,4 +239,25 @@ export function makeAleoAccount(address: string, viewKey: string): AleoAccount {
       WEEK: { latestDate: null, balances: [] },
     },
   };
+}
+
+/**
+ * makeAleoAccount plus aleoResources seeded as already privately synced.
+ *
+ * lastPrivateSyncDate must be non-null from the start: buildSyncObservables
+ * only runs the private sync step when the account has synced privately
+ * before, and left null every cycle would keep skipping it. The epoch value
+ * works because production gates only on truthiness, and stays comparable so
+ * a test can assert the sync moved it forward.
+ */
+export function makePrivateAleoAccount(address: string, viewKey: string): AleoAccount {
+  const aleoResources: AleoResources = {
+    transparentBalance: new BigNumber(0),
+    provableApi: null,
+    privateBalance: null,
+    unspentPrivateRecords: null,
+    lastPrivateSyncDate: new Date(0),
+  };
+
+  return { ...makeAleoAccount(address, viewKey), aleoResources };
 }

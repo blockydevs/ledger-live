@@ -680,23 +680,17 @@ pub mod v1 {
     let mut req = Vec::new();
     // Structure type (0x28 for root)
     req.extend_from_slice(&get_tlv(TlvTag::StructureType, &[0x28]));
-    // Version
     req.extend_from_slice(&get_tlv(TlvTag::Version, VERSION.as_bytes().as_ref()));
-    // max_base_fee
     req.extend_from_slice(&get_tlv(TlvTag::MaxBaseFee, &max_base_fee.to_be_bytes()));
-    // max_priority_fee
     req.extend_from_slice(&get_tlv(
       TlvTag::MaxPriorityFee,
       &max_priority_fee.to_be_bytes(),
     ));
-    // fee_function_name
     req.extend_from_slice(&get_tlv(
       TlvTag::FeeFunctionName,
       fee_function_name.as_bytes(),
     ));
-    // fee_program_id
     req.extend_from_slice(&get_tlv(TlvTag::FeeProgramId, fee_program_id.as_bytes()));
-    // request
     req.extend_from_slice(&get_tlv(TlvTag::Request, request_tlv));
 
     req

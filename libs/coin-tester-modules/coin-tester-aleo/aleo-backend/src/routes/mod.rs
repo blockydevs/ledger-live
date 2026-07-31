@@ -21,10 +21,8 @@ use system::handle_health;
 use crate::tracing_middleware::Tracing;
 
 pub fn create_router() -> Router {
-  // Get tracer from global provider for tracing middleware
   let tracer = global::tracer_provider().tracer("salvo");
 
-  // API routes with OpenTelemetry tracing
   let api_routes = Router::new().hoop(Tracing::new(tracer)).push(
     Router::with_path("network").push(
       Router::with_path("{network_id}")

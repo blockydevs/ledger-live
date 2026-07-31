@@ -47,6 +47,22 @@ async function addressBytes(address: string): Promise<number[]> {
   return [...wasm.Address.from_string(address).toBytesLe()];
 }
 
+function recordTypeBytes(recordName: string): number[] {
+  return [0x03, recordName.length, ...Buffer.from(recordName, "ascii")];
+}
+
+/** A commitment field plus its 32-byte LE encoding, for building a record `InputValues` entry. */
+async function commitmentField(value: string): Promise<{ bytes: number[]; commitment: string }> {
+  const wasm = await loadAleoWasm();
+  const field = wasm.Field.fromString(value);
+  return { bytes: [...field.toBytesLe()], commitment: field.toString() };
+}
+
+/** 32-byte commitment followed by 64 filler bytes standing in for the h-generator coordinates. */
+function recordValueBytes(commitmentBytes: number[]): number[] {
+  return [...commitmentBytes, ...new Array(64).fill(0)];
+}
+
 describe("decodeRequestTlv", () => {
   it("decodes a root transfer_public intent, wrapper and all", async () => {
     const inner = requestBody({
@@ -144,15 +160,6 @@ describe("decodeRequestTlv", () => {
     await expect(decodeRequestTlv(hex(bytes))).rejects.toThrow(/unknown TLV tag/i);
   });
 
-  it("throws on a record input type", async () => {
-    const bytes = requestBody({
-      programId: "credits.aleo",
-      functionName: "transfer_private",
-      inputs: [{ typeBytes: [0x03, 0x07, ...Buffer.from("credits", "ascii")], valueBytes: [0x00] }],
-    });
-    await expect(decodeRequestTlv(hex(bytes))).rejects.toThrow(/record/i);
-  });
-
   it("throws on an external record input type", async () => {
     const bytes = requestBody({
       programId: "credits.aleo",
@@ -184,5 +191,76 @@ describe("decodeRequestTlv", () => {
     );
     inner[countTagIndex + 3] = 0x02;
     await expect(decodeRequestTlv(hex(inner))).rejects.toThrow(/input count/i);
+  });
+
+  it("decodes a record input type, reading the record name after the discriminant", async () => {
+    const { bytes: commitmentBytes } = await commitmentField("42field");
+    const bytes = requestBody({
+      programId: "credits.aleo",
+      functionName: "transfer_private",
+      inputs: [
+        { typeBytes: recordTypeBytes("credits"), valueBytes: recordValueBytes(commitmentBytes) },
+      ],
+    });
+
+    const decoded = await decodeRequestTlv(hex(bytes), { resolveRecord: () => "{ record }" });
+
+    expect(decoded.inputTypes).toStrictEqual(["credits.record"]);
+  });
+
+  it("decodes a record input value, passing the resolver the first 32 bytes as the commitment", async () => {
+    const { bytes: commitmentBytes, commitment } = await commitmentField("42field");
+    const bytes = requestBody({
+      programId: "credits.aleo",
+      functionName: "transfer_private",
+      inputs: [
+        { typeBytes: recordTypeBytes("credits"), valueBytes: recordValueBytes(commitmentBytes) },
+      ],
+    });
+
+    const seenCommitments: string[] = [];
+    const resolveRecord = (seen: string): string => {
+      seenCommitments.push(seen);
+      return "{ owner: aleo1…, microcredits: 1000u64.private, _nonce: 1group.public }";
+    };
+
+    const decoded = await decodeRequestTlv(hex(bytes), { resolveRecord });
+
+    expect(seenCommitments).toStrictEqual([commitment]);
+    expect(decoded.inputs).toStrictEqual([
+      "{ owner: aleo1…, microcredits: 1000u64.private, _nonce: 1group.public }",
+    ]);
+  });
+
+  it("throws, naming the commitment, when a record input has no resolver", async () => {
+    const { bytes: commitmentBytes, commitment } = await commitmentField("42field");
+    const bytes = requestBody({
+      programId: "credits.aleo",
+      functionName: "transfer_private",
+      inputs: [
+        { typeBytes: recordTypeBytes("credits"), valueBytes: recordValueBytes(commitmentBytes) },
+      ],
+    });
+
+    await expect(decodeRequestTlv(hex(bytes))).rejects.toThrow(commitment);
+  });
+
+  it("propagates a resolver's error for an unknown commitment instead of returning undefined", async () => {
+    const { bytes: commitmentBytes } = await commitmentField("42field");
+    const bytes = requestBody({
+      programId: "credits.aleo",
+      functionName: "transfer_private",
+      inputs: [
+        { typeBytes: recordTypeBytes("credits"), valueBytes: recordValueBytes(commitmentBytes) },
+      ],
+    });
+
+    const resolveRecord = (seen: string): string => {
+      throw new Error(`unknown commitment ${seen}`);
+    };
+
+    await expect(decodeRequestTlv(hex(bytes), { resolveRecord })).rejects.toThrow(
+      /unknown commitment/,
+    );
   });
 });

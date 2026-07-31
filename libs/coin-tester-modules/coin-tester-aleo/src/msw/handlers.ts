@@ -3,8 +3,10 @@ import { ALEO_FAKE_NODE, ALEO_NETWORK_TYPE } from "../fixtures";
 import { getAccountTransactionRows } from "./indexer";
 import { fetchAccountBalanceV2, fetchLatestBlockV2, fetchTransactionV2 } from "./node";
 import { handleProve, type ExpectedTransfer, type ProveRequestBody } from "./prove";
+import type { FakeScanner } from "./scanner";
 
 const V2 = `${ALEO_FAKE_NODE}/v2/${ALEO_NETWORK_TYPE}`;
+const SCANNER = `${ALEO_FAKE_NODE}/scanner/${ALEO_NETWORK_TYPE}`;
 
 function toFailure(error: unknown): HttpResponse {
   const message = error instanceof Error ? error.message : String(error);
@@ -58,6 +60,32 @@ export function buildAleoHandlers(expected: ExpectedTransfer): RequestHandler[] 
       try {
         const body = (await request.json()) as ProveRequestBody;
         return HttpResponse.json(await handleProve(body, expected));
+      } catch (error) {
+        return toFailure(error);
+      }
+    }),
+  ];
+}
+
+export function buildScannerHandlers(scanner: FakeScanner): RequestHandler[] {
+  return [
+    http.get(`${SCANNER}/pubkey`, () => HttpResponse.json(scanner.pubkey())),
+
+    http.post(`${SCANNER}/register/encrypted`, async ({ request }) => {
+      try {
+        const body = (await request.json()) as { ciphertext: string; key_id: string };
+        return HttpResponse.json(await scanner.register(body.ciphertext));
+      } catch (error) {
+        return toFailure(error);
+      }
+    }),
+
+    http.post(`${SCANNER}/status`, () => HttpResponse.json(scanner.status())),
+
+    http.post(`${SCANNER}/records/owned`, async ({ request }) => {
+      try {
+        const body = (await request.json()) as { uuid: string; unspent?: boolean };
+        return HttpResponse.json(await scanner.ownedRecords(body.uuid, { unspent: body.unspent }));
       } catch (error) {
         return toFailure(error);
       }

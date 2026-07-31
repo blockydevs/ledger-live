@@ -65,6 +65,13 @@ export const VISIBILITY_BY_BYTE: Readonly<Record<number, string>> = {
   0x02: "private",
 };
 
+/**
+ * `ValueType::Record` discriminant. The type TLV continues with a 1-byte
+ * length and the record name's ASCII bytes (`get_input_type_bytes`,
+ * tlv.rs:515-521); the matching `InputValues` entry is 96 bytes — a 32-byte
+ * commitment followed by the 64-byte h-generator (x, y) coordinates
+ * (`encode_input_value`, tlv.rs:568-581).
+ */
 export const VALUE_TYPE_RECORD = 0x03;
 export const VALUE_TYPE_EXTERNAL_RECORD = 0x04;
 

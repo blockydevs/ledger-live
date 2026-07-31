@@ -5,7 +5,6 @@ use snarkvm::prelude::{
 };
 use std::str::FromStr;
 
-/// returns: Result<(commitment, record_view_key), Error>
 pub fn compute_record_commitment<N: Network>(
   record: &Record<N, Plaintext<N>>,
   record_name: &Identifier<N>,

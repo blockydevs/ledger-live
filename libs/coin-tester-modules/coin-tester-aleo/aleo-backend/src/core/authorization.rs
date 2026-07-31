@@ -25,10 +25,8 @@ use snarkvm::synthesizer::program::StackTrait;
 use super::evaluate::{PreloadedCallStack, custom_evaluate_function};
 use super::types::{PreparedRequest, RequestSignature, SignedRequest};
 
-/// Assemble a Request from signature data and prepared request
-///
-/// This function reconstructs a snarkVM Request from the signed prepared request,
-/// using the signature data (tvk, tpk, gammas) to compute the necessary input IDs.
+/// Reconstruct a snarkVM Request from a signed prepared request, using the signature data
+/// (tvk, tpk, gammas) to compute the input IDs.
 #[allow(clippy::too_many_arguments)]
 pub fn assemble_request<N: Network>(
   compute_key: &ComputeKey<N>,
@@ -40,7 +38,6 @@ pub fn assemble_request<N: Network>(
   input_types: &[ValueType<N>],
   root_tvk: Option<Field<N>>,
 ) -> anyhow::Result<Request<N>> {
-  // Ensure the number of inputs matches the number of input types
   if input_types.len() != inputs.len() {
     bail!(
       "'{program_id}/{function_name}' expects {} inputs, but {} were provided.",
@@ -49,43 +46,29 @@ pub fn assemble_request<N: Network>(
     )
   }
 
-  // Derive `sk_tag` from the graph key
   let sk_tag = GraphKey::try_from(view_key)?.sk_tag();
-
-  // Derive the signer from the compute key
   let signer = Address::try_from(compute_key)?;
-
-  // Get tvk from signature
   let tvk = signature.tvk;
 
-  // Compute the transition commitment `tcm` as `Hash(tvk)`
+  // tcm = Hash(tvk)
   let tcm = N::hash_psd2(&[tvk])?;
 
-  // Compute the signer commitment `scm` as `Hash(signer || root_tvk)`
+  // scm = Hash(signer || root_tvk)
   let root_tvk = root_tvk.unwrap_or(tvk);
   let scm = N::hash_psd2(&[signer.to_x_coordinate(), root_tvk])?;
 
-  // Retrieve the network ID
   let network_id = U16::new(N::ID);
-
-  // Compute the function ID
   let function_id = compute_function_id(&network_id, &program_id, &function_name)?;
 
-  // Initialize vectors to store prepared inputs and input IDs
   let mut prepared_inputs = Vec::with_capacity(inputs.len());
   let mut input_ids = Vec::with_capacity(inputs.len());
-
-  // Create a mutable FIFO queue from signature.gammas
   let mut gammas: std::collections::VecDeque<_> = signature.gammas.iter().copied().collect();
 
-  // Prepare the inputs
   for (index, (input, input_type)) in inputs.zip(input_types.iter()).enumerate() {
-    // Prepare the input
     let input = input.try_into().map_err(|_| {
       anyhow!("Failed to parse input #{index} ('{input_type}') for '{program_id}/{function_name}'")
     })?;
 
-    // Store the prepared input
     prepared_inputs.push(input.clone());
 
     match input_type {
@@ -149,7 +132,6 @@ pub fn assemble_request<N: Network>(
           Value::Future(..) => bail!("Expected a record input, found a future input"),
         };
 
-        // Ensure the record belongs to the signer
         ensure!(
           **record.owner() == signer,
           "Input record for '{program_id}' must belong to the signer"
@@ -158,19 +140,14 @@ pub fn assemble_request<N: Network>(
         let (commitment, record_view_key) =
           compute_record_commitment(record, record_name, &program_id, view_key)?;
 
-        // Get gamma from the signature
         let gamma = gammas.pop_front().ok_or_else(|| {
           anyhow!("Insufficient number of gammas provided in the request signature")
         })?;
 
-        // Compute the serial_number from gamma
         let serial_number =
           Record::<N, Plaintext<N>>::serial_number_from_gamma(&gamma, commitment)?;
-
-        // Compute the tag
         let tag = Record::<N, Plaintext<N>>::tag(sk_tag, commitment)?;
 
-        // Add the input ID
         input_ids.push(InputID::Record(
           commitment,
           gamma,
@@ -196,7 +173,6 @@ pub fn assemble_request<N: Network>(
         let input_hash = N::hash_psd8(&preimage)?;
         input_ids.push(InputID::ExternalRecord(input_hash));
       }
-      // A future is not a valid input
       ValueType::Future(..) => bail!("A future is not a valid input"),
     }
   }
@@ -216,10 +192,7 @@ pub fn assemble_request<N: Network>(
   )))
 }
 
-/// Authorize a signed request using the snarkVM process
-///
-/// This function takes a signed request and produces an Authorization
-/// that can be used to execute the transaction.
+/// Authorize a signed request, producing an Authorization that can execute the transaction.
 pub fn authorize_signed_request<N: Network + 'static, A: Aleo<Network = N>, R: Rng + CryptoRng>(
   process: &Process<N>,
   compute_key: &ComputeKey<N>,
@@ -255,13 +228,11 @@ impl<N: Network> StackAuthorize<N> for Stack<N> {
     let program_id = signed_request.source.program_id;
     let function_name = signed_request.source.function_name;
 
-    // Retrieve the input types from the function
     let input_types = self.get_function(&function_name)?.input_types();
 
-    // This is the root request and does not have a caller
+    // The root request has no caller.
     let caller = None;
 
-    // Compute the root request (root_tvk is None for root request)
     let root_request = assemble_request(
       compute_key,
       view_key,
@@ -273,7 +244,6 @@ impl<N: Network> StackAuthorize<N> for Stack<N> {
       None, // root_tvk is None for the root request itself
     )?;
 
-    // Initialize the authorization with the root request
     let authorization = Authorization::new(root_request.clone());
 
     // The root_tvk to pass to nested calls is the tvk of the root request
@@ -596,17 +566,12 @@ pub fn create_authorization_mainnet(
 ) -> AppResult<(Authorization<snarkvm::prelude::MainnetV0>, String)> {
   use snarkvm::prelude::MainnetV0;
 
-  // Parse the view key
   let view_key = ViewKey::<MainnetV0>::from_str(view_key_str)
     .map_err(|e| AppError::InvalidSignature(format!("Invalid view key: {}", e)))?;
 
-  // Load the snarkVM process, registering only the programs this request targets
   let process = build_process(signed_request)?;
-
-  // Create cryptographically secure RNG
   let mut rng = OsRng;
 
-  // Authorize the request
   let authorization = authorize_signed_request::<MainnetV0, snarkvm::circuit::AleoV0, _>(
     &process,
     compute_key,
@@ -616,7 +581,6 @@ pub fn create_authorization_mainnet(
   )
   .map_err(|e| AppError::AuthorizationFailed(format!("Authorization failed: {}", e)))?;
 
-  // Get the execution ID
   let execution_id = authorization
     .to_execution_id()
     .map_err(|e| AppError::AuthorizationFailed(format!("Failed to get execution ID: {}", e)))?
@@ -633,17 +597,12 @@ pub fn create_authorization_testnet(
 ) -> AppResult<(Authorization<snarkvm::prelude::TestnetV0>, String)> {
   use snarkvm::prelude::TestnetV0;
 
-  // Parse the view key
   let view_key = ViewKey::<TestnetV0>::from_str(view_key_str)
     .map_err(|e| AppError::InvalidSignature(format!("Invalid view key: {}", e)))?;
 
-  // Load the snarkVM process, registering only the programs this request targets
   let process = build_process(signed_request)?;
-
-  // Create cryptographically secure RNG
   let mut rng = OsRng;
 
-  // Authorize the request
   let authorization = authorize_signed_request::<TestnetV0, snarkvm::circuit::AleoTestnetV0, _>(
     &process,
     compute_key,
@@ -653,7 +612,6 @@ pub fn create_authorization_testnet(
   )
   .map_err(|e| AppError::AuthorizationFailed(format!("Authorization failed: {}", e)))?;
 
-  // Get the execution ID
   let execution_id = authorization
     .to_execution_id()
     .map_err(|e| AppError::AuthorizationFailed(format!("Failed to get execution ID: {}", e)))?
@@ -670,17 +628,12 @@ pub fn create_authorization_canary(
 ) -> AppResult<(Authorization<snarkvm::prelude::CanaryV0>, String)> {
   use snarkvm::prelude::CanaryV0;
 
-  // Parse the view key
   let view_key = ViewKey::<CanaryV0>::from_str(view_key_str)
     .map_err(|e| AppError::InvalidSignature(format!("Invalid view key: {}", e)))?;
 
-  // Load the snarkVM process, registering only the programs this request targets
   let process = build_process(signed_request)?;
-
-  // Create cryptographically secure RNG
   let mut rng = OsRng;
 
-  // Authorize the request
   let authorization = authorize_signed_request::<CanaryV0, snarkvm::circuit::AleoCanaryV0, _>(
     &process,
     compute_key,
@@ -690,7 +643,6 @@ pub fn create_authorization_canary(
   )
   .map_err(|e| AppError::AuthorizationFailed(format!("Authorization failed: {}", e)))?;
 
-  // Get the execution ID
   let execution_id = authorization
     .to_execution_id()
     .map_err(|e| AppError::AuthorizationFailed(format!("Failed to get execution ID: {}", e)))?

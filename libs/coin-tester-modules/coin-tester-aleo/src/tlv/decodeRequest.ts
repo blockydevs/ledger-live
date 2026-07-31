@@ -47,6 +47,16 @@ const UNSIGNED_INTEGER_WIDTHS: Readonly<Record<string, number>> = {
   u128: 16,
 };
 
+/** 32-byte commitment + 64-byte h-generator (x, y) coordinates (tlv.rs:568-581). */
+const RECORD_INPUT_VALUE_LENGTH = 96;
+
+/**
+ * Looks up the plaintext for a record input's commitment. Must throw for an
+ * unknown commitment — never return `undefined`, which would surface as an
+ * unreadable failure much later in signing.
+ */
+export type ResolveRecord = (commitment: string) => string;
+
 function toBytes(hex: string): Uint8Array {
   const buffer = Buffer.from(hex, "hex");
   if (buffer.length * 2 !== hex.length) {
@@ -79,9 +89,9 @@ function readUnsignedLe(value: Uint8Array, width: number, literal: string): bigi
 function decodeInputType(bytes: Uint8Array): { type: string; literal: string } {
   const [discriminant] = bytes;
   if (discriminant === VALUE_TYPE_RECORD) {
-    throw new Error(
-      "aleo coin-tester: record input types are not supported — this decoder only covers public transfers",
-    );
+    const nameLength = bytes[1];
+    const name = Buffer.from(bytes.subarray(2, 2 + nameLength)).toString("ascii");
+    return { type: `${name}.record`, literal: "record" };
   }
   if (discriminant === VALUE_TYPE_EXTERNAL_RECORD) {
     throw new Error(
@@ -118,7 +128,27 @@ function decodeInputType(bytes: Uint8Array): { type: string; literal: string } {
  * literal as `to_bytes_le()` minus the two leading type bytes
  * (`encode_input_value`, tlv.rs:539-554).
  */
-async function decodeInputValue(literal: string, bytes: Uint8Array): Promise<string> {
+async function decodeInputValue(
+  literal: string,
+  bytes: Uint8Array,
+  resolveRecord: ResolveRecord | undefined,
+): Promise<string> {
+  if (literal === "record") {
+    if (bytes.length !== RECORD_INPUT_VALUE_LENGTH) {
+      throw new Error(
+        `aleo coin-tester: expected ${RECORD_INPUT_VALUE_LENGTH} bytes for a record input, got ${bytes.length}`,
+      );
+    }
+    const wasm = await loadAleoWasm();
+    const commitment = wasm.Field.fromBytesLe(bytes.subarray(0, 32)).toString();
+    if (!resolveRecord) {
+      throw new Error(
+        `aleo coin-tester: no resolver supplied for a record input with commitment ${commitment}`,
+      );
+    }
+    return resolveRecord(commitment);
+  }
+
   if (literal === "address") {
     if (bytes.length !== 32) {
       throw new Error(`aleo coin-tester: expected 32 bytes for an address, got ${bytes.length}`);
@@ -155,7 +185,10 @@ function assertHeader(bytes: Uint8Array, expectedStructure: number): number {
   return version.next;
 }
 
-async function decodeRequestBody(bytes: Uint8Array): Promise<Omit<DecodedRequest, "feeLimits">> {
+async function decodeRequestBody(
+  bytes: Uint8Array,
+  resolveRecord: ResolveRecord | undefined,
+): Promise<Omit<DecodedRequest, "feeLimits">> {
   let offset = assertHeader(bytes, STRUCTURE_TYPE.Request);
 
   let networkId: number | null = null;
@@ -199,7 +232,7 @@ async function decodeRequestBody(bytes: Uint8Array): Promise<Omit<DecodedRequest
         if (!literal) {
           throw new Error("aleo coin-tester: an InputValues tag arrived before its InputTypes tag");
         }
-        inputs.push(await decodeInputValue(literal, value));
+        inputs.push(await decodeInputValue(literal, value, resolveRecord));
         break;
       }
       case TLV_TAG.NestedCallCount:
@@ -243,7 +276,10 @@ async function decodeRequestBody(bytes: Uint8Array): Promise<Omit<DecodedRequest
  * Accepts both shapes `request_to_tlv` can produce: a root intent wrapped in a
  * `0x28` structure carrying the fee limits, and a bare `0x29` fee intent.
  */
-export async function decodeRequestTlv(hex: string): Promise<DecodedRequest> {
+export async function decodeRequestTlv(
+  hex: string,
+  { resolveRecord }: { resolveRecord?: ResolveRecord } = {},
+): Promise<DecodedRequest> {
   const bytes = toBytes(hex);
   const structure = readTlv(bytes, 0);
 
@@ -252,7 +288,7 @@ export async function decodeRequestTlv(hex: string): Promise<DecodedRequest> {
   }
 
   if (structure.value[0] === STRUCTURE_TYPE.Request) {
-    return { ...(await decodeRequestBody(bytes)), feeLimits: null };
+    return { ...(await decodeRequestBody(bytes, resolveRecord)), feeLimits: null };
   }
 
   if (structure.value[0] !== STRUCTURE_TYPE.Root) {
@@ -303,7 +339,7 @@ export async function decodeRequestTlv(hex: string): Promise<DecodedRequest> {
   }
 
   return {
-    ...(await decodeRequestBody(inner)),
+    ...(await decodeRequestBody(inner, resolveRecord)),
     feeLimits: { maxBaseFee, maxPriorityFee, feeFunctionName, feeProgramId },
   };
 }

@@ -29,7 +29,6 @@ pub fn get_otlp_endpoint() -> Option<String> {
     return Some(format!("http://{}:{}", dd_host, port));
   }
 
-  // Fall back to standard OTEL endpoint
   std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").ok()
 }
 
@@ -45,7 +44,6 @@ pub fn get_service_name() -> String {
 /// - OpenTelemetry traces exported via OTLP gRPC
 /// - Trace context in logs for correlation
 pub fn setup_telemetry(level: Level) -> Result<()> {
-  // Build the env filter
   let env_filter = EnvFilter::try_from_default_env()
     .unwrap_or_else(|_| EnvFilter::new(level.as_str()))
     .add_directive("aleo_backend=debug".parse()?)
@@ -63,8 +61,6 @@ pub fn setup_telemetry(level: Level) -> Result<()> {
   // Check if we're running in a container/k8s (use JSON) or locally (use pretty)
   let is_production = std::env::var("OTEL_SERVICE_NAME").is_ok();
 
-  // Initialize OpenTelemetry if configured
-  // Priority: DD_AGENT_HOST (Datadog DaemonSet) > OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
   let otel_endpoint = get_otlp_endpoint();
   let otel_layer = otel_endpoint
     .as_ref()
@@ -80,7 +76,6 @@ pub fn setup_telemetry(level: Level) -> Result<()> {
       .with(datadog_layer)
       .init();
   } else {
-    // Pretty logging for local development
     let fmt_layer = fmt::layer().with_ansi(true).with_target(false).compact();
 
     tracing_subscriber::registry()
@@ -109,13 +104,11 @@ pub fn init_tracer_provider(endpoint: &str) -> Result<SdkTracerProvider> {
     .with_attributes([KeyValue::new("service.name", service_name)])
     .build();
 
-  // Configure OTLP exporter
   let exporter = opentelemetry_otlp::SpanExporter::builder()
     .with_tonic()
     .with_endpoint(endpoint)
     .build()?;
 
-  // Build the tracer provider
   let provider = SdkTracerProvider::builder()
     .with_batch_exporter(exporter)
     .with_sampler(Sampler::AlwaysOn)
@@ -123,7 +116,6 @@ pub fn init_tracer_provider(endpoint: &str) -> Result<SdkTracerProvider> {
     .with_resource(resource)
     .build();
 
-  // Register the provider globally
   global::set_tracer_provider(provider.clone());
 
   Ok(provider)
@@ -141,10 +133,7 @@ fn init_otel_tracing(
   let service_name = get_service_name();
   let provider = init_tracer_provider(endpoint)?;
 
-  // Get a tracer from the provider
   let tracer = provider.tracer(service_name);
-
-  // Create the tracing layer
   let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
   Ok(otel_layer)
@@ -152,10 +141,7 @@ fn init_otel_tracing(
 
 /// Shutdown OpenTelemetry gracefully, flushing any pending spans
 pub fn shutdown_telemetry() {
-  // In OpenTelemetry 0.31+, we need to get the provider and call shutdown on it
-  // The global provider doesn't have a direct shutdown method anymore
-  // For now, we rely on the provider being dropped when the app exits
-  // If we need explicit shutdown, we should store the provider in a static
+  // Pending spans flush when the global provider is dropped at process exit.
   tracing::info!("Shutting down OpenTelemetry...");
 }
 

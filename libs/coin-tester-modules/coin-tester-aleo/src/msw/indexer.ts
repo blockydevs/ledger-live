@@ -1,15 +1,17 @@
 import type { AleoPublicTransaction } from "@ledgerhq/coin-aleo/types";
+import { PROGRAM_ID } from "@ledgerhq/coin-aleo/constants";
 import type { DevnodeBlock, DevnodeConfirmedTransaction, DevnodeTransition } from "../devnode";
-import { getBlock, getLatestHeight } from "../devnode";
-
-const CREDITS_PROGRAM = "credits.aleo";
+import { getBlock, getLatestHeight, parseFutureSender } from "../devnode";
 
 /**
  * credits.aleo functions this indexer knows how to flatten. Anything else on
  * credits.aleo is skipped deliberately; a function on this list that cannot be
  * mapped throws instead.
  */
-const INDEXED_FUNCTIONS: ReadonlySet<string> = new Set(["transfer_public"]);
+const INDEXED_FUNCTIONS: ReadonlySet<string> = new Set([
+  "transfer_public",
+  "transfer_public_to_private",
+]);
 
 function parseU64(literal: string, field: string): number {
   const match = /^(\d+)u64$/.exec(literal.trim());
@@ -20,35 +22,18 @@ function parseU64(literal: string, field: string): number {
 }
 
 /**
- * Reads the sender out of the `future` output.
- *
- * transfer_public's inputs are (recipient, amount) — the sender is `self.signer`
- * and only surfaces in the future's argument list, as text.
+ * The fee lives in its own transition. `fee_public`'s inputs are
+ * `[baseFee, priorityFee, executionId]`; `fee_private`'s carry a spent record
+ * ahead of those same two, at `[record, baseFee, priorityFee, executionId]`.
  */
-function parseSender(transition: DevnodeTransition): string {
-  const future = transition.outputs.find(output => output.type === "future");
-  if (!future?.value) {
-    throw new Error(
-      `aleo coin-tester: transition ${transition.id} has no future output to read the sender from`,
-    );
-  }
-  const match = /arguments:\s*\[\s*([^,\]\s]+)/.exec(future.value);
-  const sender = match?.[1];
-  if (!sender?.startsWith("aleo1")) {
-    throw new Error(
-      `aleo coin-tester: could not read the sender address from the future of ${transition.id}`,
-    );
-  }
-  return sender;
-}
-
-/** The fee lives in its own transition, whose first two inputs are base and priority. */
-function parseFee(confirmed: DevnodeConfirmedTransaction): number {
+export function parseFee(confirmed: DevnodeConfirmedTransaction): number {
   const feeTransition = confirmed.transaction.fee?.transition;
   if (!feeTransition) {
     throw new Error(`aleo coin-tester: transaction ${confirmed.transaction.id} carries no fee`);
   }
-  const [base, priority] = feeTransition.inputs;
+  const offset = feeTransition.function === "fee_private" ? 1 : 0;
+  const base = feeTransition.inputs[offset];
+  const priority = feeTransition.inputs[offset + 1];
   if (!base?.value || !priority?.value) {
     throw new Error(
       `aleo coin-tester: fee transition ${feeTransition.id} does not expose its fee inputs`,
@@ -68,10 +53,13 @@ function toRow({
 }): AleoPublicTransaction {
   if (confirmed.status !== "accepted") {
     throw new Error(
-      `aleo coin-tester: cannot map ${CREDITS_PROGRAM}/${transition.function} with status '${confirmed.status}'`,
+      `aleo coin-tester: cannot map ${PROGRAM_ID.CREDITS}/${transition.function} with status '${confirmed.status}'`,
     );
   }
 
+  // Both indexed functions take `[recipient, amount]`. transfer_public's recipient
+  // is a bare address; transfer_public_to_private's is ciphertext, which the
+  // bridge decrypts or matches against the account's own private records.
   const [recipient, amount] = transition.inputs;
   if (!recipient?.value || !amount?.value) {
     throw new Error(
@@ -90,7 +78,7 @@ function toRow({
     block_timestamp: String(block.header.metadata.timestamp),
     function_id: transition.function,
     amount: parseU64(amount.value, "amount"),
-    sender_address: parseSender(transition),
+    sender_address: parseFutureSender(transition),
     recipient_address: recipient.value.trim(),
     program_id: transition.program,
     fee: parseFee(confirmed),
@@ -106,7 +94,7 @@ export async function scanIndexedTransfers(): Promise<AleoPublicTransaction[]> {
     const block = await getBlock(current);
     for (const confirmed of block.transactions ?? []) {
       for (const transition of confirmed.transaction.execution?.transitions ?? []) {
-        if (transition.program !== CREDITS_PROGRAM) continue;
+        if (transition.program !== PROGRAM_ID.CREDITS) continue;
         if (!INDEXED_FUNCTIONS.has(transition.function)) continue;
         rows.push(toRow({ block, confirmed, transition }));
       }

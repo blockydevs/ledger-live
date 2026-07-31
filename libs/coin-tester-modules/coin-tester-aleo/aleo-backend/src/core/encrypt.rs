@@ -19,10 +19,8 @@ struct ProvingRequest<N: Network> {
 /// wasm/src/types/native/request/bytes.rs
 impl<N: Network> ToBytes for ProvingRequest<N> {
   fn write_le<W: Write>(&self, mut writer: W) -> IoResult<()> {
-    // Serialize authorization
     self.authorization.write_le(&mut writer)?;
 
-    // Serialize fee_authorization (as an Option)
     match &self.fee_authorization {
       Some(fee) => {
         true.write_le(&mut writer)?;
@@ -33,7 +31,6 @@ impl<N: Network> ToBytes for ProvingRequest<N> {
       }
     }
 
-    // Serialize broadcast flag
     self.broadcast.write_le(&mut writer)?;
     Ok(())
   }
@@ -44,9 +41,6 @@ pub fn encrypt_registration_request<N: Network>(
   view_key: &str,
   start: u32,
 ) -> AppResult<String> {
-  // The implementation is provided by the getrandom crate
-  // It is assumed that the system always provides high-quality,
-  // cryptographically secure random data, ideally backed by hardware entropy sources.
   let mut rng = OsRng;
   encrypt_registration_request_with_rng::<N, _>(public_key, view_key, start, &mut rng)
 }

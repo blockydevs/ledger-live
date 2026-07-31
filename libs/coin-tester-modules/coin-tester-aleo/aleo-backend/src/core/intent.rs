@@ -170,7 +170,6 @@ fn fetch_batcher_source<N: Network>(program_id: &str) -> AppResult<&'static str>
   Ok(src)
 }
 
-/// Helper function to convert RecordContent to Record<N, Plaintext<N>>
 fn record_content_to_record<N: Network>(
   content: &RecordContent,
 ) -> AppResult<Record<N, Plaintext<N>>> {
@@ -384,10 +383,8 @@ fn build_join_transfer_nested_calls<N: Network>(
   Ok(nested)
 }
 
-/// Create a prepared request for a private transfer
-///
-/// Transfers credits from a private record to another address,
-/// producing two output records (recipient and change).
+/// Transfer credits from a private record to another address, producing recipient and
+/// change output records.
 pub fn create_transfer_private_request<N: Network>(
   network_id: u16,
   amount: u64,
@@ -665,9 +662,7 @@ pub fn create_transfer_private_to_public_batch_request<N: Network>(
   )
 }
 
-/// Create a prepared request for a public transfer
-///
-/// Transfers credits from public balance to another address's public balance.
+/// Transfer credits from public balance to another address's public balance.
 pub fn create_transfer_public_request<N: Network>(
   network_id: u16,
   amount: u64,
@@ -703,9 +698,7 @@ pub fn create_transfer_public_request<N: Network>(
   ))
 }
 
-/// Create a prepared request for a private-to-public transfer
-///
-/// Converts credits from a private record to public balance.
+/// Convert credits from a private record to public balance.
 pub fn create_transfer_private_to_public_request<N: Network>(
   network_id: u16,
   amount: u64,
@@ -747,9 +740,7 @@ pub fn create_transfer_private_to_public_request<N: Network>(
   ))
 }
 
-/// Create a prepared request for a public-to-private transfer
-///
-/// Converts credits from public balance to a private record.
+/// Convert credits from public balance to a private record.
 pub fn create_transfer_public_to_private_request<N: Network>(
   network_id: u16,
   amount: u64,
@@ -1362,9 +1353,7 @@ pub fn create_transfer_token_private_to_public_batch_request<N: Network>(
   )
 }
 
-/// Create a prepared request for paying fees with a private record
-///
-/// Pays transaction fees using a private credits record.
+/// Pay transaction fees using a private credits record.
 pub fn create_fee_private_request<N: Network>(
   network_id: u16,
   base_fee: u64,
@@ -1410,9 +1399,7 @@ pub fn create_fee_private_request<N: Network>(
   ))
 }
 
-/// Create a prepared request for paying fees with public balance
-///
-/// Pays transaction fees using public credits balance.
+/// Pay transaction fees using public credits balance.
 pub fn create_fee_public_request<N: Network>(
   network_id: u16,
   base_fee: u64,

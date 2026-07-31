@@ -713,7 +713,6 @@ fn prepared_request_to_response<N: Network>(
     .map(|nested| prepared_request_to_response(nested, view_key, None, tlv_version))
     .collect::<AppResult<Vec<_>>>()?;
 
-  // Compute record commitments if view_key is provided
   let record_commitments = if let Some(vk) = view_key {
     compute_record_commitments(request, vk)?
   } else {
@@ -1109,7 +1108,6 @@ pub async fn handle_create_intent(
     request.view_key.is_some()
   );
 
-  // Determine TLV version
   let tlv_version = match request.tlv_version {
     Some(v) => TLVVersion::try_from(v)?,
     None => TLVVersion::V1,
@@ -1160,7 +1158,6 @@ pub async fn handle_create_intent(
     None => None,
   };
 
-  // Process the intent based on the network
   let response = match network {
     NetworkId::Mainnet => process_for_network::<MainnetV0>(
       network.to_network_id(),

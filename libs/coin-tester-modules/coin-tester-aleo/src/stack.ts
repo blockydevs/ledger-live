@@ -3,6 +3,7 @@ import path from "path";
 import chalk from "chalk";
 import * as compose from "docker-compose";
 import { ALEO_LOCAL_NODE, ALEO_NETWORK_TYPE } from "./fixtures";
+import { resetConfirmedTransactionCache } from "./msw/node";
 
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const DOWN_ARGS = ["--remove-orphans", "--volumes"];
@@ -19,19 +20,12 @@ let stopped = true;
 let teardownRegistered = false;
 
 /**
- * Best-effort synchronous teardown, for signal and exit handlers only.
+ * Best-effort synchronous teardown for signal and exit handlers.
  *
- * Two reasons it is neither async nor `compose down`:
- *  - async is useless here, because the runner exits without awaiting pending
- *    promises, so a `compose.down()` promise would never settle;
- *  - `compose down` is too slow to finish. Ctrl-C reaches the whole process
- *    group, so pnpm dies alongside this process and takes it down mid-teardown.
- *    A single `docker rm -f` on the known container names is the fastest call
- *    that frees ports 3030 and 3031, which gives it the best odds of
- *    completing in that window.
- *
- * This is a race that cannot be won reliably — the process may be killed at any
- * point. The actual guarantee comes from spawnStack cleaning up first.
+ * Sync and `docker rm -f`, not async `compose down`: the runner exits without
+ * awaiting pending promises, and Ctrl-C kills this process along with pnpm's
+ * whole process group before a slower `compose down` could finish. This is a
+ * race that can be lost; spawnStack's own cleanup is the real guarantee.
  */
 function killStackSync() {
   if (stopped) return;
@@ -42,19 +36,19 @@ function killStackSync() {
       stdio: process.env.DEBUG ? "inherit" : "ignore",
     });
   } catch {
-    // Best effort: the handler must not throw on its way out.
+    // Must not throw on the way out.
   }
 }
 
 /** Tears the stack down on the ways a run can end without unwinding normally. */
-function registerTeardownHooks() {
+export function registerTeardownHooks() {
   if (teardownRegistered) return;
   teardownRegistered = true;
 
   process.on("exit", killStackSync);
 
-  // Signals need an explicit exit: registering a listener replaces Node's
-  // default terminate-on-signal behaviour, so without this the run would hang.
+  // Registering a listener replaces Node's default terminate-on-signal
+  // behaviour, so the handler must exit explicitly or the run hangs.
   for (const signal of ["SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2"] as const) {
     process.on(signal, () => {
       killStackSync();
@@ -70,13 +64,11 @@ function registerTeardownHooks() {
 
 export async function spawnStack() {
   registerTeardownHooks();
+  // The chain is about to be recreated from height 0.
+  resetConfirmedTransactionCache();
 
-  // Clear anything a previous run left behind. Interrupt-time teardown is a
-  // race the harness can lose — when pnpm forwards Ctrl-C to the whole process
-  // group, it can kill this process mid-`docker compose down` — so a run must
-  // not depend on the previous one having exited cleanly. Without this, a stale
-  // container keeps a port and the next run fails on a healthy-looking service
-  // that is not the one it started.
+  // Interrupt-time teardown can be killed mid-`compose down`, so a stale
+  // container may still hold a port from a previous run; clear it first.
   await compose.down({
     ...composeOpts(),
     commandOptions: DOWN_ARGS,
@@ -87,8 +79,8 @@ export async function spawnStack() {
 
   console.log("Starting the Aleo stack...");
   stopped = false;
-  // `--wait` blocks on both compose healthchecks, which only pass once each
-  // service is actually serving, not merely once its process is up.
+  // `--wait` blocks on both healthchecks, which pass only once each service
+  // is actually serving, not merely once its process is up.
   await compose.upAll({
     ...composeOpts(),
     commandOptions: ["--wait"],
@@ -118,20 +110,13 @@ export async function getBlockHeight(): Promise<number> {
 }
 
 /**
- * Seals `count` blocks.
- *
- * There is no consensus behind a devnode: it seals a block when a transaction
- * is broadcast, or when asked to here, and otherwise sits still. Scenarios that
- * wait on a height moving — confirmations, a finalized mapping read — have to
- * drive it explicitly rather than sleep.
- *
- * This is the endpoint `leo devnode advance` calls.
+ * Seals `count` blocks. A devnode has no consensus — it only seals a block on
+ * a broadcast transaction or on this call — so scenarios waiting on height
+ * (confirmations, a finalized mapping read) must drive it explicitly.
  */
 export async function advanceBlocks(count = 1): Promise<number> {
   for (let i = 0; i < count; i++) {
-    // The empty JSON object is not decoration: the route deserializes a body,
-    // so no body at all is a 500 and a missing content-type a 415. One call
-    // seals exactly one block.
+    // The route deserializes a body: no body is a 500, no content-type a 415.
     const response = await fetch(`${ALEO_LOCAL_NODE}/${ALEO_NETWORK_TYPE}/block/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

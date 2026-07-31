@@ -70,7 +70,6 @@ where
     )
   }
 
-  // Init empty call stack
   let placeholder_call_stack = CallStack::Authorize(vec![], None, pcs.authorization.clone());
   let mut registers = Registers::<N, A>::new(
     placeholder_call_stack,
