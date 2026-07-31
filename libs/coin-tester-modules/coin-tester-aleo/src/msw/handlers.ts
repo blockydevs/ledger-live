@@ -1,7 +1,12 @@
 import { http, HttpResponse, type RequestHandler } from "msw";
 import { ALEO_FAKE_NODE, ALEO_NETWORK_TYPE } from "../fixtures";
 import { getAccountTransactionRows } from "./indexer";
-import { fetchAccountBalanceV2, fetchLatestBlockV2, fetchTransactionV2 } from "./node";
+import {
+  fetchAccountBalanceV2,
+  fetchLatestBlockV2,
+  fetchTokenBalanceV2,
+  fetchTransactionV2,
+} from "./node";
 import { handleProve, type ExpectedTransfer, type ProveRequestBody } from "./prove";
 import type { FakeScanner } from "./scanner";
 
@@ -28,6 +33,16 @@ export function buildAleoHandlers(expected: ExpectedTransfer): RequestHandler[] 
     http.get(`${V2}/program/credits.aleo/mapping/account/:address`, async ({ params }) => {
       try {
         return HttpResponse.json(await fetchAccountBalanceV2(String(params.address)));
+      } catch (error) {
+        return toFailure(error);
+      }
+    }),
+
+    http.get(`${V2}/program/:programId/mapping/balances/:address`, async ({ params }) => {
+      try {
+        return HttpResponse.json(
+          await fetchTokenBalanceV2(String(params.programId), String(params.address)),
+        );
       } catch (error) {
         return toFailure(error);
       }

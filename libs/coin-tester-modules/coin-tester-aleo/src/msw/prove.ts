@@ -1,19 +1,19 @@
 import { PROGRAM_ID } from "@ledgerhq/coin-aleo/constants";
-import { broadcastTransaction, getProgramSource } from "../devnode";
+import { broadcastTransaction, getProgramSource, resolveProgramImports } from "../devnode";
 import {
   ALEO_LOCAL_NODE,
   GENESIS_ACCOUNT,
   TRANSFER_PUBLIC_BASE_FEE,
   TRANSFER_PRIVATE_BASE_FEE,
-  CONVERT_PUBLIC_TO_PRIVATE_BASE_FEE,
 } from "../fixtures";
 import { isRecordInputId, type RecordInputId } from "../recordInputId";
+import { hasVendoredSource, readRawProgramSource } from "../tokenContracts";
 import type { AleoWasm } from "../wasm";
 import { loadAleoWasm } from "../wasm";
+import { INDEXED_PROGRAMS } from "./programs";
 import type { RecordStore } from "./records";
 
 const TRANSFER_PUBLIC_FUNCTION = "transfer_public";
-const TRANSFER_PUBLIC_INPUT_TYPES = ["address.public", "u64.public"];
 const FEE_PUBLIC_INPUT_TYPES = ["u64.public", "u64.public", "field.public"];
 
 const TRANSFER_PRIVATE_FUNCTION = "transfer_private";
@@ -25,12 +25,6 @@ const FEE_PRIVATE_INPUT_TYPES = ["credits.record", "u64.public", "u64.public", "
 // runs through fee_public, at the CONVERT_PUBLIC_TO_PRIVATE rate.
 const TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION = "transfer_public_to_private";
 const TRANSFER_PUBLIC_TO_PRIVATE_INPUT_TYPES = ["address.private", "u64.public"];
-
-const KNOWN_TRANSFER_FUNCTIONS = new Set([
-  TRANSFER_PUBLIC_FUNCTION,
-  TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION,
-  TRANSFER_PRIVATE_FUNCTION,
-]);
 
 export type ExpectedTransfer = {
   recipient: string;
@@ -50,6 +44,8 @@ export type ExpectedTransfer = {
    * the public path never touches a record.
    */
   privateRecordStore?: RecordStore;
+  /** Defaults to PROGRAM_ID.CREDITS. Set for a token-program request (e.g. TOKEN_PROGRAM_ID). */
+  programId?: string;
 };
 
 export type ProveRequestBody = {
@@ -74,6 +70,7 @@ export type ProveResponse = {
 // declare a private constructor, so they are not assignable to a construct
 // signature. The static factories give the same instance types.
 type WasmAuthorization = ReturnType<AleoWasm["Authorization"]["fromString"]>;
+type WasmField = ReturnType<AleoWasm["Field"]["fromBytesLe"]>;
 type WasmExecutionRequest = ReturnType<AleoWasm["ExecutionRequest"]["fromString"]>;
 
 function recoverRequest(
@@ -89,6 +86,36 @@ function recoverRequest(
     throw new Error(`aleo coin-tester: authorization has no request at index ${index}`);
   }
   return wasm.ExecutionRequest.fromString(JSON.stringify(raw));
+}
+
+/**
+ * snarkVM splices a `program_checksum` into a request's signed message exactly
+ * when the called program declares a `constructor` (`Stack::authorize`), so a
+ * verifier must supply one on the same condition. `Request`'s `is_dynamic` flag
+ * is unrelated — it distinguishes `call.dynamic` from `call` — and never
+ * appears in the V1 request JSON the wasm SDK emits.
+ */
+function programDeclaresConstructor(programId: string): boolean {
+  return hasVendoredSource(programId) && /^constructor:/m.test(readRawProgramSource(programId));
+}
+
+/** Bits a BLS12-377 scalar field element carries as data — one below its 253-bit modulus. */
+const FIELD_SIZE_IN_DATA_BITS = 252;
+
+/**
+ * The `program_checksum` field element for `programSource`, matching
+ * `Stack::program_checksum_as_field`: the low `FIELD_SIZE_IN_DATA_BITS` bits of
+ * the program's 32-byte Keccak-256 checksum, read little-endian. Handing
+ * `verify()` the untruncated 32 bytes yields a different element, and the
+ * signature check fails.
+ */
+function computeProgramChecksum(wasm: AleoWasm, programSource: string): WasmField {
+  const checksum = Uint8Array.from(wasm.Program.fromString(programSource).toChecksum());
+  const wholeBytes = FIELD_SIZE_IN_DATA_BITS >> 3;
+  const remainingBits = FIELD_SIZE_IN_DATA_BITS & 7;
+  const truncated = checksum.slice(0, wholeBytes + (remainingBits ? 1 : 0));
+  if (remainingBits) truncated[wholeBytes] &= (1 << remainingBits) - 1;
+  return wasm.Field.fromBytesLe(truncated);
 }
 
 /**
@@ -116,6 +143,7 @@ function checkRecipientAndAmount(
   inputs: string[],
   recipientIndex: number,
   amountIndex: number,
+  amountSuffix: "u64" | "u128",
   expected: ExpectedTransfer,
 ): void {
   const recipient = inputs[recipientIndex];
@@ -125,9 +153,9 @@ function checkRecipientAndAmount(
       `aleo coin-tester: signed recipient ${recipient} does not match the expected ${expected.recipient}`,
     );
   }
-  if (amount !== `${expected.amount}u64`) {
+  if (amount !== `${expected.amount}${amountSuffix}`) {
     throw new Error(
-      `aleo coin-tester: signed amount ${amount} does not match the expected ${expected.amount}u64`,
+      `aleo coin-tester: signed amount ${amount} does not match the expected ${expected.amount}${amountSuffix}`,
     );
   }
 }
@@ -170,35 +198,53 @@ export async function verifyAuthorizations(
 
   const authorization = wasm.Authorization.fromString(JSON.stringify(body.authorization));
   const request = recoverRequest(wasm, authorization, 0);
+  const programId = expected.programId ?? PROGRAM_ID.CREDITS;
 
-  if (request.programId() !== PROGRAM_ID.CREDITS) {
-    throw new Error(
-      `aleo coin-tester: expected program ${PROGRAM_ID.CREDITS}, got ${request.programId()}`,
-    );
+  if (request.programId() !== programId) {
+    throw new Error(`aleo coin-tester: expected program ${programId}, got ${request.programId()}`);
   }
 
   const functionName = request.functionName();
-  if (!KNOWN_TRANSFER_FUNCTIONS.has(functionName)) {
-    throw new Error(
-      `aleo coin-tester: expected ${TRANSFER_PUBLIC_FUNCTION}, ${TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION}, or ${TRANSFER_PRIVATE_FUNCTION}, got ${functionName}`,
-    );
-  }
 
   if (functionName === TRANSFER_PRIVATE_FUNCTION) {
     if (!request.verify(TRANSFER_PRIVATE_INPUT_TYPES, true)) {
       throw new Error("aleo coin-tester: the private transfer request failed verify()");
     }
-    checkRecipientAndAmount(request.inputs() as string[], 1, 2, expected);
-  } else if (functionName === TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION) {
-    if (!request.verify(TRANSFER_PUBLIC_TO_PRIVATE_INPUT_TYPES, true)) {
-      throw new Error("aleo coin-tester: the public-to-private conversion request failed verify()");
-    }
-    checkRecipientAndAmount(request.inputs() as string[], 0, 1, expected);
+    checkRecipientAndAmount(request.inputs() as string[], 1, 2, "u64", expected);
   } else {
-    if (!request.verify(TRANSFER_PUBLIC_INPUT_TYPES, true)) {
-      throw new Error("aleo coin-tester: the transfer request failed verify()");
+    const descriptor = INDEXED_PROGRAMS[programId]?.[functionName];
+    if (!descriptor) {
+      throw new Error(`aleo coin-tester: no known request shape for ${programId}/${functionName}`);
     }
-    checkRecipientAndAmount(request.inputs() as string[], 0, 1, expected);
+
+    const inputTypes =
+      programId === PROGRAM_ID.CREDITS && functionName === TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION
+        ? TRANSFER_PUBLIC_TO_PRIVATE_INPUT_TYPES
+        : [`address.public`, `${descriptor.amountSuffix}.public`];
+
+    // `verify()`'s third argument must be present exactly when the signed
+    // message carried a checksum, and absent otherwise — either mismatch makes
+    // verify() return false. The checksum must be recomputed from the same
+    // bytes `aleo-backend` signed against: its own vendored, unpatched copy of
+    // the program (`include_str!`'d at compile time, `intent.rs:81`), not the
+    // on-chain deployed copy, whose admin gate literal is replaced with the
+    // real runtime admin address and so checksums differently. Recomputing it
+    // proves nothing beyond echoing back what the signer used, but that's
+    // enough to satisfy verify()'s signature check.
+    const programChecksum = programDeclaresConstructor(programId)
+      ? computeProgramChecksum(wasm, readRawProgramSource(programId))
+      : undefined;
+
+    if (!request.verify(inputTypes, true, programChecksum)) {
+      throw new Error(`aleo coin-tester: the ${functionName} request failed verify()`);
+    }
+    checkRecipientAndAmount(
+      request.inputs() as string[],
+      descriptor.recipientInputIndex,
+      descriptor.amountInputIndex,
+      descriptor.amountSuffix,
+      expected,
+    );
   }
 
   if (!body.fee_authorization) {
@@ -230,9 +276,7 @@ export async function verifyAuthorizations(
       throw new Error("aleo coin-tester: the fee request failed verify()");
     }
     const expectedBaseFee =
-      functionName === TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION
-        ? CONVERT_PUBLIC_TO_PRIVATE_BASE_FEE
-        : TRANSFER_PUBLIC_BASE_FEE;
+      INDEXED_PROGRAMS[programId]?.[functionName]?.baseFee ?? TRANSFER_PUBLIC_BASE_FEE;
     checkFeeAmounts(feeRequest.inputs() as string[], 0, 1, expectedBaseFee);
   }
 }
@@ -283,7 +327,9 @@ export async function buildTransaction(
   const senderPrivateKey = wasm.PrivateKey.from_string(
     expected.senderPrivateKey ?? GENESIS_ACCOUNT.privateKey,
   );
-  const programSource = await getProgramSource(PROGRAM_ID.CREDITS);
+  const programId = expected.programId ?? PROGRAM_ID.CREDITS;
+  const programSource = await getProgramSource(programId);
+  const imports = await resolveProgramImports(programSource);
 
   if (expected.privateRecordStore) {
     if (!body) {
@@ -322,6 +368,7 @@ export async function buildTransaction(
       0,
       wasm.RecordPlaintext.fromString(feeRecordPlaintext),
       ALEO_LOCAL_NODE,
+      imports,
     );
 
     await broadcastTransaction(transaction.toString());
@@ -339,16 +386,20 @@ export async function buildTransaction(
   const devnodeFunction =
     functionName === TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION
       ? TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION
-      : TRANSFER_PUBLIC_FUNCTION;
+      : functionName;
+
+  const descriptor = INDEXED_PROGRAMS[programId]?.[devnodeFunction];
+  const amountSuffix = descriptor?.amountSuffix ?? "u64";
 
   const transaction = await wasm.ProgramManagerBase.buildDevnodeExecutionTransaction(
     senderPrivateKey,
     programSource,
     devnodeFunction,
-    [expected.recipient, `${expected.amount}u64`],
+    [expected.recipient, `${expected.amount}${amountSuffix}`],
     0,
     undefined,
     ALEO_LOCAL_NODE,
+    imports,
   );
 
   await broadcastTransaction(transaction.toString());

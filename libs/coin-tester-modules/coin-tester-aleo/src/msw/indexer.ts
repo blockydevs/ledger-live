@@ -1,20 +1,10 @@
 import type { AleoPublicTransaction } from "@ledgerhq/coin-aleo/types";
-import { PROGRAM_ID } from "@ledgerhq/coin-aleo/constants";
 import type { DevnodeBlock, DevnodeConfirmedTransaction, DevnodeTransition } from "../devnode";
-import { getBlock, getLatestHeight, parseFutureSender } from "../devnode";
+import { getBlock, getLatestHeight, parseFutureArguments } from "../devnode";
+import { INDEXED_PROGRAMS, SENDER_ABSENT_FROM_FUTURE } from "./programs";
 
-/**
- * credits.aleo functions this indexer knows how to flatten. Anything else on
- * credits.aleo is skipped deliberately; a function on this list that cannot be
- * mapped throws instead.
- */
-const INDEXED_FUNCTIONS: ReadonlySet<string> = new Set([
-  "transfer_public",
-  "transfer_public_to_private",
-]);
-
-function parseU64(literal: string, field: string): number {
-  const match = /^(\d+)u64$/.exec(literal.trim());
+function parseUnsignedLiteral(literal: string, suffix: "u64" | "u128", field: string): number {
+  const match = new RegExp(`^(\\d+)${suffix}$`).exec(literal.trim());
   if (!match) {
     throw new Error(`aleo coin-tester: could not read ${field} from '${literal}'`);
   }
@@ -22,9 +12,10 @@ function parseU64(literal: string, field: string): number {
 }
 
 /**
- * The fee lives in its own transition. `fee_public`'s inputs are
- * `[baseFee, priorityFee, executionId]`; `fee_private`'s carry a spent record
- * ahead of those same two, at `[record, baseFee, priorityFee, executionId]`.
+ * The fee lives in its own transition, always billed as fee_public/fee_private
+ * on credits.aleo regardless of what program the transfer itself targets.
+ * `fee_public`'s inputs are `[baseFee, priorityFee, executionId]`;
+ * `fee_private`'s carry a spent record ahead of those same two.
  */
 export function parseFee(confirmed: DevnodeConfirmedTransaction): number {
   const feeTransition = confirmed.transaction.fee?.transition;
@@ -39,7 +30,74 @@ export function parseFee(confirmed: DevnodeConfirmedTransaction): number {
       `aleo coin-tester: fee transition ${feeTransition.id} does not expose its fee inputs`,
     );
   }
-  return parseU64(base.value, "base fee") + parseU64(priority.value, "priority fee");
+  return (
+    parseUnsignedLiteral(base.value, "u64", "base fee") +
+    parseUnsignedLiteral(priority.value, "u64", "priority fee")
+  );
+}
+
+/**
+ * A rejected execution's transitions, as snarkVM serializes them. The confirmed
+ * transaction snarkVM stores for a `RejectedExecute` is a *fee* transaction —
+ * `ConfirmedTransaction::rejected_execute` requires `transaction.is_fee()` — so
+ * it carries no `execution` field at all. The rejected execution itself moves
+ * to a sibling `rejected` field, serialized as
+ * `{ "type": "execution", "execution": { "transitions": [...] } }`
+ * (`Rejected::Execution`). A rejected *deployment* serializes as
+ * `{ "type": "deployment", "program_owner": ..., "deployment": ... }` and
+ * carries no transitions.
+ */
+type DevnodeRejected = {
+  type: string;
+  execution?: { transitions: DevnodeTransition[] };
+};
+
+type DevnodeConfirmedTransactionWithRejection = DevnodeConfirmedTransaction & {
+  rejected?: DevnodeRejected;
+};
+
+/** snarkVM's confirmed-transaction status, as the Provable API spells it. */
+const TRANSACTION_STATUS_BY_DEVNODE_STATUS: Record<string, string> = {
+  accepted: "Accepted",
+  rejected: "Rejected",
+};
+
+/**
+ * The transitions to index for one confirmed transaction, whichever side of
+ * the accepted/rejected split it fell on. An accepted execution keeps them on
+ * `transaction.execution`; a rejected one keeps them on `rejected.execution`.
+ * A deployment — accepted or rejected — has none.
+ */
+function indexableTransitions(
+  confirmed: DevnodeConfirmedTransactionWithRejection,
+): DevnodeTransition[] {
+  const accepted = confirmed.transaction.execution?.transitions;
+  if (accepted) return accepted;
+
+  const rejected = confirmed.rejected;
+  if (rejected?.type === "execution") return rejected.execution?.transitions ?? [];
+
+  return [];
+}
+
+/**
+ * The sender a row carries. `SENDER_ABSENT_FROM_FUTURE` yields the empty
+ * string, which is what a real indexer publishes for a transition whose future
+ * names no caller.
+ */
+function readSender(
+  transition: DevnodeTransition,
+  senderArgIndex: number | typeof SENDER_ABSENT_FROM_FUTURE,
+): string {
+  if (senderArgIndex === SENDER_ABSENT_FROM_FUTURE) return "";
+
+  const sender = parseFutureArguments(transition)[senderArgIndex];
+  if (!sender?.startsWith("aleo1")) {
+    throw new Error(
+      `aleo coin-tester: could not read the sender address from the future of ${transition.id}`,
+    );
+  }
+  return sender;
 }
 
 function toRow({
@@ -51,51 +109,70 @@ function toRow({
   confirmed: DevnodeConfirmedTransaction;
   transition: DevnodeTransition;
 }): AleoPublicTransaction {
-  if (confirmed.status !== "accepted") {
+  const transactionStatus = TRANSACTION_STATUS_BY_DEVNODE_STATUS[confirmed.status];
+  if (!transactionStatus) {
     throw new Error(
-      `aleo coin-tester: cannot map ${PROGRAM_ID.CREDITS}/${transition.function} with status '${confirmed.status}'`,
+      `aleo coin-tester: cannot map ${transition.program}/${transition.function} with status '${confirmed.status}'`,
     );
   }
 
-  // Both indexed functions take `[recipient, amount]`. transfer_public's recipient
-  // is a bare address; transfer_public_to_private's is ciphertext, which the
-  // bridge decrypts or matches against the account's own private records.
-  const [recipient, amount] = transition.inputs;
+  const descriptor = INDEXED_PROGRAMS[transition.program]?.[transition.function];
+  if (!descriptor) {
+    throw new Error(
+      `aleo coin-tester: no INDEXED_PROGRAMS descriptor for ${transition.program}/${transition.function}`,
+    );
+  }
+
+  const recipient = transition.inputs[descriptor.recipientInputIndex];
+  const amount = transition.inputs[descriptor.amountInputIndex];
   if (!recipient?.value || !amount?.value) {
     throw new Error(
       `aleo coin-tester: transition ${transition.id} does not expose its transfer inputs`,
     );
   }
 
+  if (descriptor.senderArgIndex === undefined) {
+    throw new Error(
+      `aleo coin-tester: ${transition.program}/${transition.function} carries no senderArgIndex — ` +
+        "a transition with no future is not an indexable public transfer",
+    );
+  }
+  const sender = readSender(transition, descriptor.senderArgIndex);
+
   return {
+    // For a rejected execution this is the id of the fee transaction snarkVM
+    // stored in its place (`Transaction::from_fee`, a fresh fee-tree root), not
+    // the id of the execution that was broadcast.
     transaction_id: confirmed.transaction.id,
     transition_id: transition.id,
-    // Exactly "Accepted": anything else sets hasFailed on the operation.
-    transaction_status: "Accepted",
+    transaction_status: transactionStatus,
     block_number: block.header.metadata.height,
     block_hash: block.block_hash,
-    // Unix seconds as a string; ISO-8601 would give an Invalid Date downstream.
     block_timestamp: String(block.header.metadata.timestamp),
     function_id: transition.function,
-    amount: parseU64(amount.value, "amount"),
-    sender_address: parseFutureSender(transition),
+    amount: parseUnsignedLiteral(amount.value, descriptor.amountSuffix, "amount"),
+    sender_address: sender,
     recipient_address: recipient.value.trim(),
     program_id: transition.program,
     fee: parseFee(confirmed),
   };
 }
 
-/** Scans every block from 0 and flattens the indexed credits.aleo transitions. */
+/** Scans every block from 0 and flattens every transition INDEXED_PROGRAMS knows how to map. */
 export async function scanIndexedTransfers(): Promise<AleoPublicTransaction[]> {
   const height = await getLatestHeight();
   const rows: AleoPublicTransaction[] = [];
 
   for (let current = 0; current <= height; current++) {
     const block = await getBlock(current);
-    for (const confirmed of block.transactions ?? []) {
-      for (const transition of confirmed.transaction.execution?.transitions ?? []) {
-        if (transition.program !== PROGRAM_ID.CREDITS) continue;
-        if (!INDEXED_FUNCTIONS.has(transition.function)) continue;
+    for (const confirmed of (block.transactions ??
+      []) as DevnodeConfirmedTransactionWithRejection[]) {
+      for (const transition of indexableTransitions(confirmed)) {
+        const descriptor = INDEXED_PROGRAMS[transition.program]?.[transition.function];
+        // A transition with no senderArgIndex emits no future — a fully private
+        // call chain such as ldg_p_1114.aleo/transfer_private_14 — so it carries
+        // no sender to index.
+        if (!descriptor || descriptor.senderArgIndex === undefined) continue;
         rows.push(toRow({ block, confirmed, transition }));
       }
     }

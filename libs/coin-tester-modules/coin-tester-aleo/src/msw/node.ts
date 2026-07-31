@@ -21,6 +21,11 @@ export function fetchAccountBalanceV2(address: string): Promise<string | null> {
   return getMapping(PROGRAM_ID.CREDITS, "account", address);
 }
 
+/** Public balance of a token program's `balances` mapping for `address`. `parseAmount` on the coin-aleo side matches `/^(\d+)u\d+$/`, so the raw u128 literal needs no reshaping here. */
+export function fetchTokenBalanceV2(programId: string, address: string): Promise<string | null> {
+  return getMapping(programId, "balances", address);
+}
+
 function toApiTransition(transition: DevnodeTransition): AleoTransition {
   return {
     id: transition.id,
