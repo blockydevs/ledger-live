@@ -32,11 +32,11 @@ export function buildMockAleoSigner(privateKey: string, resolveRecord?: ResolveR
       decoded.functionName,
       decoded.inputs,
       decoded.inputTypes,
-      // root_tvk and program_checksum only matter for nested or dynamic calls.
+      // root_tvk only matters for nested calls.
       undefined,
-      undefined,
+      decoded.programChecksum != null ? wasm.Field.fromString(decoded.programChecksum) : undefined,
       decoded.isRoot,
-      false,
+      decoded.programChecksum !== null,
     );
 
     // Read gammas off the signed request rather than computing them: this

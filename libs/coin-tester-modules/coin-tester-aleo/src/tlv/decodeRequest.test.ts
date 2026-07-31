@@ -264,3 +264,37 @@ describe("decodeRequestTlv", () => {
     );
   });
 });
+
+/** A minimal `transfer_public(address, u64)`-shaped request body, StructureType 0x29. */
+function buildRequestBody(extraTags: number[][] = []): number[] {
+  const programId = Buffer.from("credits.aleo", "ascii");
+  const functionName = Buffer.from("transfer_public", "ascii");
+  return [
+    ...encodeTlv(TLV_TAG.StructureType, [STRUCTURE_TYPE.Request]),
+    ...encodeTlv(TLV_TAG.Version, [TLV_VERSION_V1]),
+    ...encodeTlv(TLV_TAG.NetworkId, [0x00, 0x01]),
+    ...encodeTlv(TLV_TAG.ProgramId, programId),
+    ...encodeTlv(TLV_TAG.FunctionName, functionName),
+    ...encodeTlv(TLV_TAG.InputCount, [0x00]),
+    ...encodeTlv(TLV_TAG.NestedCallCount, [0x00]),
+    ...extraTags.flat(),
+  ];
+}
+
+describe("decodeRequestTlv — ProgramChecksum", () => {
+  it("returns programChecksum: null when the tag is absent", async () => {
+    const bytes = Buffer.from(buildRequestBody());
+    const decoded = await decodeRequestTlv(bytes.toString("hex"));
+    expect(decoded.programChecksum).toBeNull();
+  });
+
+  it("decodes a present ProgramChecksum tag as a field value", async () => {
+    const checksumBytes = Buffer.alloc(32, 0x01);
+    const bytes = Buffer.from(
+      buildRequestBody([encodeTlv(TLV_TAG.ProgramChecksum, checksumBytes)]),
+    );
+    const decoded = await decodeRequestTlv(bytes.toString("hex"));
+    expect(decoded.programChecksum).not.toBeNull();
+    expect(typeof decoded.programChecksum).toBe("string");
+  });
+});

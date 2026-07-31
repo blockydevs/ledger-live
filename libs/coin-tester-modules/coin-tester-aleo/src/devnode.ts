@@ -55,16 +55,27 @@ export type DevnodeBlock = {
 };
 
 /**
- * Reads the caller out of a transition's `future` output.
- *
- * Every finalize-scope credits.aleo transition binds `self.signer` as an
- * argument there, and a future is the only place that survives past
- * broadcast into the block JSON.
+ * Reads every top-level argument out of a transition's `future` output, in
+ * order. Every finalize-scope transition binds its arguments there, and a
+ * future is the only place that survives past broadcast into the block JSON.
+ * Assumes flat, simple arguments (addresses, integer literals) — true for
+ * every transition this coin-tester indexes.
  */
-export function parseFutureSender(transition: DevnodeTransition): string {
+export function parseFutureArguments(transition: DevnodeTransition): string[] {
   const future = transition.outputs.find(output => output.type === "future");
-  const match = future?.value ? /arguments:\s*\[\s*([^,\]\s]+)/.exec(future.value) : null;
-  const sender = match?.[1];
+  const match = future?.value ? /arguments:\s*\[([^\]]*)\]/.exec(future.value) : null;
+  if (!match) {
+    throw new Error(`aleo coin-tester: could not read the future arguments of ${transition.id}`);
+  }
+  return match[1]
+    .split(",")
+    .map(argument => argument.trim())
+    .filter(Boolean);
+}
+
+/** The sender is at future argument 0 for every transition this coin-tester reads directly (credits.aleo). Token programs put it elsewhere — see msw/programs.ts's `senderArgIndex`. */
+export function parseFutureSender(transition: DevnodeTransition): string {
+  const [sender] = parseFutureArguments(transition);
   if (!sender?.startsWith("aleo1")) {
     throw new Error(
       `aleo coin-tester: could not read the sender address from the future of ${transition.id}`,

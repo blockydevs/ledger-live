@@ -33,6 +33,8 @@ export type DecodedRequest = {
   nestedCallCount: number;
   /** Present only for a root intent; a fee intent comes without a wrapper. */
   feeLimits: DecodedFeeLimits | null;
+  /** Present only for a request naming a program with a constructor (e.g. an ARC-22 token). */
+  programChecksum: string | null;
 };
 
 const ALEO_ADDRESS_HRP = "aleo";
@@ -196,6 +198,7 @@ async function decodeRequestBody(
   let functionName: string | null = null;
   let inputCount: number | null = null;
   let nestedCallCount: number | null = null;
+  let programChecksum: string | null = null;
   const inputTypes: string[] = [];
   const literals: string[] = [];
   const inputs: string[] = [];
@@ -238,10 +241,11 @@ async function decodeRequestBody(
       case TLV_TAG.NestedCallCount:
         nestedCallCount = value[0];
         break;
-      case TLV_TAG.ProgramChecksum:
-        throw new Error(
-          "aleo coin-tester: program checksums are not supported — credits.aleo has no constructor",
-        );
+      case TLV_TAG.ProgramChecksum: {
+        const wasm = await loadAleoWasm();
+        programChecksum = wasm.Field.fromBytesLe(value).toString();
+        break;
+      }
       default:
         throw new Error(
           `aleo coin-tester: tag 0x${tag.toString(16)} is not valid inside a request`,
@@ -267,6 +271,7 @@ async function decodeRequestBody(
     inputTypes,
     isRoot: nestedCallCount !== null,
     nestedCallCount: nestedCallCount ?? 0,
+    programChecksum,
   };
 }
 
