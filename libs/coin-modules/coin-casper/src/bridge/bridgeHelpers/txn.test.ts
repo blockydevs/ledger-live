@@ -336,5 +336,28 @@ describe("txn", () => {
       expect(mockPublicKeyFromHex).toHaveBeenCalledWith(mockSender);
       expect(mockPublicKeyFromHex).toHaveBeenCalledWith(mockRecipient);
     });
+
+    test("should craft a transfer of a very large amount as a plain decimal string", async () => {
+      const mockHelper = await mockCreateNetwork();
+      const largeAmount = new BigNumber("1e21");
+
+      await testCreateNewTransaction(
+        mockSender,
+        mockRecipient,
+        largeAmount,
+        mockFees,
+        mockTransferId,
+      );
+
+      expect(mockHelper.createTransferTransaction).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        "1000000000000000000000",
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
   });
 });

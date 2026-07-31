@@ -36,11 +36,7 @@ export const userDerivationPath = (index: number): string => `m/${liveDerivation
 /** Genesis prefunding for a user account. No faucet step is needed. */
 export const GENESIS_USER_BALANCE_MOTES = new BigNumber("1e36");
 
-/**
- * Port 1 refuses immediately. This package does not exercise the indexer, and
- * an explicitly dead URL makes an accidental fetchTxs fail fast and loudly
- * instead of hanging on a timeout.
- */
+/** Port 1 refuses immediately, so an accidental fetchTxs fails fast instead of hanging. */
 export const UNUSED_INDEXER_URL = "http://127.0.0.1:1/";
 
 /** Mirrors `libs/ledger-live-common/src/families/casper/config.ts` with the infra URLs swapped. */
@@ -62,11 +58,7 @@ export const localCoinConfig: ReturnType<CasperCoinConfig> = {
 export const SENDER_USER_INDEX = 0;
 export const RECIPIENT_USER_INDEX = 1;
 
-/**
- * devnet.test.ts and scenarii.test.ts share one devnet. This index stays untouched by
- * the transfer scenario so devnet.test.ts's exact genesis-balance assertion holds
- * regardless of which suite the shared-devnet project runs first.
- */
+/** Untouched by the transfer scenario, so devnet.test.ts's genesis-balance assertion always holds. */
 export const DEVNET_SANITY_USER_INDEX = 2;
 
 export const ONE_CSPR_MOTES = new BigNumber(1e9);
@@ -75,6 +67,10 @@ export const ONE_CSPR_MOTES = new BigNumber(1e9);
 export const TRANSFER_AMOUNT_MOTES = ONE_CSPR_MOTES.times(10);
 
 export const TRANSFER_ID = "1";
+
+// One below Number.MAX_SAFE_INTEGER, the largest transfer id the stack can
+// craft — createNewTransaction's parseInt loses precision above 2^53.
+export const LARGE_TRANSFER_ID = "9007199254740990";
 
 /**
  * Deliberately not on localhost: the indexer mock's onUnhandledRequest rule

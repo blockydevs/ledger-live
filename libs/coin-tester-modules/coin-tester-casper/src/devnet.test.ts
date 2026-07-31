@@ -2,8 +2,9 @@ import BigNumber from "bignumber.js";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { setCoinConfig } from "@ledgerhq/coin-casper/config";
 import { fetchAccountStateInfo, fetchBalance, fetchBlockHeight } from "@ledgerhq/coin-casper/api";
+import { CASPER_MINIMUM_VALID_AMOUNT_MOTES } from "@ledgerhq/coin-casper/consts";
 import { DEVNET_SANITY_USER_INDEX, GENESIS_USER_BALANCE_MOTES, localCoinConfig } from "./fixtures";
-import { deriveUser, rawAccountInfo } from "./casperDevnet";
+import { deriveUser, nativeTransferMinimumMotes, rawAccountInfo } from "./casperDevnet";
 
 global.console = require("console");
 jest.setTimeout(600_000);
@@ -37,9 +38,8 @@ describe("Casper devnet infrastructure", () => {
   it("resolves the genesis user account", async () => {
     const { accountHash, purseUref } = await fetchAccountStateInfo(userPublicKey);
 
-    // fetchAccountStateInfo swallows RPC codes -32009 and -32003 into
-    // { undefined, undefined }, so a bare toBeDefined() would fail with
-    // nothing to act on. Surface the raw response instead.
+    // fetchAccountStateInfo swallows RPC errors into { undefined, undefined };
+    // surface the raw response instead of a bare toBeDefined() failure.
     if (!purseUref || !accountHash) {
       const raw = await rawAccountInfo(userPublicKey);
       throw new Error(
@@ -63,5 +63,13 @@ describe("Casper devnet infrastructure", () => {
 
     expect(balance).toBeInstanceOf(BigNumber);
     expect(balance.toFixed()).toBe(GENESIS_USER_BALANCE_MOTES.toFixed());
+  });
+
+  it("the declared native_transfer_minimum_motes equals CASPER_MINIMUM_VALID_AMOUNT_MOTES", async () => {
+    const declaredMotes = await nativeTransferMinimumMotes();
+
+    expect(new BigNumber(declaredMotes).toFixed()).toBe(
+      new BigNumber(CASPER_MINIMUM_VALID_AMOUNT_MOTES).toFixed(),
+    );
   });
 });

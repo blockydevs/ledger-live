@@ -1,6 +1,7 @@
 import path from "path";
 import chalk from "chalk";
 import * as compose from "docker-compose";
+import { getCasperNodeRpcClient } from "@ledgerhq/coin-casper/api";
 import {
   DEVNET_CHAIN_NAME,
   DEVNET_RPC_URL,
@@ -16,13 +17,8 @@ const composeOpts = () => ({
   env: process.env,
 });
 
-/**
- * `--wait` returns on the compose healthcheck, which runs
- * `casper-devnet network <name> is-ready` inside the container, so no in-code
- * polling loop is needed. On failure the same command is run once directly:
- * "assets for <name> not found" is a legible diagnosis, an opaque `--wait`
- * timeout is not.
- */
+// `--wait` blocks on the compose healthcheck; on failure, re-run the readiness
+// check once for a legible error instead of an opaque timeout.
 export async function spawnDevnet(): Promise<void> {
   console.log("Starting casper devnet…");
   try {
@@ -61,13 +57,8 @@ async function readinessDiagnosis(): Promise<string> {
   }
 }
 
-/**
- * `--public-key` and `--account-hash` print bare hex on stdout with a
- * trailing newline. `--secret-key` prints a multi-line, CRLF-terminated PEM
- * block, not hex — treat it as PEM wherever it's consumed. The whole triple
- * is returned so the signature stays stable when the follow-up signer needs
- * the secret key.
- */
+// `--secret-key` prints a CRLF PEM block, unlike the bare-hex `--public-key`
+// and `--account-hash` output.
 export async function deriveUser(
   index: number,
 ): Promise<{ publicKey: string; secretKey: string; accountHash: string }> {
@@ -78,10 +69,8 @@ export async function deriveUser(
   return { publicKey, secretKey, accountHash };
 }
 
-// `compose.exec`'s command argument, if a string, is split on whitespace with
-// no quote-awareness, so a quoted derivation path (it contains `'` marks)
-// would be passed to the container with literal `"` characters and rejected
-// as an undecodable path. Passing an array bypasses that split.
+// Passed as an array: compose.exec splits a string command on whitespace,
+// which would break the derivation path's `'` characters.
 async function derive(derivationPath: string, flag: string): Promise<string> {
   const { out } = await compose.exec(
     DEVNET_SERVICE_NAME,
@@ -91,12 +80,24 @@ async function derive(derivationPath: string, flag: string): Promise<string> {
   return out.trim();
 }
 
-// Best-effort teardown on exit/interrupt (matches flextesa/anvil/yaci) so an aborted run doesn't leak.
+// Best-effort teardown on exit/interrupt so an aborted run doesn't leak containers.
 ["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
   process.on(e, () => {
     killDevnet().catch(() => {});
   }),
 );
+
+// chainspecBytes is a hex-encoded TOML document; `_` digit separators are
+// stripped before parsing.
+export async function nativeTransferMinimumMotes(): Promise<string> {
+  const { chainspecBytes } = await getCasperNodeRpcClient().getChainspec();
+  const toml = Buffer.from(chainspecBytes.chainspecBytes ?? "", "hex").toString("utf-8");
+  const match = toml.match(/^native_transfer_minimum_motes\s*=\s*([\d_]+)/m);
+  if (!match) {
+    throw new Error(`native_transfer_minimum_motes not found in chainspec:\n${toml}`);
+  }
+  return match[1].replace(/_/g, "");
+}
 
 /** The only RPC call this package makes outside the module, used purely for diagnosis. */
 export async function rawAccountInfo(publicKey: string): Promise<string> {

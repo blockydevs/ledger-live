@@ -1,6 +1,5 @@
-// casperDevnet.ts transitively imports fixtures.ts, which resolves the "casper" currency at
-// module load — the resolver bootstrap normally runs via setupFilesAfterEnv, which globalSetup
-// runs before. Registering it here first keeps that import from crashing.
+// Registered before importing casperDevnet.ts, which transitively resolves the
+// "casper" currency at module load — globalSetup runs before setupFilesAfterEnv.
 import "@ledgerhq/wallet-framework-test-setup";
 import { spawnDevnet } from "./casperDevnet";
 

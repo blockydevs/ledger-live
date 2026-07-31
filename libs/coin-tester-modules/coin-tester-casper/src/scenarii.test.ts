@@ -12,17 +12,15 @@ describe("Casper Deterministic Tester", () => {
       await executeScenario(scenarioCasper);
     } catch (e) {
       if (e !== "done") {
-        await killDevnet();
         throw e;
       }
     }
   });
 });
 
-// Best-effort teardown for SIGTERM from CI and uncaughtException. Without it an
-// interrupted run leaves the container behind. Ctrl-C is not reliably covered:
-// `docker compose down` cannot finish from a handler that runs after the event
-// loop stopped — the scenario's own teardown is the path that works there.
+// Best-effort teardown for SIGTERM/uncaughtException so an interrupted run
+// doesn't leak the container. Ctrl-C isn't reliably covered here — the
+// scenario's own teardown handles that case.
 ["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
   process.on(e, () => {
     killDevnet().catch(() => {});

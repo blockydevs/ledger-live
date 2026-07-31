@@ -33,7 +33,11 @@ const config: Config = {
     {
       ...base,
       displayName: "devnet",
-      testMatch: ["<rootDir>/src/devnet.test.ts", "<rootDir>/src/scenarii.test.ts"],
+      testMatch: [
+        "<rootDir>/src/devnet.test.ts",
+        "<rootDir>/src/scenarii.test.ts",
+        "<rootDir>/src/negativeCases.test.ts",
+      ],
       globalSetup: "<rootDir>/src/globalSetup.ts",
       globalTeardown: "<rootDir>/src/globalTeardown.ts",
     },

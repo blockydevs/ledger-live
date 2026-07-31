@@ -9,12 +9,9 @@ const PAYLOAD_FIELD = 1;
 const HEADER_PREFIX_LENGTH = 5; // version byte + u32 field count
 const FIELD_ENTRY_LENGTH = 6; // u16 index + u32 offset
 
-/**
- * `Transaction.toBytes()` is a calltable serialization:
- * `[u8 version][u32 field count][(u16 index, u32 offset) × N][u32 blob length][blob]`.
- * casper-js-sdk keeps `CalltableSerialization` out of its single entry point, so
- * this reads the header itself. Offsets come from the header, never from constants.
- */
+// `Transaction.toBytes()` is a calltable serialization:
+// `[u8 version][u32 field count][(u16 index, u32 offset) × N][u32 blob length][blob]`.
+// casper-js-sdk doesn't export `CalltableSerialization`, so this reads the header itself.
 function parseCalltable(bytes: Buffer): Map<number, Buffer> {
   if (bytes.length < HEADER_PREFIX_LENGTH) {
     throw new Error(`casper tester signer: calltable is ${bytes.length} bytes, too short to parse`);
@@ -56,10 +53,8 @@ function parseCalltable(bytes: Buffer): Map<number, Buffer> {
   return fields;
 }
 
-/**
- * Checking the hash here turns a mismatch into a legible signer error instead of
- * an `invalid signature` rejection at broadcast time.
- */
+// Checking the hash here gives a legible signer error instead of an
+// `invalid signature` rejection at broadcast time.
 function extractSignableHash(txBytes: Buffer): Buffer {
   const fields = parseCalltable(txBytes);
   const hash = fields.get(HASH_FIELD);
