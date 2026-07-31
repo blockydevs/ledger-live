@@ -5,8 +5,14 @@ import {
   getDerivationScheme,
   runDerivationScheme,
 } from "@ledgerhq/ledger-wallet-framework/derivation";
+import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import { TRANSACTION_TYPE } from "@ledgerhq/coin-aleo/constants";
-import type { AleoAccount, AleoCoinConfig, AleoResources } from "@ledgerhq/coin-aleo/types";
+import type {
+  AleoAccount,
+  AleoCoinConfig,
+  AleoResources,
+  RecordPickingStrategy,
+} from "@ledgerhq/coin-aleo/types";
 import { loadAleoWasm } from "./wasm";
 
 /** REST endpoint the devnode serves. */
@@ -149,11 +155,35 @@ export async function generateAleoAccount(): Promise<GeneratedAleoAccount> {
 /** Base fee coin-aleo bills for `transfer_public`, in microcredits. */
 export const TRANSFER_PUBLIC_BASE_FEE = 34060;
 
+/**
+ * What a send-max `transfer_public` sends: getAmountToSpend's native-public
+ * branch takes the transparent balance minus estimatedFees, and
+ * feeSafetyMultiplier is 1, so estimatedFees is exactly TRANSFER_PUBLIC_BASE_FEE.
+ * Valid only when the sender was funded once, with FUNDING_AMOUNT_MICROCREDITS,
+ * and never spent before the send-max transfer.
+ */
+export const SEND_MAX_PUBLIC_AMOUNT_MICROCREDITS =
+  FUNDING_AMOUNT_MICROCREDITS - TRANSFER_PUBLIC_BASE_FEE;
+
 /** Base fee coin-aleo bills for `transfer_private`, in microcredits. */
 export const TRANSFER_PRIVATE_BASE_FEE = 2308;
 
+/** `ldg_p_1114.aleo` — the credits batcher a private send-max of 11 to 14 records routes through. */
+export const BATCHER_PROGRAM_ID = "ldg_p_1114.aleo";
+
+/**
+ * Floor for the record `mintPrivateRecords` mints last, in a 15-record
+ * send-max scenario, so it stays the smallest and `findBestRecordForFee`
+ * picks it for the fee. Equal to `PRIVATE_DEVNODE_FEE_RANGE.max`, the same
+ * floor `mintPrivateRecords` itself enforces on its `smallest` parameter.
+ */
+export const SEND_MAX_PRIVATE_SMALLEST_RECORD_MICROCREDITS = PRIVATE_DEVNODE_FEE_RANGE.max;
+
 /** Base fee coin-aleo bills for `transfer_public_to_private`, in microcredits. */
 export const CONVERT_PUBLIC_TO_PRIVATE_BASE_FEE = 17972;
+
+/** Base fee coin-aleo bills for `transfer_token_public`, in microcredits. */
+export const TRANSFER_TOKEN_PUBLIC_BASE_FEE = 34060;
 
 export const ALEO = getCryptoCurrencyById("aleo_testnet");
 
@@ -163,7 +193,9 @@ export const ALEO = getCryptoCurrencyById("aleo_testnet");
  * Ledger service unavailable locally; useEncryptedProve: false, to avoid
  * opening a crypto_box sealed box in TypeScript.
  */
-export function buildAleoCoinConfig(): AleoCoinConfig {
+export function buildAleoCoinConfig(
+  options: { enableTokens?: boolean; recordPickingStrategy?: RecordPickingStrategy } = {},
+): AleoCoinConfig {
   return {
     status: { type: "active" },
     networkType: ALEO_NETWORK_TYPE,
@@ -176,16 +208,16 @@ export function buildAleoCoinConfig(): AleoCoinConfig {
       [TRANSACTION_TYPE.TRANSFER_PRIVATE]: TRANSFER_PRIVATE_BASE_FEE,
       [TRANSACTION_TYPE.CONVERT_PUBLIC_TO_PRIVATE]: CONVERT_PUBLIC_TO_PRIVATE_BASE_FEE,
       [TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC]: 18494,
-      [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC]: 34060,
+      [TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC]: TRANSFER_TOKEN_PUBLIC_BASE_FEE,
       [TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE]: 2308,
       [TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC]: 18494,
       [TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE]: 17972,
     },
     feeSafetyMultiplier: 1,
     isFeeSponsored: false,
-    enableTokens: false,
+    enableTokens: options.enableTokens ?? false,
     useEncryptedProve: false,
-    recordPickingStrategy: "auto",
+    recordPickingStrategy: options.recordPickingStrategy ?? "auto",
   };
 }
 
@@ -260,4 +292,77 @@ export function makePrivateAleoAccount(address: string, viewKey: string): AleoAc
   };
 
   return { ...makeAleoAccount(address, viewKey), aleoResources };
+}
+
+/** Packs ASCII bytes little-endian into an integer — how Leo encodes a string literal cast to a fixed-width integer. */
+export function packAsciiToU128(text: string): bigint {
+  if (text.length > 16) {
+    throw new Error(
+      `aleo coin-tester: '${text}' is too long to pack into a u128 (max 16 ASCII bytes)`,
+    );
+  }
+  const bytes = Buffer.alloc(16);
+  bytes.write(text, 0, "ascii");
+  let value = 0n;
+  for (let i = bytes.length - 1; i >= 0; i--) {
+    value = (value << 8n) | BigInt(bytes[i]);
+  }
+  return value;
+}
+
+export const TOKEN_PROGRAM_ID = "test_usad_stablecoin.aleo";
+export const TOKEN_FREEZELIST_PROGRAM_ID = "test_usad_freezelist.aleo";
+
+export const TOKEN_NAME_U128 = packAsciiToU128("USAD");
+export const TOKEN_SYMBOL_U128 = packAsciiToU128("USAD");
+export const TOKEN_DECIMALS = 6;
+export const TOKEN_MAX_SUPPLY = 1_000_000_000_000_000n;
+export const TOKEN_FREEZE_LIST_BLOCK_HEIGHT_WINDOW = 1000;
+
+/** 1000 USAD at 6 decimals. */
+export const TOKEN_MINT_AMOUNT = 1_000_000_000n;
+/** 250 USAD — a clean fraction of TOKEN_MINT_AMOUNT. */
+export const TOKEN_TRANSFER_AMOUNT = 250_000_000n;
+
+/**
+ * A token transfer's finalize reads six mappings across two programs, so it
+ * costs more than a credits transfer under a proofless devnode execution.
+ * Priced as a range, not an exact value, for the same reason
+ * PUBLIC_DEVNODE_FEE_RANGE is: the ConsensusVersion's cost table can change it.
+ */
+export const TOKEN_PUBLIC_DEVNODE_FEE_RANGE = { min: 1_000, max: 200_000 };
+
+/**
+ * What the scenario funds its sender with in credits, ahead of the tracked
+ * token transfer. The sender pays the transfer's fee in credits, not in
+ * tokens, so the transfer amount itself does not enter this sum — the
+ * sub-account pays that out of its own minted balance.
+ */
+export const TOKEN_SENDER_FUNDING = TOKEN_PUBLIC_DEVNODE_FEE_RANGE.max * 2;
+
+export const USAD_TOKEN: TokenCurrency = {
+  type: "TokenCurrency",
+  id: "aleo_testnet/arc22/test_usad",
+  contractAddress: TOKEN_PROGRAM_ID,
+  parentCurrencyId: "aleo_testnet",
+  tokenType: "arc22",
+  name: "USAD",
+  ticker: "USAD",
+  units: [{ name: "USAD", code: "USAD", magnitude: TOKEN_DECIMALS }],
+};
+
+/** Direct devnode read of `balances[address]` on TOKEN_PROGRAM_ID; 0 when unset. */
+export async function getTokenBalance(address: string): Promise<bigint> {
+  const response = await fetch(
+    `${ALEO_LOCAL_NODE}/${ALEO_NETWORK_TYPE}/program/${TOKEN_PROGRAM_ID}/mapping/balances/${address}`,
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Could not read the balance of ${address} for ${TOKEN_PROGRAM_ID}: HTTP ${response.status}`,
+    );
+  }
+
+  // A miss returns the JSON literal `null`; a hit returns a quoted `"<n>u128"`.
+  const value = (await response.json()) as string | null;
+  return value === null ? 0n : BigInt(value.replace(/u128$/, ""));
 }
