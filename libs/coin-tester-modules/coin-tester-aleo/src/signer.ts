@@ -2,6 +2,7 @@ import type {
   AleoAddress,
   AleoAppConfig,
   AleoFeeIntentSignature,
+  AleoNestedCallSignature,
   AleoRootIntentSignature,
   AleoSigner,
   AleoTvk,
@@ -12,8 +13,6 @@ import { encodeSignatureTlv } from "./tlv/encodeSignature";
 import { isRecordInputId } from "./recordInputId";
 import { loadAleoWasm } from "./wasm";
 
-const NOT_IMPLEMENTED = "aleo coin-tester: not implemented for public transfers";
-
 /**
  * Stands in for the device app: decodes the backend's TLV, signs it, and
  * re-encodes, so the signature covers what the bridge actually built.
@@ -22,9 +21,23 @@ const NOT_IMPLEMENTED = "aleo coin-tester: not implemented for public transfers"
  * omit it for public transfers, which have no record inputs (`gammas: []`).
  */
 export function buildMockAleoSigner(privateKey: string, resolveRecord?: ResolveRecord): AleoSigner {
-  async function signIntent(intent: Buffer): Promise<string> {
+  // Set once by signRootIntent, read by every signNestedCall in the same
+  // request tree: the backend recomputes scm = Hash(signer || root_tvk) from
+  // the root signature, so a nested signature over any other root_tvk fails
+  // verification. Holds the Field's decimal string form, the shape
+  // `Field.fromString` accepts back, the same convention `programChecksum`
+  // already uses below.
+  let rootTvkField: string | undefined;
+
+  async function signIntent(
+    intent: Buffer,
+    overrides?: { isRoot: boolean; rootTvk: string | undefined },
+  ): Promise<{ signatureTlv: string; tvkField: string }> {
     const decoded = await decodeRequestTlv(intent.toString("hex"), { resolveRecord });
     const wasm = await loadAleoWasm();
+    const isRoot = overrides ? overrides.isRoot : decoded.isRoot;
+    // root_tvk only matters for nested calls; a root or fee intent leaves it unset.
+    const rootTvk = overrides?.rootTvk;
 
     const request = wasm.ExecutionRequest.sign(
       wasm.PrivateKey.from_string(privateKey),
@@ -32,10 +45,9 @@ export function buildMockAleoSigner(privateKey: string, resolveRecord?: ResolveR
       decoded.functionName,
       decoded.inputs,
       decoded.inputTypes,
-      // root_tvk only matters for nested calls.
-      undefined,
+      rootTvk !== undefined ? wasm.Field.fromString(rootTvk) : undefined,
       decoded.programChecksum != null ? wasm.Field.fromString(decoded.programChecksum) : undefined,
-      decoded.isRoot,
+      isRoot,
       decoded.programChecksum !== null,
     );
 
@@ -46,12 +58,16 @@ export function buildMockAleoSigner(privateKey: string, resolveRecord?: ResolveR
       .filter(isRecordInputId)
       .map(([, gamma]) => gamma.toBytesLe());
 
-    return encodeSignatureTlv({
-      signature: request.signature().toBytesLe(),
-      tvk: request.tvk().toBytesLe(),
-      tpk: request.to_tpk().toBytesLe(),
-      gammas,
-    });
+    const tvk = request.tvk();
+    return {
+      signatureTlv: encodeSignatureTlv({
+        signature: request.signature().toBytesLe(),
+        tvk: tvk.toBytesLe(),
+        tpk: request.to_tpk().toBytesLe(),
+        gammas,
+      }),
+      tvkField: tvk.toString(),
+    };
   }
 
   return {
@@ -67,20 +83,36 @@ export function buildMockAleoSigner(privateKey: string, resolveRecord?: ResolveR
       return { viewKey: wasm.PrivateKey.from_string(privateKey).to_view_key().to_string() };
     },
 
-    // Unimplemented because nothing exercises them yet, not for lack of the key.
-    getTvk: (): Promise<AleoTvk> => Promise.reject(new Error(`${NOT_IMPLEMENTED}: getTvk`)),
-    signNestedCall: (): Promise<never> =>
-      Promise.reject(new Error(`${NOT_IMPLEMENTED}: signNestedCall`)),
+    // No device nonce to reuse: the backend never revisits the TVKs promised
+    // here against the ones a signature actually carries (msw/prove.ts proves
+    // nothing from these), so an arbitrary distinct field element per call
+    // satisfies every consumer on the tester's path.
+    getTvk: async (): Promise<AleoTvk> => {
+      const wasm = await loadAleoWasm();
+      return { tvk: wasm.Field.random().toBytesLe() };
+    },
 
-    signRootIntent: async (
-      _path: string,
-      rootIntent: Buffer,
-    ): Promise<AleoRootIntentSignature> => ({
-      signature: await signIntent(rootIntent),
-    }),
+    signNestedCall: async (nestedCallRequest: Buffer): Promise<AleoNestedCallSignature> => {
+      if (rootTvkField === undefined) {
+        throw new Error(
+          "aleo coin-tester: signNestedCall ran before signRootIntent recorded a root tvk",
+        );
+      }
+      const { signatureTlv } = await signIntent(nestedCallRequest, {
+        isRoot: false,
+        rootTvk: rootTvkField,
+      });
+      return { signature: signatureTlv };
+    },
+
+    signRootIntent: async (_path: string, rootIntent: Buffer): Promise<AleoRootIntentSignature> => {
+      const { signatureTlv, tvkField } = await signIntent(rootIntent);
+      rootTvkField = tvkField;
+      return { signature: signatureTlv };
+    },
 
     signFeeIntent: async (feeIntent: Buffer): Promise<AleoFeeIntentSignature> => ({
-      signature: await signIntent(feeIntent),
+      signature: (await signIntent(feeIntent)).signatureTlv,
     }),
   };
 }

@@ -36,9 +36,6 @@ const config: Config = {
   },
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
   testPathIgnorePatterns: ["/node_modules/", "/lib/", "/lib-es/"],
-  // Generous only for the cold-cache image pull; the devnode itself boots in
-  // under a second.
-  testTimeout: 10 * 60 * 1000,
   reporters: ["default", ...(process.env.CI ? ["github-actions"] : [])],
 };
 
