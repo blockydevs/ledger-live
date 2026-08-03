@@ -172,6 +172,10 @@
       "entry": ["src/scenarii/Babylon.ts", "src/scenarii/Cosmos.ts"],
       "ignoreDependencies": ["expect"]
     },
+    "./libs/coin-tester-modules/coin-tester-sodax": {
+      "entry": ["src/goloop.ts", "src/indexer.ts", "src/helpers.ts", "src/fixtures.ts"],
+      "ignoreDependencies": ["expect", "@ledgerhq/types-live"]
+    },
     "./domain/entity/currency": {
       "entry": ["src/index.ts"]
     },
