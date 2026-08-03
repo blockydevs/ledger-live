@@ -185,6 +185,7 @@ export const toCoinFrameworkOperation = (
     type,
     recipients: [rawTx.recipient_address],
     senders: [rawTx.sender_address],
+    // Fee-exclusive: the coin-framework carries the fee separately, in `tx.fees`.
     value: BigInt(rawTx.amount.toFixed(0)),
     asset: { type: "native" },
     details: {
@@ -206,19 +207,32 @@ export const toCoinFrameworkOperation = (
   };
 };
 
+/** OUT value is fee-inclusive so the generic UI can subtract the fee back out; IN stays fee-exclusive. */
+function toOperationValue({
+  amount,
+  fee,
+  type,
+}: {
+  amount: BigNumber;
+  fee: BigNumber;
+  type: OperationType;
+}): BigNumber {
+  return type === "OUT" ? amount.plus(fee) : amount;
+}
+
 export const toBridgeOperation = (
   ledgerAccountId: string,
   rawTx: AleoPublicTransaction,
   address: string,
   isTokenTx?: boolean,
 ): AleoOperation => {
-  const value = new BigNumber(rawTx.amount);
+  const amount = new BigNumber(rawTx.amount);
   const { type, fee, blockHash, transactionType, date, hasFailed } = parseTransactionFields(
     rawTx,
     address,
   );
 
-  if (value.isNaN() || value.lte(0)) {
+  if (amount.isNaN() || amount.lte(0)) {
     log("aleo/toBridgeOperation", `Invalid raw transaction details for ${address}`, rawTx);
   }
 
@@ -226,7 +240,7 @@ export const toBridgeOperation = (
     id: encodeOperationId(ledgerAccountId, rawTx.transaction_id, type),
     recipients: [rawTx.recipient_address],
     senders: [rawTx.sender_address],
-    value,
+    value: toOperationValue({ amount, fee: new BigNumber(fee), type }),
     type,
     hasFailed,
     hash: rawTx.transaction_id,
@@ -252,16 +266,17 @@ export const toPrivateBridgeOperation = (
   const blockHeight = enrichedRecord.rawRecord.block_height;
   const timestamp = new Date(Number(enrichedRecord.rawRecord.block_timestamp) * 1000);
   const type: OperationType = enrichedRecord.recipient === address ? "IN" : "OUT";
+  const fee = new BigNumber(enrichedRecord.details.fee_value);
 
   return {
     id: encodeOperationId(ledgerAccountId, transactionId, type),
     senders: [enrichedRecord.sender],
     recipients: [enrichedRecord.recipient],
-    value: enrichedRecord.value,
+    value: toOperationValue({ amount: enrichedRecord.value, fee, type }),
     type,
     hasFailed: false,
     hash: transactionId,
-    fee: new BigNumber(enrichedRecord.details.fee_value),
+    fee,
     blockHeight,
     blockHash: enrichedRecord.details.block_hash,
     accountId: ledgerAccountId,
