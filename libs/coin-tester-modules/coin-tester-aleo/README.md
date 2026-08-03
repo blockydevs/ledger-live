@@ -5,17 +5,29 @@
 
 This package contains the testing infrastructure for Aleo in Ledger Live,
 running the `@ledgerhq/coin-aleo` bridge end to end against a local devnode and
-a local Aleo SDK backend. Two scenarios run:
+a local Aleo SDK backend. `src/scenarii.test.ts` registers six scenarios:
 
 - **Public credit transfer** — sends credits from a funded sender to a fresh
   recipient and checks both sides through the bridge
+- **Public send-max** — sends a sender's full public balance to a fresh
+  recipient
 - **Private credit transfer** — converts two public balances into private
   records, then sends credits privately to a fresh recipient
+- **Private send-max** — mints 15 private records for a sender, then sends
+  the sum of the 14 largest to a fresh recipient, keeping the smallest for the
+  fee. This scenario is skipped: `getAvailableBalance` sums the capped top-14
+  record selection, but `calculateAmount` still bills amount plus fees, so
+  `getTransactionStatus` always raises `NotEnoughBalance`
+- **Public ARC-22 token transfer** — sends a minted USAD token balance from a
+  funded sender to a fresh recipient
+- **Private-to-public credit transfer** — unshields a private record back
+  into a public balance for the same account
 
 ## Features
 
-- Deterministic scenarios covering `transfer_public` and `transfer_private`,
-  exercised through the real `coin-aleo` bridge
+- Deterministic scenarios covering `transfer_public`, `transfer_private`,
+  send-max on both, an ARC-22 token transfer, and a private-to-public
+  unshield, exercised through the real `coin-aleo` bridge
 - Docker-based stack: an `aleo-devnode` (a single-account Aleo devnode,
   `127.0.0.1:3030`) and an `aleo-backend` (the Rust Aleo SDK backend,
   `127.0.0.1:3031`) that prepares and signs transaction requests
@@ -24,8 +36,8 @@ a local Aleo SDK backend. Two scenarios run:
 - An `msw`-based indexer and scanner double that stand in for the production
   indexer and record-scanning service
 - The Docker stack is shared across the whole test file — `beforeAll` in
-  `src/scenarii.test.ts` brings it up once, and both scenarios in the file run
-  against that same stack rather than getting one each
+  `src/scenarii.test.ts` brings it up once, and every scenario in the file
+  runs against that same stack rather than getting one each
 - A devnode has no consensus: a block seals only when a transaction is
   broadcast, or when the harness calls `advanceBlocks()` (`src/stack.ts`) by
   hand. Confirmations and finalized reads must be driven explicitly — waiting
@@ -36,10 +48,14 @@ a local Aleo SDK backend. Two scenarios run:
 ```typescript
 import { executeScenario } from "@ledgerhq/coin-tester/main";
 import { scenarioTransferPublic } from "@ledgerhq/coin-tester-aleo/scenarii/transferPublic";
+import { scenarioSendMaxPublic } from "@ledgerhq/coin-tester-aleo/scenarii/sendMaxPublic";
 import { scenarioTransferPrivate } from "@ledgerhq/coin-tester-aleo/scenarii/transferPrivate";
+import { scenarioTransferTokenPublic } from "@ledgerhq/coin-tester-aleo/scenarii/transferTokenPublic";
 
 await executeScenario(scenarioTransferPublic);
+await executeScenario(scenarioSendMaxPublic);
 await executeScenario(scenarioTransferPrivate);
+await executeScenario(scenarioTransferTokenPublic);
 ```
 
 ## Development
