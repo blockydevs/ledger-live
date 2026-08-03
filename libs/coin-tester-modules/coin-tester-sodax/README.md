@@ -4,48 +4,30 @@
 > ICON is now named SODAX. The package name uses `sodax`. The coin module, the
 > family string, and the currency id stay `icon`.
 
-> [!WARNING]
-> **This package is a harness, not a scenario.** It starts a local ICON devnet,
-> serves the tracker REST API that `@ledgerhq/coin-icon` reads, and proves both
-> parts answer. It builds no bridge, calls no `getAccountShape`, calls no
-> `getEstimatedFees`, and runs no `Scenario`. CI reports a green
-> `Coin Tester - sodax` leg for a package that does not run a transaction
-> through the coin module. The leg proves the harness and the read path. A
-> follow-up task adds the signer and the scenario.
+This package runs a Ledger Live scenario against a local ICON devnet: it
+builds the coin module's bridges with a software signer, sends ICX between two
+freshly generated accounts, and checks that `listOperations` reports each
+transfer correctly on both the sender and recipient side.
 
 ## What it covers
 
-`src/devnet.test.ts` holds the whole deliverable. It calls the four leaf
-functions of `coin-icon` that throw on failure, plus raw RPC where no leaf
-function exists.
+`src/scenarii/sodax.ts` sends three ICX transfers from a genesis-funded dev
+account to a fresh recipient account. Each transfer asserts:
 
-| Assertion | Reads |
+| Assertion | Checks |
 |---|---|
-| Block height advances | `icx_getLastBlock` |
-| Network id is `0x1` | `icx_getNetworkInfo` |
-| Genesis balances | `icx_getBalance` |
-| `getDelegation` answers on `cx…00` | `api/node.ts` |
-| Block height through the tracker | `getCurrentBlockHeight` |
-| Balance through the tracker | `getAccount` |
-| One operation for a submitted transfer | `getOperations` |
-| An unmocked external URL throws | msw |
+| Operation count | Exactly one new OUT operation per transfer |
+| `hasFailed` | The transaction landed, not just broadcast |
+| Fee | Matches the step price and step count measured against this devnet |
+| Value | `fee + amount`, matching the account's balance delta |
+| Senders / recipients | Exact address match, both sides |
 
-`getAccountShape` and `getEstimatedFees` each catch every error. A dead indexer
-then looks like an empty wallet, and an unreachable fee service returns a
-constant. The suite calls neither function, so neither `catch` block can hide a
-broken dependency.
+`afterAll` re-syncs the recipient account independently and checks its
+operation count, type, and exact balance.
 
-A green run says the devnet answers every call the module makes, and that the
-module's own HTTP clients accept the answers. It does not say the module maps
-the answers correctly into an `Account`.
-
-## What it does not cover
-
-- The fee path. `getStepPrice` on `cx…01` and `debug_estimateStep` on
-  `/api/v3d` need two devnet capabilities the image does not ship. `goloop
-  server` preinstalls no governance SCORE and enables no debug API. A test that
-  cannot reach its service asserts nothing.
-- Send, send-max, and recipient-side behavior.
+`src/signer.test.ts` checks `buildIconSigner` without a devnet: address
+derivation through coin-icon's resolver, a signature `secp256k1` verifies
+against the recovered public key, and rejection of a tampered payload.
 
 ## Devnet image contract
 
@@ -72,7 +54,9 @@ tools, then patches three fields with `jq`:
    controls.
 
 The entrypoint also funds `DEV_ADDRESS` when the variable is set, by adding a
-second genesis account. The scenario task uses this seam.
+second genesis account. The scenario's `setup()` generates a fresh dev wallet
+per run and sets `DEV_ADDRESS` before the devnet starts, so the genesis funds
+that wallet.
 
 ## Usage
 
@@ -81,10 +65,3 @@ pnpm coin:tester:sodax start
 ```
 
 Set `DEBUG=1` to stream the compose output.
-
-## Package layout note
-
-`package.json#main` points at `src/devnet.test.ts`. Every sibling points `main`
-at `src/scenarii.test.ts`. The field is inert: the CI action runs
-`pnpm coin:tester:sodax start`, and `start` globs `src/*.test.ts`. `main` moves
-when the scenario lands.

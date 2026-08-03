@@ -12,16 +12,17 @@ services:
       - GOD_ADDRESS=${GOD_ADDRESS:-}
       - DEV_ADDRESS=${DEV_ADDRESS:-}
       - GENESIS_BALANCE=${GENESIS_BALANCE:-}
-      - STEP_PRICE=${STEP_PRICE:-}
+      - GOD_KEYSTORE_JSON=${GOD_KEYSTORE_JSON:-}
     ports:
       - "9080:9080"
     healthcheck:
-      # icx_getLastBlock answers only after the chain produces a block. A height
-      # of 1 or more means `compose up --wait` can return.
+      # A successful governance deploy submission does not prove execution.
+      # getStepPrice only answers once the deploy's on_install has run, so it
+      # covers both the chain's height and the governance install in one call.
       test:
         [
           "CMD-SHELL",
-          "curl -sf -X POST http://127.0.0.1:9080/api/v3 -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"icx_getLastBlock\"}' | jq -e '.result.height >= 1' >/dev/null",
+          "curl -sf -X POST http://127.0.0.1:9080/api/v3 -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"icx_call\",\"params\":{\"to\":\"cx0000000000000000000000000000000000000001\",\"dataType\":\"call\",\"data\":{\"method\":\"getStepPrice\"}}}' | jq -e '.result != null and .result != \"\"' >/dev/null",
         ]
       interval: 5s
       timeout: 10s

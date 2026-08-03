@@ -93,9 +93,12 @@ const handlers = [
     const limit = Number(url.searchParams.get("limit") ?? 100);
 
     const all = await Promise.all(submittedHashes.map(toTrackerTransaction));
-    const mine = all.filter(
-      transaction => transaction.from_address === address || transaction.to_address === address,
-    );
+    const mine = all
+      .filter(
+        transaction => transaction.from_address === address || transaction.to_address === address,
+      )
+      // skip === 0 is the newest transaction, matching the real tracker.
+      .reverse();
     return HttpResponse.json(mine.slice(skip, skip + limit));
   }),
 
