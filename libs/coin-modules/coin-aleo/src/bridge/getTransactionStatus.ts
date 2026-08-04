@@ -295,7 +295,15 @@ async function handleTransferTransaction({
 
   Object.assign(errors, validatePublicFees({ account, transaction, config, estimatedFees }));
 
-  if (availableBalance.isLessThan(calculatedAmount.totalSpent)) {
+  // Send-max derives the amount from the same records and balances this check compares it
+  // against, so the comparison cannot pass: a private transfer pays the fee from a record
+  // outside the amount selection, and a public one already subtracts the fee. The record
+  // selection reports insufficient funds instead, either above or through a zero amount.
+  if (transaction.useAllAmount) {
+    if (calculatedAmount.amount.lte(0)) {
+      errors.amount = new NotEnoughBalance();
+    }
+  } else if (availableBalance.isLessThan(calculatedAmount.totalSpent)) {
     errors.amount = new NotEnoughBalance();
   }
 

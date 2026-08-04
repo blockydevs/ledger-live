@@ -126,10 +126,23 @@ function preparePrivateTransaction({
     ? (subAccount?.unspentPrivateRecords ?? [])
     : (account.aleoResources?.unspentPrivateRecords ?? []);
 
+  // The fee transition needs an input record of its own, distinct from the amount records.
+  // A native send-max selects every record for the amount, so reserve the fee record first.
+  const reservedFeeRecord =
+    transaction.useAllAmount && !isTokenTx && !config.isFeeSponsored
+      ? findBestRecordForFee({
+          unspentRecords: amountRecordPool,
+          selectedAmountRecordCommitments: [],
+          targetFee: estimatedFees,
+        })
+      : null;
+
   const newAmountRecordCommitments = getAmountRecordCommitments({
     transaction,
     config,
-    unspentRecords: amountRecordPool,
+    unspentRecords: reservedFeeRecord
+      ? amountRecordPool.filter(record => record.commitment !== reservedFeeRecord.commitment)
+      : amountRecordPool,
     ...(isTokenTx && { maxRecords: MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION }),
   });
 
