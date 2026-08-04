@@ -52,6 +52,22 @@ function promoteCoinOpToFees({
   coinOp.extra = { ...coinOp.extra, patched: true };
 }
 
+/**
+ * Strips the token transfer's own amount, senders and recipients off a parent
+ * coin operation the indexer built for a token-program transaction.
+ *
+ * The native history must not show the transferred token amount as a credits
+ * value. An outgoing transfer gets this by being promoted to FEES; an incoming
+ * one keeps its NONE type, so it is levelled here with what
+ * `buildNoneParentOp` produces when no coin operation exists at all.
+ */
+function clearNoneParentOp(coinOp: AleoOperation): void {
+  coinOp.value = new BigNumber(0);
+  coinOp.fee = new BigNumber(0);
+  coinOp.senders = [];
+  coinOp.recipients = [];
+}
+
 function getAleoSubAccounts({
   ledgerAccountId,
   calTokens,
@@ -112,6 +128,46 @@ function appendUniqueOperation<T extends { id: string }>(ops: T[], op: T): T[] {
   return ops.some(o => o.id === op.id) ? ops : [...ops, op];
 }
 
+/**
+ * Keeps a single coin operation per token transaction hash, preferring the one
+ * already promoted to FEES.
+ *
+ * Promotion rewrites the operation id from `…-NONE` to `…-FEES`. The next sync
+ * fetches the same transaction from the indexer and rebuilds it as a NONE coin
+ * operation under its original id, which no longer matches the stored FEES
+ * operation, so `mergeOps` keeps both and the account history shows the token
+ * transfer twice.
+ */
+function dedupeTokenParentOperations(
+  publicOperations: AleoOperation[],
+  calTokens: Map<string, TokenCurrency>,
+): AleoOperation[] {
+  const keptIndexByHash = new Map<string, number>();
+  const deduped: AleoOperation[] = [];
+
+  for (const operation of publicOperations) {
+    const programId = operation.extra?.programId;
+    if (!programId || !calTokens.has(programId)) {
+      deduped.push(operation);
+      continue;
+    }
+
+    const keptIndex = keptIndexByHash.get(operation.hash);
+    if (keptIndex === undefined) {
+      keptIndexByHash.set(operation.hash, deduped.length);
+      deduped.push(operation);
+      continue;
+    }
+
+    // The promoted parent is the one carrying the sub-operation links.
+    if (operation.extra?.patched && !deduped[keptIndex].extra?.patched) {
+      deduped[keptIndex] = operation;
+    }
+  }
+
+  return deduped;
+}
+
 export async function prepareTokenOperations({
   address,
   ledgerAccountId,
@@ -129,16 +185,17 @@ export async function prepareTokenOperations({
   tokenOperationsBySubAccountId: Map<string, AleoOperation[]>;
 }> {
   const tokenOperationsBySubAccountId = new Map<string, AleoOperation[]>();
+  const dedupedPublicOperations = dedupeTokenParentOperations(publicOperations, calTokens);
 
   if (tokenOperations.length === 0) {
     return {
-      updatedCoinOperations: publicOperations,
+      updatedCoinOperations: dedupedPublicOperations,
       tokenOperationsBySubAccountId,
     };
   }
 
   // shallow-copy public operations so we can mutate subOperations without side effects
-  const updatedCoinOperations: CoinOperationWithSubOps[] = publicOperations.map(op => ({
+  const updatedCoinOperations: CoinOperationWithSubOps[] = dedupedPublicOperations.map(op => ({
     ...op,
     subOperations: op.subOperations ? [...op.subOperations] : [],
   }));
@@ -186,6 +243,8 @@ export async function prepareTokenOperations({
         ledgerAccountId,
         txHash: tokenOp.hash,
       });
+    } else if (parentCoinOp.type === "NONE") {
+      clearNoneParentOp(parentCoinOp);
     }
 
     parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);
