@@ -23,6 +23,8 @@ const config: Config = {
   },
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
   reporters: ["default", ...(process.env.CI ? ["github-actions"] : [])],
+  globalSetup: "<rootDir>/src/globalSetup.ts",
+  globalTeardown: "<rootDir>/src/globalTeardown.ts",
 };
 
 export default config;

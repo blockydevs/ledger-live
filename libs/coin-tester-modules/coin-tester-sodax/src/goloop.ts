@@ -8,9 +8,6 @@ import { GENESIS_BALANCE_HEX, GOD_ADDRESS, GOD_KEYSTORE_JSON } from "./fixtures"
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const SERVICE = "goloop";
 
-// DEV_ADDRESS is read at call time, not at module load: the scenario's setup()
-// generates a fresh dev wallet and sets process.env.DEV_ADDRESS before calling
-// spawnGoloop().
 function composeOptions() {
   return {
     cwd: PACKAGE_ROOT,
@@ -18,7 +15,6 @@ function composeOptions() {
     env: {
       ...process.env,
       GOD_ADDRESS,
-      DEV_ADDRESS: process.env.DEV_ADDRESS ?? "",
       GENESIS_BALANCE: GENESIS_BALANCE_HEX,
       GOD_KEYSTORE_JSON,
     },

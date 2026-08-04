@@ -7,13 +7,13 @@ import BigNumber from "bignumber.js";
 import { firstValueFrom, reduce } from "rxjs";
 import {
   createRandomWallet,
-  GENESIS_BALANCE_LOOP,
+  fundAccount,
   icon,
   makeIconAccount,
+  SCENARIO_FUNDING_ICX,
   STEP_PRICE,
   TRANSFER_FEE_LOOP,
 } from "../fixtures";
-import { killGoloop, spawnGoloop } from "../goloop";
 import { getBridges, waitForTransaction } from "../helpers";
 import { initIndexer, registerTransaction } from "../indexer";
 import { buildIconSigner } from "../signer";
@@ -61,15 +61,13 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
 
   setup: async () => {
     // Fresh dev and recipient wallets per run exercise key derivation and
-    // signing for real, rather than replaying hardcoded keys. entrypoint.sh
-    // reads DEV_ADDRESS from the environment to pre-fund it at genesis.
+    // signing for real, rather than replaying hardcoded keys.
     const devWallet = createRandomWallet();
     const devAddress = devWallet.getAddress();
     recipientAddress = createRandomWallet().getAddress();
-    process.env.DEV_ADDRESS = devAddress;
 
-    await spawnGoloop();
     closeIndexer = initIndexer();
+    await fundAccount(devAddress, SCENARIO_FUNDING_ICX);
 
     const signer = buildIconSigner(devWallet.getPrivateKey());
     const { currencyBridge, accountBridge, getAddress } = getBridges(signer);
@@ -97,8 +95,9 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
   },
 
   beforeAll: async account => {
-    expect(account.balance.toFixed()).toBe(GENESIS_BALANCE_LOOP.toFixed());
-    expect(account.spendableBalance.toFixed()).toBe(GENESIS_BALANCE_LOOP.toFixed());
+    const fundedLoop = convertICXtoLoop(SCENARIO_FUNDING_ICX);
+    expect(account.balance.toFixed()).toBe(fundedLoop.toFixed());
+    expect(account.spendableBalance.toFixed()).toBe(fundedLoop.toFixed());
     expect(account.operations.length).toBe(0);
     expect(account.iconResources.totalDelegated.toString()).toBe("0");
     expect(account.iconResources.votingPower.toString()).toBe("0");
@@ -124,6 +123,5 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
 
   teardown: async () => {
     closeIndexer?.();
-    await killGoloop();
   },
 };

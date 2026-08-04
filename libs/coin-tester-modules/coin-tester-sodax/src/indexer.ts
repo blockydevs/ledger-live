@@ -52,10 +52,14 @@ const handlers = [
 
   http.get(`${INDEXER_URL}/addresses/details/:address`, async ({ params }) => {
     const address = params.address as string;
-    const [balanceLoop, block] = await Promise.all([
+    const [balanceLoop, block, transactions] = await Promise.all([
       rpc.getBalance(address).execute(),
       rpc.getLastBlock().execute(),
+      Promise.all(submittedHashes.map(toTrackerTransaction)),
     ]);
+    const transactionCount = transactions.filter(
+      transaction => transaction.from_address === address || transaction.to_address === address,
+    ).length;
 
     // balance is an ICX decimal number here. getAccountShape calls
     // convertICXtoLoop on it.
@@ -79,7 +83,7 @@ const handlers = [
       symbol: "",
       token_standard: "",
       token_transfer_count: 0,
-      transaction_count: submittedHashes.length,
+      transaction_count: transactionCount,
       transaction_internal_count: 0,
       type: "EOA",
     };
