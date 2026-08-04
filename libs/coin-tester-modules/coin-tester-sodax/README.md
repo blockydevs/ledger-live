@@ -25,9 +25,26 @@ account to a fresh recipient account. Each transfer asserts:
 `afterAll` re-syncs the recipient account independently and checks its
 operation count, type, and exact balance.
 
+`src/sendMax.test.ts` funds an account, prepares a send-max transfer, and
+checks `estimateMaxSpendable` against the spendable balance minus the real
+transfer fee, `prepareTransaction`'s `fees` and `stepLimit`, a clean
+`getTransactionStatus`, and a zero balance after the broadcast lands.
+
+`src/failedOperation.test.ts` sends 1 ICX to the governance SCORE, which has
+no payable fallback, using an explicit step limit outside the bridge, and
+checks the reverted transfer's synced operation: `hasFailed`, `fee` against
+the receipt's `stepUsed`, and the balance delta.
+
 `src/signer.test.ts` checks `buildIconSigner` without a devnet: address
 derivation through coin-icon's resolver, a signature `secp256k1` verifies
 against the recovered public key, and rejection of a tampered payload.
+
+`src/rejections.test.ts` funds one account and calls `getTransactionStatus` on
+transactions built through `createTransaction`, `updateTransaction`, and
+`prepareTransaction`, so every fee is the real estimate. It checks the seven
+rejection cases: empty recipient, sender as recipient, malformed recipient,
+zero amount, amount above balance, an unloaded fee, and a leftover below the
+minimum balance.
 
 ## Devnet image contract
 
