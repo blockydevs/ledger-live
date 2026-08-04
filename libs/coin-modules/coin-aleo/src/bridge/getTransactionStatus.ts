@@ -261,7 +261,6 @@ async function handleTransferTransaction({
   const feeEstimation = estimateFees({ configOrCurrencyId: config, transactionType });
   const estimatedFees = new BigNumber(feeEstimation.value.toString());
   const calculatedAmount = calculateAmount({ transaction, account, estimatedFees });
-  const availableBalance = getAvailableBalance(account, transaction);
 
   const errors: Errors = {};
   const warnings: Warnings = {};
@@ -281,6 +280,9 @@ async function handleTransferTransaction({
   }
 
   if (isPrivateTransaction(transaction)) {
+    // Private balances aren't compared to totalSpent here: validatePrivateTransaction and
+    // validatePrivateFeeRecord already check the amount and fee records independently, since
+    // they're drawn from separate record pools.
     Object.assign(
       errors,
       validatePrivateTransaction({
@@ -291,20 +293,16 @@ async function handleTransferTransaction({
         config,
       }),
     );
-  }
+  } else {
+    Object.assign(errors, validatePublicFees({ account, transaction, config, estimatedFees }));
 
-  Object.assign(errors, validatePublicFees({ account, transaction, config, estimatedFees }));
+    const availableBalance = getAvailableBalance(account, transaction);
 
-  // Send-max derives the amount from the same records and balances this check compares it
-  // against, so the comparison cannot pass: a private transfer pays the fee from a record
-  // outside the amount selection, and a public one already subtracts the fee. The record
-  // selection reports insufficient funds instead, either above or through a zero amount.
-  if (transaction.useAllAmount) {
-    if (calculatedAmount.amount.lte(0)) {
+    if (availableBalance.isLessThan(calculatedAmount.totalSpent)) {
+      errors.amount = new NotEnoughBalance();
+    } else if (transaction.useAllAmount && calculatedAmount.amount.lte(0)) {
       errors.amount = new NotEnoughBalance();
     }
-  } else if (availableBalance.isLessThan(calculatedAmount.totalSpent)) {
-    errors.amount = new NotEnoughBalance();
   }
 
   return {

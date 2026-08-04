@@ -124,13 +124,15 @@ export async function performPublicSync(
 
   // Already-patched ops have modified senders/recipients that differ from raw API data.
   // Filter them from the incoming ops — mergeOps then simply keeps the patched version
-  // from oldPublicOps untouched, and no patch-restoration pass is needed.
-  const patchedOpIds = new Set(
-    (oldPublicOps as AleoOperation[]).filter(op => op.extra?.patched).map(op => op.id),
+  // from oldPublicOps untouched, and no patch-restoration pass is needed. Matched by hash,
+  // not id: promoting a token parent to FEES rewrites its id, but the freshly re-fetched
+  // op for the same transaction keeps the original NONE id.
+  const patchedOpHashes = new Set(
+    (oldPublicOps as AleoOperation[]).filter(op => op.extra?.patched).map(op => op.hash),
   );
 
   const filteredLatestPublicOperations = latestAccountPublicOperations.operations.filter(
-    op => !patchedOpIds.has(op.id),
+    op => !patchedOpHashes.has(op.hash),
   );
 
   const publicOperations = shouldSyncFromScratch

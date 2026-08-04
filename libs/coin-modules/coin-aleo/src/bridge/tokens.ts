@@ -128,46 +128,6 @@ function appendUniqueOperation<T extends { id: string }>(ops: T[], op: T): T[] {
   return ops.some(o => o.id === op.id) ? ops : [...ops, op];
 }
 
-/**
- * Keeps a single coin operation per token transaction hash, preferring the one
- * already promoted to FEES.
- *
- * Promotion rewrites the operation id from `…-NONE` to `…-FEES`. The next sync
- * fetches the same transaction from the indexer and rebuilds it as a NONE coin
- * operation under its original id, which no longer matches the stored FEES
- * operation, so `mergeOps` keeps both and the account history shows the token
- * transfer twice.
- */
-function dedupeTokenParentOperations(
-  publicOperations: AleoOperation[],
-  calTokens: Map<string, TokenCurrency>,
-): AleoOperation[] {
-  const keptIndexByHash = new Map<string, number>();
-  const deduped: AleoOperation[] = [];
-
-  for (const operation of publicOperations) {
-    const programId = operation.extra?.programId;
-    if (!programId || !calTokens.has(programId)) {
-      deduped.push(operation);
-      continue;
-    }
-
-    const keptIndex = keptIndexByHash.get(operation.hash);
-    if (keptIndex === undefined) {
-      keptIndexByHash.set(operation.hash, deduped.length);
-      deduped.push(operation);
-      continue;
-    }
-
-    // The promoted parent is the one carrying the sub-operation links.
-    if (operation.extra?.patched && !deduped[keptIndex].extra?.patched) {
-      deduped[keptIndex] = operation;
-    }
-  }
-
-  return deduped;
-}
-
 export async function prepareTokenOperations({
   address,
   ledgerAccountId,
@@ -185,17 +145,16 @@ export async function prepareTokenOperations({
   tokenOperationsBySubAccountId: Map<string, AleoOperation[]>;
 }> {
   const tokenOperationsBySubAccountId = new Map<string, AleoOperation[]>();
-  const dedupedPublicOperations = dedupeTokenParentOperations(publicOperations, calTokens);
 
   if (tokenOperations.length === 0) {
     return {
-      updatedCoinOperations: dedupedPublicOperations,
+      updatedCoinOperations: publicOperations,
       tokenOperationsBySubAccountId,
     };
   }
 
   // shallow-copy public operations so we can mutate subOperations without side effects
-  const updatedCoinOperations: CoinOperationWithSubOps[] = dedupedPublicOperations.map(op => ({
+  const updatedCoinOperations: CoinOperationWithSubOps[] = publicOperations.map(op => ({
     ...op,
     subOperations: op.subOperations ? [...op.subOperations] : [],
   }));
@@ -215,8 +174,11 @@ export async function prepareTokenOperations({
 
     // Derive IN/OUT for the sub-account from the raw operation's senders/recipients.
     // The coin op has type NONE for token-program transactions; the sub-account needs
-    // a meaningful direction.
-    const type: OperationType = tokenOp.recipients.includes(address) ? "IN" : "OUT";
+    // a meaningful direction. A self-transfer (address on both sides) is treated as OUT so
+    // the parent gets promoted to FEES below and the paid fee stays visible.
+    const isIncomingOnly =
+      tokenOp.recipients.includes(address) && !tokenOp.senders.includes(address);
+    const type: OperationType = isIncomingOnly ? "IN" : "OUT";
 
     const subAccountOp: AleoOperation = {
       ...tokenOp,

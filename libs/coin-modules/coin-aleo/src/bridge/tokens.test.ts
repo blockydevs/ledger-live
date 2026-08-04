@@ -180,6 +180,40 @@ describe("tokens utils", () => {
       });
     });
 
+    it("should promote the parent to FEES and mark the sub-operation OUT for a token self-transfer", async () => {
+      const tokenOp = getMockedTokenOperation({
+        hash: "tx-self",
+        recipients: [address],
+        senders: [address],
+        fee: new BigNumber(42),
+      });
+      const calTokens = new Map([[MOCK_TOKEN_PROGRAM_ID, mockTokenCurrency]]);
+
+      const { updatedCoinOperations } = await prepareTokenOperations({
+        address,
+        ledgerAccountId,
+        publicOperations: [],
+        tokenOperations: [tokenOp],
+        calTokens,
+      });
+
+      expect(updatedCoinOperations).toHaveLength(1);
+      expect(updatedCoinOperations[0]).toMatchObject({
+        type: "FEES",
+        value: new BigNumber(42),
+        fee: new BigNumber(42),
+        recipients: [],
+        extra: expect.objectContaining({ patched: true }),
+      });
+      expect(updatedCoinOperations[0].subOperations).toEqual([
+        expect.objectContaining({
+          type: "OUT",
+          accountId: tokenAccountId,
+          id: encodeOperationId(tokenAccountId, "tx-self", "OUT"),
+        }),
+      ]);
+    });
+
     it("should promote an existing semi-public coin op to FEES, clearing recipients and marking as patched", async () => {
       const txHash = "tx-semi-promote";
       const existingCoinOp = getMockedOperation({
@@ -260,49 +294,6 @@ describe("tokens utils", () => {
         fee: new BigNumber(0),
         senders: [],
         recipients: [],
-      });
-      expect(updatedCoinOperations[0].subOperations).toHaveLength(1);
-    });
-
-    it("should keep one parent when a later sync re-fetches a transaction already promoted to FEES", async () => {
-      const txHash = "tx-resync";
-      const calTokens = new Map([[MOCK_TOKEN_PROGRAM_ID, mockTokenCurrency]]);
-      const tokenOp = getMockedTokenOperation({
-        hash: txHash,
-        recipients: ["aleo1recipient"],
-        senders: [address],
-        fee: new BigNumber(42),
-      });
-      // What the previous sync stored: promotion moved the id from -NONE to -FEES.
-      const storedFeesOp = getMockedOperation({
-        hash: txHash,
-        id: encodeOperationId(ledgerAccountId, txHash, "FEES"),
-        type: "FEES",
-        accountId: ledgerAccountId,
-        value: new BigNumber(42),
-        fee: new BigNumber(42),
-        recipients: [],
-        senders: [address],
-        extra: {
-          functionId: "transfer_public",
-          transactionType: "public",
-          programId: MOCK_TOKEN_PROGRAM_ID,
-          patched: true,
-        },
-      });
-
-      const { updatedCoinOperations } = await prepareTokenOperations({
-        address,
-        ledgerAccountId,
-        publicOperations: [tokenOp, storedFeesOp],
-        tokenOperations: [tokenOp],
-        calTokens,
-      });
-
-      expect(updatedCoinOperations).toHaveLength(1);
-      expect(updatedCoinOperations[0]).toMatchObject({
-        type: "FEES",
-        id: encodeOperationId(ledgerAccountId, txHash, "FEES"),
       });
       expect(updatedCoinOperations[0].subOperations).toHaveLength(1);
     });

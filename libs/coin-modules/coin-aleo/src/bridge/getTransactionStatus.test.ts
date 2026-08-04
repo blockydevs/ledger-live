@@ -324,6 +324,49 @@ describe("getTransactionStatus", () => {
       expect(result.totalSpent).toEqual(amount.plus(mockFees));
     });
 
+    it("does not add error for a private explicit amount that spends the whole record selection", async () => {
+      // Same record layout as the send-max case above, but with useAllAmount false and an
+      // explicit amount equal to the sum of the amount records: availableBalance (capped at the
+      // amount records) and totalSpent (amount + fee, paid from a record outside that selection)
+      // are drawn from different pools and must not be compared directly.
+      const records = Array.from({ length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 }, (_, i) => ({
+        ...mockUnspentRecord1,
+        commitment: `probe-record-${i}`,
+        microcredits: new BigNumber(100000).plus(i * 10000).toFixed(),
+      }));
+      const [feeRecord, ...amountRecords] = records;
+      const amount = amountRecords.reduce(
+        (sum, record) => sum.plus(record.microcredits),
+        new BigNumber(0),
+      );
+
+      mockAleoConfig.getCoinConfig.mockReturnValue({ ...mockConfig, isFeeSponsored: false });
+      mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount.plus(mockFees) });
+
+      const account = getMockedAccount({
+        aleoResources: {
+          ...mockAleoResources,
+          privateBalance: amount.plus(feeRecord.microcredits),
+          unspentPrivateRecords: records,
+        },
+      });
+
+      const transaction: Transaction = {
+        ...mockTransaction,
+        mode: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+        amount,
+        useAllAmount: false,
+        properties: {
+          amountRecordCommitments: amountRecords.map(record => record.commitment),
+          feeRecordCommitment: feeRecord.commitment,
+        },
+      };
+
+      const result = await getTransactionStatus(account, transaction);
+
+      expect(result.errors).toEqual({});
+    });
+
     it("adds error when send-max resolves to a zero amount", async () => {
       mockCalculateAmount.mockReturnValue({
         amount: new BigNumber(0),
