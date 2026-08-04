@@ -63,6 +63,13 @@ describe("buildTransaction", () => {
     expect(result.unsigned).toBe("mocked-transaction");
   });
 
+  it("should omit stepLimit when it is zero", async () => {
+    const stepLimit = new BigNumber(0);
+    await buildTransaction(account, transaction, stepLimit);
+
+    expect(mockStepLimit).not.toHaveBeenCalled();
+  });
+
   it("should throw an error for unsupported transaction mode", async () => {
     const invalidTransaction: Transaction = {
       ...transaction,
