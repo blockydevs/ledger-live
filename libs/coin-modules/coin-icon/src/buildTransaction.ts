@@ -22,7 +22,7 @@ const buildTransferTransaction = (
     .nonce(IconConverter.toHexNumber(getNonce(account)))
     .timestamp(IconConverter.toHexNumber(new Date().getTime() * 1000))
     .version(IconConverter.toHexNumber(RPC_VERSION));
-  if (stepLimit) {
+  if (stepLimit?.gt(0)) {
     icxTransferData.stepLimit(IconConverter.toHexNumber(stepLimit));
   }
 
