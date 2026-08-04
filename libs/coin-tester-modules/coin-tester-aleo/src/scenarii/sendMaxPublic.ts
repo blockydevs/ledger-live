@@ -89,14 +89,14 @@ const sendMaxPublic: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     // this assertion is the point of the scenario.
     expect(latest.fee.toNumber()).toBeLessThanOrEqual(TRANSFER_PUBLIC_BASE_FEE);
 
-    // An OUT operation's value is fee-inclusive, so it pins the send-max amount
-    // exactly and the fee only within the window the two assertions above bound
-    // it to.
-    expect(latest.value).toStrictEqual(
-      new BigNumber(SEND_MAX_PUBLIC_AMOUNT_MICROCREDITS).plus(latest.fee),
-    );
+    // An operation's value is fee-exclusive: it carries the send-max amount
+    // alone, and the fee travels beside it in `operation.fee`.
+    expect(latest.value).toStrictEqual(new BigNumber(SEND_MAX_PUBLIC_AMOUNT_MICROCREDITS));
 
-    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
+    // The send-max amount is the balance minus the BILLED fee, while the chain
+    // charges the lower fee asserted above, so the account keeps that
+    // difference as dust. The balance moves by the amount plus the real fee.
+    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value).minus(latest.fee));
     expect(current.pendingOperations).toStrictEqual([]);
   },
 };

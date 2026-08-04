@@ -1097,13 +1097,12 @@ describe("Aleo transfer_private scenario", () => {
 
 describe("Aleo send-max private scenario", () => {
   /**
-   * Skipped on a coin-aleo defect, not on anything this package owns. For a
-   * native private transfer `getAvailableBalance` sums the same capped top-14
-   * record selection `getAmountToSpend` uses (`logic/utils.ts:756`), while
-   * `calculateAmount` still bills `totalSpent = amount + fees`
-   * (`logic/utils.ts:374`). The check at `getTransactionStatus.ts:298` is then
-   * `amount < amount + fee`, so every native private send-max raises
-   * NotEnoughBalance and the flow never reaches the signer.
+   * Blocked on this package's own TLV decoder. A 14-record transfer runs
+   * through the batcher program, which passes the credits records to
+   * credits.aleo as `external_record` inputs, and `decodeInputType`
+   * (`src/tlv/decodeRequest.ts:98`) rejects that discriminant. The bridge
+   * itself reaches the signer: the scenario clears prepare and
+   * getTransactionStatus.
    */
   it.skip("sends all private microcredits above the smallest of 15 records through the bridge", async () => {
     await executeScenario(scenarioSendMaxPrivate);

@@ -14,10 +14,10 @@ a local Aleo SDK backend. `src/scenarii.test.ts` registers six scenarios:
 - **Private credit transfer** — converts two public balances into private
   records, then sends credits privately to a fresh recipient
 - **Private send-max** — mints 15 private records for a sender, then sends
-  the sum of the 14 largest to a fresh recipient, keeping the smallest for the
-  fee. This scenario is skipped: `getAvailableBalance` sums the capped top-14
-  record selection, but `calculateAmount` still bills amount plus fees, so
-  `getTransactionStatus` always raises `NotEnoughBalance`
+  the sum of the 14 largest to a fresh recipient. The smallest record pays the
+  fee. This scenario is skipped: the batcher program passes the credits
+  records to credits.aleo as `external_record` inputs, and the TLV decoder in
+  `src/tlv/decodeRequest.ts` covers only record and plaintext input types
 - **Public ARC-22 token transfer** — sends a minted USAD token balance from a
   funded sender to a fresh recipient
 - **Private-to-public credit transfer** — unshields a private record back

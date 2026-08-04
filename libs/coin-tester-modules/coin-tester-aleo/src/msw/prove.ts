@@ -26,6 +26,30 @@ const FEE_PRIVATE_INPUT_TYPES = ["credits.record", "u64.public", "u64.public", "
 const TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION = "transfer_public_to_private";
 const TRANSFER_PUBLIC_TO_PRIVATE_INPUT_TYPES = ["address.private", "u64.public"];
 
+// credits.aleo/transfer_private_to_public: the spent record first, then the
+// receiver and the amount, both public. Its fee runs through fee_private.
+const TRANSFER_PRIVATE_TO_PUBLIC_FUNCTION = "transfer_private_to_public";
+const TRANSFER_PRIVATE_TO_PUBLIC_INPUT_TYPES = ["credits.record", "address.public", "u64.public"];
+
+/**
+ * Request input types for the credits.aleo functions that do not take the
+ * `[address.public, u64.public]` pair every other indexed transition takes.
+ */
+const CREDITS_INPUT_TYPES: Record<string, string[]> = {
+  [TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION]: TRANSFER_PUBLIC_TO_PRIVATE_INPUT_TYPES,
+  [TRANSFER_PRIVATE_TO_PUBLIC_FUNCTION]: TRANSFER_PRIVATE_TO_PUBLIC_INPUT_TYPES,
+};
+
+/**
+ * Functions that spend a record. They pay through credits.aleo/fee_private,
+ * out of a second record, while every other function pays fee_public out of
+ * the transparent balance.
+ */
+const PRIVATE_FEE_FUNCTIONS = new Set([
+  TRANSFER_PRIVATE_FUNCTION,
+  TRANSFER_PRIVATE_TO_PUBLIC_FUNCTION,
+]);
+
 export type ExpectedTransfer = {
   recipient: string;
   amount: number;
@@ -217,10 +241,9 @@ export async function verifyAuthorizations(
       throw new Error(`aleo coin-tester: no known request shape for ${programId}/${functionName}`);
     }
 
-    const inputTypes =
-      programId === PROGRAM_ID.CREDITS && functionName === TRANSFER_PUBLIC_TO_PRIVATE_FUNCTION
-        ? TRANSFER_PUBLIC_TO_PRIVATE_INPUT_TYPES
-        : [`address.public`, `${descriptor.amountSuffix}.public`];
+    const inputTypes = (programId === PROGRAM_ID.CREDITS
+      ? CREDITS_INPUT_TYPES[functionName]
+      : undefined) ?? [`address.public`, `${descriptor.amountSuffix}.public`];
 
     // `verify()`'s third argument must be present exactly when the signed
     // message carried a checksum, and absent otherwise — either mismatch makes
@@ -254,7 +277,7 @@ export async function verifyAuthorizations(
   }
   const feeAuthorization = wasm.Authorization.fromString(JSON.stringify(body.fee_authorization));
 
-  if (functionName === TRANSFER_PRIVATE_FUNCTION) {
+  if (PRIVATE_FEE_FUNCTIONS.has(functionName)) {
     if (!feeAuthorization.isFeePrivate()) {
       throw new Error(
         `aleo coin-tester: expected a fee_private authorization, got ${feeAuthorization.functionName()}`,
@@ -264,7 +287,9 @@ export async function verifyAuthorizations(
     if (!feeRequest.verify(FEE_PRIVATE_INPUT_TYPES, true)) {
       throw new Error("aleo coin-tester: the fee request failed verify()");
     }
-    checkFeeAmounts(feeRequest.inputs() as string[], 1, 2, TRANSFER_PRIVATE_BASE_FEE);
+    const expectedBaseFee =
+      INDEXED_PROGRAMS[programId]?.[functionName]?.baseFee ?? TRANSFER_PRIVATE_BASE_FEE;
+    checkFeeAmounts(feeRequest.inputs() as string[], 1, 2, expectedBaseFee);
   } else {
     if (!feeAuthorization.isFeePublic()) {
       throw new Error(

@@ -111,9 +111,9 @@ const convertRecord = (
     // fee is in transferPublic.ts; only the order of magnitude is asserted here.
     expect(publicSide.fee.toNumber()).toBeGreaterThanOrEqual(PUBLIC_DEVNODE_FEE_RANGE.min);
     expect(publicSide.fee.toNumber()).toBeLessThanOrEqual(PUBLIC_DEVNODE_FEE_RANGE.max);
-    // The OUT side is fee-inclusive, so it pins the amount exactly and the fee
-    // only within the window the two assertions above bound it to.
-    expect(publicSide.value).toStrictEqual(new BigNumber(amount).plus(publicSide.fee));
+    // The OUT side is fee-exclusive too, so both sides of the conversion carry
+    // the same value: the converted amount.
+    expect(publicSide.value).toStrictEqual(new BigNumber(amount));
 
     // The converted amount stays with the account, as a private record, so the fee
     // is the only thing the total balance loses.
@@ -175,22 +175,20 @@ const sendPrivate: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     expect(latest.fee.toNumber()).toBeGreaterThanOrEqual(PRIVATE_DEVNODE_FEE_RANGE.min);
     expect(latest.fee.toNumber()).toBeLessThanOrEqual(PRIVATE_DEVNODE_FEE_RANGE.max);
 
-    // An OUT operation's value is fee-inclusive, so it pins the amount exactly
-    // and the fee only within the window the two assertions above bound it to.
-    expect(latest.value).toStrictEqual(
-      new BigNumber(TRANSFER_AMOUNT_MICROCREDITS).plus(latest.fee),
-    );
+    // An operation's value is fee-exclusive: it carries the amount alone, and
+    // the fee travels beside it in `operation.fee`.
+    expect(latest.value).toStrictEqual(new BigNumber(TRANSFER_AMOUNT_MICROCREDITS));
 
     expect(previous.aleoResources?.privateBalance).not.toBeNull();
-    // Both the amount and the fee were paid out of private records, so the whole
-    // fee-inclusive value leaves the private balance.
+    // Both the amount and the fee were paid out of private records, so the
+    // private balance loses the two together.
     const previousPrivateBalance = previous.aleoResources!.privateBalance!;
     expect(current.aleoResources?.privateBalance).toStrictEqual(
-      previousPrivateBalance.minus(latest.value),
+      previousPrivateBalance.minus(latest.value).minus(latest.fee),
     );
     // The total balance folds the private balance in, so it moves by the same
     // amount: nothing was paid out of the transparent side.
-    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
+    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value).minus(latest.fee));
 
     // Records A and B (the two conversions' outputs) are the ones this transfer
     // spent as its amount and fee record; both must be gone from the unspent

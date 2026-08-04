@@ -82,13 +82,12 @@ const sendPublic: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     expect(latest.fee.toNumber()).toBeGreaterThanOrEqual(PUBLIC_DEVNODE_FEE_RANGE.min);
     expect(latest.fee.toNumber()).toBeLessThanOrEqual(PUBLIC_DEVNODE_FEE_RANGE.max);
 
-    // An OUT operation's value is fee-inclusive, so it pins the amount exactly
-    // and the fee only within the window the two assertions above bound it to.
-    expect(latest.value).toStrictEqual(
-      new BigNumber(TRANSFER_AMOUNT_MICROCREDITS).plus(latest.fee),
-    );
+    // An operation's value is fee-exclusive: it carries the amount alone, and
+    // the fee travels beside it in `operation.fee`.
+    expect(latest.value).toStrictEqual(new BigNumber(TRANSFER_AMOUNT_MICROCREDITS));
 
-    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
+    // The balance still pays both, so it moves by the amount plus the fee.
+    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value).minus(latest.fee));
     expect(current.pendingOperations).toStrictEqual([]);
   },
 };
