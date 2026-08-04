@@ -1,7 +1,7 @@
 import type { AccountType, IconTransactionType } from "@ledgerhq/coin-icon/api/api-type";
 import { convertLoopToIcx } from "@ledgerhq/coin-icon/logic";
 import BigNumber from "bignumber.js";
-import { http, HttpResponse, passthrough } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { INDEXER_URL } from "./fixtures";
 import { rpc } from "./helpers";
@@ -101,20 +101,16 @@ const handlers = [
       .reverse();
     return HttpResponse.json(mine.slice(skip, skip + limit));
   }),
-
-  // Any request that reaches here has no tracker handler above and is not
-  // the devnet RPC. Name it before failing, so a genuinely missing handler
-  // is distinguishable from the deliberate unmocked-URL test.
-  http.all("*", ({ request }) => {
-    const hostname = new URL(request.url).hostname;
-    if (["127.0.0.1", "localhost"].includes(hostname)) return passthrough();
-    console.error(`Unhandled request: ${request.method} ${request.url}`);
-    return Response.error();
-  }),
 ];
 
 export function initIndexer(): () => void {
   const server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: "bypass" });
+  server.listen({
+    onUnhandledRequest: request => {
+      const hostname = new URL(request.url).hostname;
+      if (["127.0.0.1", "localhost"].includes(hostname)) return;
+      throw new Error(`Unhandled request: ${request.method} ${request.url}`);
+    },
+  });
   return () => server.close();
 }

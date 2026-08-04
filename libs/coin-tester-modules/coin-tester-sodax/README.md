@@ -11,8 +11,9 @@ transfer correctly on both the sender and recipient side.
 
 ## What it covers
 
-`src/scenarii/sodax.ts` sends three ICX transfers from a genesis-funded dev
-account to a fresh recipient account. Each transfer asserts:
+`src/scenarii/sodax.ts` sends three ICX transfers, then a send-max transfer,
+from a genesis-funded dev account to a fresh recipient account. Each of the
+three fixed-amount transfers asserts:
 
 | Assertion | Checks |
 |---|---|
@@ -22,8 +23,24 @@ account to a fresh recipient account. Each transfer asserts:
 | Value | `fee + amount`, matching the account's balance delta |
 | Senders / recipients | Exact address match, both sides |
 
+The trailing send-max transfer asserts the same set, plus that the account's
+resulting balance is exactly `0`. That last check catches a wrong send-max fee
+estimate: an under- or over-estimate leaves loop dust behind or drops the
+broadcast outright.
+
 `afterAll` re-syncs the recipient account independently and checks its
 operation count, type, and exact balance.
+
+`src/revertedTransfer.test.ts` drives `craftTransaction`/`signOperation`/
+`broadcast` directly (outside `executeScenario`, which throws on any
+`getTransactionStatus` error) to send ICX to the governance SCORE address.
+`getEstimatedFees` always estimates against a dummy EOA recipient, never the
+real one, so it never accounts for the extra steps a SCORE's fallback method
+costs over a plain transfer. The transfer lands but runs out of steps and
+reverts, and the test asserts that the resulting operation reports
+`hasFailed: true`, a fee equal to the full step cost (not zero), and an
+account balance reduced by that fee alone (the transfer amount never left the
+account).
 
 `src/signer.test.ts` checks `buildIconSigner` without a devnet: address
 derivation through coin-icon's resolver, a signature `secp256k1` verifies
