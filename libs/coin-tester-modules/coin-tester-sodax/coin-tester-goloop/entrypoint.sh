@@ -4,6 +4,7 @@ set -euo pipefail
 GOD_ADDRESS="${GOD_ADDRESS:?GOD_ADDRESS must be set (the hx… address that holds the genesis supply)}"
 GENESIS_BALANCE="${GENESIS_BALANCE:?GENESIS_BALANCE must be set (hex loop)}"
 GOD_KEYSTORE_JSON="${GOD_KEYSTORE_JSON:?GOD_KEYSTORE_JSON must be set (the god wallet keystore JSON, used to sign the governance deploy)}"
+DEV_ADDRESS="${DEV_ADDRESS:-}"
 
 # The base image entry point sources /goloop/venv/bin/activate before it
 # starts goloop, putting pyexec on PATH. This entry point replaces that entry
@@ -52,6 +53,13 @@ jq \
   | (.accounts[] | select(.name == "god") | .balance) = $bal
 ' genesis.json > genesis.patched.json
 
+if [ -n "$DEV_ADDRESS" ]; then
+  jq --arg dev "$DEV_ADDRESS" --arg bal "$GENESIS_BALANCE" \
+    '.accounts += [{name: "dev", address: $dev, balance: $bal}]' \
+    genesis.patched.json > genesis.dev.json
+  mv genesis.dev.json genesis.patched.json
+fi
+
 mv genesis.patched.json genesis.json
 
 echo "--- genesis summary ---"
@@ -63,15 +71,12 @@ goloop gs gen -i . -o gs.zip
 goloop server start &
 SERVER_PID=$!
 
-# goloop creates cli.sock before it accepts connections on it, so testing for
-# the socket file is not a readiness check: `chain join` then fails with
-# "connection refused". Probe the socket with a real call instead.
 for _ in $(seq 1 60); do
-  goloop system info >/dev/null 2>&1 && break
+  [ -S "$GOLOOP_NODE_SOCK" ] && break
   sleep 0.5
 done
-goloop system info >/dev/null 2>&1 || {
-  echo "goloop server did not answer on $GOLOOP_NODE_SOCK" >&2
+[ -S "$GOLOOP_NODE_SOCK" ] || {
+  echo "goloop server did not open $GOLOOP_NODE_SOCK" >&2
   exit 1
 }
 

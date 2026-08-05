@@ -12,13 +12,20 @@ import type { AccountBridge } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
 import { firstValueFrom, reduce } from "rxjs";
 import { IconDoMaxSendInstead } from "@ledgerhq/coin-icon/errors";
-import { createRandomWallet, fundAccount, makeIconAccount, SCENARIO_FUNDING_ICX } from "./fixtures";
+import { createRandomWallet, makeIconAccount } from "./fixtures";
+import { killGoloop, spawnGoloop } from "./goloop";
 import { getBridges } from "./helpers";
 import { initIndexer } from "./indexer";
 import { buildIconSigner } from "./signer";
 
 global.console = require("console");
 jest.setTimeout(120_000);
+
+["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
+  process.on(e, async () => {
+    await killGoloop();
+  }),
+);
 
 let accountBridge: AccountBridge<Transaction, IconAccount>;
 let account: IconAccount;
@@ -32,11 +39,12 @@ async function prepared(patch: Partial<Transaction>): Promise<Transaction> {
 
 describe("SODAX rejection matrix", () => {
   beforeAll(async () => {
-    closeIndexer = initIndexer();
-
     const wallet = createRandomWallet();
     const address = wallet.getAddress();
-    await fundAccount(address, SCENARIO_FUNDING_ICX);
+    process.env.DEV_ADDRESS = address;
+
+    await spawnGoloop();
+    closeIndexer = initIndexer();
 
     const signer = buildIconSigner(wallet.getPrivateKey());
     const bridges = getBridges(signer);
@@ -50,8 +58,9 @@ describe("SODAX rejection matrix", () => {
     );
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     closeIndexer?.();
+    await killGoloop();
   });
 
   it("rejects an empty recipient with RecipientRequired", async () => {

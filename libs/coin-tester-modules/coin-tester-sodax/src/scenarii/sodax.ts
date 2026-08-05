@@ -7,13 +7,13 @@ import BigNumber from "bignumber.js";
 import { firstValueFrom, reduce } from "rxjs";
 import {
   createRandomWallet,
-  fundAccount,
+  GENESIS_BALANCE_LOOP,
   icon,
   makeIconAccount,
-  SCENARIO_FUNDING_ICX,
   STEP_PRICE,
   TRANSFER_FEE_LOOP,
 } from "../fixtures";
+import { killGoloop, spawnGoloop } from "../goloop";
 import { getBridges, waitForTransaction } from "../helpers";
 import { initIndexer, registerTransaction } from "../indexer";
 import { buildIconSigner } from "../signer";
@@ -26,14 +26,16 @@ let sodaxAccountBridge: AccountBridge<Transaction, IconAccount> | undefined;
 let closeIndexer: (() => void) | undefined;
 let recipientAddress = "";
 
-const TRANSFERS_ICX = [1, 2.5, 999_996.38];
-const totalSentLoop = TRANSFERS_ICX.reduce(
-  (sum, amountIcx) => sum.plus(convertICXtoLoop(amountIcx)),
-  new BigNumber(0),
-);
+// Leaves a non-trivial remainder (~6.47 ICX net of these three fees) for the
+// trailing send-max leg to sweep.
+const TRANSFERS_ICX = [1, 2.5, 999_990];
+
+// Set by the send-max leg's expect callback once the swept amount is known;
+// afterAll needs it to check the recipient's final balance.
+let sweptLoop = new BigNumber(0);
 
 function makeTransactions(): IconScenarioTransaction[] {
-  return TRANSFERS_ICX.map((amountIcx, index) => ({
+  const explicitTransfers: IconScenarioTransaction[] = TRANSFERS_ICX.map(amountIcx => ({
     name: `Send ${amountIcx} ICX`,
     amount: convertICXtoLoop(amountIcx),
     recipient: recipientAddress,
@@ -49,11 +51,33 @@ function makeTransactions(): IconScenarioTransaction[] {
       expect(current.balance.toFixed()).toBe(previous.balance.minus(latest.value).toFixed());
       expect(latest.senders).toEqual([current.freshAddress]);
       expect(latest.recipients).toEqual([recipientAddress]);
-      if (index === TRANSFERS_ICX.length - 1) {
-        expect(current.balance.lt(convertICXtoLoop(0.2))).toBe(true);
-      }
     },
   }));
+
+  const sendMax: IconScenarioTransaction = {
+    name: "Send max ICX",
+    useAllAmount: true,
+    recipient: recipientAddress,
+    expect: (previous, current) => {
+      const [latest] = current.operations;
+      expect(current.operations.length - previous.operations.length).toBe(1);
+      expect(latest.type).toBe("OUT");
+      expect(latest.hasFailed).toBe(false);
+      expect(latest.fee.toFixed()).toBe(TRANSFER_FEE_LOOP.toFixed());
+      expect(latest.senders).toEqual([current.freshAddress]);
+      expect(latest.recipients).toEqual([recipientAddress]);
+      // A send-max sweeps the whole balance, so the fee-inclusive OUT value is
+      // exactly what the account held beforehand.
+      expect(latest.value.toFixed()).toBe(previous.balance.toFixed());
+      expect(current.balance.toFixed()).toBe(previous.balance.minus(latest.value).toFixed());
+      // Catches a wrong send-max estimate: an under- or over-estimated fee
+      // leaves loop dust behind or fails the broadcast outright.
+      expect(current.balance.toFixed()).toBe("0");
+      sweptLoop = latest.value.minus(latest.fee);
+    },
+  };
+
+  return [...explicitTransfers, sendMax];
 }
 
 export const scenarioSodax: Scenario<Transaction, IconAccount> = {
@@ -61,13 +85,15 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
 
   setup: async () => {
     // Fresh dev and recipient wallets per run exercise key derivation and
-    // signing for real, rather than replaying hardcoded keys.
+    // signing for real, rather than replaying hardcoded keys. entrypoint.sh
+    // reads DEV_ADDRESS from the environment to pre-fund it at genesis.
     const devWallet = createRandomWallet();
     const devAddress = devWallet.getAddress();
     recipientAddress = createRandomWallet().getAddress();
+    process.env.DEV_ADDRESS = devAddress;
 
+    await spawnGoloop();
     closeIndexer = initIndexer();
-    await fundAccount(devAddress, SCENARIO_FUNDING_ICX);
 
     const signer = buildIconSigner(devWallet.getPrivateKey());
     const { currencyBridge, accountBridge, getAddress } = getBridges(signer);
@@ -95,9 +121,8 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
   },
 
   beforeAll: async account => {
-    const fundedLoop = convertICXtoLoop(SCENARIO_FUNDING_ICX);
-    expect(account.balance.toFixed()).toBe(fundedLoop.toFixed());
-    expect(account.spendableBalance.toFixed()).toBe(fundedLoop.toFixed());
+    expect(account.balance.toFixed()).toBe(GENESIS_BALANCE_LOOP.toFixed());
+    expect(account.spendableBalance.toFixed()).toBe(GENESIS_BALANCE_LOOP.toFixed());
     expect(account.operations.length).toBe(0);
     expect(account.iconResources.totalDelegated.toString()).toBe("0");
     expect(account.iconResources.votingPower.toString()).toBe("0");
@@ -105,9 +130,9 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
   },
 
   afterAll: async account => {
-    expect(account.operations.length).toBe(3);
+    expect(account.operations.length).toBe(TRANSFERS_ICX.length + 1);
     expect(account.operations.every(op => op.type === "OUT")).toBe(true);
-    expect(account.balance.lt(convertICXtoLoop(0.2))).toBe(true);
+    expect(account.balance.toFixed()).toBe("0");
 
     if (!sodaxAccountBridge) throw new Error("accountBridge missing in afterAll");
     const recipientAccount = makeIconAccount(recipientAddress);
@@ -116,12 +141,17 @@ export const scenarioSodax: Scenario<Transaction, IconAccount> = {
         .sync(recipientAccount, { paginationConfig: {} })
         .pipe(reduce((acc, f) => f(acc), recipientAccount)),
     );
-    expect(recipient.operations.length).toBe(3);
+    const totalSentLoop = TRANSFERS_ICX.reduce(
+      (sum, amountIcx) => sum.plus(convertICXtoLoop(amountIcx)),
+      new BigNumber(0),
+    ).plus(sweptLoop);
+    expect(recipient.operations.length).toBe(TRANSFERS_ICX.length + 1);
     expect(recipient.operations.every(op => op.type === "IN")).toBe(true);
     expect(recipient.balance.toFixed()).toBe(totalSentLoop.toFixed());
   },
 
   teardown: async () => {
     closeIndexer?.();
+    await killGoloop();
   },
 };

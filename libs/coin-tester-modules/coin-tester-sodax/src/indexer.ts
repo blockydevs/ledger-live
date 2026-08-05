@@ -1,7 +1,7 @@
 import type { AccountType, IconTransactionType } from "@ledgerhq/coin-icon/api/api-type";
 import { convertLoopToIcx } from "@ledgerhq/coin-icon/logic";
 import BigNumber from "bignumber.js";
-import { http, HttpResponse, passthrough } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { INDEXER_URL } from "./fixtures";
 import { rpc } from "./helpers";
@@ -52,14 +52,10 @@ const handlers = [
 
   http.get(`${INDEXER_URL}/addresses/details/:address`, async ({ params }) => {
     const address = params.address as string;
-    const [balanceLoop, block, transactions] = await Promise.all([
+    const [balanceLoop, block] = await Promise.all([
       rpc.getBalance(address).execute(),
       rpc.getLastBlock().execute(),
-      Promise.all(submittedHashes.map(toTrackerTransaction)),
     ]);
-    const transactionCount = transactions.filter(
-      transaction => transaction.from_address === address || transaction.to_address === address,
-    ).length;
 
     // balance is an ICX decimal number here. getAccountShape calls
     // convertICXtoLoop on it.
@@ -83,7 +79,7 @@ const handlers = [
       symbol: "",
       token_standard: "",
       token_transfer_count: 0,
-      transaction_count: transactionCount,
+      transaction_count: submittedHashes.length,
       transaction_internal_count: 0,
       type: "EOA",
     };
@@ -105,20 +101,16 @@ const handlers = [
       .reverse();
     return HttpResponse.json(mine.slice(skip, skip + limit));
   }),
-
-  // Any request that reaches here has no tracker handler above and is not
-  // the devnet RPC. Name it before failing, so a genuinely missing handler
-  // is distinguishable from the deliberate unmocked-URL test.
-  http.all("*", ({ request }) => {
-    const hostname = new URL(request.url).hostname;
-    if (["127.0.0.1", "localhost"].includes(hostname)) return passthrough();
-    console.error(`Unhandled request: ${request.method} ${request.url}`);
-    return Response.error();
-  }),
 ];
 
 export function initIndexer(): () => void {
   const server = setupServer(...handlers);
-  server.listen({ onUnhandledRequest: "bypass" });
+  server.listen({
+    onUnhandledRequest: request => {
+      const hostname = new URL(request.url).hostname;
+      if (["127.0.0.1", "localhost"].includes(hostname)) return;
+      throw new Error(`Unhandled request: ${request.method} ${request.url}`);
+    },
+  });
   return () => server.close();
 }

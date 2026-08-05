@@ -10,6 +10,7 @@ services:
     # still enforces presence at container runtime.
     environment:
       - GOD_ADDRESS=${GOD_ADDRESS:-}
+      - DEV_ADDRESS=${DEV_ADDRESS:-}
       - GENESIS_BALANCE=${GENESIS_BALANCE:-}
       - GOD_KEYSTORE_JSON=${GOD_KEYSTORE_JSON:-}
     ports:

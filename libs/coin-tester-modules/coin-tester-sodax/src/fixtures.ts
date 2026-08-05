@@ -1,8 +1,7 @@
 import type { CoinConfig } from "@ledgerhq/coin-module-framework/config";
 import type { IconCoinConfig } from "@ledgerhq/coin-icon/config";
 import type { IconAccount } from "@ledgerhq/coin-icon/types/index";
-import { RPC_VERSION } from "@ledgerhq/coin-icon/constants";
-import { convertICXtoLoop, getNid } from "@ledgerhq/coin-icon/logic";
+import { convertICXtoLoop } from "@ledgerhq/coin-icon/logic";
 import { decodeAccountId } from "@ledgerhq/ledger-wallet-framework/account/index";
 import { getCryptoCurrencyById } from "@ledgerhq/ledger-wallet-framework/currencies";
 import {
@@ -12,7 +11,7 @@ import {
 import BigNumber from "bignumber.js";
 import IconService from "icon-sdk-js";
 
-const { IconWallet, IconBuilder, IconConverter, HttpProvider, SignedTransaction } = IconService;
+const { IconWallet } = IconService;
 
 // getNid() returns 1 for the `icon` currency. The devnet genesis carries the
 // same nid, so no coin-module change is needed.
@@ -33,16 +32,9 @@ export const GOD_PRIVATE_KEY = "1cd7d9f4e0e0a53e0dbcdd1e07b25a6ee3ded4d1e0a4c9f2
 export const godWallet = IconWallet.loadPrivateKey(GOD_PRIVATE_KEY);
 export const GOD_ADDRESS = godWallet.getAddress();
 
-// Covers the main scenario's SCENARIO_FUNDING_ICX plus headroom for the
-// sendMax, rejections, and failedOperation test groups, all funded from this
-// same god wallet against the one shared devnet.
-export const GENESIS_BALANCE_ICX = new BigNumber(10_000_000);
+export const GENESIS_BALANCE_ICX = new BigNumber(1_000_000);
 export const GENESIS_BALANCE_LOOP = convertICXtoLoop(GENESIS_BALANCE_ICX);
 export const GENESIS_BALANCE_HEX = `0x${GENESIS_BALANCE_LOOP.toString(16)}`;
-
-// The main scenario funds its dev wallet with this many ICX. Its last
-// transfer amount drains the funded balance, so the two numbers stay in step.
-export const SCENARIO_FUNDING_ICX = new BigNumber(1_000_000);
 
 // Measured against this devnet: a plain ICX transfer (no data) always uses
 // exactly this many steps under the `--fee icon` step-cost table.
@@ -69,38 +61,6 @@ export const localConfig: IconCoinConfig = {
 };
 
 export const coinConfigFactory: CoinConfig<IconCoinConfig> = () => localConfig;
-
-const godRpc = new IconService(new HttpProvider(GOLOOP_RPC));
-
-/** Sends `icx` ICX from the god wallet to `address` and waits for the receipt. */
-export async function fundAccount(address: string, icx: BigNumber | number): Promise<void> {
-  const transaction = new IconBuilder.IcxTransactionBuilder()
-    .from(GOD_ADDRESS)
-    .to(address)
-    .value(IconConverter.toHexNumber(convertICXtoLoop(icx)))
-    .stepLimit(IconConverter.toHexNumber(TRANSFER_FEE_LOOP.div(STEP_PRICE)))
-    .nid(IconConverter.toHexNumber(getNid(icon)))
-    .nonce(IconConverter.toHexNumber(Date.now()))
-    .version(IconConverter.toHexNumber(RPC_VERSION))
-    .timestamp(IconConverter.toHexNumber(Date.now() * 1000))
-    .build();
-
-  const signedTransaction = new SignedTransaction(transaction, godWallet);
-  const hash = await godRpc.sendTransaction(signedTransaction).execute();
-
-  const deadline = Date.now() + 60_000;
-  let lastError: unknown;
-  while (Date.now() < deadline) {
-    try {
-      await godRpc.getTransactionResult(hash).execute();
-      return;
-    } catch (err) {
-      lastError = err;
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  }
-  throw typeof lastError === "string" ? new Error(lastError) : (lastError as Error);
-}
 
 /** A freshly generated wallet, distinct on every call. */
 export function createRandomWallet(): ReturnType<typeof IconWallet.create> {
