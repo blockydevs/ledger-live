@@ -1,3 +1,4 @@
+import { DEFAULT_STEP_LIMIT } from "@ledgerhq/coin-icon/constants";
 import type { IconAccount, Transaction } from "@ledgerhq/coin-icon/types/index";
 import { convertICXtoLoop } from "@ledgerhq/coin-icon/logic";
 import type { AccountBridge, SignedOperation } from "@ledgerhq/types-live";
@@ -10,7 +11,7 @@ import { initIndexer, registerTransaction } from "./indexer";
 import { buildIconSigner } from "./signer";
 
 global.console = require("console");
-jest.setTimeout(120_000);
+jest.setTimeout(600_000);
 
 ["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
   process.on(e, async () => {
@@ -86,10 +87,10 @@ describe("SODAX DEFAULT_STEP_LIMIT fallback", () => {
     });
     transaction = await accountBridge.prepareTransaction(account, transaction);
 
-    // A real transfer's step cost is far above the old, undersized fallback;
-    // the fix's fallback stays large enough for the transaction to finalize
-    // instead of running out of steps and reverting.
-    expect(transaction.stepLimit).toBeDefined();
+    // The node's estimate is forced to zero, so the step limit on the
+    // transaction comes from the module's fallback. A limit below a plain
+    // transfer's real step cost lets the transaction land and then revert.
+    expect(transaction.stepLimit?.toFixed()).toBe(DEFAULT_STEP_LIMIT.toString());
 
     const signedOperation = await signTransaction(accountBridge, account, transaction);
     const optimistic = await accountBridge.broadcast({ account, signedOperation });

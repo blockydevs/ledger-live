@@ -47,12 +47,15 @@ async function signTransaction(
   });
 }
 
-// getEstimatedFees always estimates against a dummy EOA recipient
-// (ICON_DUMMY_ADDRESS), never the real one. A value transfer to a SCORE
-// invokes its fallback method, which costs more steps than a plain EOA
-// transfer, so the estimate under-provisions the step limit for any real
-// SCORE recipient. The transaction lands but runs out of steps and reverts,
-// consuming the full step limit as its fee.
+// KNOWN LIMITATION, not the behaviour we want: getEstimatedFees always
+// estimates against a dummy EOA recipient (ICON_DUMMY_ADDRESS), never the real
+// one. A value transfer to a SCORE invokes its fallback method, which costs
+// more steps than a plain EOA transfer, so the estimate under-provisions the
+// step limit for every SCORE recipient. The transaction lands, runs out of
+// steps and reverts, consuming the full step limit as its fee. Any send to a
+// SCORE address therefore fails, and the assertions below pin that failure.
+// Estimating against the real recipient is the fix; this test must be updated
+// to expect a finalized transfer once coin-icon does that.
 describe("SODAX reverted transfer", () => {
   let closeIndexer: (() => void) | undefined;
   let accountBridge: AccountBridge<Transaction, IconAccount>;
