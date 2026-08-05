@@ -33,7 +33,10 @@ let recipientAddress: string;
 let closeIndexer: (() => void) | undefined;
 
 async function prepared(patch: Partial<Transaction>): Promise<Transaction> {
-  const transaction = accountBridge.updateTransaction(accountBridge.createTransaction(account), patch);
+  const transaction = accountBridge.updateTransaction(
+    accountBridge.createTransaction(account),
+    patch,
+  );
   return accountBridge.prepareTransaction(account, transaction);
 }
 
@@ -54,7 +57,9 @@ describe("SODAX rejection matrix", () => {
 
     const freshAccount = makeIconAccount(address);
     account = await firstValueFrom(
-      accountBridge.sync(freshAccount, { paginationConfig: {} }).pipe(reduce((acc, f) => f(acc), freshAccount)),
+      accountBridge
+        .sync(freshAccount, { paginationConfig: {} })
+        .pipe(reduce((acc, f) => f(acc), freshAccount)),
     );
   });
 
@@ -103,8 +108,14 @@ describe("SODAX rejection matrix", () => {
   });
 
   it("rejects an unloaded fee with FeeNotLoaded", async () => {
-    const transaction = await prepared({ recipient: recipientAddress, amount: convertICXtoLoop(1) });
-    const status = await accountBridge.getTransactionStatus(account, { ...transaction, fees: null });
+    const transaction = await prepared({
+      recipient: recipientAddress,
+      amount: convertICXtoLoop(1),
+    });
+    const status = await accountBridge.getTransactionStatus(account, {
+      ...transaction,
+      fees: null,
+    });
     expect(status.errors.fees).toBeInstanceOf(FeeNotLoaded);
   });
 
