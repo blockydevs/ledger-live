@@ -1,1 +1,0 @@
-# @ledgerhq/coin-tester-sodax

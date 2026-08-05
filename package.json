@@ -142,7 +142,6 @@
     "coin:tester:multiversx": "pnpm --filter coin-tester-multiversx",
     "coin:tester:tron": "pnpm --filter coin-tester-tron",
     "coin:tester:xrp": "pnpm --filter coin-tester-xrp",
-    "coin:tester:sodax": "pnpm --filter coin-tester-sodax",
     "evm-tools": "pnpm --filter evm-tools",
     "domain": "pnpm --filter domain-service",
     "doc": "pnpm --filter docs",
