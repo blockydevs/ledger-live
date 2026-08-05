@@ -6,7 +6,11 @@ export const BERLIN_TESTNET_NID = 7;
 export const MAINNET_NID = 1;
 export const I_SCORE_UNIT = 1000;
 export const RPC_VERSION = 3;
-export const DEFAULT_STEP_LIMIT = 200000;
+// A plain ICX transfer's step cost under the default fee table, so this
+// fallback covers a real transfer even when the node's own estimate is
+// zero or unavailable. A value below the real transfer cost lets the
+// transaction land on-chain but run out of steps and revert.
+export const DEFAULT_STEP_LIMIT = 1_000_000;
 
 export const PREP_TYPE = {
   MAIN: "Main P-Rep",
