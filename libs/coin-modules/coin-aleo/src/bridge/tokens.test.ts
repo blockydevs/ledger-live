@@ -180,9 +180,10 @@ describe("tokens utils", () => {
       });
     });
 
-    it("should promote the parent to FEES and mark the sub-operation OUT for a token self-transfer", async () => {
+    it("should promote the parent to FEES and emit matching OUT and IN sub-operations for a token self-transfer", async () => {
       const tokenOp = getMockedTokenOperation({
         hash: "tx-self",
+        value: new BigNumber(500),
         recipients: [address],
         senders: [address],
         fee: new BigNumber(42),
@@ -210,8 +211,39 @@ describe("tokens utils", () => {
           type: "OUT",
           accountId: tokenAccountId,
           id: encodeOperationId(tokenAccountId, "tx-self", "OUT"),
+          value: new BigNumber(500),
+        }),
+        expect.objectContaining({
+          type: "IN",
+          accountId: tokenAccountId,
+          id: encodeOperationId(tokenAccountId, "tx-self", "IN"),
+          value: new BigNumber(500),
         }),
       ]);
+    });
+
+    it("should net the self-transfer's OUT and IN sub-operations to zero", async () => {
+      const tokenOp = getMockedTokenOperation({
+        hash: "tx-self-net",
+        value: new BigNumber(500),
+        recipients: [address],
+        senders: [address],
+        fee: new BigNumber(42),
+      });
+      const calTokens = new Map([[MOCK_TOKEN_PROGRAM_ID, mockTokenCurrency]]);
+
+      const { updatedCoinOperations } = await prepareTokenOperations({
+        address,
+        ledgerAccountId,
+        publicOperations: [],
+        tokenOperations: [tokenOp],
+        calTokens,
+      });
+
+      const [outOp, inOp] = updatedCoinOperations[0].subOperations ?? [];
+      expect(outOp.type).toBe("OUT");
+      expect(inOp.type).toBe("IN");
+      expect(inOp.value).toEqual(outOp.value);
     });
 
     it("should promote an existing semi-public coin op to FEES, clearing recipients and marking as patched", async () => {

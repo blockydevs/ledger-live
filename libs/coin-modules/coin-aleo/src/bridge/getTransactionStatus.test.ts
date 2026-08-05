@@ -282,90 +282,58 @@ describe("getTransactionStatus", () => {
       expect(result.errors.amount).toBeUndefined();
     });
 
-    it("does not add error when a private send-max spends the whole record selection", async () => {
-      // 15 records: the 14 largest carry the amount, the smallest pays the fee. The available
-      // balance stops at the 14 largest, so it equals the amount and cannot also cover the fee.
-      const records = Array.from({ length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 }, (_, i) => ({
-        ...mockUnspentRecord1,
-        commitment: `send-max-record-${i}`,
-        microcredits: new BigNumber(100000).plus(i * 10000).toFixed(),
-      }));
-      const [feeRecord, ...amountRecords] = records;
-      const amount = amountRecords.reduce(
-        (sum, record) => sum.plus(record.microcredits),
-        new BigNumber(0),
-      );
+    it.each([
+      ["a private send-max", true],
+      ["a private explicit amount", false],
+    ])(
+      "does not add error when %s spends the whole record selection",
+      async (_label, useAllAmount) => {
+        // MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 records: the amount records fill the
+        // selection cap, the extra record pays the fee. The available balance is capped at
+        // the amount records, so it equals the amount and cannot also cover the fee.
+        const records = Array.from(
+          { length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 },
+          (_, i) => ({
+            ...mockUnspentRecord1,
+            commitment: `selection-record-${i}`,
+            microcredits: new BigNumber(100000).plus(i * 10000).toFixed(),
+          }),
+        );
+        const [feeRecord, ...amountRecords] = records;
+        const amount = amountRecords.reduce(
+          (sum, record) => sum.plus(record.microcredits),
+          new BigNumber(0),
+        );
 
-      mockAleoConfig.getCoinConfig.mockReturnValue({ ...mockConfig, isFeeSponsored: false });
-      mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount.plus(mockFees) });
+        mockAleoConfig.getCoinConfig.mockReturnValue({ ...mockConfig, isFeeSponsored: false });
+        mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount.plus(mockFees) });
 
-      const account = getMockedAccount({
-        aleoResources: {
-          ...mockAleoResources,
-          privateBalance: amount.plus(feeRecord.microcredits),
-          unspentPrivateRecords: records,
-        },
-      });
+        const account = getMockedAccount({
+          aleoResources: {
+            ...mockAleoResources,
+            privateBalance: amount.plus(feeRecord.microcredits),
+            unspentPrivateRecords: records,
+          },
+        });
 
-      const transaction: Transaction = {
-        ...mockTransaction,
-        mode: TRANSACTION_TYPE.TRANSFER_PRIVATE,
-        useAllAmount: true,
-        properties: {
-          amountRecordCommitments: amountRecords.map(record => record.commitment),
-          feeRecordCommitment: feeRecord.commitment,
-        },
-      };
+        const transaction: Transaction = {
+          ...mockTransaction,
+          mode: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+          useAllAmount,
+          ...(!useAllAmount && { amount }),
+          properties: {
+            amountRecordCommitments: amountRecords.map(record => record.commitment),
+            feeRecordCommitment: feeRecord.commitment,
+          },
+        };
 
-      const result = await getTransactionStatus(account, transaction);
+        const result = await getTransactionStatus(account, transaction);
 
-      expect(result.errors).toEqual({});
-      expect(result.amount).toEqual(amount);
-      expect(result.totalSpent).toEqual(amount.plus(mockFees));
-    });
-
-    it("does not add error for a private explicit amount that spends the whole record selection", async () => {
-      // Same record layout as the send-max case above, but with useAllAmount false and an
-      // explicit amount equal to the sum of the amount records: availableBalance (capped at the
-      // amount records) and totalSpent (amount + fee, paid from a record outside that selection)
-      // are drawn from different pools and must not be compared directly.
-      const records = Array.from({ length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 }, (_, i) => ({
-        ...mockUnspentRecord1,
-        commitment: `probe-record-${i}`,
-        microcredits: new BigNumber(100000).plus(i * 10000).toFixed(),
-      }));
-      const [feeRecord, ...amountRecords] = records;
-      const amount = amountRecords.reduce(
-        (sum, record) => sum.plus(record.microcredits),
-        new BigNumber(0),
-      );
-
-      mockAleoConfig.getCoinConfig.mockReturnValue({ ...mockConfig, isFeeSponsored: false });
-      mockCalculateAmount.mockReturnValue({ amount, totalSpent: amount.plus(mockFees) });
-
-      const account = getMockedAccount({
-        aleoResources: {
-          ...mockAleoResources,
-          privateBalance: amount.plus(feeRecord.microcredits),
-          unspentPrivateRecords: records,
-        },
-      });
-
-      const transaction: Transaction = {
-        ...mockTransaction,
-        mode: TRANSACTION_TYPE.TRANSFER_PRIVATE,
-        amount,
-        useAllAmount: false,
-        properties: {
-          amountRecordCommitments: amountRecords.map(record => record.commitment),
-          feeRecordCommitment: feeRecord.commitment,
-        },
-      };
-
-      const result = await getTransactionStatus(account, transaction);
-
-      expect(result.errors).toEqual({});
-    });
+        expect(result.errors).toEqual({});
+        expect(result.amount).toEqual(amount);
+        expect(result.totalSpent).toEqual(amount.plus(mockFees));
+      },
+    );
 
     it("adds error when send-max resolves to a zero amount", async () => {
       mockCalculateAmount.mockReturnValue({

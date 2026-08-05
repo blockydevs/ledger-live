@@ -280,9 +280,8 @@ async function handleTransferTransaction({
   }
 
   if (isPrivateTransaction(transaction)) {
-    // Private balances aren't compared to totalSpent here: validatePrivateTransaction and
-    // validatePrivateFeeRecord already check the amount and fee records independently, since
-    // they're drawn from separate record pools.
+    // The amount records and the fee record are drawn from separate pools:
+    // validatePrivateTransaction covers the amount, validatePrivateFeeRecord covers the fee.
     Object.assign(
       errors,
       validatePrivateTransaction({

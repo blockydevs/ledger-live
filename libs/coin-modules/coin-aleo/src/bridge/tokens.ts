@@ -54,18 +54,24 @@ function promoteCoinOpToFees({
 
 /**
  * Strips the token transfer's own amount, senders and recipients off a parent
- * coin operation the indexer built for a token-program transaction.
+ * coin operation the indexer built for a token-program transaction, so the
+ * native history does not show the transferred token amount as a credits
+ * value on an incoming transfer's NONE parent.
  *
- * The native history must not show the transferred token amount as a credits
- * value. An outgoing transfer gets this by being promoted to FEES; an incoming
- * one keeps its NONE type, so it is levelled here with what
- * `buildNoneParentOp` produces when no coin operation exists at all.
+ * Produces the same `extra` shape as `buildNoneParentOp` and marks the op
+ * patched, so `performPublicSync` keeps this version on later syncs instead
+ * of overwriting it with the raw re-fetched operation.
  */
 function clearNoneParentOp(coinOp: AleoOperation): void {
   coinOp.value = new BigNumber(0);
   coinOp.fee = new BigNumber(0);
   coinOp.senders = [];
   coinOp.recipients = [];
+  coinOp.extra = {
+    functionId: coinOp.extra?.functionId ?? "",
+    transactionType: coinOp.extra?.transactionType ?? "public",
+    patched: true,
+  };
 }
 
 function getAleoSubAccounts({
@@ -116,9 +122,10 @@ function buildNoneParentOp(
  *
  * For each token operation:
  *  - The correct `TokenCurrency` is resolved from `extra.programId`.
- *  - A new operation is created with `accountId = encodeTokenAccountId(…)` and
- *    an appropriate IN/OUT type derived from senders/recipients vs the account address.
- *  - The new operation is attached as a `subOperation` of the matching coin operation
+ *  - One or two operations are created with `accountId = encodeTokenAccountId(…)`, typed
+ *    IN and/or OUT from senders/recipients vs the account address. A self-transfer (the
+ *    account on both sides) yields both an OUT and an IN for the full amount.
+ *  - Each new operation is attached as a `subOperation` of the matching coin operation
  *    (matched by hash). If no coin operation matches, a NONE parent is inserted.
  *
  * @returns updatedCoinOperations – coin ops with `subOperations` filled in.
@@ -174,18 +181,12 @@ export async function prepareTokenOperations({
 
     // Derive IN/OUT for the sub-account from the raw operation's senders/recipients.
     // The coin op has type NONE for token-program transactions; the sub-account needs
-    // a meaningful direction. A self-transfer (address on both sides) is treated as OUT so
-    // the parent gets promoted to FEES below and the paid fee stays visible.
-    const isIncomingOnly =
-      tokenOp.recipients.includes(address) && !tokenOp.senders.includes(address);
-    const type: OperationType = isIncomingOnly ? "IN" : "OUT";
-
-    const subAccountOp: AleoOperation = {
-      ...tokenOp,
-      id: encodeOperationId(tokenAccountId, tokenOp.hash, type),
-      accountId: tokenAccountId,
-      type,
-    };
+    // a meaningful direction. A self-transfer (address on both sides) emits both an OUT
+    // and an IN sub-op for the full amount, so the sub-account history nets to zero.
+    const isSender = tokenOp.senders.includes(address);
+    const isRecipient = tokenOp.recipients.includes(address);
+    const types: OperationType[] =
+      isSender && isRecipient ? ["OUT", "IN"] : isRecipient ? ["IN"] : ["OUT"];
 
     // Get or create the single parent coin op for this transaction hash.
     let parentCoinOp = coinOpsByHash.get(tokenOp.hash);
@@ -195,10 +196,11 @@ export async function prepareTokenOperations({
       coinOpsByHash.set(tokenOp.hash, parentCoinOp);
     }
 
-    // For outgoing token transfers, promote the parent to a FEES op so the native
-    // account history shows the fee cost rather than a valueless NONE entry.
-    // Only promotes once per hash — idempotent if multiple OUT sub-ops share a hash.
-    if (type === "OUT" && parentCoinOp.type !== "FEES") {
+    // The account sending the token pays the network fee, so its parent coin op is
+    // promoted to a FEES op so the native account history shows that cost rather than
+    // a valueless NONE entry. This covers plain outgoing transfers and self-transfers
+    // alike. Only promotes once per hash — idempotent across repeated sub-ops.
+    if (isSender && parentCoinOp.type !== "FEES") {
       promoteCoinOpToFees({
         coinOp: parentCoinOp,
         fee: tokenOp.fee,
@@ -209,13 +211,22 @@ export async function prepareTokenOperations({
       clearNoneParentOp(parentCoinOp);
     }
 
-    parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);
+    for (const type of types) {
+      const subAccountOp: AleoOperation = {
+        ...tokenOp,
+        id: encodeOperationId(tokenAccountId, tokenOp.hash, type),
+        accountId: tokenAccountId,
+        type,
+      };
 
-    const existing = tokenOperationsBySubAccountId.get(tokenAccountId) ?? [];
-    tokenOperationsBySubAccountId.set(
-      tokenAccountId,
-      appendUniqueOperation(existing, subAccountOp),
-    );
+      parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);
+
+      const existing = tokenOperationsBySubAccountId.get(tokenAccountId) ?? [];
+      tokenOperationsBySubAccountId.set(
+        tokenAccountId,
+        appendUniqueOperation(existing, subAccountOp),
+      );
+    }
   }
 
   return { updatedCoinOperations, tokenOperationsBySubAccountId };
