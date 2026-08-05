@@ -1,6 +1,7 @@
 import type { AccountType, IconTransactionType } from "@ledgerhq/coin-icon/api/api-type";
 import { convertLoopToIcx } from "@ledgerhq/coin-icon/logic";
 import BigNumber from "bignumber.js";
+import type { RequestHandler } from "msw";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { INDEXER_URL } from "./fixtures";
@@ -103,8 +104,10 @@ const handlers = [
   }),
 ];
 
-export function initIndexer(): () => void {
-  const server = setupServer(...handlers);
+// extraHandlers lets a test override a specific goloop RPC response (e.g. to
+// force a step estimate) without standing up a second, competing msw server.
+export function initIndexer(extraHandlers: RequestHandler[] = []): () => void {
+  const server = setupServer(...handlers, ...extraHandlers);
   server.listen({
     onUnhandledRequest: request => {
       const hostname = new URL(request.url).hostname;

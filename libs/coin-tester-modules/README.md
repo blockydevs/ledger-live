@@ -21,7 +21,7 @@ A workspace directory of coin-specific end-to-end test packages for Ledger Live.
 | `@ledgerhq/coin-tester-cosmos` | Cosmos |
 | `@ledgerhq/coin-tester-evm` | EVM chains (Ethereum, etc.) |
 | `@ledgerhq/coin-tester-polkadot` | Polkadot |
-| `@ledgerhq/coin-tester-sodax` | SODAX (ICON) — harness only, no scenario |
+| `@ledgerhq/coin-tester-sodax` | SODAX (ICON) |
 | `@ledgerhq/coin-tester-solana` | Solana |
 | `@ledgerhq/coin-tester-stellar` | Stellar |
 | `@ledgerhq/coin-tester-tezos` | Tezos |
