@@ -94,6 +94,9 @@
     },
     "./libs/live-wallet": {
       "entry": ["src/walletsync/index.ts", "src/liveqr/cross.ts", "src/liveqr/importAccounts.ts"]
+    },
+    "./libs/coin-tester-modules/coin-tester-hedera": {
+      "entry": ["src/scenarii/*.ts", "src/negativeCases.ts"]
     }
   }
 }

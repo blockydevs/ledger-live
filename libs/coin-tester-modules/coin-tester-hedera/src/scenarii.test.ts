@@ -1,0 +1,45 @@
+import { executeScenario } from "@ledgerhq/coin-tester/main";
+import { closeGenesisClient } from "./genesis";
+import { deploySolo, teardownSolo } from "./solo";
+import { scenarioHedera } from "./scenarii/hedera";
+import { scenarioHederaToken } from "./scenarii/hederaToken";
+import { scenarioHederaStaking } from "./scenarii/hederaStaking";
+import { scenarioHederaMultiToken } from "./scenarii/hederaMultiToken";
+import { scenarioHederaErc20 } from "./scenarii/hederaErc20";
+import { scenarioHederaErc20Receive } from "./scenarii/hederaErc20Receive";
+import { describeNegativeCases } from "./negativeCases";
+
+/** Solo cold start is 7–10 min; the hook gets its own budget so it is not charged to a scenario. */
+const CLUSTER_BRING_UP_TIMEOUT_MS = 900_000;
+
+// Per *test*, not per suite: a hung scenario fails in 6 min.
+jest.setTimeout(360_000);
+
+["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
+  process.on(e, async () => {
+    closeGenesisClient();
+    await teardownSolo();
+  }),
+);
+
+describe("Hedera", () => {
+  beforeAll(async () => {
+    await deploySolo();
+  }, CLUSTER_BRING_UP_TIMEOUT_MS);
+
+  // The three scenarios share one cluster, so no individual scenario may tear it down.
+  afterAll(async () => {
+    closeGenesisClient();
+    await teardownSolo();
+  });
+
+  it("scenario hedera", () => executeScenario(scenarioHedera));
+  it("scenario hedera token", () => executeScenario(scenarioHederaToken));
+  it("scenario hedera staking", () => executeScenario(scenarioHederaStaking));
+
+  it("scenario hedera token multi", () => executeScenario(scenarioHederaMultiToken));
+  it("scenario hedera erc20", () => executeScenario(scenarioHederaErc20));
+  it("scenario hedera erc20 receive", () => executeScenario(scenarioHederaErc20Receive));
+
+  describeNegativeCases();
+});
