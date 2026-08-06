@@ -1663,6 +1663,22 @@ describe("createTransactionIntent", () => {
     },
   );
 
+  it.each(supportedPublicTransactionModes)(
+    "should keep the native asset for %s even with a stale subAccountId from a previous token selection",
+    mode => {
+      const tokenSubAccount = getMockedTokenAccount();
+      const account = getMockedAccount({ subAccounts: [tokenSubAccount] });
+      const transaction = getMockedTransaction({
+        mode,
+        subAccountId: tokenSubAccount.id,
+      });
+
+      const result = createTransactionIntent({ account, transaction });
+
+      expect(result.asset).toEqual({ type: "native" });
+    },
+  );
+
   it("should include useAllAmount when set to true", () => {
     const transaction = getMockedTransaction({
       mode: TRANSACTION_TYPE.TRANSFER_PUBLIC,
@@ -1775,7 +1791,12 @@ describe("createTransactionIntent", () => {
 
     expect(result).toEqual({
       intentType: "transaction",
-      asset: { type: "native" },
+      asset: {
+        type: tokenSubAccount.token.tokenType,
+        assetReference: tokenSubAccount.token.contractAddress,
+        name: tokenSubAccount.token.name,
+        unit: tokenSubAccount.token.units[0],
+      },
       type: mode,
       amount: BigInt(transaction.amount.toString()),
       recipient: transaction.recipient,
@@ -1834,6 +1855,12 @@ describe("createTransactionIntent", () => {
 
       expect(result).toMatchObject({
         type: mode,
+        asset: {
+          type: tokenAccount.token.tokenType,
+          assetReference: tokenAccount.token.contractAddress,
+          name: tokenAccount.token.name,
+          unit: tokenAccount.token.units[0],
+        },
         data: {
           type: mode,
           programId: tokenAccount.token.contractAddress,
