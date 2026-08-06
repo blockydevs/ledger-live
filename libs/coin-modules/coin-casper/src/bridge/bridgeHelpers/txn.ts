@@ -111,7 +111,7 @@ export const createNewTransaction = async (
     PublicKey.fromHex(sender),
     PublicKey.fromHex(recipient),
     network,
-    amount.toString(),
+    amount.toFixed(),
     fees.toNumber(),
     CASPER_DEFAULT_TTL,
     parseInt(transferId ?? "0"),

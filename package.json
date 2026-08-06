@@ -144,6 +144,7 @@
     "coin:tester:tron": "pnpm --filter coin-tester-tron",
     "coin:tester:vechain": "pnpm --filter coin-tester-vechain",
     "coin:tester:xrp": "pnpm --filter coin-tester-xrp",
+    "coin:tester:casper": "pnpm --filter coin-tester-casper",
     "evm-tools": "pnpm --filter evm-tools",
     "domain": "pnpm --filter domain-service",
     "doc": "pnpm --filter docs",
