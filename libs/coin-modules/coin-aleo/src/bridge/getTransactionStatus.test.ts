@@ -291,14 +291,11 @@ describe("getTransactionStatus", () => {
         // MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 records: the amount records fill the
         // selection cap, the extra record pays the fee. The available balance is capped at
         // the amount records, so it equals the amount and cannot also cover the fee.
-        const records = Array.from(
-          { length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 },
-          (_, i) => ({
-            ...mockUnspentRecord1,
-            commitment: `selection-record-${i}`,
-            microcredits: new BigNumber(100000).plus(i * 10000).toFixed(),
-          }),
-        );
+        const records = Array.from({ length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 }, (_, i) => ({
+          ...mockUnspentRecord1,
+          commitment: `selection-record-${i}`,
+          microcredits: new BigNumber(100000).plus(i * 10000).toFixed(),
+        }));
         const [feeRecord, ...amountRecords] = records;
         const amount = amountRecords.reduce(
           (sum, record) => sum.plus(record.microcredits),
@@ -329,9 +326,9 @@ describe("getTransactionStatus", () => {
 
         const result = await getTransactionStatus(account, transaction);
 
+        // calculateAmount is mocked, so amount/totalSpent would only echo the mock.
+        // The absence of an error is what this case pins.
         expect(result.errors).toEqual({});
-        expect(result.amount).toEqual(amount);
-        expect(result.totalSpent).toEqual(amount.plus(mockFees));
       },
     );
 
@@ -756,6 +753,29 @@ describe("getTransactionStatus", () => {
       const result = await getTransactionStatus(privateAccount, transaction);
 
       expect(result.errors.amount).toBeInstanceOf(AleoAmountTooLargeForTransaction);
+    });
+
+    it("reports a private send-max that reserved its only record for the fee as not enough balance", async () => {
+      mockAleoConfig.getCoinConfig.mockReturnValue({
+        ...mockConfig,
+        recordPickingStrategy: "auto",
+      });
+      // Reserving the sole record for the fee leaves no amount records, so the
+      // send-max resolves to zero. The amount is not too large to send.
+      mockCalculateAmount.mockReturnValue({
+        amount: new BigNumber(0),
+        totalSpent: mockFees,
+      });
+
+      const transaction: Transaction = {
+        ...privateTransaction,
+        useAllAmount: true,
+        properties: { amountRecordCommitments: [], feeRecordCommitment: null },
+      };
+
+      const result = await getTransactionStatus(privateAccount, transaction);
+
+      expect(result.errors.amount).toBeInstanceOf(NotEnoughBalance);
     });
 
     it("does not add errors when auto-picked records cover the amount", async () => {
