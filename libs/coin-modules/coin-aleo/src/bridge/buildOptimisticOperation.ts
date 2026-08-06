@@ -17,7 +17,8 @@ export function buildOptimisticOperation({
 }): AleoOperation {
   const fee = transaction.fees;
   const isTokenTx = isTokenTransaction(transaction);
-  const value = isTokenTx ? fee : transaction.amount;
+  // Native OUT is fee-inclusive; token fee is billed on the parent FEES op instead.
+  const value = isTokenTx ? fee : transaction.amount.plus(fee);
   const mainOperationType: OperationType = isTokenTx ? "FEES" : "OUT";
   const subOperations: Operation[] = [];
   const tokenSubAccount = account.subAccounts?.find(s => s.id === transaction.subAccountId);
