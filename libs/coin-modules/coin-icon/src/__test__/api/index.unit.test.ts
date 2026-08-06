@@ -152,5 +152,86 @@ describe("ICON API", () => {
         url: `testnet-url/transactions/address/${addr}?address=${addr}&skip=${skip + 2}&limit=${2}`,
       });
     });
+
+    it("should report only the fee as value for a failed send", async () => {
+      const accountId = "accountId";
+      const addr = "hx123";
+      const skip = 0;
+      const network = { id: "icon" } as CryptoCurrency;
+      const maxLength = 10;
+      mockLimit = 10;
+
+      const tx = {
+        hash: "tx1",
+        from_address: addr,
+        to_address: "hx456",
+        transaction_fee: "10150000000000000",
+        block_number: 12345,
+        block_timestamp: 1609459200000,
+        status: "0x0",
+        value: "1000000000000000000",
+      } as IconTransactionType;
+      querystringMock.mockReturnValue("address=hx123&skip=0&limit=10");
+      networkMock.mockResolvedValue({ data: [tx] });
+
+      const [op] = await fetchOperationList(accountId, addr, skip, network, maxLength);
+
+      expect(op.hasFailed).toBe(true);
+      expect(op.value.toFixed()).toBe("10150000000000000");
+    });
+
+    it("should report zero value for a failed receive", async () => {
+      const accountId = "accountId";
+      const addr = "hx123";
+      const skip = 0;
+      const network = { id: "icon" } as CryptoCurrency;
+      const maxLength = 10;
+      mockLimit = 10;
+
+      const tx = {
+        hash: "tx1",
+        from_address: "hx456",
+        to_address: addr,
+        transaction_fee: "10150000000000000",
+        block_number: 12345,
+        block_timestamp: 1609459200000,
+        status: "0x0",
+        value: "1000000000000000000",
+      } as IconTransactionType;
+      querystringMock.mockReturnValue("address=hx123&skip=0&limit=10");
+      networkMock.mockResolvedValue({ data: [tx] });
+
+      const [op] = await fetchOperationList(accountId, addr, skip, network, maxLength);
+
+      expect(op.hasFailed).toBe(true);
+      expect(op.value.toFixed()).toBe("0");
+    });
+
+    it("should report value plus fee for a successful send", async () => {
+      const accountId = "accountId";
+      const addr = "hx123";
+      const skip = 0;
+      const network = { id: "icon" } as CryptoCurrency;
+      const maxLength = 10;
+      mockLimit = 10;
+
+      const tx = {
+        hash: "tx1",
+        from_address: addr,
+        to_address: "hx456",
+        transaction_fee: "10150000000000000",
+        block_number: 12345,
+        block_timestamp: 1609459200000,
+        status: "0x1",
+        value: "1000000000000000000",
+      } as IconTransactionType;
+      querystringMock.mockReturnValue("address=hx123&skip=0&limit=10");
+      networkMock.mockResolvedValue({ data: [tx] });
+
+      const [op] = await fetchOperationList(accountId, addr, skip, network, maxLength);
+
+      expect(op.hasFailed).toBe(false);
+      expect(op.value.toFixed()).toBe("1010150000000000000");
+    });
   });
 });

@@ -68,14 +68,29 @@ function getOperationType(transaction: IconTransactionType, addr: string): Opera
 }
 
 /**
+ * Returns true if the transaction was reverted on-chain
+ */
+function hasTransactionFailed(transaction: IconTransactionType): boolean {
+  return transaction.status !== "0x1";
+}
+
+/**
  * Map transaction to a correct Operation Value (affecting account balance)
+ *
+ * A reverted transaction moves no value; only the step cost is charged.
  */
 function getOperationValue(transaction: IconTransactionType, addr: string): BigNumber {
   if (isSender(transaction, addr)) {
+    if (hasTransactionFailed(transaction)) {
+      return new BigNumber(transaction.transaction_fee);
+    }
     return transaction.value
       ? new BigNumber(transaction.value).plus(transaction.transaction_fee)
       : new BigNumber(0);
   } else {
+    if (hasTransactionFailed(transaction)) {
+      return new BigNumber(0);
+    }
     return transaction.value ? new BigNumber(transaction.value) : new BigNumber(0);
   }
 }
@@ -103,7 +118,7 @@ function txToOperation(
     senders: [transaction.from_address],
     recipients: [transaction.to_address],
     extra: {},
-    hasFailed: transaction.status !== "0x1",
+    hasFailed: hasTransactionFailed(transaction),
   };
 }
 
