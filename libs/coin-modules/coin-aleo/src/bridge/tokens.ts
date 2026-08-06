@@ -62,16 +62,14 @@ function promoteCoinOpToFees({
  * patched, so `performPublicSync` keeps this version on later syncs instead
  * of overwriting it with the raw re-fetched operation.
  */
-function clearNoneParentOp(coinOp: AleoOperation): void {
+function clearNoneParentOp(coinOp: AleoOperation, { markPatched }: { markPatched: boolean }): void {
   coinOp.value = new BigNumber(0);
   coinOp.fee = new BigNumber(0);
   coinOp.senders = [];
   coinOp.recipients = [];
-  coinOp.extra = {
-    functionId: coinOp.extra?.functionId ?? "",
-    transactionType: coinOp.extra?.transactionType ?? "public",
-    patched: true,
-  };
+  // Spread rather than rebuild: `extra` also carries `programId`, which
+  // resolves the token currency on a later sync.
+  coinOp.extra = { ...coinOp.extra, ...(markPatched ? { patched: true } : {}) };
 }
 
 function getAleoSubAccounts({
@@ -170,6 +168,11 @@ export async function prepareTokenOperations({
     updatedCoinOperations.map(op => [op.hash, op]),
   );
 
+  // Parents this pass invented because the indexer returned no native operation
+  // for the hash. `patched` tells a later sync to keep this version over the
+  // re-fetched one, which only makes sense for an operation the indexer sent.
+  const syntheticParentHashes = new Set<string>();
+
   for (const tokenOp of tokenOperations) {
     const programId = tokenOp.extra?.programId;
     if (!programId) continue;
@@ -194,13 +197,19 @@ export async function prepareTokenOperations({
       parentCoinOp = buildNoneParentOp(ledgerAccountId, tokenOp);
       updatedCoinOperations.push(parentCoinOp);
       coinOpsByHash.set(tokenOp.hash, parentCoinOp);
+      syntheticParentHashes.add(tokenOp.hash);
     }
 
     // The account sending the token pays the network fee, so its parent coin op is
     // promoted to a FEES op so the native account history shows that cost rather than
     // a valueless NONE entry. This covers plain outgoing transfers and self-transfers
     // alike. Only promotes once per hash — idempotent across repeated sub-ops.
-    if (isSender && parentCoinOp.type !== "FEES") {
+    //
+    // Gated on the derived direction, not on `isSender`: a private sender arrives
+    // with empty `senders` (see patchTokenSubAccountOps below), and the sub-op is
+    // still typed OUT. Gating on `isSender` would clear that parent instead of
+    // promoting it, dropping the fee from the native history.
+    if (types.includes("OUT") && parentCoinOp.type !== "FEES") {
       promoteCoinOpToFees({
         coinOp: parentCoinOp,
         fee: tokenOp.fee,
@@ -208,7 +217,9 @@ export async function prepareTokenOperations({
         txHash: tokenOp.hash,
       });
     } else if (parentCoinOp.type === "NONE") {
-      clearNoneParentOp(parentCoinOp);
+      clearNoneParentOp(parentCoinOp, {
+        markPatched: !syntheticParentHashes.has(tokenOp.hash),
+      });
     }
 
     for (const type of types) {
@@ -217,6 +228,10 @@ export async function prepareTokenOperations({
         id: encodeOperationId(tokenAccountId, tokenOp.hash, type),
         accountId: tokenAccountId,
         type,
+        // The fee is denominated in credits and is already billed on the parent
+        // FEES op. Only the OUT side names it; the IN side reports zero so a
+        // self-transfer does not show the same fee three times.
+        fee: type === "IN" ? new BigNumber(0) : tokenOp.fee,
       };
 
       parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);

@@ -222,7 +222,7 @@ describe("tokens utils", () => {
       ]);
     });
 
-    it("should net the self-transfer's OUT and IN sub-operations to zero", async () => {
+    it("should bill the self-transfer's fee once, on the OUT sub-operation and the parent", async () => {
       const tokenOp = getMockedTokenOperation({
         hash: "tx-self-net",
         value: new BigNumber(500),
@@ -243,7 +243,78 @@ describe("tokens utils", () => {
       const [outOp, inOp] = updatedCoinOperations[0].subOperations ?? [];
       expect(outOp.type).toBe("OUT");
       expect(inOp.type).toBe("IN");
-      expect(inOp.value).toEqual(outOp.value);
+      // The fee is a credits cost, carried by the parent FEES op and named once
+      // on the outgoing side. The incoming side reports zero.
+      expect(updatedCoinOperations[0].fee).toEqual(new BigNumber(42));
+      expect(outOp.fee).toEqual(new BigNumber(42));
+      expect(inOp.fee).toEqual(new BigNumber(0));
+    });
+
+    it("should still promote the parent to FEES when an outgoing token transfer arrives with no senders", async () => {
+      // A private sender is hidden, so the indexer reports empty senders and
+      // patchTokenSubAccountOps backfills them later — or not at all.
+      const tokenOp = getMockedTokenOperation({
+        hash: "tx-out-no-senders",
+        value: new BigNumber(500),
+        recipients: ["aleo1recipient"],
+        senders: [],
+        fee: new BigNumber(42),
+      });
+      const calTokens = new Map([[MOCK_TOKEN_PROGRAM_ID, mockTokenCurrency]]);
+
+      const { updatedCoinOperations } = await prepareTokenOperations({
+        address,
+        ledgerAccountId,
+        publicOperations: [],
+        tokenOperations: [tokenOp],
+        calTokens,
+      });
+
+      expect(updatedCoinOperations[0].subOperations?.[0]).toMatchObject({ type: "OUT" });
+      // The sub-op is OUT, so the parent must name the fee rather than be cleared.
+      expect(updatedCoinOperations[0]).toMatchObject({
+        type: "FEES",
+        value: new BigNumber(42),
+        fee: new BigNumber(42),
+      });
+    });
+
+    it("should keep programId on a cleared incoming NONE parent", async () => {
+      const txHash = "tx-in-keeps-program-id";
+      const existingCoinOp = getMockedOperation({
+        hash: txHash,
+        type: "NONE",
+        accountId: ledgerAccountId,
+        value: new BigNumber(500),
+        extra: {
+          functionId: "transfer_public",
+          transactionType: "public",
+          programId: MOCK_TOKEN_PROGRAM_ID,
+        },
+      });
+      const tokenOp = getMockedTokenOperation({
+        hash: txHash,
+        value: new BigNumber(500),
+        recipients: [address],
+        senders: ["aleo1sender"],
+      });
+      const calTokens = new Map([[MOCK_TOKEN_PROGRAM_ID, mockTokenCurrency]]);
+
+      const { updatedCoinOperations } = await prepareTokenOperations({
+        address,
+        ledgerAccountId,
+        publicOperations: [existingCoinOp],
+        tokenOperations: [tokenOp],
+        calTokens,
+      });
+
+      expect(updatedCoinOperations[0].value).toEqual(new BigNumber(0));
+      // programId resolves the token currency on a later sync, so clearing the
+      // parent must not drop it.
+      expect(updatedCoinOperations[0].extra).toMatchObject({
+        programId: MOCK_TOKEN_PROGRAM_ID,
+        patched: true,
+      });
     });
 
     it("should promote an existing semi-public coin op to FEES, clearing recipients and marking as patched", async () => {
