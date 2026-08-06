@@ -94,6 +94,10 @@
     },
     "./libs/live-wallet": {
       "entry": ["src/walletsync/index.ts", "src/liveqr/cross.ts", "src/liveqr/importAccounts.ts"]
+    },
+    "./libs/coin-tester-modules/coin-tester-sodax": {
+      "entry": ["src/goloop.ts", "src/indexer.ts", "src/helpers.ts", "src/fixtures.ts"],
+      "ignoreDependencies": ["expect", "@ledgerhq/types-live"]
     }
   }
 }
