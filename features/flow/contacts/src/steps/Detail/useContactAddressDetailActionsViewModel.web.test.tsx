@@ -3,10 +3,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { act, renderHook } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { ContactAddressIdSchema, contactsSlice } from "@domain/entity-contact";
-import {
-  mockContactWithAddress,
-  mockMeContact,
-} from "@domain/entity-contact/schema.mock";
+import { mockContactWithAddress, mockMeContact } from "@domain/entity-contact/schema.mock";
+import { createMockContactSignerValidationPort } from "../../platform/contactSignerValidationPort";
 import type { ContactAddressDetailActionsPorts } from "./model/ports";
 import { useContactAddressDetailActionsViewModel } from "./useContactAddressDetailActionsViewModel";
 
@@ -14,9 +12,13 @@ function createPorts(
   overrides: Partial<ContactAddressDetailActionsPorts> = {},
 ): ContactAddressDetailActionsPorts {
   return {
+    edit: {
+      renameAddressLabel: jest.fn(),
+    },
     deletion: {
       deleteAddress: jest.fn().mockResolvedValue(undefined),
     },
+    signerValidation: createMockContactSignerValidationPort(),
     ...overrides,
   };
 }
@@ -51,7 +53,7 @@ describe("useContactAddressDetailActionsViewModel", () => {
     });
   });
 
-  it("exposes an edit intent when the address exists", () => {
+  it("exposes an edit intent with a signer-required requirement when the address exists", () => {
     const contact = mockContactWithAddress();
     const address = contact.addresses[0]!;
     const Wrapper = makeWrapper([mockMeContact(), contact]);
@@ -64,7 +66,12 @@ describe("useContactAddressDetailActionsViewModel", () => {
       type: "edit-address",
       contactId: contact.id,
       addressId: address.id,
+      editRequirement: {
+        type: "confirmation-required",
+        reason: "contact-has-address",
+      },
     });
+    expect(result.current.isSignerRequiredForEdit).toBe(true);
   });
 
   it("exposes undefined send and edit intents when the address is not found", () => {
@@ -72,8 +79,7 @@ describe("useContactAddressDetailActionsViewModel", () => {
     const missingAddressId = ContactAddressIdSchema.parse("address-missing");
     const Wrapper = makeWrapper([mockMeContact(), contact]);
     const { result } = renderHook(
-      () =>
-        useContactAddressDetailActionsViewModel(contact.id, missingAddressId, createPorts()),
+      () => useContactAddressDetailActionsViewModel(contact.id, missingAddressId, createPorts()),
       { wrapper: Wrapper },
     );
 

@@ -1,6 +1,6 @@
 {
   "name": "@ledgerhq/coin-tron",
-  "version": "6.7.0",
+  "version": "6.8.0",
   "description": "Ledger Tron Coin integration",
   "keywords": [
     "Ledger",
@@ -106,15 +106,14 @@
     "@ledgerhq/ledger-wallet-framework": "workspace:^",
     "@ledgerhq/live-network": "workspace:^",
     "@ledgerhq/live-promise": "workspace:^",
-    "@ledgerhq/logs": "workspace:^",
+    "@ledgerhq/logs": "catalog:",
     "@ledgerhq/types-live": "workspace:^",
     "bignumber.js": "^9.1.2",
     "bs58check": "catalog:",
     "invariant": "^2.2.2",
     "lodash": "^4.17.21",
     "rxjs": "catalog:",
-    "tronweb": "6.2.0",
-    "@ledgerhq/errors": "workspace:^"
+    "tronweb": "6.2.0"
   },
   "devDependencies": {
     "@ledgerhq/disable-network-setup": "workspace:^",

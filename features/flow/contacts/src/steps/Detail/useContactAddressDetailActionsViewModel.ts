@@ -14,10 +14,8 @@ import {
   createIdleContactAddressDeleteLifecycle,
   createOpenContactAddressDeleteLifecycle,
 } from "./model/addressDetailActionsViewModel";
-import type {
-  ContactAddressDeleteLifecycle,
-  ContactAddressDetailActionsViewModel,
-} from "./types";
+import { isSignerConfirmationRequired } from "./model/editRequirement";
+import type { ContactAddressDeleteLifecycle, ContactAddressDetailActionsViewModel } from "./types";
 
 type ContactsStateRoot = Parameters<typeof selectContactAddressById>[0];
 
@@ -63,6 +61,7 @@ export function useContactAddressDetailActionsViewModel(
     () => createContactAddressDetailDeleteIntent(contactId, addressId),
     [contactId, addressId],
   );
+  const isSignerRequiredForEdit = isSignerConfirmationRequired(editIntent?.editRequirement);
 
   const openDelete = useCallback(() => {
     setDeleteLifecycle(createOpenContactAddressDeleteLifecycle(contactId, addressId));
@@ -81,6 +80,7 @@ export function useContactAddressDetailActionsViewModel(
     editIntent,
     deleteIntent,
     deleteLifecycle,
+    isSignerRequiredForEdit,
     openDelete,
     cancelDelete,
     confirmDelete,

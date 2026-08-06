@@ -1,6 +1,6 @@
 {
   "name": "@ledgerhq/coin-hedera",
-  "version": "1.39.0",
+  "version": "1.40.0",
   "description": "Ledger Hedera Coin integration",
   "keywords": [
     "Ledger",
@@ -96,14 +96,13 @@
     "@ledgerhq/live-env": "workspace:^",
     "@ledgerhq/live-network": "workspace:^",
     "@ledgerhq/live-promise": "workspace:^",
-    "@ledgerhq/logs": "workspace:^",
+    "@ledgerhq/logs": "catalog:",
     "@ledgerhq/types-live": "workspace:^",
     "bignumber.js": "^9.1.2",
     "invariant": "^2.2.2",
     "lodash": "^4.17.21",
     "rxjs": "catalog:",
-    "viem": "^2.27.0",
-    "@ledgerhq/errors": "workspace:^"
+    "viem": "^2.27.0"
   },
   "devDependencies": {
     "@domain/entity-currency-crypto": "workspace:^",

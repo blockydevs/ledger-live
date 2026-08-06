@@ -1,6 +1,6 @@
 {
   "name": "@ledgerhq/coin-cardano",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "Ledger Cardano Coin integration",
   "keywords": [
     "Ledger",
@@ -57,7 +57,7 @@
     "@ledgerhq/ledger-wallet-framework": "workspace:^",
     "@ledgerhq/live-env": "workspace:^",
     "@ledgerhq/live-network": "workspace:^",
-    "@ledgerhq/logs": "workspace:^",
+    "@ledgerhq/logs": "catalog:",
     "@ledgerhq/types-live": "workspace:^",
     "@stricahq/bip32ed25519": "^1.0.3",
     "@stricahq/cbors": "1.0.2",
@@ -66,8 +66,7 @@
     "bignumber.js": "^9.1.2",
     "invariant": "^2.2.2",
     "lodash": "^4.17.21",
-    "rxjs": "catalog:",
-    "@ledgerhq/errors": "workspace:^"
+    "rxjs": "catalog:"
   },
   "devDependencies": {
     "@domain/entity-currency-crypto": "workspace:^",
