@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogHeader,
-} from "@ledgerhq/lumen-ui-react";
+import { Dialog, DialogBody, DialogContent, DialogHeader } from "@ledgerhq/lumen-ui-react";
 import { ContactAddressDetailActions } from "./ContactAddressDetailActions.web";
 import { ContactAddressDetailSummary } from "./ContactAddressDetailSummary.web";
 import type { ContactAddressDetailDialogProps } from "./types";
@@ -18,6 +13,12 @@ export function ContactAddressDetailDialog({
   network,
   labels,
   onClose,
+  onSend,
+  onEdit,
+  onDelete,
+  canSend = false,
+  canEdit = false,
+  canDelete = false,
 }: ContactAddressDetailDialogProps): React.ReactNode {
   const [hasCopied, setHasCopied] = useState(false);
 
@@ -73,6 +74,12 @@ export function ContactAddressDetailDialog({
             labels={labels}
             hasCopied={hasCopied}
             onCopy={() => void handleCopy()}
+            onSend={onSend}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            canSend={canSend}
+            canEdit={canEdit}
+            canDelete={canDelete}
           />
         </DialogBody>
       </DialogContent>
