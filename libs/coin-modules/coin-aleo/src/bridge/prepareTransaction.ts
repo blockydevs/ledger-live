@@ -54,6 +54,7 @@ function resolveFeeRecordCommitment({
   feeRecordPool,
   isTokenTx,
   existingFeeRecordCommitment,
+  reservedFeeRecordCommitment,
   estimatedFees,
 }: {
   config: AleoCoinConfig;
@@ -61,10 +62,19 @@ function resolveFeeRecordCommitment({
   feeRecordPool: AleoUnspentRecord[];
   isTokenTx: boolean;
   existingFeeRecordCommitment: string | null;
+  reservedFeeRecordCommitment: string | null;
   estimatedFees: BigNumber;
 }): string | null {
   if (config.isFeeSponsored) {
     return null;
+  }
+
+  // A send-max already set this record aside and kept it out of the amount
+  // selection. Re-deriving over the remaining pool can pick a different record,
+  // which leaves the reserved one in neither set and drops its value from the
+  // amount the user sends.
+  if (reservedFeeRecordCommitment) {
+    return reservedFeeRecordCommitment;
   }
 
   // fees are always paid with native ALEO credits
@@ -169,6 +179,7 @@ function preparePrivateTransaction({
     feeRecordPool,
     isTokenTx,
     existingFeeRecordCommitment: transactionWithRecords.properties.feeRecordCommitment,
+    reservedFeeRecordCommitment: reservedFeeRecord?.commitment ?? null,
     estimatedFees,
   });
 
