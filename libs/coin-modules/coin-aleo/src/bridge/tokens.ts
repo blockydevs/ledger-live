@@ -52,6 +52,26 @@ function promoteCoinOpToFees({
   coinOp.extra = { ...coinOp.extra, patched: true };
 }
 
+/**
+ * Strips the token transfer's own amount, senders and recipients off a parent
+ * coin operation the indexer built for a token-program transaction, so the
+ * native history does not show the transferred token amount as a credits
+ * value on an incoming transfer's NONE parent.
+ *
+ * Produces the same `extra` shape as `buildNoneParentOp` and marks the op
+ * patched, so `performPublicSync` keeps this version on later syncs instead
+ * of overwriting it with the raw re-fetched operation.
+ */
+function clearNoneParentOp(coinOp: AleoOperation, { markPatched }: { markPatched: boolean }): void {
+  coinOp.value = new BigNumber(0);
+  coinOp.fee = new BigNumber(0);
+  coinOp.senders = [];
+  coinOp.recipients = [];
+  // Spread rather than rebuild: `extra` also carries `programId`, which
+  // resolves the token currency on a later sync.
+  coinOp.extra = { ...coinOp.extra, ...(markPatched ? { patched: true } : {}) };
+}
+
 function getAleoSubAccounts({
   ledgerAccountId,
   calTokens,
@@ -100,9 +120,10 @@ function buildNoneParentOp(
  *
  * For each token operation:
  *  - The correct `TokenCurrency` is resolved from `extra.programId`.
- *  - A new operation is created with `accountId = encodeTokenAccountId(…)` and
- *    an appropriate IN/OUT type derived from senders/recipients vs the account address.
- *  - The new operation is attached as a `subOperation` of the matching coin operation
+ *  - One or two operations are created with `accountId = encodeTokenAccountId(…)`, typed
+ *    IN and/or OUT from senders/recipients vs the account address. A self-transfer (the
+ *    account on both sides) yields both an OUT and an IN for the full amount.
+ *  - Each new operation is attached as a `subOperation` of the matching coin operation
  *    (matched by hash). If no coin operation matches, a NONE parent is inserted.
  *
  * @returns updatedCoinOperations – coin ops with `subOperations` filled in.
@@ -147,6 +168,11 @@ export async function prepareTokenOperations({
     updatedCoinOperations.map(op => [op.hash, op]),
   );
 
+  // Parents this pass invented because the indexer returned no native operation
+  // for the hash. `patched` tells a later sync to keep this version over the
+  // re-fetched one, which only makes sense for an operation the indexer sent.
+  const syntheticParentHashes = new Set<string>();
+
   for (const tokenOp of tokenOperations) {
     const programId = tokenOp.extra?.programId;
     if (!programId) continue;
@@ -158,15 +184,12 @@ export async function prepareTokenOperations({
 
     // Derive IN/OUT for the sub-account from the raw operation's senders/recipients.
     // The coin op has type NONE for token-program transactions; the sub-account needs
-    // a meaningful direction.
-    const type: OperationType = tokenOp.recipients.includes(address) ? "IN" : "OUT";
-
-    const subAccountOp: AleoOperation = {
-      ...tokenOp,
-      id: encodeOperationId(tokenAccountId, tokenOp.hash, type),
-      accountId: tokenAccountId,
-      type,
-    };
+    // a meaningful direction. A self-transfer (address on both sides) emits both an OUT
+    // and an IN sub-op for the full amount, so the sub-account history nets to zero.
+    const isSender = tokenOp.senders.includes(address);
+    const isRecipient = tokenOp.recipients.includes(address);
+    const types: OperationType[] =
+      isSender && isRecipient ? ["OUT", "IN"] : isRecipient ? ["IN"] : ["OUT"];
 
     // Get or create the single parent coin op for this transaction hash.
     let parentCoinOp = coinOpsByHash.get(tokenOp.hash);
@@ -174,27 +197,51 @@ export async function prepareTokenOperations({
       parentCoinOp = buildNoneParentOp(ledgerAccountId, tokenOp);
       updatedCoinOperations.push(parentCoinOp);
       coinOpsByHash.set(tokenOp.hash, parentCoinOp);
+      syntheticParentHashes.add(tokenOp.hash);
     }
 
-    // For outgoing token transfers, promote the parent to a FEES op so the native
-    // account history shows the fee cost rather than a valueless NONE entry.
-    // Only promotes once per hash — idempotent if multiple OUT sub-ops share a hash.
-    if (type === "OUT" && parentCoinOp.type !== "FEES") {
+    // The account sending the token pays the network fee, so its parent coin op is
+    // promoted to a FEES op so the native account history shows that cost rather than
+    // a valueless NONE entry. This covers plain outgoing transfers and self-transfers
+    // alike. Only promotes once per hash — idempotent across repeated sub-ops.
+    //
+    // Gated on the derived direction, not on `isSender`: a private sender arrives
+    // with empty `senders` (see patchTokenSubAccountOps below), and the sub-op is
+    // still typed OUT. Gating on `isSender` would clear that parent instead of
+    // promoting it, dropping the fee from the native history.
+    if (types.includes("OUT") && parentCoinOp.type !== "FEES") {
       promoteCoinOpToFees({
         coinOp: parentCoinOp,
         fee: tokenOp.fee,
         ledgerAccountId,
         txHash: tokenOp.hash,
       });
+    } else if (parentCoinOp.type === "NONE") {
+      clearNoneParentOp(parentCoinOp, {
+        markPatched: !syntheticParentHashes.has(tokenOp.hash),
+      });
     }
 
-    parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);
+    for (const type of types) {
+      const subAccountOp: AleoOperation = {
+        ...tokenOp,
+        id: encodeOperationId(tokenAccountId, tokenOp.hash, type),
+        accountId: tokenAccountId,
+        type,
+        // The fee is denominated in credits and is already billed on the parent
+        // FEES op. Only the OUT side names it; the IN side reports zero so a
+        // self-transfer does not show the same fee three times.
+        fee: type === "IN" ? new BigNumber(0) : tokenOp.fee,
+      };
 
-    const existing = tokenOperationsBySubAccountId.get(tokenAccountId) ?? [];
-    tokenOperationsBySubAccountId.set(
-      tokenAccountId,
-      appendUniqueOperation(existing, subAccountOp),
-    );
+      parentCoinOp.subOperations = appendUniqueOperation(parentCoinOp.subOperations, subAccountOp);
+
+      const existing = tokenOperationsBySubAccountId.get(tokenAccountId) ?? [];
+      tokenOperationsBySubAccountId.set(
+        tokenAccountId,
+        appendUniqueOperation(existing, subAccountOp),
+      );
+    }
   }
 
   return { updatedCoinOperations, tokenOperationsBySubAccountId };

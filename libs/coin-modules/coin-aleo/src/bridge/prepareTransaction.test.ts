@@ -524,6 +524,88 @@ describe("prepareTransaction", () => {
     });
   });
 
+  it("should hold back the fee record from the amount selection for a native send-max", async () => {
+    mockAleoConfig.getCoinConfig.mockReturnValue({
+      ...mockConfig,
+      recordPickingStrategy: "auto",
+      isFeeSponsored: false,
+    });
+    mockFindBestRecordForFee.mockReturnValue(mockUnspentRecord2);
+
+    const accountWithPrivateRecords = getMockedAccount({
+      aleoResources: {
+        transparentBalance: mockAccount.aleoResources?.transparentBalance ?? new BigNumber(0),
+        provableApi: mockAccount.aleoResources?.provableApi ?? null,
+        privateBalance: mockAccount.aleoResources?.privateBalance ?? null,
+        unspentPrivateRecords: [mockUnspentRecord1, mockUnspentRecord2],
+        lastPrivateSyncDate: mockAccount.aleoResources?.lastPrivateSyncDate ?? null,
+      },
+    });
+
+    const result = await prepareTransaction(accountWithPrivateRecords, {
+      ...mockTransaction,
+      mode: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+      useAllAmount: true,
+      properties: {
+        amountRecordCommitments: [],
+        feeRecordCommitment: null,
+      },
+    });
+
+    expect(mockFindBestRecordForFee).toHaveBeenNthCalledWith(1, {
+      unspentRecords: [mockUnspentRecord1, mockUnspentRecord2],
+      selectedAmountRecordCommitments: [],
+      targetFee: mockFees,
+    });
+    expect(result).toMatchObject({
+      properties: {
+        amountRecordCommitments: [mockUnspentRecord1.commitment],
+        feeRecordCommitment: mockUnspentRecord2.commitment,
+      },
+    });
+  });
+
+  it("should keep the reserved fee record even when re-deriving would pick a different one", async () => {
+    mockAleoConfig.getCoinConfig.mockReturnValue({
+      ...mockConfig,
+      recordPickingStrategy: "auto",
+      isFeeSponsored: false,
+    });
+    // The first call reserves the fee record. A second call over the remaining
+    // pool would answer with a different record, orphaning the reserved one.
+    mockFindBestRecordForFee
+      .mockReturnValueOnce(mockUnspentRecord2)
+      .mockReturnValueOnce(mockUnspentRecord1);
+
+    const accountWithPrivateRecords = getMockedAccount({
+      aleoResources: {
+        transparentBalance: mockAccount.aleoResources?.transparentBalance ?? new BigNumber(0),
+        provableApi: mockAccount.aleoResources?.provableApi ?? null,
+        privateBalance: mockAccount.aleoResources?.privateBalance ?? null,
+        unspentPrivateRecords: [mockUnspentRecord1, mockUnspentRecord2],
+        lastPrivateSyncDate: mockAccount.aleoResources?.lastPrivateSyncDate ?? null,
+      },
+    });
+
+    const result = await prepareTransaction(accountWithPrivateRecords, {
+      ...mockTransaction,
+      mode: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+      useAllAmount: true,
+      properties: {
+        amountRecordCommitments: [],
+        feeRecordCommitment: null,
+      },
+    });
+
+    expect(mockFindBestRecordForFee).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      properties: {
+        amountRecordCommitments: [mockUnspentRecord1.commitment],
+        feeRecordCommitment: mockUnspentRecord2.commitment,
+      },
+    });
+  });
+
   it("should set transfer_token_public mode and keep recipient for token public send", async () => {
     const result = await prepareTransaction(accountWithTokenSubAccount, {
       ...mockTransaction,

@@ -54,6 +54,7 @@ function resolveFeeRecordCommitment({
   feeRecordPool,
   isTokenTx,
   existingFeeRecordCommitment,
+  reservedFeeRecordCommitment,
   estimatedFees,
 }: {
   config: AleoCoinConfig;
@@ -61,10 +62,19 @@ function resolveFeeRecordCommitment({
   feeRecordPool: AleoUnspentRecord[];
   isTokenTx: boolean;
   existingFeeRecordCommitment: string | null;
+  reservedFeeRecordCommitment: string | null;
   estimatedFees: BigNumber;
 }): string | null {
   if (config.isFeeSponsored) {
     return null;
+  }
+
+  // A send-max already set this record aside and kept it out of the amount
+  // selection. Re-deriving over the remaining pool can pick a different record,
+  // which leaves the reserved one in neither set and drops its value from the
+  // amount the user sends.
+  if (reservedFeeRecordCommitment) {
+    return reservedFeeRecordCommitment;
   }
 
   // fees are always paid with native ALEO credits
@@ -126,10 +136,23 @@ function preparePrivateTransaction({
     ? (subAccount?.unspentPrivateRecords ?? [])
     : (account.aleoResources?.unspentPrivateRecords ?? []);
 
+  // The fee transition needs an input record of its own, distinct from the amount records.
+  // A native send-max selects every record for the amount, so reserve the fee record first.
+  const reservedFeeRecord =
+    transaction.useAllAmount && !isTokenTx && !config.isFeeSponsored
+      ? findBestRecordForFee({
+          unspentRecords: amountRecordPool,
+          selectedAmountRecordCommitments: [],
+          targetFee: estimatedFees,
+        })
+      : null;
+
   const newAmountRecordCommitments = getAmountRecordCommitments({
     transaction,
     config,
-    unspentRecords: amountRecordPool,
+    unspentRecords: reservedFeeRecord
+      ? amountRecordPool.filter(record => record.commitment !== reservedFeeRecord.commitment)
+      : amountRecordPool,
     ...(isTokenTx && { maxRecords: MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION }),
   });
 
@@ -156,6 +179,7 @@ function preparePrivateTransaction({
     feeRecordPool,
     isTokenTx,
     existingFeeRecordCommitment: transactionWithRecords.properties.feeRecordCommitment,
+    reservedFeeRecordCommitment: reservedFeeRecord?.commitment ?? null,
     estimatedFees,
   });
 

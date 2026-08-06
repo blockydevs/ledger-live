@@ -94,8 +94,18 @@ function resolveAmountRecords(account: AleoAccount, transaction: TransactionPriv
  * - insufficient balance to cover given amount
  * - more than MAX_PRIVATE_RECORDS_PER_TRANSACTION records would be needed to cover the amount
  */
-function resolveAutoPickingAmountError(amount: BigNumber, privateBalance: BigNumber): Error {
+function resolveAutoPickingAmountError(
+  amount: BigNumber,
+  privateBalance: BigNumber,
+  useAllAmount: boolean,
+): Error {
   if (privateBalance.isZero() || amount.gt(privateBalance)) {
+    return new NotEnoughBalance();
+  }
+
+  // A send-max that reserved its only record for the fee has nothing left to
+  // send. The amount is not too large — the balance does not cover a transfer.
+  if (useAllAmount && amount.lte(0)) {
     return new NotEnoughBalance();
   }
 
@@ -132,7 +142,11 @@ function validatePrivateTransaction({
   if (config.recordPickingStrategy === "manual" && records.length === 0) {
     errors.amountRecord = new AleoAmountRecordRequired();
   } else if (config.recordPickingStrategy === "auto" && records.length === 0) {
-    errors.amount = resolveAutoPickingAmountError(amount, privateBalance);
+    errors.amount = resolveAutoPickingAmountError(
+      amount,
+      privateBalance,
+      Boolean(transaction.useAllAmount),
+    );
   } else if (records.length > maxRecords) {
     errors.amount = new AleoTooManyRecordsSelected(undefined, { count: maxRecords });
   } else if (amount.gt(totalValue)) {
@@ -261,7 +275,6 @@ async function handleTransferTransaction({
   const feeEstimation = estimateFees({ configOrCurrencyId: config, transactionType });
   const estimatedFees = new BigNumber(feeEstimation.value.toString());
   const calculatedAmount = calculateAmount({ transaction, account, estimatedFees });
-  const availableBalance = getAvailableBalance(account, transaction);
 
   const errors: Errors = {};
   const warnings: Warnings = {};
@@ -281,6 +294,8 @@ async function handleTransferTransaction({
   }
 
   if (isPrivateTransaction(transaction)) {
+    // The amount records and the fee record are drawn from separate pools:
+    // validatePrivateTransaction covers the amount, validatePrivateFeeRecord covers the fee.
     Object.assign(
       errors,
       validatePrivateTransaction({
@@ -291,12 +306,16 @@ async function handleTransferTransaction({
         config,
       }),
     );
-  }
+  } else {
+    Object.assign(errors, validatePublicFees({ account, transaction, config, estimatedFees }));
 
-  Object.assign(errors, validatePublicFees({ account, transaction, config, estimatedFees }));
+    const availableBalance = getAvailableBalance(account, transaction);
 
-  if (availableBalance.isLessThan(calculatedAmount.totalSpent)) {
-    errors.amount = new NotEnoughBalance();
+    if (availableBalance.isLessThan(calculatedAmount.totalSpent)) {
+      errors.amount = new NotEnoughBalance();
+    } else if (transaction.useAllAmount && calculatedAmount.amount.lte(0)) {
+      errors.amount = new NotEnoughBalance();
+    }
   }
 
   return {
