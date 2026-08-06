@@ -9,7 +9,8 @@ import { ParamListBase, T } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { getDeviceModel } from "@ledgerhq/devices";
-import { WrongDeviceForAccount, NanoSNotSupported } from "@ledgerhq/errors";
+import { WrongDeviceForAccount } from "@ledgerhq/ledger-wallet-framework/errors";
+import { NanoSNotSupported } from "@ledgerhq/live-common/errors";
 import { isCounterfeitError } from "@ledgerhq/live-common/hw/isCounterfeitError";
 import { isSyncOnboardingSupported } from "@ledgerhq/live-common/device/use-cases/screenSpecs";
 import { ExchangeRate, ExchangeSwap } from "@ledgerhq/live-common/exchange/swap/types";
@@ -23,7 +24,7 @@ import { BoxedIcon, Flex, Icons, IconsLegacy, Link, Log, Tag, Text } from "@ledg
 import { StuckDeviceActionHint } from "../StuckDeviceActionHint";
 import InfiniteLoader from "~/components/InfiniteLoader";
 import { DownloadMedium } from "@ledgerhq/native-ui/assets/icons";
-import { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { TokenCurrency } from "@domain/entity-currency-token";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import type { DeviceModelInfo } from "@ledgerhq/types-live";
 

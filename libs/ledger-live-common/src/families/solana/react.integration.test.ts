@@ -3,13 +3,13 @@
  */
 import "../../__tests__/test-helpers/dom-polyfill";
 import { renderHook } from "@testing-library/react";
-import { setEnv } from "@ledgerhq/live-env";
+import { setEnv } from "@shared/env";
 import type { Account, CurrencyBridge } from "@ledgerhq/types-live";
 import type { Transaction } from "@ledgerhq/coin-solana/types";
 import { getCurrentSolanaPreloadData } from "@ledgerhq/coin-solana/preload-data";
 import { LEDGER_VALIDATOR_DEFAULT } from "@ledgerhq/coin-solana/utils";
 import { getAccountBridge, getCurrencyBridge } from "../../bridge";
-import { getCryptoCurrencyById } from "../../currencies";
+import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import { makeBridgeCacheSystem } from "../../bridge/cache";
 import { genAccount, genAddingOperationsInAccount } from "../../mock/account";
 import * as hooks from "./react";

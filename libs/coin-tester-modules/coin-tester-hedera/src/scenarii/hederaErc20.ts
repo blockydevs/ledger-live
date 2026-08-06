@@ -3,7 +3,7 @@ import type { Scenario } from "@ledgerhq/coin-tester/main";
 import type { Transaction, HederaAccount, HederaOperationExtra } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES, DEFAULT_GAS_LIMIT } from "@ledgerhq/coin-hedera/constants";
 import type { TokenAccount } from "@ledgerhq/types-live";
-import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import BigNumber from "bignumber.js";
 import { TOKEN_SYMBOL, TOKEN_UNIT, makeHederaAccount, makeLocalErc20Token } from "../fixtures";

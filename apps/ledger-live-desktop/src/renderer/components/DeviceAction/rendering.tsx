@@ -8,7 +8,8 @@ import { TFunction } from "i18next";
 import styled from "styled-components";
 import { BigNumber } from "bignumber.js";
 
-import { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { CryptoCurrency } from "@domain/entity-currency-crypto";
+import { TokenCurrency } from "@domain/entity-currency-token";
 import { Account, ABTestingVariants } from "@ledgerhq/types-live";
 import { DeviceModelId, getDeviceModel } from "@ledgerhq/devices";
 import {
@@ -20,7 +21,8 @@ import {
   Text,
   Theme,
 } from "@ledgerhq/react-ui";
-import { WrongDeviceForAccount, DisconnectedDevice } from "@ledgerhq/errors";
+import { DisconnectedDevice } from "@ledgerhq/hw-transport/errors";
+import { WrongDeviceForAccount } from "@ledgerhq/ledger-wallet-framework/errors";
 import { Transaction } from "@ledgerhq/live-common/generated/types";
 import { ExchangeRate, ExchangeSwap } from "@ledgerhq/live-common/exchange/swap/types";
 import { getNoticeType, getProviderName } from "@ledgerhq/live-common/exchange/swap/utils/index";

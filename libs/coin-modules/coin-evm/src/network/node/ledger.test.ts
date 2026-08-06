@@ -1,7 +1,7 @@
 import { AssertionError, fail } from "assert";
 import { getCryptoCurrencyById } from "@ledgerhq/ledger-wallet-framework/currencies";
 import { delay } from "@ledgerhq/live-promise";
-import { CryptoCurrency } from "@ledgerhq/ledger-wallet-framework/types";
+import { CryptoCurrency, CryptoCurrencyIdSchema } from "@ledgerhq/ledger-wallet-framework/types";
 import axios from "axios";
 import BigNumber from "bignumber.js";
 import { Transaction } from "ethers";
@@ -36,15 +36,77 @@ const ledgerConfig = { type: "ledger" as const, explorerId: "eth" as const, retr
 
 describe("EVM Family", () => {
   describe("network/node/ledger.ts", () => {
-    it("does not expose contract calls through ledger nodes", async () => {
-      const api = createLedgerNodeApi(ledgerConfig);
+    describe("call", () => {
+      // USDC on Ethereum, EIP-55 checksummed — asserts we normalize (lowercase) the `to` address.
+      const USDC = "0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48";
+      const DECIMALS_SELECTOR = "0x313ce567"; // decimals()
+      const DECIMALS_RESPONSE =
+        "0x0000000000000000000000000000000000000000000000000000000000000006";
 
-      await expect(
-        api.call(currency, {
-          to: "0x6cBCD73CD8e8a42844662f0A0e76D7F79Afd933d",
-          data: "0x1234",
-        }),
-      ).rejects.toThrow("call is not supported");
+      // Clear the shared axios mock's call history after each case so counts don't leak into sibling
+      // tests (e.g. the retry test below asserts an exact number of axios.request calls).
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it("reads a contract through the explorer contract/read endpoint", async () => {
+        const api = createLedgerNodeApi(ledgerConfig);
+        const spy = jest.spyOn(axios, "request").mockImplementationOnce(async () => ({
+          data: [
+            {
+              info: { contract: USDC.toLowerCase(), data: DECIMALS_SELECTOR, blockNumber: null },
+              response: DECIMALS_RESPONSE,
+            },
+          ],
+        }));
+
+        const result = await api.call(currency, { to: USDC, data: DECIMALS_SELECTOR });
+
+        expect(result).toEqual(DECIMALS_RESPONSE);
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            method: "POST",
+            url: expect.stringContaining("/blockchain/v4/eth/contract/read"),
+            data: [{ contract: USDC.toLowerCase(), data: DECIMALS_SELECTOR }],
+          }),
+        );
+      });
+
+      it("forwards the requested block", async () => {
+        const api = createLedgerNodeApi(ledgerConfig);
+        const spy = jest.spyOn(axios, "request").mockImplementationOnce(async () => ({
+          data: [
+            {
+              info: { contract: USDC.toLowerCase(), data: DECIMALS_SELECTOR, blockNumber: 123 },
+              response: DECIMALS_RESPONSE,
+            },
+          ],
+        }));
+
+        await api.call(currency, { to: USDC, data: DECIMALS_SELECTOR, block: 123 });
+
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: [{ contract: USDC.toLowerCase(), data: DECIMALS_SELECTOR, blockNumber: 123 }],
+          }),
+        );
+      });
+
+      it("throws when the node reports a failure (e.g. revert)", async () => {
+        const api = createLedgerNodeApi(ledgerConfig);
+        jest.spyOn(axios, "request").mockImplementationOnce(async () => ({
+          data: [
+            {
+              info: { contract: USDC.toLowerCase(), data: DECIMALS_SELECTOR, blockNumber: null },
+              error: { code: "REVERTED", message: "execution reverted" },
+            },
+          ],
+        }));
+
+        await expect(api.call(currency, { to: USDC, data: DECIMALS_SELECTOR })).rejects.toThrow(
+          "EVM call failed",
+        );
+      });
     });
 
     describe("createLedgerNodeApi / retries", () => {
@@ -551,11 +613,52 @@ describe("EVM Family", () => {
 
         expect(
           await api.getOptimismAdditionalFees(
-            { ...currency, id: "optimism" },
+            { ...currency, id: CryptoCurrencyIdSchema.parse("optimism") },
             transaction.serialized,
           ),
         ).toEqual(new BigNumber("100000000"));
       });
+
+      it.each(["blast", "blast_sepolia", "base", "base_sepolia"])(
+        "should query the OP-stack gas oracle for %s (not return 0)",
+        async currencyId => {
+          const api = createLedgerNodeApi(ledgerConfig);
+          jest.spyOn(axios, "request").mockImplementationOnce(async () => ({
+            data: [
+              {
+                info: {
+                  contract: "0x420000000000000000000000000000000000000F",
+                  data: "0xSerializedTransaction",
+                  blockNumber: 123,
+                },
+                response: "100000000",
+              },
+            ],
+          }));
+
+          const transaction = Transaction.from({
+            to: "0x6cBCD73CD8e8a42844662f0A0e76D7F79Afd933d",
+            value: 1n,
+            gasLimit: 2n,
+            chainId: 1,
+            nonce: 0,
+            gasPrice: 3n,
+            type: 0,
+            signature: {
+              r: "0xffffffffffffffffffffffffffffffffffffffff",
+              s: "0xffffffffffffffffffffffffffffffffffffffff",
+              v: 27,
+            },
+          });
+
+          expect(
+            await api.getOptimismAdditionalFees(
+              { ...currency, id: CryptoCurrencyIdSchema.parse(currencyId) },
+              transaction.serialized,
+            ),
+          ).toEqual(new BigNumber("100000000"));
+        },
+      );
     });
 
     describe("getScrollAdditionalFees", () => {
@@ -595,7 +698,10 @@ describe("EVM Family", () => {
         });
 
         expect(
-          await api.getScrollAdditionalFees({ ...currency, id: "scroll" }, transaction.serialized),
+          await api.getScrollAdditionalFees(
+            { ...currency, id: CryptoCurrencyIdSchema.parse("scroll") },
+            transaction.serialized,
+          ),
         ).toEqual(new BigNumber("100000000"));
       });
     });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";
+import { CryptoOrTokenCurrency } from "@domain/entity-currency";
 import SearchInputContainer from "./components/SearchInputContainer";
 import { EnhancedModularDrawerConfiguration } from "@ledgerhq/live-common/wallet-api/ModularDrawer/types";
 import { MODULAR_DIALOG_PAGE_NAME } from "../../analytics/modularDialog.types";
@@ -16,6 +16,7 @@ export type AssetSelectorProps = {
   assetsToDisplay: CryptoOrTokenCurrency[];
   providersLoadingStatus: LoadingStatus;
   assetsConfiguration: EnhancedModularDrawerConfiguration["assets"];
+  fillAvailableHeight?: boolean;
   onAssetSelected: (asset: CryptoOrTokenCurrency) => void;
   loadNext?: () => void;
   errorInfo?: ErrorInfo;
@@ -27,6 +28,7 @@ const AssetSelector = ({
   assetsToDisplay,
   providersLoadingStatus,
   assetsConfiguration,
+  fillAvailableHeight,
   onAssetSelected,
   loadNext,
   errorInfo,
@@ -66,6 +68,7 @@ const AssetSelector = ({
           assetsToDisplay={assetsToDisplay}
           providersLoadingStatus={providersLoadingStatus}
           assetsConfiguration={assetsConfiguration}
+          fillAvailableHeight={fillAvailableHeight}
           scrollToTop={shouldScrollToTop}
           onAssetSelected={onAssetSelected}
           onScrolledToTop={() => setShouldScrollToTop(false)}

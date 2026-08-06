@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { catchError, throwError } from "rxjs";
-import { GenuineCheckFailed } from "@ledgerhq/errors";
+import { GenuineCheckFailed } from "@ledgerhq/live-common/errors";
 import { isCounterfeitError } from "@ledgerhq/live-common/hw/isCounterfeitError";
 import connectApp from "@ledgerhq/live-common/hw/connectApp";
 import connectManager from "@ledgerhq/live-common/hw/connectManager";
@@ -20,7 +20,7 @@ import {
 import { createAction as createTransactionAction } from "@ledgerhq/live-common/hw/actions/transaction";
 import { createAction as createRawTransactionAction } from "@ledgerhq/live-common/hw/actions/rawTransaction";
 import { createAction as createStartExchangeAction } from "@ledgerhq/live-common/hw/actions/startExchange";
-import { getEnv } from "@ledgerhq/live-env";
+import { getEnv } from "@shared/env";
 import { mockedEventEmitter } from "~/renderer/components/debug/DebugMock";
 import { useFeature } from "@features/platform-feature-flags";
 import { Action } from "@ledgerhq/live-common/hw/actions/types";
@@ -118,7 +118,7 @@ export function useGenuineCheckAction(): Action<ManagerRequest, ManagerState, Ma
           if (isCounterfeitError(error)) return throwError(() => error);
           if (isDeviceNotOnboardedError(error)) return throwError(() => error);
 
-          return throwError(() => new GenuineCheckFailed("", undefined, { cause: error }));
+          return throwError(() => new GenuineCheckFailed("", { cause: error }));
         }),
       );
     return createManagerAction(task);

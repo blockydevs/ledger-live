@@ -1,7 +1,7 @@
 import type { Scenario } from "@ledgerhq/coin-tester/main";
 import type { Transaction, HederaAccount } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
-import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import BigNumber from "bignumber.js";
 import {
   MAX_AUTO_ASSOCIATIONS,

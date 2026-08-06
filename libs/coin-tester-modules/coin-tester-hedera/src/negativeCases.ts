@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { AccountBridge } from "@ledgerhq/types-live";
-import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import type { Transaction, HederaAccount, TransactionStatus } from "@ledgerhq/coin-hedera/types";
 import { HEDERA_MAX_MEMO_SIZE } from "@ledgerhq/coin-hedera/logic/validateMemo";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";

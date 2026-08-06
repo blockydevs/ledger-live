@@ -11,10 +11,10 @@ import OptimismGasPriceOracleAbi from "../../abis/optimismGasPriceOracle.abi.jso
 import { BlockFinalizationTag, LedgerNodeConfig } from "../../config";
 import { GasEstimationError } from "../../errors";
 import { LedgerExplorerOperation } from "../../types";
-import { padHexString, safeEncodeEIP55 } from "../../utils";
+import { normalizeAddress, padHexString, safeEncodeEIP55 } from "../../utils";
 import { getGasOptions } from "../gasTracker/ledger";
 import { withRetries } from "../withRetries";
-import { BlockByHeightResult, NodeApi, TransactionInfo } from "./types";
+import { BlockByHeightResult, EvmCallParams, NodeApi, TransactionInfo } from "./types";
 
 const LEDGER_TIMEOUT = 10_000; // 10s for network call timeout
 const LEDGER_TIME_BETWEEN_TRIES = 200; // 200ms between 2 calls
@@ -280,7 +280,11 @@ async function getOptimismAdditionalFees(
   currency: CryptoCurrency,
   transaction: string,
 ): Promise<BigNumber> {
-  if (!["optimism", "optimism_sepolia"].includes(currency.id)) {
+  if (
+    !["optimism", "optimism_sepolia", "blast", "blast_sepolia", "base", "base_sepolia"].includes(
+      currency.id,
+    )
+  ) {
     return new BigNumber(0);
   }
   if (!transaction) {
@@ -304,6 +308,54 @@ async function getOptimismAdditionalFees(
     ],
   });
   return new BigNumber(result.response);
+}
+
+/**
+ * A single entry of the Ledger explorer `contract/read` batch response. On success the node returns
+ * the raw `response` (hex-encoded call output); on a revert/failure it returns `error` instead.
+ */
+type ContractReadResult = {
+  response?: string;
+  error?: unknown;
+};
+
+/**
+ * Read-only contract call (ADR-044) over a Ledger node. Unlike external nodes (which use the RPC
+ * `eth_call`), Ledger nodes expose the same capability through the explorer `contract/read` endpoint,
+ * so the returned `response` is the hex-encoded call output, kept opaque here.
+ */
+async function call(
+  fetch: LedgerFetch,
+  config: LedgerNodeConfig,
+  _currency: CryptoCurrency,
+  params: EvmCallParams,
+): Promise<string> {
+  // `contract/read` accepts a decimal block height or a tag ("latest"/"earliest"/"pending"); it
+  // defaults to latest when omitted. We forward `block` as-is (unlike the RPC path, no hex quantity).
+  const [result] = await fetch<ContractReadResult[]>({
+    method: "POST",
+    url: `${getEnv("EXPLORER")}/blockchain/v4/${config.explorerId}/contract/read`,
+    data: [
+      {
+        contract: normalizeAddress(params.to),
+        data: params.data,
+        ...(params.block !== undefined ? { blockNumber: params.block } : {}),
+      },
+    ],
+  });
+  if (result?.response === undefined) {
+    // `error` comes straight from the JSON response (a string or a `{ code, message }`-like object),
+    // so there are no cycles/Error instances to worry about. Keep plain strings verbatim to avoid the
+    // extra quotes JSON.stringify would wrap them in.
+    const reason =
+      result?.error === undefined
+        ? "empty response"
+        : typeof result.error === "string"
+          ? result.error
+          : JSON.stringify(result.error);
+    throw new Error(`EVM call failed on ${config.explorerId}: ${reason}`);
+  }
+  return result.response;
 }
 
 function makeGetTokenAllowance(
@@ -336,7 +388,7 @@ async function getScrollAdditionalFees(
   currency: CryptoCurrency,
   transaction: string,
 ): Promise<BigNumber> {
-  if (!["scroll", "scroll_sepolia"].includes(currency.id)) {
+  if (currency.id !== "scroll") {
     return new BigNumber(0);
   }
   if (!transaction) {
@@ -369,9 +421,7 @@ export function createLedgerNodeApi(config: LedgerNodeConfig): NodeApi {
     Batcher<{ address: string; contract: string }, BigNumber>
   >();
   return {
-    async call() {
-      throw new Error("call is not supported");
-    },
+    call: make(call, config, fetch),
     getBlockByHeight: make(getBlockByHeight, config, fetch),
     getCoinBalance: make(getCoinBalance, config, fetch),
     getTokenBalance: makeGetTokenBalance(config, fetch, tokenBalancesBatchersMap),

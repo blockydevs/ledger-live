@@ -35,6 +35,7 @@ export default class SwapLiveAppPage {
   quotesContainerErrorIcon = "quotes-container-error-icon";
   insufficientFundsBuyButton = "insufficient-funds-buy-button";
   fromAccountAccountNameTag = "from-account-account-name-tag";
+  fromAccountBalance = "from-account-balance";
   toAccountAccountNameTag = "to-account-account-name-tag";
   incompatibilityBannerPartnerId = "incompatibility-banner-partner";
   swapMainContainerCssSelector = "main";
@@ -406,13 +407,21 @@ export default class SwapLiveAppPage {
     jestExpect(fromAccount).toContain(expectedAssetText);
   }
 
+  @Step("Check from-account balance is masked in discreet mode for $0")
+  async checkFromAccountBalanceIsDiscreet(ticker: string) {
+    await waitWebElementByTestId(this.fromAccountBalance);
+    const text = await getWebElementText(this.fromAccountBalance);
+    jestExpect(text).toMatch(new RegExp(String.raw`\*\*\*\s+${escapeRegExp(ticker)}`, "i"));
+  }
+
   @Step("Check currency to swap from matches account $0")
   async checkAssetFromMatchesAccount(account: Account) {
     const selectedAccountText: string = await getWebElementText(this.fromSelector);
+    const expectedAccountName = account.parentAccount?.accountName ?? account.accountName;
     jestExpect(selectedAccountText).toContain(account.currency.ticker);
     await waitWebElementByTestId(this.fromAccountAccountNameTag);
     const accountNameText: string = await getWebElementText(this.fromAccountAccountNameTag);
-    jestExpect(accountNameText).toContain(account.accountName);
+    jestExpect(accountNameText).toContain(expectedAccountName);
   }
 
   @Step("Check currency to swap to is $0 with amount $1")
@@ -446,6 +455,14 @@ export default class SwapLiveAppPage {
 
     jestExpect(selectedAccountTicker).toContain(account.currency.ticker);
     jestExpect(selectedAccountNameTag).toContain(expectedAccountName);
+  }
+
+  @Step("Clear swap account selection from localStorage")
+  async clearSwapState() {
+    await this.swapMainContainerWebElement.runScript(() => {
+      localStorage.removeItem("from-account");
+      localStorage.removeItem("to-account");
+    });
   }
 
   @Step("Check Ledger Nano S not supported banner for $0")

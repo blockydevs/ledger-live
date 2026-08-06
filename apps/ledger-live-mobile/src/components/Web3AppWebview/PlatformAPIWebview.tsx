@@ -5,14 +5,14 @@ import { ActivityIndicator, Linking, Platform, StyleSheet, View } from "react-na
 import { WebView as RNWebView, WebViewMessageEvent } from "react-native-webview";
 import { useNavigation } from "@react-navigation/native";
 import { JSONRPCRequest } from "json-rpc-2.0";
-import { UserRefusedOnDevice } from "@ledgerhq/errors";
+import { UserRefusedOnDevice } from "@ledgerhq/ledger-wallet-framework/errors";
 import { Account, AccountLike, Operation } from "@ledgerhq/types-live";
 import type {
   RawPlatformTransaction,
   RawPlatformSignedTransaction,
   RawPlatformAccount,
 } from "@ledgerhq/live-common/platform/rawTypes";
-import { getEnv } from "@ledgerhq/live-env";
+import { getEnv } from "@shared/env";
 import type { Device } from "@ledgerhq/live-common/hw/actions/types";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import {
@@ -38,7 +38,7 @@ import { useInternalAppIds } from "@ledgerhq/live-common/hooks/useInternalAppIds
 import { safeGetRefValue } from "@ledgerhq/live-common/wallet-api/react";
 import { useFeature } from "@features/platform-feature-flags";
 import { useFeatureFlaggedCurrencies } from "@features/platform-currencies";
-import useEnv from "@ledgerhq/live-common/hooks/useEnv";
+import useEnv from "@features/platform-env";
 import { NavigatorName, ScreenName } from "~/const";
 import { broadcastSignedTx } from "~/logic/screenTransactionHooks";
 import { flattenAccountsSelector } from "~/reducers/accounts";

@@ -33,6 +33,8 @@ const transformIncludePatterns = [
   "@hashgraph/sdk",
   "react-native-startup-time",
   "@segment/analytics-react-native",
+  "expo-crypto",
+  "expo-modules-core",
   "uuid",
   "react-native-ble-plx",
   "react-native-android-location-services-dialog-box",
@@ -133,6 +135,8 @@ module.exports = {
   ],
   resolver: "<rootDir>/scripts/resolver.js",
   moduleNameMapper: {
+    "^@ledgerhq/ledger-key-ring-protocol/__mocks__/(.*)$":
+      "<rootDir>/../../libs/ledger-key-ring-protocol/src/__mocks__/$1",
     ...pathsToModuleNameMapper(compilerOptions.paths),
     // Logic-only stub — integration tests overlay UI components via jest.mock.
     "^@features/flow-contacts$": "<rootDir>/../../features/flow/contacts/src/jest.native.ts",
@@ -158,6 +162,9 @@ module.exports = {
     "^react-redux": "<rootDir>/node_modules/react-redux",
     "^@tanstack/react-query$": "<rootDir>/node_modules/@tanstack/react-query",
     "^react-native-mmkv$": "<rootDir>/__mocks__/react-native-mmkv.ts",
+    // expo-keep-awake resolves to its ESM TS source under the react-native
+    // export condition, which Jest can't parse; redirect to a stub.
+    "^expo-keep-awake$": "<rootDir>/__mocks__/expo-keep-awake.ts",
     // Redirect to mock for pre-compiled dependencies (like @ledgerhq/native-ui)
     "^react-native-worklets$": "<rootDir>/__mocks__/react-native-worklets.js",
     // Global mock for .lottie (dotLottie) files

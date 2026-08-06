@@ -260,9 +260,9 @@ describe("LargeScreenUpsellModalMount (integration)", () => {
     expect(openedUrl.origin + openedUrl.pathname).toBe(
       "https://shop.ledger.com/pages/opted-out-offer",
     );
-    expect(openedUrl.searchParams.get("utm_source")).toBe("ledger_live");
-    expect(openedUrl.searchParams.get("utm_medium")).toBe("desktop");
-    expect(openedUrl.searchParams.get("utm_campaign")).toBe("upsell_large_screen");
+    expect(openedUrl.searchParams.get("utm_source")).toBe("ledger_wallet_desktop");
+    expect(openedUrl.searchParams.get("utm_medium")).toBe("ledger_live");
+    expect(openedUrl.searchParams.get("utm_campaign")).toBe("nano_upgrade_program");
     expect(openedUrl.searchParams.get("utm_content")).toBe("app_start_modal");
     expect(store.getState().largeScreenUpsellModal.retries).toBe(0);
     expect(track).toHaveBeenCalledWith("button_clicked", {
@@ -311,9 +311,9 @@ describe("LargeScreenUpsellModalMount (integration)", () => {
     expect(openedUrl.origin + openedUrl.pathname).toBe(
       "https://shop.ledger.com/pages/opted-in-offer",
     );
-    expect(openedUrl.searchParams.get("utm_source")).toBe("ledger_live");
-    expect(openedUrl.searchParams.get("utm_medium")).toBe("desktop");
-    expect(openedUrl.searchParams.get("utm_campaign")).toBe("upsell_large_screen");
+    expect(openedUrl.searchParams.get("utm_source")).toBe("ledger_wallet_desktop");
+    expect(openedUrl.searchParams.get("utm_medium")).toBe("ledger_live");
+    expect(openedUrl.searchParams.get("utm_campaign")).toBe("nano_upgrade_program");
     expect(openedUrl.searchParams.get("utm_content")).toBe("app_start_modal");
     expect(track).toHaveBeenCalledWith("button_clicked", {
       button: "explore large screen devices",
@@ -611,7 +611,7 @@ describe("LargeScreenUpsellModalMount (integration)", () => {
     await expectModalNotOpen();
   });
 
-  it("should not open when onboarding date is missing", async () => {
+  it("should open when onboarding date is missing using the legacy fallback", async () => {
     renderMount({
       ...eligibleState({
         devicesModelList: [DeviceModelId.nanoX],
@@ -621,7 +621,9 @@ describe("LargeScreenUpsellModalMount (integration)", () => {
       },
     });
 
-    await expectModalNotOpen();
+    await waitFor(() => {
+      expect(screen.getByTestId("large-screen-upsell-modal")).toBeVisible();
+    });
   });
 
   it("should not open when retries reach killThreshold 3 within the cadence window", async () => {

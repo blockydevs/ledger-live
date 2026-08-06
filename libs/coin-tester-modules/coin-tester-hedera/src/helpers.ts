@@ -11,7 +11,7 @@ import type {
   HederaSigner,
 } from "@ledgerhq/coin-hedera/types";
 import type { Scenario, ScenarioTransaction } from "@ledgerhq/coin-tester/main";
-import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
+import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import { registerCoinModules } from "@ledgerhq/live-common/coin-modules/registry";
 import { coinModuleLoaders } from "@ledgerhq/live-common/coin-modules/loaders";
 import {

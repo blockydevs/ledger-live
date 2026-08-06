@@ -2,8 +2,9 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import featureFlagsReducer, { createFeatureFlagsMiddleware } from "@shared/feature-flags";
 import { withCopyStoreHydration } from "@devtools/protocols/copyStore";
 import { sleepingListener } from "./sleepingListener";
-import { cryptoAssetsApi, calApiExtra } from "@domain/api-currency-token";
-import { getEnv } from "@ledgerhq/live-env";
+import { cryptoAssetsApi } from "@domain/api-currency-token";
+import { calApiExtra } from "@shared/api-services";
+import { getEnv } from "@shared/env";
 
 const rootReducer = combineReducers({
   featureFlags: featureFlagsReducer,

@@ -2,7 +2,7 @@ import { Account } from "@ledgerhq/live-e2e-shared/enum/Account";
 import { ensureTokenApproval, performSwapUntilQuoteSelectionStep } from "../../../utils/swapUtils";
 import { SwapProvider } from "@ledgerhq/live-e2e-shared/enum/Provider";
 import { Team } from "@ledgerhq/live-e2e-shared/enum/Team";
-import { setEnv } from "@ledgerhq/live-env";
+import { setEnv } from "@shared/env";
 import { beforeAllFunctionSwap } from "../swap.setup";
 import { getAmountFromUSD } from "@ledgerhq/live-e2e-shared/currencyUtils";
 import { setTeamOwner } from "../../../helpers/allure/allure-helper";
@@ -16,7 +16,7 @@ export function runSwapDexNativeFlow(
   tmsLinks: string[],
   tags: string[],
 ) {
-  describe("Swap - DEX Native flow", () => {
+  describe("Swap - DEX native flow", () => {
     beforeAll(async () => {
       await app.speculos.setExchangeDependencies(fromAccount, toAccount);
       await beforeAllFunctionSwap({
@@ -38,7 +38,7 @@ export function runSwapDexNativeFlow(
     setTeamOwner(Team.SWAP);
     tmsLinks.forEach(tmsLink => $TmsLink(tmsLink));
     tags.forEach(tag => $Tag(tag));
-    it(`Swap test DEX provider native flow - (${provider.uiName})`, async () => {
+    it(`[${fromAccount.currency.testLabel}-${toAccount.currency.testLabel}] - Swap DEX native flow with ${provider.uiName}`, async () => {
       const amountToSwap = await getAmountFromUSD(fromAccount.currency.id, 5);
       if (amountToSwap === null) {
         throw new Error(`Could not resolve USD amount for ${fromAccount.currency.id}`);

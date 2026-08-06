@@ -1,5 +1,5 @@
 import { stringify } from "querystring";
-import { InvalidTransactionError } from "@ledgerhq/errors";
+import { InvalidTransactionError } from "@ledgerhq/ledger-wallet-framework/errors";
 import network from "@ledgerhq/live-network";
 import { hours, makeLRUCache } from "@ledgerhq/live-network/cache";
 import { log } from "@ledgerhq/logs";
@@ -306,7 +306,7 @@ export async function craftStandardTransaction(
 const getTokenInfo = (subAccount: TokenAccount | null | undefined): string[] | undefined[] => {
   const tokenInfo =
     subAccount && subAccount.type === "TokenAccount"
-      ? drop(subAccount.token.id.split("/"), 1)
+      ? drop(String(subAccount.token.id).split("/"), 1)
       : [undefined, undefined];
   return tokenInfo;
 };

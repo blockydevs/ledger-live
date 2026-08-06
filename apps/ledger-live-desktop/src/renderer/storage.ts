@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { ipcRenderer } from "electron";
-import { getEnv } from "@ledgerhq/live-env";
+import { getEnv } from "@shared/env";
 import { useDBRaw } from "@ledgerhq/live-common/hooks/useDBRaw";
 import { DiscoverDB } from "@ledgerhq/live-common/wallet-api/types";
 import accountModel from "~/helpers/accountModel";
@@ -21,7 +21,7 @@ import { ExportedWalletState } from "@ledgerhq/live-wallet/store";
 import type { PersistedCAL } from "@domain/api-currency-token";
 import type { PersistedIdentities } from "@domain/entity-client-identity";
 import type { FeatureFlagsState } from "@shared/feature-flags";
-import type { RestorableLargeScreenUpsellModalState } from "@domain/entity-large-screen-upsell-modal";
+import type { RestorableLargeScreenUpsellModalState } from "@features/flow-large-screen-upsell";
 
 /*
   This file serve as an interface for the RPC binding to the main thread that now manage the config file.

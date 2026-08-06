@@ -40,8 +40,17 @@ apps/ledger-live-desktop/scripts/                        @ledgerhq/platform
 /features/                                               @ledgerhq/platform
 
 # Platform — shared
-shared/feature-flags                                     @ledgerhq/platform
-shared/schema-primitives                                 @ledgerhq/platform
+/shared/                                                 @ledgerhq/platform
+
+# Platform — shared (explicit overrides)
+/shared/feature-flags                                    @ledgerhq/platform
+/shared/schema-primitives                                @ledgerhq/platform
+/shared/qr-code                                          @ledgerhq/platform
+/shared/api-services/                                    @ledgerhq/platform
+/shared/auth/                                            @ledgerhq/platform
+/shared/cloud-sync/                                      @ledgerhq/platform
+/shared/cloud-sync-module/                               @ledgerhq/platform
+/shared/env/                                             @ledgerhq/platform
 
 # Platform — mobile
 apps/ledger-live-mobile/android/                         @ledgerhq/platform
@@ -56,6 +65,16 @@ libs/promise/                                            @ledgerhq/platform
 libs/ledger-key-ring-protocol/                           @ledgerhq/platform
 libs/hw-ledger-key-ring-protocol/                        @ledgerhq/platform
 libs/ledger-live-common/src/featureFlags/                @ledgerhq/platform
+libs/disable-network-setup/                              @ledgerhq/platform
+libs/feature-flag-module/                                @ledgerhq/platform
+libs/ledger-auth/                                        @ledgerhq/platform
+libs/oxc-live-libs/                                      @ledgerhq/platform
+
+# Platform — devtools
+devtools/transport/                                      @ledgerhq/platform
+devtools/protocols/                                      @ledgerhq/platform
+devtools/wire/                                           @ledgerhq/platform
+devtools/relay/                                          @ledgerhq/platform
 
 # Wallet — libs
 libs/live-countervalues-react/                           @ledgerhq/wallet-xp
@@ -145,13 +164,12 @@ apps/ledger-live-mobile/src/screens/SignRawTransaction/             @ledgerhq/co
 apps/ledger-live-mobile/src/screens/SignTransaction/                @ledgerhq/coin-integration
 
 ### ... cryptoassets ongoing rework => the lib now belongs to @ledgerhq/wallet-xp (with currencies owned by @ledgerhq/coin-integration) ... ###
-libs/ledgerjs/packages/cryptoassets                      @ledgerhq/wallet-xp
-libs/ledgerjs/packages/cryptoassets/src/currencies.ts    @ledgerhq/coin-integration
 domain/entity/currency-crypto/src/currencies/            @ledgerhq/coin-integration
 libs/ledgerjs/packages/types-live/src/lnsUpsell.ts       @ledgerhq/engagement
 libs/ledgerjs/packages/types-live/src/postOnboarding.ts  @ledgerhq/engagement
-domain/entity/large-screen-upsell-modal/                 @ledgerhq/engagement
 features/flow/large-screen-upsell/                       @ledgerhq/engagement
+domain/entity/analytics-consent/                         @ledgerhq/engagement
+features/flow/analytics-consent/                         @ledgerhq/engagement
 
 ### ... market/altcoins sentiment => @ledgerhq/wallet-xp ... ###
 domain/entity/market-sentiment/                          @ledgerhq/wallet-xp
@@ -162,9 +180,13 @@ features/flow/fear-and-greed/                            @ledgerhq/wallet-xp
 
 libs/psbtv2/                                             @ledgerhq/coin-integration
 libs/ledgerjs/packages/hw-app-*/                         @ledgerhq/coin-integration
-libs/ledgerjs/packages/types-cryptoassets/               @ledgerhq/coin-integration
+libs/ledgerjs/packages/hw-bolos/                         @ledgerhq/coin-integration
+libs/ledgerjs/packages/keyring-eth/                      @ledgerhq/coin-integration
 libs/live-config/                                        @ledgerhq/coin-integration
 libs/live-network/                                       @ledgerhq/coin-integration
+libs/ethereum-provider/                                  @ledgerhq/coin-integration
+libs/wallet-btc/                                         @ledgerhq/coin-integration
+libs/wallet-framework-test-setup/                        @ledgerhq/coin-integration
 tools/actions/composites/run-coin-tester/                @ledgerhq/coin-integration
 tools/actions/composites/setup-coin-tester-env/          @ledgerhq/coin-integration
 tools/actions/composites/monitor/                        @ledgerhq/coin-integration
@@ -172,34 +194,32 @@ tools/actions/composites/monitor/                        @ledgerhq/coin-integrat
 # Coin modules owned by Coin Integration
 # (libs/coin-*/ above already defaults to @ledgerhq/coin-integration; these make
 #  ownership explicit. New/unlisted modules still fall back to that wildcard.)
-libs/coin-modules/coin-algorand/                                         @ledgerhq/coin-integration
+libs/coin-modules/coin-module-boilerplate/                               @ledgerhq/coin-integration
 libs/coin-modules/coin-bitcoin/                                          @ledgerhq/coin-integration
 libs/coin-modules/coin-cosmos/                                           @ledgerhq/coin-integration
 libs/coin-modules/coin-evm/                                              @ledgerhq/coin-integration
-libs/coin-modules/coin-icon/                                             @ledgerhq/coin-integration
-libs/coin-modules/coin-module-boilerplate/                               @ledgerhq/coin-integration
-libs/coin-modules/coin-multiversx/                                       @ledgerhq/coin-integration
 libs/coin-modules/coin-polkadot/                                         @ledgerhq/coin-integration
 libs/coin-modules/coin-solana/                                           @ledgerhq/coin-integration
-libs/coin-modules/coin-stellar/                                          @ledgerhq/coin-integration
 libs/coin-modules/coin-tron/                                             @ledgerhq/coin-integration
 
 ## Blockchain support 1
 libs/coin-modules/coin-aptos/                                            @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-near/                                             @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-vechain/                                          @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
-libs/coin-modules/coin-casper/                                           @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-filecoin/                                         @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
-libs/coin-modules/coin-internet_computer/                                @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-mina/                                             @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-stacks/                                           @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
-libs/coin-modules/coin-ton/                                              @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-kaspa/                                            @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-zcash/                                            @ledgerhq/blockchain-support @ledgerhq/ledger-third-party-leads
 
 ## Blockchain support 2
 libs/coin-modules/coin-hedera/                                           @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-aleo/                                             @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-xrp/                                              @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-algorand/                                         @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-icon/                                             @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-multiversx/                                       @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-casper/                                           @ledgerhq/ledger-partner-blockydevs @ledgerhq/ledger-third-party-leads
 
 ## Blockchain support 3
 libs/coin-modules/coin-sui/                                              @ledgerhq/ledger-partner-hoodies @ledgerhq/ledger-third-party-leads
@@ -208,8 +228,12 @@ libs/coin-modules/coin-concordium/                                       @ledger
 libs/coin-modules/coin-tezos/                                            @ledgerhq/ledger-partner-hoodies @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-cardano/                                          @ledgerhq/ledger-partner-hoodies @ledgerhq/ledger-third-party-leads
 libs/coin-modules/coin-celo/                                             @ledgerhq/ledger-partner-hoodies @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-internet_computer/                                @ledgerhq/ledger-partner-hoodies @ledgerhq/ledger-third-party-leads
+libs/coin-modules/coin-ton/                                              @ledgerhq/ledger-partner-hoodies @ledgerhq/ledger-third-party-leads
+libs/concordium-core/                                                    @ledgerhq/ledger-partner-hoodies
 
 # PTX team
+features/flow/pay-card-auth/                                             @ledgerhq/ptx
 apps/cli/src/commands/ptx                                            					@ledgerhq/ptx
 apps/ledger-live-desktop/src/renderer/components/ProviderIcon/       					@ledgerhq/ptx
 apps/ledger-live-desktop/src/renderer/components/WebPTXPlayer/       					@ledgerhq/ptx
@@ -262,9 +286,9 @@ apps/ledger-live-desktop/src/mvvm/features/Borrow/							            @ledgerhq/p
 apps/ledger-live-desktop/src/mvvm/features/Portfolio/components/BorrowEntryPoint/       @ledgerhq/ptx
 
 # wallet-cli
-apps/wallet-cli/                                                              @Justkant
-apps/wallet-cli/src/commands/swap/                                            @ledgerhq/ptx @Justkant
-apps/wallet-cli/src/test/commands/swap/                                       @ledgerhq/ptx @Justkant
+apps/wallet-cli/                                                              @ledgerhq/agentic-core
+apps/wallet-cli/src/commands/swap/                                            @ledgerhq/ptx @ledgerhq/agentic-core
+apps/wallet-cli/src/test/commands/swap/                                       @ledgerhq/ptx @ledgerhq/agentic-core
 
 # Wallet API team > coin-integration
 **/PlatformAppProviderWrapper.tsx                        @ledgerhq/coin-integration
@@ -303,6 +327,7 @@ libs/ledger-live-common/src/customImage/                            @ledgerhq/li
 apps/**/components/DeviceAction/                                   @ledgerhq/live-devices
 apps/ledger-live-mobile/src/mvvm/components/DeviceIntentExecutor/     @ledgerhq/live-devices
 apps/ledger-live-mobile/src/mvvm/components/DeviceActionContent/   @ledgerhq/live-devices
+apps/ledger-live-mobile/src/mvvm/features/WalletApiSignature/ @ledgerhq/live-devices @ledgerhq/coin-integration
 apps/ledger-live-desktop/src/mvvm/components/DeviceIntentExecutor/ @ledgerhq/live-devices
 apps/ledger-live-desktop/src/mvvm/components/DeviceActionContent/  @ledgerhq/live-devices
 apps/ledger-live-mobile/src/components/ValidateMessageOnDevice.tsx @ledgerhq/live-devices
@@ -346,6 +371,14 @@ libs/live-dmk-desktop/                                             @ledgerhq/liv
 libs/live-dmk-shared/                                              @ledgerhq/live-devices
 libs/live-signer-evm/                                              @ledgerhq/live-devices
 libs/live-signer-solana/                                           @ledgerhq/live-devices
+libs/live-signer-aleo/                                             @ledgerhq/live-devices
+libs/live-signer-canton/                                           @ledgerhq/live-devices
+libs/live-signer-concordium/                                       @ledgerhq/live-devices
+libs/live-signer-zcash/                                            @ledgerhq/live-devices
+libs/live-signer-celo/                                             @ledgerhq/live-devices
+libs/live-signer-cosmos/                                           @ledgerhq/live-devices
+libs/live-signer-hyperliquid/                                      @ledgerhq/live-devices
+libs/ledgerjs/packages/hw-transport/                               @ledgerhq/live-devices
 libs/live-dmk-speculos/                                            @ledgerhq/live-devices
 apps/ledger-live-desktop/src/renderer/hooks/useDeeplinking/handlers/manager.handler.ts  @ledgerhq/live-devices
 
@@ -451,7 +484,7 @@ apps/ledger-live-mobile/src/mvvm/features/WalletV4Tour/                         
 apps/ledger-live-mobile/src/mvvm/features/ProductTour/                                         @ledgerhq/engagement
 apps/ledger-live-mobile/src/mvvm/features/Q2WalletV4Tour/                                       @ledgerhq/engagement
 apps/ledger-live-mobile/src/mvvm/features/BackupHub/                                           @ledgerhq/engagement
-apps/ledger-live-mobile/src/mvvm/features/LNSUpsell/                                           @ledgerhq/engagement
+apps/ledger-live-mobile/src/mvvm/features/LNUpsell/                                           @ledgerhq/engagement
 apps/ledger-live-mobile/src/mvvm/features/LargeScreenUpsell/                                   @ledgerhq/engagement
 apps/ledger-live-mobile/src/mvvm/features/Reborn/                                              @ledgerhq/engagement
 apps/ledger-live-mobile/src/mvvm/features/GenericAwarenessModal/                               @ledgerhq/engagement
@@ -494,6 +527,7 @@ libs/ui/packages/native/src/components/Layout/Slides/                           
 apps/ledger-live-desktop/tests/                                             @ledgerhq/wallet-xp
 e2e/                                                                        @ledgerhq/qaa
 libs/ledger-live-common/src/e2e/                                            @ledgerhq/qaa
+libs/live-e2e-shared/                                                       @ledgerhq/qaa
 apps/ledger-live-mobile/e2e/                                                @ledgerhq/wallet-xp
 tools/actions/composites/merge-e2e-detox-timings/                           @ledgerhq/qaa
 
@@ -526,7 +560,7 @@ mise.toml                                             @ledgerhq/platform
 
 # Platform — Agent files
 .agents/                           @ledgerhq/platform
-.agents/skills/ledger-wallet-cli/                                             @Justkant
+.agents/skills/ledger-wallet-cli/                                             @ledgerhq/agentic-core
 .claude/                           @ledgerhq/platform
 .codex                             @ledgerhq/platform
 .cursor/                           @ledgerhq/platform

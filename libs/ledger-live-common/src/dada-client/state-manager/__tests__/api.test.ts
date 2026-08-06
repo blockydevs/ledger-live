@@ -5,9 +5,9 @@ import {
 } from "../api";
 import { AssetCategory } from "../types";
 import type { RawApiResponse } from "../../entities";
-import { getEnv } from "@ledgerhq/live-env";
+import { getEnv } from "@shared/env";
 
-jest.mock("@ledgerhq/live-env", () => ({
+jest.mock("@shared/env", () => ({
   getEnv: jest.fn().mockReturnValue("https://dada.api.ledger.com/v1"),
 }));
 
@@ -77,6 +77,19 @@ describe("buildAssetsQueryParams", () => {
       buildAssetsQueryParams({ ...baseQueryArg, currencyIds: [] }).currencyIds,
     ).toBeUndefined();
     expect(buildAssetsQueryParams(baseQueryArg).currencyIds).toBeUndefined();
+  });
+
+  it("should serialize networkIds as a comma-separated string", () => {
+    const input = ["ethereum", "tron"];
+
+    expect(buildAssetsQueryParams({ ...baseQueryArg, networkIds: input }).networkIds).toBe(
+      "ethereum,tron",
+    );
+  });
+
+  it("should omit networkIds when empty or not provided", () => {
+    expect(buildAssetsQueryParams({ ...baseQueryArg, networkIds: [] }).networkIds).toBeUndefined();
+    expect(buildAssetsQueryParams(baseQueryArg).networkIds).toBeUndefined();
   });
 
   it("should serialize categories as a comma-separated string", () => {
