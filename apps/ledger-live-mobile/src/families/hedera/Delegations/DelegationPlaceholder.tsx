@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function DelegationPlaceholder({ account }: Readonly<Props>) {
-  invariant(!account.hederaResources?.delegation, "hedera: account shouldn't have delegation");
+  invariant(!account.stakingPositions?.length, "hedera: account shouldn't have delegation");
   const { t } = useTranslation();
   const navigation = useNavigation();
 

@@ -22,7 +22,7 @@ const getMainActions = ({
   const currency = getAccountCurrency(account);
   const label = getStakeLabelLocaleBased();
   const hasNoFunds = account.spendableBalance.isZero();
-  const isAlreadyDelegated = !!account.hederaResources?.delegation;
+  const isAlreadyDelegated = (account.stakingPositions?.length ?? 0) > 0;
 
   const navigationParams: NavigationParamsType = (() => {
     if (isAlreadyDelegated) {
