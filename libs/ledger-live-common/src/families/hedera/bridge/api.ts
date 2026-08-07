@@ -1,8 +1,10 @@
+import BigNumber from "bignumber.js";
 import type { AssetInfo, Balance } from "@ledgerhq/coin-module-framework/api/types";
 import type { CryptoCurrency, TokenCurrency } from "@ledgerhq/types-cryptoassets";
 import type { Account, Operation as LiveOperation } from "@ledgerhq/types-live";
 import type { BridgeApi } from "@ledgerhq/ledger-wallet-framework/api/types";
 import type { GetAddressResult } from "@ledgerhq/ledger-wallet-framework/derivation";
+import { getEnv } from "@ledgerhq/live-env";
 import { getAssetFromToken } from "@ledgerhq/coin-hedera/logic/getAssetFromToken";
 import { getTokenFromAsset } from "@ledgerhq/coin-hedera/logic/getTokenFromAsset";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/coin-hedera/constants";
@@ -60,9 +62,10 @@ function enrichOptimisticOperation(
 ): LiveOperation {
   const stripChecksum = !isErc20Transaction(transaction);
   const senders = stripChecksum ? operation.senders.map(stripHederaChecksum) : operation.senders;
-  const recipients = stripChecksum
+  let recipients = stripChecksum
     ? operation.recipients.map(stripHederaChecksum)
     : operation.recipients;
+  let value = operation.value;
 
   const extra: Partial<HederaOperationExtra> = {
     ...(operation.extra as Partial<HederaOperationExtra>),
@@ -76,6 +79,13 @@ function enrichOptimisticOperation(
     if (typeof transaction.assetReference === "string") {
       extra.associatedTokenId = transaction.assetReference;
     }
+  } else if (transaction.mode === HEDERA_TRANSACTION_MODES.ClaimRewards) {
+    // The UI transaction for this mode carries only `mode`; the actual transfer amount and
+    // recipient are hardcoded in craftTransaction.ts, so the optimistic operation must read
+    // them from the same source to show the right value before the next sync.
+    value = new BigNumber(1);
+    const recipient = getEnv("HEDERA_CLAIM_REWARDS_RECIPIENT_ACCOUNT_ID");
+    recipients = [stripChecksum ? stripHederaChecksum(recipient) : recipient];
   } else if (HEDERA_STAKING_MODES.has(transaction.mode as string)) {
     extra.memo = memo ?? null;
     extra.targetStakingNodeId =
@@ -85,10 +95,13 @@ function enrichOptimisticOperation(
     extra.memo = memo;
   }
 
-  return { ...operation, senders, recipients, extra };
+  return { ...operation, senders, recipients, value, extra };
 }
 
 const OPERATION_DETAILS_TO_EXTRA_KEYS: (keyof HederaOperationExtra)[] = [
+  "consensusTimestamp",
+  // getTransactionExplorer builds the HashScan link from this one.
+  "transactionId",
   "associatedTokenId",
   "targetStakingNodeId",
   "previousStakingNodeId",

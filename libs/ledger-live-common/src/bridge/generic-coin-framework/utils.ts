@@ -240,9 +240,15 @@ function isStringArray(value: unknown): value is string[] {
 function isDelegationMode(mode: GenericTransaction["mode"]): mode is StakingOperation {
   return (
     typeof mode === "string" &&
-    ["delegate", "undelegate", "redelegate", "claimReward", "compoundReward", "withdraw"].includes(
-      mode,
-    )
+    [
+      "delegate",
+      "undelegate",
+      "redelegate",
+      "claimReward",
+      "claim-rewards",
+      "compoundReward",
+      "withdraw",
+    ].includes(mode)
   );
 }
 

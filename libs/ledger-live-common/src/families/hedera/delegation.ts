@@ -9,7 +9,7 @@ export function getHederaDelegation(account: HederaAccount): HederaDelegation | 
   const stake = account.stakingPositions?.[0];
   const nodeId = stake?.details?.stakedNodeId;
 
-  if (!stake || nodeId === undefined) {
+  if (!stake || nodeId === undefined || nodeId < 0) {
     return undefined;
   }
 

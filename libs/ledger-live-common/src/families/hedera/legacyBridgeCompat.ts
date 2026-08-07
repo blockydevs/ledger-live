@@ -215,6 +215,9 @@ function withStakingPositions(account: HederaAccount): HederaAccount {
  * coin-framework transaction shape the UI now builds. Lets `bridge/impl.ts` fall back to the
  * legacy bridge when `genericCoinFrameworkFamilies.json` disables the generic one for hedera,
  * without the UI having to know which bridge is live.
+ *
+ * Removal trigger: once hedera stays on the generic coin framework for good, delete this file
+ * along with its call site in `setup.ts`.
  */
 export function createLegacyCompatBridges(
   signerContext: SignerContext<HederaSigner>,

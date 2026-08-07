@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import type { Balance } from "@ledgerhq/coin-module-framework/api/types";
 import type { Operation } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/types-cryptoassets";
@@ -156,6 +157,25 @@ describe("hederaBridge().enrichOptimisticOperation", () => {
     expect((withoutMemo.extra as Record<string, unknown>).memo).toBeNull();
   });
 
+  it("sets the value and recipient of a claim-rewards operation from the configured account", () => {
+    const bridge = hederaBridge(currency);
+    const account = { stakingPositions: [] } as unknown as HederaAccount;
+    const zeroValueOperation = {
+      ...baseOperation,
+      value: new BigNumber(0),
+      recipients: [""],
+    } as unknown as Operation;
+
+    const enriched = bridge.enrichOptimisticOperation!(
+      account as never,
+      { mode: "claim-rewards" },
+      zeroValueOperation,
+    );
+
+    expect(enriched.value).toEqual(new BigNumber(1));
+    expect(enriched.recipients).toEqual(["0.0.163372"]);
+  });
+
   it("does not attach a memo on a token-associate transaction", () => {
     const bridge = hederaBridge(currency);
     const account = { stakingPositions: [] } as unknown as HederaAccount;
@@ -171,10 +191,12 @@ describe("hederaBridge().enrichOptimisticOperation", () => {
 });
 
 describe("hederaBridge().mapOperationDetailsToExtra", () => {
-  it("copies only the six Hedera-specific keys", () => {
+  it("copies only the Hedera-specific keys", () => {
     const bridge = hederaBridge(currency);
 
     const extra = bridge.mapOperationDetailsToExtra!({
+      consensusTimestamp: "1699999999.000000001",
+      transactionId: "0.0.1234567-1699999999-000000000",
       associatedTokenId: "0.0.5005",
       targetStakingNodeId: 7,
       previousStakingNodeId: 3,
@@ -186,6 +208,8 @@ describe("hederaBridge().mapOperationDetailsToExtra", () => {
     });
 
     expect(extra).toEqual({
+      consensusTimestamp: "1699999999.000000001",
+      transactionId: "0.0.1234567-1699999999-000000000",
       associatedTokenId: "0.0.5005",
       targetStakingNodeId: 7,
       previousStakingNodeId: 3,
