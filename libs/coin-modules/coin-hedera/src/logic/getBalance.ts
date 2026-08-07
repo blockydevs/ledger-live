@@ -57,23 +57,29 @@ export async function getBalance({
       validatorPromise,
     ]);
 
+    const stakedNodeId = mirrorAccount.staked_node_id;
+    const balance = BigInt(mirrorAccount.balance.balance);
+
     const nativeBalance: Balance = {
       asset: { type: "native" },
-      value: BigInt(mirrorAccount.balance.balance),
-      ...(validator && {
+      value: balance,
+      ...(typeof stakedNodeId === "number" && {
         stake: {
           uid: address,
           address,
           asset: { type: "native" },
-          state: "active",
-          amount: BigInt(mirrorAccount.balance.balance) + BigInt(mirrorAccount.pending_reward),
-          amountDeposited: BigInt(mirrorAccount.balance.balance),
+          state: validator ? "active" : "inactive",
+          amount: balance + BigInt(mirrorAccount.pending_reward),
+          amountDeposited: balance,
           amountRewarded: BigInt(mirrorAccount.pending_reward),
-          delegate: validator.node_account_id,
           actions: [],
           details: {
-            overstaked: BigInt(validator.stake) >= BigInt(validator.max_stake),
+            stakedNodeId,
+            overstaked: validator ? BigInt(validator.stake) >= BigInt(validator.max_stake) : null,
           },
+          ...(validator && {
+            delegate: validator.node_account_id,
+          }),
         },
       }),
     };

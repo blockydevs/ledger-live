@@ -23,22 +23,29 @@ const estimateContractCallFees = async ({
   configOrCurrencyId: HederaCoinConfig | string;
   txIntent: TransactionIntent;
 }): Promise<EstimateFeesResult> => {
-  let tinybars = new BigNumber(0);
-  let gas = new BigNumber(0);
+  let tinybars: BigNumber;
+  let gas: BigNumber;
 
   const tokenEvmAddress = "assetReference" in txIntent.asset ? txIntent.asset.assetReference : null;
+  invariant(
+    tokenEvmAddress,
+    `hedera: could not resolve evm address for token asset of type ${txIntent.asset.type}`,
+  );
+
   const [senderEvmAddress, recipientEvmAddress] = await Promise.all([
     toEVMAddress({ configOrCurrencyId, accountId: txIntent.sender }),
     toEVMAddress({ configOrCurrencyId, accountId: txIntent.recipient }),
   ]);
 
-  if (!tokenEvmAddress || !senderEvmAddress || !recipientEvmAddress) {
-    return {
-      tinybars,
-    };
-  }
-
   try {
+    // An address that does not resolve makes the live gas estimation impossible, but a fee
+    // estimate is not the layer that rejects it: `getTransactionStatus` reports `InvalidAddress`
+    // and `craftTransaction` refuses to build the transfer. Throwing here would pre-empt both,
+    // because every status build runs fee estimation first. Fall back to the default gas
+    // estimate instead — never a zero fee.
+    invariant(senderEvmAddress, "unresolved sender evm address");
+    invariant(recipientEvmAddress, "unresolved recipient evm address");
+
     const [networkFees, gasLimit] = await Promise.all([
       apiClient.getNetworkFees({ configOrCurrencyId }),
       apiClient.estimateContractCallGas({

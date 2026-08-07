@@ -10,7 +10,7 @@ import type { SignerContext } from "@ledgerhq/ledger-wallet-framework/signer";
 import type { AccountBridge, CurrencyBridge } from "@ledgerhq/types-live";
 import hederaCoinConfig, { type HederaCoinConfig } from "../config";
 import { HEDERA_DUMMY_ADDRESS } from "../constants";
-import { getPreloadStrategy, hydrate, preload } from "../preload";
+import { preload } from "../preload";
 import resolver from "../signer/index";
 import type { Transaction, TransactionStatus, HederaSigner, HederaAccount } from "../types";
 import { broadcast } from "./broadcast";
@@ -22,7 +22,7 @@ import { receive } from "./receive";
 import { assignFromAccountRaw, assignToAccountRaw } from "./serialization";
 import { buildSignOperation } from "./signOperation";
 import { getAccountShape, buildIterateResult } from "./synchronisation";
-import { validateAddress } from "./validateAddress";
+import { validateAddress } from "../logic/validateAddress";
 
 function buildCurrencyBridge(signerContext: SignerContext<HederaSigner>): CurrencyBridge {
   const getAddress = resolver(signerContext);
@@ -34,9 +34,9 @@ function buildCurrencyBridge(signerContext: SignerContext<HederaSigner>): Curren
   });
 
   return {
+    // preload() publishes into the shared store itself and caches for 15 minutes, so this
+    // bridge needs neither a hydrate nor a getPreloadStrategy hook.
     preload,
-    hydrate,
-    getPreloadStrategy,
     scanAccounts,
   };
 }

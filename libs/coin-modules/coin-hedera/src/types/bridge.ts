@@ -1,3 +1,4 @@
+import type { Stake } from "@ledgerhq/coin-module-framework/api/types";
 import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import type {
   Account,
@@ -123,6 +124,13 @@ export type TransactionStaking = Extract<
   }
 >;
 
+// The generic framework `Stake.details` is an untyped `Record<string, unknown>`. Widen it with
+// the shape Hedera actually populates so consumers (e.g. the staking validation branch) can
+// read `stakedNodeId` without a cast.
+export type StakeWithNodeDetails = Omit<Stake, "details"> & {
+  details?: { stakedNodeId: number; overstaked: boolean | null };
+};
+
 export interface HederaDelegation {
   nodeId: number;
   delegated: BigNumber;
@@ -154,16 +162,30 @@ export interface HederaResourcesRaw {
 
 export type HederaAccount = Account & {
   hederaResources?: HederaResources;
+  stakingPositions?: StakeWithNodeDetails[];
+};
+
+// `amountDeposited`/`amountRewarded` stay optional here: the framework's `Stake` type
+// allows either to be absent, so a raw form that forces them to a required string would
+// crash on serialization for a stake that has neither.
+export type HederaStakeRaw = Omit<
+  StakeWithNodeDetails,
+  "amount" | "amountDeposited" | "amountRewarded"
+> & {
+  amount: string;
+  amountDeposited?: string;
+  amountRewarded?: string;
 };
 
 export type HederaAccountRaw = AccountRaw & {
   hederaResources?: HederaResourcesRaw;
+  stakingPositions?: HederaStakeRaw[];
 };
 
 export type HederaOperationExtra = {
   consensusTimestamp?: string;
   transactionId?: string;
-  feesPayer?: string;
+  feePayer?: string;
   associatedTokenId?: string;
   pagingToken?: string;
   gasConsumed?: number;
@@ -181,18 +203,6 @@ export type HederaValidator = {
   maxStake: BigNumber;
   activeStake: BigNumber;
   activeStakePercentage: BigNumber;
-  address: string;
-  addressChecksum: string | null;
-  name: string;
-  overstaked: boolean;
-};
-
-export type HederaValidatorRaw = {
-  nodeId: number;
-  minStake: string;
-  maxStake: string;
-  activeStake: string;
-  activeStakePercentage: string;
   address: string;
   addressChecksum: string | null;
   name: string;

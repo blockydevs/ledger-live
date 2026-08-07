@@ -9,12 +9,14 @@ import {
   TransferTransaction,
 } from "@hashgraph/sdk";
 import type { FeeEstimation, TransactionIntent } from "@ledgerhq/coin-module-framework/api/index";
+import { getEnv } from "@ledgerhq/live-env";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import type { HederaCoinConfig } from "../config";
 import {
   DEFAULT_GAS_LIMIT,
   HEDERA_TRANSACTION_MODES,
+  MAP_STAKING_MODE_TO_MEMO,
   TRANSACTION_VALID_DURATION_SECONDS,
 } from "../constants";
 import { rpcClient } from "../network/rpc";
@@ -81,7 +83,7 @@ async function buildUnsignedCoinTransaction({
   const tx = new TransferTransaction()
     .setTransactionValidDuration(TRANSACTION_VALID_DURATION_SECONDS)
     .setTransactionId(transaction.transactionId)
-    .setTransactionMemo(transaction.memo)
+    .setTransactionMemo(transaction.memo ?? "")
     .addHbarTransfer(accountId, hbarAmount.negated())
     .addHbarTransfer(transaction.recipient, hbarAmount);
 
@@ -107,7 +109,7 @@ async function buildUnsignedHTSTokenTransaction({
   const tx = new TransferTransaction()
     .setTransactionValidDuration(TRANSACTION_VALID_DURATION_SECONDS)
     .setTransactionId(transaction.transactionId)
-    .setTransactionMemo(transaction.memo)
+    .setTransactionMemo(transaction.memo ?? "")
     .addTokenTransfer(tokenId, accountId, transaction.amount.negated().toNumber())
     .addTokenTransfer(tokenId, transaction.recipient, transaction.amount.toNumber());
 
@@ -147,7 +149,7 @@ async function buildUnsignedERC20TokenTransaction({
     .setGas(gas)
     .setFunction("transfer", functionParameters);
 
-  if (transaction.maxFee) {
+  if (transaction.maxFee && transaction.maxFee.gt(0)) {
     tx.setMaxTransactionFee(Hbar.fromTinybars(transaction.maxFee.toNumber()));
   }
 
@@ -168,7 +170,7 @@ async function buildTokenAssociateTransaction({
   const tx = new TokenAssociateTransaction()
     .setTransactionValidDuration(TRANSACTION_VALID_DURATION_SECONDS)
     .setTransactionId(transaction.transactionId)
-    .setTransactionMemo(transaction.memo)
+    .setTransactionMemo(transaction.memo ?? "")
     .setAccountId(accountId)
     .setTokenIds([transaction.tokenId]);
 
@@ -272,9 +274,19 @@ export async function craftTransaction({
     invariant("assetReference" in txIntent.asset, "hedera: no assetReference in token transfer");
 
     const amount = new BigNumber(txIntent.amount.toString());
-    const gasLimit = hasSpecificIntentData(txIntent, "erc20")
-      ? new BigNumber(txIntent.data.gasLimit.toString())
-      : DEFAULT_GAS_LIMIT;
+    // Legacy `signOperation` has no `customFees` channel for gas: it packs the estimate into
+    // `txIntent.data.gasLimit` instead, so that's the fallback when `customFees` carries none.
+    // Removal trigger: when `coin-hedera/src/bridge/` goes away, drop the `legacyGasLimit`
+    // branch and make the erc20 intent's `gasLimit` non-optional.
+    const legacyGasLimit = hasSpecificIntentData(txIntent, "erc20")
+      ? txIntent.data.gasLimit
+      : undefined;
+    const estimatedGasLimit =
+      (customFees?.parameters?.gasLimit as bigint | number | string | undefined) ?? legacyGasLimit;
+    const gasLimit =
+      estimatedGasLimit !== undefined
+        ? new BigNumber(estimatedGasLimit.toString())
+        : DEFAULT_GAS_LIMIT;
 
     tx = await buildUnsignedERC20TokenTransaction({
       config,
@@ -300,13 +312,34 @@ export async function craftTransaction({
       transaction: {
         type: txIntent.type,
         transactionId,
-        memo: txIntent.memo.value,
+        memo: MAP_STAKING_MODE_TO_MEMO[txIntent.type],
         maxFee,
         stakingNodeId,
       },
     });
   }
-  // HEDERA_TRANSACTION_MODES.ClaimRewards is just a coin transfer that triggers staking rewards claim
+  // HEDERA_TRANSACTION_MODES.ClaimRewards is just a coin transfer that triggers staking rewards claim.
+  // The generic framework's intent carries no UI-supplied recipient/amount for this mode (the UI only
+  // sets `mode`), so both are hardcoded here exactly as the legacy bridge's prepareTransaction did:
+  // send 1 tinybar to the configured staking-rewards account to trigger the claim.
+  else if (txIntent.type === HEDERA_TRANSACTION_MODES.ClaimRewards) {
+    const amount = new BigNumber(1);
+    const recipient = getEnv("HEDERA_CLAIM_REWARDS_RECIPIENT_ACCOUNT_ID");
+
+    tx = await buildUnsignedCoinTransaction({
+      config,
+      account,
+      transaction: {
+        type: HEDERA_TRANSACTION_MODES.Send,
+        transactionId,
+        amount,
+        recipient,
+        memo: MAP_STAKING_MODE_TO_MEMO[HEDERA_TRANSACTION_MODES.ClaimRewards],
+        maxFee,
+      },
+    });
+  }
+  // Plain native HBAR transfer.
   else {
     const amount = new BigNumber(txIntent.amount.toString());
 

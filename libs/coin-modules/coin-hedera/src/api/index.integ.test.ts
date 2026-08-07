@@ -243,26 +243,32 @@ describe("createApi", () => {
       expect(rawTx.maxTransactionFee).toEqual(expectedMaxFee);
     });
 
-    it("throws if useAllAmount is true", async () => {
-      await expect(
-        api.craftTransaction({
-          intentType: "transaction",
-          asset: {
-            type: "native",
-          },
-          amount: BigInt(100),
-          useAllAmount: true,
-          sender: MAINNET_TEST_ACCOUNTS.withoutTokens.accountId,
-          senderPublicKey: MAINNET_TEST_ACCOUNTS.withoutTokens.publicKey,
-          recipient: MAINNET_TEST_ACCOUNTS.withoutTokens.accountId,
-          type: HEDERA_TRANSACTION_MODES.TokenAssociate,
-          memo: {
-            kind: "text",
-            type: "string",
-            value: "token association",
-          },
-        }),
-      ).rejects.toThrow("useAllAmount is not supported");
+    it("crafts a transaction when useAllAmount is set, trusting intent.amount", async () => {
+      const { transaction: hex } = await api.craftTransaction({
+        intentType: "transaction",
+        asset: {
+          type: "native",
+        },
+        type: HEDERA_TRANSACTION_MODES.Send,
+        amount: BigInt(1 * 10 ** TINYBAR_SCALE),
+        useAllAmount: true,
+        sender: MAINNET_TEST_ACCOUNTS.withoutTokens.accountId,
+        senderPublicKey: MAINNET_TEST_ACCOUNTS.withoutTokens.publicKey,
+        recipient: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
+        memo: {
+          kind: "text",
+          type: "string",
+          value: "native transfer",
+        },
+      });
+
+      const rawTx = TransferTransaction.fromBytes(Buffer.from(hex, "hex"));
+
+      expect(rawTx).toBeInstanceOf(TransferTransaction);
+      invariant(rawTx instanceof TransferTransaction, "TransferTransaction type guard");
+
+      const sendTransfer = rawTx.hbarTransfers.get(MAINNET_TEST_ACCOUNTS.withoutTokens.accountId);
+      expect(sendTransfer).toEqual(Hbar.from(-1, HbarUnit.Hbar));
     });
   });
 
@@ -1031,7 +1037,9 @@ describe("createApi", () => {
       });
       expect(rewardOp?.value).toBeGreaterThan(BigInt(0));
       expect(rewardOp?.tx.fees).toBe(BigInt(0));
-      expect(rewardOp?.tx.hash).not.toContain(STAKING_REWARD_HASH_SUFFIX);
+      // A reward shares its consensus timestamp with the transaction that triggered it; the
+      // suffix keeps the two from being grouped into a single parent operation.
+      expect(rewardOp?.tx.hash).toContain(STAKING_REWARD_HASH_SUFFIX);
       // every staking operation should have a fees payer
       expect(ops.every(op => /^0\.0\.\d+$/.test(op.tx.feesPayer ?? ""))).toBe(true);
     });
