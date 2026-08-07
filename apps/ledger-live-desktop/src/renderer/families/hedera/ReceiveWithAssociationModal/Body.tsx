@@ -175,9 +175,6 @@ const Body = ({
         mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
         assetReference: token.contractAddress,
         assetOwner: mainAccount.freshAddress,
-        properties: {
-          token,
-        },
       };
     },
     [mainAccount],

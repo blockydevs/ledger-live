@@ -1,9 +1,9 @@
-import invariant from "invariant";
 import React from "react";
 import { Trans } from "react-i18next";
 import styled from "styled-components";
 import { SyncOneAccountOnMount } from "@ledgerhq/live-common/bridge/react/index";
-import { isTokenAssociateTransaction } from "@ledgerhq/live-common/families/hedera/utils";
+import { useFindTokenByAddressInCurrencyQuery } from "@domain/api-currency-token";
+import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import Box from "~/renderer/components/Box";
 import BroadcastErrorDisclaimer from "~/renderer/components/BroadcastErrorDisclaimer";
 import Button from "~/renderer/components/Button";
@@ -28,14 +28,22 @@ const Container = styled(Box).attrs<{
 `;
 
 function StepAssociationConfirmation({
+  account,
   transaction,
   optimisticOperation,
   error,
   signed,
 }: StepProps) {
+  const { data: associatedToken } = useFindTokenByAddressInCurrencyQuery(
+    {
+      contract_address: transaction?.assetReference || "",
+      network: account ? getAccountCurrency(account).id : "",
+    },
+    { skip: !transaction?.assetReference },
+  );
+
   if (optimisticOperation) {
-    invariant(isTokenAssociateTransaction(transaction), "hedera: token associate tx expected");
-    const tokenName = transaction.properties.token.name ?? "token";
+    const tokenName = associatedToken?.name ?? "token";
 
     return (
       <Container>

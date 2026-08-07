@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { Trans } from "react-i18next";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { HEDERA_MAX_MEMO_SIZE } from "@ledgerhq/live-common/families/hedera/constants";
-import { Transaction } from "@ledgerhq/live-common/families/hedera/types";
+import type { Transaction } from "@ledgerhq/live-common/families/hedera/types";
 import { track } from "~/renderer/analytics/segment";
 import { SendAmountProps } from "./types";
 import Text from "~/renderer/components/Text";
@@ -19,18 +19,19 @@ const MemoField = ({
   const [memoLength, setMemoLength] = React.useState(0);
   const bridge = useAccountBridge<Transaction>(account);
   const onMemoChange = useCallback(
-    (memo: string) => {
+    (memoValue: string) => {
       track("button_clicked2", {
         ...trackProperties,
         button: "input",
-        memo,
+        memo: memoValue,
       });
       onChange(
         bridge.updateTransaction(transaction, {
-          memo,
+          memoType: memoValue ? "text" : null,
+          memoValue: memoValue || null,
         }),
       );
-      setMemoLength(memo.length);
+      setMemoLength(memoValue.length);
     },
     [trackProperties, onChange, bridge, transaction],
   );
@@ -42,7 +43,7 @@ const MemoField = ({
   return (
     <MemoTagField
       maxLength={HEDERA_MAX_MEMO_SIZE}
-      value={transaction.memo ?? ""}
+      value={transaction.memoValue ?? ""}
       onChange={onMemoChange}
       error={status.errors.transaction}
       CaracterCountComponent={() => (

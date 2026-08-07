@@ -1,4 +1,7 @@
-import type { Transaction, TransactionStatus } from "@ledgerhq/live-common/families/hedera/types";
+import type {
+  Transaction,
+  TransactionStatus,
+} from "@ledgerhq/live-common/families/hedera/types";
 import type { Operation } from "@ledgerhq/types-live";
 import type {
   StepProps as DefaultStepProps,

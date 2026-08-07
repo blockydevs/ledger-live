@@ -4,6 +4,7 @@ import { Trans } from "react-i18next";
 import { useSelector } from "LLD/hooks/redux";
 import { formatCurrencyUnit } from "@ledgerhq/coin-module-framework/currencies/formatCurrencyUnit";
 import { useHederaEnrichedDelegation } from "@ledgerhq/live-common/families/hedera/react";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import { getMainAccount } from "@ledgerhq/ledger-wallet-framework/account/helpers";
 import Alert from "~/renderer/components/Alert";
 import Box from "~/renderer/components/Box";
@@ -21,8 +22,8 @@ import type { StepProps } from "../types";
 
 function StepRewards({ account, parentAccount, transaction, status, error }: Readonly<StepProps>) {
   invariant(account && transaction, "hedera: account and transaction required");
-  invariant(account.hederaResources?.delegation, "hedera: delegation is required");
-  const { delegation } = account.hederaResources;
+  const delegation = getHederaDelegation(account);
+  invariant(delegation, "hedera: delegation is required");
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
   const discreet = useDiscreetMode();
   const locale = useSelector(localeSelector);

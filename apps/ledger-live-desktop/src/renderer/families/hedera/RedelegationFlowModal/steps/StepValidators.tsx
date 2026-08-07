@@ -2,11 +2,11 @@ import invariant from "invariant";
 import React from "react";
 import { Trans } from "react-i18next";
 import { useHederaEnrichedDelegation } from "@ledgerhq/live-common/families/hedera/react";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import { getMainAccount } from "@ledgerhq/ledger-wallet-framework/account/helpers";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
-import { HederaValidator, Transaction } from "@ledgerhq/live-common/families/hedera/types";
+import type { HederaValidator, Transaction } from "@ledgerhq/live-common/families/hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
-import { isStakingTransaction } from "@ledgerhq/live-common/families/hedera/utils";
 import { urls } from "~/config/urls";
 import Alert from "~/renderer/components/Alert";
 import Box from "~/renderer/components/Box";
@@ -30,11 +30,10 @@ function StepValidators({
   onUpdateTransaction,
 }: Readonly<StepProps>) {
   invariant(account && transaction, "hedera: account and transaction required");
-  invariant(account.hederaResources?.delegation, "hedera: delegation is required");
-  invariant(isStakingTransaction(transaction), "hedera: staking tx expected");
 
-  const { delegation } = account.hederaResources;
-  const selectedValidatorNodeId = transaction.properties?.stakingNodeId ?? null;
+  const delegation = getHederaDelegation(account);
+  invariant(delegation, "hedera: delegation is required");
+  const selectedValidatorNodeId = transaction.valId ? Number(transaction.valId) : null;
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
   const enrichedDelegation = useHederaEnrichedDelegation(account, delegation);
   const feeError = status.errors.fee;
@@ -47,9 +46,7 @@ function StepValidators({
     onUpdateTransaction(() => {
       return bridge.updateTransaction(transaction, {
         mode: HEDERA_TRANSACTION_MODES.Redelegate,
-        properties: {
-          stakingNodeId: validator.nodeId ?? null,
-        },
+        valId: String(validator.nodeId),
       });
     });
   };
