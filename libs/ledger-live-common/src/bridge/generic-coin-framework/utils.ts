@@ -654,6 +654,9 @@ export const buildOptimisticOperation = (
     case "changeTrust":
       type = "OPT_IN";
       break;
+    case "token-associate":
+      type = "ASSOCIATE_TOKEN";
+      break;
     case "delegate":
       type = "DELEGATE";
       break;

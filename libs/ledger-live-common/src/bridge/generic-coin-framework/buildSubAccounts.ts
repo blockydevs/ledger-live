@@ -65,12 +65,18 @@ export async function buildSubAccounts({
   syncConfig,
   operations,
   getTokenFromAsset,
+  shouldBuildTokenAccount,
 }: {
   accountId: string;
   allTokenAssetsBalances: Balance[];
   syncConfig: SyncConfig;
   operations: OperationCommon[];
   getTokenFromAsset?: (asset: AssetInfo) => Promise<TokenCurrency | undefined>;
+  shouldBuildTokenAccount?: (
+    balance: Balance,
+    token: TokenCurrency,
+    operations: OperationCommon[],
+  ) => boolean;
 }): Promise<TokenAccount[]> {
   const { blacklistedTokenIds = [] } = syncConfig;
   const tokenAccounts: TokenAccount[] = [];
@@ -89,16 +95,22 @@ export async function buildSubAccounts({
   for (const { balance, token } of tokenBalances) {
     // NOTE: for future tokens, will need to check over currencyName/standard(erc20,trc10,trc20, etc)/id
     if (token && !blacklistedTokenIds.includes(token.id)) {
+      const tokenOperations = operations.filter(
+        op =>
+          op.extra.assetReference === balance.asset?.["assetReference"] &&
+          op.extra.assetOwner === balance.asset?.["assetOwner"], // NOTE: we could narrow type
+      );
+
+      if (shouldBuildTokenAccount && !shouldBuildTokenAccount(balance, token, tokenOperations)) {
+        continue;
+      }
+
       tokenAccounts.push(
         buildTokenAccount({
           parentAccountId: accountId,
           assetBalance: balance,
           token,
-          operations: operations.filter(
-            op =>
-              op.extra.assetReference === balance.asset?.["assetReference"] &&
-              op.extra.assetOwner === balance.asset?.["assetOwner"], // NOTE: we could narrow type
-          ),
+          operations: tokenOperations,
         }),
       );
     }

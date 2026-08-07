@@ -94,7 +94,17 @@ export const genericSignOperation =
           signedInfo.txnSig,
           signedInfo.publicKey,
         );
-        const operation = buildOptimisticOperation(account, transaction, signedInfo.sequence);
+        const builtOperation = buildOptimisticOperation(account, transaction, signedInfo.sequence);
+        let operation = builtOperation;
+        if (bridgeApi.enrichOptimisticOperation) {
+          try {
+            operation = bridgeApi.enrichOptimisticOperation(account, transaction, builtOperation);
+          } catch (e) {
+            log("Generic coin-framework", "enrichOptimisticOperation failed, falling back to base operation", {
+              error: e instanceof Error ? e.message : String(e),
+            });
+          }
+        }
         if (!operation.id) {
           log("Generic coin-framework", "buildOptimisticOperation", operation);
         }

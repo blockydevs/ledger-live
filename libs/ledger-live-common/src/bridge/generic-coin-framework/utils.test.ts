@@ -439,6 +439,22 @@ describe("coin-framework utils", () => {
           : {}),
       });
     });
+
+    it("maps a token-associate transaction to an ASSOCIATE_TOKEN operation", () => {
+      const account = {
+        id: "parent-account-id",
+        freshAddress: "account-address",
+      } as Account;
+      const transaction = {
+        amount: new BigNumber(0),
+        recipient: "",
+        mode: "token-associate",
+      } as GenericTransaction;
+
+      const operation = buildOptimisticOperation(account, transaction);
+
+      expect(operation.type).toBe("ASSOCIATE_TOKEN");
+    });
   });
 
   describe("cleanedOperation", () => {
@@ -636,6 +652,7 @@ describe("coin-framework utils", () => {
         expect(craftTransactionDataMock).not.toHaveBeenCalled();
         expect(defaultCraftTransactionDataSpy).not.toHaveBeenCalled();
       });
+
     });
 
     describe("memo", () => {

@@ -12,11 +12,13 @@ import { firstValueFrom, Observable, of, Subscription, throwError } from "rxjs";
 import {
   AccountShapeInfo,
   bip32asBuffer,
+  makeAccountBridgeReceive,
   makeScanAccounts,
   makeSync,
   updateTransaction,
 } from "./jsHelpers";
 import { createEmptyHistoryCache } from "../account/balanceHistoryCache";
+import { WrongDeviceForAccount } from "@ledgerhq/errors";
 
 describe("updateTransaction", () => {
   it("should not update the transaction object", () => {
@@ -931,6 +933,95 @@ describe("bip32asBuffer", () => {
   ])("converts path for AppCoins with $name case", ({ derivationPath, expectedResult }) => {
     const path = bip32asBuffer(derivationPath);
     expect(path).toEqual(Buffer.from(expectedResult, "hex"));
+  });
+});
+
+describe("makeAccountBridgeReceive", () => {
+  const makeAccount = () =>
+    createAccount({
+      freshAddress: "address-1",
+      freshAddressPath: "44'/0'/0'/0/0",
+      seedIdentifier: "pubkey-1",
+    });
+  const deviceResult = { address: "address-1", path: "44'/0'/0'/0/0", publicKey: "pubkey-1" };
+
+  it("returns the device result when the address matches, without a matcher", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue(deviceResult);
+    const receive = makeAccountBridgeReceive(getAddressFn);
+
+    await expect(
+      firstValueFrom(receive(makeAccount(), { deviceId: "device", verify: true })),
+    ).resolves.toEqual(deviceResult);
+  });
+
+  it("throws WrongDeviceForAccount on an address mismatch when verifying, without a matcher", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue({ ...deviceResult, address: "address-2" });
+    const receive = makeAccountBridgeReceive(getAddressFn);
+
+    await expect(
+      firstValueFrom(receive(makeAccount(), { deviceId: "device", verify: true })),
+    ).rejects.toThrow(WrongDeviceForAccount);
+  });
+
+  it("keeps a mismatching address when not verifying, without a matcher", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue({ ...deviceResult, address: "address-2" });
+    const receive = makeAccountBridgeReceive(getAddressFn);
+
+    await expect(
+      firstValueFrom(receive(makeAccount(), { deviceId: "device" })),
+    ).resolves.toMatchObject({
+      address: "address-2",
+    });
+  });
+
+  it("passes injectGetAddressParams through to the device call", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue(deviceResult);
+    const receive = makeAccountBridgeReceive(getAddressFn, {
+      injectGetAddressParams: () => ({ forceFormat: "bech32" }),
+    });
+
+    await firstValueFrom(receive(makeAccount(), { deviceId: "device", verify: true }));
+
+    expect(getAddressFn).toHaveBeenCalledWith(
+      "device",
+      expect.objectContaining({ forceFormat: "bech32" }),
+    );
+  });
+
+  it("lets a matcher accept on another criterion and surface its own address", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue({ ...deviceResult, address: "" });
+    const receive = makeAccountBridgeReceive(getAddressFn, {
+      receiveAddressMatcher: (result, a) => ({
+        matches: result.publicKey === a.seedIdentifier,
+        address: a.freshAddress,
+      }),
+    });
+
+    await expect(
+      firstValueFrom(receive(makeAccount(), { deviceId: "device", verify: true })),
+    ).resolves.toMatchObject({ address: "address-1" });
+  });
+
+  it("throws WrongDeviceForAccount when the matcher rejects a matching address", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue(deviceResult);
+    const receive = makeAccountBridgeReceive(getAddressFn, {
+      receiveAddressMatcher: () => ({ matches: false, address: "address-1" }),
+    });
+
+    await expect(
+      firstValueFrom(receive(makeAccount(), { deviceId: "device", verify: true })),
+    ).rejects.toThrow(WrongDeviceForAccount);
+  });
+
+  it("awaits an asynchronous matcher", async () => {
+    const getAddressFn = jest.fn().mockResolvedValue(deviceResult);
+    const receive = makeAccountBridgeReceive(getAddressFn, {
+      receiveAddressMatcher: async () => ({ matches: true, address: "address-3" }),
+    });
+
+    await expect(
+      firstValueFrom(receive(makeAccount(), { deviceId: "device", verify: true })),
+    ).resolves.toMatchObject({ address: "address-3" });
   });
 });
 

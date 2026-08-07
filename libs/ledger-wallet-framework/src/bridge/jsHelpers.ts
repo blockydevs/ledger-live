@@ -40,7 +40,7 @@ import {
 import { shouldRetainPendingOperation } from "../account/pending";
 import { shouldShowNewAccount } from "../account/support";
 import getAddressWrapper, { GetAddressFn } from "./getAddressWrapper";
-import type { GetAddressResult } from "../derivation";
+import type { GetAddressResult, ReceiveAddressMatcher } from "../derivation";
 import type { CryptoCurrency } from "../types";
 import type {
   Account,
@@ -631,12 +631,19 @@ export const makeScanAccounts =
       return unsubscribe;
     });
 
+const defaultReceiveAddressMatcher: ReceiveAddressMatcher = (result, account) => ({
+  matches: result.address === account.freshAddress,
+  address: result.address,
+});
+
 export function makeAccountBridgeReceive<A extends Account = Account>(
   getAddressFn: GetAddressFn,
   {
     injectGetAddressParams,
+    receiveAddressMatcher = defaultReceiveAddressMatcher as ReceiveAddressMatcher<A>,
   }: {
     injectGetAddressParams?: (account: A) => any;
+    receiveAddressMatcher?: ReceiveAddressMatcher<A>;
   } = {},
 ) {
   return (
@@ -660,15 +667,16 @@ export function makeAccountBridgeReceive<A extends Account = Account>(
       ...(injectGetAddressParams && injectGetAddressParams(account)),
     };
     return from(
-      getAddressFn(deviceId, arg).then(r => {
-        const accountAddress = account.freshAddress;
+      (async () => {
+        const result = await getAddressFn(deviceId, arg);
+        const { matches, address } = await receiveAddressMatcher(result, account);
 
-        if (verify && r.address !== accountAddress) {
+        if (verify && !matches) {
           throw new WrongDeviceForAccount();
         }
 
-        return r;
-      }),
+        return { ...result, address };
+      })(),
     );
   };
 }

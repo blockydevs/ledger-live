@@ -132,11 +132,12 @@ function parentOpsFromNativeOps(
   accountId: string,
   subOperations: OperationCommon[],
   internalOperations: OperationCommon[],
+  keepFeesOnlyNativeOpType: boolean,
 ): OperationCommon[] {
   const out: OperationCommon[] = [];
   for (const nativeOp of nativeOps) {
     // Native outgoing operation with value 0 (only fees) => output as single FEES op
-    if (isFeesOnlyNativeOp(nativeOp)) {
+    if (!keepFeesOnlyNativeOpType && isFeesOnlyNativeOp(nativeOp)) {
       out.push(
         cleanedOperation({
           id: encodeOperationId(accountId, nativeOp.hash, "FEES"),
@@ -218,6 +219,7 @@ function parentOpsForTxWithNonInternalOperations(
   newSubAccounts: TokenAccount[],
   accountId: string,
   address: string,
+  keepFeesOnlyNativeOpType: boolean,
 ): OperationCommon[] {
   const nativeOps = transactionOps.filter(isNativeLiveOp);
   // inferSubOperations returns types-live Operation[]; we use OperationCommon in this bridge
@@ -226,7 +228,13 @@ function parentOpsForTxWithNonInternalOperations(
 
   // If transaction has native ops, use them as parents
   if (nativeOps.length > 0)
-    return parentOpsFromNativeOps(nativeOps, accountId, subOperations, internalOperations);
+    return parentOpsFromNativeOps(
+      nativeOps,
+      accountId,
+      subOperations,
+      internalOperations,
+      keepFeesOnlyNativeOpType,
+    );
 
   // If transaction has no native ops, create a synthetic parent
   const firstOp = transactionOps[0];
@@ -287,6 +295,7 @@ function buildParentOperations(
   newInternalOperations: OperationCommon[],
   accountId: string,
   address: string,
+  keepFeesOnlyNativeOpType: boolean,
 ): OperationCommon[] {
   const nonInternalByHash = groupBy(newNonInternalOperations, "hash");
   const internalByHash = groupBy(newInternalOperations, "hash");
@@ -304,6 +313,7 @@ function buildParentOperations(
         newSubAccounts,
         accountId,
         address,
+        keepFeesOnlyNativeOpType,
       ),
     );
   }
@@ -358,10 +368,11 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
           .catch(() => [])
       : Promise.resolve([]);
 
-    const [blockInfo, balanceRes, validators] = await Promise.all([
+    const [blockInfo, balanceRes, validators, accountResources] = await Promise.all([
       coinModuleApi.lastBlock(),
       coinModuleApi.getBalance(address, bridgeApi.balanceOptions),
       validatorsPromise,
+      bridgeApi.fetchAccountResources?.(currency.id, address) ?? Promise.resolve(undefined),
     ]);
 
     const nativeAsset = extractBalance(balanceRes, "native");
@@ -468,7 +479,21 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
     });
     const newOps = newCoreOps
       .filter(op => !isNftCoreOp(op) && (!isIncomingCoreOp(op) || !op.tx.failed))
-      .map(op => adaptCoreOperationToLiveOperation(accountId, op)) as OperationCommon[];
+      .map(op => {
+        const operation = adaptCoreOperationToLiveOperation(accountId, op) as OperationCommon;
+        if (!bridgeApi.mapOperationDetailsToExtra) return operation;
+        let mappedExtra: Record<string, unknown> = {};
+        try {
+          mappedExtra = bridgeApi.mapOperationDetailsToExtra(op.details ?? {});
+        } catch (e) {
+          log(
+            "generic-coin-framework",
+            "mapOperationDetailsToExtra failed, falling back to base extra",
+            { error: e instanceof Error ? e.message : String(e) },
+          );
+        }
+        return { ...operation, extra: { ...operation.extra, ...mappedExtra } };
+      }) as OperationCommon[];
 
     const newAssetOperations = newOps.filter(
       operation =>
@@ -490,6 +515,7 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
       syncConfig,
       operations: newAssetOperations,
       getTokenFromAsset: bridgeApi.getTokenFromAsset,
+      shouldBuildTokenAccount: bridgeApi.shouldBuildTokenAccount,
     });
     const subAccounts = syncFromScratch
       ? newSubAccounts
@@ -501,6 +527,7 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
       newInternalOperations,
       accountId,
       address,
+      bridgeApi.keepFeesOnlyNativeOpType ?? false,
     );
     // Try to refresh known pending and broadcasted operations (if not already updated)
     // Useful for integrations without explorers
@@ -542,7 +569,7 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
       stakingShape = { stakingResources: enrichedStakingResources };
     }
 
-    const res: Partial<Account> & {
+    const frameworkFields: Partial<Account> & {
       stakingResources?: StakingResources;
       stakingPositions?: StakingPositionOnAccount[];
     } = {
@@ -558,6 +585,28 @@ export function genericGetAccountShape(network: string, kind: string): GetAccoun
       operationsCount: operations.length,
       syncHash,
       ...stakingShape,
+    };
+
+    // A family's fetchAccountResources hook is opaque to the framework; guard against it
+    // returning a key that shadows a framework-owned field. This must never happen — surfaced
+    // loudly rather than thrown, since a sync failure here would break an otherwise-healthy
+    // account.
+    if (accountResources) {
+      const collidingKeys = Object.keys(accountResources).filter(key => key in frameworkFields);
+      if (collidingKeys.length > 0) {
+        console.error(
+          `genericGetAccountShape: fetchAccountResources returned key(s) owned by the framework, dropped: ${collidingKeys.join(", ")}`,
+        );
+      }
+    }
+
+    const res: Partial<Account> & {
+      stakingResources?: StakingResources;
+      stakingPositions?: StakingPositionOnAccount[];
+      [key: string]: unknown;
+    } = {
+      ...(accountResources ?? {}),
+      ...frameworkFields,
     };
     return res;
   };

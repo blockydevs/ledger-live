@@ -1,7 +1,7 @@
 import { getCurrenciesResolver } from "./currencies/resolver";
 import { getEnv } from "@ledgerhq/live-env";
 import type { CryptoCurrency } from "./types";
-import { DerivationMode } from "@ledgerhq/types-live";
+import { Account, DerivationMode } from "@ledgerhq/types-live";
 
 type ModeSpec = {
   mandatoryEmptyAccountSkip?: number;
@@ -29,6 +29,19 @@ export type GetAddressResult = {
   publicKey: string;
   chainCode?: string;
 };
+/**
+ * Decides whether a device's `getAddress` result belongs to the given account,
+ * and what address to surface to the caller.
+ *
+ * @param result - The raw result returned by the device's address derivation.
+ * @param account - The account receive was called for.
+ * @returns Whether the result matches the account, and the address to surface to the caller.
+ */
+export type ReceiveAddressMatcher<A extends Account = Account> = (
+  result: GetAddressResult,
+  account: A,
+) => { matches: boolean; address: string } | Promise<{ matches: boolean; address: string }>;
+
 export type GetAddressOptions = {
   currency: CryptoCurrency;
   path: string;
