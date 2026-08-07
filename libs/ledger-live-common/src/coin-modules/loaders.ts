@@ -233,9 +233,16 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     family: "hedera",
     supportedCoins: ["hedera", "hedera_testnet"],
     loadSetup: () => import("../families/hedera/setup"),
-    loadTransaction: () => import("@ledgerhq/coin-hedera/transaction").then(m => m.default),
+    loadLocalApi: () =>
+      import("../families/hedera/coinModuleApi").then(m => m.createLocalHederaApi),
+    loadTransaction: () => import("../families/hedera/transaction").then(m => m.default),
     loadDeviceTxConfig: () =>
-      import("@ledgerhq/coin-hedera/deviceTransactionConfig").then(m => m.default),
+      import("../families/hedera/deviceTransactionConfig").then(m => m.default),
+    loadMockBridge: () => import("../families/hedera/bridge/mock").then(m => m.default),
+    loadBridgeApi: () => import("../families/hedera/bridge/api").then(m => m.default),
+    loadAccountRawAssign: () => import("../families/hedera/accountRawAssign").then(m => m.default),
+    loadSigner: () => import("../families/hedera/signer").then(m => m.default),
+    loadBridgeExtensions: () => import("../families/hedera/bridgeExtensions").then(m => m.default),
   },
   {
     // HyperCore (generic framework): eth-format address, no send. setup/signer only derive the

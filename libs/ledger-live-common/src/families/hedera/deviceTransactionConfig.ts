@@ -1,15 +1,29 @@
 import type { CommonDeviceTransactionField as DeviceTransactionField } from "@ledgerhq/ledger-wallet-framework/transaction/common";
 import type { AccountLike, Account } from "@ledgerhq/types-live";
-import { HEDERA_TRANSACTION_MODES, MAP_STAKING_MODE_TO_METHOD } from "./constants";
-import { isTokenAssociateTransaction, isStakingTransaction } from "./logic/utils";
+import { HEDERA_TRANSACTION_MODES, MAP_STAKING_MODE_TO_METHOD } from "@ledgerhq/coin-hedera/constants";
 import type { Transaction, TransactionStatus } from "./types";
+
+const STAKING_MODES = new Set<string>([
+  HEDERA_TRANSACTION_MODES.Delegate,
+  HEDERA_TRANSACTION_MODES.Undelegate,
+  HEDERA_TRANSACTION_MODES.Redelegate,
+  HEDERA_TRANSACTION_MODES.ClaimRewards,
+]);
+
+function isStakingTransaction(transaction: Transaction): boolean {
+  return typeof transaction.mode === "string" && STAKING_MODES.has(transaction.mode);
+}
+
+function isTokenAssociateTransaction(transaction: Transaction): boolean {
+  return transaction.mode === HEDERA_TRANSACTION_MODES.TokenAssociate;
+}
 
 async function getDeviceTransactionConfig({
   transaction,
   status: { estimatedFees },
 }: {
   account: AccountLike;
-  parentAccount?: Account;
+  parentAccount?: Account | null;
   transaction: Transaction;
   status: TransactionStatus;
 }): Promise<Array<DeviceTransactionField>> {
@@ -19,29 +33,29 @@ async function getDeviceTransactionConfig({
     fields.push({
       type: "text",
       label: "Method",
-      value: MAP_STAKING_MODE_TO_METHOD[transaction.mode],
+      value: MAP_STAKING_MODE_TO_METHOD[transaction.mode as string],
     });
 
-    if (!estimatedFees.isZero()) {
+    if (estimatedFees && !estimatedFees.isZero()) {
       fields.push({
         type: "fees",
         label: "Fees",
       });
     }
 
-    if (typeof transaction.properties?.stakingNodeId === "number") {
+    if (transaction.valId) {
       fields.push({
         type: "text",
         label: "Staked Node ID",
-        value: transaction.properties.stakingNodeId.toString(),
+        value: transaction.valId,
       });
     }
 
-    if (transaction.memo) {
+    if (transaction.memoValue) {
       fields.push({
         type: "text",
         label: "Memo",
-        value: transaction.memo,
+        value: transaction.memoValue,
       });
     }
 
@@ -67,7 +81,7 @@ async function getDeviceTransactionConfig({
     });
   }
 
-  if (!estimatedFees.isZero()) {
+  if (estimatedFees && !estimatedFees.isZero()) {
     fields.push({
       type: "fees",
       label: "Fees",
@@ -82,11 +96,11 @@ async function getDeviceTransactionConfig({
     });
   }
 
-  if (transaction.memo) {
+  if (transaction.memoValue) {
     fields.push({
       type: "text",
       label: "Memo",
-      value: transaction.memo,
+      value: transaction.memoValue,
     });
   }
 

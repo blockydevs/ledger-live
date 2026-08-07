@@ -20,11 +20,13 @@ jest.mock("../network/utils");
 jest.mock("../network/api");
 
 const mockExtractInitiator = jest.mocked(logicUtils.extractInitiator);
+const mockGetDateRangeFromBlockHeight = jest.mocked(logicUtils.getDateRangeFromBlockHeight);
 const mockGetOperationValue = jest.mocked(logicUtils.getOperationValue);
 const mockMapIntentToSDKOperation = jest.mocked(mapIntentToSDKOperation);
 const mockToEVMAddress = jest.mocked(networkUtils.toEVMAddress);
 const mockGetAccountTokens = jest.mocked(apiClient.getAccountTokens);
 const mockGetERC20BalancesForAccountV2 = jest.mocked(networkUtils.getERC20BalancesForAccountV2);
+const mockBase64ToUrlSafeBase64 = jest.mocked(logicUtils.base64ToUrlSafeBase64);
 const mockBroadcast = jest.mocked(logic.broadcast);
 const mockCombine = jest.mocked(logic.combine);
 const mockCraftTransaction = jest.mocked(logic.craftTransaction);
@@ -81,11 +83,29 @@ describe("createApi", () => {
       const fakeHash = new Uint8Array([1, 2, 3]);
       // @ts-expect-error - partial mock
       mockBroadcast.mockResolvedValue({ transactionHash: fakeHash });
+      mockBase64ToUrlSafeBase64.mockImplementation(value => value);
 
       const result = await api.broadcast("tx");
 
       expect(mockBroadcast).toHaveBeenCalledTimes(1);
       expect(result).toBe(Buffer.from(fakeHash).toString("base64"));
+    });
+
+    it("returns a url-safe hash from broadcast", async () => {
+      const { base64ToUrlSafeBase64: actualBase64ToUrlSafeBase64 } =
+        jest.requireActual("../logic/utils");
+      // These bytes encode to base64 containing both `+` and `/`.
+      const hashWithPlusAndSlash = new Uint8Array([251, 239, 190, 255, 62]);
+      // @ts-expect-error - partial mock
+      mockBroadcast.mockResolvedValue({ transactionHash: hashWithPlusAndSlash });
+      mockBase64ToUrlSafeBase64.mockImplementation(actualBase64ToUrlSafeBase64);
+
+      const result = await api.broadcast("tx");
+
+      const rawBase64Hash = Buffer.from(hashWithPlusAndSlash).toString("base64");
+      expect(rawBase64Hash).toMatch(/[+/]/);
+      expect(result).toBe(actualBase64ToUrlSafeBase64(rawBase64Hash));
+      expect(result).not.toMatch(/[+/]/);
     });
   });
 
@@ -117,11 +137,20 @@ describe("createApi", () => {
       expect(result).toEqual({ transaction: "serialized" });
     });
 
-    it("should throw when craftTransaction is called with useAllAmount", async () => {
-      // @ts-expect-error - testing unsupported useAllAmount
-      const txIntent: TransactionIntent<HederaMemo> = { useAllAmount: true };
+    it("crafts a transaction when useAllAmount is set, trusting intent.amount", async () => {
+      // @ts-expect-error - partial mock
+      mockCraftTransaction.mockResolvedValue({ serializedTx: "serialized" });
+      // @ts-expect-error - partial intent
+      const txIntent: TransactionIntent<HederaMemo> = {
+        useAllAmount: true,
+        recipient: "0.0.1234",
+        amount: 999n,
+      };
 
-      await expect(api.craftTransaction(txIntent)).rejects.toThrow("useAllAmount is not supported");
+      const result = await api.craftTransaction(txIntent);
+
+      expect(mockCraftTransaction).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({ transaction: "serialized" });
     });
   });
 
@@ -166,6 +195,24 @@ describe("createApi", () => {
           txIntent,
         }),
       );
+    });
+
+    it("carries the estimated gas limit for a ContractCall estimation", async () => {
+      mockMapIntentToSDKOperation.mockReturnValue(HEDERA_OPERATION_TYPES.ContractCall);
+      mockEstimateFees.mockResolvedValue({
+        tinybars: new BigNumber(9000),
+        gas: new BigNumber(250000),
+      });
+
+      // @ts-expect-error - testing with minimal required fields for TransactionIntent
+      const txIntent: TransactionIntent<HederaMemo> = { recipient: "0.0.1234", amount: 100n };
+
+      const result = await api.estimateFees(txIntent);
+
+      expect(result).toEqual({
+        value: BigInt("9000"),
+        parameters: { gasLimit: BigInt("250000") },
+      });
     });
   });
 
@@ -317,10 +364,63 @@ describe("createApi", () => {
       mockGetERC20BalancesForAccountV2.mockResolvedValue([]);
     });
 
-    it("should throw when minHeight is not 0", async () => {
-      await expect(
-        api.listOperations(mockAddress, { ...mockOptions, minHeight: 5 }),
-      ).rejects.toThrow("minHeight is not supported");
+    it("accepts a non-zero minHeight and forwards a dotted nanosecond-precision cursor", async () => {
+      mockGetDateRangeFromBlockHeight.mockReturnValue({
+        start: new Date(420_000),
+        end: new Date(430_000),
+      });
+      mockListOperationsV2.mockResolvedValue({
+        coinOperations: [],
+        tokenOperations: [],
+        nextCursor: null,
+      });
+
+      const result = await api.listOperations(mockAddress, { ...mockOptions, minHeight: 42 });
+
+      // The synthetic block preceding `minHeight` (the last known operation's own block) is
+      // re-covered by the query rather than skipped: several operations can share that block
+      // height, and starting the cursor exactly at `minHeight` would drop any of them that
+      // happened after the last known one. See the "does not skip" test below for the case
+      // this guards against.
+      expect(mockGetDateRangeFromBlockHeight).toHaveBeenCalledWith(41);
+      expect(mockListOperationsV2).toHaveBeenCalledWith(
+        expect.objectContaining({ cursor: "420.000000000" }),
+      );
+
+      // `getERC20Transfers` (network/hgraph.ts) builds its bigint cursor via
+      // `timestamp?.replace(".", "")`, so the string must carry the dot and a
+      // fixed 9-digit nanosecond part — a bare-seconds string (no dot) would
+      // silently desync the hgraph cursor from real nanosecond-scale
+      // `consensus_timestamp` values and break ERC20 incremental sync.
+      const forwardedCursor = mockListOperationsV2.mock.calls[0][0].cursor;
+      expect(forwardedCursor).toMatch(/^\d+\.\d{9}$/);
+
+      expect(result).toHaveProperty("items");
+    });
+
+    it("does not skip operations sharing the last known operation's synthetic block", async () => {
+      // Real `getDateRangeFromBlockHeight`, not the mock: a 10-second window, so block 41
+      // covers seconds [410, 420) and block 42 covers [420, 430). The last known operation
+      // landed at second 415 (block 41); a second, not-yet-synced operation at second 418
+      // shares that same block. Starting the cursor at block 42 (the naive `minHeight`)
+      // would exclude both; starting at block 41 (`minHeight - 1`) re-covers the block.
+      const realGetDateRangeFromBlockHeight = jest.requireActual(
+        "../logic/utils",
+      ).getDateRangeFromBlockHeight;
+      mockGetDateRangeFromBlockHeight.mockImplementation(realGetDateRangeFromBlockHeight);
+      mockListOperationsV2.mockResolvedValue({
+        coinOperations: [],
+        tokenOperations: [],
+        nextCursor: null,
+      });
+
+      await api.listOperations(mockAddress, { ...mockOptions, minHeight: 42 });
+
+      const forwardedCursor: string | undefined = mockListOperationsV2.mock.calls[0][0].cursor;
+      expect(forwardedCursor).not.toBeUndefined();
+      // Block 41 starts at second 410, strictly before the not-yet-synced operation's
+      // second-418 timestamp, so a mirror-node query from this cursor still returns it.
+      expect(Number(forwardedCursor?.split(".")[0])).toBeLessThanOrEqual(418);
     });
 
     it("should return mapped coin-framework operations with correct shape", async () => {
@@ -407,7 +507,7 @@ describe("createApi", () => {
       const operationWithExplicitFeesPayer = getMockedOperation({
         extra: {
           transactionId: "0.0.111-1234567890-1",
-          feesPayer: explicitFeesPayer,
+          feePayer: explicitFeesPayer,
         },
       });
 
@@ -491,11 +591,31 @@ describe("createApi", () => {
   });
 
   describe("validateIntent", () => {
-    it("should throw when called", async () => {
-      // @ts-expect-error - testing unsupported method
-      await expect(api.validateIntent({}, [], undefined)).rejects.toThrow(
-        "validateIntent is not supported",
+    it("should call validateIntent from logic and return its result", async () => {
+      const mockValidateIntent = jest.mocked(logic.validateIntent);
+      const validation = {
+        errors: {},
+        warnings: {},
+        estimatedFees: 50n,
+        amount: 100n,
+        totalSpent: 150n,
+      };
+      mockValidateIntent.mockResolvedValue(validation);
+
+      // @ts-expect-error - testing with minimal required fields for TransactionIntent
+      const txIntent: TransactionIntent<HederaMemo> = { recipient: "0.0.1234", amount: 100n };
+      const balances = [{ value: 1_000n, locked: 0n, asset: { type: "native" as const } }];
+
+      const result = await api.validateIntent(txIntent, balances, undefined);
+
+      expect(mockValidateIntent).toHaveBeenCalledWith(
+        expect.objectContaining({ status: { type: "active" } }),
+        mockCurrency.id,
+        txIntent,
+        balances,
+        undefined,
       );
+      expect(result).toBe(validation);
     });
   });
 

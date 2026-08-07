@@ -1,6 +1,9 @@
-import type { Page, Stake } from "@ledgerhq/coin-module-framework/api/types";
+import type { Page } from "@ledgerhq/coin-module-framework/api/types";
+import type { StakeWithNodeDetails } from "../types";
 import type { HederaCoinConfig } from "../config";
 import { apiClient } from "../network/api";
+
+export type { StakeWithNodeDetails } from "../types";
 
 /**
  * Fetch stakes for a given Hedera account.
@@ -11,7 +14,7 @@ export async function getStakes({
 }: {
   configOrCurrencyId: HederaCoinConfig | string;
   address: string;
-}): Promise<Page<Stake>> {
+}): Promise<Page<StakeWithNodeDetails>> {
   const mirrorAccount = await apiClient.getAccount({ configOrCurrencyId, address });
   const stakedNodeId = mirrorAccount.staked_node_id;
 
@@ -28,7 +31,7 @@ export async function getStakes({
   const balance = BigInt(mirrorAccount.balance.balance);
   const pendingReward = BigInt(mirrorAccount.pending_reward);
 
-  const stake: Stake = {
+  const stake: StakeWithNodeDetails = {
     uid: address,
     address,
     asset: { type: "native" },

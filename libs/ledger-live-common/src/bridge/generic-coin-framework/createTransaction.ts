@@ -75,6 +75,18 @@ export function createTransaction(account: Account | TokenAccount): GenericTrans
         fees: null,
         mode: "send",
       };
+    case "hedera":
+      return {
+        family: currency.family,
+        amount: new BigNumber(0),
+        recipient: "",
+        fees: null,
+        useAllAmount: false,
+        mode: "send",
+        // Hedera has no account sequence. utils.ts maps nonce → intent.sequence, which lets
+        // signOperation skip getNextSequence (coin-hedera throws it).
+        nonce: new BigNumber(0),
+      };
     case "multiversx":
     case "tron":
       return {

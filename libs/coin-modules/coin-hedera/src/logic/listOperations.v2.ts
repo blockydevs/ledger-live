@@ -42,12 +42,12 @@ function getCommonMirrorOperationData(
   const hasFailed = rawTx.result !== "SUCCESS";
   const syntheticBlock = getSyntheticBlock(rawTx.consensus_timestamp);
   const memo = getMemoFromBase64(rawTx.memo_base64);
-  const feesPayer = extractFeesPayer(rawTx);
+  const feePayer = extractFeesPayer(rawTx);
   const extra: HederaOperationExtra = {
     pagingToken: rawTx.consensus_timestamp,
     consensusTimestamp: rawTx.consensus_timestamp,
     transactionId: rawTx.transaction_id,
-    feesPayer,
+    feePayer,
     ...(memo && { memo }),
   };
 
@@ -437,6 +437,13 @@ async function processTransactionItem({
   return { newCoinOperations, newTokenOperations };
 }
 
+// Drop `NONE` operations (account is neither sender nor recipient; value 0) to stay consistent with getBlock,
+// which only emits real transfer participants. Fees are represented separately, so this never discards a fee.
+// See BACK-11641.
+function removeNone(ops: Operation<HederaOperationExtra>[]) {
+  return ops.filter(op => op.type !== "NONE");
+}
+
 export async function listOperationsV2({
   config,
   currencyId,
@@ -535,12 +542,6 @@ export async function listOperationsV2({
     coinOperations.push(...result.newCoinOperations);
     tokenOperations.push(...result.newTokenOperations);
   }
-
-  // Drop `NONE` operations (account is neither sender nor recipient; value 0) to stay consistent with getBlock,
-  // which only emits real transfer participants. Fees are represented separately, so this never discards a fee.
-  // See BACK-11641.
-  const removeNone = (ops: Operation<HederaOperationExtra>[]) =>
-    ops.filter(op => op.type !== "NONE");
 
   return {
     tokenOperations: removeNone(tokenOperations),

@@ -36,4 +36,31 @@ describe("createTransaction", () => {
       mode: "send",
     });
   });
+
+  it("returns a send-mode transaction with no network-specific defaults for hedera", () => {
+    const account = {
+      type: "Account",
+      currency: { family: "hedera" },
+    } as never;
+
+    const transaction = createTransaction(account);
+
+    expect(transaction).toMatchObject({
+      family: "hedera",
+      mode: "send",
+      recipient: "",
+      useAllAmount: false,
+    });
+  });
+
+  it("gives hedera a nonce so signOperation never calls getNextSequence", () => {
+    const account = {
+      type: "Account",
+      currency: getCryptoCurrencyById("hedera"),
+    } as unknown as Account;
+
+    const transaction = createTransaction(account);
+
+    expect(transaction.nonce).toEqual(new BigNumber(0));
+  });
 });

@@ -4,19 +4,14 @@ import type {
   BalanceOptions,
   CraftedTransaction,
   Operation,
-  TransactionValidation,
 } from "@ledgerhq/coin-module-framework/api/index";
-import { craftTransactionData } from "@ledgerhq/coin-module-framework/logic/craftTransactionData";
 import { BridgeApi } from "@ledgerhq/ledger-wallet-framework/api/types";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
-import { validateAddress } from "../bridge/validateAddress";
+import { craftTransactionData } from "../logic/craftTransactionData";
+import { validateAddress } from "../logic/validateAddress";
 import hederaCoinConfig, { type HederaCoinConfig, type HederaConfig } from "../config";
-import {
-  HARDCODED_BLOCK_HEIGHT,
-  HEDERA_OPERATION_TYPES,
-  STAKING_REWARD_HASH_SUFFIX,
-} from "../constants";
+import { HARDCODED_BLOCK_HEIGHT, HEDERA_OPERATION_TYPES } from "../constants";
 import {
   combine,
   craftTransaction,
@@ -30,10 +25,13 @@ import {
   broadcast as logicBroadcast,
   estimateFees as logicEstimateFees,
   listOperationsV2 as logicListOperationsV2,
+  validateIntent as logicValidateIntent,
 } from "../logic";
 import {
+  base64ToUrlSafeBase64,
   extractInitiator,
   getBlockHash,
+  getDateRangeFromBlockHeight,
   getOperationValue,
   mapIntentToSDKOperation,
 } from "../logic/utils";
@@ -55,14 +53,13 @@ export function createApi(
         txWithSignature: tx,
       });
 
-      return Buffer.from(response.transactionHash).toString("base64");
+      return base64ToUrlSafeBase64(Buffer.from(response.transactionHash).toString("base64"));
     },
     async call() {
       throw new Error("call is not supported");
     },
     combine,
     craftTransaction: async (txIntent, customFees) => {
-      invariant(!txIntent.useAllAmount, "useAllAmount is not supported");
       const { serializedTx } = await craftTransaction({
         configOrCurrencyId: coinConfig,
         txIntent,
@@ -95,6 +92,9 @@ export function createApi(
 
       return {
         value: BigInt(estimatedFee.tinybars.toString()),
+        ...(estimatedFee.gas && {
+          parameters: { gasLimit: BigInt(estimatedFee.gas.toString()) },
+        }),
       };
     },
     getBalance: (address: string, options?: BalanceOptions) =>
@@ -107,7 +107,30 @@ export function createApi(
       return lastBlockV2({ configOrCurrencyId: coinConfig });
     },
     listOperations: async (address, { cursor, limit, order, minHeight }) => {
-      invariant(minHeight === 0, "minHeight is not supported");
+      // The framework never writes back `oldOps[0].extra.pagingToken` as a cursor on
+      // incremental syncs, so `minHeight` — the synthetic block height of the last known
+      // operation, plus one — is what actually bounds the sync. A synthetic block spans
+      // `SYNTHETIC_BLOCK_WINDOW_SECONDS`, so several operations can share the last known
+      // op's own block height; starting the cursor at `minHeight` would skip the rest of
+      // that block entirely. Starting one block earlier re-covers it (dedup happens
+      // downstream via operation id) without losing anything newer. Converting it to the
+      // mirror node's "seconds.nanoseconds" consensus-timestamp format keeps the sync
+      // incremental instead of full, and keeps it comparable to the nanosecond-scale cursor
+      // hgraph derives from this same string (see `getERC20Transfers`'s
+      // `timestamp?.replace(".", "")`).
+      const effectiveCursor =
+        cursor ??
+        (minHeight > 0
+          ? `${Math.floor(getDateRangeFromBlockHeight(minHeight - 1).start.getTime() / 1000)}.000000000`
+          : undefined);
+
+      // A synthesized cursor marks a point in the past, not a page boundary: the mirror
+      // node request must ask for what comes after it ("gt"), not before it ("lt"). The
+      // request direction is derived from `order`, so an incremental sync has to fetch
+      // ascending here regardless of the descending order the caller wants for display;
+      // the operations are re-sorted into that order below.
+      const isSynthesizedCursor = !cursor && minHeight > 0;
+      const fetchOrder = isSynthesizedCursor ? "asc" : order;
 
       const evmAddress = await toEVMAddress({
         configOrCurrencyId: coinConfig,
@@ -125,13 +148,13 @@ export function createApi(
         address,
         evmAddress,
         mirrorTokens,
-        ...(typeof cursor === "string" && { cursor }),
+        ...(typeof effectiveCursor === "string" && { cursor: effectiveCursor }),
         ...(typeof limit === "number" && { limit }),
-        ...(typeof order === "string" && { order }),
+        ...(typeof fetchOrder === "string" && { order: fetchOrder }),
         tokenEvmAddresses: erc20TokenBalances.map(t => t.contractAddress.toLowerCase()),
         fetchAllPages: false,
         skipFeesForTokenOperations: true,
-        useEncodedHash: false,
+        useEncodedHash: true,
         useSyntheticBlocks: true,
       });
 
@@ -169,15 +192,9 @@ export function createApi(
           : { type: "native" };
 
         // Prefer inferred payer from operation extra, fallback to transaction_id parsing for legacy ops.
-        let feesPayer = liveOp.extra?.feesPayer;
-        if (!feesPayer && liveOp.extra?.transactionId)
-          feesPayer = extractInitiator(liveOp.extra.transactionId);
-
-        // REWARD operations append a suffix to the tx.hash to ensure uniqueness
-        const hash =
-          liveOp.type === "REWARD"
-            ? liveOp.hash.replace(STAKING_REWARD_HASH_SUFFIX, "")
-            : liveOp.hash;
+        let feePayer = liveOp.extra?.feePayer;
+        if (!feePayer && liveOp.extra?.transactionId)
+          feePayer = extractInitiator(liveOp.extra.transactionId);
 
         return {
           id: liveOp.id,
@@ -195,9 +212,9 @@ export function createApi(
             }),
           },
           tx: {
-            hash,
+            hash: liveOp.hash,
             fees: BigInt(liveOp.fee.toFixed(0)),
-            ...(feesPayer && { feesPayer }),
+            ...(feePayer && { feesPayer: feePayer }),
             date: liveOp.date,
             block: {
               height: liveOp.blockHeight ?? HARDCODED_BLOCK_HEIGHT,
@@ -218,13 +235,8 @@ export function createApi(
     getStakes: async address => getStakes({ configOrCurrencyId: coinConfig, address }),
     getRewards: async (address, cursor) =>
       getRewards({ configOrCurrencyId: coinConfig, address, cursor }),
-    validateIntent: async (
-      _transactionIntent,
-      _balances,
-      _customFees,
-    ): Promise<TransactionValidation> => {
-      throw new Error("validateIntent is not supported");
-    },
+    validateIntent: (transactionIntent, balances, customFees) =>
+      logicValidateIntent(coinConfig, currencyId, transactionIntent, balances, customFees),
     getNextSequence: async (_address): Promise<bigint> => {
       throw new Error("getNextSequence is not supported");
     },

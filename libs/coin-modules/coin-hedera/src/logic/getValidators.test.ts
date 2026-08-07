@@ -1,6 +1,6 @@
 import { apiClient } from "../network/api";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
-import { getValidators } from "./getValidators";
+import { getAllValidators, getValidators } from "./getValidators";
 
 jest.mock("../network/api");
 
@@ -53,5 +53,43 @@ describe("getValidators", () => {
       fetchAllPages: false,
     });
     expect(result.next).toBe("123");
+  });
+});
+
+describe("getAllValidators", () => {
+  const mockCurrency = getMockedCurrency();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("reads every page and returns the whole node set", async () => {
+    (apiClient.getNodes as jest.Mock).mockResolvedValue({
+      nodes: [
+        {
+          node_id: 1,
+          node_account_id: "0.0.3",
+          description: "Hosted by Ledger | Paris, France",
+          stake: 1000000,
+          reward_rate_start: 3538,
+        },
+        {
+          node_id: 2,
+          node_account_id: "0.0.4",
+          description: "Hosted by Ledger | Vierzon, France",
+          stake: 2000000,
+          reward_rate_start: 3538,
+        },
+      ],
+      nextCursor: null,
+    });
+
+    const result = await getAllValidators({ configOrCurrencyId: mockCurrency.id });
+
+    expect(apiClient.getNodes).toHaveBeenCalledWith({
+      configOrCurrencyId: mockCurrency.id,
+      fetchAllPages: true,
+    });
+    expect(result.map(v => v.nodeId)).toEqual(["1", "2"]);
   });
 });

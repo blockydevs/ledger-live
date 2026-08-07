@@ -788,7 +788,7 @@ describe("listOperationsV2", () => {
       {
         extra: {
           transactionId: "0.0.10067173-1761755118-730000493",
-          feesPayer: "0.0.23",
+          feePayer: "0.0.23",
         },
       },
     ]);

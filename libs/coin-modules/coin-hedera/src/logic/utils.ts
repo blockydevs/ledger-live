@@ -24,7 +24,6 @@ import {
   HEDERA_TRANSACTION_NAMES,
   STAKING_REWARD_HASH_SUFFIX,
 } from "../constants";
-import { getCurrentHederaPreloadData } from "../preload-data";
 import type {
   EnrichedERC20Transfer,
   HederaAccount,
@@ -390,19 +389,6 @@ export const filterValidatorBySearchTerm = (
     validator.name.toLowerCase().includes(lowercaseSearch) ||
     addressWithChecksum.toLowerCase().includes(lowercaseSearch)
   );
-};
-
-export const getValidatorFromAccount = (account: HederaAccount): HederaValidator | null => {
-  const { delegation } = account.hederaResources ?? {};
-
-  if (!delegation) {
-    return null;
-  }
-
-  const validators = getCurrentHederaPreloadData(account.currency);
-  const validator = validators.validators.find(v => v.nodeId === delegation.nodeId) ?? null;
-
-  return validator;
 };
 
 export const getDefaultValidator = (validators: HederaValidator[]): HederaValidator | null => {

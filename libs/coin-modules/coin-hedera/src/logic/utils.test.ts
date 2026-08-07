@@ -13,16 +13,6 @@ import {
   STAKING_REWARD_HASH_SUFFIX,
 } from "../constants";
 import { rpcClient } from "../network/rpc";
-
-// Mock preloadData module before importing
-jest.mock("../preload-data", () => ({
-  ...jest.requireActual("../preload-data"),
-  getCurrentHederaPreloadData: jest.fn(),
-}));
-
-import * as preloadData from "../preload-data";
-
-const mockGetCurrentHederaPreloadData = preloadData.getCurrentHederaPreloadData as jest.Mock;
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockedEnrichedERC20Transfer } from "../test/fixtures/common.fixture";
@@ -32,14 +22,7 @@ import {
 } from "../test/fixtures/currency.fixture";
 import { getMockedMirrorTransaction } from "../test/fixtures/mirror.fixture";
 import { getMockedOperation } from "../test/fixtures/operation.fixture";
-import type {
-  HederaAccount,
-  HederaMemo,
-  HederaPreloadData,
-  HederaTxData,
-  HederaValidator,
-  Transaction,
-} from "../types";
+import type { HederaMemo, HederaTxData, HederaValidator, Transaction } from "../types";
 import {
   serializeSignature,
   deserializeSignature,
@@ -63,7 +46,6 @@ import {
   isStakingTransaction,
   extractCompanyFromNodeDescription,
   sortValidators,
-  getValidatorFromAccount,
   getDefaultValidator,
   getDelegationStatus,
   filterValidatorBySearchTerm,
@@ -735,35 +717,6 @@ describe("logic utils", () => {
       expect(sorted[0].nodeId).toBe(2);
       expect(sorted[1].nodeId).toBe(1);
       expect(sorted[2].nodeId).toBe(3);
-    });
-  });
-
-  describe("getValidatorFromAccount", () => {
-    const mockValidator = { nodeId: 1 };
-    const mockPreload = { validators: [mockValidator] } as HederaPreloadData;
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-
-      mockGetCurrentHederaPreloadData.mockReturnValue(mockPreload);
-    });
-
-    it("returns validator matching delegation nodeId", () => {
-      const mockAccount = {
-        currency: "hedera",
-        hederaResources: { delegation: { nodeId: 1 } },
-      } as unknown as HederaAccount;
-
-      expect(getValidatorFromAccount(mockAccount)).toEqual(mockValidator);
-    });
-
-    it("returns null if no delegation", () => {
-      const mockAccount = {
-        currency: "hedera",
-        hederaResources: {},
-      } as unknown as HederaAccount;
-
-      expect(getValidatorFromAccount(mockAccount)).toBeNull();
     });
   });
 
