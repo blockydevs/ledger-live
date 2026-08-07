@@ -1,8 +1,8 @@
 import type {
   HederaAccount,
-  HederaOperation,
   Transaction,
   TransactionStatus,
+  HederaOperation,
 } from "@ledgerhq/live-common/families/hedera/types";
 import type { Account } from "@ledgerhq/types-live";
 import type { LLDCoinFamily } from "../types";

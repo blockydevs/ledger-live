@@ -22,7 +22,7 @@ const AccountHeaderActions: HederaFamily["accountHeaderManageActions"] = ({
   }
 
   const isStakingEnabled = getCanStakeCurrency(account.currency.id);
-  const isAlreadyStaked = !!account.hederaResources?.delegation;
+  const isAlreadyStaked = (account.stakingPositions?.length ?? 0) > 0;
 
   if (!isStakingEnabled) {
     return [];

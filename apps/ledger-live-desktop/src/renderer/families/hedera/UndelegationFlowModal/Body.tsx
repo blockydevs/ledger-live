@@ -93,9 +93,7 @@ const Body = ({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
 
       const transaction = bridge.updateTransaction(t, {
         mode: HEDERA_TRANSACTION_MODES.Undelegate,
-        properties: {
-          stakingNodeId: null,
-        },
+        valId: undefined,
       });
 
       return {

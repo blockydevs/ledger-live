@@ -4,7 +4,6 @@ import { Trans } from "react-i18next";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
 import { HederaValidator, Transaction } from "@ledgerhq/live-common/families/hedera/types";
-import { isStakingTransaction } from "@ledgerhq/live-common/families/hedera/utils";
 import TrackPage from "~/renderer/analytics/TrackPage";
 import Box from "~/renderer/components/Box";
 import Button from "~/renderer/components/Button";
@@ -20,17 +19,14 @@ export default function StepValidator({
   error,
 }: Readonly<StepProps>) {
   invariant(account && transaction, "hedera: account and transaction required");
-  invariant(isStakingTransaction(transaction), "hedera: staking tx expected");
-  const selectedValidatorNodeId = transaction.properties?.stakingNodeId ?? null;
+  const selectedValidatorNodeId = transaction.valId ? Number(transaction.valId) : null;
   const bridge = useAccountBridge<Transaction>(account, parentAccount);
 
   const updateValidator = (validator: HederaValidator) => {
     onUpdateTransaction(() => {
       return bridge.updateTransaction(transaction, {
         mode: HEDERA_TRANSACTION_MODES.Delegate,
-        properties: {
-          stakingNodeId: validator.nodeId,
-        },
+        valId: String(validator.nodeId),
       });
     });
   };
@@ -65,14 +61,10 @@ export function StepValidatorFooter({
   transaction,
 }: Readonly<StepProps>) {
   invariant(account && transaction, "hedera: account and transaction required");
-  invariant(isStakingTransaction(transaction), "hedera: staking tx expected");
 
   const { errors } = status;
   const canNext =
-    !bridgePending &&
-    !errors.validators &&
-    transaction &&
-    typeof transaction.properties?.stakingNodeId === "number";
+    !bridgePending && !errors.validators && transaction && typeof transaction.valId === "string";
 
   return (
     <Box horizontal>
