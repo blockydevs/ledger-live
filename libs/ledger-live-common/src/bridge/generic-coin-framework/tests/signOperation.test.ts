@@ -4,10 +4,15 @@ import { toArray } from "rxjs/operators";
 import { genericSignOperation } from "../signOperation";
 import { FeeNotLoaded } from "@ledgerhq/ledger-wallet-framework/errors";
 import { getCoinModuleApi } from "../api";
+import { getBridgeApi } from "../bridge";
 import { buildOptimisticOperation } from "../utils";
 
 jest.mock("../api", () => ({
   getCoinModuleApi: jest.fn(),
+}));
+
+jest.mock("../bridge", () => ({
+  getBridgeApi: jest.fn(),
 }));
 
 jest.mock("../utils", () => ({
@@ -48,6 +53,7 @@ describe("genericSignOperation", () => {
     });
 
     (buildOptimisticOperation as jest.Mock).mockReturnValue({ id: "mock-op" });
+    (getBridgeApi as jest.Mock).mockResolvedValue({});
 
     mockSigner.getAddress.mockResolvedValue({ publicKey: "pubKey" });
     mockSigner.signTransaction.mockResolvedValue("sig");
@@ -124,5 +130,47 @@ describe("genericSignOperation", () => {
     const observable = signOperation({ account, transaction: txWithoutFees, deviceId: "" });
 
     await expect(lastValueFrom(observable)).rejects.toThrow(FeeNotLoaded);
+  });
+
+  describe("enrichOptimisticOperation", () => {
+    it("emits the hook's returned operation instead of the pre-hook built operation", async () => {
+      (getBridgeApi as jest.Mock).mockResolvedValue({
+        enrichOptimisticOperation: jest.fn().mockReturnValue({ id: "mock-op", enriched: true }),
+      });
+
+      const signOperation = genericSignOperation("mainnet", "xrp")(mockSignerContext);
+      const observable = signOperation({ account, transaction, deviceId: "" });
+
+      const events = await lastValueFrom(observable.pipe(toArray()));
+
+      expect(events[2]).toEqual({
+        type: "signed",
+        signedOperation: {
+          operation: { id: "mock-op", enriched: true },
+          signature: "signedTx",
+        },
+      });
+    });
+
+    it("falls back to the pre-hook built operation when the hook throws", async () => {
+      (getBridgeApi as jest.Mock).mockResolvedValue({
+        enrichOptimisticOperation: jest.fn().mockImplementation(() => {
+          throw new Error("boom");
+        }),
+      });
+
+      const signOperation = genericSignOperation("mainnet", "xrp")(mockSignerContext);
+      const observable = signOperation({ account, transaction, deviceId: "" });
+
+      const events = await lastValueFrom(observable.pipe(toArray()));
+
+      expect(events[2]).toEqual({
+        type: "signed",
+        signedOperation: {
+          operation: { id: "mock-op" },
+          signature: "signedTx",
+        },
+      });
+    });
   });
 });
