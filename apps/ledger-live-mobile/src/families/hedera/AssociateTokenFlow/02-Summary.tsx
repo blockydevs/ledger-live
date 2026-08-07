@@ -3,7 +3,7 @@ import { Trans } from "~/context/Locale";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
-import { Transaction } from "@ledgerhq/live-common/families/hedera/types";
+import type { Transaction } from "@ledgerhq/live-common/families/hedera/types";
 import { View, StyleSheet } from "react-native";
 import SafeAreaView from "~/components/SafeAreaView";
 import { getMainAccount } from "@ledgerhq/ledger-wallet-framework/account/helpers";
@@ -43,9 +43,6 @@ export default function Summary({ navigation, route }: Props) {
       mode: HEDERA_TRANSACTION_MODES.TokenAssociate,
       assetReference: token.contractAddress,
       assetOwner: mainAccount.freshAddress,
-      properties: {
-        token,
-      },
     } satisfies Partial<Transaction>);
 
     return {

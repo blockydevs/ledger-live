@@ -3,10 +3,10 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "~/context/Locale";
 import { ScrollView } from "react-native";
 import BigNumber from "bignumber.js";
-import invariant from "invariant";
 import CryptoIcon from "@ledgerhq/crypto-icons/native";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import type { HederaAccount } from "@ledgerhq/live-common/families/hedera/types";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import InfoItem from "~/components/BalanceSummaryInfoItem";
 import CurrencyUnitValue from "~/components/CurrencyUnitValue";
 import { useAccountUnit } from "LLM/hooks/useAccountUnit";
@@ -21,7 +21,6 @@ interface Props {
 type InfoName = "available" | "delegated" | "claimable";
 
 function AccountBalanceSummaryFooter({ account }: Readonly<Props>) {
-  invariant(account.hederaResources, "hedera: hederaResources is missing");
   const { t } = useTranslation();
   const { getCanStakeCurrency } = useStake();
   const [infoName, setInfoName] = useState<InfoName>();
@@ -33,7 +32,7 @@ function AccountBalanceSummaryFooter({ account }: Readonly<Props>) {
   const onPressInfoCreator = useCallback((infoName: InfoName) => () => setInfoName(infoName), []);
 
   const isStakingEnabled = getCanStakeCurrency(account.currency.id);
-  const { delegation } = account.hederaResources;
+  const delegation = getHederaDelegation(account);
   const spendableBalance = account.spendableBalance;
   const delegatedAssets = delegation?.delegated ?? new BigNumber(0);
   const claimableRewards = delegation?.pendingReward ?? new BigNumber(0);
@@ -76,10 +75,6 @@ function AccountBalanceSummaryFooter({ account }: Readonly<Props>) {
 }
 
 export default function AccountBalanceFooter({ account }: Readonly<Props>) {
-  if (!account.hederaResources) {
-    return null;
-  }
-
   return <AccountBalanceSummaryFooter account={account} />;
 }
 

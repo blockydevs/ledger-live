@@ -42,9 +42,7 @@ function UndelegationAmount({ navigation, route }: Props) {
 
     const transaction = bridge.updateTransaction(t, {
       mode: HEDERA_TRANSACTION_MODES.Undelegate,
-      properties: {
-        stakingNodeId: null,
-      },
+      valId: undefined,
     });
 
     return {
