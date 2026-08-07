@@ -12,6 +12,7 @@ import { getAddressExplorer, getDefaultExplorerView } from "@ledgerhq/live-commo
 import type { HederaAccount, HederaDelegation } from "@ledgerhq/live-common/families/hedera/types";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
 import { useHederaEnrichedDelegation } from "@ledgerhq/live-common/families/hedera/react";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import type { AccountLike, TokenAccount } from "@ledgerhq/types-live";
 import { Box, Flex, Text } from "@ledgerhq/native-ui";
 import AccountSectionLabel from "~/components/AccountSectionLabel";
@@ -299,18 +300,20 @@ export default function HederaDelegations({ account }: Readonly<{ account: Accou
     return null;
   }
 
-  if (!hederaAccount.hederaResources) {
-    return null;
-  }
+  const delegation = getHederaDelegation(hederaAccount);
 
-  if (!hederaAccount?.hederaResources.delegation) {
+  if (!delegation) {
     return <DelegationPlaceholder account={hederaAccount} />;
   }
 
   return (
     <Delegations
       account={hederaAccount}
-      delegatedPosition={hederaAccount.hederaResources.delegation}
+      delegatedPosition={{
+        nodeId: delegation.nodeId,
+        delegated: delegation.delegated,
+        pendingReward: delegation.pendingReward,
+      }}
     />
   );
 }
