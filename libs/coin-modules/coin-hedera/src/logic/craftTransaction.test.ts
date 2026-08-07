@@ -1,7 +1,9 @@
 import * as sdk from "@hashgraph/sdk";
 import type { FeeEstimation, TransactionIntent } from "@ledgerhq/coin-module-framework/api/index";
+import { getEnv } from "@ledgerhq/live-env";
 import invariant from "invariant";
 import {
+  DEFAULT_GAS_LIMIT,
   HEDERA_TRANSACTION_MODES,
   TINYBAR_SCALE,
   TRANSACTION_VALID_DURATION_SECONDS,
@@ -12,6 +14,7 @@ import { toEVMAddress } from "../network/utils";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import type { HederaMemo, HederaTxData } from "../types";
 import { craftTransaction } from "./craftTransaction";
+import { craftTransactionData } from "./craftTransactionData";
 import { serializeTransaction } from "./utils";
 
 jest.mock("./utils", () => ({
@@ -127,7 +130,10 @@ describe("craftTransaction", () => {
   it("should craft ERC20 token transfer transaction", async () => {
     mockToEVMAddress.mockResolvedValue("0x0000000000000000000000000000000000003039");
 
-    const txIntent = {
+    const erc20AssetReference = "0x39ceba2b467fa987546000eb5d1373acf1f3a2e1";
+    const estimatedGasLimit = BigInt(123456);
+
+    const intentWithoutData = {
       intentType: "transaction",
       type: HEDERA_TRANSACTION_MODES.Send,
       amount: BigInt(1000),
@@ -135,22 +141,27 @@ describe("craftTransaction", () => {
       sender: "0.0.54321",
       asset: {
         type: "erc20",
-        assetReference: "0x39ceba2b467fa987546000eb5d1373acf1f3a2e1",
+        assetReference: erc20AssetReference,
       },
       memo: {
         kind: "text",
         type: "string",
         value: "Token transfer",
       },
-      data: {
-        type: "erc20",
-        gasLimit: BigInt(100000),
-      },
-    } satisfies TransactionIntent<HederaMemo, HederaTxData>;
+    } satisfies TransactionIntent<HederaMemo>;
+
+    const erc20Data = craftTransactionData(
+      intentWithoutData as TransactionIntent<HederaMemo, HederaTxData>,
+    ) as Extract<HederaTxData, { type: "erc20" }>;
+    const txIntent: TransactionIntent<HederaMemo, HederaTxData> = {
+      ...intentWithoutData,
+      data: erc20Data,
+    };
 
     const result = await craftTransaction({
       configOrCurrencyId: mockConfig,
       txIntent,
+      customFees: { value: 0n, parameters: { gasLimit: estimatedGasLimit } },
     });
 
     expect(result.tx).toBeInstanceOf(sdk.ContractExecuteTransaction);
@@ -159,15 +170,78 @@ describe("craftTransaction", () => {
       "ContractExecuteTransaction type guard",
     );
 
-    expect(result.tx.gas).toEqual(sdk.Long.fromBigInt(txIntent.data.gasLimit));
+    expect(result.tx.gas).toEqual(sdk.Long.fromBigInt(estimatedGasLimit));
     expect(result.tx.contractId).toEqual(
-      sdk.ContractId.fromEvmAddress(0, 0, txIntent.asset.assetReference),
+      sdk.ContractId.fromEvmAddress(0, 0, erc20AssetReference),
     );
     expect(result.tx.transactionMemo).toBe("Token transfer");
     expect(serializeTransaction).toHaveBeenCalled();
     expect(result).toEqual({
       tx: expect.any(Object),
       serializedTx: "serialized-transaction",
+    });
+  });
+
+  describe("erc20 gas limit via customFees", () => {
+    const erc20AssetReference = "0x39ceba2b467fa987546000eb5d1373acf1f3a2e1";
+
+    function buildErc20Intent(): TransactionIntent<HederaMemo, HederaTxData> {
+      const intentWithoutData = {
+        intentType: "transaction",
+        type: HEDERA_TRANSACTION_MODES.Send,
+        amount: BigInt(1000),
+        recipient: "0.0.12345",
+        sender: "0.0.54321",
+        asset: {
+          type: "erc20",
+          assetReference: erc20AssetReference,
+        },
+        memo: {
+          kind: "text",
+          type: "string",
+          value: "Token transfer",
+        },
+      } satisfies TransactionIntent<HederaMemo>;
+
+      const erc20Data = craftTransactionData(
+        intentWithoutData as TransactionIntent<HederaMemo, HederaTxData>,
+      ) as Extract<HederaTxData, { type: "erc20" }>;
+
+      return { ...intentWithoutData, data: erc20Data };
+    }
+
+    beforeEach(() => {
+      mockToEVMAddress.mockResolvedValue("0x0000000000000000000000000000000000003039");
+    });
+
+    it("crafts the ERC20 gas limit from customFees, ignoring the intent's own data.gasLimit, and does not re-estimate", async () => {
+      const estimateContractCallGasSpy = jest.spyOn(apiClient, "estimateContractCallGas");
+
+      const result = await craftTransaction({
+        configOrCurrencyId: mockConfig,
+        txIntent: buildErc20Intent(),
+        customFees: { value: 0n, parameters: { gasLimit: 60_000n } },
+      });
+
+      invariant(
+        result.tx instanceof sdk.ContractExecuteTransaction,
+        "ContractExecuteTransaction type guard",
+      );
+      expect(result.tx.gas).toEqual(sdk.Long.fromBigInt(60_000n));
+      expect(estimateContractCallGasSpy).not.toHaveBeenCalled();
+    });
+
+    it("falls back to DEFAULT_GAS_LIMIT when customFees carries no gasLimit", async () => {
+      const result = await craftTransaction({
+        configOrCurrencyId: mockConfig,
+        txIntent: buildErc20Intent(),
+      });
+
+      invariant(
+        result.tx instanceof sdk.ContractExecuteTransaction,
+        "ContractExecuteTransaction type guard",
+      );
+      expect(result.tx.gas).toEqual(sdk.Long.fromBigInt(BigInt(DEFAULT_GAS_LIMIT.toString())));
     });
   });
 
@@ -208,6 +282,64 @@ describe("craftTransaction", () => {
       tx: expect.any(Object),
       serializedTx: "serialized-transaction",
     });
+  });
+
+  it("should craft a claim-rewards transaction targeting the env recipient with amount 1", async () => {
+    const rewardsRecipient = getEnv("HEDERA_CLAIM_REWARDS_RECIPIENT_ACCOUNT_ID");
+    const txIntent = {
+      intentType: "staking",
+      type: HEDERA_TRANSACTION_MODES.ClaimRewards,
+      amount: BigInt(0),
+      recipient: "",
+      sender: "0.0.54321",
+      asset: {
+        type: "native",
+      },
+      memo: {
+        type: "NO_MEMO",
+      },
+    } as unknown as TransactionIntent<HederaMemo>;
+
+    const result = await craftTransaction({
+      configOrCurrencyId: mockConfig,
+      txIntent,
+    });
+
+    expect(result.tx).toBeInstanceOf(sdk.TransferTransaction);
+    invariant(result.tx instanceof sdk.TransferTransaction, "TransferTransaction type guard");
+
+    const senderTransfer = result.tx.hbarTransfers?.get(txIntent.sender);
+    const recipientTransfer = result.tx.hbarTransfers?.get(rewardsRecipient);
+
+    expect(senderTransfer).toEqual(sdk.Hbar.fromTinybars("-1"));
+    expect(recipientTransfer).toEqual(sdk.Hbar.fromTinybars("1"));
+    expect(result.tx.transactionMemo).toBe("Collect Staking Rewards");
+  });
+
+  it("should craft a delegate transaction with the staking memo even without a UI-supplied memo", async () => {
+    const txIntent = {
+      intentType: "staking",
+      type: HEDERA_TRANSACTION_MODES.Delegate,
+      amount: BigInt(0),
+      recipient: "0.0.54321",
+      sender: "0.0.54321",
+      asset: {
+        type: "native",
+      },
+      data: { type: "staking", stakingNodeId: 7 },
+      memo: {
+        type: "NO_MEMO",
+      },
+    } as unknown as TransactionIntent<HederaMemo, HederaTxData>;
+
+    const result = await craftTransaction({
+      configOrCurrencyId: mockConfig,
+      txIntent,
+    });
+
+    expect(result.tx).toBeInstanceOf(sdk.AccountUpdateTransaction);
+    invariant(result.tx instanceof sdk.AccountUpdateTransaction, "AccountUpdateTransaction type guard");
+    expect(result.tx.transactionMemo).toBe("Stake");
   });
 
   it("should apply custom fees when provided", async () => {

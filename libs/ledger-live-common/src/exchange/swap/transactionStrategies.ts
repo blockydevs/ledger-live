@@ -267,7 +267,10 @@ export function hederaTransaction({
     amount,
     recipient,
     ...customFeeConfig,
-    memo: payinExtraId ?? undefined,
+    // The generic framework only attaches a memo when both fields are set (see
+    // `transactionToIntent` in bridge/generic-coin-framework/utils.ts) — pairing them here
+    // avoids silently dropping the payin-extra-id memo.
+    ...(payinExtraId && { memoType: "text", memoValue: payinExtraId }),
   };
 }
 

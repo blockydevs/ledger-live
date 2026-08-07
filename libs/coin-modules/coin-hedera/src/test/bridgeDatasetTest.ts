@@ -12,8 +12,14 @@ import type { Transaction } from "../types";
 export const hedera: CurrenciesData<Transaction> = {
   FIXME_ignoreAccountFields: [
     "syncHash",
-    // pending rewards change on a daily basis
-    "hederaResources.delegation.pendingReward",
+    // the generic coin framework carries the delegation in `stakingPositions`; the legacy bridge
+    // carries it here. Ignore the whole key so the snapshot holds under either bridge.
+    "hederaResources.delegation",
+    // an account holds at most one staking position, and its amounts track the account balance
+    // and the pending reward, both of which move on a daily basis
+    "stakingPositions[0].amount",
+    "stakingPositions[0].amountDeposited",
+    "stakingPositions[0].amountRewarded",
     // balance of ERC20 token account may change without any operation (e.g. Bonzo aUSDC)
     "balance",
     "spendableBalance",

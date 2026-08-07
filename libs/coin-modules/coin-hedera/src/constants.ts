@@ -127,6 +127,9 @@ export const OP_TYPES_EXCLUDING_FEES: OperationType[] = [
  */
 export const STAKING_REWARD_HASH_SUFFIX = "-staking-reward";
 
+/** Byte length of a Hedera transaction hash (a SHA-384 digest). */
+export const HEDERA_TRANSACTION_HASH_LENGTH = 48;
+
 export const MAP_TX_NAME_TO_CUSTOM_OPERATION_TYPE: Record<string, OperationType> = {
   [HEDERA_TRANSACTION_NAMES.TokenAssociate]: "ASSOCIATE_TOKEN",
   [HEDERA_TRANSACTION_NAMES.ContractCall]: "CONTRACT_CALL",

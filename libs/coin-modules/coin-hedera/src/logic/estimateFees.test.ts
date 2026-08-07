@@ -297,30 +297,46 @@ describe("getEstimatedFees", () => {
     expect(result).toMatchObject({ tinybars: expectedTinybars, gas: expectedGas });
   });
 
-  it("returns zero tinybars early when EVM address cannot be resolved (no evm_address on account)", async () => {
-    const transferAmount = BigInt(1000000);
+  it.each([
+    ["sender", senderAddress],
+    ["recipient", recipientAddress],
+  ])(
+    "falls back to the default gas estimate, never a zero fee, when the %s evm address does not resolve",
+    async (_role, unresolvedAddress) => {
+      (apiClient.getAccount as jest.Mock).mockImplementation(({ address }: { address: string }) =>
+        address === unresolvedAddress
+          ? { address, evm_address: null }
+          : { address, evm_address: "0x0000000000000000000000000000000000012345" },
+      );
 
-    (apiClient.getAccount as jest.Mock).mockResolvedValue({ account: senderAddress });
-
-    const result = await estimateFees({
-      configOrCurrencyId: mockedAccount.currency.id,
-      operationType: HEDERA_OPERATION_TYPES.ContractCall,
-      txIntent: {
-        intentType: "transaction",
-        type: HEDERA_TRANSACTION_MODES.Send,
-        sender: senderAddress,
-        recipient: recipientAddress,
-        amount: transferAmount,
-        asset: {
-          type: "erc20",
-          assetReference: mockedTokenCurrencyERC20.contractAddress,
+      const result = await estimateFees({
+        configOrCurrencyId: mockedAccount.currency.id,
+        operationType: HEDERA_OPERATION_TYPES.ContractCall,
+        txIntent: {
+          intentType: "transaction",
+          type: HEDERA_TRANSACTION_MODES.Send,
+          sender: senderAddress,
+          recipient: recipientAddress,
+          amount: BigInt(1000000),
+          asset: {
+            type: "erc20",
+            assetReference: mockedTokenCurrencyERC20.contractAddress,
+          },
         },
-      },
-    });
+      });
 
-    expect(result).toMatchObject({ tinybars: new BigNumber(0) });
-    expect(apiClient.getNetworkFees).not.toHaveBeenCalled();
-  });
+      const expectedGas = DEFAULT_GAS_LIMIT;
+      const expectedTinybars = new BigNumber(expectedGas)
+        .multipliedBy(DEFAULT_GAS_PRICE_TINYBARS)
+        .integerValue(BigNumber.ROUND_CEIL);
+
+      expect(result).toMatchObject({
+        tinybars: expectedTinybars,
+        gas: expectedGas,
+      });
+      expect(apiClient.estimateContractCallGas).not.toHaveBeenCalled();
+    },
+  );
 
   it("falls back to default estimate on cvs api failure", async () => {
     (cvsApi.fetchLatest as jest.Mock).mockRejectedValueOnce(new Error("Network error"));

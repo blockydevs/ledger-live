@@ -158,6 +158,9 @@ describe("getBalance", () => {
           amountDeposited: BigInt(mockMirrorAccount.balance.balance),
           amountRewarded: BigInt(mockMirrorAccount.pending_reward),
           delegate: mockMirrorNode.node_account_id,
+          details: {
+            stakedNodeId: mockMirrorAccount.staked_node_id,
+          },
         },
       },
     ]);

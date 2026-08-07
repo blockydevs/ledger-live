@@ -23,8 +23,8 @@ import {
   OP_TYPES_EXCLUDING_FEES,
   HEDERA_TRANSACTION_NAMES,
   STAKING_REWARD_HASH_SUFFIX,
+  HEDERA_TRANSACTION_HASH_LENGTH,
 } from "../constants";
-import { getCurrentHederaPreloadData } from "../preload-data";
 import type {
   EnrichedERC20Transfer,
   HederaAccount,
@@ -179,16 +179,32 @@ export function base64ToUrlSafeBase64(data: string): string {
   return data.replace(/\//g, "_").replace(/\+/g, "-");
 }
 
+// HashScan resolves a transaction hash in `0x` hex form only, while an operation carries it as
+// url-safe base64. Returns null when the hash is not a 48-byte transaction hash, which is the case
+// for the synthetic hash of a staking-reward operation.
+export function urlSafeBase64ToHexHash(hash: string): string | null {
+  try {
+    const bytes = Buffer.from(hash.replace(/_/g, "/").replace(/-/g, "+"), "base64");
+
+    return bytes.length === HEDERA_TRANSACTION_HASH_LENGTH ? `0x${bytes.toString("hex")}` : null;
+  } catch {
+    return null;
+  }
+}
+
 export const getTransactionExplorer = (
   explorerView: ExplorerView | null | undefined,
   operation: LiveOperation,
 ): string | undefined => {
   const extra = isValidExtra(operation.extra) ? operation.extra : null;
+  // HashScan accepts a transaction id, a consensus timestamp, or a hex transaction hash. Only the
+  // hash is known before the first sync, so it is what a pending operation links to.
+  const identifier =
+    extra?.transactionId ?? extra?.consensusTimestamp ?? urlSafeBase64ToHexHash(operation.hash);
 
-  return explorerView?.tx?.replace(
-    "$hash",
-    extra?.consensusTimestamp ?? extra?.transactionId ?? "0",
-  );
+  if (!identifier) return undefined;
+
+  return explorerView?.tx?.replace("$hash", identifier);
 };
 
 export const isTokenAssociateTransaction = (
@@ -390,19 +406,6 @@ export const filterValidatorBySearchTerm = (
     validator.name.toLowerCase().includes(lowercaseSearch) ||
     addressWithChecksum.toLowerCase().includes(lowercaseSearch)
   );
-};
-
-export const getValidatorFromAccount = (account: HederaAccount): HederaValidator | null => {
-  const { delegation } = account.hederaResources ?? {};
-
-  if (!delegation) {
-    return null;
-  }
-
-  const validators = getCurrentHederaPreloadData(account.currency);
-  const validator = validators.validators.find(v => v.nodeId === delegation.nodeId) ?? null;
-
-  return validator;
 };
 
 export const getDefaultValidator = (validators: HederaValidator[]): HederaValidator | null => {

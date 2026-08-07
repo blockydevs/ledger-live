@@ -5,25 +5,14 @@ import "../../__tests__/test-helpers/dom-polyfill";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { getCurrentHederaPreloadData } from "@ledgerhq/coin-hedera/preload-data";
+import { preload } from "@ledgerhq/coin-hedera/preload";
 import { apiClient } from "@ledgerhq/coin-hedera/network/api";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
 import { renderHook } from "@testing-library/react";
-import { makeBridgeCacheSystem } from "../../bridge/cache";
 import { liveConfig } from "../../config/sharedConfig";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import * as hooks from "./react";
 import type { HederaAccount, HederaDelegation } from "./types";
-
-const localCache: Record<string, unknown> = {};
-const cache = makeBridgeCacheSystem({
-  saveData(c, d) {
-    localCache[c.id] = d;
-    return Promise.resolve();
-  },
-  getData(c) {
-    return Promise.resolve(localCache[c.id]);
-  },
-});
 
 describe("hedera/react", () => {
   const currency = getCryptoCurrencyById("hedera");
@@ -69,8 +58,7 @@ describe("hedera/react", () => {
 
   describe("useHederaPreloadData", () => {
     beforeEach(async () => {
-      const { prepare } = setup();
-      await prepare();
+      await preload(currency);
     });
 
     it("should return preloaded data", async () => {
@@ -83,8 +71,7 @@ describe("hedera/react", () => {
 
   describe("useHederaValidators", () => {
     beforeEach(async () => {
-      const { prepare } = setup();
-      await prepare();
+      await preload(currency);
     });
 
     it("should return all validators when no search query", () => {
@@ -113,15 +100,14 @@ describe("hedera/react", () => {
     it("should filter validators by node ID", () => {
       const data = getCurrentHederaPreloadData(currency);
       const firstValidator = data.validators[0];
+      invariant(firstValidator, "No validators available for test");
 
-      if (firstValidator) {
-        const { result } = renderHook(() =>
-          hooks.useHederaValidators(currency, firstValidator.nodeId.toString()),
-        );
+      const { result } = renderHook(() =>
+        hooks.useHederaValidators(currency, firstValidator.nodeId.toString()),
+      );
 
-        expect(result.current.length).toBeGreaterThan(0);
-        expect(result.current.some(v => v.nodeId === firstValidator.nodeId)).toBe(true);
-      }
+      expect(result.current.length).toBeGreaterThan(0);
+      expect(result.current.some(v => v.nodeId === firstValidator.nodeId)).toBe(true);
     });
 
     it("should return empty array when no validators match search", () => {
@@ -140,6 +126,7 @@ describe("hedera/react", () => {
         hooks.useHederaValidators(currency, "swirlds"),
       );
 
+      expect(upperResult.current.length).toBeGreaterThan(0);
       expect(upperResult.current.length).toEqual(lowerResult.current.length);
     });
   });
@@ -157,8 +144,7 @@ describe("hedera/react", () => {
     } as unknown as HederaAccount;
 
     beforeEach(async () => {
-      const { prepare } = setup();
-      await prepare();
+      await preload(currency);
     });
 
     it("should enrich delegation with validator data", () => {
@@ -263,13 +249,3 @@ describe("hedera/react", () => {
     });
   });
 });
-
-function setup(): {
-  prepare: () => Promise<unknown>;
-} {
-  const currency = getCryptoCurrencyById("hedera");
-
-  return {
-    prepare: async () => cache.prepareCurrency(currency),
-  };
-}
