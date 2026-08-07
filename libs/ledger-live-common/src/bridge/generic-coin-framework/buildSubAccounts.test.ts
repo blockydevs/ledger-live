@@ -236,6 +236,25 @@ describe("buildSubAccounts", () => {
       },
     ]);
   });
+
+  it("skips a balance vetoed by shouldBuildTokenAccount", async () => {
+    const subAccounts = await buildSubAccounts({
+      accountId: "accountId",
+      allTokenAssetsBalances: [
+        { value: 0n, asset: { type: "token", assetReference: "untouched", assetOwner: "owner" } },
+        { value: 30n, asset: { type: "token", assetReference: "usdt", assetOwner: "owner" } },
+      ],
+      syncConfig: { blacklistedTokenIds: [] } as unknown as SyncConfig,
+      operations: [],
+      getTokenFromAsset: async asset =>
+        asset.type === "token" ? ({ id: asset.assetReference } as TokenCurrency) : undefined,
+      shouldBuildTokenAccount: (balance, _token, operations) =>
+        !(balance.value === 0n && operations.length === 0),
+    });
+
+    expect(subAccounts).toHaveLength(1);
+    expect(subAccounts[0].token.id).toBe("usdt");
+  });
 });
 
 describe("mergeSubAccounts", () => {

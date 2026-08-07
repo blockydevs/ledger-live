@@ -268,9 +268,15 @@ function isStringArray(value: unknown): value is string[] {
 function isDelegationMode(mode: GenericTransaction["mode"]): mode is StakingOperation {
   return (
     typeof mode === "string" &&
-    ["delegate", "undelegate", "redelegate", "claimReward", "compoundReward", "withdraw"].includes(
-      mode,
-    )
+    [
+      "delegate",
+      "undelegate",
+      "redelegate",
+      "claimReward",
+      "claim-rewards",
+      "compoundReward",
+      "withdraw",
+    ].includes(mode)
   );
 }
 
@@ -681,6 +687,9 @@ export const buildOptimisticOperation = (
   switch (transaction.mode) {
     case "changeTrust":
       type = "OPT_IN";
+      break;
+    case "token-associate":
+      type = "ASSOCIATE_TOKEN";
       break;
     case "delegate":
       type = "DELEGATE";

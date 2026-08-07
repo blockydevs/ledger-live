@@ -94,4 +94,43 @@ describe("postSync", () => {
       ],
     });
   });
+
+  it("keeps a hedera-shaped pending op: sequence 0 against synced ops with no sequence", () => {
+    const pending = {
+      hash: "0.0.4@1753600000.000000001",
+      type: "OUT",
+      transactionSequenceNumber: new BigNumber(0),
+    } as unknown as Account["pendingOperations"][number];
+    const initialAccount = {
+      operations: [],
+      pendingOperations: [pending],
+    } as unknown as Account;
+    const synced = {
+      operations: [
+        { hash: "0.0.4@1753500000.000000001", type: "OUT", transactionSequenceNumber: undefined },
+      ],
+      pendingOperations: [],
+    } as unknown as Account;
+
+    expect(postSync(initialAccount, synced).pendingOperations).toHaveLength(1);
+  });
+
+  it("drops a hedera-shaped pending op once its hash appears in the synced list", () => {
+    const hash = "0.0.4@1753600000.000000001";
+    const pending = {
+      hash,
+      type: "OUT",
+      transactionSequenceNumber: new BigNumber(0),
+    } as unknown as Account["pendingOperations"][number];
+    const initialAccount = {
+      operations: [],
+      pendingOperations: [pending],
+    } as unknown as Account;
+    const synced = {
+      operations: [{ hash, type: "OUT", transactionSequenceNumber: undefined }],
+      pendingOperations: [],
+    } as unknown as Account;
+
+    expect(postSync(initialAccount, synced).pendingOperations).toHaveLength(0);
+  });
 });
