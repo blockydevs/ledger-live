@@ -12,6 +12,7 @@ import InfoCircle from "~/renderer/icons/InfoCircle";
 import ToolTip from "~/renderer/components/Tooltip";
 import { useAccountUnit } from "~/renderer/hooks/useAccountUnit";
 import { useStake } from "LLD/hooks/useStake";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import type { HederaFamily } from "./types";
 
 const AccountBalanceSummaryFooter: HederaFamily["AccountBalanceSummaryFooter"] = ({ account }) => {
@@ -20,7 +21,7 @@ const AccountBalanceSummaryFooter: HederaFamily["AccountBalanceSummaryFooter"] =
   const unit = useAccountUnit(account);
   const { getCanStakeCurrency } = useStake();
 
-  if (account.type !== "Account" || !account.hederaResources) {
+  if (account.type !== "Account") {
     return null;
   }
 
@@ -37,7 +38,7 @@ const AccountBalanceSummaryFooter: HederaFamily["AccountBalanceSummaryFooter"] =
     locale,
   };
 
-  const { delegation } = account.hederaResources;
+  const delegation = getHederaDelegation(account);
   const spendableBalance = account.spendableBalance;
   const delegatedAssets = delegation?.delegated ?? new BigNumber(0);
   const claimableRewards = delegation?.pendingReward ?? new BigNumber(0);

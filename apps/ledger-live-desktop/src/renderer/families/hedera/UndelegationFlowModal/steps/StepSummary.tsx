@@ -2,6 +2,7 @@ import React from "react";
 import { Trans } from "react-i18next";
 import invariant from "invariant";
 import { useHederaValidators } from "@ledgerhq/live-common/families/hedera/react";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import { getMainAccount } from "@ledgerhq/ledger-wallet-framework/account/helpers";
 import { urls } from "~/config/urls";
 import Alert from "~/renderer/components/Alert";
@@ -25,7 +26,7 @@ function StepSummary({
 }: Readonly<StepProps>) {
   invariant(account && transaction, "hedera: account and transaction required");
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
-  const currentValidatorNodeId = account.hederaResources?.delegation?.nodeId;
+  const currentValidatorNodeId = getHederaDelegation(account)?.nodeId;
   const validators = useHederaValidators(account.currency);
   const validator = validators.find(v => v.nodeId === currentValidatorNodeId);
   const isValidatorRemoved = !validator && typeof currentValidatorNodeId === "number";

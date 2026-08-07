@@ -9,6 +9,7 @@ import type {
   HederaEnrichedDelegation,
 } from "@ledgerhq/live-common/families/hedera/types";
 import { useHederaEnrichedDelegation } from "@ledgerhq/live-common/families/hedera/react";
+import { getHederaDelegation } from "@ledgerhq/live-common/families/hedera/delegation";
 import { useStake } from "LLD/hooks/useStake";
 import type { TokenAccount } from "@ledgerhq/types-live";
 import { openURL } from "~/renderer/linking";
@@ -92,7 +93,7 @@ const DelegatedPositions = ({ account }: { account: HederaAccount | TokenAccount
     return null;
   }
 
-  const { delegation } = account.hederaResources ?? {};
+  const delegation = getHederaDelegation(account);
   const isStakingEnabled = getCanStakeCurrency(account.currency.id);
 
   if (!isStakingEnabled) {

@@ -9,7 +9,10 @@ import type { Account, Operation } from "@ledgerhq/types-live";
 import { SyncSkipUnderPriority } from "@ledgerhq/live-common/bridge/react/index";
 import { useHederaValidators } from "@ledgerhq/live-common/families/hedera/react";
 import { HEDERA_TRANSACTION_MODES } from "@ledgerhq/live-common/families/hedera/constants";
-import type { HederaAccount, Transaction } from "@ledgerhq/live-common/families/hedera/types";
+import type {
+  HederaAccount,
+  Transaction,
+} from "@ledgerhq/live-common/families/hedera/types";
 import { getDefaultValidator } from "@ledgerhq/live-common/families/hedera/utils";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
@@ -101,9 +104,7 @@ const Body = ({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
 
       const transaction = bridge.updateTransaction(t, {
         mode: HEDERA_TRANSACTION_MODES.Delegate,
-        properties: {
-          stakingNodeId: defaultValidator?.nodeId ?? null,
-        },
+        valId: defaultValidator ? String(defaultValidator.nodeId) : undefined,
       });
 
       return {
