@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 env:
-  COIN_TESTER_CURRENCIES: "evm polkadot solana bitcoin tezos tron xrp stellar multiversx cosmos cardano vechain near"
+  COIN_TESTER_CURRENCIES: "evm polkadot solana bitcoin tezos tron xrp stellar multiversx cosmos cardano vechain near hedera"
 
 jobs:
   is-affected:
@@ -111,7 +111,7 @@ jobs:
     name: Coin Tester - ${{ matrix.chain }}
     needs: is-affected
     if: ${{ needs.is-affected.outputs.is-affected == 'true' }}
-    runs-on: public-ledgerhq-shared-small
+    runs-on: ledger-live-linux-8CPU-32RAM
     permissions:
       id-token: write
       contents: read

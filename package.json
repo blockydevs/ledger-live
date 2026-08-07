@@ -134,6 +134,7 @@
     "coin:tester:cardano": "pnpm --filter coin-tester-cardano",
     "coin:tester:cosmos": "pnpm --filter coin-tester-cosmos",
     "coin:tester:evm": "pnpm --filter coin-tester-evm",
+    "coin:tester:hedera": "pnpm --filter coin-tester-hedera",
     "coin:tester:polkadot": "pnpm --filter coin-tester-polkadot",
     "coin:tester:solana": "pnpm --filter coin-tester-solana",
     "coin:tester:bitcoin": "pnpm --filter coin-tester-bitcoin",
@@ -317,6 +318,12 @@
       "@hiero-ledger/proto@2.25.0": "patches/@hiero-ledger__proto@2.25.0.patch"
     },
     "packageExtensions": {
+      "@hiero-ledger/solo": {
+        "dependencies": {
+          "reflect-metadata": "^0.2.2",
+          "protobufjs": "^8.0.1"
+        }
+      },
       "detox-allure2-adapter": {
         "dependencies": {
           "tslib": "*"

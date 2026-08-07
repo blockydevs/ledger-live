@@ -1,0 +1,153 @@
+{
+  "name": "LedgerLiveTestToken",
+  "origin": "Own minimal ERC20 for coin-tester-hedera (not a mainnet snapshot: mainnet tokens carry\npausable/ownable/blacklist logic that can fire unpredictably on a local net).\n\nCompiled with solc-js 0.8.36 (npx --yes solc@0.8.36), via:\n  npx --yes solc@0.8.36 --optimize --bin --abi -o out LedgerLiveTestToken.sol\n\nRefresh by writing the source below to a .sol file and re-running the command above; do not\ncommit the .sol file itself (CI never compiles it, so it would silently drift from the bytecode).\n\nSource:\n// SPDX-License-Identifier: MIT\npragma solidity 0.8.36;\n\n/// @notice Minimal ERC20 for coin-tester-hedera's local Solo network. Deliberately bare —\n/// no pause/owner/blacklist hooks that could fire unpredictably against a bridge under test.\ncontract LedgerLiveTestToken {\n    string public name;\n    string public symbol;\n    uint8 public decimals;\n    uint256 public totalSupply;\n\n    mapping(address => uint256) public balanceOf;\n\n    event Transfer(address indexed from, address indexed to, uint256 value);\n\n    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _initialSupply) {\n        name = _name;\n        symbol = _symbol;\n        decimals = _decimals;\n        totalSupply = _initialSupply;\n        balanceOf[msg.sender] = _initialSupply;\n        emit Transfer(address(0), msg.sender, _initialSupply);\n    }\n\n    function transfer(address to, uint256 value) external returns (bool) {\n        require(balanceOf[msg.sender] >= value, \"ERC20: insufficient balance\");\n        balanceOf[msg.sender] -= value;\n        balanceOf[to] += value;\n        emit Transfer(msg.sender, to, value);\n        return true;\n    }\n}\n",
+  "bytecode": "0x608060405234801561000f575f5ffd5b506040516106f63803806106f683398101604081905261002e91610144565b5f6100398582610256565b5060016100468482610256565b506002805460ff191660ff84161790556003819055335f818152600460209081526040808320859055518481527fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef910160405180910390a350505050610314565b634e487b7160e01b5f52604160045260245ffd5b5f82601f8301126100ca575f5ffd5b81516001600160401b038111156100e3576100e36100a7565b604051601f8201601f19908116603f011681016001600160401b0381118282101715610111576101116100a7565b604052818152838201602001851015610128575f5ffd5b8160208501602083015e5f918101602001919091529392505050565b5f5f5f5f60808587031215610157575f5ffd5b84516001600160401b0381111561016c575f5ffd5b610178878288016100bb565b602087015190955090506001600160401b03811115610195575f5ffd5b6101a1878288016100bb565b935050604085015160ff811681146101b7575f5ffd5b6060959095015193969295505050565b600181811c908216806101db57607f821691505b6020821081036101f957634e487b7160e01b5f52602260045260245ffd5b50919050565b601f821115610251578282111561025157805f5260205f20601f840160051c602085101561022a57505f5b90810190601f840160051c035f5b8181101561024d575f83820155600101610238565b5050505b505050565b81516001600160401b0381111561026f5761026f6100a7565b6102838161027d84546101c7565b846101ff565b6020601f8211600181146102b5575f831561029e5750848201515b5f19600385901b1c1916600184901b17845561030d565b5f84815260208120601f198516915b828110156102e457878501518255602094850194600190920191016102c4565b508482101561030157868401515f19600387901b60f8161c191681555b505060018360011b0184555b5050505050565b6103d5806103215f395ff3fe608060405234801561000f575f5ffd5b5060043610610060575f3560e01c806306fdde031461006457806318160ddd14610082578063313ce5671461009957806370a08231146100b857806395d89b41146100d7578063a9059cbb146100df575b5f5ffd5b61006c610102565b6040516100799190610295565b60405180910390f35b61008b60035481565b604051908152602001610079565b6002546100a69060ff1681565b60405160ff9091168152602001610079565b61008b6100c63660046102e5565b60046020525f908152604090205481565b61006c61018d565b6100f26100ed366004610305565b61019a565b6040519015158152602001610079565b5f805461010e9061032d565b80601f016020809104026020016040519081016040528092919081815260200182805461013a9061032d565b80156101855780601f1061015c57610100808354040283529160200191610185565b820191905f5260205f20905b81548152906001019060200180831161016857829003601f168201915b505050505081565b6001805461010e9061032d565b335f908152600460205260408120548211156101fc5760405162461bcd60e51b815260206004820152601b60248201527f45524332303a20696e73756666696369656e742062616c616e63650000000000604482015260640160405180910390fd5b335f908152600460205260408120805484929061021a908490610379565b90915550506001600160a01b0383165f908152600460205260408120805484929061024690849061038c565b90915550506040518281526001600160a01b0384169033907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9060200160405180910390a35060015b92915050565b602081525f82518060208401528060208501604085015e5f604082850101526040601f19601f83011684010191505092915050565b80356001600160a01b03811681146102e0575f5ffd5b919050565b5f602082840312156102f5575f5ffd5b6102fe826102ca565b9392505050565b5f5f60408385031215610316575f5ffd5b61031f836102ca565b946020939093013593505050565b600181811c9082168061034157607f821691505b60208210810361035f57634e487b7160e01b5f52602260045260245ffd5b50919050565b634e487b7160e01b5f52601160045260245ffd5b8181038181111561028f5761028f610365565b8082018082111561028f5761028f61036556fea264697066735822122008864af55e40c14106954cd7e69a481e28774ccaabec3d7790264ea0a86b079a64736f6c63430008240033",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_symbol",
+          "type": "string"
+        },
+        {
+          "internalType": "uint8",
+          "name": "_decimals",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_initialSupply",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}
