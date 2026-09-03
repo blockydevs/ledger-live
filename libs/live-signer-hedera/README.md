@@ -20,13 +20,10 @@ keeps the wire bytes identical for every stored account.
 ## Running the Speculos suite
 
 1. Start Speculos with the Hedera app loaded.
-2. Build `@ledgerhq/coin-hedera` first. The integ test imports
-   `@ledgerhq/coin-hedera/logic/utils`, and jest resolves that import through the
-   `require` condition to `lib/`, not `src/`.
-3. Set `SEED` to the emulator's 24-word seed.
-4. Set `SPECULOS_API_PORT` if the emulator does not run on port 5000.
-5. Run `pnpm --filter @ledgerhq/live-signer-hedera test-integ`.
+2. Set `SEED` to the emulator's 24-word seed.
+3. Set `SPECULOS_API_PORT` if the emulator does not run on port 5000.
+4. Run `pnpm --filter @ledgerhq/live-signer-hedera test-integ`.
 
-The signing case shows the transfer on the device and needs its buttons pressed.
-The emulator exposes an HTTP button API on the same port as the API. This suite
-is excluded from the default `pnpm test` run by `testPathIgnorePatterns`.
+The signing case shows the transfer on the device and drives the approval
+buttons itself through the emulator's HTTP button API. This suite is excluded
+from the default `pnpm test` run by `testPathIgnorePatterns`.

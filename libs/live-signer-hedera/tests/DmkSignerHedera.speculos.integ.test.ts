@@ -2,7 +2,10 @@ import { AccountId, Hbar, Mnemonic, TransactionId, TransferTransaction } from "@
 import { getHederaTransactionBodyBytes } from "@ledgerhq/coin-hedera/logic/utils";
 import { DeviceModelId } from "@ledgerhq/device-management-kit";
 import { DeviceManagementKitTransportSpeculos } from "@ledgerhq/live-dmk-speculos";
+import { SpeculosButton } from "@ledgerhq/live-dmk-speculos/transport/DeviceManagementKitTransportSpeculos";
 import { DmkSignerHedera } from "../src/DmkSignerHedera";
+
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 const SEED = process.env.SEED;
 
@@ -53,7 +56,20 @@ describe("DmkSignerHedera against Speculos", () => {
     const bodyBytes = getHederaTransactionBodyBytes(tx);
     expect(bodyBytes.length).toBeLessThanOrEqual(251);
 
-    const signature = await signer.signTransaction(bodyBytes);
+    const signPromise = signer.signTransaction(bodyBytes);
+
+    await delay(500);
+    const APPROVAL_BUTTON_SEQUENCE = [
+      SpeculosButton.RIGHT,
+      SpeculosButton.RIGHT,
+      SpeculosButton.RIGHT,
+      SpeculosButton.BOTH,
+    ];
+    for (const button of APPROVAL_BUTTON_SEQUENCE) {
+      await transport.button(button);
+    }
+
+    const signature = await signPromise;
 
     expect(signature).toHaveLength(64);
 

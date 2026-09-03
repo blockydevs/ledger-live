@@ -34,7 +34,7 @@ export function mapDeviceActionError(
     return new Error(genericMessage(error));
   }
 
-  switch (String(error.errorCode)) {
+  switch (error.errorCode) {
     case "6985":
       return new RefusedError();
     case "5515":
