@@ -189,7 +189,6 @@
     "ljs:hw-app-cosmos": "pnpm --filter hw-app-cosmos",
     "ljs:hw-app-eth": "pnpm --filter hw-app-eth",
     "ljs:hw-app-exchange": "pnpm --filter hw-app-exchange",
-    "ljs:hw-app-hedera": "pnpm --filter hw-app-hedera",
     "ljs:hw-app-helium": "pnpm --filter hw-app-helium",
     "ljs:hw-app-kaspa": "pnpm --filter hw-app-kaspa",
     "ljs:hw-app-multiversx": "pnpm --filter hw-app-multiversx",
@@ -269,6 +268,7 @@
       ]
     },
     "overrides": {
+      "@ledgerhq/device-signer-kit-hedera": "file:./vendor/device-signer-kit-hedera-0.1.0.tgz",
       "react": "catalog:",
       "react-dom": "catalog:",
       "csstype": "3.2.3",

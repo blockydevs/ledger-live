@@ -835,7 +835,6 @@
     "@ledgerhq/hw-app-algorand",
     "@ledgerhq/hw-app-aptos",
     "@ledgerhq/hw-app-eth",
-    "@ledgerhq/hw-app-hedera",
     "@ledgerhq/hw-app-icon",
     "@ledgerhq/hw-app-kaspa",
     "@ledgerhq/hw-app-multiversx",

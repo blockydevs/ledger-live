@@ -2,23 +2,21 @@
 
 import invariant from "invariant";
 import { createBridges } from "@ledgerhq/coin-hedera/bridge/index";
-import Transport from "@ledgerhq/hw-transport";
-import Hedera from "@ledgerhq/hw-app-hedera";
 import hederaResolver from "@ledgerhq/coin-hedera/signer/index";
 import type {
   HederaCoinConfig,
   TransactionStatus,
   Transaction,
   HederaAccount,
+  HederaSigner,
 } from "@ledgerhq/coin-hedera/types/index";
 import type { Bridge } from "@ledgerhq/types-live";
 import { CreateSigner, createResolver, executeWithSigner } from "../../bridge/setup";
 import { getCurrencyConfiguration } from "../../config";
 import { Resolver } from "../../hw/getAddress/types";
+import { createDmkSigner } from "./dmkSigner";
 
-const createSigner: CreateSigner<Hedera> = (transport: Transport) => {
-  return new Hedera(transport);
-};
+const createSigner: CreateSigner<HederaSigner> = createDmkSigner;
 
 const getCurrencyConfig = (currencyId?: string) => {
   invariant(currencyId, "hedera: currencyId is required in getCurrencyConfig");
