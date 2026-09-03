@@ -1,4 +1,5 @@
-import { Mnemonic } from "@hashgraph/sdk";
+import { AccountId, Hbar, Mnemonic, TransactionId, TransferTransaction } from "@hashgraph/sdk";
+import { getHederaTransactionBodyBytes } from "@ledgerhq/coin-hedera/logic/utils";
 import { DeviceModelId } from "@ledgerhq/device-management-kit";
 import { DeviceManagementKitTransportSpeculos } from "@ledgerhq/live-dmk-speculos";
 import { DmkSignerHedera } from "../src/DmkSignerHedera";
@@ -31,5 +32,31 @@ describe("DmkSignerHedera against Speculos", () => {
 
     expect(publicKey).toMatch(/^[0-9a-f]{64}$/);
     expect(publicKey).toBe(expected.toStringRaw());
+  });
+
+  it("produces a signature that verifies against the device public key", async () => {
+    const sender = AccountId.fromString("0.0.1001");
+    const recipient = AccountId.fromString("0.0.1002");
+
+    // Frozen locally with an explicit transaction id and node account id, so the
+    // test needs no network and stays deterministic.
+    const tx = new TransferTransaction()
+      .setTransactionId(TransactionId.generate(sender))
+      .setNodeAccountIds([AccountId.fromString("0.0.3")])
+      .addHbarTransfer(sender, Hbar.fromTinybars(-100))
+      .addHbarTransfer(recipient, Hbar.fromTinybars(100))
+      .freeze();
+
+    const bodyBytes = getHederaTransactionBodyBytes(tx);
+    expect(bodyBytes.length).toBeLessThanOrEqual(251);
+
+    const signature = await signer.signTransaction(bodyBytes);
+
+    expect(signature).toHaveLength(64);
+
+    const mnemonic = await Mnemonic.fromString(SEED as string);
+    const publicKey = (await mnemonic.toStandardEd25519PrivateKey("", 0)).publicKey;
+
+    expect(publicKey.verify(bodyBytes, signature)).toBe(true);
   });
 });

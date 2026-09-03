@@ -3,7 +3,8 @@ import {
   SignerHederaBuilder,
   type SignerHedera,
 } from "@ledgerhq/device-signer-kit-hedera";
-import { UserRefusedAddress } from "@ledgerhq/hw-transport/errors";
+import { UserRefusedAddress, UserRefusedOnDevice } from "@ledgerhq/hw-transport/errors";
+import type { HederaSigner } from "@ledgerhq/coin-hedera/types/signer";
 import { lastValueFrom } from "rxjs";
 import { mapDeviceActionResult } from "./mapResult";
 
@@ -18,7 +19,7 @@ import { mapDeviceActionResult } from "./mapResult";
  */
 export const HEDERA_INDEX_0_PATH = "44'/3030'";
 
-export class DmkSignerHedera {
+export class DmkSignerHedera implements HederaSigner {
   private readonly signer: SignerHedera;
 
   constructor(dmk: DeviceManagementKit, sessionId: string) {
@@ -39,5 +40,21 @@ export class DmkSignerHedera {
     const result = mapDeviceActionResult(await lastValueFrom(observable), UserRefusedAddress);
 
     return result.publicKey;
+  }
+
+  /**
+   * Takes the transaction body bytes, not a serialized transaction. `coin-hedera`
+   * owns the protobuf work: `deserializeTransaction`,
+   * `getHederaTransactionBodyBytes` and `serializeSignature`.
+   *
+   * The kit rejects a body over 251 bytes (`APDU_MAX_PAYLOAD - KEY_INDEX_LENGTH`).
+   * The device app runs no APDU chaining, so that limit is the device's.
+   */
+  async signTransaction(transaction: Uint8Array): Promise<Uint8Array> {
+    const { observable } = this.signer.signTransaction(HEDERA_INDEX_0_PATH, transaction, {
+      skipOpenApp: true,
+    });
+
+    return mapDeviceActionResult(await lastValueFrom(observable), UserRefusedOnDevice);
   }
 }
