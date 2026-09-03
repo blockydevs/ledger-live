@@ -1,14 +1,17 @@
-import Hedera from "@ledgerhq/hw-app-hedera";
-import Transport from "@ledgerhq/hw-transport";
+import type { DeviceManagementKit } from "@ledgerhq/device-management-kit";
+import type Transport from "@ledgerhq/hw-transport";
 import type { GetAddressOptions } from "@ledgerhq/ledger-wallet-framework/derivation";
+import { DmkSignerHedera } from "@ledgerhq/live-signer-hedera";
 import { getSigner } from "../../bridge/generic-coin-framework/signer";
 import { coinModuleLoaders } from "../../coin-modules/loaders";
 import hederaSigner, { createSigner, hederaGetAddress } from "./signer";
 
-jest.mock("@ledgerhq/hw-app-hedera");
+jest.mock("@ledgerhq/live-signer-hedera");
 
-const MockedHedera = Hedera as jest.MockedClass<typeof Hedera>;
-const mockTransport = {} as Transport;
+const MockedDmkSignerHedera = DmkSignerHedera as jest.MockedClass<typeof DmkSignerHedera>;
+
+const dmk = {} as DeviceManagementKit;
+const mockTransport = { dmk, sessionId: "sessionId" } as unknown as Transport;
 
 describe("createSigner (Hedera)", () => {
   let getPublicKey: jest.Mock;
@@ -17,18 +20,13 @@ describe("createSigner (Hedera)", () => {
   beforeEach(() => {
     getPublicKey = jest.fn().mockResolvedValue("aabbcc");
     signTransaction = jest.fn();
-    MockedHedera.mockImplementation(() => ({ getPublicKey, signTransaction }) as unknown as Hedera);
+    MockedDmkSignerHedera.mockImplementation(
+      () => ({ getPublicKey, signTransaction }) as unknown as DmkSignerHedera,
+    );
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  it("wires the transport through to hw-app-hedera", () => {
-    createSigner(mockTransport);
-
-    expect(MockedHedera).toHaveBeenCalledTimes(1);
-    expect(MockedHedera).toHaveBeenCalledWith(mockTransport);
   });
 
   it("getAddress resolves through the signer context", async () => {
