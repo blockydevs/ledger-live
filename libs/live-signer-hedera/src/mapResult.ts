@@ -6,7 +6,7 @@ import type {
   GetAddressDAError,
   SignTransactionDAError,
 } from "@ledgerhq/device-signer-kit-hedera";
-import { LockedDeviceError } from "@ledgerhq/hw-transport/errors";
+import { LockedDeviceError } from "@ledgerhq/ledger-wallet-framework/errors";
 import { HederaInvalidSignerInputError } from "./errors";
 
 export type HederaDAError = GetAddressDAError | SignTransactionDAError;
@@ -57,10 +57,11 @@ export function mapDeviceActionResult<T>(
       return actionState.output;
     case DeviceActionStatus.Error:
       throw mapDeviceActionError(actionState.error, RefusedError);
+    case DeviceActionStatus.Stopped:
+      throw new Error("Device action was stopped before it completed");
     case DeviceActionStatus.NotStarted:
     case DeviceActionStatus.Pending:
-    case DeviceActionStatus.Stopped:
     default:
-      throw new Error("Unknown device action status");
+      throw new Error(`Device action ended with status ${actionState.status}`);
   }
 }

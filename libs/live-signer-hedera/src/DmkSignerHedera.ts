@@ -3,7 +3,10 @@ import {
   SignerHederaBuilder,
   type SignerHedera,
 } from "@ledgerhq/device-signer-kit-hedera";
-import { UserRefusedAddress, UserRefusedOnDevice } from "@ledgerhq/hw-transport/errors";
+import {
+  UserRefusedAddress,
+  UserRefusedOnDevice,
+} from "@ledgerhq/ledger-wallet-framework/errors";
 import type { HederaSigner } from "@ledgerhq/coin-hedera/types/signer";
 import { lastValueFrom } from "rxjs";
 import { mapDeviceActionResult } from "./mapResult";

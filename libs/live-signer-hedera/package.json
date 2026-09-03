@@ -30,7 +30,7 @@
     "@ledgerhq/coin-hedera": "workspace:^",
     "@ledgerhq/device-management-kit": "catalog:",
     "@ledgerhq/device-signer-kit-hedera": "0.1.0",
-    "@ledgerhq/hw-transport": "workspace:^",
+    "@ledgerhq/ledger-wallet-framework": "workspace:^",
     "rxjs": "catalog:"
   },
   "scripts": {
