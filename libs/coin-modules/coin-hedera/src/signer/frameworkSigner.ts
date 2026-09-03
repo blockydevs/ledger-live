@@ -18,8 +18,8 @@ export function createFrameworkSigner(signer: HederaSigner): HederaFrameworkSign
       // Hedera has no derivable address; the 0.0.x id comes from the discovery scan.
       return { path, address: publicKey, publicKey };
     },
-    // The framework passes a path and an options object; hw-app-hedera takes neither and signs
-    // from account index 0 only (device-app limit), so both are dropped — as in the legacy bridge.
+    // The framework passes a path and an options object; the signer takes neither. The device app
+    // accepts any 32-bit key index, but Ledger Live only ever stores index 0, so the signer pins it.
     async signTransaction(_path, unsignedTxHex) {
       const tx = deserializeTransaction(unsignedTxHex);
       const signature = await signer.signTransaction(getHederaTransactionBodyBytes(tx));
