@@ -430,6 +430,7 @@ libs/live-signer-concordium/                                       @ledgerhq/liv
 libs/live-signer-zcash/                                            @ledgerhq/live-devices
 libs/live-signer-celo/                                             @ledgerhq/live-devices
 libs/live-signer-cosmos/                                           @ledgerhq/live-devices
+libs/live-signer-hedera/                                           @ledgerhq/live-devices @ledgerhq/ledger-partner-blockydevs
 libs/live-signer-hyperliquid/                                      @ledgerhq/live-devices
 libs/ledgerjs/packages/hw-transport/                               @ledgerhq/live-devices
 libs/live-dmk-speculos/                                            @ledgerhq/live-devices

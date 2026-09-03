@@ -16,3 +16,17 @@ The Hedera device app takes a 4-byte little-endian key index, not a BIP32 path.
 signer kit, and ignores the path its caller gives it. Ledger Live's `hederaBip44`
 derivation mode produces the same path for every account index, so a pinned index
 keeps the wire bytes identical for every stored account.
+
+## Running the Speculos suite
+
+1. Start Speculos with the Hedera app loaded.
+2. Build `@ledgerhq/coin-hedera` first. The integ test imports
+   `@ledgerhq/coin-hedera/logic/utils`, and jest resolves that import through the
+   `require` condition to `lib/`, not `src/`.
+3. Set `SEED` to the emulator's 24-word seed.
+4. Set `SPECULOS_API_PORT` if the emulator does not run on port 5000.
+5. Run `pnpm --filter @ledgerhq/live-signer-hedera test-integ`.
+
+The signing case shows the transfer on the device and needs its buttons pressed.
+The emulator exposes an HTTP button API on the same port as the API. This suite
+is excluded from the default `pnpm test` run by `testPathIgnorePatterns`.

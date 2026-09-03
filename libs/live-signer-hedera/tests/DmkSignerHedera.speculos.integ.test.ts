@@ -13,7 +13,10 @@ describe("DmkSignerHedera against Speculos", () => {
   beforeAll(async () => {
     if (!SEED) throw new Error("SEED is not set");
 
-    transport = await DeviceManagementKitTransportSpeculos.open({ model: DeviceModelId.NANO_X });
+    transport = await DeviceManagementKitTransportSpeculos.open({
+      model: DeviceModelId.NANO_X,
+      apiPort: process.env.SPECULOS_API_PORT ?? "5000",
+    });
     signer = new DmkSignerHedera(transport.dmk, transport.sessionId);
   });
 
