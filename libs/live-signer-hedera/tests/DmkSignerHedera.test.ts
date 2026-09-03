@@ -4,7 +4,7 @@ import {
   LockedDeviceError,
   UserRefusedAddress,
   UserRefusedOnDevice,
-} from "@ledgerhq/hw-transport/errors";
+} from "@ledgerhq/ledger-wallet-framework/errors";
 import { of } from "rxjs";
 import { HederaInvalidSignerInputError } from "../src/errors";
 import { DmkSignerHedera, HEDERA_INDEX_0_PATH } from "../src/DmkSignerHedera";

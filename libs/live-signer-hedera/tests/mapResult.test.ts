@@ -3,7 +3,7 @@ import {
   LockedDeviceError,
   UserRefusedAddress,
   UserRefusedOnDevice,
-} from "@ledgerhq/hw-transport/errors";
+} from "@ledgerhq/ledger-wallet-framework/errors";
 import { HederaInvalidSignerInputError } from "../src/errors";
 import {
   mapDeviceActionError,
@@ -90,13 +90,18 @@ describe("mapDeviceActionResult", () => {
     ).toThrow(UserRefusedAddress);
   });
 
-  it.each([
-    DeviceActionStatus.NotStarted,
-    DeviceActionStatus.Pending,
-    DeviceActionStatus.Stopped,
-  ])("throws on the non-terminal status %s", status => {
-    expect(() => mapDeviceActionResult({ status } as never, UserRefusedAddress)).toThrow(
-      "Unknown device action status",
-    );
+  it.each([DeviceActionStatus.NotStarted, DeviceActionStatus.Pending])(
+    "throws on the non-terminal status %s",
+    status => {
+      expect(() => mapDeviceActionResult({ status } as never, UserRefusedAddress)).toThrow(
+        `Device action ended with status ${status}`,
+      );
+    },
+  );
+
+  it("throws a stop-specific message when the action is stopped", () => {
+    expect(() =>
+      mapDeviceActionResult({ status: DeviceActionStatus.Stopped } as never, UserRefusedAddress),
+    ).toThrow("Device action was stopped before it completed");
   });
 });
