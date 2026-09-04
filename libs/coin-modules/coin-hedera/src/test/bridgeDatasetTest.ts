@@ -10,6 +10,9 @@ import { fromTransactionRaw } from "../transaction";
 import type { Transaction } from "../types";
 
 export const hedera: CurrenciesData<Transaction> = {
+  // This dataset replays APDUs against LegacySignerHedera only: _hederaLdmkEnabled
+  // starts false, and openTransportReplayer's transport has no dmk field. It is not
+  // parity evidence for the DMK signing path.
   FIXME_ignoreAccountFields: [
     "syncHash",
     // pending rewards change on a daily basis

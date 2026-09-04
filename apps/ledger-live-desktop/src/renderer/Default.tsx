@@ -67,6 +67,7 @@ import {
   setSolanaTxcEnabled,
 } from "@ledgerhq/live-common/families/solana/setup";
 import { setCosmosLdmkEnabled } from "@ledgerhq/live-common/families/cosmos/setup";
+import { setHederaLdmkEnabled } from "@ledgerhq/live-common/families/hedera/signerSelection";
 import { resolveSuiTransport, setSuiTransport } from "@ledgerhq/live-common/families/sui/setup";
 import { themeSelector } from "./actions/general";
 import useCheckAccountWithFunds from "./components/PostOnboardingHub/logic/useCheckAccountWithFunds";
@@ -385,6 +386,7 @@ export default function Default() {
   const ldmkSolanaSignerFeatureFlag = useFeature("ldmkSolanaSigner");
   const ldmkSolanaSignerIsTxcActiveFeatureFlag = useFeature("ldmkSolanaSignerIsTxcActive");
   const ldmkCosmosSignerFeatureFlag = useFeature("ldmkCosmosSigner");
+  const ldmkHederaSignerFeatureFlag = useFeature("ldmkHederaSigner");
   const suiTransportFeatureFlag = useFeature("suiTransport");
 
   const dmk = useDeviceManagementKit();
@@ -419,6 +421,12 @@ export default function Default() {
       setCosmosLdmkEnabled(ldmkCosmosSignerFeatureFlag.enabled);
     }
   }, [ldmkCosmosSignerFeatureFlag]);
+
+  useEffect(() => {
+    if (typeof ldmkHederaSignerFeatureFlag?.enabled === "boolean") {
+      setHederaLdmkEnabled(ldmkHederaSignerFeatureFlag.enabled);
+    }
+  }, [ldmkHederaSignerFeatureFlag]);
 
   useEffect(() => {
     setSuiTransport(resolveSuiTransport(suiTransportFeatureFlag));

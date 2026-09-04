@@ -5,6 +5,7 @@ import { DmkSignerHedera } from "@ledgerhq/live-signer-hedera";
 import { getSigner } from "../../bridge/generic-coin-framework/signer";
 import { coinModuleLoaders } from "../../coin-modules/loaders";
 import hederaSigner, { createSigner, hederaGetAddress } from "./signer";
+import { setHederaLdmkEnabled } from "./signerSelection";
 
 jest.mock("@ledgerhq/live-signer-hedera");
 
@@ -18,6 +19,7 @@ describe("createSigner (Hedera)", () => {
   let signTransaction: jest.Mock;
 
   beforeEach(() => {
+    setHederaLdmkEnabled(true);
     getPublicKey = jest.fn().mockResolvedValue("aabbcc");
     signTransaction = jest.fn();
     MockedDmkSignerHedera.mockImplementation(
@@ -27,6 +29,7 @@ describe("createSigner (Hedera)", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    setHederaLdmkEnabled(false);
   });
 
   it("getAddress resolves through the signer context", async () => {

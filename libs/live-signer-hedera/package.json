@@ -30,6 +30,8 @@
     "@ledgerhq/coin-hedera": "workspace:^",
     "@ledgerhq/device-management-kit": "catalog:",
     "@ledgerhq/device-signer-kit-hedera": "0.1.0",
+    "@ledgerhq/hw-app-hedera": "workspace:^",
+    "@ledgerhq/hw-transport": "workspace:*",
     "@ledgerhq/ledger-wallet-framework": "workspace:^",
     "rxjs": "catalog:"
   },
@@ -42,10 +44,14 @@
     "lint": "oxlint -c ../oxc-live-libs/.oxlintrc.json ./src",
     "lint:fix": "pnpm lint --fix",
     "test": "jest",
+    "test:integ": "jest --config=jest.integ.config.js",
     "typecheck": "tsc --noEmit",
     "coverage": "jest --coverage"
   },
   "devDependencies": {
+    "@hashgraph/sdk": "2.78.0",
+    "@ledgerhq/hw-transport-mocker": "workspace:^",
+    "@ledgerhq/live-dmk-speculos": "workspace:*",
     "@ledgerhq/test-quarantine": "workspace:*",
     "@ledgerhq/types-live": "workspace:^",
     "@swc/core": "catalog:",
@@ -66,8 +72,9 @@
     },
     "./errors": {
       "@ledgerhq/source": "./src/errors.ts",
+      "import": "./lib-es/errors.js",
       "require": "./lib/errors.js",
-      "default": "./lib-es/errors.js"
+      "default": "./lib/errors.js"
     },
     "./package.json": "./package.json"
   }

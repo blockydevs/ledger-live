@@ -1,6 +1,6 @@
 module.exports = {
   testEnvironment: "node",
-  testPathIgnorePatterns: ["lib/", "lib-es/"],
+  testPathIgnorePatterns: ["lib/", "lib-es/", ".integ.test.ts"],
   transform: {
     "^.+\\.(ts|tsx)?$": [
       "@swc/jest",

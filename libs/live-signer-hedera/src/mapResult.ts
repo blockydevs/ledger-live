@@ -14,10 +14,32 @@ export type HederaDAError = GetAddressDAError | SignTransactionDAError;
 /** A zero-argument Ledger Live error class, e.g. `UserRefusedAddress`. */
 export type RefusalErrorClass = new () => Error;
 
-function genericMessage(error: HederaDAError): string {
-  const originalError = "originalError" in error ? error.originalError : null;
-  const originalMessage = originalError instanceof Error ? originalError.message : null;
-  const tag = error._tag;
+/** Device-action errors are typed as tagged objects, but a task can reject with any
+ * value, down to a primitive, so nothing here may assume an object shape. An untagged
+ * rejection must still carry a message instead of surfacing as an empty one. */
+type ErrorDetails = { errorCode?: unknown; _tag?: unknown; originalError?: unknown };
+
+const INPUT_VALIDATION_CODES = new Set([
+  "empty_transaction",
+  "transaction_too_large",
+  "unsupported_derivation_path",
+]);
+
+function safeDescribe(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function describeError(details: ErrorDetails, error: unknown): string {
+  const originalMessage =
+    details.originalError instanceof Error ? details.originalError.message : null;
+  const tag =
+    typeof details._tag === "string" && details._tag.length > 0
+      ? details._tag
+      : `Untagged device action error: ${safeDescribe(error)}`;
 
   return originalMessage ? `${tag}: ${originalMessage}` : tag;
 }
@@ -30,22 +52,24 @@ export function mapDeviceActionError(
   error: HederaDAError,
   RefusedError: RefusalErrorClass,
 ): Error {
-  if (!("errorCode" in error)) {
-    return new Error(genericMessage(error));
-  }
+  const details: ErrorDetails = typeof error === "object" && error !== null ? error : {};
 
-  switch (error.errorCode) {
-    case "6985":
-      return new RefusedError();
-    case "5515":
-      return new LockedDeviceError();
-    case "empty_transaction":
-    case "transaction_too_large":
-    case "unsupported_derivation_path":
-      return new HederaInvalidSignerInputError(genericMessage(error));
-    default:
-      return new Error(genericMessage(error));
+  if (details.errorCode === "6985") {
+    return new RefusedError();
   }
+  if (details.errorCode === "5515") {
+    return new LockedDeviceError();
+  }
+  if (typeof details.errorCode === "string" && INPUT_VALIDATION_CODES.has(details.errorCode)) {
+    return new HederaInvalidSignerInputError(describeError(details, error));
+  }
+  if (typeof details._tag === "string" && details._tag.length > 0) {
+    return new Error(describeError(details, error));
+  }
+  if (error instanceof Error) {
+    return error;
+  }
+  return new Error(`Untagged device action error: ${safeDescribe(error)}`);
 }
 
 export function mapDeviceActionResult<T>(

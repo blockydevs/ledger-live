@@ -1,17 +1,19 @@
 import { DeviceActionStatus, type DeviceManagementKit } from "@ledgerhq/device-management-kit";
 import { SignerHederaBuilder } from "@ledgerhq/device-signer-kit-hedera";
-import {
-  LockedDeviceError,
-  UserRefusedAddress,
-  UserRefusedOnDevice,
-} from "@ledgerhq/ledger-wallet-framework/errors";
-import { of } from "rxjs";
-import { HederaInvalidSignerInputError } from "../src/errors";
+import { GetAddressCommand } from "@ledgerhq/device-signer-kit-hedera/internal/app-binder/command/GetAddressCommand.js";
+import { SignTransactionCommand } from "@ledgerhq/device-signer-kit-hedera/internal/app-binder/command/SignTransactionCommand.js";
+import { LockedDeviceError, UserRefusedAddress } from "@ledgerhq/ledger-wallet-framework/errors";
+import { of, throwError } from "rxjs";
+import { HederaInvalidSignerInputError, TransactionRefusedOnDevice } from "../src/errors";
 import { DmkSignerHedera, HEDERA_INDEX_0_PATH } from "../src/DmkSignerHedera";
 
 jest.mock("@ledgerhq/device-signer-kit-hedera", () => ({
   SignerHederaBuilder: jest.fn(),
 }));
+
+function hex(apdu: { getRawApdu(): Uint8Array }): string {
+  return Buffer.from(apdu.getRawApdu()).toString("hex");
+}
 
 describe("DmkSignerHedera", () => {
   let signer: DmkSignerHedera;
@@ -91,6 +93,48 @@ describe("DmkSignerHedera", () => {
 
       await expect(signer.getPublicKey(HEDERA_INDEX_0_PATH)).rejects.toThrow(LockedDeviceError);
     });
+
+    it("rejects when the observable emits a transport error", async () => {
+      mockSignerHedera.getAddress.mockReturnValue({
+        observable: throwError(() => new Error("transport error")),
+      });
+
+      await expect(signer.getPublicKey(HEDERA_INDEX_0_PATH)).rejects.toThrow("transport error");
+    });
+
+    it("rejects instead of hanging when the device action is stopped", async () => {
+      mockSignerHedera.getAddress.mockReturnValue({
+        observable: of({ status: DeviceActionStatus.Stopped }),
+      });
+
+      await expect(signer.getPublicKey(HEDERA_INDEX_0_PATH)).rejects.toThrow(
+        "Device action was stopped before it completed",
+      );
+    });
+
+    it("rejects with a generic error carrying the tag when errorCode is unknown", async () => {
+      mockSignerHedera.getAddress.mockReturnValue({
+        observable: of({
+          status: DeviceActionStatus.Error,
+          error: { _tag: "HederaAppCommandError", errorCode: "unknown_code" },
+        }),
+      });
+
+      await expect(signer.getPublicKey(HEDERA_INDEX_0_PATH)).rejects.toThrow(
+        "HederaAppCommandError",
+      );
+    });
+
+    it("rejects with a generic error carrying the tag when the error carries no errorCode", async () => {
+      mockSignerHedera.getAddress.mockReturnValue({
+        observable: of({
+          status: DeviceActionStatus.Error,
+          error: { _tag: "HederaUnknownError" },
+        }),
+      });
+
+      await expect(signer.getPublicKey(HEDERA_INDEX_0_PATH)).rejects.toThrow("HederaUnknownError");
+    });
   });
 
   describe("signTransaction", () => {
@@ -110,7 +154,7 @@ describe("DmkSignerHedera", () => {
       });
     });
 
-    it("maps 6985 to UserRefusedOnDevice", async () => {
+    it("maps 6985 to TransactionRefusedOnDevice", async () => {
       mockSignerHedera.signTransaction.mockReturnValue({
         observable: of({
           status: DeviceActionStatus.Error,
@@ -118,7 +162,7 @@ describe("DmkSignerHedera", () => {
         }),
       });
 
-      await expect(signer.signTransaction(body)).rejects.toThrow(UserRefusedOnDevice);
+      await expect(signer.signTransaction(body)).rejects.toThrow(TransactionRefusedOnDevice);
     });
 
     it.each(["empty_transaction", "transaction_too_large", "unsupported_derivation_path"])(
@@ -134,5 +178,81 @@ describe("DmkSignerHedera", () => {
         await expect(signer.signTransaction(body)).rejects.toThrow(HederaInvalidSignerInputError);
       },
     );
+
+    it("maps 5515 to LockedDeviceError", async () => {
+      mockSignerHedera.signTransaction.mockReturnValue({
+        observable: of({
+          status: DeviceActionStatus.Error,
+          error: { _tag: "DeviceLockedError", errorCode: "5515" },
+        }),
+      });
+
+      await expect(signer.signTransaction(body)).rejects.toThrow(LockedDeviceError);
+    });
+
+    it("rejects when the observable emits a transport error", async () => {
+      mockSignerHedera.signTransaction.mockReturnValue({
+        observable: throwError(() => new Error("transport error")),
+      });
+
+      await expect(signer.signTransaction(body)).rejects.toThrow("transport error");
+    });
+
+    it("rejects instead of hanging when the device action is stopped", async () => {
+      mockSignerHedera.signTransaction.mockReturnValue({
+        observable: of({ status: DeviceActionStatus.Stopped }),
+      });
+
+      await expect(signer.signTransaction(body)).rejects.toThrow(
+        "Device action was stopped before it completed",
+      );
+    });
+
+    it("rejects with a generic error carrying the tag when errorCode is unknown", async () => {
+      mockSignerHedera.signTransaction.mockReturnValue({
+        observable: of({
+          status: DeviceActionStatus.Error,
+          error: { _tag: "HederaAppCommandError", errorCode: "unknown_code" },
+        }),
+      });
+
+      await expect(signer.signTransaction(body)).rejects.toThrow("HederaAppCommandError");
+    });
+
+    it("rejects with a generic error carrying the tag when the error carries no errorCode", async () => {
+      mockSignerHedera.signTransaction.mockReturnValue({
+        observable: of({
+          status: DeviceActionStatus.Error,
+          error: { _tag: "HederaUnknownError" },
+        }),
+      });
+
+      await expect(signer.signTransaction(body)).rejects.toThrow("HederaUnknownError");
+    });
+  });
+
+  describe("wire bytes", () => {
+    /**
+     * `checkOnDevice: false` is `getPublicKey`'s call to the kit, so this pins
+     * `P1_NON_CONFIRM` (0x01): the Hedera app shows the UI when p1 is 0 and answers
+     * silently for any other value, the opposite of every other app on the device.
+     */
+    it("sends e0 02 01 00 04 00000000 for a public key read at index 0", () => {
+      const command = new GetAddressCommand({
+        derivationPath: HEDERA_INDEX_0_PATH,
+        checkOnDevice: false,
+      });
+
+      expect(hex(command.getApdu())).toBe("e00201000400000000");
+    });
+
+    it("sends e0 04 00 00 with the four-byte little-endian index prefix when signing", () => {
+      const command = new SignTransactionCommand({
+        derivationPath: HEDERA_INDEX_0_PATH,
+        transaction: new Uint8Array([0xaa, 0xbb, 0xcc]),
+      });
+
+      expect(hex(command.getApdu())).toBe("e00400000700000000aabbcc");
+    });
   });
 });

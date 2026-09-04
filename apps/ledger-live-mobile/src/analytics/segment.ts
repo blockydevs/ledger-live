@@ -335,6 +335,7 @@ const getLdmkAndSyncFlags = () => ({
   ldmkConnectApp: analyticsFeatureFlagMethod?.("ldmkConnectApp") ?? { enabled: false },
   ldmkSolanaSigner: analyticsFeatureFlagMethod?.("ldmkSolanaSigner") ?? { enabled: false },
   ldmkCosmosSigner: analyticsFeatureFlagMethod?.("ldmkCosmosSigner") ?? { enabled: false },
+  ldmkHederaSigner: analyticsFeatureFlagMethod?.("ldmkHederaSigner") ?? { enabled: false },
 });
 
 const getAccountsWithFunds = (accounts: ReturnType<typeof accountsSelector>) =>
@@ -383,7 +384,7 @@ const extraProperties = async (store: AppStore) => {
   const satisfaction = satisfactionSelector(state);
   const accounts = accountsSelector(state);
   const lastDevice = devices.at(-1) || bleDevices.at(-1);
-  const { ldmkTransport, ldmkConnectApp, ldmkSolanaSigner, ldmkCosmosSigner } =
+  const { ldmkTransport, ldmkConnectApp, ldmkSolanaSigner, ldmkCosmosSigner, ldmkHederaSigner } =
     getLdmkAndSyncFlags();
   const deviceInfo = lastDevice
     ? {
@@ -514,6 +515,7 @@ const extraProperties = async (store: AppStore) => {
     isLDMKConnectAppEnabled: ldmkConnectApp?.enabled,
     isLDMKSolanaSignerEnabled: ldmkSolanaSigner?.enabled,
     isLDMKCosmosSignerEnabled: ldmkCosmosSigner?.enabled,
+    isLDMKHederaSignerEnabled: ldmkHederaSigner?.enabled,
     stakingCurrenciesEnabled,
     partnerStakingCurrenciesEnabled,
     madAttributes,

@@ -14,9 +14,9 @@ import type { Bridge } from "@ledgerhq/types-live";
 import { CreateSigner, createResolver, executeWithSigner } from "../../bridge/setup";
 import { getCurrencyConfiguration } from "../../config";
 import { Resolver } from "../../hw/getAddress/types";
-import { createDmkSigner } from "./dmkSigner";
+import { createHederaSigner } from "./signerSelection";
 
-const createSigner: CreateSigner<HederaSigner> = createDmkSigner;
+const createSigner: CreateSigner<HederaSigner> = createHederaSigner;
 
 const getCurrencyConfig = (currencyId?: string) => {
   invariant(currencyId, "hedera: currencyId is required in getCurrencyConfig");
