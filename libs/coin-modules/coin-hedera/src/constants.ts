@@ -58,6 +58,13 @@ export const TRANSACTION_VALID_DURATION_SECONDS = 180;
 export const HARDCODED_BLOCK_HEIGHT = 10;
 
 /**
+ * app-hedera issues one APDU per signing call with no chaining, so the transaction body is
+ * bound by the single-byte APDU length field: 255 (max APDU payload) minus the 4-byte key
+ * index leaves 251 bytes for the transaction body.
+ */
+export const HEDERA_APDU_MAX_BODY_SIZE = 251;
+
+/**
  * On Hedera, transactions are not appended to a global chain of immutable blocks. Instead, each consensus node
  * publishes its own transactions stream, and mirrornode publishes transactions data as it receives it from each
  * consensus node. This leads to a changing transaction history on the window [now - delay of worst node, now].

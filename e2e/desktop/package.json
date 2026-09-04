@@ -38,6 +38,7 @@
     "rxjs": "catalog:"
   },
   "devDependencies": {
+    "@hashgraph/sdk": "2.78.0",
     "@types/invariant": "2.2.37",
     "@types/lodash": "catalog:",
     "electron": "catalog:",

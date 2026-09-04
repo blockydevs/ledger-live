@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { Mnemonic } from "@hashgraph/sdk";
 import { readFile } from "fs/promises";
 import { test } from "tests/fixtures/common";
 import { getModularSelector } from "tests/utils/modularSelectorUtils";
@@ -14,10 +15,19 @@ import { isTouchDevice } from "@ledgerhq/live-e2e-shared/speculosAppVersion";
 import { withDeviceController } from "@ledgerhq/live-e2e-shared/deviceInteraction/DeviceController";
 import { pressAndRelease } from "@ledgerhq/live-e2e-shared/deviceInteraction/TouchDeviceSimulator";
 
-// Hedera pins every account to key index 0 (see libs/live-signer-hedera/README.md), so the
-// legacy and DMK signers are expected to derive the same public key from the same seed. If
-// they ever diverge, a stored account's identity changes and its funds disappear from view.
-let referenceHederaPublicKey: string | undefined;
+// Hedera pins every account to key index 0 (see libs/live-signer-hedera/README.md), so both
+// signers must derive the seed's key at index 0. If either diverges, a stored account's
+// identity changes and its funds disappear from view.
+async function expectedPublicKeyAtIndex0(): Promise<string> {
+  const seed = process.env.SEED;
+  if (!seed) {
+    throw new Error("SEED is not set");
+  }
+  const mnemonic = await Mnemonic.fromString(seed);
+  const { publicKey } = await mnemonic.toStandardEd25519PrivateKey("", 0);
+
+  return publicKey.toStringRaw();
+}
 
 const rejectHederaSend = withDeviceController(({ getButtonsController }) => async () => {
   const buttons = getButtonsController();
@@ -32,11 +42,14 @@ const rejectHederaSend = withDeviceController(({ getButtonsController }) => asyn
   }
 });
 
-type UserdataFile = {
-  data?: { accounts?: { data?: { currencyId?: string; seedIdentifier?: string } }[] };
-};
+type HederaAccountData = { currencyId?: string; seedIdentifier?: string; freshAddress?: string };
 
-async function readHederaPublicKey(userdataFile: string, timeoutMs = 60000): Promise<string> {
+type UserdataFile = { data?: { accounts?: { data?: HederaAccountData }[] } };
+
+async function readHederaAccount(
+  userdataFile: string,
+  timeoutMs = 60000,
+): Promise<HederaAccountData> {
   const deadline = Date.now() + timeoutMs;
   let lastError: unknown;
   while (Date.now() < deadline) {
@@ -45,7 +58,7 @@ async function readHederaPublicKey(userdataFile: string, timeoutMs = 60000): Pro
       const accounts = raw?.data?.accounts;
       const hederaAccount = accounts?.find(entry => entry?.data?.currencyId === Currency.HBAR.id);
       if (hederaAccount?.data?.seedIdentifier) {
-        return hederaAccount.data.seedIdentifier;
+        return hederaAccount.data;
       }
     } catch (e) {
       lastError = e;
@@ -78,20 +91,14 @@ function runHederaSignerParityTest() {
 
         await app.portfolio.expectAccountsPersistedInAppJson(userdataFile, 1, 60000);
 
-        const publicKey = await readHederaPublicKey(userdataFile);
-        expect(publicKey).toMatch(/^[0-9a-f]{64}$/);
+        const account = await readHederaAccount(userdataFile);
 
-        // Both blocks run the same comparison: whichever signer path runs first records the
-        // reference key, the other asserts it derived the identical key. This relies on
-        // `test.describe.configure({ mode: "serial" })` below to run both blocks in one
-        // worker in declaration order, so the explicit check guards against a refactor that
-        // drops that guarantee and would otherwise compare `undefined` with `undefined`.
-        if (referenceHederaPublicKey === undefined) {
-          referenceHederaPublicKey = publicKey;
-        } else {
-          expect(referenceHederaPublicKey).toBeDefined();
-          expect(publicKey).toBe(referenceHederaPublicKey);
-        }
+        expect(account.seedIdentifier).toBe(await expectedPublicKeyAtIndex0());
+        // The send steps below drive the account by name, and Ledger Wallet names the first
+        // discovered HBAR account "Hedera 1" whatever its id, so pin the id here: a seed
+        // other than the one the fixtures were built from fails with the two ids side by
+        // side instead of timing out later on a disabled Continue button.
+        expect(account.freshAddress).toBe(Account.HEDERA_1.address);
       });
 
       await test.step("an HBAR send is signed and broadcast", async () => {
@@ -135,17 +142,11 @@ function runHederaSignerParityTest() {
 
         await rejectHederaSend();
 
-        await expect(page.locator("#error-TransactionRefusedOnDevice")).toContainText(
-          "Operation denied on device",
-        );
+        await expect(page.locator("#error-UserRefusedOnDevice")).toContainText("Action rejected");
       });
     },
   );
 }
-
-// The two blocks below compare a public key derived in one against the other, so they must
-// run in the same worker, in order.
-test.describe.configure({ mode: "serial" });
 
 test.describe("Hedera signer parity - legacy signer", () => {
   test.use({
