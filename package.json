@@ -269,6 +269,7 @@
       ]
     },
     "overrides": {
+      "@ledgerhq/device-signer-kit-hedera": "file:./vendor/device-signer-kit-hedera-0.1.0.tgz",
       "react": "catalog:",
       "react-dom": "catalog:",
       "csstype": "3.2.3",

@@ -32,3 +32,13 @@ The signing case shows the transfer on the device and drives the approval
 buttons itself through the emulator's HTTP button API. This suite is excluded
 from the default `pnpm test` run by `testPathIgnorePatterns` in
 `jest.config.js` and only picked up by `jest.integ.config.js`.
+
+## Vendored signer kit
+
+`@ledgerhq/device-signer-kit-hedera@0.1.0` is not published to the registry. The
+package is consumed as a packed tarball at
+`vendor/device-signer-kit-hedera-0.1.0.tgz`. A `pnpm.overrides` entry in the root
+`package.json` points the dependency at this tarball. The pnpm catalog does not
+accept a `file:` specifier, so the override is necessary. The package manifest
+pins the literal version `0.1.0`. Removing the override before the kit is
+published makes the install fail instead of resolving to an unexpected version.
