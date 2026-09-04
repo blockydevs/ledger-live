@@ -3,17 +3,12 @@
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
-    // The vendored hw-app-hedera, hw-transport and devices sources compile under a
-    // looser config than tsconfig.base.json; typechecking them at the stricter
-    // setting here surfaces pre-existing implicit-any issues that belong to those
-    // packages, not to this one.
     "noImplicitAny": false,
     "noImplicitThis": false,
     "lib": ["es2022", "dom"],
     "outDir": "lib",
     "rootDir": "src",
-    "types": ["node"],
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "types": ["node"]
   },
-  "include": ["src/**/*", "types/*.d.ts"]
+  "include": ["src/**/*"]
 }

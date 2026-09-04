@@ -7,15 +7,16 @@
 ## @ledgerhq/live-signer-hedera
 
 > [!NOTE]
-> **Status: STABLE** — Production-ready; API is considered stable.
+> **Status: UNSTABLE** — API may still change.
 
 Ledger Hardware Wallet Hedera JavaScript bindings via DMK.
 
 The Hedera device app takes a 4-byte little-endian key index, not a BIP32 path.
 `DmkSignerHedera` pins that index to 0 by passing the constant `44'/3030'` to the
-signer kit, and ignores the path its caller gives it. Ledger Live's `hederaBip44`
-derivation mode produces the same path for every account index, so a pinned index
-keeps the wire bytes identical for every stored account.
+signer kit, and ignores the path its caller gives it. Both signer paths use key
+index 0, so they derive the same public key and seed identifier. The signing APDU
+is identical between the two paths. The public-key read APDU differs in payload
+length: 9 bytes on the legacy path, 4 bytes on the DMK path.
 
 ## Running the Speculos suite
 
