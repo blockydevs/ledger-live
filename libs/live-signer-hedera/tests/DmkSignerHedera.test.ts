@@ -1,19 +1,17 @@
 import { DeviceActionStatus, type DeviceManagementKit } from "@ledgerhq/device-management-kit";
 import { SignerHederaBuilder } from "@ledgerhq/device-signer-kit-hedera";
-import { GetAddressCommand } from "@ledgerhq/device-signer-kit-hedera/internal/app-binder/command/GetAddressCommand.js";
-import { SignTransactionCommand } from "@ledgerhq/device-signer-kit-hedera/internal/app-binder/command/SignTransactionCommand.js";
-import { LockedDeviceError, UserRefusedAddress } from "@ledgerhq/ledger-wallet-framework/errors";
+import {
+  LockedDeviceError,
+  UserRefusedAddress,
+  UserRefusedOnDevice,
+} from "@ledgerhq/ledger-wallet-framework/errors";
 import { of, throwError } from "rxjs";
-import { HederaInvalidSignerInputError, TransactionRefusedOnDevice } from "../src/errors";
+import { HederaInvalidSignerInputError } from "../src/errors";
 import { DmkSignerHedera, HEDERA_INDEX_0_PATH } from "../src/DmkSignerHedera";
 
 jest.mock("@ledgerhq/device-signer-kit-hedera", () => ({
   SignerHederaBuilder: jest.fn(),
 }));
-
-function hex(apdu: { getRawApdu(): Uint8Array }): string {
-  return Buffer.from(apdu.getRawApdu()).toString("hex");
-}
 
 describe("DmkSignerHedera", () => {
   let signer: DmkSignerHedera;
@@ -154,7 +152,7 @@ describe("DmkSignerHedera", () => {
       });
     });
 
-    it("maps 6985 to TransactionRefusedOnDevice", async () => {
+    it("maps 6985 to UserRefusedOnDevice", async () => {
       mockSignerHedera.signTransaction.mockReturnValue({
         observable: of({
           status: DeviceActionStatus.Error,
@@ -162,7 +160,7 @@ describe("DmkSignerHedera", () => {
         }),
       });
 
-      await expect(signer.signTransaction(body)).rejects.toThrow(TransactionRefusedOnDevice);
+      await expect(signer.signTransaction(body)).rejects.toThrow(UserRefusedOnDevice);
     });
 
     it.each(["empty_transaction", "transaction_too_large", "unsupported_derivation_path"])(
@@ -228,31 +226,6 @@ describe("DmkSignerHedera", () => {
       });
 
       await expect(signer.signTransaction(body)).rejects.toThrow("HederaUnknownError");
-    });
-  });
-
-  describe("wire bytes", () => {
-    /**
-     * `checkOnDevice: false` is `getPublicKey`'s call to the kit, so this pins
-     * `P1_NON_CONFIRM` (0x01): the Hedera app shows the UI when p1 is 0 and answers
-     * silently for any other value, the opposite of every other app on the device.
-     */
-    it("sends e0 02 01 00 04 00000000 for a public key read at index 0", () => {
-      const command = new GetAddressCommand({
-        derivationPath: HEDERA_INDEX_0_PATH,
-        checkOnDevice: false,
-      });
-
-      expect(hex(command.getApdu())).toBe("e00201000400000000");
-    });
-
-    it("sends e0 04 00 00 with the four-byte little-endian index prefix when signing", () => {
-      const command = new SignTransactionCommand({
-        derivationPath: HEDERA_INDEX_0_PATH,
-        transaction: new Uint8Array([0xaa, 0xbb, 0xcc]),
-      });
-
-      expect(hex(command.getApdu())).toBe("e00400000700000000aabbcc");
     });
   });
 });

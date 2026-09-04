@@ -1,6 +1,10 @@
 import { DeviceActionStatus } from "@ledgerhq/device-management-kit";
-import { LockedDeviceError, UserRefusedAddress } from "@ledgerhq/ledger-wallet-framework/errors";
-import { HederaInvalidSignerInputError, TransactionRefusedOnDevice } from "../src/errors";
+import {
+  LockedDeviceError,
+  UserRefusedAddress,
+  UserRefusedOnDevice,
+} from "@ledgerhq/ledger-wallet-framework/errors";
+import { HederaInvalidSignerInputError } from "../src/errors";
 import {
   mapDeviceActionError,
   mapDeviceActionResult,
@@ -14,15 +18,15 @@ describe("mapDeviceActionError", () => {
     const error = asError({ _tag: "HederaAppCommandError", errorCode: "6985" });
 
     expect(mapDeviceActionError(error, UserRefusedAddress)).toBeInstanceOf(UserRefusedAddress);
-    expect(mapDeviceActionError(error, TransactionRefusedOnDevice)).toBeInstanceOf(
-      TransactionRefusedOnDevice,
+    expect(mapDeviceActionError(error, UserRefusedOnDevice)).toBeInstanceOf(
+      UserRefusedOnDevice,
     );
   });
 
   it("maps 5515 to LockedDeviceError", () => {
     const error = asError({ _tag: "DeviceLockedError", errorCode: "5515" });
 
-    expect(mapDeviceActionError(error, TransactionRefusedOnDevice)).toBeInstanceOf(
+    expect(mapDeviceActionError(error, UserRefusedOnDevice)).toBeInstanceOf(
       LockedDeviceError,
     );
   });
@@ -36,7 +40,7 @@ describe("mapDeviceActionError", () => {
         originalError: new Error("bad input"),
       });
 
-      const mapped = mapDeviceActionError(error, TransactionRefusedOnDevice);
+      const mapped = mapDeviceActionError(error, UserRefusedOnDevice);
 
       expect(mapped).toBeInstanceOf(HederaInvalidSignerInputError);
       expect(mapped.message).toBe("HederaInvalidInputError: bad input");
@@ -47,7 +51,7 @@ describe("mapDeviceActionError", () => {
     for (const code of ["6d00", "6980", "6e00", "b00a"]) {
       const mapped = mapDeviceActionError(
         asError({ _tag: "HederaAppCommandError", errorCode: code }),
-        TransactionRefusedOnDevice,
+        UserRefusedOnDevice,
       );
 
       expect(mapped.constructor).toBe(Error);
@@ -58,7 +62,7 @@ describe("mapDeviceActionError", () => {
   it("handles an error that carries no errorCode", () => {
     const mapped = mapDeviceActionError(
       asError({ _tag: "InvalidStatusWordError", originalError: new Error("short response") }),
-      TransactionRefusedOnDevice,
+      UserRefusedOnDevice,
     );
 
     expect(mapped.constructor).toBe(Error);
@@ -68,13 +72,13 @@ describe("mapDeviceActionError", () => {
   it("preserves the message of an untagged Error", () => {
     const thrown = new RangeError("Offset is outside the bounds of the DataView");
 
-    expect(mapDeviceActionError(asError(thrown), TransactionRefusedOnDevice)).toBe(thrown);
+    expect(mapDeviceActionError(asError(thrown), UserRefusedOnDevice)).toBe(thrown);
   });
 
   it("describes an untagged object rejection instead of yielding an empty message", () => {
     const mapped = mapDeviceActionError(
       asError({ reason: "split failed" }),
-      TransactionRefusedOnDevice,
+      UserRefusedOnDevice,
     );
 
     expect(mapped.message).toBe('Untagged device action error: {"reason":"split failed"}');
@@ -87,7 +91,7 @@ describe("mapDeviceActionError", () => {
   ])(
     "describes %s rejection rather than throwing while inspecting it",
     (_label, rejection, expected) => {
-      expect(mapDeviceActionError(asError(rejection), TransactionRefusedOnDevice).message).toBe(
+      expect(mapDeviceActionError(asError(rejection), UserRefusedOnDevice).message).toBe(
         expected,
       );
     },

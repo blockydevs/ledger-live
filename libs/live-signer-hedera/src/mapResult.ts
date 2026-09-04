@@ -14,9 +14,6 @@ export type HederaDAError = GetAddressDAError | SignTransactionDAError;
 /** A zero-argument Ledger Live error class, e.g. `UserRefusedAddress`. */
 export type RefusalErrorClass = new () => Error;
 
-/** Device-action errors are typed as tagged objects, but a task can reject with any
- * value, down to a primitive, so nothing here may assume an object shape. An untagged
- * rejection must still carry a message instead of surfacing as an empty one. */
 type ErrorDetails = { errorCode?: unknown; _tag?: unknown; originalError?: unknown };
 
 const INPUT_VALIDATION_CODES = new Set([
@@ -48,10 +45,7 @@ function describeError(details: ErrorDetails, error: unknown): string {
  * The device answers 0x6985 for any refusal, so the caller decides whether that
  * means a refused address or a refused transaction.
  */
-export function mapDeviceActionError(
-  error: HederaDAError,
-  RefusedError: RefusalErrorClass,
-): Error {
+export function mapDeviceActionError(error: unknown, RefusedError: RefusalErrorClass): Error {
   const details: ErrorDetails = typeof error === "object" && error !== null ? error : {};
 
   if (details.errorCode === "6985") {

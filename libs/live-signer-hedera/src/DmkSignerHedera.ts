@@ -3,11 +3,10 @@ import {
   SignerHederaBuilder,
   type SignerHedera,
 } from "@ledgerhq/device-signer-kit-hedera";
-import { UserRefusedAddress } from "@ledgerhq/ledger-wallet-framework/errors";
+import { UserRefusedAddress, UserRefusedOnDevice } from "@ledgerhq/ledger-wallet-framework/errors";
 import type { HederaSigner } from "@ledgerhq/coin-hedera/types/signer";
 import { lastValueFrom } from "rxjs";
 import { mapDeviceActionResult } from "./mapResult";
-import { TransactionRefusedOnDevice } from "./errors";
 
 /**
  * The device app takes a 4-byte little-endian key index, not a BIP32 path, and
@@ -56,6 +55,6 @@ export class DmkSignerHedera implements HederaSigner {
       skipOpenApp: true,
     });
 
-    return mapDeviceActionResult(await lastValueFrom(observable), TransactionRefusedOnDevice);
+    return mapDeviceActionResult(await lastValueFrom(observable), UserRefusedOnDevice);
   }
 }
