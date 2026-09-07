@@ -6,9 +6,6 @@ import type { CoinFrameworkSigner } from "../../bridge/generic-coin-framework/ty
 import { executeWithSigner, type CreateSigner } from "../../bridge/setup";
 import { createHederaSigner } from "./signerSelection";
 
-// The generic coin framework path is not routed for Hedera today; it reads the
-// same flag as the legacy bridge path so that routing the family later cannot
-// activate DMK on its own.
 export const createSigner: CreateSigner<HederaFrameworkSigner> = (transport: Transport) =>
   createFrameworkSigner(createHederaSigner(transport));
 
