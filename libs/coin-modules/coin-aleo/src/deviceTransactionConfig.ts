@@ -40,8 +40,6 @@ async function getDeviceTransactionConfig({
     { type: "amount", label: "Amount" },
   );
 
-  // TODO: restore config.isFeeSponsored check
-  // https://ledgerhq.atlassian.net/browse/LIVE-29092
   if (status.estimatedFees.isZero()) {
     fields.push({
       type: "text",
