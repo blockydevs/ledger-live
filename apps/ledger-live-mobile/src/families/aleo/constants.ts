@@ -1,0 +1,1 @@
+export const LIVE_BLOCK_HEIGHT_POLL_MS = 10_000;
