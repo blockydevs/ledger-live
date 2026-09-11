@@ -1,13 +1,19 @@
 import { IconsLegacy } from "@ledgerhq/native-ui";
 import BigNumber from "bignumber.js";
+import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
 import accountActions from "../accountActions";
 import { ALEO_ACCOUNT_1 } from "../__mocks__/account.mock";
 import { aleoCurrency } from "../__mocks__/currency.mock";
+import { getCurrencyConfiguration } from "@ledgerhq/live-common/config/index";
 import { NavigatorName, ScreenName } from "~/const";
 import ZeroBalanceDisabledModalContent from "~/components/FabActions/modals/ZeroBalanceDisabledModalContent";
 
 jest.mock("@ledgerhq/native-ui", () => ({
-  IconsLegacy: { TransferMedium: "TransferMedium" },
+  IconsLegacy: { TransferMedium: "TransferMedium", CoinsMedium: "CoinsMedium" },
+}));
+
+jest.mock("@ledgerhq/live-common/config/index", () => ({
+  getCurrencyConfiguration: jest.fn(),
 }));
 
 jest.mock("~/components/FabActions/modals/ZeroBalanceDisabledModalContent", () => ({
@@ -18,6 +24,16 @@ jest.mock("~/components/FabActions/modals/ZeroBalanceDisabledModalContent", () =
 jest.mock("~/context/Locale", () => ({
   i18n: { t: (key: string) => key },
 }));
+
+const mockGetCurrencyConfiguration = jest.mocked(getCurrencyConfiguration);
+
+beforeEach(() => {
+  mockGetCurrencyConfiguration.mockReset();
+  mockGetCurrencyConfiguration.mockReturnValue({
+    status: { type: "active" },
+    enableStaking: false,
+  } as ReturnType<typeof getCurrencyConfiguration>);
+});
 
 describe("accountActions.getMainActions", () => {
   it("returns a single publicToPrivate action with correct shape", () => {
@@ -62,6 +78,78 @@ describe("accountActions.getMainActions", () => {
     });
 
     expect(action.disabled).toBe(false);
+  });
+});
+
+describe("accountActions.getMainActions and the enableStaking flag", () => {
+  const findStake = (account = ALEO_ACCOUNT_1) =>
+    accountActions.getMainActions({ account }).find(action => action.id === "stake");
+
+  const withTransparentBalance = (transparentBalance: BigNumber): AleoAccount => ({
+    ...ALEO_ACCOUNT_1,
+    aleoResources: {
+      transparentBalance,
+      provableApi: null,
+      privateBalance: null,
+      unspentPrivateRecords: null,
+      lastPrivateSyncDate: null,
+    },
+  });
+
+  it("omits the stake action when staking is disabled", () => {
+    expect(findStake()).toBeUndefined();
+    expect(
+      accountActions.getMainActions({ account: ALEO_ACCOUNT_1 }).map(action => action.id),
+    ).toEqual(["public_to_private"]);
+  });
+
+  it("omits the stake action when the currency configuration cannot be resolved", () => {
+    mockGetCurrencyConfiguration.mockImplementation(() => {
+      throw new Error("no config");
+    });
+
+    expect(findStake()).toBeUndefined();
+  });
+
+  it("returns the stake action first when staking is enabled", () => {
+    mockGetCurrencyConfiguration.mockReturnValue({
+      status: { type: "active" },
+      enableStaking: true,
+    } as ReturnType<typeof getCurrencyConfiguration>);
+
+    const actions = accountActions.getMainActions({ account: ALEO_ACCOUNT_1 });
+
+    expect(actions.map(action => action.id)).toEqual(["stake", "public_to_private"]);
+    expect(actions[0].navigationParams).toEqual([
+      NavigatorName.AleoBondPublicFlow,
+      {
+        screen: ScreenName.AleoBondPublicSelectValidator,
+        params: { accountId: ALEO_ACCOUNT_1.id, parentId: undefined },
+      },
+    ]);
+  });
+
+  it("disables the stake action when the account holds no public funds", () => {
+    mockGetCurrencyConfiguration.mockReturnValue({
+      status: { type: "active" },
+      enableStaking: true,
+    } as ReturnType<typeof getCurrencyConfiguration>);
+
+    const action = findStake(withTransparentBalance(new BigNumber(0)));
+
+    expect(action?.disabled).toBe(true);
+    expect(action?.modalOnDisabledClick?.component).toBe(ZeroBalanceDisabledModalContent);
+  });
+
+  it("enables the stake action when the account holds public funds", () => {
+    mockGetCurrencyConfiguration.mockReturnValue({
+      status: { type: "active" },
+      enableStaking: true,
+    } as ReturnType<typeof getCurrencyConfiguration>);
+
+    const action = findStake(withTransparentBalance(new BigNumber(2_000_000)));
+
+    expect(action?.disabled).toBe(false);
   });
 });
 

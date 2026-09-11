@@ -124,7 +124,13 @@ export const ANNUAL_INFLATION_RATE = 0.05;
 // A validator above this share of total stake earns zero, not a reduced rate.
 export const MAX_VALIDATOR_STAKE_SHARE = 0.25;
 
+/**
+ * Figment runs a different validator address on each network, and both are named
+ * "Figment" in the committee validator-metadata. A single constant silently
+ * pre-selects an address absent from the other network's committee, which renders
+ * as "nothing is selected" rather than as an error.
+ */
 export const DEFAULT_ALEO_VALIDATOR: Record<"mainnet" | "testnet", string> = {
-  mainnet: "",
-  testnet: "",
+  mainnet: "aleo1q3vx8pet0h7739hx5xlekfxh9kus6qdlxhx9qdkxhh9rnva8q5gsskve3t",
+  testnet: "aleo1l7avejc23yv6e8nx4udjwz89dw6mg95dzsp936hf77yuhnjywv9syl0ywc",
 };

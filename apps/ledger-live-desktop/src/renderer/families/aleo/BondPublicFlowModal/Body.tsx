@@ -4,10 +4,12 @@ import { StepId, StepProps, St } from "./types";
 import StepAmount, { StepAmountFooter } from "./steps/StepAmount";
 import StepValidator, { StepValidatorFooter } from "./steps/StepValidator";
 import GenericStepConnectDevice from "~/renderer/modals/Send/steps/GenericStepConnectDevice";
-import { TRANSACTION_TYPE } from "@ledgerhq/live-common/families/aleo/constants";
+import {
+  DEFAULT_ALEO_VALIDATOR,
+  TRANSACTION_TYPE,
+} from "@ledgerhq/live-common/families/aleo/constants";
 import StepConfirmation, { StepConfirmationFooter } from "./steps/StepConfirmation";
 import { createStakingFlowBody, StakingFlowData } from "../shared/createStakingFlowBody";
-import { DEFAULT_ALEO_VALIDATOR } from "../constants";
 import { getAleoCurrencyConfig } from "../shared/utils";
 
 export type Data = StakingFlowData;

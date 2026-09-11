@@ -6,6 +6,7 @@ import { Trans, useTranslation } from "~/context/Locale";
 import { useTheme } from "@react-navigation/native";
 import { IconsLegacy, Text } from "@ledgerhq/native-ui";
 import { Spinner } from "@ledgerhq/lumen-ui-rnative";
+import { shortAddressPreview } from "@ledgerhq/live-common/account/index";
 import invariant from "invariant";
 import type { Unit } from "@domain/entity-currency-unit";
 import { useSelector } from "~/context/hooks";
@@ -17,7 +18,7 @@ import type {
   AleoAccount,
   AleoCoinConfig,
 } from "@ledgerhq/live-common/families/aleo/types";
-import { isAleoAccount } from "@ledgerhq/live-common/families/aleo/utils";
+import { isAleoAccount, isValidatorBondable } from "@ledgerhq/live-common/families/aleo/utils";
 import { getCurrencyConfiguration } from "@ledgerhq/live-common/config/index";
 import { TrackScreen } from "~/analytics";
 import Button from "~/components/Button";
@@ -176,7 +177,7 @@ function ValidatorRow({
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { isOpen, isUnbonding, nonEarningReason, commissionPercent, stakeMicrocredits } = validator;
-  const isDisabled = isLocked || !isOpen || isUnbonding || nonEarningReason === "overConcentrated";
+  const isDisabled = isLocked || !isValidatorBondable(validator);
 
   const handlePress = useCallback(() => {
     if (!isDisabled) onPress(validator);
@@ -191,7 +192,7 @@ function ValidatorRow({
     if (nonEarningReason === "overConcentrated") {
       return { warning: true, text: t("aleo.bond.selectValidator.nonEarning.overConcentrated") };
     }
-    const commission = (commissionPercent / 100).toFixed(1);
+    const commission = commissionPercent;
     if (validator.estimatedYearlyRewardsRate !== undefined) {
       const rate = (validator.estimatedYearlyRewardsRate * 100).toFixed(1);
       return {
@@ -225,8 +226,13 @@ function ValidatorRow({
       >
         <View style={styles.rowInfo}>
           <Text fontWeight="semiBold" numberOfLines={1}>
-            {validator.name || validator.address.slice(0, 16) + "…"}
+            {validator.name || shortAddressPreview(validator.address)}
           </Text>
+          {!!validator.name && (
+            <Text variant="small" color="neutral.c70" numberOfLines={1}>
+              {shortAddressPreview(validator.address)}
+            </Text>
+          )}
           <View style={styles.subtitleRow}>
             {subtitle.warning && (
               <IconsLegacy.WarningMedium

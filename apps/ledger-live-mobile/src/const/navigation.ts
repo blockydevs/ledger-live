@@ -445,7 +445,6 @@ export enum ScreenName {
   AleoMandatoryPrivateSync = "AleoMandatoryPrivateSync",
   AleoBondPublicSelectValidator = "AleoBondPublicSelectValidator",
   AleoBondPublicAmount = "AleoBondPublicAmount",
-  AleoBondPublicSummary = "AleoBondPublicSummary",
   AleoBondPublicSelectDevice = "AleoBondPublicSelectDevice",
   AleoBondPublicConnectDevice = "AleoBondPublicConnectDevice",
   AleoBondPublicValidationError = "AleoBondPublicValidationError",

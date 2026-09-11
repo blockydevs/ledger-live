@@ -11,12 +11,11 @@ import SelectDevice from "~/screens/SelectDevice";
 import { useNotificationsPrompt } from "LLM/features/NotificationsPrompt";
 import SelectValidator from "./SelectValidator";
 import Amount from "./Amount";
-import Summary from "./Summary";
 import ValidationSuccess from "./ValidationSuccess";
 import ValidationError from "./ValidationError";
 import type { BondPublicFlowParamList } from "./types";
 
-const totalSteps = "3";
+const totalSteps = "2";
 
 function BondPublicFlow() {
   const { t } = useTranslation();
@@ -55,22 +54,6 @@ function BondPublicFlow() {
               title={t("aleo.bond.stepperHeader.amount")}
               subtitle={t("aleo.bond.stepperHeader.stepRange", {
                 currentStep: "2",
-                totalSteps,
-              })}
-            />
-          ),
-        }}
-      />
-      <Stack.Screen
-        name={ScreenName.AleoBondPublicSummary}
-        component={Summary}
-        options={{
-          gestureEnabled: false,
-          headerTitle: () => (
-            <StepHeader
-              title={t("aleo.bond.stepperHeader.summary")}
-              subtitle={t("aleo.bond.stepperHeader.stepRange", {
-                currentStep: "3",
                 totalSteps,
               })}
             />

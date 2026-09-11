@@ -15,12 +15,6 @@ export type BondPublicFlowParamList = {
     parentId?: string;
     validatorAddress: string;
   };
-  [ScreenName.AleoBondPublicSummary]: {
-    accountId: string;
-    parentId?: string;
-    validatorAddress: string;
-    amount: string;
-  };
   [ScreenName.AleoBondPublicSelectDevice]: {
     accountId: string;
     parentId?: string;

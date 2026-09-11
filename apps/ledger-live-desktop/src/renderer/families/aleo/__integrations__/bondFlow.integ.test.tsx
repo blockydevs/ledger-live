@@ -4,7 +4,7 @@ import { mockDomMeasurements } from "LLD/features/__tests__/shared";
 import { importLLDCoinFamily } from "~/renderer/families";
 import { AFTER_ONBOARDING_STATE } from "~/renderer/reducers/settings";
 import BondPublicFlowModal from "../BondPublicFlowModal";
-import { DEFAULT_ALEO_VALIDATOR } from "../constants";
+import { DEFAULT_ALEO_VALIDATOR } from "@ledgerhq/live-common/families/aleo/constants";
 import { ALEO_MAIN_ACCOUNT } from "../__mocks__/account.mock";
 import { mockAleoCoinConfig } from "../__mocks__/config.mock";
 import { mockSignedOperation } from "../__mocks__/signedOperation.mock";

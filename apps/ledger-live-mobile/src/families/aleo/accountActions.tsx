@@ -3,10 +3,21 @@ import { IconsLegacy } from "@ledgerhq/native-ui";
 import type { Account, AccountLike } from "@ledgerhq/types-live";
 import type { CryptoCurrency } from "@domain/entity-currency-crypto";
 import type { TokenCurrency } from "@domain/entity-currency-token";
-import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
+import type { AleoAccount, AleoCoinConfig } from "@ledgerhq/live-common/families/aleo/types";
+import { getCurrencyConfiguration } from "@ledgerhq/live-common/config/index";
 import { NavigatorName, ScreenName } from "~/const";
 import type { ActionButtonEvent } from "~/components/FabActions";
 import ZeroBalanceDisabledModalContent from "~/components/FabActions/modals/ZeroBalanceDisabledModalContent";
+
+// The stake entry point is absent, not disabled, while the config flag is off, so the flow
+// stays unreachable.
+const isStakingEnabled = (account: AleoAccount): boolean => {
+  try {
+    return !!getCurrencyConfiguration<AleoCoinConfig>(account.currency.id)?.enableStaking;
+  } catch {
+    return false;
+  }
+};
 
 const getMainActions = ({
   account,
@@ -18,24 +29,26 @@ const getMainActions = ({
   const transparentBalance = account.aleoResources?.transparentBalance;
   const hasNoPublicFunds = !transparentBalance || transparentBalance.isZero();
 
+  const stakeAction: ActionButtonEvent = {
+    id: "stake",
+    label: i18n.t("account.stake"),
+    Icon: IconsLegacy.CoinsMedium,
+    event: "button_clicked",
+    eventProperties: { button: "stake", currency: "ALEO", page: "Account Page" },
+    disabled: hasNoPublicFunds,
+    modalOnDisabledClick: { component: ZeroBalanceDisabledModalContent },
+    // TODO(LIVE-32811): navigate to ManageDrawer when already bonded
+    navigationParams: [
+      NavigatorName.AleoBondPublicFlow,
+      {
+        screen: ScreenName.AleoBondPublicSelectValidator,
+        params: { accountId: account.id, parentId: parentAccount?.id },
+      },
+    ],
+  };
+
   return [
-    {
-      id: "stake",
-      label: i18n.t("account.stake"),
-      Icon: IconsLegacy.CoinsMedium,
-      event: "button_clicked",
-      eventProperties: { button: "stake", currency: "ALEO", page: "Account Page" },
-      disabled: hasNoPublicFunds,
-      modalOnDisabledClick: { component: ZeroBalanceDisabledModalContent },
-      // TODO(LIVE-32811): navigate to ManageDrawer when already bonded
-      navigationParams: [
-        NavigatorName.AleoBondPublicFlow,
-        {
-          screen: ScreenName.AleoBondPublicSelectValidator,
-          params: { accountId: account.id, parentId: parentAccount?.id },
-        },
-      ],
-    },
+    ...(isStakingEnabled(account) ? [stakeAction] : []),
     {
       id: "public_to_private",
       label: i18n.t("aleo.accountActions.publicToPrivate"),
