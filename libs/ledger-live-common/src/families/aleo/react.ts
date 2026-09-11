@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useBridgeSync } from "../../bridge/react";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
@@ -21,7 +22,9 @@ import {
   type ViewKeysByAccountId,
 } from "./hw/getViewKey/index";
 import {
+  getClaimableStakingBalance,
   getStrategyConfig,
+  hasPendingOperationType,
   isAleoAccount,
   isAleoTransaction,
   isPrivateTransaction,
@@ -37,7 +40,13 @@ import type {
 } from "./types";
 import { getValidators } from "@ledgerhq/coin-aleo/logic";
 import { aleoPrivateSyncProgress$ } from "./privateSyncProgress";
-import { MANDATORY_SYNC_POLLING_DELAY, PROGRESS_THROTTLE_INTERVAL_MS } from "./constants";
+import {
+  MANDATORY_SYNC_POLLING_DELAY,
+  MAX_UNBONDING_SYNC_ATTEMPTS,
+  PROGRESS_THROTTLE_INTERVAL_MS,
+  UNBONDING_SYNC_PRIORITY,
+  UNBONDING_SYNC_RETRY_MS,
+} from "./constants";
 
 const QUICK_AMOUNT_STRATEGIES: SigningStrategy[] = ["fast", "balanced", "full"];
 
@@ -620,4 +629,111 @@ export function useAleoValidators(currency: CryptoCurrency): UseAleoValidatorsRe
   }, [currencyId]);
 
   return { validators, loading, error };
+}
+
+export type AleoNonEarningReason = NonNullable<AleoValidator["nonEarningReason"]> | "leftCommittee";
+
+export type AleoStakingPosition = {
+  bondedBalance: BigNumber;
+  bondedValidator: string | null;
+  validatorLabel: string;
+  nonEarningReason: AleoNonEarningReason | undefined;
+  /**
+   * Estimated net yearly rate as a fraction (0.07 = 7%). Undefined when it could not be
+   * derived; `0` is a real value meaning "earns nothing" — never conflate the two.
+   */
+  estimatedRate: number | undefined;
+  unbondingBalance: BigNumber;
+  unbondingHeight: number | null;
+  claimableBalance: BigNumber;
+  hasBonded: boolean;
+  hasUnbonding: boolean;
+  hasPendingUnbond: boolean;
+  hasPendingClaim: boolean;
+  hasPendingUnbondingChange: boolean;
+};
+
+export function useStakingPosition(account: AleoAccount): AleoStakingPosition {
+  const { validators, loading } = useAleoValidators(account.currency);
+
+  const bondedBalance = account.aleoResources?.bondedBalance ?? new BigNumber(0);
+  const unbondingBalance = account.aleoResources?.unbondingBalance ?? new BigNumber(0);
+  const unbondingHeight = account.aleoResources?.unbondingHeight ?? null;
+  const claimableBalance = getClaimableStakingBalance(account);
+  const bondedValidator = account.aleoResources?.bondedValidator ?? null;
+
+  const validator = useMemo(
+    () => (bondedValidator ? validators.find(item => item.address === bondedValidator) : undefined),
+    [validators, bondedValidator],
+  );
+
+  const hasBonded = bondedBalance.gt(0);
+  const hasPendingUnbond = hasPendingOperationType(account, "UNBOND");
+  const hasPendingClaim = hasPendingOperationType(account, "WITHDRAW_UNBONDED");
+
+  const nonEarningReason: AleoNonEarningReason | undefined =
+    loading || !hasBonded ? undefined : validator ? validator.nonEarningReason : "leftCommittee";
+
+  const estimatedRate = nonEarningReason ? 0 : validator?.estimatedYearlyRewardsRate;
+
+  return {
+    bondedBalance,
+    bondedValidator,
+    validatorLabel: validator?.name || bondedValidator || "",
+    nonEarningReason,
+    estimatedRate,
+    unbondingBalance,
+    unbondingHeight,
+    claimableBalance,
+    hasBonded,
+    hasUnbonding: unbondingBalance.gt(0),
+    hasPendingUnbond,
+    hasPendingClaim,
+    hasPendingUnbondingChange: hasPendingUnbond || hasPendingClaim,
+  };
+}
+
+/**
+ * Requests account syncs while the chain has passed the unbonding height but the account has
+ * not caught up yet.
+ *
+ * The live block-height poll sees the crossing within seconds; `account.blockHeight` only
+ * moves on a sync, and that is the height every claimable decision reads. So the gap is
+ * closed by syncing rather than by reading the live height in more places — the bridge
+ * validates the claim against the synced height too, and a UI that disagreed with it would
+ * offer a claim the flow then refuses.
+ *
+ * Retries because a single sync can fail or land a block too early; the effect tears down as
+ * soon as `enabled` goes false, which is what a successful sync causes.
+ */
+export function useSyncOnUnbondingComplete(accountId: string, enabled: boolean): void {
+  const sync = useBridgeSync();
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    let attempts = 0;
+    const requestSync = () => {
+      attempts += 1;
+      sync({
+        type: "SYNC_ONE_ACCOUNT",
+        accountId,
+        priority: UNBONDING_SYNC_PRIORITY,
+        reason: "aleo-unbonding-complete",
+      });
+    };
+
+    requestSync();
+    const interval = setInterval(() => {
+      // Give up rather than poll forever: the background tick remains the backstop, and the
+      // row keeps showing that it is still settling.
+      if (attempts >= MAX_UNBONDING_SYNC_ATTEMPTS) {
+        clearInterval(interval);
+        return;
+      }
+      requestSync();
+    }, UNBONDING_SYNC_RETRY_MS);
+
+    return () => clearInterval(interval);
+  }, [enabled, accountId, sync]);
 }

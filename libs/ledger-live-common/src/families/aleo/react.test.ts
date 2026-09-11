@@ -8,7 +8,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { Subject } from "rxjs";
 import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
+import type { Account, Operation, OperationType } from "@ledgerhq/types-live";
 import type { CryptoCurrency } from "@domain/entity-currency-crypto";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
@@ -22,6 +22,7 @@ import {
   useAleoPrivateSync,
   useAleoQuickAmountSelector,
   useAleoValidators,
+  useStakingPosition,
 } from "./react";
 import { getValidators } from "@ledgerhq/coin-aleo/logic";
 import { ALEO_ACCOUNT_1, makeAleoAccount } from "./__mocks__/account.mock";
@@ -1506,5 +1507,65 @@ describe("useAleoValidators", () => {
 
     expect(result.current.validators).toEqual([]);
     await waitFor(() => expect(result.current.validators).toEqual([testnetValidator]));
+  });
+});
+
+describe("useStakingPosition", () => {
+  const pendingOperation = (type: OperationType): Operation =>
+    ({
+      id: `pending-${type}`,
+      hash: "",
+      type,
+      value: new BigNumber(1),
+      fee: new BigNumber(1),
+      senders: [],
+      recipients: [],
+      accountId: ALEO_ACCOUNT_1.id,
+      date: new Date(),
+      blockHash: null,
+      blockHeight: null,
+      extra: {},
+    }) as unknown as Operation;
+
+  const positionFor = (pendingOperations: Operation[]) =>
+    renderHook(() => useStakingPosition({ ...ALEO_ACCOUNT_1, pendingOperations } as AleoAccount))
+      .result.current;
+
+  beforeEach(() => {
+    jest.mocked(getValidators).mockResolvedValue([]);
+  });
+
+  // `unbond_public` and `claim_unbond_public` share one `unbonding` slot on chain, so the gate
+  // both actions read has to close on either of them — the per-type flags exist only to label
+  // what is in flight.
+  describe("hasPendingUnbondingChange", () => {
+    it("is false with nothing pending", () => {
+      expect(positionFor([]).hasPendingUnbondingChange).toBe(false);
+    });
+
+    it("is true for a pending unbond", () => {
+      const position = positionFor([pendingOperation("UNBOND")]);
+
+      expect(position.hasPendingUnbondingChange).toBe(true);
+      expect(position.hasPendingUnbond).toBe(true);
+      expect(position.hasPendingClaim).toBe(false);
+    });
+
+    it("is true for a pending claim", () => {
+      const position = positionFor([pendingOperation("WITHDRAW_UNBONDED")]);
+
+      expect(position.hasPendingUnbondingChange).toBe(true);
+      expect(position.hasPendingClaim).toBe(true);
+      expect(position.hasPendingUnbond).toBe(false);
+    });
+
+    // A bond writes the `bonded` mapping, not `unbonding`, so it must not close either action.
+    it("ignores a pending bond", () => {
+      expect(positionFor([pendingOperation("BOND")]).hasPendingUnbondingChange).toBe(false);
+    });
+
+    it("ignores an unrelated pending operation", () => {
+      expect(positionFor([pendingOperation("OUT")]).hasPendingUnbondingChange).toBe(false);
+    });
   });
 });
