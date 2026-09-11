@@ -24,7 +24,7 @@ export function useAleoLiveBlockHeight(
   const cancelled = useRef(false);
 
   const fetchHeight = useCallback(async () => {
-    if (!enabled || inFlight.current || AppState.currentState === "background") return;
+    if (!enabled || inFlight.current || AppState.currentState !== "active") return;
     // getCurrencyConfiguration throws when no config is registered for the currency.
     let config: AleoCoinConfig;
     try {
@@ -45,9 +45,10 @@ export function useAleoLiveBlockHeight(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currency.id, enabled]);
 
-  // useInterval's delay is typed as a plain number, so the enabled gate lives in
-  // fetchHeight itself rather than in the delay argument.
-  useInterval(fetchHeight, LIVE_BLOCK_HEIGHT_POLL_MS);
+  // useInterval's signature is typed as delay: number, but its body still treats
+  // null as "no interval" (see ~/components/useInterval.ts) — cast through unknown
+  // to actually stop the timer while disabled instead of leaving it ticking.
+  useInterval(fetchHeight, (enabled ? LIVE_BLOCK_HEIGHT_POLL_MS : null) as unknown as number);
 
   useEffect(() => {
     if (!enabled) {
