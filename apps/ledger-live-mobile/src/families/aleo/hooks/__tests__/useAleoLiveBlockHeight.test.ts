@@ -17,6 +17,7 @@ describe("useAleoLiveBlockHeight", () => {
     jest.clearAllMocks();
     AppState.currentState = "active";
     mockGetCurrencyConfiguration.mockReturnValue({
+      status: { type: "active" },
       networkType: "mainnet",
     } as ReturnType<typeof getCurrencyConfiguration>);
   });
