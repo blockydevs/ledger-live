@@ -65,6 +65,7 @@ import type { EvmClaimRewardsFlowParamList } from "~/families/evm/ClaimRewardsFl
 import type { EvmWithdrawFlowParamList } from "~/families/evm/WithdrawFlow/types";
 import type { BondPublicFlowParamList as AleoBondPublicFlowParamList } from "~/families/aleo/BondPublicFlow/types";
 import type { UnbondFlowParamList as AleoUnbondFlowParamList } from "~/families/aleo/UnbondFlow/types";
+import type { ClaimUnbondFlowParamList as AleoClaimUnbondFlowParamList } from "~/families/aleo/ClaimUnbondFlow/types";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
 
 type Props =
@@ -140,7 +141,8 @@ type Props =
   | StackNavigatorProps<EvmClaimRewardsFlowParamList, ScreenName.EvmClaimRewardsConnectDevice>
   | StackNavigatorProps<EvmWithdrawFlowParamList, ScreenName.EvmWithdrawConnectDevice>
   | StackNavigatorProps<AleoBondPublicFlowParamList, ScreenName.AleoBondPublicConnectDevice>
-  | StackNavigatorProps<AleoUnbondFlowParamList, ScreenName.AleoUnbondConnectDevice>;
+  | StackNavigatorProps<AleoUnbondFlowParamList, ScreenName.AleoUnbondConnectDevice>
+  | StackNavigatorProps<AleoClaimUnbondFlowParamList, ScreenName.AleoClaimUnbondConnectDevice>;
 
 export const navigateToSelectDevice = (navigation: Props["navigation"], route: Props["route"]) =>
   // Assumes that it will always navigate to a "SelectDevice"

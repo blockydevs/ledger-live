@@ -11,6 +11,7 @@ export type ClaimUnbondFlowParamList = {
     transaction?: Transaction;
     status?: TransactionStatus;
     source?: RouteProp<ParamListBase, ScreenName>;
+    forceSelectDevice?: boolean;
   };
   [ScreenName.AleoClaimUnbondConnectDevice]: {
     device?: Device;
