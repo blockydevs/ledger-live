@@ -4,6 +4,7 @@ import { Trans } from "react-i18next";
 import { useDispatch } from "LLD/hooks/redux";
 import type { TokenAccount } from "@ledgerhq/types-live";
 import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
+import { useStakingPosition } from "@ledgerhq/live-common/families/aleo/react";
 import { openModal } from "~/renderer/actions/modals";
 import Box from "~/renderer/components/Box/Box";
 import Button from "~/renderer/components/Button";
@@ -14,7 +15,6 @@ import { TableLine } from "../blocks/Staking";
 import StakedRow from "./StakedRow";
 import StakingSummary from "./StakingSummary";
 import Unstakings from "./Unstakings";
-import { useStakingPosition } from "./useStakingPosition";
 
 const COLUMNS = [
   "aleo.stake.table.validator",

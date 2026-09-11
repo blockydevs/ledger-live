@@ -2,6 +2,11 @@ import React, { useCallback } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
+import {
+  useSyncOnUnbondingComplete,
+  type AleoStakingPosition,
+} from "@ledgerhq/live-common/families/aleo/react";
+import { getUnbondingDisplayState } from "@ledgerhq/live-common/families/aleo/stakingDisplay";
 import { useDispatch } from "LLD/hooks/redux";
 import { openModal } from "~/renderer/actions/modals";
 import Box from "~/renderer/components/Box/Box";
@@ -12,9 +17,7 @@ import ToolTip from "~/renderer/components/Tooltip";
 import ClockIcon from "~/renderer/icons/Clock";
 import { useAccountUnit } from "~/renderer/hooks/useAccountUnit";
 import { useAleoLiveBlockHeight } from "../hooks/useAleoLiveBlockHeight";
-import { useSyncOnUnbondingComplete } from "../hooks/useSyncOnUnbondingComplete";
 import { Claim, Column, Ellipsis, TableLine, Wrapper } from "../blocks/Staking";
-import type { AleoStakingPosition } from "./useStakingPosition";
 
 const COLUMNS = [
   "aleo.stake.table.source",
@@ -32,25 +35,25 @@ const Unstakings = ({ account, position }: Props) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const unit = useAccountUnit(account);
-  const {
-    unbondingBalance,
-    unbondingHeight,
-    claimableBalance,
-    hasPendingClaim,
-    hasPendingUnbondingChange,
-  } = position;
+  const { unbondingBalance, unbondingHeight, hasPendingClaim, hasPendingUnbondingChange } =
+    position;
 
-  const isClaimable = claimableBalance.gt(0);
-
-  const isCountingDown =
-    !isClaimable && unbondingHeight != null && unbondingHeight > account.blockHeight;
+  // The poll must be enabled before its height exists, so the countdown flag is read from the
+  // synced height first and the full state is derived once the live height is in.
+  const { isCountingDown } = getUnbondingDisplayState({
+    position,
+    syncedHeight: account.blockHeight,
+    currentHeight: account.blockHeight,
+  });
   const currentHeight = useAleoLiveBlockHeight(account.currency, {
     fallbackHeight: account.blockHeight,
     enabled: isCountingDown,
   });
-  const blocksLeft = unbondingHeight != null ? Math.max(0, unbondingHeight - currentHeight) : null;
-
-  const isSettling = !isClaimable && blocksLeft === 0;
+  const { isClaimable, isSettling, blocksLeft } = getUnbondingDisplayState({
+    position,
+    syncedHeight: account.blockHeight,
+    currentHeight,
+  });
   useSyncOnUnbondingComplete(account.id, isSettling);
 
   const onClaim = useCallback(() => {

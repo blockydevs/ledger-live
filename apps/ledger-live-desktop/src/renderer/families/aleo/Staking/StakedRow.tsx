@@ -4,6 +4,7 @@ import { shortAddressPreview } from "@ledgerhq/live-common/account/index";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import { getAddressExplorer, getDefaultExplorerView } from "@ledgerhq/live-common/explorers";
 import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
+import type { AleoStakingPosition } from "@ledgerhq/live-common/families/aleo/react";
 import Box from "~/renderer/components/Box/Box";
 import Discreet from "~/renderer/components/Discreet";
 import FirstLetterIcon from "~/renderer/components/FirstLetterIcon";
@@ -12,7 +13,6 @@ import { useAccountUnit } from "~/renderer/hooks/useAccountUnit";
 import { openURL } from "~/renderer/linking";
 import { Column, Ellipsis, SubLabel, Wrapper } from "../blocks/Staking";
 import StatusIcon from "./StatusIcon";
-import type { AleoStakingPosition } from "./useStakingPosition";
 
 type Props = {
   account: AleoAccount;

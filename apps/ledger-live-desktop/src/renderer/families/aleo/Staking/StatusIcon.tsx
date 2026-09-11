@@ -1,10 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Icons } from "@ledgerhq/react-ui";
+import type { AleoNonEarningReason } from "@ledgerhq/live-common/families/aleo/react";
 import Box from "~/renderer/components/Box/Box";
 import CheckCircle from "~/renderer/icons/CheckCircle";
 import ToolTip from "~/renderer/components/Tooltip";
-import type { AleoNonEarningReason } from "./useStakingPosition";
 
 const StatusIcon = ({
   nonEarningReason,

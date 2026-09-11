@@ -3,14 +3,19 @@ import React from "react";
 import { render, screen } from "tests/testSetup";
 import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
 import type { Operation, OperationType } from "@ledgerhq/types-live";
+import {
+  useSyncOnUnbondingComplete,
+  type AleoStakingPosition,
+} from "@ledgerhq/live-common/families/aleo/react";
 import Unstakings from "./Unstakings";
-import type { AleoStakingPosition } from "./useStakingPosition";
 import { useAleoLiveBlockHeight } from "../hooks/useAleoLiveBlockHeight";
-import { useSyncOnUnbondingComplete } from "../hooks/useSyncOnUnbondingComplete";
 import { ALEO_MAIN_ACCOUNT } from "../__mocks__/account.mock";
 
 jest.mock("../hooks/useAleoLiveBlockHeight");
-jest.mock("../hooks/useSyncOnUnbondingComplete");
+jest.mock("@ledgerhq/live-common/families/aleo/react", () => ({
+  ...jest.requireActual("@ledgerhq/live-common/families/aleo/react"),
+  useSyncOnUnbondingComplete: jest.fn(),
+}));
 
 const mockUseAleoLiveBlockHeight = jest.mocked(useAleoLiveBlockHeight);
 const mockUseSyncOnUnbondingComplete = jest.mocked(useSyncOnUnbondingComplete);

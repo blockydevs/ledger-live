@@ -4,13 +4,13 @@ import BigNumber from "bignumber.js";
 import styled from "styled-components";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import type { AleoAccount } from "@ledgerhq/live-common/families/aleo/types";
+import type { AleoStakingPosition } from "@ledgerhq/live-common/families/aleo/react";
 import Box from "~/renderer/components/Box/Box";
 import Discreet from "~/renderer/components/Discreet";
 import Text from "~/renderer/components/Text";
 import ToolTip from "~/renderer/components/Tooltip";
 import InfoCircle from "~/renderer/icons/InfoCircle";
 import { useAccountUnit } from "~/renderer/hooks/useAccountUnit";
-import type { AleoStakingPosition } from "./useStakingPosition";
 
 type Props = {
   account: AleoAccount;
