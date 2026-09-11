@@ -211,12 +211,14 @@ describe("Aleo claim unbond flow (integration)", () => {
     );
   });
 
-  it("renders the error screen when the claim status reports no claimable amount", async () => {
+  it("blocks device selection and surfaces the error when the claim status reports no claimable amount", async () => {
     mockStatus({ errors: { amount: new AleoNoClaimableAmount() } });
 
     renderSelectDeviceStep(CLAIMABLE_ACCOUNT);
 
-    // The status error surfaces on the device step through the shared DeviceAction rendering.
-    await waitFor(() => expect(screen.getByTestId("device-item-mock")).toBeVisible());
+    await waitFor(() => expect(screen.getByTestId("aleo-claim-status-error")).toBeVisible());
+    // No device to press means onSelect can never fire and the flow can never reach signing.
+    expect(screen.queryByTestId("device-item-mock")).toBeNull();
+    expect(mockAccountBridge.signOperation).not.toHaveBeenCalled();
   });
 });

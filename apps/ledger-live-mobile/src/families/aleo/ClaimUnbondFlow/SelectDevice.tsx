@@ -15,10 +15,13 @@ import type {
 } from "@ledgerhq/live-common/families/aleo/types";
 import { TrackScreen } from "~/analytics";
 import SelectDevice from "~/components/SelectDevice2";
+import Alert from "~/components/Alert";
+import { TranslatedError } from "~/components/TranslatedError/TranslatedError";
 import { setLastConnectedDevice, setReadOnlyMode } from "~/actions/settings";
 import { useDispatch, useSelector } from "~/context/hooks";
 import { accountScreenSelector } from "~/reducers/accounts";
 import { ScreenName } from "~/const";
+import { getFirstStatusError } from "../../helpers";
 import type { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import type { ClaimUnbondFlowParamList } from "./types";
 
@@ -56,9 +59,13 @@ export default function ClaimUnbondSelectDevice({ navigation, route }: Props) {
     };
   });
 
+  // No amount or summary screen ever sees this transaction, so this is the only place
+  // that can refuse to sign a claim the chain would reject (e.g. nothing left to claim).
+  const statusError = getFirstStatusError(status, "errors");
+
   const onSelect = useCallback(
     (device: Device) => {
-      if (!transaction) return;
+      if (!transaction || statusError) return;
       dispatch(setLastConnectedDevice(device));
       dispatch(setReadOnlyMode(false));
       navigation.navigate(ScreenName.AleoClaimUnbondConnectDevice, {
@@ -69,7 +76,7 @@ export default function ClaimUnbondSelectDevice({ navigation, route }: Props) {
         device,
       });
     },
-    [dispatch, navigation, route.params, status, transaction],
+    [dispatch, navigation, route.params, status, statusError, transaction],
   );
 
   const requestToSetHeaderOptions = useCallback(() => undefined, []);
@@ -78,11 +85,17 @@ export default function ClaimUnbondSelectDevice({ navigation, route }: Props) {
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
       <TrackScreen category="ClaimUnbondFlow" name="SelectDevice" flow="claim" currency="aleo" />
       <Flex px={16} pb={8} flex={1}>
-        <SelectDevice
-          onSelect={onSelect}
-          requestToSetHeaderOptions={requestToSetHeaderOptions}
-          autoSelectLastConnectedDevice={!route.params.forceSelectDevice}
-        />
+        {statusError ? (
+          <Alert type="error" testID="aleo-claim-status-error">
+            <TranslatedError error={statusError} field="description" />
+          </Alert>
+        ) : (
+          <SelectDevice
+            onSelect={onSelect}
+            requestToSetHeaderOptions={requestToSetHeaderOptions}
+            autoSelectLastConnectedDevice={!route.params.forceSelectDevice}
+          />
+        )}
       </Flex>
     </SafeAreaView>
   );
