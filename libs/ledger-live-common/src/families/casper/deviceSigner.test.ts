@@ -1,5 +1,6 @@
 import Casper from "@zondax/ledger-casper";
 import Transport from "@ledgerhq/hw-transport";
+import { UserRefusedAddress, UserRefusedOnDevice } from "@ledgerhq/ledger-wallet-framework/errors";
 import { createDeviceSigner } from "./deviceSigner";
 
 jest.mock("@zondax/ledger-casper");
@@ -95,22 +96,46 @@ describe("createDeviceSigner (Casper)", () => {
     it("for showAddressAndPubKey", async () => {
       showAddressAndPubKey.mockResolvedValue({
         ...okAddress,
-        returnCode: 0x6985,
-        errorMessage: "rejected",
+        returnCode: 0x6a80,
+        errorMessage: "nope",
+      });
+      const signer = createDeviceSigner(mockTransport);
+
+      await expect(signer.showAddressAndPubKey("44'/506'/0'/0/0")).rejects.toThrow("27264 - nope");
+    });
+
+    it("for sign", async () => {
+      sign.mockResolvedValue({ ...okSign, returnCode: 0x6a80, errorMessage: "nope" });
+      const signer = createDeviceSigner(mockTransport);
+
+      await expect(signer.sign("44'/506'/0'/0/0", Buffer.alloc(4))).rejects.toThrow("27264 - nope");
+    });
+  });
+
+  describe("throws UserRefusedOnDevice when the device reports a user rejection", () => {
+    it("for showAddressAndPubKey", async () => {
+      showAddressAndPubKey.mockResolvedValue({
+        ...okAddress,
+        returnCode: 0x6986,
+        errorMessage: "Command not allowed",
       });
       const signer = createDeviceSigner(mockTransport);
 
       await expect(signer.showAddressAndPubKey("44'/506'/0'/0/0")).rejects.toThrow(
-        "27013 - rejected",
+        UserRefusedAddress,
       );
     });
 
     it("for sign", async () => {
-      sign.mockResolvedValue({ ...okSign, returnCode: 0x6985, errorMessage: "rejected" });
+      sign.mockResolvedValue({
+        ...okSign,
+        returnCode: 0x6986,
+        errorMessage: "Command not allowed",
+      });
       const signer = createDeviceSigner(mockTransport);
 
       await expect(signer.sign("44'/506'/0'/0/0", Buffer.alloc(4))).rejects.toThrow(
-        "27013 - rejected",
+        UserRefusedOnDevice,
       );
     });
   });
