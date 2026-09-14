@@ -1,13 +1,18 @@
 import Transport from "@ledgerhq/hw-transport";
+import { UserRefusedAddress, UserRefusedOnDevice } from "@ledgerhq/ledger-wallet-framework/errors";
 import Casper, { type ResponseAddress } from "@zondax/ledger-casper";
 import { CreateSigner } from "../../bridge/setup";
 import { getPath, isError } from "./common";
 import { CasperGetAddrResponse, CasperSigner } from "./types";
 
+const SW_CANCEL = 0x6986;
+
 const throwOnDeviceError = async <T extends { returnCode: number; errorMessage?: string }>(
   request: Promise<T>,
+  onCancel: () => Error = () => new UserRefusedOnDevice(),
 ): Promise<T> => {
   const r = await request;
+  if (r.returnCode === SW_CANCEL) throw onCancel();
   isError(r);
   return r;
 };
@@ -23,7 +28,10 @@ export const createDeviceSigner: CreateSigner<CasperSigner> = (transport: Transp
   const casper = new Casper(transport);
   return {
     showAddressAndPubKey: path =>
-      throwOnDeviceError(casper.showAddressAndPubKey(getPath(path))).then(toAddrResponse),
+      throwOnDeviceError(
+        casper.showAddressAndPubKey(getPath(path)),
+        () => new UserRefusedAddress(),
+      ).then(toAddrResponse),
     getAddressAndPubKey: path =>
       throwOnDeviceError(casper.getAddressAndPubKey(getPath(path))).then(toAddrResponse),
     sign: (path, message) => throwOnDeviceError(casper.sign(getPath(path), message)),
