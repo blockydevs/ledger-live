@@ -1,6 +1,9 @@
-import { readFileSync } from "fs";
-import path from "path";
-import { loadTokenPrograms, patchAdminLiteral } from "./tokenContracts";
+import {
+  fetchProgramSources,
+  loadTokenPrograms,
+  patchAdminLiteral,
+  readRawProgramSource,
+} from "./tokenContracts";
 
 const MULTISIG_LITERAL = "aleo1g3v24z8ke26c0vun3ma9p56r74pqqkpshmhcjj5ywc32hmuf0sgsr7fmjx";
 const FREEZELIST_STABLECOIN_LITERAL =
@@ -33,6 +36,8 @@ describe("patchAdminLiteral", () => {
 });
 
 describe("loadTokenPrograms", () => {
+  beforeAll(() => fetchProgramSources(), 30_000);
+
   it("patches the real stablecoin source and leaves the ComplianceRecord address untouched", () => {
     const [, , , stablecoin] = loadTokenPrograms(FRESH_ADMIN);
     expect(stablecoin.id).toBe("test_usad_stablecoin.aleo");
@@ -51,11 +56,8 @@ describe("loadTokenPrograms", () => {
     ]);
   });
 
-  it("matches the raw file on disk once patched back", () => {
-    const raw = readFileSync(
-      path.join(__dirname, "../aleo-backend/contracts/test_usad_freezelist.aleo"),
-      "utf8",
-    );
+  it("matches the raw pinned source once patched back", () => {
+    const raw = readRawProgramSource("test_usad_freezelist.aleo");
     const [, , freezelist] = loadTokenPrograms(FRESH_ADMIN);
     expect(freezelist.source.replaceAll(FRESH_ADMIN, FREEZELIST_STABLECOIN_LITERAL)).toBe(raw);
   });

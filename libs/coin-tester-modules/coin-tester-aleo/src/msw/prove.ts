@@ -7,7 +7,7 @@ import {
   TRANSFER_PRIVATE_BASE_FEE,
 } from "../fixtures";
 import { isRecordInputId, type RecordInputId } from "../recordInputId";
-import { hasVendoredSource, readRawProgramSource } from "../tokenContracts";
+import { hasPinnedSource, readRawProgramSource } from "../tokenContracts";
 import type { AleoWasm } from "../wasm";
 import { loadAleoWasm } from "../wasm";
 import { INDEXED_PROGRAMS } from "./programs";
@@ -120,7 +120,7 @@ function recoverRequest(
  * appears in the V1 request JSON the wasm SDK emits.
  */
 function programDeclaresConstructor(programId: string): boolean {
-  return hasVendoredSource(programId) && /^constructor:/m.test(readRawProgramSource(programId));
+  return hasPinnedSource(programId) && /^constructor:/m.test(readRawProgramSource(programId));
 }
 
 /** Bits a BLS12-377 scalar field element carries as data — one below its 253-bit modulus. */
@@ -245,15 +245,8 @@ export async function verifyAuthorizations(
       ? CREDITS_INPUT_TYPES[functionName]
       : undefined) ?? [`address.public`, `${descriptor.amountSuffix}.public`];
 
-    // `verify()`'s third argument must be present exactly when the signed
-    // message carried a checksum, and absent otherwise — either mismatch makes
-    // verify() return false. The checksum must be recomputed from the same
-    // bytes `aleo-backend` signed against: its own vendored, unpatched copy of
-    // the program (`include_str!`'d at compile time, `intent.rs:81`), not the
-    // on-chain deployed copy, whose admin gate literal is replaced with the
-    // real runtime admin address and so checksums differently. Recomputing it
-    // proves nothing beyond echoing back what the signer used, but that's
-    // enough to satisfy verify()'s signature check.
+    // Pass a checksum only when the signed message has one. Compute it from the unpatched
+    // source `aleo-backend` signed, not the on-chain copy with the real admin literal.
     const programChecksum = programDeclaresConstructor(programId)
       ? computeProgramChecksum(wasm, readRawProgramSource(programId))
       : undefined;
@@ -337,12 +330,8 @@ function resolveRecordPlaintext(store: RecordStore, request: WasmExecutionReques
  * `ALEO_LOCAL_NODE` as `url`: the wasm client appends its own network
  * segment, so a network-qualified base would double into `/testnet/testnet/...`.
  *
- * `body` is needed only for `transfer_private` (via
- * `expected.privateRecordStore`), to read the amount/fee record commitments
- * off each authorization's `input_ids()`; its root authorization also picks
- * `transfer_public` vs `transfer_public_to_private` when present. With no
- * authorization to read (the direct-to-devnode funding helpers), it defaults
- * to `transfer_public`.
+ * `body` supplies the record commitments for record-spending functions and picks the
+ * public function; without it (devnode funding helpers) the function is `transfer_public`.
  */
 export async function buildTransaction(
   expected: ExpectedTransfer,
@@ -388,7 +377,9 @@ export async function buildTransaction(
     const transaction = await wasm.ProgramManagerBase.buildDevnodeExecutionTransaction(
       senderPrivateKey,
       programSource,
-      TRANSFER_PRIVATE_FUNCTION,
+      // transfer_private and transfer_private_to_public both take
+      // `[record, receiver, u64]`; only the input visibility differs.
+      rootRequest.functionName(),
       [amountRecordPlaintext, expected.recipient, `${expected.amount}u64`],
       0,
       wasm.RecordPlaintext.fromString(feeRecordPlaintext),

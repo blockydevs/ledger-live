@@ -1,6 +1,6 @@
 import { encodeTlv, STRUCTURE_TYPE, TLV_TAG, TLV_VERSION_V1 } from "./tags";
 
-/** Byte lengths `decode_signature_tlv` insists on (aleo-backend/src/core/tlv.rs). */
+/** Byte lengths `decode_signature_tlv` insists on (`aleo-backend`'s `src/core/tlv.rs`). */
 const SIGNATURE_LENGTH = 128;
 const FIELD_LENGTH = 32;
 

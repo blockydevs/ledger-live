@@ -108,7 +108,7 @@ const sendToken: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     expect(tokenOp.extra?.functionId).toBe("transfer_public");
     expect(tokenOp.extra?.programId).toBe(TOKEN_PROGRAM_ID);
     expect(tokenOp.hash).toBe(parentOp.hash);
-    expect(parentOp.subOperations).toContain(tokenOp.id);
+    expect(parentOp.subOperations?.map(subOp => subOp.id)).toContain(tokenOp.id);
 
     expect(current.balance).toStrictEqual(previous.balance.minus(parentOp.fee));
     expect(currentTokenAccount?.balance).toStrictEqual(

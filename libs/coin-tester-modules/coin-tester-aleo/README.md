@@ -63,8 +63,20 @@ await executeScenario(scenarioTransferTokenPublic);
 Run the scenarios with `pnpm start`. The script spins up the Docker stack,
 runs the Jest test file, then tears the stack down.
 
-The first run builds both images: `aleo-devnode` downloads the `leo` binary,
-`aleo-backend` runs a `cargo build`.
+The first run builds the `aleo-devnode` image, which downloads the `leo`
+binary.
+
+The `aleo-backend` image is not built from this repo. `docker-compose.yml`
+pins it by tag (`coin-tester-aleo-backend:934ee86`) with `pull_policy: never`,
+so the image must already exist in the local Docker daemon.
+
+The tester fetches the five programs it deploys and signs over from the
+Provable explorer API (`api.explorer.provable.com`). `src/tokenContracts.ts`
+pins each program to a network, an edition and the SHA-256 of its source. The
+backend compiles its own copy of these programs into its binary and computes
+`program_checksum` from it, so each fetched source must be byte-identical to
+the copy in the pinned image. A hash mismatch stops the run. When you pin a
+new image, update the pins to match the backend source.
 
 ### Known wasm defects
 

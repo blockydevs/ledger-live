@@ -1,4 +1,4 @@
-/** Tag numbers from `aleo-backend/src/core/tlv.rs` (`TlvTag`). */
+/** Tag numbers from `aleo-backend`'s `TlvTag` enum (`src/core/tlv.rs`). */
 export const TLV_TAG = {
   StructureType: 0x01,
   Version: 0x02,

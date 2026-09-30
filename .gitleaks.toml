@@ -94,12 +94,6 @@ id = "generic-api-key"
         '''libs/coin-tester-modules/coin-tester-aleo/src/fixtures\.ts''',
     ]
 
-    [[rules.allowlists]]
-    description = "Ignore Cargo.lock: every checksum in it is a public crates.io registry hash, not a secret -- some trip the rule's generic keyword match because they sit next to a dependency name like crypto_secretbox."
-    paths = [
-        '''libs/coin-tester-modules/coin-tester-aleo/aleo-backend/Cargo\.lock''',
-    ]
-
 [[rules]]
 id = "datadog-access-token"
 
