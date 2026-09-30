@@ -71,6 +71,21 @@ export function buildAleoHandlers(expected: ExpectedTransfer): RequestHandler[] 
       }
     }),
 
+    // No token program is registered, so listOperations and getBalance classify nothing.
+    http.get(`${V2}/tokens`, ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      return HttpResponse.json({
+        data: [],
+        pagination: {
+          limit: Number(params.get("limit") ?? 0),
+          offset: Number(params.get("offset") ?? 0),
+          total_count: 0,
+          has_next: false,
+          has_previous: false,
+        },
+      });
+    }),
+
     http.post(`${ALEO_FAKE_NODE}/prove/${ALEO_NETWORK_TYPE}/prove`, async ({ request }) => {
       try {
         const body = (await request.json()) as ProveRequestBody;
@@ -95,7 +110,13 @@ export function buildScannerHandlers(scanner: FakeScanner): RequestHandler[] {
       }
     }),
 
-    http.post(`${SCANNER}/status`, () => HttpResponse.json(scanner.status())),
+    http.post(`${SCANNER}/status`, async () => {
+      try {
+        return HttpResponse.json(await scanner.status());
+      } catch (error) {
+        return toFailure(error);
+      }
+    }),
 
     http.post(`${SCANNER}/records/owned`, async ({ request }) => {
       try {

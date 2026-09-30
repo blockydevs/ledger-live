@@ -101,9 +101,11 @@ const unshield: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     expect(privateSide.fee.toNumber()).toBeGreaterThanOrEqual(PRIVATE_DEVNODE_FEE_RANGE.min);
     expect(privateSide.fee.toNumber()).toBeLessThanOrEqual(PRIVATE_DEVNODE_FEE_RANGE.max);
     expect(publicSide.fee).toStrictEqual(privateSide.fee);
-    // The OUT side is fee-exclusive too, so both sides of the conversion carry
-    // the same value: the converted amount.
-    expect(privateSide.value).toStrictEqual(new BigNumber(TRANSFER_AMOUNT_MICROCREDITS));
+    // The OUT side is fee-inclusive, so it pins the amount exactly and the fee
+    // only within the window the two assertions above bound it to.
+    expect(privateSide.value).toStrictEqual(
+      new BigNumber(TRANSFER_AMOUNT_MICROCREDITS).plus(privateSide.fee),
+    );
 
     // The public side of the account is where the unshielded credits land. The
     // sender was funded privately only, so before this transaction its
@@ -114,12 +116,12 @@ const unshield: ScenarioTransaction<AleoTransaction, AleoAccount> = {
       previousTransparentBalance.plus(TRANSFER_AMOUNT_MICROCREDITS),
     );
 
-    // Both the amount and the fee left private records, so the private balance
-    // loses the two together.
+    // Both the amount and the fee left private records, so the whole
+    // fee-inclusive value leaves the private balance.
     expect(previous.aleoResources?.privateBalance).not.toBeNull();
     const previousPrivateBalance = previous.aleoResources!.privateBalance!;
     expect(current.aleoResources?.privateBalance).toStrictEqual(
-      previousPrivateBalance.minus(privateSide.value).minus(privateSide.fee),
+      previousPrivateBalance.minus(privateSide.value),
     );
 
     // The converted amount stays with the account, as public credits, so the fee

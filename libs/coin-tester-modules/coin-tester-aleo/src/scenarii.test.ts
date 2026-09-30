@@ -1,5 +1,3 @@
-import { readFileSync } from "fs";
-import path from "path";
 import BigNumber from "bignumber.js";
 import { firstValueFrom, reduce } from "rxjs";
 import { setupServer } from "msw/node";
@@ -18,6 +16,7 @@ import { scenarioSendMaxPrivate } from "./scenarii/sendMaxPrivate";
 import { scenarioTransferPrivateToPublic } from "./scenarii/transferPrivateToPublic";
 import { scenarioTransferTokenPublic } from "./scenarii/transferTokenPublic";
 import { deployTokenPrograms, mintTokens } from "./bootstrapToken";
+import { fetchProgramSources, readRawProgramSource } from "./tokenContracts";
 import {
   assertGenesisAccountIsFunded,
   generateAleoAccount,
@@ -76,6 +75,7 @@ registerTeardownHooks();
 // One stack shared by every describe in this file.
 beforeAll(
   async () => {
+    await fetchProgramSources();
     await spawnStack();
     await deployTokenPrograms(GENESIS_ACCOUNT);
   },
@@ -421,10 +421,7 @@ describe("devnode execution without a proof", () => {
 
   it("accepts a proofless deployment of a fresh program (step zero)", async () => {
     const wasm = await loadAleoWasm();
-    const source = readFileSync(
-      path.join(__dirname, "../aleo-backend/contracts/merkle_tree.aleo"),
-      "utf8",
-    );
+    const source = readRawProgramSource("merkle_tree.aleo");
 
     const transaction = await timed("deploy merkle_tree.aleo", () =>
       wasm.ProgramManagerBase.buildDevnodeDeploymentTransaction(

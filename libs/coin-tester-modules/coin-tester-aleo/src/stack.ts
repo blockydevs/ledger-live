@@ -74,7 +74,7 @@ export async function spawnStack() {
     commandOptions: DOWN_ARGS,
   });
 
-  console.log("Building the stack images (devnode: leo binary download; backend: cargo build)...");
+  console.log("Building the stack images (devnode: leo binary download)...");
   await compose.buildAll(composeOpts());
 
   console.log("Starting the Aleo stack...");

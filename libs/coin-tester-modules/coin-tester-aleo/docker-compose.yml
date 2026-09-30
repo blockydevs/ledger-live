@@ -29,9 +29,10 @@ services:
 
   aleo-backend:
     container_name: aleo-backend
-    image: coin-tester-aleo-backend:latest
-    build:
-      context: ./aleo-backend
+    # Built outside this repo and pinned by tag. `never` makes a missing image
+    # fail the run instead of silently pulling or building something else.
+    image: coin-tester-aleo-backend:934ee86
+    pull_policy: never
     ports:
       - "3031:3030"
     # Same reasoning as aleo-devnode: disposable state, nothing to flush.
@@ -53,7 +54,7 @@ services:
       start_period: 5s
 
 # No depends_on between the two services: the freeze-list call above is
-# request-time, not boot-time, so both containers can build and start in
+# request-time, not boot-time, so both containers can start in
 # parallel.
 
 # No named volume: the ledger lives inside the container filesystem (under
