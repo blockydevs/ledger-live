@@ -152,13 +152,12 @@ export async function performPublicSync(
   latestAccountPublicOperations.operations.sort((a, b) => b.date.getTime() - a.date.getTime());
   latestAccountPublicOperations.tokenOperations.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  // Already-patched ops have modified senders/recipients that differ from raw API data.
-  // Filter them from the incoming ops — mergeOps then simply keeps the patched version
-  // from oldPublicOps untouched, and no patch-restoration pass is needed.
-  const patchedOpIds = new Set(oldPublicOps.filter(op => op.extra?.patched).map(op => op.id));
+  // Drop re-fetched ops that an older patched op covers, so mergeOps keeps the patched one.
+  // Match by hash: promotion to FEES changes the op id.
+  const patchedOpHashes = new Set(oldPublicOps.filter(op => op.extra?.patched).map(op => op.hash));
 
   const filteredLatestPublicOperations = latestAccountPublicOperations.operations.filter(
-    op => !patchedOpIds.has(op.id),
+    op => !patchedOpHashes.has(op.hash),
   );
 
   const publicOperations = shouldSyncFromScratch
