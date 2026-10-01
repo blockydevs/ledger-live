@@ -207,11 +207,8 @@ export async function deployTokenPrograms(admin: Admin): Promise<void> {
 }
 
 /**
- * Deploys `ldg_p_1114.aleo`, the credits batcher an 11-to-14-record private
- * send-max routes through, so `getProgramSource` can serve it to
- * `buildTransaction`. It carries no admin gate literal, so its vendored
- * source deploys unpatched. Called from a scenario's setup(), the same as
- * `deployTokenPrograms`.
+ * Deploys `ldg_p_1114.aleo`, the batcher for an 11-to-14-record private send-max.
+ * It has no admin gate literal, so its pinned source deploys unpatched.
  */
 export async function deployBatcherProgram(admin: Admin): Promise<void> {
   await assertGenesisAccountIsFunded();

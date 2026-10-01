@@ -1,6 +1,7 @@
 import sodium from "libsodium-wrappers";
 import { randomUUID } from "node:crypto";
-import type { AleoPrivateRecord } from "@ledgerhq/coin-aleo/types";
+import type { AleoPrivateRecord, AleoRecordScannerStatusResponse } from "@ledgerhq/coin-aleo/types";
+import { getLatestHeight } from "../devnode";
 import { loadAleoWasm } from "../wasm";
 import { createRecordStore, type RecordStore } from "./records";
 
@@ -22,7 +23,7 @@ export type FakeScanner = {
   registerAccount: (account: { viewKey: string; address: string }) => void;
   pubkey: () => { public_key: string; key_id: string };
   register: (encryptedBase64: string) => Promise<{ uuid: string }>;
-  status: () => { synced: boolean; percentage: number };
+  status: () => Promise<AleoRecordScannerStatusResponse>;
   ownedRecords: (uuid: string, filter?: { unspent?: boolean }) => Promise<AleoPrivateRecord[]>;
 };
 
@@ -78,8 +79,17 @@ export function createFakeScanner(): FakeScanner {
     return { uuid };
   }
 
-  function status(): { synced: boolean; percentage: number } {
-    return { synced: true, percentage: 100 };
+  /**
+   * `ownedRecords` rescans on every call, so the scanner is always at the tip.
+   * coin-aleo caps a listing at `synced_up_to`, so the field must carry that tip.
+   */
+  async function status(): Promise<AleoRecordScannerStatusResponse> {
+    return {
+      synced: true,
+      percentage: 100,
+      sync_start_height: 0,
+      synced_up_to: await getLatestHeight(),
+    };
   }
 
   async function ownedRecords(

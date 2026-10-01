@@ -111,20 +111,20 @@ const sendMaxPrivate: ScenarioTransaction<AleoTransaction, AleoAccount> = {
     expect(latest.fee.toNumber()).toBeLessThanOrEqual(PRIVATE_DEVNODE_FEE_RANGE.max);
     expect(latest.fee.toNumber()).toBeLessThanOrEqual(TRANSFER_PRIVATE_BASE_FEE);
 
-    // An operation's value is fee-exclusive, so it pins the send-max amount
-    // exactly: the sum of the 14 records above the smallest one.
-    expect(latest.value).toStrictEqual(new BigNumber(expectedAmount));
+    // An OUT operation's value is fee-inclusive, so it pins the send-max
+    // amount exactly: the sum of the 14 records above the smallest one.
+    expect(latest.value).toStrictEqual(new BigNumber(expectedAmount).plus(latest.fee));
 
     expect(previous.aleoResources?.privateBalance).not.toBeNull();
-    // Both the amount and the fee were paid out of private records, so the
-    // private balance loses the two together.
+    // Both the amount and the fee were paid out of private records, so the whole
+    // fee-inclusive value leaves the private balance.
     const previousPrivateBalance = previous.aleoResources!.privateBalance!;
     expect(current.aleoResources?.privateBalance).toStrictEqual(
-      previousPrivateBalance.minus(latest.value).minus(latest.fee),
+      previousPrivateBalance.minus(latest.value),
     );
     // The total balance folds the private balance in, so it moves by the same
     // amount: nothing was paid out of the transparent side.
-    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value).minus(latest.fee));
+    expect(current.balance).toStrictEqual(previous.balance.minus(latest.value));
 
     // All 15 minted records are gone: the 14 above the smallest paid the
     // amount, and the smallest — spent but absent from the amount sum
