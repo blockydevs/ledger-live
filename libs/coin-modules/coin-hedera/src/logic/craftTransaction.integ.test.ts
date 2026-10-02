@@ -3,6 +3,7 @@ import type { TransactionIntent } from "@ledgerhq/coin-module-framework/api/inde
 import invariant from "invariant";
 import { HEDERA_TRANSACTION_MODES } from "../constants";
 import { rpcClient } from "../network/rpc";
+import { MAINNET_TEST_ACCOUNTS } from "../test/fixtures/account.fixture";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import type { HederaMemo, HederaTxData } from "../types";
 import { craftTransaction } from "./craftTransaction";
@@ -80,7 +81,7 @@ describe("craftTransaction", () => {
       intentType: "transaction",
       type: HEDERA_TRANSACTION_MODES.Send,
       amount: BigInt(1000),
-      sender: "0.0.9806001",
+      sender: MAINNET_TEST_ACCOUNTS.inactiveStaking.accountId,
       asset: {
         type: "erc20",
         assetReference: "0x39ceba2b467fa987546000eb5d1373acf1f3a2e1",
@@ -101,12 +102,12 @@ describe("craftTransaction", () => {
 
     const txIntentAccountId = {
       ...txIntent,
-      recipient: "0.0.9806001",
+      recipient: MAINNET_TEST_ACCOUNTS.inactiveStaking.accountId,
     } satisfies TransactionIntent<HederaMemo, HederaTxData>;
 
     const txIntentEVMAddress = {
       ...txIntentAccountId,
-      recipient: "0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc",
+      recipient: MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress,
     } satisfies TransactionIntent<HederaMemo, HederaTxData>;
 
     const resultAccountId = await craftTransaction({

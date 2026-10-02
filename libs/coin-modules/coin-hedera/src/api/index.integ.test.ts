@@ -15,6 +15,7 @@ import { getEnv } from "@ledgerhq/live-env";
 import invariant from "invariant";
 import { createApi } from "../api";
 import {
+  HEDERA_DUMMY_ADDRESS,
   HEDERA_TRANSACTION_MODES,
   STAKING_REWARD_ACCOUNT_ID,
   STAKING_REWARD_HASH_SUFFIX,
@@ -473,43 +474,30 @@ describe("createApi", () => {
     });
 
     it("returns block with proper multi-transfer data", async () => {
-      const blockHeight = 176051087;
+      const blockHeight = 179120098;
       const multiTransferTxHash =
-        "OoaJ/10qHN/97Zaxj8vxGIJfL9UhrGKaJBwclsL4wUeqbegBAXhdmw+/6/dB6mow";
+        "1zz5Mnd+IFt9HuqNDzOvqEAxpEw0lISQfZNUOXaNwlihjLDIVPcavzMRrE8y4Fnw";
+      const sender = MAINNET_TEST_ACCOUNTS.withTokens.accountId;
+      const firstRecipient = MAINNET_TEST_ACCOUNTS.inactiveStaking.accountId;
+      const secondRecipient = MAINNET_TEST_ACCOUNTS.activeStaking.accountId;
 
       const expectedCoinTransferTx = {
         hash: multiTransferTxHash,
         failed: false,
-        fees: 1176695n,
-        feesPayer: "0.0.8835924",
+        fees: 49735613n,
+        feesPayer: sender,
         operations: [
           {
             type: "transfer",
-            address: "0.0.15",
+            address: "0.0.802",
             asset: {
               type: "native",
             },
-            amount: 55631n,
+            amount: 49735613n,
           },
           {
             type: "transfer",
-            address: "0.0.801",
-            asset: {
-              type: "native",
-            },
-            amount: 1121064n,
-          },
-          {
-            type: "transfer",
-            address: "0.0.8835924",
-            asset: {
-              type: "native",
-            },
-            amount: -2000000n, // -3176695n + 1176695n fee
-          },
-          {
-            type: "transfer",
-            address: "0.0.9124531",
+            address: firstRecipient,
             asset: {
               type: "native",
             },
@@ -517,7 +505,7 @@ describe("createApi", () => {
           },
           {
             type: "transfer",
-            address: "0.0.9169746",
+            address: secondRecipient,
             asset: {
               type: "native",
             },
@@ -525,16 +513,15 @@ describe("createApi", () => {
           },
           {
             type: "transfer",
-            address: "0.0.8835924",
+            address: sender,
             asset: {
-              type: "hts",
-              assetReference: "0.0.456858",
+              type: "native",
             },
-            amount: -10000n,
+            amount: -2000000n, // -51735613n + 49735613n fee
           },
           {
             type: "transfer",
-            address: "0.0.9124531",
+            address: firstRecipient,
             asset: {
               type: "hts",
               assetReference: "0.0.456858",
@@ -543,30 +530,39 @@ describe("createApi", () => {
           },
           {
             type: "transfer",
-            address: "0.0.8835924",
+            address: sender,
+            asset: {
+              type: "hts",
+              assetReference: "0.0.456858",
+            },
+            amount: -10000n,
+          },
+          {
+            type: "transfer",
+            address: firstRecipient,
+            asset: {
+              type: "hts",
+              assetReference: "0.0.5022567",
+            },
+            amount: 1n,
+          },
+          {
+            type: "transfer",
+            address: secondRecipient,
+            asset: {
+              type: "hts",
+              assetReference: "0.0.5022567",
+            },
+            amount: 1n,
+          },
+          {
+            type: "transfer",
+            address: sender,
             asset: {
               type: "hts",
               assetReference: "0.0.5022567",
             },
             amount: -2n,
-          },
-          {
-            type: "transfer",
-            address: "0.0.9124531",
-            asset: {
-              type: "hts",
-              assetReference: "0.0.5022567",
-            },
-            amount: 1n,
-          },
-          {
-            type: "transfer",
-            address: "0.0.9169746",
-            asset: {
-              type: "hts",
-              assetReference: "0.0.5022567",
-            },
-            amount: 1n,
           },
         ],
       };
@@ -580,7 +576,7 @@ describe("createApi", () => {
       expect(block.info.time?.getTime()).toBeGreaterThan(0);
       expect(resultCoinTransferTx).toMatchObject(expectedCoinTransferTx);
       expect(block.transactions).toBeInstanceOf(Array);
-      expect(block.transactions.length).toEqual(48);
+      expect(block.transactions.length).toEqual(36);
       block.transactions.forEach(tx => {
         expect(tx.hash.length).toBe(64);
         expect(tx.fees).toBeGreaterThanOrEqual(0n);
@@ -588,8 +584,8 @@ describe("createApi", () => {
     });
 
     it("returns block with transaction memo", async () => {
-      const blockHeight = 176180671;
-      const txHash = "4Ksb7RTwtvvk9r6vvK0Gwxb38kwPqVbJjP6bL4bu2gTvdwrIGZGk6TWntlgRsjvU";
+      const blockHeight = 179120100;
+      const txHash = "kpaDSRPsp/rCdd8v2BPjdODGqbF+bQNNK7ksPXQf/ikPvIvi1BqP+SCmwZpC0dM6";
 
       const block = await api.getBlock(context, blockHeight);
       const transaction = block.transactions.find(tx => tx.hash === txHash);
@@ -598,42 +594,45 @@ describe("createApi", () => {
     });
 
     it("derives fees payer from transfers for failed transactions", async () => {
-      const blockHeight = 176175512;
-      const txPaidBySender = "zlE5fX0N44XgMzi9jxr9G4gcCwuAQ4v75wYVXmqBqE808wLKhc/aS+3ZZFl1XOzp";
-      const txNotPaidBySender = "su9qFNvTpteObMCdqJZ8UxKmgB0UFafqPbwjpawBKzAzJOPwCgpQz6TLCL80oZXd";
+      const txPaidBySender = "izXITPe0hCVSrQQFLE2hfZ6Jh5+eOysPOSsxnPLhbuosLCF08mumxdqpl0czaqEt";
+      const txNotPaidBySender = "MRVWsnabB52sDUrpIWKLBKWul6lJzBoDjmCynsf97zqqt8a4Z+3GI3Viz6+JBUEk";
 
-      const block = await api.getBlock(context, blockHeight);
-      const firstTx = block.transactions.find(tx => tx.hash === txPaidBySender);
-      const secondTx = block.transactions.find(tx => tx.hash === txNotPaidBySender);
+      const [paidBySenderBlock, notPaidBySenderBlock] = await Promise.all([
+        api.getBlock(context, 179120096),
+        api.getBlock(context, 179120135),
+      ]);
+      const firstTx = paidBySenderBlock.transactions.find(tx => tx.hash === txPaidBySender);
+      const secondTx = notPaidBySenderBlock.transactions.find(tx => tx.hash === txNotPaidBySender);
 
       expect(firstTx?.failed).toBe(true);
-      expect(firstTx?.feesPayer).toBe("0.0.10067173");
+      expect(firstTx?.feesPayer).toBe(MAINNET_TEST_ACCOUNTS.withFailedTransactions.accountId);
 
       expect(secondTx?.failed).toBe(true);
-      expect(secondTx?.feesPayer).toBe("0.0.23");
+      expect(secondTx?.feesPayer).toBe("0.0.4");
     });
 
     it("correctly identifies erc20 operations in blocks", async () => {
-      const blockHeight = 176814261;
-      const txHash = "dN7BMus6+8ISOwNPVt7l4KpQT9VaSM9LG6qLPXBqpRVw83ZPMO6Bzyt63305lLXu";
+      const blockHeight = 179120099;
+      const txHash = "LsBFNrtAWaJc5ksyXUWUK41pQ0wG98sEY/H11NEvUV6VgaN7gLyCivxXlmh4n+/G";
+      const sender = MAINNET_TEST_ACCOUNTS.withTokens.accountId;
 
       const block = await api.getBlock(context, blockHeight);
       const transaction = block.transactions.find(tx => tx.hash === txHash);
 
-      expect(transaction?.fees).toBe(BigInt(3741416));
+      expect(transaction?.fees).toBe(BigInt(4218572));
       expect(transaction?.operations).toEqual(
         expect.arrayContaining([
           {
             type: "transfer",
-            address: "0.0.801",
+            address: "0.0.802",
             asset: {
               type: "native",
             },
-            amount: 3741416n,
+            amount: 4218572n,
           },
           {
             type: "transfer",
-            address: "0.0.8835924",
+            address: sender,
             asset: {
               type: "native",
             },
@@ -641,7 +640,7 @@ describe("createApi", () => {
           },
           {
             type: "transfer",
-            address: "0.0.9124531",
+            address: MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress,
             asset: {
               type: "erc20",
               assetReference: "0xca367694cdac8f152e33683bb36cc9d6a73f1ef2",
@@ -650,7 +649,7 @@ describe("createApi", () => {
           },
           {
             type: "transfer",
-            address: "0.0.8835924",
+            address: sender,
             asset: {
               type: "erc20",
               assetReference: "0xca367694cdac8f152e33683bb36cc9d6a73f1ef2",
@@ -663,10 +662,10 @@ describe("createApi", () => {
 
     it("correctly identifies staking operations in blocks", async () => {
       const [delegateBlock, undelegateBlock, redelegateBlock, rewardsBlock] = await Promise.all([
-        api.getBlock(context, 176220207),
-        api.getBlock(context, 176220201),
-        api.getBlock(context, 176220211),
-        api.getBlock(context, 176777078),
+        api.getBlock(context, 179119797),
+        api.getBlock(context, 179119788),
+        api.getBlock(context, 179119779),
+        api.getBlock(context, 179119560),
       ]);
 
       const delegateOperations = delegateBlock.transactions
@@ -679,16 +678,17 @@ describe("createApi", () => {
         .flatMap(tx => tx.operations)
         .filter(op => op.type === "other");
       const rewardsTransaction = rewardsBlock.transactions.find(
-        tx => tx.hash === "dwKzBC5qV79SxlRufB6yfXIVOrNh9Nswt36zDoxRgwOQaKmjDHJlM5ImKxSnnRgs",
+        tx => tx.hash === "FcaL6dx/etyLe/wfT5vhRnGfFJ2b6OM/q5k8Zlhhs7WPh4A1Q/PoQGjKhW3Zq/Jd",
       );
+      const rewardsAccount = MAINNET_TEST_ACCOUNTS.activeStaking.accountId;
 
       expect(delegateOperations).toEqual([
         {
           type: "other",
           ledgerOpType: "DELEGATE",
-          targetStakingNodeId: 34,
+          targetStakingNodeId: 19,
           previousStakingNodeId: null,
-          stakedAmount: BigInt(21083322293),
+          stakedAmount: BigInt(499315430),
         },
       ]);
       expect(undelegateOperations).toEqual([
@@ -696,76 +696,60 @@ describe("createApi", () => {
           type: "other",
           ledgerOpType: "UNDELEGATE",
           targetStakingNodeId: null,
-          previousStakingNodeId: 22,
-          stakedAmount: BigInt(21083441623),
+          previousStakingNodeId: 11,
+          stakedAmount: BigInt(499528329),
         },
       ]);
       expect(redelegateOperations).toEqual([
         {
           type: "other",
           ledgerOpType: "REDELEGATE",
-          targetStakingNodeId: 6,
-          previousStakingNodeId: 34,
-          stakedAmount: BigInt(21083202902),
+          targetStakingNodeId: 11,
+          previousStakingNodeId: 1,
+          stakedAmount: BigInt(499741228),
         },
       ]);
       expect(rewardsTransaction?.operations).toEqual(
         expect.arrayContaining([
           {
             type: "transfer",
-            address: "0.0.35",
-            asset: {
-              type: "native",
-            },
-            amount: 3235n,
-          },
-          {
-            type: "transfer",
             address: "0.0.800",
             asset: {
               type: "native",
             },
-            amount: -30505446n,
+            amount: -101800n,
           },
           {
             type: "transfer",
-            address: "0.0.801",
+            address: "0.0.802",
             asset: {
               type: "native",
             },
-            amount: 76639n,
+            amount: 96772n,
           },
           {
             type: "transfer",
-            address: "0.0.8835924",
+            address: HEDERA_DUMMY_ADDRESS,
             asset: {
               type: "native",
             },
-            amount: -1000000n, // excluded fee and staking reward
+            amount: 1n,
           },
           {
             type: "transfer",
-            address: "0.0.9124531",
+            address: rewardsAccount,
             asset: {
               type: "native",
             },
-            amount: 1000000n, // excluded staking reward
+            amount: -1n, // excluded fee and staking reward
           },
           {
             type: "transfer",
-            address: "0.0.8835924",
+            address: rewardsAccount,
             asset: {
               type: "native",
             },
-            amount: 30313674n,
-          },
-          {
-            type: "transfer",
-            address: "0.0.9124531",
-            asset: {
-              type: "native",
-            },
-            amount: 191772n,
+            amount: 101800n,
           },
         ]),
       );
@@ -885,7 +869,7 @@ describe("createApi", () => {
     });
 
     it("returns operations with valid synthetic block info", async () => {
-      const cursor = "1753099264.927988000";
+      const cursor = "1790938300.000000000";
       const { items: ops } = await api.listOperations(
         context,
         MAINNET_TEST_ACCOUNTS.withTokens.accountId,
@@ -904,7 +888,7 @@ describe("createApi", () => {
     });
 
     it("returns operations for real account with tokens", async () => {
-      const cursor = "1753099264.927988000";
+      const cursor = "1790946600.000000000";
       const { items: ops } = await api.listOperations(
         context,
         MAINNET_TEST_ACCOUNTS.withTokens.accountId,
@@ -916,7 +900,7 @@ describe("createApi", () => {
         },
       );
 
-      const memoTxHash = "WvMcFERtxRsGJqxqGVDYa6JR5PqLgFeJxiSVoimayaWra/AMEJMzC09LhdRLTZ/M";
+      const memoTxHash = "0WrSGDGDWvgoFKiZPnodVEsjA0zNCab7NYnFt3UL8v9/i5oyZika5AxI7I8Phtv7";
       const operationWithMemo = ops.find(op => op.tx.hash === memoTxHash);
       const firstTokenAssociateOperations = ops.find(op => op.type === "ASSOCIATE_TOKEN");
       const firstSendTokenOperation = ops.find(o => o.type === "OUT" && o.asset.type !== "native");
@@ -1040,10 +1024,10 @@ describe("createApi", () => {
     });
 
     it("returns staking operations with correct metadata", async () => {
-      const cursor = "1762202113.000000000";
+      const cursor = "1791198000.000000000";
       const { items: ops } = await api.listOperations(
         context,
-        MAINNET_TEST_ACCOUNTS.activeStaking.accountId,
+        MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId,
         { minHeight: 0, cursor, limit: 30, order: "desc" },
       );
 
@@ -1081,16 +1065,16 @@ describe("createApi", () => {
     });
 
     it("returns valid senders and recipients for staking operations", async () => {
-      const cursor = "1772617523.000000000";
+      const cursor = "1791198000.000000000";
       const { items: ops } = await api.listOperations(
         context,
         MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId,
         { minHeight: 0, cursor, limit: 30, order: "desc" },
       );
 
-      const delegateHash = "+07jwNyyEDuwngDgoW3sVgfTfDE5qn+HgPsbltlrUIW/n/LYpFSEwSQNOTu/8GLQ";
-      const undelegateHash = "v0jXJwjKaypunqz91EuQDU2mz/ejSb3AvEJ5fgYkftl+DDT2mBlwB5bSRqXWyoth";
-      const redelegateHash = "pm8vFWlcBEEPbB+pkZTUUxs0FfO2KyDtg0KNfOYnnba+rpHT63OIMhFKKNpfDokk";
+      const delegateHash = "9Rl/IA5+A3+Z/rX88fDsavr6FrwoU2bEaFfTyyHvlXMfe+rdTdYHpPuZDoYv4abl";
+      const undelegateHash = "rh502AyLcnwcGU5IBdAOucQyHUNRc1NzPlG2h1fVVkuWqVQ8817+i4IP+mDwtUVw";
+      const redelegateHash = "k31VmY4pqBeKvzb+9EVatYH2P/4YqseEBNqQRcq3WPh0b2X0B/7yJ/1+4lAkav6e";
 
       const delegateOp = ops.find(o => o.type !== "REWARD" && o.tx.hash === delegateHash);
       const undelegateOp = ops.find(o => o.type !== "REWARD" && o.tx.hash === undelegateHash);
@@ -1098,11 +1082,11 @@ describe("createApi", () => {
       const rewardOp = ops.find(o => o.type === "REWARD");
 
       expect(delegateOp?.senders).toEqual([MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId]);
-      expect(delegateOp?.recipients).toEqual(["0.0.14"]);
+      expect(delegateOp?.recipients).toEqual(["0.0.21"]);
       expect(undelegateOp?.senders).toEqual([MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId]);
-      expect(undelegateOp?.recipients).toEqual(["0.0.31"]);
+      expect(undelegateOp?.recipients).toEqual(["0.0.29"]);
       expect(redelegateOp?.senders).toEqual([MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId]);
-      expect(redelegateOp?.recipients).toEqual(["0.0.23"]);
+      expect(redelegateOp?.recipients).toEqual(["0.0.8"]);
       expect(rewardOp?.senders).toEqual([rewardPayerAddress]);
       expect(rewardOp?.recipients).toEqual([MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId]);
     });
@@ -1121,7 +1105,7 @@ describe("createApi", () => {
       const opDelegate2 = ops[6];
 
       // starting point has known, hardcoded balance
-      const expectedBalanceDelegate1 = BigInt(999834971);
+      const expectedBalanceDelegate1 = BigInt(49786295);
 
       // after undelegate1 we expect stakedAmount to be initial balance reduced by:
       // 1. first DELEGATE fee
@@ -1150,7 +1134,7 @@ describe("createApi", () => {
       async order => {
         const minHeight = 0;
         const limit = 10;
-        const initialCursor = order === "desc" ? "1762168437.643463899" : undefined;
+        const initialCursor = order === "desc" ? "1790946600.000000000" : undefined;
 
         const { items: page1, next: pagingToken1 } = await api.listOperations(
           context,
