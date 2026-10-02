@@ -55,41 +55,41 @@ describe("toEVMAddress", () => {
   it("should resolve from an account id to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "0.0.9806001",
+      accountId: MAINNET_TEST_ACCOUNTS.inactiveStaking.accountId,
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from an EVM alias address to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc",
+      accountId: MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress,
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from an EVM alias address without prefix to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "cf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc",
+      accountId: "f8a372995a825c5f9db1e25de7598aca4692a628",
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from a long-zero EVM address to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "0x000000000000000000000000000000000095a0b1",
+      accountId: "0x0000000000000000000000000000000000a6585d",
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from a long-zero EVM address without prefix to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "000000000000000000000000000000000095a0b1",
+      accountId: "0000000000000000000000000000000000a6585d",
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 });
 

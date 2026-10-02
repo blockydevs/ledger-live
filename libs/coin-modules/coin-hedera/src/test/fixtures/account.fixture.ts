@@ -126,18 +126,18 @@ export const getMockedTokenAccount = (
 
 export const MAINNET_TEST_ACCOUNTS = {
   pristine: {
-    accountId: "0.0.800000",
-    publicKey: "3608128be58bfb7e753068e0bc82430ec77e51eed578e0a7055a0bd1296fe334",
+    accountId: "0.0.10901879",
+    publicKey: "a29bf4d631ea5310bea92d3822a4ebfb2891f6643e839f306a6dc827f220d5ac",
   },
   withoutTokens: {
-    accountId: "0.0.8000000",
-    publicKey: "96eae0821a63a138f37e0a60a83f9a0317fa11dde4d7669a62afb5ced2158141",
+    accountId: "0.0.10901621",
+    publicKey: "bf4315b0bad6a735dce83024283704211001925c00fca881610e0d9f13d9f17c",
   },
   withTokens: {
-    accountId: "0.0.8835924",
-    evmAddress: "0x000000000000000000000000000000000086d354",
+    accountId: "0.0.10901638",
+    evmAddress: "0x0000000000000000000000000000000000a65886",
     accountIdWithErc20: "0.0.4351292",
-    publicKey: "34e26415574250721e8869bd33ea2678c2bbccff5fc70bd8b0ec9239295fd2cf",
+    publicKey: "bf4315b0bad6a735dce83024283704211001925c00fca881610e0d9f13d9f17c",
     associatedTokenWithBalance: "0.0.456858",
     associatedTokenWithoutBalance: "0.0.7243470",
     notAssociatedToken: "0.0.3176721",
@@ -147,12 +147,13 @@ export const MAINNET_TEST_ACCOUNTS = {
     accountId: "0.0.10176637",
   },
   activeStaking: {
-    accountId: "0.0.8835924",
-    publicKey: "34e26415574250721e8869bd33ea2678c2bbccff5fc70bd8b0ec9239295fd2cf",
+    accountId: "0.0.10901625",
+    publicKey: "bf4315b0bad6a735dce83024283704211001925c00fca881610e0d9f13d9f17c",
   },
   inactiveStaking: {
-    accountId: "0.0.9806001",
-    publicKey: "0283ef0997da7161c9a3aec45c57f4e074cb67916c97c1e5339d9f988e702e0450",
+    accountId: "0.0.10901597",
+    evmAddress: "0xf8a372995a825c5f9db1e25de7598aca4692a628",
+    publicKey: "021b03783a804e2e7dfb202e8f3028072070bf5ef43a3ef61a5ee6c05b4fb80992",
   },
   withStakingHistory: {
     accountId: "0.0.10083165",
