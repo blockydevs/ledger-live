@@ -25,7 +25,7 @@ describe("hgraphClient", () => {
     it("returns entries with all required fields for an account with ERC20 tokens", async () => {
       const balances = await hgraphClient.getERC20Balances({
         configOrCurrencyId: coinConfig,
-        address: MAINNET_TEST_ACCOUNTS.withTokens.accountIdWithErc20,
+        address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
       });
       expect(balances.length).toBeGreaterThan(0);
       for (const b of balances) {

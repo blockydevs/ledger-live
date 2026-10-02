@@ -885,7 +885,7 @@ describe("createApi", () => {
     });
 
     it("returns operations with valid synthetic block info", async () => {
-      const cursor = "1753099264.927988000";
+      const cursor = "1790938300.000000000";
       const { items: ops } = await api.listOperations(
         context,
         MAINNET_TEST_ACCOUNTS.withTokens.accountId,
@@ -904,7 +904,7 @@ describe("createApi", () => {
     });
 
     it("returns operations for real account with tokens", async () => {
-      const cursor = "1753099264.927988000";
+      const cursor = "1790946600.000000000";
       const { items: ops } = await api.listOperations(
         context,
         MAINNET_TEST_ACCOUNTS.withTokens.accountId,
@@ -916,7 +916,7 @@ describe("createApi", () => {
         },
       );
 
-      const memoTxHash = "WvMcFERtxRsGJqxqGVDYa6JR5PqLgFeJxiSVoimayaWra/AMEJMzC09LhdRLTZ/M";
+      const memoTxHash = "0WrSGDGDWvgoFKiZPnodVEsjA0zNCab7NYnFt3UL8v9/i5oyZika5AxI7I8Phtv7";
       const operationWithMemo = ops.find(op => op.tx.hash === memoTxHash);
       const firstTokenAssociateOperations = ops.find(op => op.type === "ASSOCIATE_TOKEN");
       const firstSendTokenOperation = ops.find(o => o.type === "OUT" && o.asset.type !== "native");
@@ -1040,10 +1040,10 @@ describe("createApi", () => {
     });
 
     it("returns staking operations with correct metadata", async () => {
-      const cursor = "1762202113.000000000";
+      const cursor = "1772617523.000000000";
       const { items: ops } = await api.listOperations(
         context,
-        MAINNET_TEST_ACCOUNTS.activeStaking.accountId,
+        MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId,
         { minHeight: 0, cursor, limit: 30, order: "desc" },
       );
 
@@ -1150,7 +1150,7 @@ describe("createApi", () => {
       async order => {
         const minHeight = 0;
         const limit = 10;
-        const initialCursor = order === "desc" ? "1762168437.643463899" : undefined;
+        const initialCursor = order === "desc" ? "1790946600.000000000" : undefined;
 
         const { items: page1, next: pagingToken1 } = await api.listOperations(
           context,
