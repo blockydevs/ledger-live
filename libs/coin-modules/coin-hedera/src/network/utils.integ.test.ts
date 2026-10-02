@@ -55,41 +55,41 @@ describe("toEVMAddress", () => {
   it("should resolve from an account id to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "0.0.9806001",
+      accountId: MAINNET_TEST_ACCOUNTS.inactiveStaking.accountId,
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from an EVM alias address to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc",
+      accountId: MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress,
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from an EVM alias address without prefix to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "cf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc",
+      accountId: "f8a372995a825c5f9db1e25de7598aca4692a628",
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from a long-zero EVM address to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "0x000000000000000000000000000000000095a0b1",
+      accountId: "0x0000000000000000000000000000000000a6585d",
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 
   it("should resolve from a long-zero EVM address without prefix to an EVM alias address for an account with an EVM alias", async () => {
     const address = await toEVMAddress({
       configOrCurrencyId: coinConfig,
-      accountId: "000000000000000000000000000000000095a0b1",
+      accountId: "0000000000000000000000000000000000a6585d",
     });
-    expect(address).toEqual("0xcf15538fa293ab04cdd7ce45bcdac8b6e2dc7ebc");
+    expect(address).toEqual(MAINNET_TEST_ACCOUNTS.inactiveStaking.evmAddress);
   });
 });
 
@@ -134,8 +134,8 @@ describe("calculateUncommittedBalanceChange", () => {
     const result = await calculateUncommittedBalanceChange({
       configOrCurrencyId: coinConfig,
       address: MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId,
-      startTimestamp: "1762200000.000000000",
-      endTimestamp: "1762210000.000000000",
+      startTimestamp: "1791197500.000000000",
+      endTimestamp: "1791198000.000000000",
     });
     expect(BigNumber.isBigNumber(result)).toBe(true);
     expect(result.isNaN()).toBe(false);
@@ -206,9 +206,9 @@ describe("getHederaValidators", () => {
 });
 
 describe("analyzeStakingOperation", () => {
-  const DELEGATE_HASH = "+07jwNyyEDuwngDgoW3sVgfTfDE5qn+HgPsbltlrUIW/n/LYpFSEwSQNOTu/8GLQ";
-  const UNDELEGATE_HASH = "v0jXJwjKaypunqz91EuQDU2mz/ejSb3AvEJ5fgYkftl+DDT2mBlwB5bSRqXWyoth";
-  const REDELEGATE_HASH = "pm8vFWlcBEEPbB+pkZTUUxs0FfO2KyDtg0KNfOYnnba+rpHT63OIMhFKKNpfDokk";
+  const DELEGATE_HASH = "9Rl/IA5+A3+Z/rX88fDsavr6FrwoU2bEaFfTyyHvlXMfe+rdTdYHpPuZDoYv4abl";
+  const UNDELEGATE_HASH = "rh502AyLcnwcGU5IBdAOucQyHUNRc1NzPlG2h1fVVkuWqVQ8817+i4IP+mDwtUVw";
+  const REDELEGATE_HASH = "k31VmY4pqBeKvzb+9EVatYH2P/4YqseEBNqQRcq3WPh0b2X0B/7yJ/1+4lAkav6e";
 
   const address = MAINNET_TEST_ACCOUNTS.withStakingHistory.accountId;
   let transactions: HederaMirrorTransaction[];
@@ -219,7 +219,7 @@ describe("analyzeStakingOperation", () => {
     ({ transactions } = await apiClient.getAccountTransactions({
       configOrCurrencyId: coinConfig,
       address,
-      pagingToken: "1772617523.000000000",
+      pagingToken: "1791198000.000000000",
       order: "desc",
       limit: 30,
       fetchAllPages: false,

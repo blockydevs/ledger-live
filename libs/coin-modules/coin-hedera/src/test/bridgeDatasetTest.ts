@@ -23,7 +23,7 @@ export const hedera: CurrenciesData<Transaction> = {
       name: "hedera seed 1",
       apdus: `
           => e002010009000000002c00000bd6
-          <= 9e92a312233d5fd6b5a723875aeea2cea81a8e48ffc00341cff6dffcfd3ab7f29000
+          <= bf4315b0bad6a735dce83024283704211001925c00fca881610e0d9f13d9f17c9000
           `,
     },
   ],
@@ -31,12 +31,12 @@ export const hedera: CurrenciesData<Transaction> = {
     {
       FIXME_tests: ["balance is sum of ops"],
       raw: {
-        id: `js:2:hedera:0.0.751515:`,
+        id: `js:2:hedera:0.0.10901621:`,
         seedIdentifier: "",
         name: "Hedera 1",
         derivationMode: "hederaBip44",
         index: 0,
-        freshAddress: "0.0.751515",
+        freshAddress: "0.0.10901621",
         freshAddressPath: "44/3030/0/0/0",
         blockHeight: 0,
         operations: [],
@@ -51,7 +51,7 @@ export const hedera: CurrenciesData<Transaction> = {
           transaction: fromTransactionRaw({
             mode: HEDERA_TRANSACTION_MODES.Send,
             family: "hedera",
-            recipient: "0.0.751515",
+            recipient: "0.0.10901621",
             amount: "100000000",
           }),
           expectedStatus: {
@@ -66,7 +66,7 @@ export const hedera: CurrenciesData<Transaction> = {
           transaction: fromTransactionRaw({
             mode: HEDERA_TRANSACTION_MODES.Send,
             family: "hedera",
-            recipient: "0.0.751515",
+            recipient: "0.0.10901621",
             amount: "0",
           }),
           expectedStatus: {
@@ -81,7 +81,7 @@ export const hedera: CurrenciesData<Transaction> = {
           transaction: fromTransactionRaw({
             mode: HEDERA_TRANSACTION_MODES.Send,
             family: "hedera",
-            recipient: "0.0.751515",
+            recipient: "0.0.10901621",
             amount: "1000000000000000",
           }),
           expectedStatus: {
@@ -96,7 +96,7 @@ export const hedera: CurrenciesData<Transaction> = {
           transaction: fromTransactionRaw({
             mode: HEDERA_TRANSACTION_MODES.Send,
             family: "hedera",
-            recipient: "0.0.751515",
+            recipient: "0.0.10901621",
             amount: "1000000000000000",
             useAllAmount: true,
           }),
