@@ -168,9 +168,13 @@ async function processERC20TokenTransfer({
       value: new BigNumber(transfer.amount),
       extra: {
         ...commonData.extra,
-        gasConsumed: enrichedERC20Transfer.contractCallResult.gas_consumed,
         gasLimit: enrichedERC20Transfer.contractCallResult.gas_limit,
-        gasUsed: enrichedERC20Transfer.contractCallResult.gas_used,
+        ...(enrichedERC20Transfer.contractCallResult.gas_consumed !== null && {
+          gasConsumed: enrichedERC20Transfer.contractCallResult.gas_consumed,
+        }),
+        ...(enrichedERC20Transfer.contractCallResult.gas_used !== null && {
+          gasUsed: enrichedERC20Transfer.contractCallResult.gas_used,
+        }),
       },
     } satisfies Partial<Operation<HederaOperationExtra>>;
 

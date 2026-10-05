@@ -442,6 +442,77 @@ describe("listOperationsV2", () => {
     ]);
   });
 
+  it("omits gasConsumed and gasUsed when the contract call result has them as null", async () => {
+    const mockTokenERC20 = getMockedERC20TokenCurrency();
+    const sharedHash = "erc20-null-gas-hash";
+    const sharedTimestamp = "1625097700.000000000";
+
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: sharedTimestamp,
+      transaction_hash: sharedHash,
+      charged_tx_fee: 300000,
+      result: "SUCCESS",
+      name: "CONTRACTCALL",
+      transfers: [{ account: mockMirrorAccount.account, amount: -300000 }],
+    });
+    const mockERC20Transfer = getMockedERC20TokenTransfer({
+      token_evm_address: mockTokenERC20.contractAddress,
+      transaction_hash: sharedHash,
+      consensus_timestamp: Number(sharedTimestamp.split(".")[0]) * 10 ** 9,
+      sender_account_id: 12345,
+      receiver_account_id: 67890,
+      sender_evm_address: mockMirrorAccount.evm_address,
+      receiver_evm_address: "0xrecipient",
+      payer_account_id: 12345,
+      amount: 5000000,
+    });
+    const mockContractCallResult = getMockedMirrorContractCallResult({
+      gas_consumed: null,
+      gas_limit: 100000,
+      gas_used: null,
+    });
+    const mockEnrichedERC20Transfer = getMockedEnrichedERC20Transfer({
+      mirrorTransaction: mockMirrorTransaction,
+      contractCallResult: mockContractCallResult,
+      transfers: [mockERC20Transfer],
+    });
+
+    jest.spyOn(networkUtils, "enrichERC20Transfers").mockResolvedValue([mockEnrichedERC20Transfer]);
+    (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+      transactions: [],
+      nextCursor: null,
+    });
+    (hgraphClient.getERC20Transfers as jest.Mock).mockResolvedValue([mockERC20Transfer]);
+    (hgraphClient.getLatestIndexedConsensusTimestamp as jest.Mock).mockResolvedValue(
+      new BigNumber(sharedTimestamp),
+    );
+
+    setCryptoAssetsStore({
+      findTokenById: async () => undefined,
+      findTokenByAddressInCurrency: jest.fn().mockResolvedValue(mockTokenERC20),
+      getTokensSyncHash: async () => "",
+    });
+
+    const result = await listOperations(mockConfig, {
+      limit: mockLimit,
+      order: mockOrder,
+      currencyId: mockCurrency.id,
+      address: mockMirrorAccount.account,
+      evmAddress: mockMirrorAccount.evm_address,
+      mirrorTokens: [],
+      tokenEvmAddresses: [mockTokenERC20.contractAddress],
+      fetchAllPages: true,
+      skipFeesForTokenOperations: false,
+      useEncodedHash: false,
+      useSyntheticBlocks: false,
+    });
+
+    expect(result.tokenOperations).toHaveLength(1);
+    expect(result.tokenOperations[0].extra.gasLimit).toBe(100000);
+    expect(result.tokenOperations[0].extra).not.toHaveProperty("gasConsumed");
+    expect(result.tokenOperations[0].extra).not.toHaveProperty("gasUsed");
+  });
+
   it("should use EVM address for sender/recipient when account_id is null in ERC20 transfer", async () => {
     const mockTokenERC20 = getMockedERC20TokenCurrency();
     const sharedHash = "erc20-transfer-hash";

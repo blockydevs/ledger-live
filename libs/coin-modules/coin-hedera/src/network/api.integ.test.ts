@@ -97,6 +97,30 @@ describe("apiClient", () => {
       }
       expect(nextCursor === null || typeof nextCursor === "string").toBe(true);
     });
+
+    it("parses a full page of transactions for a busy account", async () => {
+      const { transactions } = await apiClient.getAccountTransactions({
+        configOrCurrencyId: coinConfig,
+        address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
+        pagingToken: null,
+        limit: 100,
+        order: "desc",
+        fetchAllPages: false,
+      });
+
+      expect(transactions.length).toBeGreaterThan(0);
+      for (const tx of transactions) {
+        expect(typeof tx.nonce).toBe("number");
+        expect(typeof tx.charged_tx_fee).toBe("number");
+        for (const transfer of tx.transfers) {
+          expect(typeof transfer.account).toBe("string");
+        }
+        for (const transfer of tx.token_transfers) {
+          expect(typeof transfer.token_id).toBe("string");
+          expect(typeof transfer.account).toBe("string");
+        }
+      }
+    });
   });
 
   describe("getAccountTokens", () => {

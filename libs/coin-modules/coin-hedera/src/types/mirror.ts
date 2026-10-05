@@ -57,27 +57,6 @@ export interface HederaMirrorAccount {
   };
 }
 
-export interface HederaMirrorAccountTokensResponse {
-  tokens: HederaMirrorToken[];
-  links: {
-    next: string | null;
-  };
-}
-
-export interface HederaMirrorAccountsResponse {
-  accounts: HederaMirrorAccount[];
-  links: {
-    next: string | null;
-  };
-}
-
-export interface HederaMirrorTransactionsResponse {
-  transactions: HederaMirrorTransaction[];
-  links: {
-    next: string | null;
-  };
-}
-
 export interface HederaMirrorBlock {
   timestamp: {
     from: string;
@@ -85,17 +64,10 @@ export interface HederaMirrorBlock {
   };
 }
 
-export interface HederaMirrorBlocksResponse {
-  blocks: HederaMirrorBlock[];
-  links: {
-    next: string | null;
-  };
-}
-
 export interface HederaMirrorNetworkFees {
   fees: {
     gas: number;
-    transaction_type: "ContractCall" | "ContractCreate" | "EthereumTransaction";
+    transaction_type: string;
   }[];
   timestamp: string;
 }
@@ -104,18 +76,10 @@ export interface HederaMirrorContractCallResult {
   contract_id: string;
   block_hash: string;
   block_gas_used: number;
-  gas_consumed: number;
+  gas_consumed: number | null;
   gas_limit: number;
-  gas_used: number;
+  gas_used: number | null;
   timestamp: string;
-}
-
-export interface HederaMirrorContractCallEstimate {
-  result: string;
-}
-
-export interface HederaMirrorContractCallBalance {
-  result: string;
 }
 
 export interface HederaMirrorNode {
@@ -124,14 +88,7 @@ export interface HederaMirrorNode {
   description: string;
   max_stake: number;
   min_stake: number;
-  stake?: number | null;
+  stake: number | null;
   stake_rewarded: number;
   reward_rate_start: number;
-}
-
-export interface HederaMirrorNodesResponse {
-  nodes: HederaMirrorNode[];
-  links: {
-    next: string | null;
-  };
 }
