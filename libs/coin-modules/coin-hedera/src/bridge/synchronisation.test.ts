@@ -126,6 +126,19 @@ describe("getAccountShape", () => {
     );
   });
 
+  it("floors the operations history at the account creation timestamp", async () => {
+    mockGetAccount.mockResolvedValue(
+      getMockedMirrorAccount({ created_timestamp: "1700000000.000000001" }),
+    );
+
+    await getAccountShape(mockInfo, { paginationConfig: {} });
+
+    expect(logic.listOperationsV2).toHaveBeenCalledWith(
+      mockConfig,
+      expect.objectContaining({ minTimestamp: "1700000000.000000001" }),
+    );
+  });
+
   it("passes ERC20 token contractAddresses to listOperationsV2 tokenEvmAddresses", async () => {
     const erc20Token = getMockedERC20TokenCurrency();
     const erc20Address = erc20Token.contractAddress.toLowerCase();
