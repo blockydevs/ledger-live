@@ -86,6 +86,8 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
       .filter(token => token.tokenType === "erc20")
       .map(token => token.contractAddress.toLowerCase()),
     ...(latestOperationTimestamp && { cursor: latestOperationTimestamp }),
+    // without a floor, the mirror node keeps returning empty 60-day windows back to genesis
+    ...(mirrorAccount.created_timestamp && { minTimestamp: mirrorAccount.created_timestamp }),
     fetchAllPages: true,
     skipFeesForTokenOperations: false,
     useEncodedHash: true,

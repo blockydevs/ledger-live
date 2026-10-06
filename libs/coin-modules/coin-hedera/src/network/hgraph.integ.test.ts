@@ -25,7 +25,7 @@ describe("hgraphClient", () => {
     it("returns entries with all required fields for an account with ERC20 tokens", async () => {
       const balances = await hgraphClient.getERC20Balances({
         configOrCurrencyId: coinConfig,
-        address: MAINNET_TEST_ACCOUNTS.withTokens.accountIdWithErc20,
+        address: MAINNET_TEST_ACCOUNTS.withTokens.accountId,
       });
       expect(balances.length).toBeGreaterThan(0);
       for (const b of balances) {
@@ -46,9 +46,7 @@ describe("hgraphClient", () => {
   });
 
   describe("getERC20Transfers", () => {
-    const address = MAINNET_TEST_ACCOUNTS.withTokens.accountIdWithErc20;
-    // Must come from live balances: the fixture's erc20Token belongs to
-    // withTokens.accountId, and pairing it with this address returns zero transfers.
+    const address = MAINNET_TEST_ACCOUNTS.withTokens.accountId;
     let tokenEvmAddresses: string[];
 
     beforeAll(async () => {
