@@ -3,7 +3,7 @@ import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { apiClient } from "../network/api";
 import { getERC20BalancesForAccountV2 } from "../network/utils";
-import { getMirrorAccountBalance } from "./utils";
+import { getMirrorAccountBalance, isNodeOverstaked } from "./utils";
 import type { HederaERC20TokenBalance, HederaMirrorToken, HederaCoinConfig } from "../types";
 
 function mapMirrorTokenToBalance(token: HederaMirrorToken, address: string): Balance[] {
@@ -75,13 +75,10 @@ export async function getBalance(
           amount: accountBalance + BigInt(mirrorAccount.pending_reward ?? 0),
           amountDeposited: accountBalance,
           amountRewarded: BigInt(mirrorAccount.pending_reward ?? 0),
-          delegate: validator.node_account_id as string,
+          ...(validator.node_account_id && { delegate: validator.node_account_id }),
           actions: [],
           details: {
-            overstaked:
-              typeof validator.stake === "number"
-                ? BigInt(validator.stake) >= BigInt(validator.max_stake!)
-                : null,
+            overstaked: isNodeOverstaked(validator),
           },
         },
       }),

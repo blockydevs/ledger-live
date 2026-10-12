@@ -1,7 +1,7 @@
 import type { Cursor, Page, Validator } from "@ledgerhq/coin-module-framework/api/types";
 import { apiClient } from "../network/api";
 import type { HederaCoinConfig } from "../types";
-import { calculateAPY, extractCompanyFromNodeDescription } from "./utils";
+import { calculateAPY, extractCompanyFromNodeDescription, skipNodesWithoutAccount } from "./utils";
 
 export async function getValidators({
   configOrCurrencyId,
@@ -18,13 +18,13 @@ export async function getValidators({
 
   return {
     next: res.nextCursor ?? undefined,
-    items: res.nodes.map(node => ({
+    items: skipNodesWithoutAccount(res.nodes).map(node => ({
       id: node.node_id.toString(),
       address: node.node_account_id as string,
-      name: extractCompanyFromNodeDescription(node.description!),
-      description: node.description!,
+      name: extractCompanyFromNodeDescription(node.description ?? ""),
+      description: node.description ?? "",
       ...(typeof node.stake === "number" && { balance: BigInt(node.stake) }),
-      apy: calculateAPY(node.reward_rate_start as number),
+      apy: calculateAPY(node.reward_rate_start),
     })),
   };
 }

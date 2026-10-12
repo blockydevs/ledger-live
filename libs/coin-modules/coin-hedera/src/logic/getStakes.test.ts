@@ -113,6 +113,59 @@ describe("getStakes", () => {
     ]);
   });
 
+  it.each([
+    ["max_stake", { max_stake: null, stake: 1 }],
+    ["stake", { max_stake: 1, stake: null }],
+  ])("should report overstaked null when node %s is null", async (_name, nodeStake) => {
+    mockGetAccount.mockResolvedValue({
+      account: mockAddress,
+      max_automatic_token_associations: 0,
+      evm_address: "",
+      balance: { balance: 10, timestamp: "0", tokens: [] },
+      pending_reward: 0,
+      staked_node_id: 1,
+    });
+    mockGetNode.mockResolvedValue({
+      node_id: 1,
+      node_account_id: "0.0.3",
+      description: "",
+      min_stake: 0,
+      stake_rewarded: 0,
+      reward_rate_start: 0,
+      ...nodeStake,
+    });
+
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
+
+    expect(result.items[0].details).toEqual({ stakedNodeId: 1, overstaked: null });
+    expect(result.items[0].state).toBe("active");
+  });
+
+  it("should omit delegate when node has no node_account_id", async () => {
+    mockGetAccount.mockResolvedValue({
+      account: mockAddress,
+      max_automatic_token_associations: 0,
+      evm_address: "",
+      balance: { balance: 10, timestamp: "0", tokens: [] },
+      pending_reward: 0,
+      staked_node_id: 1,
+    });
+    mockGetNode.mockResolvedValue({
+      node_id: 1,
+      node_account_id: null,
+      description: "",
+      min_stake: 0,
+      max_stake: 5,
+      stake: 1,
+      stake_rewarded: 0,
+      reward_rate_start: 0,
+    });
+
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
+
+    expect(result.items[0]).not.toHaveProperty("delegate");
+  });
+
   it("should return active stake for delegated account", async () => {
     const balance = 5000000000;
     const pendingReward = 100000000;

@@ -1,6 +1,6 @@
 import type { Page, Stake } from "@ledgerhq/coin-module-framework/api/types";
 import { apiClient } from "../network/api";
-import { getMirrorAccountBalance } from "./utils";
+import { getMirrorAccountBalance, isNodeOverstaked } from "./utils";
 import type { HederaCoinConfig } from "../types";
 
 /**
@@ -40,14 +40,9 @@ export async function getStakes({
     actions: [],
     details: {
       stakedNodeId,
-      overstaked:
-        typeof delegatedNode?.stake === "number"
-          ? BigInt(delegatedNode.stake) >= BigInt(delegatedNode.max_stake!)
-          : null,
+      overstaked: delegatedNode ? isNodeOverstaked(delegatedNode) : null,
     },
-    ...(delegatedNode && {
-      delegate: delegatedNode.node_account_id as string,
-    }),
+    ...(delegatedNode?.node_account_id && { delegate: delegatedNode.node_account_id }),
   };
 
   return { items: [stake] };

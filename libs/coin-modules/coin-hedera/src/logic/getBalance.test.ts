@@ -220,6 +220,54 @@ describe("getBalance", () => {
     await expect(promise).rejects.toThrow(`"${path}"`);
   });
 
+  it.each([
+    ["max_stake", { max_stake: null, stake: 1 }],
+    ["stake", { max_stake: 1, stake: null }],
+  ])(
+    "should return stake without overstaked status when validator %s is null",
+    async (_name, nodeStake) => {
+      (apiClient.getAccount as jest.Mock).mockResolvedValue({
+        account: address,
+        staked_node_id: 5,
+        balance: { balance: 100 },
+        pending_reward: 100,
+      });
+      (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([]);
+      (apiClient.getNode as jest.Mock).mockResolvedValue({
+        node_id: 5,
+        node_account_id: "0.0.5",
+        ...nodeStake,
+      });
+      (networkUtils.getERC20BalancesForAccountV2 as jest.Mock).mockResolvedValue([]);
+
+      const result = await getBalance(mockConfig, { address });
+
+      expect(result[0]?.stake?.details?.overstaked).toBeNull();
+    },
+  );
+
+  it("should omit stake delegate when validator has no node_account_id", async () => {
+    (apiClient.getAccount as jest.Mock).mockResolvedValue({
+      account: address,
+      staked_node_id: 5,
+      balance: { balance: 100 },
+      pending_reward: 100,
+    });
+    (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([]);
+    (apiClient.getNode as jest.Mock).mockResolvedValue({
+      node_id: 5,
+      node_account_id: null,
+      max_stake: 1,
+      stake: 1,
+    });
+    (networkUtils.getERC20BalancesForAccountV2 as jest.Mock).mockResolvedValue([]);
+
+    const result = await getBalance(mockConfig, { address });
+
+    expect(result[0]?.stake).toMatchObject({ state: "active" });
+    expect(result[0]?.stake).not.toHaveProperty("delegate");
+  });
+
   it("should return stake without overstaked status when validator stake is null", async () => {
     const mockMirrorAccount = {
       account: address,

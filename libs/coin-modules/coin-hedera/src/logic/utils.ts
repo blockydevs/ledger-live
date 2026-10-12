@@ -453,29 +453,54 @@ export const extractCompanyFromNodeDescription = (description: string): string =
     .trim();
 };
 
+/**
+ * Returns the nodes that have an account id and logs each node without one.
+ */
+export function skipNodesWithoutAccount(nodes: HederaMirrorNode[]): HederaMirrorNode[] {
+  const kept = nodes.filter(node => {
+    if (node.node_account_id === null || node.node_account_id === undefined) {
+      log("coin-hedera", 'Skipping mirror node node with no value for "nodes[].node_account_id"');
+      return false;
+    }
+    return true;
+  });
+
+  return kept.length === nodes.length ? nodes : kept;
+}
+
+/**
+ * `null` when the node reports no stake or no stake cap.
+ */
+export function isNodeOverstaked(node: HederaMirrorNode): boolean | null {
+  return typeof node.stake === "number" && typeof node.max_stake === "number"
+    ? BigInt(node.stake) >= BigInt(node.max_stake)
+    : null;
+}
+
 export function mapMirrorNodesToValidators(
   nodes: HederaMirrorNode[],
   ledgerNodeId: string,
 ): HederaValidator[] {
-  const validators: HederaValidator[] = nodes.map(mirrorNode => {
+  const validators: HederaValidator[] = skipNodesWithoutAccount(nodes).map(mirrorNode => {
     const id = mirrorNode.node_id.toString();
-    const minStake = new BigNumber(mirrorNode.min_stake ?? NaN);
-    const maxStake = new BigNumber(mirrorNode.max_stake ?? NaN);
-    const activeStake = new BigNumber(mirrorNode.stake_rewarded ?? NaN);
+    const minStake = new BigNumber(mirrorNode.min_stake ?? 0);
+    const maxStake = new BigNumber(mirrorNode.max_stake ?? 0);
+    const activeStake = new BigNumber(mirrorNode.stake_rewarded ?? 0);
     const activeStakePercentage = maxStake.gt(0)
       ? activeStake.dividedBy(maxStake).multipliedBy(100).dp(0, BigNumber.ROUND_CEIL)
       : new BigNumber(0);
+    const address = mirrorNode.node_account_id as string;
 
     return {
       id,
-      address: mirrorNode.node_account_id as string,
-      addressChecksum: getChecksum(mirrorNode.node_account_id as string),
-      name: extractCompanyFromNodeDescription(mirrorNode.description!),
+      address,
+      addressChecksum: getChecksum(address),
+      name: extractCompanyFromNodeDescription(mirrorNode.description ?? ""),
       minStake,
       maxStake,
       activeStake,
       activeStakePercentage,
-      overstaked: activeStake.gte(maxStake),
+      overstaked: mirrorNode.max_stake === null ? false : activeStake.gte(maxStake),
       isLedgerNode: id === ledgerNodeId,
     };
   });
@@ -547,7 +572,9 @@ export const hasSpecificIntentData = <Type extends "staking" | "erc20">(
   return "data" in txIntent && txIntent.data.type === expectedType;
 };
 
-export const calculateAPY = (rewardRateStart: number): number => {
+export const calculateAPY = (rewardRateStart: number | null): number => {
+  if (rewardRateStart === null) return 0;
+
   const dailyRate = rewardRateStart / 10 ** TINYBAR_SCALE;
   const annualRate = dailyRate * 365;
 

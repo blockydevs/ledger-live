@@ -64,6 +64,58 @@ describe("getValidators", () => {
     expect(result.items[0]).not.toHaveProperty("balance");
   });
 
+  it("should skip nodes without node_account_id", async () => {
+    (apiClient.getNodes as jest.Mock).mockResolvedValue({
+      nodes: [
+        { node_id: 1, node_account_id: null, description: "A", stake: 1, reward_rate_start: 1 },
+        { node_id: 2, node_account_id: "0.0.4", description: "B", stake: 1, reward_rate_start: 1 },
+      ],
+      nextCursor: null,
+    });
+
+    const result = await getValidators({ configOrCurrencyId: mockCurrency.id, cursor: undefined });
+
+    expect(result.items.map(item => item.id)).toEqual(["2"]);
+  });
+
+  it("should return empty description and name when description is null", async () => {
+    (apiClient.getNodes as jest.Mock).mockResolvedValue({
+      nodes: [
+        {
+          node_id: 1,
+          node_account_id: "0.0.3",
+          description: null,
+          stake: 1,
+          reward_rate_start: 1,
+        },
+      ],
+      nextCursor: null,
+    });
+
+    const result = await getValidators({ configOrCurrencyId: mockCurrency.id, cursor: undefined });
+
+    expect(result.items[0]).toMatchObject({ name: "", description: "" });
+  });
+
+  it("should return APY 0 when reward_rate_start is null", async () => {
+    (apiClient.getNodes as jest.Mock).mockResolvedValue({
+      nodes: [
+        {
+          node_id: 1,
+          node_account_id: "0.0.3",
+          description: "Hosted by Ledger",
+          stake: 1,
+          reward_rate_start: null,
+        },
+      ],
+      nextCursor: null,
+    });
+
+    const result = await getValidators({ configOrCurrencyId: mockCurrency.id, cursor: undefined });
+
+    expect(result.items[0].apy).toBe(0);
+  });
+
   it("should handle pagination cursor", async () => {
     (apiClient.getNodes as jest.Mock).mockResolvedValue({
       nodes: [],

@@ -771,6 +771,44 @@ describe("logic utils", () => {
       expect(validator.overstaked).toBe(true);
     });
 
+    it("skips and logs nodes without node_account_id", () => {
+      const validators = mapMirrorNodesToValidators(
+        [
+          getMockedMirrorNode({ node_id: 0, node_account_id: null }),
+          getMockedMirrorNode({ node_id: 1, node_account_id: "0.0.4" }),
+        ],
+        "1",
+      );
+
+      expect(validators.map(v => v.id)).toEqual(["1"]);
+      expect(log).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringContaining("nodes[].node_account_id"),
+      );
+    });
+
+    it("maps null stake fields to zero and does not mark the node as overstaked", () => {
+      const [validator] = mapMirrorNodesToValidators(
+        [getMockedMirrorNode({ min_stake: null, max_stake: null, stake_rewarded: null })],
+        "1",
+      );
+
+      expect(validator.minStake).toEqual(new BigNumber(0));
+      expect(validator.maxStake).toEqual(new BigNumber(0));
+      expect(validator.activeStake).toEqual(new BigNumber(0));
+      expect(validator.activeStakePercentage).toEqual(new BigNumber(0));
+      expect(validator.overstaked).toBe(false);
+    });
+
+    it("maps a null description to an empty name", () => {
+      const [validator] = mapMirrorNodesToValidators(
+        [getMockedMirrorNode({ description: null })],
+        "1",
+      );
+
+      expect(validator.name).toBe("");
+    });
+
     it("returns an empty array for an empty node list", () => {
       expect(mapMirrorNodesToValidators([], "1")).toEqual([]);
     });
@@ -935,6 +973,10 @@ describe("logic utils", () => {
       const result = calculateAPY(0);
 
       expect(result).toBe(0);
+    });
+
+    it("should return 0 when reward rate is null", () => {
+      expect(calculateAPY(null)).toBe(0);
     });
   });
 
