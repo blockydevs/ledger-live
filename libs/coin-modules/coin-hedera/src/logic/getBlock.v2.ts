@@ -55,7 +55,7 @@ function createBlockOperationFromCoinTransfer({
   transfer: HederaMirrorCoinTransfer;
   rewardTransfers: HederaMirrorTransaction["staking_reward_transfers"];
 }): BlockOperation {
-  const address = transfer.account;
+  const address = transfer.account as string;
   const reward = rewardTransfers.find(r => r.account === address);
   const asset: AssetInfo = {
     type: "native",
@@ -82,10 +82,10 @@ function createBlockOperationFromHTSTokenTransfer({
   transfer: HederaMirrorTokenTransfer;
 }): BlockOperation {
   const amount = BigInt(transfer.amount);
-  const address = transfer.account;
+  const address = transfer.account as string;
   const asset: AssetInfo = {
     type: "hts",
-    assetReference: transfer.token_id,
+    assetReference: transfer.token_id as string,
   };
 
   return {
@@ -138,7 +138,7 @@ function createBlockOperationFromERC20TokenTransfer({
 function createStakingRewardOperations(tx: HederaMirrorTransaction): BlockOperation[] {
   return tx.staking_reward_transfers.map(rewardTransfer => ({
     type: "transfer",
-    address: rewardTransfer.account,
+    address: rewardTransfer.account as string,
     asset: { type: "native" },
     amount: BigInt(rewardTransfer.amount),
   }));

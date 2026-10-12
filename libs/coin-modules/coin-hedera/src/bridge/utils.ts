@@ -100,7 +100,7 @@ export async function buildCalTokenMap({
   const uniqueAddresses = [
     ...new Set([
       ...erc20Tokens.map(t => t.contractAddress.toLowerCase()),
-      ...mirrorTokens.map(t => t.token_id),
+      ...mirrorTokens.map(t => t.token_id as string),
     ]),
   ];
   const tokenByAddress = new Map<string, TokenCurrency>();
@@ -238,7 +238,7 @@ export const getSubAccounts = async ({
     const balance = new BigNumber(rawBalance);
     const isERC20 = "contractAddress" in rawToken;
     const tokenAddress = isERC20 ? rawToken.contractAddress : rawToken.token_id;
-    const token = calTokenByAddress.get(tokenAddress.toLowerCase());
+    const token = calTokenByAddress.get(tokenAddress!.toLowerCase());
 
     if (!token) {
       continue;
@@ -264,7 +264,7 @@ export const getSubAccounts = async ({
       spendableBalance: balance,
       creationDate: isERC20
         ? new Date()
-        : new Date(Number.parseFloat(rawToken.created_timestamp) * 1000),
+        : new Date(Number.parseFloat(rawToken.created_timestamp ?? "") * 1000),
       operations: [],
       operationsCount: 0,
       pendingOperations: [],

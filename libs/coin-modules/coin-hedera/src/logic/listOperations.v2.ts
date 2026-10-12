@@ -168,13 +168,9 @@ async function processERC20TokenTransfer({
       value: new BigNumber(transfer.amount),
       extra: {
         ...commonData.extra,
+        gasConsumed: enrichedERC20Transfer.contractCallResult.gas_consumed as number,
         gasLimit: enrichedERC20Transfer.contractCallResult.gas_limit,
-        ...(enrichedERC20Transfer.contractCallResult.gas_consumed !== null && {
-          gasConsumed: enrichedERC20Transfer.contractCallResult.gas_consumed,
-        }),
-        ...(enrichedERC20Transfer.contractCallResult.gas_used !== null && {
-          gasUsed: enrichedERC20Transfer.contractCallResult.gas_used,
-        }),
+        gasUsed: enrichedERC20Transfer.contractCallResult.gas_used as number,
       },
     } satisfies Partial<Operation<HederaOperationExtra>>;
 
@@ -230,7 +226,7 @@ async function processHTSTokenTransfers({
   const tokenTransfers = rawTx.token_transfers ?? [];
   if (tokenTransfers.length === 0) return null;
 
-  const tokenId = tokenTransfers[0].token_id;
+  const tokenId = tokenTransfers[0].token_id as string;
   const { type, value, senders, recipients } = parseTransfers(tokenTransfers, address);
   const { hash, fee, date, blockHeight, blockHash, hasFailed } = commonData;
   const extra = { ...commonData.extra };
@@ -332,7 +328,7 @@ function processCoinTransfers({
     });
 
     if (relatedMirrorToken) {
-      extra.associatedTokenId = relatedMirrorToken.token_id;
+      extra.associatedTokenId = relatedMirrorToken.token_id as string;
     }
   }
 

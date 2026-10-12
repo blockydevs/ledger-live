@@ -37,7 +37,10 @@ const mockGetERC20BalancesForAccountV2 = jest.mocked(networkUtils.getERC20Balanc
 
 const mockConfig = getMockedConfig();
 const mockCurrency = getMockedCurrency();
-const mockMirrorAccount = getMockedMirrorAccount();
+const mockMirrorAccount = getMockedMirrorAccount() as ReturnType<typeof getMockedMirrorAccount> & {
+  account: string;
+  evm_address: string;
+};
 const mockAddress = mockMirrorAccount.account;
 const mockEvmAddress = mockMirrorAccount.evm_address;
 const mockLiveAccountId = `js:2:hedera:${mockAddress}:`;

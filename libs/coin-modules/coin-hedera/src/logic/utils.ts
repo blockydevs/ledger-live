@@ -120,7 +120,7 @@ export function extractFeesPayer(
 
   // exactly one transfer with amount equal to charged fee => use that transfer's account
   const exactFeeTransfers = transfers.filter(transfer => transfer.amount === -chargedFee);
-  if (exactFeeTransfers.length === 1) return exactFeeTransfers[0].account;
+  if (exactFeeTransfers.length === 1) return exactFeeTransfers[0].account as string;
 
   // otherwise, fallback to initiator
   return initiator;
@@ -368,18 +368,18 @@ export function mapMirrorNodesToValidators(
 ): HederaValidator[] {
   const validators: HederaValidator[] = nodes.map(mirrorNode => {
     const id = mirrorNode.node_id.toString();
-    const minStake = new BigNumber(mirrorNode.min_stake);
-    const maxStake = new BigNumber(mirrorNode.max_stake);
-    const activeStake = new BigNumber(mirrorNode.stake_rewarded);
+    const minStake = new BigNumber(mirrorNode.min_stake ?? NaN);
+    const maxStake = new BigNumber(mirrorNode.max_stake ?? NaN);
+    const activeStake = new BigNumber(mirrorNode.stake_rewarded ?? NaN);
     const activeStakePercentage = maxStake.gt(0)
       ? activeStake.dividedBy(maxStake).multipliedBy(100).dp(0, BigNumber.ROUND_CEIL)
       : new BigNumber(0);
 
     return {
       id,
-      address: mirrorNode.node_account_id,
-      addressChecksum: getChecksum(mirrorNode.node_account_id),
-      name: extractCompanyFromNodeDescription(mirrorNode.description),
+      address: mirrorNode.node_account_id as string,
+      addressChecksum: getChecksum(mirrorNode.node_account_id as string),
+      name: extractCompanyFromNodeDescription(mirrorNode.description!),
       minStake,
       maxStake,
       activeStake,

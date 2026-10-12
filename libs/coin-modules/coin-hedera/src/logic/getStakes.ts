@@ -25,8 +25,8 @@ export async function getStakes({
     stakedNodeId >= 0
       ? await apiClient.getNode({ configOrCurrencyId, nodeId: stakedNodeId })
       : null;
-  const balance = BigInt(mirrorAccount.balance.balance);
-  const pendingReward = BigInt(mirrorAccount.pending_reward);
+  const balance = BigInt(mirrorAccount.balance.balance!);
+  const pendingReward = BigInt(mirrorAccount.pending_reward!);
 
   const stake: Stake = {
     uid: address,
@@ -41,11 +41,11 @@ export async function getStakes({
       stakedNodeId,
       overstaked:
         typeof delegatedNode?.stake === "number"
-          ? BigInt(delegatedNode.stake) >= BigInt(delegatedNode.max_stake)
+          ? BigInt(delegatedNode.stake) >= BigInt(delegatedNode.max_stake!)
           : null,
     },
     ...(delegatedNode && {
-      delegate: delegatedNode.node_account_id,
+      delegate: delegatedNode.node_account_id as string,
     }),
   };
 

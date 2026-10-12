@@ -9,7 +9,7 @@ function mapMirrorTokenToBalance(token: HederaMirrorToken, address: string): Bal
     value: BigInt(new BigNumber(token.balance).toFixed(0)),
     asset: {
       type: "hts",
-      assetReference: token.token_id,
+      assetReference: token.token_id as string,
       assetOwner: address,
     },
   };
@@ -54,22 +54,22 @@ export async function getBalance(
 
     const nativeBalance: Balance = {
       asset: { type: "native" },
-      value: BigInt(mirrorAccount.balance.balance),
+      value: BigInt(mirrorAccount.balance.balance!),
       ...(validator && {
         stake: {
           uid: address,
           address,
           asset: { type: "native" },
           state: "active",
-          amount: BigInt(mirrorAccount.balance.balance) + BigInt(mirrorAccount.pending_reward),
-          amountDeposited: BigInt(mirrorAccount.balance.balance),
-          amountRewarded: BigInt(mirrorAccount.pending_reward),
-          delegate: validator.node_account_id,
+          amount: BigInt(mirrorAccount.balance.balance!) + BigInt(mirrorAccount.pending_reward!),
+          amountDeposited: BigInt(mirrorAccount.balance.balance!),
+          amountRewarded: BigInt(mirrorAccount.pending_reward!),
+          delegate: validator.node_account_id as string,
           actions: [],
           details: {
             overstaked:
               typeof validator.stake === "number"
-                ? BigInt(validator.stake) >= BigInt(validator.max_stake)
+                ? BigInt(validator.stake) >= BigInt(validator.max_stake!)
                 : null,
           },
         },

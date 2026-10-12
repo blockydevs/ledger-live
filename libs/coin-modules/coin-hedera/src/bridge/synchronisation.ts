@@ -53,7 +53,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     getERC20BalancesForAccountV2({ configOrCurrencyId: config, address }),
   ]);
 
-  const accountBalance = new BigNumber(mirrorAccount.balance.balance);
+  const accountBalance = new BigNumber(mirrorAccount.balance.balance ?? NaN);
 
   // we should sync again when new tokens are added or blacklist changes
   const syncHash = await getSyncHash(currency.id, blacklistedTokenIds);
@@ -110,7 +110,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
       ? {
           nodeId: mirrorAccount.staked_node_id,
           delegated: accountBalance,
-          pendingReward: new BigNumber(mirrorAccount.pending_reward),
+          pendingReward: new BigNumber(mirrorAccount.pending_reward ?? NaN),
         }
       : null;
 
@@ -140,7 +140,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     blockHeight: HARDCODED_BLOCK_HEIGHT,
     subAccounts,
     hederaResources: {
-      maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
+      maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations as number,
       isAutoTokenAssociationEnabled: mirrorAccount.max_automatic_token_associations === -1,
       delegation,
     },

@@ -20,11 +20,11 @@ export async function getValidators({
     next: res.nextCursor ?? undefined,
     items: res.nodes.map(node => ({
       id: node.node_id.toString(),
-      address: node.node_account_id,
-      name: extractCompanyFromNodeDescription(node.description),
-      description: node.description,
+      address: node.node_account_id as string,
+      name: extractCompanyFromNodeDescription(node.description!),
+      description: node.description!,
       ...(typeof node.stake === "number" && { balance: BigInt(node.stake) }),
-      apy: calculateAPY(node.reward_rate_start),
+      apy: calculateAPY(node.reward_rate_start as number),
     })),
   };
 }

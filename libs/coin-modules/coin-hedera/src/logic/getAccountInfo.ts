@@ -18,10 +18,10 @@ export async function getAccountInfo(
 
   const accountInfo: HederaAccountInfo = {
     type: "hedera",
-    maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations,
+    maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations as number,
     stakedNodeId: mirrorAccount.staked_node_id,
-    balance: mirrorAccount.balance.balance,
-    pendingReward: mirrorAccount.pending_reward,
+    balance: mirrorAccount.balance.balance as number,
+    pendingReward: mirrorAccount.pending_reward as number,
   };
 
   return accountInfo;

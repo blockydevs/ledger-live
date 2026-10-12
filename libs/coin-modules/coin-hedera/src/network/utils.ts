@@ -88,7 +88,7 @@ export function parseTransfers(
 
   for (const transfer of mirrorTransfers) {
     const amount = new BigNumber(transfer.amount);
-    const accountId = AccountId.fromString(transfer.account);
+    const accountId = AccountId.fromString(transfer.account!);
 
     // staking reward is included in transfer, so it can be positive even if user sent less HBARs than the reward is
     const amountWithoutReward = transfer.account === address ? amount.minus(stakingReward) : amount;
@@ -107,9 +107,9 @@ export function parseTransfers(
         continue;
       }
 
-      senders.push(transfer.account);
+      senders.push(transfer.account!);
     } else if (isValidRecipient(accountId, recipients)) {
-      recipients.push(transfer.account);
+      recipients.push(transfer.account!);
     }
   }
 
@@ -499,11 +499,11 @@ export const analyzeStakingOperation = async ({
   const uncommittedBalanceChange = await calculateUncommittedBalanceChange({
     configOrCurrencyId,
     address,
-    startTimestamp: accountAfter.balance.timestamp,
+    startTimestamp: accountAfter.balance.timestamp as string,
     endTimestamp: mirrorTx.consensus_timestamp,
   });
 
-  const actualStakedAmount = uncommittedBalanceChange.plus(accountAfter.balance.balance);
+  const actualStakedAmount = uncommittedBalanceChange.plus(accountAfter.balance.balance ?? NaN);
 
   return {
     operationType,
