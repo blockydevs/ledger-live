@@ -25,7 +25,7 @@ export async function getAddressesForPublicKey(
     publicKey,
   });
 
-  return accounts.map(a => a.account as string);
+  return accounts.map(a => a.account);
 }
 
 // Every Hedera account sits on the seed path (`44/3030`), so its key is `seedIdentifier`.

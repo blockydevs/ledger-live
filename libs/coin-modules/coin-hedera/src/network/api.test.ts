@@ -59,6 +59,23 @@ describe("apiClient", () => {
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
     });
 
+    it("skips and logs an account without account id and keeps the others", async () => {
+      const good1 = { account: "0.0.1234" };
+      const good2 = { account: "0.0.5678" };
+      mockedNetwork.mockResolvedValueOnce(
+        getMockResponse({ accounts: [good1, { account: null }, good2] }),
+      );
+
+      const result = await apiClient.getAccountsForPublicKey({
+        configOrCurrencyId: mockConfig,
+        publicKey: "abc123",
+      });
+
+      expect(result).toEqual([good1, good2]);
+      expect(result[0]).toBe(good1);
+      expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining('"account"'));
+    });
+
     it("should return empty array on LedgerAPI4xx error", async () => {
       mockedNetwork.mockRejectedValueOnce(new LedgerAPI4xx());
 

@@ -174,7 +174,7 @@ async function getAccountsForPublicKey({
 }: {
   configOrCurrencyId: HederaCoinConfig | string;
   publicKey: string;
-}): Promise<HederaMirrorAccount[]> {
+}): Promise<(HederaMirrorAccount & { account: string })[]> {
   const config = resolveConfig(configOrCurrencyId);
 
   let res;
@@ -191,7 +191,13 @@ async function getAccountsForPublicKey({
   const accounts = requiredField(res.data.accounts, "accounts");
   accounts.forEach(assertCoreAccount);
 
-  return accounts;
+  return accounts.filter((account): account is HederaMirrorAccount & { account: string } => {
+    if (account?.account === null || account?.account === undefined) {
+      log(LOG_TYPE, 'Skipping mirror node account without "account"');
+      return false;
+    }
+    return true;
+  });
 }
 
 /**
