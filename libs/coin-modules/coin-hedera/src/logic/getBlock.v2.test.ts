@@ -417,6 +417,92 @@ describe("getBlockV2", () => {
     });
   });
 
+  it("omits gas fields from details when the contract result has null gas", async () => {
+    const mockMirrorAccount = getMockedMirrorAccount({ account: "0.0.12345" });
+    const mockTokenERC20 = getMockedERC20TokenCurrency();
+
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: "1625097600.000000000",
+      transaction_hash: "erc20-transfer-hash",
+      charged_tx_fee: 300000,
+      result: "SUCCESS",
+      name: "CONTRACTCALL",
+      memo_base64: "xyz",
+      staking_reward_transfers: [],
+      token_transfers: [],
+      transfers: [{ account: mockMirrorAccount.account, amount: -300000 }],
+    });
+
+    const mockERC20Transfer = getMockedERC20TokenTransfer({
+      token_evm_address: mockTokenERC20.contractAddress,
+      transaction_hash: mockMirrorTransaction.transaction_hash,
+      consensus_timestamp:
+        Number(mockMirrorTransaction.consensus_timestamp.split(".")[0]) * 10 ** 9,
+      sender_account_id: 12345,
+      receiver_account_id: 67890,
+      sender_evm_address: mockMirrorAccount.evm_address,
+      receiver_evm_address: "0xrecipient",
+      payer_account_id: 12345,
+      amount: 5000000,
+    });
+
+    const mockContractCallResult = getMockedMirrorContractCallResult({
+      block_hash: "0xblockhash123",
+      gas_consumed: null,
+      gas_limit: 100000,
+      gas_used: null,
+    });
+
+    const mockEnrichedERC20Transfer = getMockedEnrichedERC20Transfer({
+      mirrorTransaction: mockMirrorTransaction,
+      contractCallResult: mockContractCallResult,
+      transfers: [mockERC20Transfer],
+    });
+
+    (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([
+      mockMirrorTransaction,
+    ]);
+    (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([
+      mockERC20Transfer,
+    ]);
+    (enrichERC20Transfers as jest.Mock).mockReturnValue([mockEnrichedERC20Transfer]);
+
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
+
+    expect(result.transactions[0].operations).toEqual([
+      {
+        type: "transfer",
+        address: "0.0.12345",
+        asset: {
+          type: "native",
+        },
+        amount: BigInt(0),
+      },
+      {
+        type: "transfer",
+        address: "0.0.67890",
+        asset: {
+          type: "erc20",
+          assetReference: mockTokenERC20.contractAddress,
+        },
+        amount: BigInt(mockERC20Transfer.amount),
+      },
+      {
+        type: "transfer",
+        address: "0.0.12345",
+        asset: {
+          type: "erc20",
+          assetReference: mockTokenERC20.contractAddress,
+        },
+        amount: BigInt(-mockERC20Transfer.amount),
+      },
+    ]);
+    const details = result.transactions[0].details;
+    expect(details).toMatchObject({ gasLimit: mockContractCallResult.gas_limit });
+    expect(details).not.toHaveProperty("gasUsed");
+    expect(details).not.toHaveProperty("gasConsumed");
+  });
+
   it("should deduplicate CONTRACT_CALL when matching ERC20 transfer exists", async () => {
     const mockMirrorAccount = getMockedMirrorAccount({ account: "0.0.12345" });
     const mockTokenERC20 = getMockedERC20TokenCurrency();
