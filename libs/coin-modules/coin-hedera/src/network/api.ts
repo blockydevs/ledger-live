@@ -332,7 +332,7 @@ async function getLatestTransaction({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/transactions?${params.toString()}`,
   });
-  const transaction = res.data.transactions?.[0];
+  const transaction = requiredField(res.data.transactions, "transactions")[0];
 
   if (!transaction) {
     throw new Error("No transactions found on the Hedera network");
@@ -356,7 +356,7 @@ async function getLatestBlock({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/blocks?${params.toString()}`,
   });
-  const block = res.data.blocks?.[0];
+  const block = requiredField(res.data.blocks, "blocks")[0];
 
   if (!block) {
     throw new Error("No blocks found on the Hedera network");
@@ -430,7 +430,7 @@ async function findTransactionByContractCallV2({
   const relatedTx = transactions.find(tx => {
     return (
       tx.name === HEDERA_TRANSACTION_NAMES.ContractCall &&
-      tx.transaction_id.startsWith(payerAddress) &&
+      tx.transaction_id?.startsWith(payerAddress) &&
       tx.parent_consensus_timestamp === null
     );
   });

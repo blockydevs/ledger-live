@@ -73,7 +73,10 @@ describe("apiClient", () => {
 
       expect(result).toEqual([good1, good2]);
       expect(result[0]).toBe(good1);
-      expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining('"account"'));
+      expect(mockedLog).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringMatching(/^Skipping .*"account"/),
+      );
     });
 
     it("should return empty array on LedgerAPI4xx error", async () => {
@@ -1076,6 +1079,54 @@ describe("apiClient", () => {
         expect(result).toEqual([foreignTx]);
         expect(mockedLog).toHaveBeenCalledTimes(1);
         expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("name"));
+      });
+
+      it("findTransactionByContractCallV2 does not match a foreign tx without transaction_id", async () => {
+        const foreignTx = {
+          ...getMockedMirrorTransaction({ name: "CONTRACTCALL" }),
+          transaction_id: null,
+        };
+        const ownTx = getMockedMirrorTransaction({
+          transaction_id: `${mockAddress}-1-1`,
+          name: "CONTRACTCALL",
+        });
+        mockedNetwork.mockResolvedValueOnce(getMockResponse({ transactions: [foreignTx, ownTx] }));
+
+        const result = await apiClient.findTransactionByContractCallV2({
+          configOrCurrencyId: mockConfig,
+          timestamp: "1758733200.632122898",
+          payerAddress: mockAddress,
+        });
+
+        expect(result).toBe(ownTx);
+      });
+
+      it("getLatestTransaction raises HederaMirrorNodeResponseError when transactions is missing", async () => {
+        mockedNetwork.mockResolvedValueOnce(getMockResponse({}));
+
+        await expect(
+          apiClient.getLatestTransaction({ configOrCurrencyId: mockConfig, before: new Date() }),
+        ).rejects.toThrow(HederaMirrorNodeResponseError);
+      });
+
+      it("getLatestTransaction keeps the plain error for an empty transactions array", async () => {
+        mockedNetwork.mockResolvedValueOnce(getMockResponse({ transactions: [] }));
+
+        const promise = apiClient.getLatestTransaction({
+          configOrCurrencyId: mockConfig,
+          before: new Date(),
+        });
+
+        await expect(promise).rejects.toThrow("No transactions found on the Hedera network");
+        await expect(promise).rejects.not.toBeInstanceOf(HederaMirrorNodeResponseError);
+      });
+
+      it("getLatestBlock raises HederaMirrorNodeResponseError when blocks is missing", async () => {
+        mockedNetwork.mockResolvedValueOnce(getMockResponse({}));
+
+        await expect(apiClient.getLatestBlock({ configOrCurrencyId: mockConfig })).rejects.toThrow(
+          HederaMirrorNodeResponseError,
+        );
       });
 
       it("getLatestTransaction logs nothing for fields lastBlock does not read", async () => {
