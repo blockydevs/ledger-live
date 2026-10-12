@@ -2,6 +2,7 @@ import type { Balance } from "@ledgerhq/coin-module-framework/api/types";
 import BigNumber from "bignumber.js";
 import { apiClient } from "../network/api";
 import { getERC20BalancesForAccountV2 } from "../network/utils";
+import { getMirrorAccountBalance } from "./utils";
 import type { HederaERC20TokenBalance, HederaMirrorToken, HederaCoinConfig } from "../types";
 
 function mapMirrorTokenToBalance(token: HederaMirrorToken, address: string): Balance {
@@ -52,18 +53,21 @@ export async function getBalance(
       validatorPromise,
     ]);
 
+    const accountBalance = BigInt(getMirrorAccountBalance(mirrorAccount));
+    const pendingReward = BigInt(mirrorAccount.pending_reward ?? 0);
+
     const nativeBalance: Balance = {
       asset: { type: "native" },
-      value: BigInt(mirrorAccount.balance.balance!),
+      value: accountBalance,
       ...(validator && {
         stake: {
           uid: address,
           address,
           asset: { type: "native" },
           state: "active",
-          amount: BigInt(mirrorAccount.balance.balance!) + BigInt(mirrorAccount.pending_reward!),
-          amountDeposited: BigInt(mirrorAccount.balance.balance!),
-          amountRewarded: BigInt(mirrorAccount.pending_reward!),
+          amount: accountBalance + pendingReward,
+          amountDeposited: accountBalance,
+          amountRewarded: pendingReward,
           delegate: validator.node_account_id as string,
           actions: [],
           details: {

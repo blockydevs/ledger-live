@@ -1,5 +1,6 @@
 import type { Page, Stake } from "@ledgerhq/coin-module-framework/api/types";
 import { apiClient } from "../network/api";
+import { getMirrorAccountBalance } from "./utils";
 import type { HederaCoinConfig } from "../types";
 
 /**
@@ -25,8 +26,8 @@ export async function getStakes({
     stakedNodeId >= 0
       ? await apiClient.getNode({ configOrCurrencyId, nodeId: stakedNodeId })
       : null;
-  const balance = BigInt(mirrorAccount.balance.balance!);
-  const pendingReward = BigInt(mirrorAccount.pending_reward!);
+  const balance = BigInt(getMirrorAccountBalance(mirrorAccount));
+  const pendingReward = BigInt(mirrorAccount.pending_reward ?? 0);
 
   const stake: Stake = {
     uid: address,

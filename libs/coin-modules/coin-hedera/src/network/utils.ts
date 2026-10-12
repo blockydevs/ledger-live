@@ -12,6 +12,7 @@ import { HEDERA_VALIDATORS_CACHE_MINUTES, STAKING_REWARD_ACCOUNT_ID } from "../c
 import { HederaRecipientInvalidChecksum } from "../errors";
 import {
   getChecksum,
+  getMirrorAccountBalance,
   mapMirrorNodesToValidators,
   nanosToSeconds,
   resolveConfig,
@@ -496,14 +497,19 @@ export const analyzeStakingOperation = async ({
   }
 
   // calculate uncommitted balance changes between the last snapshot and the staking tx
-  const uncommittedBalanceChange = await calculateUncommittedBalanceChange({
-    configOrCurrencyId,
-    address,
-    startTimestamp: accountAfter.balance.timestamp as string,
-    endTimestamp: mirrorTx.consensus_timestamp,
-  });
+  const snapshotBalance = getMirrorAccountBalance(accountAfter);
+  const snapshotTimestamp = accountAfter.balance.timestamp;
+  // without a snapshot timestamp there is no range to query, so no uncommitted change is known
+  const uncommittedBalanceChange = snapshotTimestamp
+    ? await calculateUncommittedBalanceChange({
+        configOrCurrencyId,
+        address,
+        startTimestamp: snapshotTimestamp,
+        endTimestamp: mirrorTx.consensus_timestamp,
+      })
+    : new BigNumber(0);
 
-  const actualStakedAmount = uncommittedBalanceChange.plus(accountAfter.balance.balance ?? NaN);
+  const actualStakedAmount = uncommittedBalanceChange.plus(snapshotBalance);
 
   return {
     operationType,

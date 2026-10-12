@@ -13,7 +13,7 @@ import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import { HARDCODED_BLOCK_HEIGHT } from "../constants";
 import { listOperationsV2 } from "../logic";
-import { resolveConfig } from "../logic/utils";
+import { getMirrorAccountBalance, resolveConfig } from "../logic/utils";
 import { apiClient } from "../network/api";
 import { getERC20BalancesForAccountV2, toEVMAddress } from "../network/utils";
 import type { HederaAccount } from "../types";
@@ -53,7 +53,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
     getERC20BalancesForAccountV2({ configOrCurrencyId: config, address }),
   ]);
 
-  const accountBalance = new BigNumber(mirrorAccount.balance.balance ?? NaN);
+  const accountBalance = new BigNumber(getMirrorAccountBalance(mirrorAccount));
 
   // we should sync again when new tokens are added or blacklist changes
   const syncHash = await getSyncHash(currency.id, blacklistedTokenIds);
@@ -110,7 +110,7 @@ export const getAccountShape: GetAccountShape<HederaAccount> = async (
       ? {
           nodeId: mirrorAccount.staked_node_id,
           delegated: accountBalance,
-          pendingReward: new BigNumber(mirrorAccount.pending_reward ?? NaN),
+          pendingReward: new BigNumber(mirrorAccount.pending_reward ?? 0),
         }
       : null;
 

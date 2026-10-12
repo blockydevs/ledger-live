@@ -1,5 +1,6 @@
 import type { AccountInfo } from "@ledgerhq/coin-module-framework/api/types";
 import { apiClient } from "../network/api";
+import { getMirrorAccountBalance } from "./utils";
 import type { HederaCoinConfig } from "../types";
 
 export type HederaAccountInfo = {
@@ -20,8 +21,8 @@ export async function getAccountInfo(
     type: "hedera",
     maxAutomaticTokenAssociations: mirrorAccount.max_automatic_token_associations as number,
     stakedNodeId: mirrorAccount.staked_node_id,
-    balance: mirrorAccount.balance.balance as number,
-    pendingReward: mirrorAccount.pending_reward as number,
+    balance: getMirrorAccountBalance(mirrorAccount),
+    pendingReward: mirrorAccount.pending_reward ?? 0,
   };
 
   return accountInfo;

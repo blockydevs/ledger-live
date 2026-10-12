@@ -234,7 +234,7 @@ async function validateStaking({
       config,
       address: intent.sender,
     });
-    const pendingReward = BigInt(account.pending_reward!);
+    const pendingReward = BigInt(account.pending_reward ?? 0);
 
     if (pendingReward <= 0n) {
       errors.noRewardsToClaim = new HederaNoStakingRewardsError();

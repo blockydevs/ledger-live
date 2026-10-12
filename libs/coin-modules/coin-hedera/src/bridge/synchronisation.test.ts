@@ -2,6 +2,7 @@ import * as coinFrameworkAccount from "@ledgerhq/ledger-wallet-framework/account
 import type { AccountShapeInfo } from "@ledgerhq/ledger-wallet-framework/bridge/jsHelpers";
 import type { Account } from "@ledgerhq/types-live";
 import hederaCoinConfig from "../config";
+import { HederaMirrorNodeResponseError } from "../errors";
 import * as logic from "../logic";
 import { apiClient } from "../network/api";
 import * as networkUtils from "../network/utils";
@@ -169,6 +170,34 @@ describe("getAccountShape", () => {
       delegation: unknown;
     } | null;
     expect(hederaResources?.delegation).toMatchObject({ nodeId: 5 });
+  });
+
+  it("uses 0 as the delegation reward when pending_reward is missing", async () => {
+    const { pending_reward: _omitted, ...account } = getMockedMirrorAccount({ staked_node_id: 5 });
+    mockGetAccount.mockResolvedValue(account);
+
+    const result = await getAccountShape(mockInfo, { paginationConfig: {} });
+
+    const hederaResources = (result as { hederaResources?: unknown }).hederaResources as {
+      delegation: { pendingReward: { toNumber(): number } };
+    };
+    expect(hederaResources.delegation.pendingReward.toNumber()).toBe(0);
+  });
+
+  it.each([
+    ["balance", null],
+    ["balance.balance", { balance: null, timestamp: "1764932745.835883000", tokens: [] }],
+  ])("throws HederaMirrorNodeResponseError when %s is null", async (path, balance) => {
+    mockGetAccount.mockResolvedValue(
+      getMockedMirrorAccount({ balance } as unknown as Parameters<
+        typeof getMockedMirrorAccount
+      >[0]),
+    );
+
+    const promise = getAccountShape(mockInfo, { paginationConfig: {} });
+
+    await expect(promise).rejects.toBeInstanceOf(HederaMirrorNodeResponseError);
+    await expect(promise).rejects.toThrow(`"${path}"`);
   });
 
   it("should NOT pass cursor when syncHash has changed", async () => {

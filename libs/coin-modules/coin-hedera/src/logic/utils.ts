@@ -13,7 +13,8 @@ import type { AccountLike, Operation as LiveOperation } from "@ledgerhq/types-li
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import coinConfig from "../config";
-import type { HederaMirrorNode } from "../types/mirror";
+import { HederaMirrorNodeResponseError } from "../errors";
+import type { HederaMirrorAccount, HederaMirrorNode } from "../types/mirror";
 import {
   HEDERA_DELEGATION_STATUS,
   HEDERA_OPERATION_TYPES,
@@ -41,6 +42,18 @@ import type {
   TransactionTokenAssociate,
   SyntheticBlock,
 } from "../types";
+
+export const getMirrorAccountBalance = (account: HederaMirrorAccount): number => {
+  const balance = account.balance?.balance;
+
+  if (balance === null || balance === undefined) {
+    throw new HederaMirrorNodeResponseError(
+      `Mirror node response is missing required field "${account.balance ? "balance.balance" : "balance"}"`,
+    );
+  }
+
+  return balance;
+};
 
 export const serializeSignature = (signature: Uint8Array) => {
   return Buffer.from(signature).toString("base64");

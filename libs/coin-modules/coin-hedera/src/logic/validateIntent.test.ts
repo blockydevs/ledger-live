@@ -237,6 +237,17 @@ describe("validateIntent", () => {
       expect(result.errors.noRewardsToClaim).toBeInstanceOf(HederaNoStakingRewardsError);
     });
 
+    it("claim-rewards treats a missing pending reward as 0", async () => {
+      const { pending_reward: _omitted, ...account } = getMockedMirrorAccount();
+      mockGetAccount.mockResolvedValue(account);
+      mockEstimateFees.mockResolvedValue({ tinybars: new BigNumber(10) });
+      const intent = makeIntent({ type: HEDERA_TRANSACTION_MODES.ClaimRewards });
+
+      const result = await callValidateIntent(intent, [balance(NATIVE_ASSET, 100000n)]);
+
+      expect(result.errors.noRewardsToClaim).toBeInstanceOf(HederaNoStakingRewardsError);
+    });
+
     it("claim-rewards warns, but does not error, when the fee exceeds the pending reward", async () => {
       mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ pending_reward: 10 }));
       mockEstimateFees.mockResolvedValue({ tinybars: new BigNumber(100) });

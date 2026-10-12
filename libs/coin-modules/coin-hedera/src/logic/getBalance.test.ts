@@ -1,7 +1,7 @@
 import { LedgerAPI4xx } from "@ledgerhq/live-network/errors";
 import BigNumber from "bignumber.js";
 import hederaCoinConfig from "../config";
-import { HederaAddAccountError } from "../errors";
+import { HederaAddAccountError, HederaMirrorNodeResponseError } from "../errors";
 import { apiClient } from "../network/api";
 import * as networkUtils from "../network/utils";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
@@ -159,6 +159,43 @@ describe("getBalance", () => {
         },
       },
     ]);
+  });
+
+  it("should use 0 for the reward when pending_reward is missing", async () => {
+    (apiClient.getAccount as jest.Mock).mockResolvedValue({
+      account: address,
+      staked_node_id: 5,
+      balance: { balance: 100 },
+    });
+    (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([]);
+    (apiClient.getNode as jest.Mock).mockResolvedValue({
+      node_id: 5,
+      node_account_id: "0.0.5",
+      max_stake: 45000000000000000,
+      stake: 45000000000000000,
+    });
+    (networkUtils.getERC20BalancesForAccountV2 as jest.Mock).mockResolvedValue([]);
+
+    const result = await getBalance(mockConfig, { address });
+
+    expect(result[0]).toMatchObject({
+      value: 100n,
+      stake: { amount: 100n, amountDeposited: 100n, amountRewarded: 0n },
+    });
+  });
+
+  it.each([
+    ["balance", null],
+    ["balance.balance", { balance: null }],
+  ])("should throw HederaMirrorNodeResponseError when %s is null", async (path, balance) => {
+    (apiClient.getAccount as jest.Mock).mockResolvedValue({ account: address, balance });
+    (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([]);
+    (networkUtils.getERC20BalancesForAccountV2 as jest.Mock).mockResolvedValue([]);
+
+    const promise = getBalance(mockConfig, { address });
+
+    await expect(promise).rejects.toBeInstanceOf(HederaMirrorNodeResponseError);
+    await expect(promise).rejects.toThrow(`"${path}"`);
   });
 
   it("should return stake without overstaked status when validator stake is null", async () => {

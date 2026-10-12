@@ -1,3 +1,4 @@
+import { HederaMirrorNodeResponseError } from "../errors";
 import { apiClient } from "../network/api";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockedMirrorAccount } from "../test/fixtures/mirror.fixture";
@@ -53,6 +54,31 @@ describe("getAccountInfo", () => {
     const result = await getAccountInfo(mockConfig, address);
 
     expect(result).toMatchObject({ maxAutomaticTokenAssociations: 0, stakedNodeId: null });
+  });
+
+  it("uses 0 when pending_reward is missing", async () => {
+    const { pending_reward: _omitted, ...account } = getMockedMirrorAccount();
+    mockGetAccount.mockResolvedValue(account);
+
+    const result = await getAccountInfo(mockConfig, address);
+
+    expect(result).toMatchObject({ pendingReward: 0 });
+  });
+
+  it.each([
+    ["balance", null],
+    ["balance.balance", { balance: null, timestamp: "1764932745.835883000", tokens: [] }],
+  ])("throws HederaMirrorNodeResponseError when %s is null", async (path, balance) => {
+    mockGetAccount.mockResolvedValue(
+      getMockedMirrorAccount({ balance } as unknown as Parameters<
+        typeof getMockedMirrorAccount
+      >[0]),
+    );
+
+    const promise = getAccountInfo(mockConfig, address);
+
+    await expect(promise).rejects.toBeInstanceOf(HederaMirrorNodeResponseError);
+    await expect(promise).rejects.toThrow(`"${path}"`);
   });
 
   it("propagates a mirror node failure", async () => {

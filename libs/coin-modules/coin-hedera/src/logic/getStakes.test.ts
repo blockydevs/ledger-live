@@ -1,3 +1,4 @@
+import { HederaMirrorNodeResponseError } from "../errors";
 import { apiClient } from "../network/api";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getStakes } from "./getStakes";
@@ -218,5 +219,38 @@ describe("getStakes", () => {
     const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
 
     expect(result.items[0].details?.overstaked).toBe(true);
+  });
+
+  it("uses 0 when pending_reward is missing", async () => {
+    mockGetAccount.mockResolvedValue({
+      account: mockAddress,
+      max_automatic_token_associations: 0,
+      evm_address: "",
+      balance: { balance: 1000, timestamp: "0", tokens: [] },
+      staked_node_id: -1,
+    });
+
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
+
+    expect(result.items[0]).toMatchObject({
+      amount: 1000n,
+      amountDeposited: 1000n,
+      amountRewarded: 0n,
+    });
+  });
+
+  it("throws HederaMirrorNodeResponseError when balance.balance is null", async () => {
+    mockGetAccount.mockResolvedValue({
+      account: mockAddress,
+      max_automatic_token_associations: 0,
+      evm_address: "",
+      balance: { balance: null, timestamp: "0", tokens: [] },
+      staked_node_id: -1,
+    });
+
+    const promise = getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
+
+    await expect(promise).rejects.toBeInstanceOf(HederaMirrorNodeResponseError);
+    await expect(promise).rejects.toThrow('"balance.balance"');
   });
 });
