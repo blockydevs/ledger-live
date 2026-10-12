@@ -142,7 +142,7 @@ export function hasCoreTransactionFields(transaction: HederaMirrorTransaction): 
 
   for (const field of CORE_TRANSACTION_FIELDS) {
     if (transaction?.[field] === undefined || transaction[field] === null) {
-      log("coin-hedera", `Mirror node transaction has no value for "${field}"`);
+      log("coin-hedera", `Skipping mirror node transaction with no value for "${field}"`);
       complete = false;
     }
   }
@@ -459,7 +459,7 @@ export const extractCompanyFromNodeDescription = (description: string): string =
 export function skipNodesWithoutAccount(nodes: HederaMirrorNode[]): HederaMirrorNode[] {
   const kept = nodes.filter(node => {
     if (node.node_account_id === null || node.node_account_id === undefined) {
-      log("coin-hedera", 'Skipping mirror node node with no value for "nodes[].node_account_id"');
+      log("coin-hedera", 'Skipping mirror node with no value for "nodes[].node_account_id"');
       return false;
     }
     return true;

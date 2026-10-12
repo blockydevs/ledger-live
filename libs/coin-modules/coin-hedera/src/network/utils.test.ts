@@ -552,7 +552,7 @@ describe("network utils", () => {
       expect(result).toBe(true);
     });
 
-    it("does not treat a null max_automatic_token_associations as auto association", async () => {
+    it("returns true when max_automatic_token_associations is null and the token is associated", async () => {
       (apiClient.getAccount as jest.Mock).mockResolvedValueOnce({
         account: accountId,
         max_automatic_token_associations: null,
