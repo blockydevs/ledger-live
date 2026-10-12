@@ -552,6 +552,58 @@ describe("network utils", () => {
       expect(result).toBe(true);
     });
 
+    it("does not treat a null max_automatic_token_associations as auto association", async () => {
+      (apiClient.getAccount as jest.Mock).mockResolvedValueOnce({
+        account: accountId,
+        max_automatic_token_associations: null,
+        balance: { balance: 1, timestamp: "", tokens: [{ token_id: tokenId, balance: 1 }] },
+      });
+
+      const result = await checkAccountTokenAssociationStatus({
+        configOrCurrencyId: defaultConfig,
+        address: accountId,
+        tokenId,
+      });
+      expect(result).toBe(true);
+    });
+
+    it("returns false when max_automatic_token_associations is null and the token is not associated", async () => {
+      (apiClient.getAccount as jest.Mock).mockResolvedValueOnce({
+        account: accountId,
+        max_automatic_token_associations: null,
+        balance: { balance: 1, timestamp: "", tokens: [] },
+      });
+
+      const result = await checkAccountTokenAssociationStatus({
+        configOrCurrencyId: defaultConfig,
+        address: accountId,
+        tokenId,
+      });
+      expect(result).toBe(false);
+    });
+
+    it("ignores balance.tokens entries with a null token_id", async () => {
+      (apiClient.getAccount as jest.Mock).mockResolvedValueOnce({
+        account: accountId,
+        max_automatic_token_associations: 0,
+        balance: {
+          balance: 1,
+          timestamp: "",
+          tokens: [
+            { token_id: null, balance: 1 },
+            { token_id: tokenId, balance: 1 },
+          ],
+        },
+      });
+
+      const result = await checkAccountTokenAssociationStatus({
+        configOrCurrencyId: defaultConfig,
+        address: accountId,
+        tokenId,
+      });
+      expect(result).toBe(true);
+    });
+
     it("returns true if token is already associated", async () => {
       (apiClient.getAccount as jest.Mock).mockResolvedValueOnce({
         account: accountId,

@@ -8,6 +8,7 @@ import {
   isTokenAccount,
 } from "@ledgerhq/ledger-wallet-framework/account";
 import { mergeOps } from "@ledgerhq/ledger-wallet-framework/bridge/jsHelpers";
+import { log } from "@ledgerhq/logs";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
@@ -100,7 +101,7 @@ export async function buildCalTokenMap({
   const uniqueAddresses = [
     ...new Set([
       ...erc20Tokens.map(t => t.contractAddress.toLowerCase()),
-      ...mirrorTokens.map(t => t.token_id as string),
+      ...mirrorTokens.flatMap(t => (t.token_id ? [t.token_id] : [])),
     ]),
   ];
   const tokenByAddress = new Map<string, TokenCurrency>();
@@ -233,6 +234,11 @@ export const getSubAccounts = async ({
   // e.g. hts tokens added via association flow, without any subsequent activity
   // or erc20 tokens received from 3rd party
   for (const rawToken of [...mirrorTokens, ...erc20Tokens]) {
+    if (!("contractAddress" in rawToken) && !rawToken.token_id) {
+      log("coin-hedera", 'Skipping mirror node account token with no value for "token_id"');
+      continue;
+    }
+
     const parentAccountId = ledgerAccountId;
     const rawBalance = rawToken.balance;
     const balance = new BigNumber(rawBalance);
@@ -264,7 +270,9 @@ export const getSubAccounts = async ({
       spendableBalance: balance,
       creationDate: isERC20
         ? new Date()
-        : new Date(Number.parseFloat(rawToken.created_timestamp ?? "") * 1000),
+        : rawToken.created_timestamp
+          ? new Date(Number.parseFloat(rawToken.created_timestamp) * 1000)
+          : new Date(),
       operations: [],
       operationsCount: 0,
       pendingOperations: [],

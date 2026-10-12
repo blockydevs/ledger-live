@@ -677,6 +677,49 @@ describe("listOperationsV2", () => {
     ]);
   });
 
+  it.each([
+    ["token_id", { token_id: null }],
+    ["created_timestamp", { created_timestamp: null }],
+  ])("should not set associatedTokenId when the related token has a null %s", async (_field, overrides) => {
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: "1625097600.000000000",
+      transaction_hash: "hash1",
+      charged_tx_fee: 500000,
+      result: "SUCCESS",
+      token_transfers: [],
+      staking_reward_transfers: [],
+      transfers: [{ account: mockMirrorAccount.account, amount: -500000 }],
+      name: "TOKENASSOCIATE",
+    });
+    const mockMirrorToken = getMockedMirrorToken({
+      token_id: "0.0.7890",
+      created_timestamp: mockMirrorTransaction.consensus_timestamp,
+      ...overrides,
+    });
+
+    (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+      transactions: [mockMirrorTransaction],
+      nextCursor: null,
+    });
+
+    const result = await listOperations(mockConfig, {
+      limit: mockLimit,
+      order: mockOrder,
+      currencyId: mockCurrency.id,
+      address: mockMirrorAccount.account,
+      evmAddress: mockMirrorAccount.evm_address,
+      mirrorTokens: [mockMirrorToken],
+      tokenEvmAddresses: [],
+      fetchAllPages: true,
+      skipFeesForTokenOperations: false,
+      useEncodedHash: false,
+      useSyntheticBlocks: false,
+    });
+
+    expect(result.coinOperations).toHaveLength(1);
+    expect(result.coinOperations[0].extra).not.toHaveProperty("associatedTokenId");
+  });
+
   it("should return raw token operations even when token is not in CAL", async () => {
     const tokenId = "0.0.7890";
     const mockTransaction = getMockedMirrorTransaction({

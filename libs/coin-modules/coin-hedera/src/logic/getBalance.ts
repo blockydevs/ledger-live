@@ -1,19 +1,25 @@
 import type { Balance } from "@ledgerhq/coin-module-framework/api/types";
+import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { apiClient } from "../network/api";
 import { getERC20BalancesForAccountV2 } from "../network/utils";
 import { getMirrorAccountBalance } from "./utils";
 import type { HederaERC20TokenBalance, HederaMirrorToken, HederaCoinConfig } from "../types";
 
-function mapMirrorTokenToBalance(token: HederaMirrorToken, address: string): Balance {
-  return {
+function mapMirrorTokenToBalance(token: HederaMirrorToken, address: string): Balance[] {
+  if (!token.token_id) {
+    log("coin-hedera", 'Skipping mirror node account token with no value for "token_id"');
+    return [];
+  }
+
+  return [{
     value: BigInt(new BigNumber(token.balance).toFixed(0)),
     asset: {
       type: "hts",
-      assetReference: token.token_id as string,
+      assetReference: token.token_id,
       assetOwner: address,
     },
-  };
+  }];
 }
 
 function mapErc20TokenToBalance(token: HederaERC20TokenBalance, address: string): Balance {
@@ -80,7 +86,7 @@ export async function getBalance(
     };
 
     const tokenBalances: Balance[] = [
-      ...mirrorTokens.map(token => mapMirrorTokenToBalance(token, address)),
+      ...mirrorTokens.flatMap(token => mapMirrorTokenToBalance(token, address)),
       ...erc20TokenBalances.map(token => mapErc20TokenToBalance(token, address)),
     ];
 

@@ -1,4 +1,5 @@
 import { LedgerAPI4xx } from "@ledgerhq/live-network/errors";
+import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import hederaCoinConfig from "../config";
 import { HederaAddAccountError, HederaMirrorNodeResponseError } from "../errors";
@@ -8,6 +9,7 @@ import { getMockedConfig } from "../test/fixtures/config.fixture";
 import type { HederaERC20TokenBalance } from "../types";
 import { getBalance } from "./getBalance";
 
+jest.mock("@ledgerhq/logs");
 jest.mock("../config");
 jest.mock("../network/api");
 jest.mock("../network/utils");
@@ -51,6 +53,26 @@ describe("getBalance", () => {
         value: BigInt("1000000000"),
       },
     ]);
+  });
+
+  it("skips HTS tokens with a null token_id and keeps the others", async () => {
+    (apiClient.getAccount as jest.Mock).mockResolvedValue(mockMirrorAccount);
+    (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([
+      { token_id: null, balance: "1" },
+      { token_id: "0.0.7890", balance: "5000" },
+    ]);
+    (networkUtils.getERC20BalancesForAccountV2 as jest.Mock).mockResolvedValue([]);
+
+    const result = await getBalance(mockConfig, { address });
+
+    expect(result).toEqual([
+      { asset: { type: "native" }, value: BigInt("1000000000") },
+      {
+        value: BigInt("5000"),
+        asset: { type: "hts", assetReference: "0.0.7890", assetOwner: address },
+      },
+    ]);
+    expect(log).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("token_id"));
   });
 
   it("should return native balance and raw token balances", async () => {

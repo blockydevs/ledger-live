@@ -327,8 +327,8 @@ function processCoinTransfers({
       return t.created_timestamp === rawTx.consensus_timestamp;
     });
 
-    if (relatedMirrorToken) {
-      extra.associatedTokenId = relatedMirrorToken.token_id as string;
+    if (relatedMirrorToken?.token_id) {
+      extra.associatedTokenId = relatedMirrorToken.token_id;
     }
   }
 

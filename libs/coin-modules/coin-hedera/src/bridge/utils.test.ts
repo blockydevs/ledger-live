@@ -2,6 +2,7 @@ import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAs
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import { TokenCurrencyIdSchema } from "@ledgerhq/ledger-wallet-framework/types";
+import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { getMockedAccount, getMockedTokenAccount } from "../test/fixtures/account.fixture";
 import {
@@ -21,6 +22,8 @@ import {
   resolveBridgeOperations,
 } from "./utils";
 import { getMockedMirrorToken } from "../test/fixtures/mirror.fixture";
+
+jest.mock("@ledgerhq/logs");
 
 describe("bridge utils", () => {
   describe("prepareOperations", () => {
@@ -204,6 +207,27 @@ describe("bridge utils", () => {
       expect(result.size).toBe(2);
       expect(result.get(erc20Token.contractAddress)).toBe(erc20Token);
       expect(result.get(htsToken.contractAddress)).toBe(htsToken);
+    });
+
+    it("does not look up HTS tokens with a null token_id", async () => {
+      const findMock = jest.fn().mockResolvedValue(undefined);
+      setCryptoAssetsStore({
+        findTokenById: async () => undefined,
+        findTokenByAddressInCurrency: findMock,
+        getTokensSyncHash: async () => "",
+      });
+
+      await buildCalTokenMap({
+        erc20Tokens: [],
+        mirrorTokens: [
+          getMockedMirrorToken({ token_id: null }),
+          getMockedMirrorToken({ token_id: "0.0.1001" }),
+        ],
+        currencyId: "hedera",
+      });
+
+      expect(findMock).toHaveBeenCalledTimes(1);
+      expect(findMock).toHaveBeenCalledWith("0.0.1001", "hedera");
     });
 
     it("deduplicates addresses case-insensitively", async () => {
@@ -472,6 +496,67 @@ describe("getSubAccounts", () => {
         operations: [],
       },
     ]);
+  });
+
+  it("skips mirror tokens with a null token_id and still creates sub accounts for the others", async () => {
+    const htsToken = getMockedHTSTokenCurrency({ contractAddress: "0.0.1001" });
+    const calTokenByAddress = new Map([[htsToken.contractAddress, htsToken]]);
+
+    const result = await getSubAccounts({
+      ledgerAccountId,
+      latestTokenOperations: [],
+      mirrorTokens: [
+        getMockedMirrorToken({ token_id: null, balance: 7 }),
+        getMockedMirrorToken({ token_id: "0.0.1001", balance: 500 }),
+      ],
+      erc20Tokens: [],
+      calTokenByAddress,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ token: htsToken, balance: new BigNumber(500) });
+    expect(log).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("token_id"));
+  });
+
+  it("uses a valid creation date when created_timestamp is null", async () => {
+    const htsToken = getMockedHTSTokenCurrency({ contractAddress: "0.0.1001" });
+    const calTokenByAddress = new Map([[htsToken.contractAddress, htsToken]]);
+    const before = Date.now();
+
+    const result = await getSubAccounts({
+      ledgerAccountId,
+      latestTokenOperations: [],
+      mirrorTokens: [
+        getMockedMirrorToken({ token_id: "0.0.1001", balance: 500, created_timestamp: null }),
+      ],
+      erc20Tokens: [],
+      calTokenByAddress,
+    });
+
+    const creationDate = result[0].creationDate;
+    expect(Number.isNaN(creationDate.getTime())).toBe(false);
+    expect(creationDate.getTime()).toBeGreaterThanOrEqual(before);
+  });
+
+  it("derives the creation date from created_timestamp when present", async () => {
+    const htsToken = getMockedHTSTokenCurrency({ contractAddress: "0.0.1001" });
+    const calTokenByAddress = new Map([[htsToken.contractAddress, htsToken]]);
+
+    const result = await getSubAccounts({
+      ledgerAccountId,
+      latestTokenOperations: [],
+      mirrorTokens: [
+        getMockedMirrorToken({
+          token_id: "0.0.1001",
+          balance: 500,
+          created_timestamp: "1700000000.123456789",
+        }),
+      ],
+      erc20Tokens: [],
+      calTokenByAddress,
+    });
+
+    expect(result[0].creationDate).toEqual(new Date(1700000000123.4568));
   });
 
   it("creates a sub account for an ERC20 token with a positive balance", async () => {

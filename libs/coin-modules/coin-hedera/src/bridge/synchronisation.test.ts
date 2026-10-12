@@ -184,6 +184,28 @@ describe("getAccountShape", () => {
     expect(hederaResources.delegation.pendingReward.toNumber()).toBe(0);
   });
 
+  it("reports auto token association as disabled when max_automatic_token_associations is null", async () => {
+    mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ max_automatic_token_associations: null }));
+
+    const result = await getAccountShape(mockInfo, { paginationConfig: {} });
+
+    expect((result as { hederaResources?: unknown }).hederaResources).toMatchObject({
+      maxAutomaticTokenAssociations: null,
+      isAutoTokenAssociationEnabled: false,
+    });
+  });
+
+  it("reports auto token association as enabled when max_automatic_token_associations is -1", async () => {
+    mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ max_automatic_token_associations: -1 }));
+
+    const result = await getAccountShape(mockInfo, { paginationConfig: {} });
+
+    expect((result as { hederaResources?: unknown }).hederaResources).toMatchObject({
+      maxAutomaticTokenAssociations: -1,
+      isAutoTokenAssociationEnabled: true,
+    });
+  });
+
   it.each([
     ["balance", null],
     ["balance.balance", { balance: null, timestamp: "1764932745.835883000", tokens: [] }],

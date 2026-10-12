@@ -56,6 +56,14 @@ describe("getAccountInfo", () => {
     expect(result).toMatchObject({ maxAutomaticTokenAssociations: 0, stakedNodeId: null });
   });
 
+  it("keeps a null max_automatic_token_associations", async () => {
+    mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ max_automatic_token_associations: null }));
+
+    const result = await getAccountInfo(mockConfig, address);
+
+    expect(result).toMatchObject({ maxAutomaticTokenAssociations: null });
+  });
+
   it("uses 0 when pending_reward is missing", async () => {
     const { pending_reward: _omitted, ...account } = getMockedMirrorAccount();
     mockGetAccount.mockResolvedValue(account);
