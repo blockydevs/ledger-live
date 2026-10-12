@@ -913,6 +913,33 @@ describe("network utils", () => {
       expect(result).toEqual(new BigNumber(1000));
     });
 
+    it("skips and logs transfers without account", async () => {
+      (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValueOnce([
+        {
+          consensus_timestamp: "1762202065.000000000",
+          transfers: [
+            { account: null, amount: 9000 },
+            { account: mockAddress, amount: 2000 },
+          ],
+          staking_reward_transfers: [],
+          token_transfers: [],
+        },
+      ] as unknown as HederaMirrorTransaction[]);
+
+      const result = await calculateUncommittedBalanceChange({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        startTimestamp: mockStartTimestamp,
+        endTimestamp: mockEndTimestamp,
+      });
+
+      expect(result).toEqual(new BigNumber(2000));
+      expect(log).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringContaining("transfers[].account"),
+      );
+    });
+
     it("should return 0 when timestamps are equal or invalid", async () => {
       (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValueOnce([]);
 

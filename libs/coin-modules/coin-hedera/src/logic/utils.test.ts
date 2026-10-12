@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { Transaction as SDKTransaction, TransactionId } from "@hashgraph/sdk";
 import type { AssetInfo, TransactionIntent } from "@ledgerhq/coin-module-framework/api/types";
 import { getCryptoCurrencyById } from "@ledgerhq/ledger-wallet-framework/currencies";
+import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import hederaConfig from "../config";
 import {
@@ -40,6 +41,7 @@ import {
   getTransactionExplorer,
   getSyntheticBlock,
   fromEVMAddress,
+  skipIncompleteTransfers,
   formatTransactionId,
   getDateRangeFromBlockHeight,
   getBlockHash,
@@ -67,6 +69,7 @@ import {
   getHederaTransactionBodyBytes,
 } from "./utils";
 
+jest.mock("@ledgerhq/logs");
 jest.mock("../config");
 jest.mock("../network/api");
 jest.mock("../network/rpc", () => ({
@@ -1471,5 +1474,61 @@ describe("logic utils", () => {
         "hedera: tx body bytes are missing",
       );
     });
+  });
+});
+
+describe("skipIncompleteTransfers", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns the same transaction when nothing is skipped", () => {
+    const tx = getMockedMirrorTransaction({
+      transfers: [{ account: "0.0.1", amount: 1 }],
+      token_transfers: [{ token_id: "0.0.2", account: "0.0.1", amount: 1 }],
+      staking_reward_transfers: [{ account: "0.0.1", amount: 1 }],
+    });
+
+    expect(skipIncompleteTransfers(tx)).toBe(tx);
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  it("returns a copy without incomplete transfers and leaves the input unchanged", () => {
+    const tx = getMockedMirrorTransaction({
+      transfers: [
+        { account: null, amount: 1 },
+        { account: "0.0.1", amount: 1 },
+      ],
+      token_transfers: [
+        { token_id: null, account: "0.0.1", amount: 1 },
+        { token_id: "0.0.2", account: null, amount: 1 },
+        { token_id: "0.0.2", account: "0.0.1", amount: 1 },
+      ],
+      staking_reward_transfers: [{ account: null, amount: 1 }],
+    });
+    const snapshot = structuredClone(tx);
+
+    const result = skipIncompleteTransfers(tx);
+
+    expect(result).not.toBe(tx);
+    expect(result.transfers).toEqual([{ account: "0.0.1", amount: 1 }]);
+    expect(result.token_transfers).toEqual([{ token_id: "0.0.2", account: "0.0.1", amount: 1 }]);
+    expect(result.staking_reward_transfers).toEqual([]);
+    expect(tx).toEqual(snapshot);
+    expect(log).toHaveBeenCalledTimes(4);
+  });
+
+  it("keeps a non-array transfers field unchanged", () => {
+    const tx = {
+      ...getMockedMirrorTransaction(),
+      transfers: null,
+      token_transfers: undefined,
+    } as unknown as ReturnType<typeof getMockedMirrorTransaction>;
+
+    const result = skipIncompleteTransfers(tx);
+
+    expect(result).toBe(tx);
+    expect(result.transfers).toBeNull();
+    expect(result.token_transfers).toBeUndefined();
   });
 });

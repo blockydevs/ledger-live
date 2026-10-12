@@ -1,6 +1,7 @@
 import type { Page, Reward } from "@ledgerhq/coin-module-framework/api/types";
 import { apiClient } from "../network/api";
 import type { HederaCoinConfig } from "../types";
+import { skipIncompleteTransfers } from "./utils";
 
 /**
  * Fetch staking rewards for a given Hedera account.
@@ -24,7 +25,9 @@ export async function getRewards({
   });
 
   const rewards = mirrorTransactions.transactions.reduce<Reward[]>((acc, tx) => {
-    const reward = tx.staking_reward_transfers.find(r => r.account === address);
+    const reward = skipIncompleteTransfers(tx).staking_reward_transfers.find(
+      r => r.account === address,
+    );
     if (!reward) return acc;
 
     const timestamp = new Date(Number.parseInt(tx.consensus_timestamp.split(".")[0], 10) * 1000);

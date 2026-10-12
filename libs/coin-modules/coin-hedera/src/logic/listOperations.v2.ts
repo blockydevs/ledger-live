@@ -23,6 +23,7 @@ import {
   base64ToUrlSafeBase64,
   createStakingRewardOperationHash,
   extractFeesPayer,
+  hasCoreTransactionFields,
   getMemoFromBase64,
   getSyntheticBlock,
   mergeTransactionsFromDifferentSources,
@@ -522,7 +523,12 @@ export async function listOperationsV2(
   // merge transactions, ensuring no duplicates, correct ordering and pagination handling
   const mergeResult = mergeTransactionsFromDifferentSources({
     mirrorTransactions: mirrorTransactions.transactions,
-    enrichedERC20Transfers,
+    enrichedERC20Transfers: enrichedERC20Transfers
+      .filter(item => hasCoreTransactionFields(item.mirrorTransaction))
+      .map(item => ({
+        ...item,
+        mirrorTransaction: skipIncompleteTransfers(item.mirrorTransaction),
+      })),
     order,
     limit,
     latestHgraphIndexedTimestampNs,

@@ -280,6 +280,56 @@ describe("getBlockV2", () => {
     }
   });
 
+  it("skips transfers without account in the mirror transaction of an ERC20 item", async () => {
+    const mockTokenERC20 = getMockedERC20TokenCurrency();
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: "1625097600.000000000",
+      transaction_hash: "erc20-transfer-hash",
+      transaction_id: "0.0.12345-1625097600-000000000",
+      name: "CONTRACTCALL",
+      charged_tx_fee: 300000,
+      transfers: [
+        { account: null, amount: 11 },
+        { account: "0.0.12345", amount: -300000 },
+      ],
+      token_transfers: [{ token_id: "0.0.1", account: null, amount: 1 }],
+      staking_reward_transfers: [{ account: null, amount: 2 }],
+    });
+    const mockERC20Transfer = getMockedERC20TokenTransfer({
+      token_evm_address: mockTokenERC20.contractAddress,
+      transaction_hash: mockMirrorTransaction.transaction_hash,
+      consensus_timestamp: 1625097600 * 10 ** 9,
+      sender_account_id: 12345,
+      receiver_account_id: 67890,
+      payer_account_id: 12345,
+      amount: 5000000,
+    });
+
+    (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([]);
+    (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([
+      mockERC20Transfer,
+    ]);
+    (enrichERC20Transfers as jest.Mock).mockReturnValue([
+      getMockedEnrichedERC20Transfer({
+        mirrorTransaction: mockMirrorTransaction,
+        contractCallResult: getMockedMirrorContractCallResult(),
+        transfers: [mockERC20Transfer],
+      }),
+    ]);
+
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
+
+    expect(result.transactions).toHaveLength(1);
+    const addresses = result.transactions[0].operations.map(op => op.address);
+    expect(addresses).not.toContain(null);
+    expect(addresses).toEqual(["0.0.12345", "0.0.67890", "0.0.12345"]);
+    expect(log).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("transfers[].account"));
+    expect(log).toHaveBeenCalledWith(
+      "coin-hedera",
+      expect.stringContaining("staking_reward_transfers[].account"),
+    );
+  });
+
   it("should handle ERC20 token transfers", async () => {
     const mockMirrorAccount = getMockedMirrorAccount({ account: "0.0.12345" });
     const mockTokenERC20 = getMockedERC20TokenCurrency();

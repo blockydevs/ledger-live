@@ -2040,5 +2040,72 @@ describe("listOperationsV2", () => {
         expect(message).not.toContain(mockMirrorAccount.account);
       }
     });
+
+    it("keeps null transfers and token_transfers as they are", async () => {
+      mockTransactions({
+        ...getMockedMirrorTransaction(),
+        transfers: null,
+        token_transfers: null,
+      } as unknown as HederaMirrorTransaction);
+
+      const result = await callListOperations();
+
+      expect(result.coinOperations).toEqual([]);
+      expect(result.tokenOperations).toEqual([]);
+    });
+
+    describe("ERC20 items", () => {
+      const buildErc20Item = (mirrorTransaction: HederaMirrorTransaction) => {
+        const tokenEvmAddress = "0x00000000000000000000000000000000000abc12";
+        const erc20Transfer = getMockedERC20TokenTransfer({
+          token_evm_address: tokenEvmAddress,
+          transaction_hash: mirrorTransaction.transaction_hash ?? "hash",
+          sender_account_id: 12345,
+          receiver_account_id: 67890,
+          sender_evm_address: mockMirrorAccount.evm_address,
+          receiver_evm_address: "0xrecipient",
+          payer_account_id: 12345,
+          amount: 5,
+        });
+        (hgraphClient.getERC20Transfers as jest.Mock).mockResolvedValue([erc20Transfer]);
+        (networkUtils.enrichERC20Transfers as jest.Mock).mockResolvedValue([
+          getMockedEnrichedERC20Transfer({
+            mirrorTransaction,
+            contractCallResult: getMockedMirrorContractCallResult(),
+            transfers: [erc20Transfer],
+          }),
+        ]);
+        mockTransactions();
+      };
+
+      it("drops an ERC20 item whose mirror transaction lacks a core field and logs it", async () => {
+        buildErc20Item({ ...getMockedMirrorTransaction(), nonce: undefined } as never);
+
+        const result = await callListOperations();
+
+        expect(result.coinOperations).toEqual([]);
+        expect(result.tokenOperations).toEqual([]);
+        expect(log).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("nonce"));
+      });
+
+      it("skips transfers without account in an ERC20 item and still builds its operations", async () => {
+        buildErc20Item(
+          getMockedMirrorTransaction({
+            transfers: [
+              { account: null, amount: 3 },
+              { account: mockMirrorAccount.account, amount: -300000 },
+            ],
+          }),
+        );
+
+        const result = await callListOperations();
+
+        expect(result.tokenOperations).toHaveLength(1);
+        expect(log).toHaveBeenCalledWith(
+          "coin-hedera",
+          expect.stringContaining("transfers[].account"),
+        );
+      });
+    });
   });
 });

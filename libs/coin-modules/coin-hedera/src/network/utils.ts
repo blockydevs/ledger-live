@@ -19,6 +19,7 @@ import {
   resolveConfig,
   toEntityId,
   toTimestamp,
+  skipIncompleteTransfers,
 } from "../logic/utils";
 import type {
   HederaMirrorTokenTransfer,
@@ -419,7 +420,7 @@ export const calculateUncommittedBalanceChange = async ({
 
   // Sum all balance changes from transfers related to this account
   const uncommittedBalanceChange = uncommittedTransactions.reduce((total, tx) => {
-    const transfers = tx.transfers ?? [];
+    const transfers = skipIncompleteTransfers(tx).transfers ?? [];
     const relevantTransfers = transfers.filter(t => t.account === address);
     const netChange = relevantTransfers.reduce((sum, t) => sum.plus(t.amount), new BigNumber(0));
     return total.plus(netChange);

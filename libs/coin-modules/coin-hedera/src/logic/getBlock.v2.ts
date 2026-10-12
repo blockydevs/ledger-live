@@ -195,7 +195,10 @@ export async function getBlockV2({
 
   const mergeResult = mergeTransactionsFromDifferentSources({
     mirrorTransactions: mirrorTransactions.map(skipIncompleteTransfers),
-    enrichedERC20Transfers,
+    enrichedERC20Transfers: enrichedERC20Transfers.map(item => ({
+      ...item,
+      mirrorTransaction: skipIncompleteTransfers(item.mirrorTransaction),
+    })),
     order,
     limit,
     latestHgraphIndexedTimestampNs,

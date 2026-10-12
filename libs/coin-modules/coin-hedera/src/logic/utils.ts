@@ -110,6 +110,8 @@ function skipTransfersMissing<T extends { account: string | null }>(
   path: string,
   fields: readonly (keyof T & string)[],
 ): T[] {
+  if (!Array.isArray(transfers)) return transfers;
+
   const kept = transfers.filter(transfer => {
     const missing = fields.filter(
       field => transfer[field] === null || transfer[field] === undefined,
@@ -121,6 +123,31 @@ function skipTransfersMissing<T extends { account: string | null }>(
   });
 
   return kept.length === transfers.length ? transfers : kept;
+}
+
+export const CORE_TRANSACTION_FIELDS = [
+  "transaction_hash",
+  "consensus_timestamp",
+  "charged_tx_fee",
+  "nonce",
+  "result",
+  "name",
+] as const satisfies readonly (keyof HederaMirrorTransaction)[];
+
+/**
+ * Checks the fields without which no operation can be built and logs each missing one.
+ */
+export function hasCoreTransactionFields(transaction: HederaMirrorTransaction): boolean {
+  let complete = true;
+
+  for (const field of CORE_TRANSACTION_FIELDS) {
+    if (transaction?.[field] === undefined || transaction[field] === null) {
+      log("coin-hedera", `Mirror node transaction has no value for "${field}"`);
+      complete = false;
+    }
+  }
+
+  return complete;
 }
 
 /**

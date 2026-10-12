@@ -1,6 +1,9 @@
+import { log } from "@ledgerhq/logs";
 import { apiClient } from "../network/api";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import { getRewards } from "./getRewards";
+
+jest.mock("@ledgerhq/logs");
 
 describe("getRewards", () => {
   const mockCurrency = getMockedCurrency();
@@ -215,5 +218,34 @@ describe("getRewards", () => {
     });
 
     expect(result.next).toBeUndefined();
+  });
+
+  it("skips and logs a staking reward transfer without account", async () => {
+    mockGetAccountTransactions.mockResolvedValue({
+      transactions: [
+        {
+          transaction_hash: "0xabc123",
+          consensus_timestamp: "1704067210.123456789",
+          staking_reward_transfers: [
+            { account: null, amount: 7 },
+            { account: mockAddress, amount: 5000000 },
+          ],
+        },
+      ] as any,
+      nextCursor: null,
+    });
+
+    const result = await getRewards({
+      configOrCurrencyId: mockCurrency.id,
+      address: mockAddress,
+      cursor: undefined,
+    });
+
+    expect(result.items).toMatchObject([{ amount: BigInt(5000000) }]);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith(
+      "coin-hedera",
+      expect.stringContaining("staking_reward_transfers[].account"),
+    );
   });
 });

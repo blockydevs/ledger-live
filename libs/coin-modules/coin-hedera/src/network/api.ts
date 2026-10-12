@@ -5,7 +5,7 @@ import BigNumber from "bignumber.js";
 import { encodeFunctionData, erc20Abi } from "viem";
 import { HEDERA_TRANSACTION_NAMES } from "../constants";
 import { HederaAddAccountError, HederaMirrorNodeResponseError } from "../errors";
-import { resolveConfig } from "../logic/utils";
+import { CORE_TRANSACTION_FIELDS, hasCoreTransactionFields, resolveConfig } from "../logic/utils";
 import type {
   HederaCoinConfig,
   HederaMirrorAccountTokensResponse,
@@ -24,15 +24,6 @@ import type {
 } from "../types";
 
 const LOG_TYPE = "coin-hedera";
-
-const CORE_TRANSACTION_FIELDS = [
-  "transaction_hash",
-  "consensus_timestamp",
-  "charged_tx_fee",
-  "nonce",
-  "result",
-  "name",
-] as const satisfies readonly (keyof HederaMirrorTransaction)[];
 
 // fields getBlock.v2 reads from every transaction of a block, which is fetched without an account filter
 const BLOCK_TRANSACTION_FIELDS = [
@@ -128,19 +119,6 @@ function assertCoreTransaction(
   logMissingFields("transaction", transaction, fields, ["parent_consensus_timestamp"]);
 
   return transaction;
-}
-
-function assertCoreOwnTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
-  assertCoreTransaction(transaction);
-
-  return transaction;
-}
-
-// without the core fields no operation can be built, so history drops such a transaction
-function hasCoreFields(transaction: HederaMirrorTransaction): boolean {
-  return logMissingFields("transaction", transaction, CORE_TRANSACTION_FIELDS, [
-    "parent_consensus_timestamp",
-  ]);
 }
 
 function assertBlockTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
@@ -282,7 +260,7 @@ async function getAccountTransactions({
     const newTransactions = requiredField(res.data.transactions, "transactions");
     const links = requiredField(res.data.links, "links");
     for (const transaction of newTransactions) {
-      if (hasCoreFields(transaction)) transactions.push(transaction);
+      if (hasCoreTransactionFields(transaction)) transactions.push(transaction);
     }
     nextPath = links.next;
 
@@ -530,7 +508,7 @@ async function getTransactionsByTimestampRange({
     const newTransactions = requiredField(res.data.transactions, "transactions");
     const links = requiredField(res.data.links, "links");
     newTransactions.forEach(tx =>
-      address ? assertCoreOwnTransaction(tx) : assertBlockTransaction(tx),
+      address ? assertCoreTransaction(tx) : assertBlockTransaction(tx),
     );
     transactions.push(...newTransactions);
     nextPath = links.next;
