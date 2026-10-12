@@ -36,13 +36,19 @@ const CORE_TRANSACTION_FIELDS = [
   "name",
 ] as const satisfies readonly (keyof HederaMirrorTransaction)[];
 
-// fields read from every transaction of a block, which is fetched without an account filter
+// fields getBlock.v2 reads from every transaction of a block, which is fetched without an account filter
 const BLOCK_TRANSACTION_FIELDS = [
   "transaction_hash",
   "consensus_timestamp",
   "charged_tx_fee",
   "result",
   "name",
+  "transaction_id",
+] as const satisfies readonly (keyof HederaMirrorTransaction)[];
+
+// fields read from the latest transaction, which is fetched without an account filter
+const LATEST_TRANSACTION_FIELDS = [
+  "consensus_timestamp",
 ] as const satisfies readonly (keyof HederaMirrorTransaction)[];
 
 // fields read from every transaction of the contract call search window, which has no account filter
@@ -52,7 +58,7 @@ const CONTRACT_CALL_SEARCH_FIELDS = [
   "parent_consensus_timestamp",
 ] as const satisfies readonly (keyof HederaMirrorTransaction)[];
 
-export function requiredField<T>(value: T | null | undefined, path: string): T {
+function requiredField<T>(value: T | null | undefined, path: string): T {
   if (value === null || value === undefined) {
     throw new HederaMirrorNodeResponseError(
       `Mirror node response is missing required field "${path}"`,
@@ -136,11 +142,22 @@ function assertCoreTransaction(
   return transaction;
 }
 
-function assertCoreOwnTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
-  assertCoreTransaction(transaction);
+function assertTransfers(transaction: HederaMirrorTransaction): void {
   transaction?.transfers?.forEach(t => assertCoreTransfer("transfer", t));
   transaction?.staking_reward_transfers?.forEach(t => assertCoreTransfer("staking reward", t));
   transaction?.token_transfers?.forEach(assertCoreTokenTransfer);
+}
+
+function assertCoreOwnTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
+  assertCoreTransaction(transaction);
+  assertTransfers(transaction);
+
+  return transaction;
+}
+
+function assertBlockTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
+  assertCoreTransaction(transaction, BLOCK_TRANSACTION_FIELDS);
+  assertTransfers(transaction);
 
   return transaction;
 }
@@ -349,7 +366,7 @@ async function getLatestTransaction({
     throw new Error("No transactions found on the Hedera network");
   }
 
-  return assertCoreOwnTransaction(transaction);
+  return assertCoreTransaction(transaction, LATEST_TRANSACTION_FIELDS);
 }
 
 async function getLatestBlock({
@@ -519,7 +536,7 @@ async function getTransactionsByTimestampRange({
     const newTransactions = requiredField(res.data.transactions, "transactions");
     const links = requiredField(res.data.links, "links");
     newTransactions.forEach(tx =>
-      address ? assertCoreOwnTransaction(tx) : assertCoreTransaction(tx, BLOCK_TRANSACTION_FIELDS),
+      address ? assertCoreOwnTransaction(tx) : assertBlockTransaction(tx),
     );
     transactions.push(...newTransactions);
     nextPath = links.next;
@@ -602,7 +619,7 @@ async function getNodes({
   // set the next cursor only if we have more nodes to fetch
   if (!fetchAllPages && nextPath) {
     const lastNode = nodes.at(-1);
-    nextCursor = lastNode?.node_id?.toString() ?? null;
+    nextCursor = lastNode?.node_id.toString() ?? null;
   }
 
   return { nodes, nextCursor };

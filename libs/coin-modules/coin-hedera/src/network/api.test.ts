@@ -937,10 +937,11 @@ describe("apiClient", () => {
         expect(mockedLog).not.toHaveBeenCalled();
       });
 
-      it("getTransactionsByTimestampRange without address does not log fields the block reader ignores", async () => {
+      it("getTransactionsByTimestampRange without address logs only the fields getBlock reads", async () => {
         const foreignTx = {
           ...getMockedMirrorTransaction(),
           nonce: undefined,
+          memo_base64: undefined,
           transfers: [{ account: null, amount: 1 }],
         };
         mockedNetwork.mockResolvedValueOnce(
@@ -954,6 +955,20 @@ describe("apiClient", () => {
         });
 
         expect(result).toEqual([foreignTx]);
+        expect(mockedLog).toHaveBeenCalledTimes(1);
+        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("account"));
+      });
+
+      it("getLatestTransaction logs nothing for fields lastBlock does not read", async () => {
+        const tx = { ...getMockedMirrorTransaction(), transfers: null, nonce: undefined };
+        mockedNetwork.mockResolvedValueOnce(getMockResponse({ transactions: [tx] }));
+
+        const result = await apiClient.getLatestTransaction({
+          configOrCurrencyId: mockConfig,
+          before: new Date(),
+        });
+
+        expect(result).toBe(tx);
         expect(mockedLog).not.toHaveBeenCalled();
       });
     });
