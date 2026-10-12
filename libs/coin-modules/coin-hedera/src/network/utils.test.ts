@@ -20,6 +20,7 @@ import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockedMirrorNode } from "../test/fixtures/validator.fixture";
 import hederaCoinConfig from "../config";
 import type { HederaMirrorCoinTransfer, HederaMirrorTransaction } from "../types";
+import { log } from "@ledgerhq/logs";
 import network from "@ledgerhq/live-network";
 import { apiClient } from "./api";
 import { hgraphClient } from "./hgraph";
@@ -42,6 +43,7 @@ jest.mock("@ledgerhq/live-network", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
+jest.mock("@ledgerhq/logs");
 jest.mock("./api");
 jest.mock("./hgraph");
 jest.mock("./rpc", () => ({
@@ -946,6 +948,7 @@ describe("network utils", () => {
       });
 
       expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
+      expect(log).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("balance.timestamp"));
       expect(result).toMatchObject({ operationType: "DELEGATE", stakedAmount: 1000n });
     });
 

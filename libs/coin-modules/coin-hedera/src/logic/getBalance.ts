@@ -54,7 +54,6 @@ export async function getBalance(
     ]);
 
     const accountBalance = BigInt(getMirrorAccountBalance(mirrorAccount));
-    const pendingReward = BigInt(mirrorAccount.pending_reward ?? 0);
 
     const nativeBalance: Balance = {
       asset: { type: "native" },
@@ -65,9 +64,9 @@ export async function getBalance(
           address,
           asset: { type: "native" },
           state: "active",
-          amount: accountBalance + pendingReward,
+          amount: accountBalance + BigInt(mirrorAccount.pending_reward ?? 0),
           amountDeposited: accountBalance,
-          amountRewarded: pendingReward,
+          amountRewarded: BigInt(mirrorAccount.pending_reward ?? 0),
           delegate: validator.node_account_id as string,
           actions: [],
           details: {

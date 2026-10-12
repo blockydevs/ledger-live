@@ -7,6 +7,7 @@ import network from "@ledgerhq/live-network";
 import { makeLRUCache, minutes, seconds } from "@ledgerhq/live-network/cache";
 import type { FiatCurrency, Currency } from "@ledgerhq/ledger-wallet-framework/types";
 import type { Operation, OperationType } from "@ledgerhq/types-live";
+import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { HEDERA_VALIDATORS_CACHE_MINUTES, STAKING_REWARD_ACCOUNT_ID } from "../constants";
 import { HederaRecipientInvalidChecksum } from "../errors";
@@ -33,6 +34,8 @@ import type {
 import { apiClient } from "./api";
 import { hgraphClient } from "./hgraph";
 import { rpcClient } from "./rpc";
+
+const LOG_TYPE = "coin-hedera";
 
 const USD_FIAT: FiatCurrency = {
   type: "FiatCurrency",
@@ -500,14 +503,18 @@ export const analyzeStakingOperation = async ({
   const snapshotBalance = getMirrorAccountBalance(accountAfter);
   const snapshotTimestamp = accountAfter.balance.timestamp;
   // without a snapshot timestamp there is no range to query, so no uncommitted change is known
-  const uncommittedBalanceChange = snapshotTimestamp
-    ? await calculateUncommittedBalanceChange({
-        configOrCurrencyId,
-        address,
-        startTimestamp: snapshotTimestamp,
-        endTimestamp: mirrorTx.consensus_timestamp,
-      })
-    : new BigNumber(0);
+  if (snapshotTimestamp === null || snapshotTimestamp === undefined) {
+    log(LOG_TYPE, 'Mirror node account balance has no value for "balance.timestamp"');
+  }
+  const uncommittedBalanceChange =
+    snapshotTimestamp !== null && snapshotTimestamp !== undefined
+      ? await calculateUncommittedBalanceChange({
+          configOrCurrencyId,
+          address,
+          startTimestamp: snapshotTimestamp,
+          endTimestamp: mirrorTx.consensus_timestamp,
+        })
+      : new BigNumber(0);
 
   const actualStakedAmount = uncommittedBalanceChange.plus(snapshotBalance);
 
