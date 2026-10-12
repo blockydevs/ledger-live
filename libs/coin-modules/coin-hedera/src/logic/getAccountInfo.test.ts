@@ -57,7 +57,9 @@ describe("getAccountInfo", () => {
   });
 
   it("keeps a null max_automatic_token_associations", async () => {
-    mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ max_automatic_token_associations: null }));
+    mockGetAccount.mockResolvedValue(
+      getMockedMirrorAccount({ max_automatic_token_associations: null }),
+    );
 
     const result = await getAccountInfo(mockConfig, address);
 

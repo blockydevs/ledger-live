@@ -785,39 +785,42 @@ describe("getBlockV2", () => {
   it.each([
     ["token_id", { token_id: null }],
     ["created_timestamp", { created_timestamp: null }],
-  ])("should emit ASSOCIATE_TOKEN without token id when the related token has a null %s", async (_field, overrides) => {
-    const consensusTimestamp = "1764932745.835883000";
-    const mockTx = getMockedMirrorTransaction({
-      transaction_id: "0.0.999-1234567890-000000000",
-      transaction_hash: "hash_token_associate",
-      name: HEDERA_TRANSACTION_NAMES.TokenAssociate,
-      result: "SUCCESS",
-      charged_tx_fee: 51871165,
-      consensus_timestamp: consensusTimestamp,
-      entity_id: "0.0.999",
-      staking_reward_transfers: [],
-      transfers: [
-        { account: "0.0.802", amount: 51871165 },
-        { account: "0.0.999", amount: 0 },
-      ],
-      token_transfers: [],
-    });
-    const mockToken = getMockedMirrorToken({
-      token_id: "0.0.8279134",
-      created_timestamp: consensusTimestamp,
-      ...overrides,
-    });
+  ])(
+    "should emit ASSOCIATE_TOKEN without token id when the related token has a null %s",
+    async (_field, overrides) => {
+      const consensusTimestamp = "1764932745.835883000";
+      const mockTx = getMockedMirrorTransaction({
+        transaction_id: "0.0.999-1234567890-000000000",
+        transaction_hash: "hash_token_associate",
+        name: HEDERA_TRANSACTION_NAMES.TokenAssociate,
+        result: "SUCCESS",
+        charged_tx_fee: 51871165,
+        consensus_timestamp: consensusTimestamp,
+        entity_id: "0.0.999",
+        staking_reward_transfers: [],
+        transfers: [
+          { account: "0.0.802", amount: 51871165 },
+          { account: "0.0.999", amount: 0 },
+        ],
+        token_transfers: [],
+      });
+      const mockToken = getMockedMirrorToken({
+        token_id: "0.0.8279134",
+        created_timestamp: consensusTimestamp,
+        ...overrides,
+      });
 
-    (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
-    (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
-    (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([mockToken]);
+      (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
+      (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
+      (apiClient.getAccountTokens as jest.Mock).mockResolvedValue([mockToken]);
 
-    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
+      const result = await getBlockV2({ configOrCurrencyId, height: 100 });
 
-    expect(result.transactions[0].operations).toEqual([
-      { type: "other", ledgerOpType: "ASSOCIATE_TOKEN" },
-    ]);
-  });
+      expect(result.transactions[0].operations).toEqual([
+        { type: "other", ledgerOpType: "ASSOCIATE_TOKEN" },
+      ]);
+    },
+  );
 
   it("should include consensusTimestamp and transactionId in tx.details", async () => {
     const mockTx = getMockedMirrorTransaction({

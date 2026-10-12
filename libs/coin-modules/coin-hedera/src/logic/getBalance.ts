@@ -12,14 +12,16 @@ function mapMirrorTokenToBalance(token: HederaMirrorToken, address: string): Bal
     return [];
   }
 
-  return [{
-    value: BigInt(new BigNumber(token.balance).toFixed(0)),
-    asset: {
-      type: "hts",
-      assetReference: token.token_id,
-      assetOwner: address,
+  return [
+    {
+      value: BigInt(new BigNumber(token.balance).toFixed(0)),
+      asset: {
+        type: "hts",
+        assetReference: token.token_id,
+        assetOwner: address,
+      },
     },
-  }];
+  ];
 }
 
 function mapErc20TokenToBalance(token: HederaERC20TokenBalance, address: string): Balance {

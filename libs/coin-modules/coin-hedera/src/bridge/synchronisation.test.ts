@@ -185,7 +185,9 @@ describe("getAccountShape", () => {
   });
 
   it("reports auto token association as disabled when max_automatic_token_associations is null", async () => {
-    mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ max_automatic_token_associations: null }));
+    mockGetAccount.mockResolvedValue(
+      getMockedMirrorAccount({ max_automatic_token_associations: null }),
+    );
 
     const result = await getAccountShape(mockInfo, { paginationConfig: {} });
 
@@ -196,7 +198,9 @@ describe("getAccountShape", () => {
   });
 
   it("reports auto token association as enabled when max_automatic_token_associations is -1", async () => {
-    mockGetAccount.mockResolvedValue(getMockedMirrorAccount({ max_automatic_token_associations: -1 }));
+    mockGetAccount.mockResolvedValue(
+      getMockedMirrorAccount({ max_automatic_token_associations: -1 }),
+    );
 
     const result = await getAccountShape(mockInfo, { paginationConfig: {} });
 
