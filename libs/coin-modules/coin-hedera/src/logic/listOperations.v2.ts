@@ -26,6 +26,7 @@ import {
   getMemoFromBase64,
   getSyntheticBlock,
   mergeTransactionsFromDifferentSources,
+  skipIncompleteTransfers,
   toEntityId,
 } from "./utils";
 
@@ -377,7 +378,9 @@ async function processTransactionItem(
   const newCoinOperations: Operation<HederaOperationExtra>[] = [];
   const newTokenOperations: Operation<HederaOperationExtra>[] = [];
 
-  const mirrorTx = mergedTx.type === "mirror" ? mergedTx.data : mergedTx.data.mirrorTransaction;
+  const mirrorTx = skipIncompleteTransfers(
+    mergedTx.type === "mirror" ? mergedTx.data : mergedTx.data.mirrorTransaction,
+  );
   const commonData = getCommonMirrorOperationData(mirrorTx, useEncodedHash, useSyntheticBlocks);
 
   const stakingReward = calculateStakingReward(mirrorTx, address);

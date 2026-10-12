@@ -26,6 +26,7 @@ import {
   extractFeesPayer,
   millisToSeconds,
   secondsToNanos,
+  skipIncompleteTransfers,
 } from "./utils";
 
 function isStakingTransactionType(
@@ -193,7 +194,7 @@ export async function getBlockV2({
   ]);
 
   const mergeResult = mergeTransactionsFromDifferentSources({
-    mirrorTransactions,
+    mirrorTransactions: mirrorTransactions.map(skipIncompleteTransfers),
     enrichedERC20Transfers,
     order,
     limit,

@@ -123,7 +123,7 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1" })],
             links: { next: "/next-1" },
           }),
         )
@@ -135,13 +135,13 @@ describe("apiClient", () => {
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "3" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "3" })],
             links: { next: "/next-3" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "4" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "4" })],
             links: { next: "/next-4" },
           }),
         )
@@ -168,7 +168,7 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1" })],
             links: { next: "/next-1" },
           }),
         )
@@ -180,13 +180,13 @@ describe("apiClient", () => {
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "3" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "3" })],
             links: { next: "/next-3" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "4" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "4" })],
             links: { next: "/next-4" },
           }),
         )
@@ -927,6 +927,108 @@ describe("apiClient", () => {
       });
     });
 
+    describe("own transactions with missing core fields", () => {
+      const coreFields = [
+        "transaction_hash",
+        "consensus_timestamp",
+        "charged_tx_fee",
+        "nonce",
+        "result",
+        "name",
+      ] as const;
+
+      it.each(coreFields)("drops a transaction without %s and logs the field only", async field => {
+        const incomplete = { ...getMockedMirrorTransaction({ consensus_timestamp: "2" }) };
+        delete (incomplete as Partial<HederaMirrorTransaction>)[field];
+        const first = getMockedMirrorTransaction({ consensus_timestamp: "1" });
+        const third = getMockedMirrorTransaction({ consensus_timestamp: "3" });
+        mockedNetwork.mockResolvedValueOnce(
+          getMockResponse({ transactions: [first, incomplete, third], links: { next: null } }),
+        );
+
+        const { transactions } = await callGetAccountTransactions();
+
+        expect(transactions).toEqual([first, third]);
+        expect(transactions[0]).toBe(first);
+        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining(field));
+        for (const [, message] of mockedLog.mock.calls) {
+          expect(message).not.toContain(mockAddress);
+        }
+      });
+
+      it("drops a null core field", async () => {
+        const incomplete = { ...getMockedMirrorTransaction(), result: null };
+        mockedNetwork.mockResolvedValueOnce(
+          getMockResponse({ transactions: [incomplete], links: { next: null } }),
+        );
+
+        const { transactions } = await callGetAccountTransactions();
+
+        expect(transactions).toEqual([]);
+      });
+
+      it("keeps a null parent_consensus_timestamp", async () => {
+        const tx = getMockedMirrorTransaction({ parent_consensus_timestamp: null });
+        mockedNetwork.mockResolvedValueOnce(
+          getMockResponse({ transactions: [tx], links: { next: null } }),
+        );
+
+        const { transactions } = await callGetAccountTransactions();
+
+        expect(transactions).toEqual([tx]);
+      });
+
+      it("keeps paginating and takes the cursor from the last kept transaction", async () => {
+        const incomplete = { ...getMockedMirrorTransaction({ consensus_timestamp: "3" }) };
+        delete (incomplete as Partial<HederaMirrorTransaction>).consensus_timestamp;
+        mockedNetwork
+          .mockResolvedValueOnce(
+            getMockResponse({
+              transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1" }), incomplete],
+              links: { next: "/next-1" },
+            }),
+          )
+          .mockResolvedValueOnce(
+            getMockResponse({
+              transactions: [getMockedMirrorTransaction({ consensus_timestamp: "4" })],
+              links: { next: "/next-2" },
+            }),
+          );
+
+        const result = await apiClient.getAccountTransactions({
+          configOrCurrencyId: mockConfig,
+          address: mockAddress,
+          pagingToken: null,
+          limit: 2,
+          fetchAllPages: false,
+        });
+
+        expect(result.transactions.map(tx => tx.consensus_timestamp)).toEqual(["1", "4"]);
+        expect(result.nextCursor).toBe("4");
+        expect(mockedNetwork).toHaveBeenCalledTimes(2);
+      });
+
+      it("returns a null cursor when every transaction of the last page is dropped", async () => {
+        const incomplete = { ...getMockedMirrorTransaction(), nonce: undefined };
+        mockedNetwork.mockResolvedValueOnce(
+          getMockResponse({ transactions: [incomplete], links: { next: "/next-1" } }),
+        );
+        mockedNetwork.mockResolvedValueOnce(
+          getMockResponse({ transactions: [], links: { next: null } }),
+        );
+
+        const result = await apiClient.getAccountTransactions({
+          configOrCurrencyId: mockConfig,
+          address: mockAddress,
+          pagingToken: null,
+          limit: 2,
+          fetchAllPages: false,
+        });
+
+        expect(result).toEqual({ transactions: [], nextCursor: null });
+      });
+    });
+
     describe("foreign transactions", () => {
       it("findTransactionByContractCallV2 neither rejects nor logs for invalid fields it does not read", async () => {
         const foreignTx = {
@@ -959,7 +1061,7 @@ describe("apiClient", () => {
           ...getMockedMirrorTransaction(),
           nonce: undefined,
           memo_base64: undefined,
-          transfers: [{ account: null, amount: 1 }],
+          name: undefined,
         };
         mockedNetwork.mockResolvedValueOnce(
           getMockResponse({ transactions: [foreignTx], links: { next: null } }),
@@ -973,7 +1075,7 @@ describe("apiClient", () => {
 
         expect(result).toEqual([foreignTx]);
         expect(mockedLog).toHaveBeenCalledTimes(1);
-        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("account"));
+        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("name"));
       });
 
       it("getLatestTransaction logs nothing for fields lastBlock does not read", async () => {
@@ -1010,15 +1112,16 @@ describe("apiClient", () => {
         }
       });
 
-      it("returns the same transaction objects and logs missing core fields", async () => {
-        const tx = { ...getMockedMirrorTransaction(), nonce: undefined };
-        const response = { transactions: [tx], links: { next: null } };
-        mockedNetwork.mockResolvedValueOnce(getMockResponse(response));
+      it("returns the same transaction objects when all core fields are present", async () => {
+        const tx = getMockedMirrorTransaction();
+        mockedNetwork.mockResolvedValueOnce(
+          getMockResponse({ transactions: [tx], links: { next: null } }),
+        );
 
         const { transactions } = await callGetAccountTransactions();
 
         expect(transactions[0]).toBe(tx);
-        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("nonce"));
+        expect(mockedLog).not.toHaveBeenCalled();
       });
 
       it("returns the same token and node objects", async () => {
@@ -1067,7 +1170,7 @@ describe("apiClient", () => {
         expect(mockedLog).not.toHaveBeenCalled();
       });
 
-      it("returns the same transfer objects and logs null accounts", async () => {
+      it("returns the same transfer objects and leaves skipping to the consumers", async () => {
         const coinTransfer = { account: null, amount: 1 };
         const tokenTransfer = { token_id: null, account: "0.0.5", amount: 1 };
         const tx = getMockedMirrorTransaction({
@@ -1082,8 +1185,7 @@ describe("apiClient", () => {
 
         expect(transactions[0].transfers[0]).toBe(coinTransfer);
         expect(transactions[0].token_transfers[0]).toBe(tokenTransfer);
-        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("account"));
-        expect(mockedLog).toHaveBeenCalledWith("coin-hedera", expect.stringContaining("token_id"));
+        expect(mockedLog).not.toHaveBeenCalled();
       });
     });
   });

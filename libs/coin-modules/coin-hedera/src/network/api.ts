@@ -14,9 +14,7 @@ import type {
   HederaMirrorAccount,
   HederaMirrorAccountsResponse,
   HederaMirrorBlock,
-  HederaMirrorCoinTransfer,
   HederaMirrorToken,
-  HederaMirrorTokenTransfer,
   HederaMirrorTransaction,
   HederaMirrorNetworkFees,
   HederaMirrorContractCallResult,
@@ -72,13 +70,18 @@ function logMissingFields<T extends object>(
   element: T | null | undefined,
   fields: readonly (keyof T & string)[],
   nullableFields: readonly (keyof T & string)[] = [],
-): void {
+): boolean {
+  let complete = true;
+
   for (const field of fields) {
     const value = element?.[field];
     if (value === undefined || (value === null && !nullableFields.includes(field))) {
       log(LOG_TYPE, `Mirror node ${kind} has no value for "${field}"`);
+      complete = false;
     }
   }
+
+  return complete;
 }
 
 function assertCoreAccount(account: HederaMirrorAccount): HederaMirrorAccount {
@@ -118,21 +121,6 @@ function assertCoreContractCallResult(
   return result;
 }
 
-function assertCoreTransfer(
-  kind: string,
-  transfer: HederaMirrorCoinTransfer,
-): HederaMirrorCoinTransfer {
-  logMissingFields(kind, transfer, ["account"]);
-
-  return transfer;
-}
-
-function assertCoreTokenTransfer(transfer: HederaMirrorTokenTransfer): HederaMirrorTokenTransfer {
-  logMissingFields("token transfer", transfer, ["token_id", "account"]);
-
-  return transfer;
-}
-
 function assertCoreTransaction(
   transaction: HederaMirrorTransaction,
   fields: readonly (keyof HederaMirrorTransaction & string)[] = CORE_TRANSACTION_FIELDS,
@@ -142,22 +130,21 @@ function assertCoreTransaction(
   return transaction;
 }
 
-function assertTransfers(transaction: HederaMirrorTransaction): void {
-  transaction?.transfers?.forEach(t => assertCoreTransfer("transfer", t));
-  transaction?.staking_reward_transfers?.forEach(t => assertCoreTransfer("staking reward", t));
-  transaction?.token_transfers?.forEach(assertCoreTokenTransfer);
-}
-
 function assertCoreOwnTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
   assertCoreTransaction(transaction);
-  assertTransfers(transaction);
 
   return transaction;
 }
 
+// without the core fields no operation can be built, so history drops such a transaction
+function hasCoreFields(transaction: HederaMirrorTransaction): boolean {
+  return logMissingFields("transaction", transaction, CORE_TRANSACTION_FIELDS, [
+    "parent_consensus_timestamp",
+  ]);
+}
+
 function assertBlockTransaction(transaction: HederaMirrorTransaction): HederaMirrorTransaction {
   assertCoreTransaction(transaction, BLOCK_TRANSACTION_FIELDS);
-  assertTransfers(transaction);
 
   return transaction;
 }
@@ -294,8 +281,9 @@ async function getAccountTransactions({
     });
     const newTransactions = requiredField(res.data.transactions, "transactions");
     const links = requiredField(res.data.links, "links");
-    newTransactions.forEach(assertCoreOwnTransaction);
-    transactions.push(...newTransactions);
+    for (const transaction of newTransactions) {
+      if (hasCoreFields(transaction)) transactions.push(transaction);
+    }
     nextPath = links.next;
 
     // stop fetching if pagination mode is used and we reached the limit

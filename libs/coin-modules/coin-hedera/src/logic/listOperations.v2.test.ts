@@ -2,6 +2,7 @@ import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAs
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account/accountId";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import { TokenCurrencyIdSchema } from "@ledgerhq/ledger-wallet-framework/types";
+import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import { STAKING_REWARD_ACCOUNT_ID } from "../constants";
 import { apiClient } from "../network/api";
@@ -21,7 +22,7 @@ import {
   getMockedMirrorToken,
   getMockedMirrorTransaction,
 } from "../test/fixtures/mirror.fixture";
-import type { StakingAnalysis, SyntheticBlock } from "../types";
+import type { HederaMirrorTransaction, StakingAnalysis, SyntheticBlock } from "../types";
 import { listOperationsV2 as listOperations } from "./listOperations.v2";
 import * as utils from "./utils";
 
@@ -36,6 +37,7 @@ jest.mock("@ledgerhq/ledger-wallet-framework/account/accountId", () => ({
   encodeTokenAccountId: jest.fn(),
 }));
 jest.mock("@ledgerhq/ledger-wallet-framework/operation");
+jest.mock("@ledgerhq/logs");
 jest.mock("../network/api");
 jest.mock("../network/hgraph");
 jest.mock("../network/utils", () => ({
@@ -1891,5 +1893,152 @@ describe("listOperationsV2", () => {
     });
 
     expect(result.coinOperations).toEqual([]);
+  });
+
+  describe("transfers without account or token id", () => {
+    const callListOperations = () =>
+      listOperations(mockConfig, {
+        limit: mockLimit,
+        order: mockOrder,
+        currencyId: mockCurrency.id,
+        address: mockMirrorAccount.account,
+        evmAddress: mockMirrorAccount.evm_address,
+        mirrorTokens: [],
+        tokenEvmAddresses: [],
+        fetchAllPages: true,
+        skipFeesForTokenOperations: false,
+        useEncodedHash: false,
+        useSyntheticBlocks: false,
+      });
+
+    const mockTransactions = (...transactions: HederaMirrorTransaction[]) =>
+      (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+        transactions,
+        nextCursor: null,
+      });
+
+    it("skips a coin transfer without account, logs it and processes the others", async () => {
+      mockTransactions(
+        getMockedMirrorTransaction({
+          transfers: [
+            { account: null, amount: 7 },
+            { account: mockMirrorAccount.account, amount: -1000000 },
+            { account: "0.0.67890", amount: 1000000 },
+          ],
+        }),
+      );
+
+      const result = await callListOperations();
+
+      expect(result.coinOperations).toMatchObject([
+        { type: "OUT", senders: [mockMirrorAccount.account], recipients: ["0.0.67890"] },
+      ]);
+      expect(log).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringContaining("transfers[].account"),
+      );
+    });
+
+    it("skips a staking reward transfer without account and logs it", async () => {
+      mockTransactions(
+        getMockedMirrorTransaction({
+          transfers: [{ account: mockMirrorAccount.account, amount: 1000 }],
+          staking_reward_transfers: [
+            { account: null, amount: 5 },
+            { account: mockMirrorAccount.account, amount: 300 },
+          ],
+        }),
+      );
+
+      const result = await callListOperations();
+      const reward = result.coinOperations.find(op => op.type === "REWARD");
+
+      expect(reward?.value.toNumber()).toBe(300);
+      expect(log).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringContaining("staking_reward_transfers[].account"),
+      );
+    });
+
+    it("skips HTS transfers without token id or account and processes the others", async () => {
+      const tokenId = "0.0.12345";
+      mockTransactions(
+        getMockedMirrorTransaction({
+          token_transfers: [
+            { token_id: null, account: mockMirrorAccount.account, amount: -5 },
+            { token_id: tokenId, account: null, amount: 5 },
+            { token_id: tokenId, account: mockMirrorAccount.account, amount: -1000 },
+            { token_id: tokenId, account: "0.0.67890", amount: 1000 },
+          ],
+        }),
+      );
+
+      const result = await callListOperations();
+
+      expect(result.tokenOperations).toMatchObject([
+        {
+          type: "OUT",
+          contract: tokenId,
+          value: new BigNumber(1000),
+          senders: [mockMirrorAccount.account],
+          recipients: ["0.0.67890"],
+        },
+      ]);
+      expect(log).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringContaining("token_transfers[].token_id"),
+      );
+      expect(log).toHaveBeenCalledWith(
+        "coin-hedera",
+        expect.stringContaining("token_transfers[].account"),
+      );
+    });
+
+    it("uses the first valid token transfer for the token id", async () => {
+      const tokenId = "0.0.12345";
+      mockTransactions(
+        getMockedMirrorTransaction({
+          token_transfers: [
+            { token_id: null, account: "0.0.67890", amount: 1 },
+            { token_id: tokenId, account: mockMirrorAccount.account, amount: 1000 },
+          ],
+        }),
+      );
+
+      const result = await callListOperations();
+
+      expect(result.tokenOperations).toMatchObject([{ type: "IN", contract: tokenId }]);
+    });
+
+    it("builds no operation for a transaction whose transfers all lack an account", async () => {
+      mockTransactions(
+        getMockedMirrorTransaction({
+          transfers: [{ account: null, amount: 7 }],
+          token_transfers: [{ token_id: "0.0.1", account: null, amount: 7 }],
+        }),
+      );
+
+      const result = await callListOperations();
+
+      expect(result.coinOperations).toEqual([]);
+      expect(result.tokenOperations).toEqual([]);
+    });
+
+    it("never logs account ids", async () => {
+      mockTransactions(
+        getMockedMirrorTransaction({
+          transfers: [
+            { account: null, amount: 7 },
+            { account: mockMirrorAccount.account, amount: -1 },
+          ],
+        }),
+      );
+
+      await callListOperations();
+
+      for (const [, message] of (log as jest.Mock).mock.calls) {
+        expect(message).not.toContain(mockMirrorAccount.account);
+      }
+    });
   });
 });

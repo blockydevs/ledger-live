@@ -105,6 +105,57 @@ export function extractInitiator(transactionId: string): string {
   return transactionId.split("-")[0];
 }
 
+function skipTransfersMissing<T extends { account: string | null }>(
+  transfers: T[],
+  path: string,
+  fields: readonly (keyof T & string)[],
+): T[] {
+  const kept = transfers.filter(transfer => {
+    const missing = fields.filter(
+      field => transfer[field] === null || transfer[field] === undefined,
+    );
+    missing.forEach(field =>
+      log("coin-hedera", `Skipping mirror node transfer with no value for "${path}.${field}"`),
+    );
+    return missing.length === 0;
+  });
+
+  return kept.length === transfers.length ? transfers : kept;
+}
+
+/**
+ * Returns the transaction without the transfers that lack an account or a token id.
+ * The input is not modified.
+ */
+export function skipIncompleteTransfers(
+  transaction: HederaMirrorTransaction,
+): HederaMirrorTransaction {
+  const { transfers, staking_reward_transfers, token_transfers } = transaction;
+  const keptTransfers = skipTransfersMissing(transfers, "transfers[]", ["account"]);
+  const keptRewards = skipTransfersMissing(staking_reward_transfers, "staking_reward_transfers[]", [
+    "account",
+  ]);
+  const keptTokenTransfers = skipTransfersMissing(token_transfers, "token_transfers[]", [
+    "token_id",
+    "account",
+  ]);
+
+  if (
+    keptTransfers === transfers &&
+    keptRewards === staking_reward_transfers &&
+    keptTokenTransfers === token_transfers
+  ) {
+    return transaction;
+  }
+
+  return {
+    ...transaction,
+    transfers: keptTransfers,
+    staking_reward_transfers: keptRewards,
+    token_transfers: keptTokenTransfers,
+  };
+}
+
 /**
  * Extract the fee payer account for a Hedera mirror transaction.
  *

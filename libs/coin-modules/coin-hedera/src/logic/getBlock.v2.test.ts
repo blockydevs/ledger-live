@@ -1,4 +1,5 @@
 import type { BlockInfo } from "@ledgerhq/coin-module-framework/api/types";
+import { log } from "@ledgerhq/logs";
 import { BigNumber } from "bignumber.js";
 import { HEDERA_TRANSACTION_NAMES, FINALITY_MS, STAKING_REWARD_ACCOUNT_ID } from "../constants";
 import { apiClient } from "../network/api";
@@ -18,6 +19,7 @@ import { getBlockV2 } from "./getBlock.v2";
 import { getBlockInfo } from "./getBlockInfo";
 import { getDateRangeFromBlockHeight } from "./utils";
 
+jest.mock("@ledgerhq/logs");
 jest.mock("./getBlockInfo");
 jest.mock("../network/api");
 jest.mock("../network/hgraph");
@@ -234,6 +236,48 @@ describe("getBlockV2", () => {
         amount: BigInt(1000),
       },
     ]);
+  });
+
+  it("skips transfers without account or token id, logs them and keeps the transaction", async () => {
+    const mockTx = getMockedMirrorTransaction({
+      transaction_id: "0.0.999-1234567890-000000000",
+      transaction_hash: "hash",
+      charged_tx_fee: 100000,
+      transfers: [
+        { account: null, amount: 3 },
+        { account: "0.0.999", amount: -100 },
+        { account: "0.0.1001", amount: 100 },
+      ],
+      token_transfers: [
+        { token_id: null, account: "0.0.999", amount: -1 },
+        { token_id: "0.0.12345", account: null, amount: 1 },
+      ],
+      staking_reward_transfers: [{ account: null, amount: 2 }],
+    });
+
+    (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([]);
+    (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([mockTx]);
+
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
+
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions[0].operations).toEqual([
+      {
+        type: "transfer",
+        address: "0.0.999",
+        asset: { type: "native" },
+        amount: BigInt(-100 + 100000),
+      },
+      { type: "transfer", address: "0.0.1001", asset: { type: "native" }, amount: BigInt(100) },
+    ]);
+    for (const path of [
+      "transfers[].account",
+      "token_transfers[].token_id",
+      "token_transfers[].account",
+      "staking_reward_transfers[].account",
+    ]) {
+      expect(log).toHaveBeenCalledWith("coin-hedera", expect.stringContaining(path));
+    }
   });
 
   it("should handle ERC20 token transfers", async () => {
