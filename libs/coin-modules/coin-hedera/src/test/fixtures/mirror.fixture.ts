@@ -34,6 +34,7 @@ export const getMockedMirrorAccount = (
     max_automatic_token_associations: -1,
     pending_reward: 0,
     staked_node_id: null,
+    created_timestamp: null,
     ...overrides,
   };
 };

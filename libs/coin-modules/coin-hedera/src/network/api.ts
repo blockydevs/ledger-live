@@ -8,11 +8,7 @@ import { HederaAddAccountError } from "../errors";
 import { resolveConfig } from "../logic/utils";
 import type {
   HederaCoinConfig,
-  HederaMirrorAccountTokensResponse,
-  HederaMirrorBlocksResponse,
-  HederaMirrorTransactionsResponse,
   HederaMirrorAccount,
-  HederaMirrorAccountsResponse,
   HederaMirrorBlock,
   HederaMirrorToken,
   HederaMirrorTransaction,
@@ -20,8 +16,28 @@ import type {
   HederaMirrorContractCallResult,
   HederaMirrorContractCallEstimate,
   HederaMirrorNode,
-  HederaMirrorNodesResponse,
 } from "../types";
+import {
+  normalizeAccount,
+  normalizeAccounts,
+  normalizeBlock,
+  normalizeContractCallResult,
+  normalizeNetworkFees,
+  normalizeNode,
+  normalizeToken,
+  normalizeTransaction,
+  requiredField,
+} from "./normalize";
+import type {
+  RawMirrorAccount,
+  RawMirrorAccountTokensResponse,
+  RawMirrorAccountsResponse,
+  RawMirrorBlocksResponse,
+  RawMirrorContractCallResult,
+  RawMirrorNetworkFees,
+  RawMirrorNodesResponse,
+  RawMirrorTransactionsResponse,
+} from "../types/mirror.raw";
 
 // keeps old behavior when all pages are fetched
 const getPaginationDirection = (fetchAllPages: boolean, order: string) => {
@@ -40,7 +56,7 @@ async function getAccountsForPublicKey({
 
   let res;
   try {
-    res = await network<HederaMirrorAccountsResponse>({
+    res = await network<RawMirrorAccountsResponse>({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}/api/v1/accounts?account.publicKey=${publicKey}&balance=true&limit=100`,
     });
@@ -49,9 +65,7 @@ async function getAccountsForPublicKey({
     throw e;
   }
 
-  const accounts = res.data.accounts;
-
-  return accounts;
+  return normalizeAccounts(requiredField(res.data.accounts, "accounts"));
 }
 
 /**
@@ -84,13 +98,12 @@ async function getAccount({
       ...(timestamp && { timestamp }),
     });
 
-    const res = await network<HederaMirrorAccount>({
+    const res = await network<RawMirrorAccount>({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}/api/v1/accounts/${address}?${params.toString()}`,
     });
-    const account = res.data;
 
-    return account;
+    return normalizeAccount(res.data, res.data.account ?? address);
   } catch (error) {
     if (
       (error as { name?: string; status?: number })?.name === "LedgerAPI4xx" &&
@@ -142,13 +155,13 @@ async function getAccountTransactions({
   // the mirror node API enforces a 60-day max time range per query, even if `timestamp` param is set
   // see: https://hedera.com/blog/changes-to-the-hedera-operated-mirror-node
   while (nextPath) {
-    const res: LiveNetworkResponse<HederaMirrorTransactionsResponse> = await network({
+    const res: LiveNetworkResponse<RawMirrorTransactionsResponse> = await network({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newTransactions = res.data.transactions;
-    transactions.push(...newTransactions);
-    nextPath = res.data.links.next;
+    const newTransactions = requiredField(res.data.transactions, "transactions");
+    transactions.push(...newTransactions.flatMap(tx => normalizeTransaction(tx) ?? []));
+    nextPath = requiredField(res.data.links, "links").next ?? null;
 
     // stop fetching if pagination mode is used and we reached the limit
     if (!fetchAllPages && transactions.length >= limit) {
@@ -186,13 +199,13 @@ async function getAccountTokens({
   let nextPath: string | null = `/api/v1/accounts/${address}/tokens?${params.toString()}`;
 
   while (nextPath) {
-    const res: LiveNetworkResponse<HederaMirrorAccountTokensResponse> = await network({
+    const res: LiveNetworkResponse<RawMirrorAccountTokensResponse> = await network({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newTokens = res.data.tokens;
-    tokens.push(...newTokens);
-    nextPath = res.data.links.next;
+    const newTokens = requiredField(res.data.tokens, "tokens");
+    tokens.push(...newTokens.flatMap(token => normalizeToken(token) ?? []));
+    nextPath = requiredField(res.data.links, "links").next ?? null;
   }
 
   return tokens;
@@ -212,17 +225,17 @@ async function getLatestTransaction({
     timestamp: `lt:${before.getTime() / 1000}`,
   });
 
-  const res = await network<HederaMirrorTransactionsResponse>({
+  const res = await network<RawMirrorTransactionsResponse>({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/transactions?${params.toString()}`,
   });
-  const transaction = res.data.transactions[0];
+  const [transaction] = requiredField(res.data.transactions, "transactions");
 
   if (!transaction) {
     throw new Error("No transactions found on the Hedera network");
   }
 
-  return transaction;
+  return requiredField(normalizeTransaction(transaction), "transactions[0]");
 }
 
 async function getLatestBlock({
@@ -236,17 +249,17 @@ async function getLatestBlock({
     order: "desc",
   });
 
-  const res = await network<HederaMirrorBlocksResponse>({
+  const res = await network<RawMirrorBlocksResponse>({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/blocks?${params.toString()}`,
   });
-  const block = res.data.blocks[0];
+  const [block] = requiredField(res.data.blocks, "blocks");
 
   if (!block) {
     throw new Error("No blocks found on the Hedera network");
   }
 
-  return block;
+  return normalizeBlock(block);
 }
 
 async function getNetworkFees({
@@ -255,12 +268,12 @@ async function getNetworkFees({
   configOrCurrencyId: HederaCoinConfig | string;
 }): Promise<HederaMirrorNetworkFees> {
   const config = resolveConfig(configOrCurrencyId);
-  const res = await network<HederaMirrorNetworkFees>({
+  const res = await network<RawMirrorNetworkFees>({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/network/fees`,
   });
 
-  return res.data;
+  return normalizeNetworkFees(res.data);
 }
 
 const getContractCallResult = makeLRUCache(
@@ -272,12 +285,12 @@ const getContractCallResult = makeLRUCache(
     transactionHash: string;
   }): Promise<HederaMirrorContractCallResult> => {
     const config = resolveConfig(configOrCurrencyId);
-    const res = await network<HederaMirrorContractCallResult>({
+    const res = await network<RawMirrorContractCallResult>({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}/api/v1/contracts/results/${transactionHash}`,
     });
 
-    return res.data;
+    return normalizeContractCallResult(res.data);
   },
   ({ configOrCurrencyId, transactionHash }) => {
     if (typeof configOrCurrencyId === "string") {
@@ -327,19 +340,21 @@ const findTransactionByContractCallV2: CacheRes<
     params.append("timestamp", `gte:${from.toFixed(9)}`);
     params.append("timestamp", `lte:${to.toFixed(9)}`);
 
-    const res = await network<HederaMirrorTransactionsResponse>({
+    const res = await network<RawMirrorTransactionsResponse>({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}/api/v1/transactions?${params.toString()}`,
     });
 
     // try to find main CONTRACT_CALL transaction related to the given address
-    const relatedTx = res.data.transactions.find(tx => {
-      return (
-        tx.name === HEDERA_TRANSACTION_NAMES.ContractCall &&
-        tx.transaction_id.startsWith(payerAddress) &&
-        tx.parent_consensus_timestamp === null
-      );
-    });
+    const relatedTx = requiredField(res.data.transactions, "transactions")
+      .flatMap(tx => normalizeTransaction(tx) ?? [])
+      .find(tx => {
+        return (
+          tx.name === HEDERA_TRANSACTION_NAMES.ContractCall &&
+          tx.transaction_id.startsWith(payerAddress) &&
+          tx.parent_consensus_timestamp === null
+        );
+      });
 
     // not indexed yet: kept out of the cache, so the next sync asks again
     if (!relatedTx) {
@@ -416,13 +431,13 @@ async function getTransactionsByTimestampRange({
   let nextPath: string | null = `/api/v1/transactions?${params.toString()}`;
 
   while (nextPath) {
-    const res: LiveNetworkResponse<HederaMirrorTransactionsResponse> = await network({
+    const res: LiveNetworkResponse<RawMirrorTransactionsResponse> = await network({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newTransactions = res.data.transactions;
-    transactions.push(...newTransactions);
-    nextPath = res.data.links.next;
+    const newTransactions = requiredField(res.data.transactions, "transactions");
+    transactions.push(...newTransactions.flatMap(tx => normalizeTransaction(tx) ?? []));
+    nextPath = requiredField(res.data.links, "links").next ?? null;
   }
 
   return transactions;
@@ -441,11 +456,13 @@ async function getNode({
     limit: "1",
   });
 
-  const res = await network<HederaMirrorNodesResponse>({
+  const res = await network<RawMirrorNodesResponse>({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/network/nodes?${params.toString()}`,
   });
-  return res.data.nodes[0] ?? null;
+  const [node] = requiredField(res.data.nodes, "nodes");
+
+  return node ? normalizeNode(node) : null;
 }
 
 async function getNodes({
@@ -476,13 +493,13 @@ async function getNodes({
   let nextPath: string | null = `/api/v1/network/nodes?${params.toString()}`;
 
   while (nextPath) {
-    const res: LiveNetworkResponse<HederaMirrorNodesResponse> = await network({
+    const res: LiveNetworkResponse<RawMirrorNodesResponse> = await network({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newNodes = res.data.nodes;
-    nodes.push(...newNodes);
-    nextPath = res.data.links.next;
+    const newNodes = requiredField(res.data.nodes, "nodes");
+    nodes.push(...newNodes.flatMap(node => normalizeNode(node) ?? []));
+    nextPath = requiredField(res.data.links, "links").next ?? null;
 
     // stop fetching if pagination mode is used and we reached the limit
     if (!fetchAllPages && nodes.length >= limit) {

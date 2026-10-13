@@ -32,12 +32,12 @@ export interface HederaMirrorTransaction {
 }
 
 export interface HederaMirrorToken {
-  automatic_association: boolean;
+  automatic_association: boolean | null;
   balance: number;
-  created_timestamp: string;
-  decimals: number;
+  created_timestamp: string | null;
+  decimals: number | null;
   token_id: string;
-  freeze_status: FreezeStatus;
+  freeze_status: FreezeStatus | null;
   kyc_status: KycStatus;
 }
 
@@ -46,36 +46,15 @@ export interface HederaMirrorAccount {
   max_automatic_token_associations: number;
   staked_node_id: number | null;
   pending_reward: number;
-  evm_address: string;
+  evm_address: string | null;
   created_timestamp?: string | null;
   balance: {
     balance: number;
-    timestamp: string;
+    timestamp: string | null;
     tokens: {
       token_id: string;
       balance: number;
     }[];
-  };
-}
-
-export interface HederaMirrorAccountTokensResponse {
-  tokens: HederaMirrorToken[];
-  links: {
-    next: string | null;
-  };
-}
-
-export interface HederaMirrorAccountsResponse {
-  accounts: HederaMirrorAccount[];
-  links: {
-    next: string | null;
-  };
-}
-
-export interface HederaMirrorTransactionsResponse {
-  transactions: HederaMirrorTransaction[];
-  links: {
-    next: string | null;
   };
 }
 
@@ -86,29 +65,22 @@ export interface HederaMirrorBlock {
   };
 }
 
-export interface HederaMirrorBlocksResponse {
-  blocks: HederaMirrorBlock[];
-  links: {
-    next: string | null;
-  };
-}
-
 export interface HederaMirrorNetworkFees {
   fees: {
     gas: number;
-    transaction_type: "ContractCall" | "ContractCreate" | "EthereumTransaction";
+    transaction_type: string;
   }[];
-  timestamp: string;
+  timestamp: string | null;
 }
 
 export interface HederaMirrorContractCallResult {
-  contract_id: string;
-  block_hash: string;
-  block_gas_used: number;
-  gas_consumed: number;
+  contract_id: string | null;
+  block_hash: string | null;
+  block_gas_used: number | null;
+  gas_consumed: number | null;
   gas_limit: number;
-  gas_used: number;
-  timestamp: string;
+  gas_used: number | null;
+  timestamp: string | null;
 }
 
 export interface HederaMirrorContractCallEstimate {
@@ -123,16 +95,9 @@ export interface HederaMirrorNode {
   node_id: number;
   node_account_id: string;
   description: string;
-  max_stake: number;
+  max_stake: number | null;
   min_stake: number;
-  stake?: number | null;
+  stake: number | null;
   stake_rewarded: number;
   reward_rate_start: number;
-}
-
-export interface HederaMirrorNodesResponse {
-  nodes: HederaMirrorNode[];
-  links: {
-    next: string | null;
-  };
 }

@@ -893,6 +893,32 @@ describe("network utils", () => {
       jest.resetAllMocks();
     });
 
+    it("skips the uncommitted balance lookup when the account balance has no timestamp", async () => {
+      const accountBefore = getMockedMirrorAccount({ staked_node_id: null });
+      const accountAfter = getMockedMirrorAccount({
+        staked_node_id: 5,
+        balance: { balance: 1000, timestamp: null, tokens: [] },
+      });
+
+      (apiClient.getAccount as jest.Mock)
+        .mockResolvedValueOnce(accountBefore)
+        .mockResolvedValueOnce(accountAfter);
+
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
+
+      expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        operationType: "DELEGATE",
+        previousStakingNodeId: null,
+        targetStakingNodeId: 5,
+        stakedAmount: BigInt(1000),
+      });
+    });
+
     it("detects DELEGATE operation when staking starts", async () => {
       const accountBefore = getMockedMirrorAccount({ staked_node_id: null });
       const accountAfter = getMockedMirrorAccount({ staked_node_id: 5 });

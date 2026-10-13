@@ -379,7 +379,7 @@ export function mapMirrorNodesToValidators(
   const validators: HederaValidator[] = nodes.map(mirrorNode => {
     const id = mirrorNode.node_id.toString();
     const minStake = new BigNumber(mirrorNode.min_stake);
-    const maxStake = new BigNumber(mirrorNode.max_stake);
+    const maxStake = new BigNumber(mirrorNode.max_stake ?? 0);
     const activeStake = new BigNumber(mirrorNode.stake_rewarded);
     const activeStakePercentage = maxStake.gt(0)
       ? activeStake.dividedBy(maxStake).multipliedBy(100).dp(0, BigNumber.ROUND_CEIL)
@@ -394,7 +394,7 @@ export function mapMirrorNodesToValidators(
       maxStake,
       activeStake,
       activeStakePercentage,
-      overstaked: activeStake.gte(maxStake),
+      overstaked: mirrorNode.max_stake !== null && activeStake.gte(maxStake),
       isLedgerNode: id === ledgerNodeId,
     };
   });

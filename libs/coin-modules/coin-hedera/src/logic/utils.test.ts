@@ -789,6 +789,26 @@ describe("logic utils", () => {
       expect(validator.overstaked).toBe(true);
     });
 
+    it("maps a node without max_stake to maxStake 0 and overstaked false", () => {
+      const [validator] = mapMirrorNodesToValidators(
+        [getMockedMirrorNode({ max_stake: null, stake_rewarded: 2000 })],
+        "1",
+      );
+
+      expect(validator).toEqual({
+        id: "0",
+        address: "0.0.3",
+        addressChecksum: getChecksum("0.0.3"),
+        name: "Hedera",
+        minStake: new BigNumber(1000),
+        maxStake: new BigNumber(0),
+        activeStake: new BigNumber(2000),
+        activeStakePercentage: new BigNumber(0),
+        overstaked: false,
+        isLedgerNode: false,
+      });
+    });
+
     it("returns an empty array for an empty node list", () => {
       expect(mapMirrorNodesToValidators([], "1")).toEqual([]);
     });

@@ -2,6 +2,7 @@ import invariant from "invariant";
 import { AccountId, TransactionId } from "@hiero-ledger/sdk";
 import { promiseAllBatched } from "@ledgerhq/coin-module-framework/promises";
 import { getEnv } from "@ledgerhq/live-env";
+import { log } from "@ledgerhq/logs";
 import { getCryptoCurrencyById } from "@ledgerhq/ledger-wallet-framework/currencies";
 import { InvalidAddress } from "@ledgerhq/ledger-wallet-framework/errors";
 import network from "@ledgerhq/live-network";
@@ -503,12 +504,20 @@ export const analyzeStakingOperation = async ({
   }
 
   // calculate uncommitted balance changes between the last snapshot and the staking tx
-  const uncommittedBalanceChange = await calculateUncommittedBalanceChange({
-    configOrCurrencyId,
-    address,
-    startTimestamp: accountAfter.balance.timestamp,
-    endTimestamp: mirrorTx.consensus_timestamp,
-  });
+  let uncommittedBalanceChange = new BigNumber(0);
+  if (accountAfter.balance.timestamp === null) {
+    log(
+      "coin-hedera",
+      'Skipping uncommitted balance for mirror node account with no value for "balance.timestamp"',
+    );
+  } else {
+    uncommittedBalanceChange = await calculateUncommittedBalanceChange({
+      configOrCurrencyId,
+      address,
+      startTimestamp: accountAfter.balance.timestamp,
+      endTimestamp: mirrorTx.consensus_timestamp,
+    });
+  }
 
   const actualStakedAmount = uncommittedBalanceChange.plus(accountAfter.balance.balance);
 

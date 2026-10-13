@@ -1,9 +1,17 @@
 import { LedgerAPI4xx } from "@ledgerhq/live-network/errors";
 import network from "@ledgerhq/live-network";
 import BigNumber from "bignumber.js";
+import { HederaMirrorNodeResponseError } from "../errors";
 import { resolveConfig } from "../logic/utils";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
+import {
+  getMockedMirrorAccount,
+  getMockedMirrorContractCallResult,
+  getMockedMirrorToken,
+  getMockedMirrorTransaction,
+} from "../test/fixtures/mirror.fixture";
 import { getMockResponse } from "../test/fixtures/network.fixture";
+import { getMockedMirrorNode } from "../test/fixtures/validator.fixture";
 import type {
   HederaMirrorContractCallResult,
   HederaMirrorNetworkFees,
@@ -34,7 +42,10 @@ describe("apiClient", () => {
 
   describe("getAccountsForPublicKey", () => {
     it("should call the correct endpoint and return accounts", async () => {
-      const mockAccounts = [{ account: "0.0.1234" }, { account: "0.0.5678" }];
+      const mockAccounts = [
+        getMockedMirrorAccount({ account: "0.0.1234" }),
+        getMockedMirrorAccount({ account: "0.0.5678" }),
+      ];
       mockedNetwork.mockResolvedValueOnce(getMockResponse({ accounts: mockAccounts }));
 
       const result = await apiClient.getAccountsForPublicKey({
@@ -49,6 +60,30 @@ describe("apiClient", () => {
       expect(requestUrl).toContain("balance=true");
       expect(requestUrl).toContain("limit=100");
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips accounts with no account id and keeps scanning", async () => {
+      const kept = getMockedMirrorAccount({ account: "0.0.5678" });
+      mockedNetwork.mockResolvedValueOnce(
+        getMockResponse({
+          accounts: [getMockedMirrorAccount({ account: null as unknown as string }), kept],
+        }),
+      );
+
+      const result = await apiClient.getAccountsForPublicKey({
+        configOrCurrencyId: mockConfig,
+        publicKey: "abc123",
+      });
+
+      expect(result).toEqual([kept]);
+    });
+
+    it("throws when the response has no accounts", async () => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({}));
+
+      await expect(
+        apiClient.getAccountsForPublicKey({ configOrCurrencyId: mockConfig, publicKey: "abc123" }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
     });
 
     it("should return empty array on LedgerAPI4xx error", async () => {
@@ -98,7 +133,7 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1" })],
             links: { next: "/next-1" },
           }),
         )
@@ -110,13 +145,13 @@ describe("apiClient", () => {
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "3" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "3" })],
             links: { next: "/next-3" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "4" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "4" })],
             links: { next: "/next-4" },
           }),
         )
@@ -143,7 +178,7 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1" })],
             links: { next: "/next-1" },
           }),
         )
@@ -155,13 +190,13 @@ describe("apiClient", () => {
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "3" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "3" })],
             links: { next: "/next-3" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "4" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "4" })],
             links: { next: "/next-4" },
           }),
         )
@@ -237,18 +272,55 @@ describe("apiClient", () => {
     });
   });
 
+  describe("pagination with incomplete responses", () => {
+    it.each([
+      ["transactions", { links: { next: null } }],
+      ["links", { transactions: [] }],
+    ])("getAccountTransactions throws when the response has no %s", async (_field, response) => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse(response));
+
+      await expect(
+        apiClient.getAccountTransactions({
+          configOrCurrencyId: mockConfig,
+          address: "0.0.1234",
+          pagingToken: null,
+          fetchAllPages: true,
+        }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
+    });
+
+    it("takes the cursor from the last transaction kept by the normalizer", async () => {
+      const dropped = { ...getMockedMirrorTransaction({ consensus_timestamp: "2" }), name: null };
+      mockedNetwork
+        .mockResolvedValueOnce(
+          getMockResponse({
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1" }), dropped],
+            links: { next: "/next-1" },
+          }),
+        )
+        .mockResolvedValueOnce(
+          getMockResponse({
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "3" })],
+            links: { next: "/next-2" },
+          }),
+        );
+
+      const result = await apiClient.getAccountTransactions({
+        configOrCurrencyId: mockConfig,
+        address: "0.0.1234",
+        pagingToken: null,
+        limit: 2,
+        fetchAllPages: false,
+      });
+
+      expect(result.nextCursor).toBe("3");
+    });
+  });
+
   describe("getAccount", () => {
     it("should call the correct endpoint and return account data", async () => {
       mockedNetwork.mockResolvedValueOnce(
-        getMockResponse({
-          account: mockAddress,
-          max_automatic_token_associations: 0,
-          balance: {
-            balance: 1000,
-            timestamp: "1749047764.000113442",
-            tokens: [],
-          },
-        }),
+        getMockResponse(getMockedMirrorAccount({ account: mockAddress })),
       );
 
       const result = await apiClient.getAccount({
@@ -263,10 +335,10 @@ describe("apiClient", () => {
     });
 
     it("supports timestamp filter", async () => {
-      const mockAccount = { account: mockAddress, staked_node_id: null };
+      const mockAccount = getMockedMirrorAccount({ account: mockAddress });
       const timestamp = "lt:1762202064.065172388";
 
-      (network as jest.Mock).mockResolvedValueOnce({ data: mockAccount });
+      mockedNetwork.mockResolvedValueOnce(getMockResponse(mockAccount));
 
       const result = await apiClient.getAccount({
         configOrCurrencyId: mockConfig,
@@ -283,13 +355,27 @@ describe("apiClient", () => {
     });
   });
 
+  describe("getAccount fallback", () => {
+    it("fills a missing account id with the requested address", async () => {
+      const mockAccount = getMockedMirrorAccount({ account: mockAddress });
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({ ...mockAccount, account: null }));
+
+      const result = await apiClient.getAccount({
+        configOrCurrencyId: mockConfig,
+        address: mockAddress,
+      });
+
+      expect(result).toEqual(mockAccount);
+    });
+  });
+
   describe("getAccountTokens", () => {
     it("should return all tokens if only one page is needed", async () => {
       mockedNetwork.mockResolvedValueOnce(
         getMockResponse({
           tokens: [
-            { token_id: "0.0.1001", balance: 10 },
-            { token_id: "0.0.1002", balance: 20 },
+            getMockedMirrorToken({ token_id: "0.0.1001", balance: 10 }),
+            getMockedMirrorToken({ token_id: "0.0.1002", balance: 20 }),
           ],
           links: { next: null },
         }),
@@ -311,13 +397,13 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            tokens: [{ token_id: "0.0.1001", balance: 10 }],
+            tokens: [getMockedMirrorToken({ token_id: "0.0.1001", balance: 10 })],
             links: { next: "/next-1" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            tokens: [{ token_id: "0.0.1002", balance: 20 }],
+            tokens: [getMockedMirrorToken({ token_id: "0.0.1002", balance: 20 })],
             links: { next: null },
           }),
         );
@@ -329,6 +415,17 @@ describe("apiClient", () => {
 
       expect(result.map(t => t.token_id)).toEqual(["0.0.1001", "0.0.1002"]);
       expect(mockedNetwork).toHaveBeenCalledTimes(2);
+    });
+
+    it.each([
+      ["tokens", { links: { next: null } }],
+      ["links", { tokens: [] }],
+    ])("throws when the response has no %s", async (_field, response) => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse(response));
+
+      await expect(
+        apiClient.getAccountTokens({ configOrCurrencyId: mockConfig, address: "0.0.1234" }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
     });
   });
 
@@ -434,13 +531,14 @@ describe("apiClient", () => {
     });
 
     it("fetches a transaction hash only once", async () => {
-      mockedNetwork.mockResolvedValue(getMockResponse({ gas_used: 150 }));
+      const mockedResult = getMockedMirrorContractCallResult({ gas_used: 150 });
+      mockedNetwork.mockResolvedValue(getMockResponse(mockedResult));
       const params = { configOrCurrencyId: mockConfig, transactionHash: "0xabc" };
 
       await apiClient.getContractCallResult(params);
       const result = await apiClient.getContractCallResult(params);
 
-      expect(result).toEqual({ gas_used: 150 });
+      expect(result).toEqual(mockedResult);
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
     });
   });
@@ -493,31 +591,19 @@ describe("apiClient", () => {
       mockedNetwork.mockResolvedValueOnce(
         getMockResponse({
           transactions: [
-            {
-              transfers: [],
-              token_transfers: [],
-              staking_reward_transfers: [],
-              charged_tx_fee: 100,
+            getMockedMirrorTransaction({
               transaction_hash: "zzz",
               transaction_id: `${mockPayerAddress1}-${mockConsensusTimestamp1}`,
               consensus_timestamp: mockConsensusTimestamp1,
-              result: "",
-              entity_id: "0.0.1",
               name: "NOT_CONTRACTCALL",
-            },
-            {
-              transfers: [],
-              token_transfers: [],
-              staking_reward_transfers: [],
-              charged_tx_fee: 100,
+            }),
+            getMockedMirrorTransaction({
               transaction_hash: "yyy",
               transaction_id: `${mockPayerAddress2}-${mockConsensusTimestamp2}`,
               consensus_timestamp: mockConsensusTimestamp2,
-              result: "",
-              entity_id: "0.0.2",
               name: "CONTRACTCALL",
-            },
-          ] satisfies Partial<HederaMirrorTransaction>[],
+            }),
+          ],
         }),
       );
 
@@ -550,11 +636,11 @@ describe("apiClient", () => {
     });
 
     it("fetches a found transaction only once", async () => {
-      const transaction = {
+      const transaction = getMockedMirrorTransaction({
         name: "CONTRACTCALL",
         transaction_id: "0.0.1234-1758733200-632122898",
         parent_consensus_timestamp: null,
-      };
+      });
       mockedNetwork.mockResolvedValue(getMockResponse({ transactions: [transaction] }));
       const params = {
         configOrCurrencyId: mockConfig,
@@ -662,8 +748,8 @@ describe("apiClient", () => {
       mockedNetwork.mockResolvedValueOnce(
         getMockResponse({
           transactions: [
-            { consensus_timestamp: "1500.123456789" },
-            { consensus_timestamp: "1750.987654321" },
+            getMockedMirrorTransaction({ consensus_timestamp: "1500.123456789" }),
+            getMockedMirrorTransaction({ consensus_timestamp: "1750.987654321" }),
           ],
           links: { next: null },
         }),
@@ -686,19 +772,19 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1100.000000000" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1100.000000000" })],
             links: { next: "/next-1" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1200.000000000" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1200.000000000" })],
             links: { next: "/next-2" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1300.000000000" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1300.000000000" })],
             links: { next: null },
           }),
         );
@@ -721,7 +807,7 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1100.000000000" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1100.000000000" })],
             links: { next: "/next-1" },
           }),
         )
@@ -733,7 +819,7 @@ describe("apiClient", () => {
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            transactions: [{ consensus_timestamp: "1300.000000000" }],
+            transactions: [getMockedMirrorTransaction({ consensus_timestamp: "1300.000000000" })],
             links: { next: null },
           }),
         );
@@ -752,13 +838,30 @@ describe("apiClient", () => {
     });
   });
 
+  describe("getTransactionsByTimestampRange with incomplete responses", () => {
+    it.each([
+      ["transactions", { links: { next: null } }],
+      ["links", { transactions: [] }],
+    ])("throws when the response has no %s", async (_field, response) => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse(response));
+
+      await expect(
+        apiClient.getTransactionsByTimestampRange({
+          configOrCurrencyId: mockConfig,
+          startTimestamp: "gte:1000.000000000",
+          endTimestamp: "lt:2000.000000000",
+        }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
+    });
+  });
+
   describe("getNodes", () => {
     it("should return all nodes if only one page is needed", async () => {
       mockedNetwork.mockResolvedValueOnce(
         getMockResponse({
           nodes: [
-            { node_id: 0, node_account_id: "0.0.3" },
-            { node_id: 1, node_account_id: "0.0.4" },
+            getMockedMirrorNode({ node_id: 0, node_account_id: "0.0.3" }),
+            getMockedMirrorNode({ node_id: 1, node_account_id: "0.0.4" }),
           ],
           links: { next: null },
         }),
@@ -781,19 +884,19 @@ describe("apiClient", () => {
       mockedNetwork
         .mockResolvedValueOnce(
           getMockResponse({
-            nodes: [{ node_id: 0, node_account_id: "0.0.3" }],
+            nodes: [getMockedMirrorNode({ node_id: 0, node_account_id: "0.0.3" })],
             links: { next: "/next-1" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            nodes: [{ node_id: 1, node_account_id: "0.0.4" }],
+            nodes: [getMockedMirrorNode({ node_id: 1, node_account_id: "0.0.4" })],
             links: { next: "/next-2" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            nodes: [{ node_id: 2, node_account_id: "0.0.5" }],
+            nodes: [getMockedMirrorNode({ node_id: 2, node_account_id: "0.0.5" })],
             links: { next: null },
           }),
         );
@@ -812,15 +915,15 @@ describe("apiClient", () => {
         .mockResolvedValueOnce(
           getMockResponse({
             nodes: [
-              { node_id: 0, node_account_id: "0.0.3" },
-              { node_id: 1, node_account_id: "0.0.4" },
+              getMockedMirrorNode({ node_id: 0, node_account_id: "0.0.3" }),
+              getMockedMirrorNode({ node_id: 1, node_account_id: "0.0.4" }),
             ],
             links: { next: "/next-1" },
           }),
         )
         .mockResolvedValueOnce(
           getMockResponse({
-            nodes: [{ node_id: 2, node_account_id: "0.0.5" }],
+            nodes: [getMockedMirrorNode({ node_id: 2, node_account_id: "0.0.5" })],
             links: { next: null },
           }),
         );
@@ -834,6 +937,17 @@ describe("apiClient", () => {
       expect(result.nodes.map(tx => tx.node_id)).toEqual([0, 1]);
       expect(result.nextCursor).toBe("1");
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ["nodes", { links: { next: null } }],
+      ["links", { nodes: [] }],
+    ])("throws when the response has no %s", async (_field, response) => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse(response));
+
+      await expect(
+        apiClient.getNodes({ configOrCurrencyId: mockConfig, fetchAllPages: true }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
     });
   });
 });

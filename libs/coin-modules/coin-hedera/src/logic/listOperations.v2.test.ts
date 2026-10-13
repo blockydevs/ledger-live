@@ -56,7 +56,8 @@ const mockGetContractCallResult = jest.mocked(apiClient.getContractCallResult);
 describe("listOperationsV2", () => {
   const mockCurrency = getMockedCurrency();
   const mockConfig = getMockedConfig();
-  const mockMirrorAccount = getMockedMirrorAccount();
+  const mockEvmAddress = "0x0000000000000000000000000000000000012345";
+  const mockMirrorAccount = getMockedMirrorAccount({ evm_address: mockEvmAddress });
   const mockSyntheticBlock: SyntheticBlock = {
     blockHeight: 1000000,
     blockHash: "0x100000",
@@ -103,7 +104,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -146,7 +147,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -170,7 +171,7 @@ describe("listOperationsV2", () => {
       order: "desc" as const,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: false,
@@ -248,7 +249,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -312,7 +313,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -367,7 +368,7 @@ describe("listOperationsV2", () => {
       consensus_timestamp: Number(sharedTimestamp.split(".")[0]) * 10 ** 9,
       sender_account_id: 12345,
       receiver_account_id: 67890,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       receiver_evm_address: "0xrecipient",
       payer_account_id: 12345,
       amount: 5000000,
@@ -405,7 +406,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -444,6 +445,79 @@ describe("listOperationsV2", () => {
     ]);
   });
 
+  it("should omit gasConsumed and gasUsed from extra when the contract call result has none", async () => {
+    const mockTokenERC20 = getMockedERC20TokenCurrency();
+    const sharedTimestamp = "1625097600.000000000";
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: sharedTimestamp,
+      transaction_hash: "erc20-transfer-hash",
+      charged_tx_fee: 300000,
+      name: "CONTRACTCALL",
+      staking_reward_transfers: [],
+      token_transfers: [],
+      transfers: [{ account: mockMirrorAccount.account, amount: -300000 }],
+    });
+    const mockERC20Transfer = getMockedERC20TokenTransfer({
+      token_evm_address: mockTokenERC20.contractAddress,
+      transaction_hash: "erc20-transfer-hash",
+      consensus_timestamp: Number(sharedTimestamp.split(".")[0]) * 10 ** 9,
+      sender_account_id: 12345,
+      receiver_account_id: 67890,
+      sender_evm_address: mockEvmAddress,
+      receiver_evm_address: "0xrecipient",
+      payer_account_id: 12345,
+      amount: 5000000,
+    });
+    const mockContractCallResult = getMockedMirrorContractCallResult({
+      gas_consumed: null,
+      gas_used: null,
+    });
+
+    jest.spyOn(networkUtils, "enrichERC20Transfers").mockResolvedValue([
+      getMockedEnrichedERC20Transfer({
+        mirrorTransaction: mockMirrorTransaction,
+        contractCallResult: mockContractCallResult,
+        transfers: [mockERC20Transfer],
+      }),
+    ]);
+    (apiClient.getAccountTransactions as jest.Mock).mockResolvedValue({
+      transactions: [],
+      nextCursor: null,
+    });
+    (hgraphClient.getERC20Transfers as jest.Mock).mockResolvedValue([mockERC20Transfer]);
+    (hgraphClient.getLatestIndexedConsensusTimestamp as jest.Mock).mockResolvedValue(
+      new BigNumber(sharedTimestamp),
+    );
+    setCryptoAssetsStore({
+      findTokenById: async () => undefined,
+      findTokenByAddressInCurrency: jest.fn().mockResolvedValue(mockTokenERC20),
+      getTokensSyncHash: async () => "",
+    });
+
+    const result = await listOperations(mockConfig, {
+      limit: mockLimit,
+      order: mockOrder,
+      currencyId: mockCurrency.id,
+      address: mockMirrorAccount.account,
+      evmAddress: mockEvmAddress,
+      mirrorTokens: [],
+      tokenEvmAddresses: [mockTokenERC20.contractAddress],
+      fetchAllPages: true,
+      skipFeesForTokenOperations: false,
+      useEncodedHash: false,
+      useSyntheticBlocks: false,
+    });
+
+    expect(result.tokenOperations).toHaveLength(1);
+    expect(result.tokenOperations[0].extra).toEqual({
+      pagingToken: mockMirrorTransaction.consensus_timestamp,
+      consensusTimestamp: mockMirrorTransaction.consensus_timestamp,
+      transactionId: mockMirrorTransaction.transaction_id,
+      feesPayer: "0.0.1234",
+      gasLimit: mockContractCallResult.gas_limit,
+    });
+  });
+
   it("should use EVM address for sender/recipient when account_id is null in ERC20 transfer", async () => {
     const mockTokenERC20 = getMockedERC20TokenCurrency();
     const sharedHash = "erc20-transfer-hash";
@@ -465,7 +539,7 @@ describe("listOperationsV2", () => {
       consensus_timestamp: Number(sharedTimestamp.split(".")[0]) * 10 ** 9,
       sender_account_id: null,
       receiver_account_id: null,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       receiver_evm_address: "0xrecipient123",
       payer_account_id: 12345,
       amount: 5000000,
@@ -498,7 +572,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -509,7 +583,7 @@ describe("listOperationsV2", () => {
 
     expect(result.tokenOperations).toEqual([
       expect.objectContaining({
-        senders: [mockMirrorAccount.evm_address],
+        senders: [mockEvmAddress],
         recipients: [mockERC20Transfer.receiver_evm_address],
       }),
     ]);
@@ -564,7 +638,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -599,7 +673,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -653,7 +727,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [mockMirrorToken],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -700,7 +774,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -748,7 +822,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -779,7 +853,7 @@ describe("listOperationsV2", () => {
       cursor: lastPagingToken,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -824,7 +898,7 @@ describe("listOperationsV2", () => {
       limit: mockLimit,
       order: mockOrder,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       currencyId: mockCurrency.id,
       mirrorTokens: [],
       tokenEvmAddresses: [],
@@ -865,7 +939,7 @@ describe("listOperationsV2", () => {
       limit: mockLimit,
       order: mockOrder,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       currencyId: mockCurrency.id,
       mirrorTokens: [],
       tokenEvmAddresses: [],
@@ -907,7 +981,7 @@ describe("listOperationsV2", () => {
       limit: mockLimit,
       order: mockOrder,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       currencyId: mockCurrency.id,
       mirrorTokens: [],
       tokenEvmAddresses: [],
@@ -960,7 +1034,7 @@ describe("listOperationsV2", () => {
         Number(mockMirrorTransaction.consensus_timestamp.split(".")[0]) * 10 ** 9,
       sender_account_id: 12345,
       receiver_account_id: 67890,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       receiver_evm_address: "0xrecipient",
       payer_account_id: 12345,
       amount: 5000000,
@@ -994,7 +1068,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -1057,7 +1131,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1112,7 +1186,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1172,7 +1246,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1217,7 +1291,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1251,7 +1325,7 @@ describe("listOperationsV2", () => {
       sender_account_id: 67890,
       receiver_account_id: 12345,
       sender_evm_address: "0xsender",
-      receiver_evm_address: mockMirrorAccount.evm_address,
+      receiver_evm_address: mockEvmAddress,
       payer_account_id: 67890,
       amount: 5000000,
     });
@@ -1283,7 +1357,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -1309,7 +1383,7 @@ describe("listOperationsV2", () => {
 
     const mockErc20TransferOut = getMockedERC20TokenTransfer({
       token_evm_address: mockTokenA.contractAddress,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       sender_account_id: 12345,
       receiver_account_id: 99999,
       transfer_type: "transfer",
@@ -1318,7 +1392,7 @@ describe("listOperationsV2", () => {
     });
     const mockErc20TransferIn = getMockedERC20TokenTransfer({
       token_evm_address: mockTokenB.contractAddress,
-      receiver_evm_address: mockMirrorAccount.evm_address,
+      receiver_evm_address: mockEvmAddress,
       sender_account_id: 99999,
       receiver_account_id: 12345,
       transfer_type: "transfer",
@@ -1354,7 +1428,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenA.contractAddress, mockTokenB.contractAddress],
       fetchAllPages: true,
@@ -1406,7 +1480,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1446,7 +1520,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1484,7 +1558,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1523,7 +1597,7 @@ describe("listOperationsV2", () => {
       consensus_timestamp: Number(sharedTimestamp.split(".")[0]) * 10 ** 9,
       sender_account_id: 12345,
       receiver_account_id: 67890,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       receiver_evm_address: "0xrecipient",
       payer_account_id: 12345,
       amount: 5000000,
@@ -1558,7 +1632,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -1597,7 +1671,7 @@ describe("listOperationsV2", () => {
       transaction_hash: sharedHash,
       consensus_timestamp: Number(sharedTimestamp) * 10 ** 9,
       sender_account_id: 1234,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       payer_account_id: 1234,
       amount: 1000000,
     });
@@ -1630,7 +1704,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -1687,7 +1761,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1730,7 +1804,7 @@ describe("listOperationsV2", () => {
         Number(mockERC20MirrorTransaction.consensus_timestamp.split(".")[0]) * 10 ** 9 + 1,
       sender_account_id: 12345,
       receiver_account_id: 67890,
-      sender_evm_address: mockMirrorAccount.evm_address,
+      sender_evm_address: mockEvmAddress,
       receiver_evm_address: "0xrecipient",
       payer_account_id: 12345,
       amount: 5000000,
@@ -1764,7 +1838,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [mockTokenERC20.contractAddress],
       fetchAllPages: true,
@@ -1800,7 +1874,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
@@ -1832,7 +1906,7 @@ describe("listOperationsV2", () => {
       order: mockOrder,
       currencyId: mockCurrency.id,
       address: mockMirrorAccount.account,
-      evmAddress: mockMirrorAccount.evm_address,
+      evmAddress: mockEvmAddress,
       mirrorTokens: [],
       tokenEvmAddresses: [],
       fetchAllPages: true,
