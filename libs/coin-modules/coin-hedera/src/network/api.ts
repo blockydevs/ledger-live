@@ -22,9 +22,10 @@ import type {
   HederaMirrorNode,
   HederaMirrorNodesResponse,
 } from "../types";
+import * as guard from "../logic/guards";
 
 export function requiredField<T>(value: T | null | undefined, path: string): T {
-  if (value === null || value === undefined) {
+  if (!guard.isDefined(value)) {
     throw new HederaMirrorNodeResponseError(`Mirror node response has no value for "${path}"`);
   }
   return value;
@@ -344,7 +345,7 @@ const findTransactionByContractCallV2: CacheRes<
       return (
         tx.name === HEDERA_TRANSACTION_NAMES.ContractCall &&
         tx.transaction_id.startsWith(payerAddress) &&
-        tx.parent_consensus_timestamp === null
+        !guard.isDefined(tx.parent_consensus_timestamp)
       );
     });
 

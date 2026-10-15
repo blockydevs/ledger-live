@@ -27,6 +27,7 @@ import {
   millisToSeconds,
   secondsToNanos,
 } from "./utils";
+import * as guard from "./guards";
 
 function isStakingTransactionType(
   item: MergedTransaction,
@@ -252,11 +253,11 @@ export async function getBlockV2({
       transactionId: mirrorTx.transaction_id,
       feesPayer: payerAccount,
       ...(item.type === "erc20" && {
-        ...(item.data.contractCallResult.gas_consumed !== null && {
+        ...(guard.isDefined(item.data.contractCallResult.gas_consumed) && {
           gasConsumed: item.data.contractCallResult.gas_consumed,
         }),
         gasLimit: item.data.contractCallResult.gas_limit,
-        ...(item.data.contractCallResult.gas_used !== null && {
+        ...(guard.isDefined(item.data.contractCallResult.gas_used) && {
           gasUsed: item.data.contractCallResult.gas_used,
         }),
       }),

@@ -41,6 +41,7 @@ import type {
   TransactionTokenAssociate,
   SyntheticBlock,
 } from "../types";
+import * as guard from "./guards";
 
 export const serializeSignature = (signature: Uint8Array) => {
   return Buffer.from(signature).toString("base64");
@@ -162,7 +163,7 @@ export const mapIntentToSDKOperation = (txIntent: TransactionIntent) => {
 
 export const getMemoFromBase64 = (memoBase64: string | undefined): string | null => {
   try {
-    if (memoBase64 === undefined) return null;
+    if (!guard.isDefined(memoBase64)) return null;
 
     return Buffer.from(memoBase64, "base64").toString("utf-8");
   } catch {
@@ -394,7 +395,7 @@ export function mapMirrorNodesToValidators(
       maxStake,
       activeStake,
       activeStakePercentage,
-      overstaked: mirrorNode.max_stake !== null && activeStake.gte(maxStake),
+      overstaked: guard.isDefined(mirrorNode.max_stake) && activeStake.gte(maxStake),
       isLedgerNode: id === ledgerNodeId,
     };
   });
@@ -548,7 +549,7 @@ export const mergeTransactionsFromDifferentSources = ({
   merged = merged.filter(item => {
     if (item.type !== "mirror") return true;
 
-    const isChildTransaction = item.data.parent_consensus_timestamp !== null;
+    const isChildTransaction = guard.isDefined(item.data.parent_consensus_timestamp);
     const hasErc20Transfer = erc20TransferByMirrorHash.has(item.data.transaction_hash);
 
     // ignore child transactions of CONTRACT_CALL if details from erc20 data source are available
