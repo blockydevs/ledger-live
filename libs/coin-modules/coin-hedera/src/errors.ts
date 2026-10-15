@@ -85,3 +85,10 @@ export class ClaimRewardsFeesWarning extends Error {
     if (fields) Object.assign(this, fields);
   }
 }
+
+export class HederaMirrorNodeResponseError extends Error {
+  override name = "HederaMirrorNodeResponseError";
+  constructor(message?: string) {
+    super(message || "HederaMirrorNodeResponseError");
+  }
+}

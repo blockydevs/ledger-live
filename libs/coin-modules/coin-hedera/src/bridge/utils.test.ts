@@ -1,5 +1,5 @@
+import { emptyHistoryCache, encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAssetsStore";
-import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import { TokenCurrencyIdSchema } from "@ledgerhq/ledger-wallet-framework/types";
 import BigNumber from "bignumber.js";
@@ -470,6 +470,40 @@ describe("getSubAccounts", () => {
         balance: new BigNumber(500),
         spendableBalance: new BigNumber(500),
         operations: [],
+      },
+    ]);
+  });
+
+  it("uses the current date as creationDate when the HTS mirror token has no created_timestamp", async () => {
+    const htsToken = getMockedHTSTokenCurrency({ contractAddress: "0.0.1001" });
+    const mirrorToken = getMockedMirrorToken({
+      token_id: "0.0.1001",
+      balance: 500,
+      created_timestamp: null,
+    });
+
+    const result = await getSubAccounts({
+      ledgerAccountId,
+      latestTokenOperations: [],
+      mirrorTokens: [mirrorToken],
+      erc20Tokens: [],
+      calTokenByAddress: new Map([[htsToken.contractAddress, htsToken]]),
+    });
+
+    expect(result).toEqual([
+      {
+        type: "TokenAccount",
+        id: encodeTokenAccountId(ledgerAccountId, htsToken),
+        parentId: ledgerAccountId,
+        token: htsToken,
+        balance: new BigNumber(500),
+        spendableBalance: new BigNumber(500),
+        creationDate: expect.any(Date),
+        operations: [],
+        operationsCount: 0,
+        pendingOperations: [],
+        balanceHistoryCache: emptyHistoryCache,
+        swapHistory: [],
       },
     ]);
   });

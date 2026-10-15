@@ -4,7 +4,7 @@ import type { LiveNetworkResponse } from "@ledgerhq/live-network/network";
 import BigNumber from "bignumber.js";
 import { encodeFunctionData, erc20Abi } from "viem";
 import { HEDERA_TRANSACTION_NAMES } from "../constants";
-import { HederaAddAccountError } from "../errors";
+import { HederaAddAccountError, HederaMirrorNodeResponseError } from "../errors";
 import { resolveConfig } from "../logic/utils";
 import type {
   HederaCoinConfig,
@@ -22,6 +22,13 @@ import type {
   HederaMirrorNode,
   HederaMirrorNodesResponse,
 } from "../types";
+
+export function requiredField<T>(value: T | null | undefined, path: string): T {
+  if (value === null || value === undefined) {
+    throw new HederaMirrorNodeResponseError(`Mirror node response has no value for "${path}"`);
+  }
+  return value;
+}
 
 // keeps old behavior when all pages are fetched
 const getPaginationDirection = (fetchAllPages: boolean, order: string) => {
@@ -49,7 +56,7 @@ async function getAccountsForPublicKey({
     throw e;
   }
 
-  const accounts = res.data.accounts;
+  const accounts = requiredField(res.data.accounts, "accounts");
 
   return accounts;
 }
@@ -146,9 +153,9 @@ async function getAccountTransactions({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newTransactions = res.data.transactions;
+    const newTransactions = requiredField(res.data.transactions, "transactions");
     transactions.push(...newTransactions);
-    nextPath = res.data.links.next;
+    nextPath = res.data.links?.next ?? null;
 
     // stop fetching if pagination mode is used and we reached the limit
     if (!fetchAllPages && transactions.length >= limit) {
@@ -190,9 +197,9 @@ async function getAccountTokens({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newTokens = res.data.tokens;
+    const newTokens = requiredField(res.data.tokens, "tokens");
     tokens.push(...newTokens);
-    nextPath = res.data.links.next;
+    nextPath = res.data.links?.next ?? null;
   }
 
   return tokens;
@@ -216,7 +223,7 @@ async function getLatestTransaction({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/transactions?${params.toString()}`,
   });
-  const transaction = res.data.transactions[0];
+  const [transaction] = requiredField(res.data.transactions, "transactions");
 
   if (!transaction) {
     throw new Error("No transactions found on the Hedera network");
@@ -240,7 +247,7 @@ async function getLatestBlock({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/blocks?${params.toString()}`,
   });
-  const block = res.data.blocks[0];
+  const [block] = requiredField(res.data.blocks, "blocks");
 
   if (!block) {
     throw new Error("No blocks found on the Hedera network");
@@ -333,7 +340,7 @@ const findTransactionByContractCallV2: CacheRes<
     });
 
     // try to find main CONTRACT_CALL transaction related to the given address
-    const relatedTx = res.data.transactions.find(tx => {
+    const relatedTx = requiredField(res.data.transactions, "transactions").find(tx => {
       return (
         tx.name === HEDERA_TRANSACTION_NAMES.ContractCall &&
         tx.transaction_id.startsWith(payerAddress) &&
@@ -420,9 +427,9 @@ async function getTransactionsByTimestampRange({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newTransactions = res.data.transactions;
+    const newTransactions = requiredField(res.data.transactions, "transactions");
     transactions.push(...newTransactions);
-    nextPath = res.data.links.next;
+    nextPath = res.data.links?.next ?? null;
   }
 
   return transactions;
@@ -445,7 +452,7 @@ async function getNode({
     method: "GET",
     url: `${config.apiUrls.mirrorNode}/api/v1/network/nodes?${params.toString()}`,
   });
-  return res.data.nodes[0] ?? null;
+  return requiredField(res.data.nodes, "nodes")[0] ?? null;
 }
 
 async function getNodes({
@@ -480,9 +487,9 @@ async function getNodes({
       method: "GET",
       url: `${config.apiUrls.mirrorNode}${nextPath}`,
     });
-    const newNodes = res.data.nodes;
+    const newNodes = requiredField(res.data.nodes, "nodes");
     nodes.push(...newNodes);
-    nextPath = res.data.links.next;
+    nextPath = res.data.links?.next ?? null;
 
     // stop fetching if pagination mode is used and we reached the limit
     if (!fetchAllPages && nodes.length >= limit) {

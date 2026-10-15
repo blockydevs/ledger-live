@@ -2,7 +2,7 @@ import { getEnv, setEnv } from "@ledgerhq/live-env";
 import { InvalidAddress } from "@ledgerhq/ledger-wallet-framework/errors";
 import BigNumber from "bignumber.js";
 import { STAKING_REWARD_ACCOUNT_ID } from "../constants";
-import { HederaRecipientInvalidChecksum } from "../errors";
+import { HederaMirrorNodeResponseError, HederaRecipientInvalidChecksum } from "../errors";
 import { getMockedAccount } from "../test/fixtures/account.fixture";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import {
@@ -364,10 +364,7 @@ describe("network utils", () => {
       payer_account_id: payerAccountId,
       transaction_hash: mockMirrorTransaction.transaction_hash,
     });
-    const mockContractCallResult = getMockedMirrorContractCallResult({
-      contract_id: erc20Token.tokenId,
-      timestamp: mockMirrorTransaction.consensus_timestamp,
-    });
+    const mockContractCallResult = getMockedMirrorContractCallResult();
 
     beforeEach(() => {
       mockGetContractCallResult.mockResolvedValue(mockContractCallResult);
@@ -891,6 +888,28 @@ describe("network utils", () => {
 
     beforeEach(() => {
       jest.resetAllMocks();
+    });
+
+    it("throws when the account balance has no timestamp", async () => {
+      const accountBefore = getMockedMirrorAccount({ staked_node_id: null });
+      const accountAfter = getMockedMirrorAccount({
+        staked_node_id: 5,
+        balance: { balance: 1000, timestamp: null, tokens: [] },
+      });
+
+      (apiClient.getAccount as jest.Mock)
+        .mockResolvedValueOnce(accountBefore)
+        .mockResolvedValueOnce(accountAfter);
+
+      await expect(
+        analyzeStakingOperation({
+          configOrCurrencyId: defaultConfig,
+          address: mockAddress,
+          mirrorTx: mockTx,
+        }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
+
+      expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
     });
 
     it("detects DELEGATE operation when staking starts", async () => {
