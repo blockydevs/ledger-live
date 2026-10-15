@@ -79,12 +79,9 @@ import type {
   AleoUnbondingDisplayState,
   AleoValidatorNonEarningReason,
 } from "../types";
+import * as guard from "./guards";
 
 const MICROCREDITS_REGEX = /^(\d+)u\d+$/;
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 export function normalizeAleoPlaintext(v: string): string {
   return v.trim().replace(/\.(private|public|constant)$/, "");
@@ -726,13 +723,13 @@ export function isStakingOperation(op: AleoOperation): boolean {
 
 /** `functionId` works as the discriminant because no other family's extra carries one. */
 export function isAleoOperationExtra(extra: OperationExtra): extra is AleoOperationExtra {
-  return isRecord(extra) && "functionId" in extra;
+  return guard.isObject(extra) && "functionId" in extra;
 }
 
 export function isAleoOperationExtraRaw(
   extraRaw: OperationExtraRaw,
 ): extraRaw is AleoOperationExtraRaw {
-  return isRecord(extraRaw) && "functionId" in extraRaw;
+  return guard.isObject(extraRaw) && "functionId" in extraRaw;
 }
 
 export function isPublicTokenTransaction(transaction: Pick<Transaction, "mode">): boolean {
@@ -871,7 +868,7 @@ export function findBestRecordForFee({
 
 function isPrivateOperation(operation: Operation): boolean {
   const { extra } = operation;
-  return isRecord(extra) && "transactionType" in extra && extra.transactionType === "private";
+  return guard.isObject(extra) && "transactionType" in extra && extra.transactionType === "private";
 }
 
 export function splitPrivateAndPublicOperations(

@@ -7,7 +7,6 @@ import { getUnbondingValidators } from "../network/utils";
 import {
   estimateNetRate,
   getValidatorNonEarningReason,
-  isRecord,
   isValidatorBondable,
   parseTotalSupply,
 } from "./utils";
@@ -17,6 +16,7 @@ import type {
   AleoValidatorMetadataResponse,
 } from "../types/api";
 import type { AleoCoinConfig, AleoValidator } from "../types";
+import * as guard from "./guards";
 
 const VALIDATORS_CACHE = minutes(ALEO_VALIDATORS_CACHE_MINUTES, 2);
 
@@ -37,16 +37,16 @@ function isValidCommitteeMember(value: unknown): value is AleoCommitteeMember {
 }
 
 function isValidCommitteeResponse(value: unknown): value is AleoCommitteeResponse {
-  if (!isRecord(value)) return false;
+  if (!guard.isObject(value)) return false;
   // The protocol always has a committee, so absent `members` is an error envelope
   // rather than an empty list — accepting it would cache emptiness for a whole TTL.
-  if (!isRecord(value.members)) return false;
+  if (!guard.isObject(value.members)) return false;
 
   return Object.values(value.members).every(isValidCommitteeMember);
 }
 
 function isValidValidatorMetadataResponse(value: unknown): value is AleoValidatorMetadataResponse {
-  if (!isRecord(value)) return false;
+  if (!guard.isObject(value)) return false;
 
   return Object.values(value).every(entry => typeof entry === "string");
 }
