@@ -1,4 +1,5 @@
 import type { OperationType } from "@ledgerhq/types-live";
+import type { AleoApiPrivateRootIntentData } from "./types";
 
 export const ALEO_DUMMY_ADDRESS = "aleo14pfq40wgltv8wrhsxqe5tlme4pkp448rfejfvqhd4yj0qycs7c9s2xkcwv";
 
@@ -39,6 +40,18 @@ export const STAKING_OPERATION_TYPE = {
 } as const satisfies Record<string, OperationType>;
 
 export const FEE_INTENT_TYPES = new Set(["fee_public", "fee_private"]);
+
+// Keys must match the API private root data types exactly: a missing or extra key fails to compile.
+const PRIVATE_ROOT_INTENT_TYPE_KEYS = {
+  [TRANSACTION_TYPE.TRANSFER_PRIVATE]: true,
+  [TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC]: true,
+  [TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE]: true,
+  [TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC]: true,
+} satisfies Record<AleoApiPrivateRootIntentData["type"], true>;
+
+export const PRIVATE_ROOT_INTENT_TYPES: ReadonlySet<string> = new Set(
+  Object.keys(PRIVATE_ROOT_INTENT_TYPE_KEYS),
+);
 
 // Function names that represent actual private token transfers between parties.
 // Used to exclude internal operations (split, join, fee_private, etc.) from history.

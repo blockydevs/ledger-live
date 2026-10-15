@@ -5,7 +5,11 @@ import { TRANSACTION_TYPE } from "../constants";
 import { AleoApiConfigurationResetError } from "../errors";
 import { fromHex } from "../logic/utils";
 import { accessProvableApi } from "../network/utils";
-import { getTestnetIntegConfig } from "../__tests__/fixtures/config.fixture";
+import { fetchUnspentRecordPool } from "../logic/fetchUnspentRecordPool";
+import {
+  getTestnetIntegConfig,
+  mockFeeByTransactionType,
+} from "../__tests__/fixtures/config.fixture";
 import {
   referenceTransferPublicTx,
   TEST_TOKEN_PROGRAM_ID,
@@ -19,11 +23,14 @@ import {
 } from "../__tests__/fixtures/api.fixture";
 import { setupCalStore } from "../__tests__/helpers/cal";
 import { getPristineAccount } from "../__tests__/helpers/account";
-import type { AleoAccountInfo, AleoContext, PreparedRequestResponse } from "../types";
-import {
-  mockTxIntentTransferPrivate,
-  mockTxIntentTransferPublic,
-} from "../__tests__/fixtures/transaction.fixture";
+import type {
+  AleoAccountInfo,
+  AleoApiTransactionIntent,
+  AleoContext,
+  AleoCraftDetails,
+  PreparedRequestResponse,
+} from "../types";
+import { mockTxIntentTransferPublic } from "../__tests__/fixtures/transaction.fixture";
 
 async function withPrivacyContext(context: AleoContext, viewKey: string): Promise<AleoContext> {
   const config = await context.config();
@@ -72,15 +79,71 @@ describe("createApi", () => {
       );
     });
 
-    it("crafts a prepared request for a private root intent when a viewKey is present", async () => {
-      const contextWithPrivacy = await withPrivacyContext(context, testnetViewKey);
+    it("runs selection, crafting and fee_private against the testnet scanner", async () => {
+      const unsponsored: AleoContext = {
+        config: async () => getTestnetIntegConfig({ isFeeSponsored: false }),
+        logger: () => {},
+      };
+      const ctx = await withPrivacyContext(unsponsored, testnetViewKey);
+      invariant(ctx.provableId, "guard: provableId");
 
-      const result = await api.craftTransaction(contextWithPrivacy, mockTxIntentTransferPrivate);
+      const { nativeRecords } = await fetchUnspentRecordPool({
+        config: await ctx.config(),
+        provableId: ctx.provableId,
+      });
+      if (nativeRecords.length < 2) {
+        throw new Error(
+          `aleo integ: ${testnetAddress} needs at least two unspent credits.aleo records on testnet (has ${nativeRecords.length}); fund it`,
+        );
+      }
 
-      const preparedRequest = fromHex<PreparedRequestResponse>(result.transaction);
+      const rootIntent: AleoApiTransactionIntent = {
+        intentType: "transaction",
+        type: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+        sender: testnetAddress,
+        recipient: testnetAddress,
+        amount: 1n,
+        asset: { type: "native" },
+        data: { type: TRANSACTION_TYPE.TRANSFER_PRIVATE },
+      };
+
+      const selection = await api.craftTransaction(ctx, rootIntent);
+      const details = selection.details as AleoCraftDetails;
+      expect(selection.transaction).toBe("0x");
+      expect(details.recordCommitments).toHaveLength(1);
+      expect(typeof details.feeRecordCommitment).toBe("string");
+
+      const crafted = await api.craftTransaction(ctx, {
+        ...rootIntent,
+        data: {
+          type: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+          recordCommitments: details.recordCommitments,
+          tvks: [],
+        },
+      });
+      const preparedRequest = fromHex<PreparedRequestResponse>(crafted.transaction);
       expect(preparedRequest.function_name.toLowerCase()).toContain(
         Buffer.from("transfer_private").toString("hex"),
       );
+      expect(crafted.details).toEqual({ recordCommitments: details.recordCommitments });
+
+      const fee = await api.craftTransaction(ctx, {
+        intentType: "transaction",
+        type: "fee_private",
+        sender: testnetAddress,
+        recipient: testnetAddress,
+        amount: BigInt(mockFeeByTransactionType[TRANSACTION_TYPE.TRANSFER_PRIVATE]),
+        asset: { type: "native" },
+        data: {
+          type: "fee_private",
+          executionId:
+            "7287422539927885800585937944314327552710698933416219800491628782750554575326field",
+          recordCommitment: details.feeRecordCommitment!,
+        },
+      });
+      expect(
+        fromHex<PreparedRequestResponse>(fee.transaction).function_name.toLowerCase(),
+      ).toContain(Buffer.from("fee_private").toString("hex"));
     });
   });
 
