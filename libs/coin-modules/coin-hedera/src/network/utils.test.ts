@@ -2,7 +2,7 @@ import { getEnv, setEnv } from "@ledgerhq/live-env";
 import { InvalidAddress } from "@ledgerhq/ledger-wallet-framework/errors";
 import BigNumber from "bignumber.js";
 import { STAKING_REWARD_ACCOUNT_ID } from "../constants";
-import { HederaRecipientInvalidChecksum } from "../errors";
+import { HederaMirrorNodeResponseError, HederaRecipientInvalidChecksum } from "../errors";
 import { getMockedAccount } from "../test/fixtures/account.fixture";
 import { getMockedCurrency } from "../test/fixtures/currency.fixture";
 import {
@@ -893,7 +893,7 @@ describe("network utils", () => {
       jest.resetAllMocks();
     });
 
-    it("skips the uncommitted balance lookup when the account balance has no timestamp", async () => {
+    it("throws when the account balance has no timestamp", async () => {
       const accountBefore = getMockedMirrorAccount({ staked_node_id: null });
       const accountAfter = getMockedMirrorAccount({
         staked_node_id: 5,
@@ -904,19 +904,15 @@ describe("network utils", () => {
         .mockResolvedValueOnce(accountBefore)
         .mockResolvedValueOnce(accountAfter);
 
-      const result = await analyzeStakingOperation({
-        configOrCurrencyId: defaultConfig,
-        address: mockAddress,
-        mirrorTx: mockTx,
-      });
+      await expect(
+        analyzeStakingOperation({
+          configOrCurrencyId: defaultConfig,
+          address: mockAddress,
+          mirrorTx: mockTx,
+        }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
 
       expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
-      expect(result).toEqual({
-        operationType: "DELEGATE",
-        previousStakingNodeId: null,
-        targetStakingNodeId: 5,
-        stakedAmount: BigInt(1000),
-      });
     });
 
     it("detects DELEGATE operation when staking starts", async () => {
