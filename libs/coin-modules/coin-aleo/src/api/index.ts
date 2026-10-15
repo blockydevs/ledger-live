@@ -41,6 +41,7 @@ import type {
   AleoTransactionIntentData,
 } from "../types";
 import { listOperations } from "../logic/listOperations";
+import * as guard from "../logic/guards";
 
 type AleoCoinModuleImpl = CoinModuleImpl<
   AleoCoinConfig,
@@ -189,7 +190,7 @@ export function createApi(currencyId: string) {
           name: validator.name ?? validator.address,
           balance: BigInt(validator.stakeMicrocredits),
           commissionRate: String(validator.commissionPercent),
-          ...(validator.estimatedYearlyRewardsRate !== undefined && {
+          ...(guard.isDefined(validator.estimatedYearlyRewardsRate) && {
             apy: validator.estimatedYearlyRewardsRate,
           }),
         })),

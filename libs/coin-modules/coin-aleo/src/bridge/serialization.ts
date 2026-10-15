@@ -18,6 +18,7 @@ import type {
   AleoTokenAccountRaw,
 } from "../types";
 import { isAleoOperationExtra, isAleoOperationExtraRaw } from "../logic/utils";
+import * as guard from "../logic/guards";
 
 export function toAleoResourcesRaw(resources: AleoResources): AleoResourcesRaw {
   return {
@@ -131,10 +132,10 @@ export function toOperationExtraRaw(extra: OperationExtra): OperationExtraRaw {
   const extraRaw: AleoOperationExtraRaw = {
     functionId: extra.functionId,
     transactionType: extra.transactionType,
-    ...(extra.patched !== undefined && { patched: extra.patched }),
-    ...(extra.programId !== undefined && { programId: extra.programId }),
-    ...(extra.validator !== undefined && { validator: extra.validator }),
-    ...(extra.stakedAmount !== undefined && { stakedAmount: extra.stakedAmount.toFixed() }),
+    ...(guard.isDefined(extra.patched) && { patched: extra.patched }),
+    ...(guard.isDefined(extra.programId) && { programId: extra.programId }),
+    ...(guard.isDefined(extra.validator) && { validator: extra.validator }),
+    ...(guard.isDefined(extra.stakedAmount) && { stakedAmount: extra.stakedAmount.toFixed() }),
   };
 
   return extraRaw;
@@ -148,10 +149,10 @@ export function fromOperationExtraRaw(extraRaw: OperationExtraRaw): OperationExt
   const extra: AleoOperationExtra = {
     functionId: extraRaw.functionId,
     transactionType: extraRaw.transactionType,
-    ...(extraRaw.patched !== undefined && { patched: extraRaw.patched }),
-    ...(extraRaw.programId !== undefined && { programId: extraRaw.programId }),
-    ...(extraRaw.validator !== undefined && { validator: extraRaw.validator }),
-    ...(extraRaw.stakedAmount !== undefined && {
+    ...(guard.isDefined(extraRaw.patched) && { patched: extraRaw.patched }),
+    ...(guard.isDefined(extraRaw.programId) && { programId: extraRaw.programId }),
+    ...(guard.isDefined(extraRaw.validator) && { validator: extraRaw.validator }),
+    ...(guard.isDefined(extraRaw.stakedAmount) && {
       stakedAmount: new BigNumber(extraRaw.stakedAmount),
     }),
   };

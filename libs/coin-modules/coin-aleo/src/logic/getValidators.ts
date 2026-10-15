@@ -77,14 +77,14 @@ export const getValidators = makeLRUCache(
     // A zero or unparseable total is treated as absent rather than divided by: it would make
     // every validator's stake share infinite, flagging the whole list as non-earning.
     const parsedTotalStake =
-      committee.total_stake === undefined ? null : new BigNumber(committee.total_stake);
+      guard.isDefined(committee.total_stake) ? new BigNumber(committee.total_stake) : null;
     const totalStakeMicrocredits =
       parsedTotalStake?.isFinite() && parsedTotalStake.isGreaterThan(0) ? parsedTotalStake : null;
 
-    if (totalSupplyCredits === null || totalStakeMicrocredits === null) {
+    if (!guard.isDefined(totalSupplyCredits) || !guard.isDefined(totalStakeMicrocredits)) {
       log("aleo/getValidators", "no estimated rate: missing total supply or total stake", {
-        hasTotalSupply: totalSupplyCredits !== null,
-        hasTotalStake: totalStakeMicrocredits !== null,
+        hasTotalSupply: guard.isDefined(totalSupplyCredits),
+        hasTotalStake: guard.isDefined(totalStakeMicrocredits),
       });
     }
 
@@ -98,11 +98,11 @@ export const getValidators = makeLRUCache(
         // Total stake alone decides whether a validator earns; the rate additionally
         // needs the supply, so a missing supply drops the rate but keeps the reason.
         const nonEarningReason =
-          totalStakeMicrocredits === null
+          !guard.isDefined(totalStakeMicrocredits)
             ? null
             : getValidatorNonEarningReason({ ...shared, totalStakeMicrocredits });
         const rate =
-          totalSupplyCredits === null || totalStakeMicrocredits === null
+          !guard.isDefined(totalSupplyCredits) || !guard.isDefined(totalStakeMicrocredits)
             ? null
             : estimateNetRate({ ...shared, totalStakeMicrocredits, totalSupplyCredits });
 
@@ -113,8 +113,8 @@ export const getValidators = makeLRUCache(
           isOpen,
           isUnbonding: unbonding.has(address),
           commissionPercent,
-          ...(rate !== null && { estimatedYearlyRewardsRate: rate.toNumber() }),
-          ...(nonEarningReason !== null && { nonEarningReason }),
+          ...(guard.isDefined(rate) && { estimatedYearlyRewardsRate: rate.toNumber() }),
+          ...(guard.isDefined(nonEarningReason) && { nonEarningReason }),
         };
       })
       .sort((left, right) => {

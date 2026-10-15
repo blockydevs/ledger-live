@@ -7,6 +7,7 @@ import type {
 import { sdkClient } from "../network/sdk";
 import type { AleoCoinConfig, AleoTransactionIntentData, FeeConfiguration } from "../types";
 import { mapTransactionIntentToSdkIntent, toHex } from "./utils";
+import * as guard from "./guards";
 
 export async function craftTransaction({
   config,
@@ -33,7 +34,7 @@ export async function craftTransaction({
     config,
     intent,
     feeConfiguration,
-    ...(viewKey !== undefined && { viewKey }),
+    ...(guard.isDefined(viewKey) && { viewKey }),
     ...(tvks && tvks.length > 0 && { tvks }),
   });
 

@@ -21,6 +21,7 @@ import type {
   AleoPrivateTokenBalance,
   AleoCoinConfig,
 } from "../types";
+import * as guard from "../logic/guards";
 
 interface TxOpEntry {
   amount: BigNumber;
@@ -769,7 +770,7 @@ export async function buildSubAccountsFromPrivateRecords({
     if (isOutgoingRecord) {
       // OUT: read the actual sent amount and recipient address from the transition inputs.
       const outDetails = await getTokenOutDetails({ config, record, viewKey });
-      if (outDetails.amount === null) {
+      if (!guard.isDefined(outDetails.amount)) {
         log(
           "aleo/buildSubAccountsFromPrivateRecords",
           `Could not determine OUT amount for record ${record.commitment} (tx ${record.transaction_id}), falling back to 0`,
