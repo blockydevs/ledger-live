@@ -33,6 +33,7 @@ import type {
 import { apiClient } from "./api";
 import { hgraphClient } from "./hgraph";
 import { rpcClient } from "./rpc";
+import * as guard from "../logic/guards";
 
 const USD_FIAT: FiatCurrency = {
   type: "FiatCurrency",
@@ -208,7 +209,7 @@ export const enrichERC20Transfers = async ({
   );
 
   return enrichedTransfers.filter(
-    (transfer): transfer is EnrichedERC20Transfer => transfer !== null,
+    guard.isDefined,
   );
 };
 
@@ -482,17 +483,17 @@ export const analyzeStakingOperation = async ({
   const targetStakingNodeId = accountAfter.staked_node_id;
 
   // stake: node id changed from null -> not null
-  if (previousStakingNodeId === null && targetStakingNodeId !== null) {
+  if (!guard.isDefined(previousStakingNodeId) && guard.isDefined(targetStakingNodeId)) {
     operationType = "DELEGATE";
   }
   // unstake: node id changed from not null -> null
-  else if (previousStakingNodeId !== null && targetStakingNodeId === null) {
+  else if (guard.isDefined(previousStakingNodeId) && !guard.isDefined(targetStakingNodeId)) {
     operationType = "UNDELEGATE";
   }
   // restake: node id changed from not null -> different not null
   else if (
-    previousStakingNodeId !== null &&
-    targetStakingNodeId !== null &&
+    guard.isDefined(previousStakingNodeId) &&
+    guard.isDefined(targetStakingNodeId) &&
     previousStakingNodeId !== targetStakingNodeId
   ) {
     operationType = "REDELEGATE";
@@ -503,7 +504,7 @@ export const analyzeStakingOperation = async ({
   }
 
   const snapshotTimestamp = accountAfter.balance.timestamp;
-  if (snapshotTimestamp === null) {
+  if (!guard.isDefined(snapshotTimestamp)) {
     throw new HederaMirrorNodeResponseError(
       'Mirror node response has no value for "balance.timestamp"',
     );

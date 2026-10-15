@@ -19,7 +19,11 @@ import {
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockedMirrorNode } from "../test/fixtures/validator.fixture";
 import hederaCoinConfig from "../config";
-import type { HederaMirrorCoinTransfer, HederaMirrorTransaction } from "../types";
+import type {
+  HederaMirrorAccount,
+  HederaMirrorCoinTransfer,
+  HederaMirrorTransaction,
+} from "../types";
 import network from "@ledgerhq/live-network";
 import { apiClient } from "./api";
 import { hgraphClient } from "./hgraph";
@@ -910,6 +914,27 @@ describe("network utils", () => {
       ).rejects.toThrow(HederaMirrorNodeResponseError);
 
       expect(apiClient.getTransactionsByTimestampRange).not.toHaveBeenCalled();
+    });
+
+    it("detects DELEGATE when the account before staking has no staked_node_id field", async () => {
+      const accountBefore = {
+        ...getMockedMirrorAccount(),
+        staked_node_id: undefined,
+      } as unknown as HederaMirrorAccount;
+      const accountAfter = getMockedMirrorAccount({ staked_node_id: 5 });
+
+      (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValueOnce([]);
+      (apiClient.getAccount as jest.Mock)
+        .mockResolvedValueOnce(accountBefore)
+        .mockResolvedValueOnce(accountAfter);
+
+      const result = await analyzeStakingOperation({
+        configOrCurrencyId: defaultConfig,
+        address: mockAddress,
+        mirrorTx: mockTx,
+      });
+
+      expect(result?.operationType).toBe("DELEGATE");
     });
 
     it("detects DELEGATE operation when staking starts", async () => {
