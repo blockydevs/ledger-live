@@ -229,7 +229,7 @@ export const isTokenAssociationRequired = (
 };
 
 export const isValidExtra = (extra: unknown): extra is HederaOperationExtra => {
-  return !!extra && typeof extra === "object" && !Array.isArray(extra);
+  return guard.isObject(extra);
 };
 
 export const getOperationDetailsExtraFields = (

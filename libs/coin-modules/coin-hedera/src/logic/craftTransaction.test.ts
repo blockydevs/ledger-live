@@ -449,6 +449,44 @@ describe("craftTransaction", () => {
     expect(serializeTransaction).toHaveBeenCalled();
   });
 
+  it("does not clear the staked node when stakingNodeId is undefined", async () => {
+    const clearSpy = jest.spyOn(sdk.AccountUpdateTransaction.prototype, "clearStakedNodeId");
+    const txIntent = {
+      intentType: "transaction",
+      type: HEDERA_TRANSACTION_MODES.Undelegate,
+      amount: BigInt(0),
+      recipient: "",
+      sender: "0.0.54321",
+      asset: { type: "native" },
+      memo: { kind: "text", type: "string", value: "" },
+      data: { type: "staking", stakingNodeId: undefined },
+    } as unknown as TransactionIntent<HederaMemo, HederaTxData>;
+
+    await craftTransaction({ configOrCurrencyId: mockConfig, txIntent });
+
+    expect(clearSpy).not.toHaveBeenCalled();
+    clearSpy.mockRestore();
+  });
+
+  it("stakes to node 0", async () => {
+    const setSpy = jest.spyOn(sdk.AccountUpdateTransaction.prototype, "setStakedNodeId");
+    const txIntent = {
+      intentType: "transaction",
+      type: HEDERA_TRANSACTION_MODES.Delegate,
+      amount: BigInt(0),
+      recipient: "",
+      sender: "0.0.54321",
+      asset: { type: "native" },
+      memo: { kind: "text", type: "string", value: "" },
+      data: { type: "staking", stakingNodeId: 0 },
+    } satisfies TransactionIntent<HederaMemo, HederaTxData>;
+
+    await craftTransaction({ configOrCurrencyId: mockConfig, txIntent });
+
+    expect(setSpy).toHaveBeenCalledWith(0);
+    setSpy.mockRestore();
+  });
+
   it("should craft a claim-rewards intent as a 1 tinybar transfer to the claim rewards recipient", async () => {
     const txIntent = {
       intentType: "transaction",
