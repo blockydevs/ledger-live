@@ -10,7 +10,7 @@ import type { FiatCurrency, Currency } from "@ledgerhq/ledger-wallet-framework/t
 import type { Operation, OperationType } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
 import { HEDERA_VALIDATORS_CACHE_MINUTES, STAKING_REWARD_ACCOUNT_ID } from "../constants";
-import { HederaRecipientInvalidChecksum } from "../errors";
+import { HederaMirrorNodeResponseError, HederaRecipientInvalidChecksum } from "../errors";
 import {
   getChecksum,
   mapMirrorNodesToValidators,
@@ -32,7 +32,6 @@ import type {
 } from "../types";
 import { apiClient } from "./api";
 import { hgraphClient } from "./hgraph";
-import { requiredField } from "./normalize";
 import { rpcClient } from "./rpc";
 
 const USD_FIAT: FiatCurrency = {
@@ -503,11 +502,18 @@ export const analyzeStakingOperation = async ({
     return null;
   }
 
+  const snapshotTimestamp = accountAfter.balance.timestamp;
+  if (snapshotTimestamp === null) {
+    throw new HederaMirrorNodeResponseError(
+      'Mirror node response has no value for "balance.timestamp"',
+    );
+  }
+
   // calculate uncommitted balance changes between the last snapshot and the staking tx
   const uncommittedBalanceChange = await calculateUncommittedBalanceChange({
     configOrCurrencyId,
     address,
-    startTimestamp: requiredField(accountAfter.balance.timestamp, "balance.timestamp"),
+    startTimestamp: snapshotTimestamp,
     endTimestamp: mirrorTx.consensus_timestamp,
   });
 

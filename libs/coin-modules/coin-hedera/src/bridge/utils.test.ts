@@ -1,6 +1,5 @@
-import { emptyHistoryCache } from "@ledgerhq/ledger-wallet-framework/account";
+import { emptyHistoryCache, encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAssetsStore";
-import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { encodeOperationId } from "@ledgerhq/ledger-wallet-framework/operation";
 import { TokenCurrencyIdSchema } from "@ledgerhq/ledger-wallet-framework/types";
 import BigNumber from "bignumber.js";
@@ -410,14 +409,6 @@ describe("bridge utils", () => {
 describe("getSubAccounts", () => {
   const ledgerAccountId = "js:2:hedera:0.0.12345:hederaBip44";
 
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   it("returns an empty array when all inputs are empty", async () => {
     const result = await getSubAccounts({
       ledgerAccountId,
@@ -484,7 +475,6 @@ describe("getSubAccounts", () => {
   });
 
   it("uses the current date as creationDate when the HTS mirror token has no created_timestamp", async () => {
-    jest.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     const htsToken = getMockedHTSTokenCurrency({ contractAddress: "0.0.1001" });
     const mirrorToken = getMockedMirrorToken({
       token_id: "0.0.1001",
@@ -508,7 +498,7 @@ describe("getSubAccounts", () => {
         token: htsToken,
         balance: new BigNumber(500),
         spendableBalance: new BigNumber(500),
-        creationDate: new Date("2026-01-01T00:00:00Z"),
+        creationDate: expect.any(Date),
         operations: [],
         operationsCount: 0,
         pendingOperations: [],

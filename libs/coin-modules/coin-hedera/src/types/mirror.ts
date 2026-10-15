@@ -1,7 +1,3 @@
-type FreezeStatus = "NOT_APPLICABLE" | "FROZEN" | "UNFROZEN";
-
-type KycStatus = "NOT_APPLICABLE" | "GRANTED" | "REVOKED";
-
 export interface HederaMirrorCoinTransfer {
   account: string;
   amount: number;
@@ -11,7 +7,6 @@ export interface HederaMirrorTokenTransfer {
   token_id: string;
   account: string;
   amount: number;
-  is_approval?: boolean;
 }
 
 export interface HederaMirrorTransaction {
@@ -32,13 +27,9 @@ export interface HederaMirrorTransaction {
 }
 
 export interface HederaMirrorToken {
-  automatic_association: boolean | null;
   balance: number;
   created_timestamp: string | null;
-  decimals: number | null;
   token_id: string;
-  freeze_status: FreezeStatus | null;
-  kyc_status: KycStatus;
 }
 
 export interface HederaMirrorAccount {
@@ -58,10 +49,38 @@ export interface HederaMirrorAccount {
   };
 }
 
+export interface HederaMirrorAccountTokensResponse {
+  tokens: HederaMirrorToken[];
+  links: {
+    next?: string | null;
+  };
+}
+
+export interface HederaMirrorAccountsResponse {
+  accounts: HederaMirrorAccount[];
+  links: {
+    next?: string | null;
+  };
+}
+
+export interface HederaMirrorTransactionsResponse {
+  transactions: HederaMirrorTransaction[];
+  links: {
+    next?: string | null;
+  };
+}
+
 export interface HederaMirrorBlock {
   timestamp: {
     from: string;
     to: string | null;
+  };
+}
+
+export interface HederaMirrorBlocksResponse {
+  blocks: HederaMirrorBlock[];
+  links: {
+    next?: string | null;
   };
 }
 
@@ -70,17 +89,12 @@ export interface HederaMirrorNetworkFees {
     gas: number;
     transaction_type: string;
   }[];
-  timestamp: string | null;
 }
 
 export interface HederaMirrorContractCallResult {
-  contract_id: string | null;
-  block_hash: string | null;
-  block_gas_used: number | null;
   gas_consumed: number | null;
   gas_limit: number;
   gas_used: number | null;
-  timestamp: string | null;
 }
 
 export interface HederaMirrorContractCallEstimate {
@@ -100,4 +114,11 @@ export interface HederaMirrorNode {
   stake: number | null;
   stake_rewarded: number;
   reward_rate_start: number;
+}
+
+export interface HederaMirrorNodesResponse {
+  nodes: HederaMirrorNode[];
+  links: {
+    next?: string | null;
+  };
 }

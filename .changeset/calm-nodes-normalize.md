@@ -1,5 +1,5 @@
 ---
-"@ledgerhq/coin-hedera": minor
+"@ledgerhq/coin-hedera": patch
 ---
 
-Normalize Hedera mirror node responses at the network layer: missing required data throws HederaMirrorNodeResponseError, incomplete list items are skipped and logged. `maxAutomaticTokenAssociations` is now `0` instead of `null` for accounts where the mirror node returns null (pre-HIP-23 accounts).
+Mirror node fields that can be null are typed as nullable and handled where they are read. A mirror node response without its top-level list throws `HederaMirrorNodeResponseError`.

@@ -374,7 +374,6 @@ describe("listOperationsV2", () => {
       amount: 5000000,
     });
     const mockContractCallResult = getMockedMirrorContractCallResult({
-      block_hash: "0xblockhash123",
       gas_consumed: 75000,
       gas_limit: 100000,
       gas_used: 75000,
@@ -508,14 +507,17 @@ describe("listOperationsV2", () => {
       useSyntheticBlocks: false,
     });
 
-    expect(result.tokenOperations).toHaveLength(1);
-    expect(result.tokenOperations[0].extra).toEqual({
-      pagingToken: mockMirrorTransaction.consensus_timestamp,
-      consensusTimestamp: mockMirrorTransaction.consensus_timestamp,
-      transactionId: mockMirrorTransaction.transaction_id,
-      feesPayer: "0.0.1234",
-      gasLimit: mockContractCallResult.gas_limit,
-    });
+    expect(result.tokenOperations).toEqual([
+      expect.objectContaining({
+        extra: {
+          pagingToken: mockMirrorTransaction.consensus_timestamp,
+          consensusTimestamp: mockMirrorTransaction.consensus_timestamp,
+          transactionId: mockMirrorTransaction.transaction_id,
+          feesPayer: "0.0.1234",
+          gasLimit: mockContractCallResult.gas_limit,
+        },
+      }),
+    ]);
   });
 
   it("should use EVM address for sender/recipient when account_id is null in ERC20 transfer", async () => {
@@ -1602,9 +1604,7 @@ describe("listOperationsV2", () => {
       payer_account_id: 12345,
       amount: 5000000,
     });
-    const mockContractCallResult = getMockedMirrorContractCallResult({
-      block_hash: "0xevm-block-hash-should-not-be-used",
-    });
+    const mockContractCallResult = getMockedMirrorContractCallResult();
     const mockEnrichedERC20Transfer = getMockedEnrichedERC20Transfer({
       mirrorTransaction: mockMirrorTransaction,
       contractCallResult: mockContractCallResult,

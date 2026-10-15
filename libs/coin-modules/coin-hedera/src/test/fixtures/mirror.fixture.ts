@@ -11,11 +11,7 @@ export const getMockedMirrorToken = (overrides?: Partial<HederaMirrorToken>): He
   return {
     token_id: "",
     created_timestamp: "123",
-    automatic_association: false,
     balance: 0,
-    decimals: 0,
-    freeze_status: "NOT_APPLICABLE",
-    kyc_status: "NOT_APPLICABLE",
     ...overrides,
   };
 };
@@ -34,7 +30,6 @@ export const getMockedMirrorAccount = (
     max_automatic_token_associations: -1,
     pending_reward: 0,
     staked_node_id: null,
-    created_timestamp: null,
     ...overrides,
   };
 };
@@ -84,10 +79,6 @@ export const getMockedMirrorTransaction = (
 export const getMockedMirrorContractCallResult = (
   overrides?: Partial<HederaMirrorContractCallResult>,
 ): HederaMirrorContractCallResult => ({
-  contract_id: "0.0.12345",
-  timestamp: "1764932745.835883000",
-  block_hash: "0xblockhash",
-  block_gas_used: 100000,
   gas_consumed: 50000,
   gas_limit: 100000,
   gas_used: 50000,

@@ -266,7 +266,6 @@ describe("getBlockV2", () => {
     });
 
     const mockContractCallResult = getMockedMirrorContractCallResult({
-      block_hash: "0xblockhash123",
       gas_consumed: 75000,
       gas_limit: 100000,
       gas_used: 75000,

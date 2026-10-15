@@ -364,10 +364,7 @@ describe("network utils", () => {
       payer_account_id: payerAccountId,
       transaction_hash: mockMirrorTransaction.transaction_hash,
     });
-    const mockContractCallResult = getMockedMirrorContractCallResult({
-      contract_id: erc20Token.tokenId,
-      timestamp: mockMirrorTransaction.consensus_timestamp,
-    });
+    const mockContractCallResult = getMockedMirrorContractCallResult();
 
     beforeEach(() => {
       mockGetContractCallResult.mockResolvedValue(mockContractCallResult);

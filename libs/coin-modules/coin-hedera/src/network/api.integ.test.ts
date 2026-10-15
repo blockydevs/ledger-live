@@ -31,7 +31,6 @@ describe("apiClient", () => {
 
       expect(Array.isArray(fees.fees)).toBe(true);
       expect(fees.fees.length).toBeGreaterThan(0);
-      expect(typeof fees.timestamp).toBe("string");
 
       for (const fee of fees.fees) {
         expect(typeof fee.gas).toBe("number");
