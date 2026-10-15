@@ -1259,7 +1259,27 @@ export function getAvailableBalance(account: AleoAccount, transaction: Transacti
   }
 }
 
-function resolveDecryptedAmountRecordsFromCommitments({
+function amountRecordsLabel(type: "native" | "token"): string {
+  return type === "native" ? "amount records" : "token amount records";
+}
+
+export function assertAmountRecordCommitmentCount({
+  type,
+  commitments,
+  maxRecords,
+}: {
+  type: "native" | "token";
+  commitments: string[];
+  maxRecords: number;
+}): void {
+  invariant(commitments.length > 0, "aleo: missing amount record commitments");
+  invariant(
+    commitments.length <= maxRecords,
+    `aleo: too many ${amountRecordsLabel(type)} selected (max: ${maxRecords})`,
+  );
+}
+
+export function resolveDecryptedAmountRecordsFromCommitments({
   type,
   commitments,
   maxRecords,
@@ -1270,13 +1290,8 @@ function resolveDecryptedAmountRecordsFromCommitments({
   maxRecords: number;
   findRecord: (commitment: string) => AleoUnspentRecord | null;
 }): AleoUnspentRecord["decryptedData"][] {
-  const label = type === "native" ? "amount records" : "token amount records";
-
-  invariant(commitments.length > 0, "aleo: missing amount record commitments");
-  invariant(
-    commitments.length <= maxRecords,
-    `aleo: too many ${label} selected (max: ${maxRecords})`,
-  );
+  const label = amountRecordsLabel(type);
+  assertAmountRecordCommitmentCount({ type, commitments, maxRecords });
 
   const missingCommitments: string[] = [];
   const decryptedRecords: AleoUnspentRecord["decryptedData"][] = [];
