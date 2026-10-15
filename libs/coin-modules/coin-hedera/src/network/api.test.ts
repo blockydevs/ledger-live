@@ -514,6 +514,35 @@ describe("apiClient", () => {
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
     });
 
+    it("returns the contract call when parent_consensus_timestamp is missing", async () => {
+      const mockConsensusTimestamp = "1758733200.632122898";
+      const mockPayerAddress = "0.0.1234";
+      const mockedResults = {
+        transfers: [],
+        token_transfers: [],
+        staking_reward_transfers: [],
+        charged_tx_fee: 100,
+        transaction_hash: "",
+        result: "",
+        consensus_timestamp: mockConsensusTimestamp,
+        entity_id: "0.0.1",
+        transaction_id: `${mockPayerAddress}-${mockConsensusTimestamp}`,
+        name: "CONTRACTCALL",
+        node: null,
+        nonce: 0,
+      } as unknown as HederaMirrorTransaction;
+
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({ transactions: [mockedResults] }));
+
+      const result = await apiClient.findTransactionByContractCallV2({
+        configOrCurrencyId: mockConfig,
+        timestamp: mockConsensusTimestamp,
+        payerAddress: mockPayerAddress,
+      });
+
+      expect(result).toEqual(mockedResults);
+    });
+
     it("should return null for non existing contract calls", async () => {
       const mockConsensusTimestamp1 = "1758733200.632122898";
       const mockConsensusTimestamp2 = "1758733300.632122898";
