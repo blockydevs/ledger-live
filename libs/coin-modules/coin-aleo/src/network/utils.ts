@@ -38,6 +38,7 @@ import {
 } from "../logic/utils";
 import { register } from "../logic/register";
 import { apiClient } from "./api";
+import * as guard from "../logic/guards";
 
 export async function getStakingPosition(
   config: AleoCoinConfig,
@@ -61,7 +62,7 @@ export async function getUnbondingValidators(
     return raw ? address : null;
   });
 
-  return new Set(flagged.filter((address): address is string => address !== null));
+  return new Set(flagged.filter(guard.isDefined));
 }
 
 export async function decryptRecordAmount(
@@ -231,7 +232,7 @@ export async function fetchAccountTransactionsFromHeight({
     });
 
     const nextCursorBlockNumber = page.next_cursor?.block_number.toString() ?? null;
-    hasMorePages = nextCursorBlockNumber !== null;
+    hasMorePages = guard.isDefined(nextCursorBlockNumber);
 
     const recentTxs = page.transactions.filter(
       tx => tx.block_number >= minBlockHeight && !isUnaddressedTransfer(tx),

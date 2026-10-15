@@ -9,12 +9,13 @@ import {
   getStakingOperationType,
   isTokenTransaction,
 } from "../logic/utils";
+import * as guard from "../logic/guards";
 
 function resolveStakingExtra(
   stakingType: OperationType | undefined,
   transaction: Transaction,
 ): Partial<AleoOperationExtra> {
-  if (stakingType === undefined) return {};
+  if (!guard.isDefined(stakingType)) return {};
 
   // Staking is credits.aleo by definition, and `isStakingOperation` reads the program to tell a
   // staking row from a same-named function of another program.

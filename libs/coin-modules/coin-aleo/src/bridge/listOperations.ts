@@ -7,6 +7,7 @@ import { fetchAccountTransactionsFromHeight, resolveBondArguments } from "../net
 import { resolveStakingOperationType } from "../logic/utils";
 import { getCalTokens, toBridgeOperation } from "./utils";
 import type { AleoCoinConfig } from "../types";
+import * as guard from "../logic/guards";
 
 export async function listOperations({
   currencyId,
@@ -53,7 +54,7 @@ export async function listOperations({
 
   for (const rawTx of result.transactions) {
     const stakingType = resolveStakingOperationType(rawTx);
-    if (stakingType !== undefined && !config.enableStaking) continue;
+    if (guard.isDefined(stakingType) && !config.enableStaking) continue;
 
     transactions.push(rawTx);
     if (stakingType === "BOND") bondTransactions.push(rawTx);

@@ -7,6 +7,7 @@ import type {
 } from "../types";
 import { enrichPrivateRecords } from "../network/utils";
 import { toPrivateBridgeOperation } from "./utils";
+import * as guard from "../logic/guards";
 
 // Records forwarded to another program carry no tag; the callee's transition holds it.
 function onlyTaggedRecordValue(
@@ -80,7 +81,7 @@ export async function listPrivateOperations({
 
   const operations = enrichedRecords
     .filter((record): record is EnrichedPrivateRecord => {
-      return record !== null && nativeRecordTags.has(record.rawRecord.tag);
+      return guard.isDefined(record) && nativeRecordTags.has(record.rawRecord.tag);
     })
     .map(record => toPrivateBridgeOperation(ledgerAccountId, record, address));
 

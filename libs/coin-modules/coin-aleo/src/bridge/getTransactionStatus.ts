@@ -18,7 +18,6 @@ import type {
   TransactionTransfer,
   AleoCoinConfig,
 } from "../types";
-import type { AleoUnspentRecord } from "../types/logic";
 import { estimateFees, getValidators, validateAddress } from "../logic";
 import {
   calculateAmount,
@@ -53,6 +52,7 @@ import {
   AleoTwoRecordsRequired,
   AleoUnbondingValidator,
 } from "../errors";
+import * as guard from "../logic/guards";
 
 type Errors = Record<string, Error>;
 type Warnings = Record<string, Error>;
@@ -83,7 +83,7 @@ function resolveAmountRecords(account: AleoAccount, transaction: TransactionPriv
         ...(isTokenTx && tokenAccount && { tokenAccount }),
       }),
     )
-    .filter((record): record is AleoUnspentRecord => record !== null);
+    .filter(guard.isDefined);
 
   const totalValue = sumPrivateRecords(records);
 
