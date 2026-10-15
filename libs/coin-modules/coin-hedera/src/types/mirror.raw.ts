@@ -61,7 +61,7 @@ export interface RawMirrorAccount {
   balance: {
     timestamp: string | null;
     balance: number | null;
-    tokens?: {
+    tokens: {
       token_id?: string | null;
       balance: number;
     }[];

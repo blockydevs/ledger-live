@@ -295,6 +295,15 @@ describe("network/normalize", () => {
       );
     });
 
+    it("throws when balance.tokens is missing", () => {
+      const raw = getRawAccount({ balance: { timestamp: null, balance: 1, tokens: [] } });
+      delete (raw.balance as { tokens?: unknown }).tokens;
+
+      expect(() => normalizeAccount(raw, "0.0.12345")).toThrow(
+        new HederaMirrorNodeResponseError('Mirror node response has no value for "balance.tokens"'),
+      );
+    });
+
     it("falls back to 0 for a missing pending_reward", () => {
       const raw = getRawAccount();
       delete raw.pending_reward;
@@ -341,13 +350,6 @@ describe("network/normalize", () => {
         'Skipping mirror node token balance with no value for "balance.tokens[].token_id"',
         'Skipping mirror node token balance with no value for "balance.tokens[].token_id"',
       ]);
-    });
-
-    it("turns a missing balance.tokens into an empty array", () => {
-      expect(
-        normalizeAccount(getRawAccount({ balance: { timestamp: null, balance: 1 } }), "0.0.12345")
-          .balance.tokens,
-      ).toEqual([]);
     });
 
     it("falls back to null for evm_address, balance.timestamp, staked_node_id and created_timestamp", () => {

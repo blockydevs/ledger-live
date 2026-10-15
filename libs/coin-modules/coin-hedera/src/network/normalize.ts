@@ -133,7 +133,7 @@ export function normalizeTransaction(raw: RawMirrorTransaction): HederaMirrorTra
 
 export function normalizeAccount(raw: RawMirrorAccount, account: string): HederaMirrorAccount {
   const balance = requiredField(raw.balance, "balance");
-  const tokens = (balance.tokens ?? []).flatMap(token => {
+  const tokens = requiredField(balance.tokens, "balance.tokens").flatMap(token => {
     if (isNil(token.token_id)) {
       logSkipped("token balance", "balance.tokens[].token_id");
       return [];
