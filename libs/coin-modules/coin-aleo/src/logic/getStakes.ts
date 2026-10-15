@@ -3,6 +3,7 @@ import type { Page, Stake } from "@ledgerhq/coin-module-framework/api/index";
 import { getStakingPosition } from "../network/utils";
 import { lastBlock } from "./lastBlock";
 import type { AleoCoinConfig } from "../types";
+import * as guard from "./guards";
 
 export async function getStakes(config: AleoCoinConfig, address: string): Promise<Page<Stake>> {
   if (!config.enableStaking) return { items: [] };
@@ -27,7 +28,10 @@ export async function getStakes(config: AleoCoinConfig, address: string): Promis
   }
 
   if (position.unbondingBalance.isGreaterThan(0)) {
-    invariant(position.unbondingHeight !== null, "aleo: unbonding balance without a height");
+    invariant(
+      guard.isDefined(position.unbondingHeight),
+      "aleo: unbonding balance without a height",
+    );
 
     const { height } = await lastBlock(config);
     const withdrawable = height >= position.unbondingHeight;

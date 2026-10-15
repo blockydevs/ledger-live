@@ -35,6 +35,7 @@ import {
   toPrivateOperation,
   toPublicOperation,
 } from "./utils";
+import * as guard from "./guards";
 
 function encodeCursor(maxBlockHeight: number, resumeFrom: AleoExactTransitionCursor): string {
   return `${maxBlockHeight}:${resumeFrom.blockNumber}:${resumeFrom.transitionId}`;
@@ -323,7 +324,7 @@ export async function listOperations({
     tx => tx.block_number >= windowFrom && tx.block_number <= windowTo,
   );
   // Once the stream leaves the window there is nothing left to resume from.
-  const isLastPage = next === null || inWindow.length < transitions.length;
+  const isLastPage = !guard.isDefined(next) || inWindow.length < transitions.length;
 
   const lastFullBlockRow = isLastPage ? undefined : inWindow.at(-1);
   const recordsFrom =
@@ -331,7 +332,7 @@ export async function listOperations({
   const recordsTo = lastFullBlockRow && order === "asc" ? lastFullBlockRow.block_number : windowTo;
 
   const publicTransactions = dedupeByTransaction(inWindow).filter(
-    rawTx => config.enableStaking || resolveStakingOperationType(rawTx) === undefined,
+    rawTx => config.enableStaking || !guard.isDefined(resolveStakingOperationType(rawTx)),
   );
   const publicTxIds = new Set(publicTransactions.map(tx => tx.transaction_id));
 
@@ -384,6 +385,6 @@ export async function listOperations({
 
   return {
     items: operations,
-    next: isLastPage || next === null ? undefined : encodeCursor(maxBlockHeight, next),
+    next: isLastPage || !guard.isDefined(next) ? undefined : encodeCursor(maxBlockHeight, next),
   };
 }

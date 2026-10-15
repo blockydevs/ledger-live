@@ -60,6 +60,7 @@ import {
   patchTokenSubAccountOps,
   resolveTokenSubAccounts,
 } from "./tokens";
+import * as guard from "../logic/guards";
 
 const privateSyncInFlight = new Set<string>();
 
@@ -358,10 +359,10 @@ export async function performPrivateSync({
   // Without this, only incremental records are available and older ops lose their patching.
   // freshSyncHash being defined means this is a chained public→private run (not standalone).
   const publicSyncWasFromScratch =
-    freshSyncHash !== undefined && freshSyncHash !== initialAccount.syncHash;
+    guard.isDefined(freshSyncHash) && freshSyncHash !== initialAccount.syncHash;
   // Not `freshSyncHash`: that is only a fresh value while tokens are enabled, and is otherwise
   // the stored hash — undefined on an account that never had one.
-  const publicSyncRanThisCycle = freshTransparentBalance !== undefined;
+  const publicSyncRanThisCycle = guard.isDefined(freshTransparentBalance);
 
   // The migration itself runs in the public sync, so only a chained run may report it happened.
   // Staking being off has to clear the marker, since this run strips the cached staking rows:
@@ -642,11 +643,11 @@ export function createPrivateSyncObservable(
       syncConfig,
       currentPublicOps: publicOps,
       signal: controller.signal,
-      ...(freshTransparentBalance !== undefined && { freshTransparentBalance }),
-      ...(freshStakingPosition !== undefined && { freshStakingPosition }),
-      ...(onProgress !== undefined && { onProgress }),
-      ...(publicSubAccounts !== undefined && { publicSubAccounts }),
-      ...(freshSyncHash !== undefined && { freshSyncHash }),
+      ...(guard.isDefined(freshTransparentBalance) && { freshTransparentBalance }),
+      ...(guard.isDefined(freshStakingPosition) && { freshStakingPosition }),
+      ...(guard.isDefined(onProgress) && { onProgress }),
+      ...(guard.isDefined(publicSubAccounts) && { publicSubAccounts }),
+      ...(guard.isDefined(freshSyncHash) && { freshSyncHash }),
     })
       .then(result => {
         releaseLock();

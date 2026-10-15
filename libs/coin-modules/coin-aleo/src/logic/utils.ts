@@ -94,7 +94,7 @@ function matchAleoPlaintextAmount(raw: string): string | null {
 
 export function parseMicrocredits(microcredits: string): string {
   const amount = matchAleoPlaintextAmount(microcredits);
-  invariant(amount !== null, `aleo: invalid microcredits format (${microcredits})`);
+  invariant(guard.isDefined(amount), `aleo: invalid microcredits format (${microcredits})`);
   return amount;
 }
 
@@ -139,7 +139,7 @@ function parseStakingMapping<T>(
   if (!raw) return null;
 
   const parsed = parse(raw);
-  if (parsed === null) {
+  if (!guard.isDefined(parsed)) {
     log("aleo/stakingPosition", `unparseable ${mapping} mapping value`, { raw });
     throw new Error(`aleo: unparseable ${mapping} mapping value`);
   }
@@ -716,9 +716,9 @@ export function resolveStakingOperationType(
 
 export function isStakingOperation(op: AleoOperation): boolean {
   const { functionId, programId } = op.extra ?? {};
-  if (functionId === undefined) return false;
+  if (!guard.isDefined(functionId)) return false;
 
-  return programId === PROGRAM_ID.CREDITS && getStakingOperationType(functionId) !== undefined;
+  return programId === PROGRAM_ID.CREDITS && guard.isDefined(getStakingOperationType(functionId));
 }
 
 /** `functionId` works as the discriminant because no other family's extra carries one. */
@@ -1127,8 +1127,7 @@ export function sumStakedBalance(resources: AleoStakingResources): BigNumber {
  */
 export function getClaimableStakingBalance(account: AleoAccount): BigNumber {
   const { unbondingBalance, unbondingHeight } = account.aleoResources ?? {};
-  if (!unbondingBalance || unbondingHeight === null || unbondingHeight === undefined)
-    return new BigNumber(0);
+  if (!unbondingBalance || !guard.isDefined(unbondingHeight)) return new BigNumber(0);
   return account.blockHeight >= unbondingHeight ? unbondingBalance : new BigNumber(0);
 }
 
@@ -1154,7 +1153,9 @@ export function isUnbondingCountingDown({
   claimableBalance: BigNumber;
   syncedHeight: number;
 }): boolean {
-  return !claimableBalance.gt(0) && unbondingHeight !== null && unbondingHeight > syncedHeight;
+  return (
+    !claimableBalance.gt(0) && guard.isDefined(unbondingHeight) && unbondingHeight > syncedHeight
+  );
 }
 
 /**
@@ -1179,7 +1180,9 @@ export function getUnbondingDisplayState({
     claimableBalance,
     syncedHeight,
   });
-  const blocksLeft = unbondingHeight !== null ? Math.max(0, unbondingHeight - currentHeight) : null;
+  const blocksLeft = guard.isDefined(unbondingHeight)
+    ? Math.max(0, unbondingHeight - currentHeight)
+    : null;
   const isSettling = !isClaimable && blocksLeft === 0;
 
   return { isClaimable, isCountingDown, isSettling, blocksLeft, currentHeight };
@@ -1591,7 +1594,7 @@ export function selectPrivateRecordsForAmount({
   }
 
   // no target amount supplied -> useAllAmount mode, return top N records.
-  if (targetAmount === null) {
+  if (!guard.isDefined(targetAmount)) {
     return rankedRecords.slice(0, maxRecords).map(({ record }) => record);
   }
 
@@ -1810,18 +1813,19 @@ export function estimateNetRate({
   delegatorStakeMicrocredits?: BigNumber;
 }): BigNumber | null {
   const grossRate = estimateGrossRate(totalSupplyCredits, totalStakeMicrocredits);
-  if (grossRate === null) return null;
+  if (!guard.isDefined(grossRate)) return null;
 
   if (!commissionPercent.isFinite() || commissionPercent.isLessThan(0)) return null;
 
   const delegatorBelowMinimum =
-    delegatorStakeMicrocredits !== undefined && isDelegatorBelowMinimum(delegatorStakeMicrocredits);
+    guard.isDefined(delegatorStakeMicrocredits) &&
+    isDelegatorBelowMinimum(delegatorStakeMicrocredits);
   const nonEarningReason = getValidatorNonEarningReason({
     totalStakeMicrocredits,
     validatorStakeMicrocredits,
     commissionPercent,
   });
-  if (delegatorBelowMinimum || nonEarningReason !== null) return new BigNumber(0);
+  if (delegatorBelowMinimum || guard.isDefined(nonEarningReason)) return new BigNumber(0);
 
   const keptShare = new BigNumber(1).minus(commissionPercent.dividedBy(100));
 

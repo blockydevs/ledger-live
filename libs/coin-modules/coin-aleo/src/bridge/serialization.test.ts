@@ -367,6 +367,24 @@ describe("serialization", () => {
       ]);
     });
 
+    it("should drop extra fields stored as null in raw JSON", () => {
+      const extraRaw = {
+        functionId: "bond_public",
+        transactionType: "public",
+        patched: null,
+        programId: null,
+        validator: null,
+        stakedAmount: null,
+      } as unknown as AleoOperationExtraRaw;
+
+      const extra = fromOperationExtraRaw(extraRaw);
+
+      expect(extra).not.toHaveProperty("patched");
+      expect(extra).not.toHaveProperty("programId");
+      expect(extra).not.toHaveProperty("validator");
+      expect(extra).not.toHaveProperty("stakedAmount");
+    });
+
     it("should write a large stakedAmount in full rather than in exponential notation", () => {
       const extraRaw = toOperationExtraRaw({
         functionId: "bond_public",
