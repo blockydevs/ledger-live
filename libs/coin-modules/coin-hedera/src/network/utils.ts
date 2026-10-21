@@ -8,7 +8,7 @@ import { makeLRUCache, minutes, seconds } from "@ledgerhq/live-network/cache";
 import type { Operation, OperationType } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
 import { HEDERA_VALIDATORS_CACHE_MINUTES, STAKING_REWARD_ACCOUNT_ID } from "../constants";
-import { HederaRecipientInvalidChecksum } from "../errors";
+import { HederaMirrorNodeResponseError, HederaRecipientInvalidChecksum } from "../errors";
 import {
   getChecksum,
   mapMirrorNodesToValidators,
@@ -488,11 +488,18 @@ export const analyzeStakingOperation = async ({
     return null;
   }
 
+  const snapshotTimestamp = accountAfter.balance.timestamp;
+  if (snapshotTimestamp === null) {
+    throw new HederaMirrorNodeResponseError(
+      'Mirror node response has no value for "balance.timestamp"',
+    );
+  }
+
   // calculate uncommitted balance changes between the last snapshot and the staking tx
   const uncommittedBalanceChange = await calculateUncommittedBalanceChange({
     configOrCurrencyId,
     address,
-    startTimestamp: accountAfter.balance.timestamp,
+    startTimestamp: snapshotTimestamp,
     endTimestamp: mirrorTx.consensus_timestamp,
   });
 

@@ -192,6 +192,34 @@ describe("getStakes", () => {
     expect(result.items[0].details?.overstaked).toBeNull();
   });
 
+  it("should return active stake without overstaked status when validator max_stake is null", async () => {
+    const nodeId = 1;
+
+    mockGetAccount.mockResolvedValue({
+      account: mockAddress,
+      max_automatic_token_associations: 0,
+      evm_address: "",
+      balance: { balance: 1000000000, timestamp: "0", tokens: [] },
+      pending_reward: 50000000,
+      staked_node_id: nodeId,
+    });
+
+    mockGetNode.mockResolvedValue({
+      node_id: nodeId,
+      node_account_id: "0.0.3",
+      description: "",
+      stake: 1000,
+      max_stake: null,
+      min_stake: 0,
+      stake_rewarded: 0,
+      reward_rate_start: 0,
+    });
+
+    const result = await getStakes({ configOrCurrencyId: mockCurrency.id, address: mockAddress });
+
+    expect(result.items[0].details?.overstaked).toBeNull();
+  });
+
   it("should detect overstaked validator", async () => {
     const nodeId = 1;
 

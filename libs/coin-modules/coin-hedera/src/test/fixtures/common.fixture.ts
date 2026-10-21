@@ -30,13 +30,9 @@ export const getMockedEnrichedERC20Transfer = (
       },
     ],
     contractCallResult: {
-      block_hash: "0xblock",
-      contract_id: "0.0.12345",
-      block_gas_used: 100000,
       gas_consumed: 50000,
       gas_limit: 100000,
       gas_used: 50000,
-      timestamp: consensusTimestamp,
     },
     mirrorTransaction: getMockedMirrorTransaction({
       consensus_timestamp: consensusTimestamp,

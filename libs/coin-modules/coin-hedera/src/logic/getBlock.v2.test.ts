@@ -266,7 +266,6 @@ describe("getBlockV2", () => {
     });
 
     const mockContractCallResult = getMockedMirrorContractCallResult({
-      block_hash: "0xblockhash123",
       gas_consumed: 75000,
       gas_limit: 100000,
       gas_used: 75000,
@@ -327,6 +326,60 @@ describe("getBlockV2", () => {
         gasLimit: mockContractCallResult.gas_limit,
         gasUsed: mockContractCallResult.gas_used,
       },
+    });
+  });
+
+  it("should omit gasConsumed and gasUsed from familyExtra when the contract call result has none", async () => {
+    const mockMirrorAccount = getMockedMirrorAccount({ account: "0.0.12345" });
+    const mockTokenERC20 = getMockedERC20TokenCurrency();
+    const mockMirrorTransaction = getMockedMirrorTransaction({
+      consensus_timestamp: "1625097600.000000000",
+      transaction_hash: "erc20-transfer-hash",
+      charged_tx_fee: 300000,
+      name: "CONTRACTCALL",
+      staking_reward_transfers: [],
+      token_transfers: [],
+      transfers: [{ account: mockMirrorAccount.account, amount: -300000 }],
+    });
+    const mockERC20Transfer = getMockedERC20TokenTransfer({
+      token_evm_address: mockTokenERC20.contractAddress,
+      transaction_hash: mockMirrorTransaction.transaction_hash,
+      consensus_timestamp:
+        Number(mockMirrorTransaction.consensus_timestamp.split(".")[0]) * 10 ** 9,
+      sender_account_id: 12345,
+      receiver_account_id: 67890,
+      sender_evm_address: mockMirrorAccount.evm_address,
+      receiver_evm_address: "0xrecipient",
+      payer_account_id: 12345,
+      amount: 5000000,
+    });
+    const mockContractCallResult = getMockedMirrorContractCallResult({
+      gas_consumed: null,
+      gas_used: null,
+    });
+
+    (apiClient.getTransactionsByTimestampRange as jest.Mock).mockResolvedValue([
+      mockMirrorTransaction,
+    ]);
+    (hgraphClient.getERC20TransfersByTimestampRange as jest.Mock).mockResolvedValue([
+      mockERC20Transfer,
+    ]);
+    (enrichERC20Transfers as jest.Mock).mockReturnValue([
+      getMockedEnrichedERC20Transfer({
+        mirrorTransaction: mockMirrorTransaction,
+        contractCallResult: mockContractCallResult,
+        transfers: [mockERC20Transfer],
+      }),
+    ]);
+
+    const result = await getBlockV2({ configOrCurrencyId, height: 100 });
+
+    expect(result.transactions[0].details?.familyExtra).toEqual({
+      pagingToken: mockMirrorTransaction.consensus_timestamp,
+      consensusTimestamp: mockMirrorTransaction.consensus_timestamp,
+      transactionId: mockMirrorTransaction.transaction_id,
+      feesPayer: "0.0.12345",
+      gasLimit: mockContractCallResult.gas_limit,
     });
   });
 

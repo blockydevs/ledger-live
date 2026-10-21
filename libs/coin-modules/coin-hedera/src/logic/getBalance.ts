@@ -68,7 +68,7 @@ export async function getBalance(
           actions: [],
           details: {
             overstaked:
-              typeof validator.stake === "number"
+              typeof validator.stake === "number" && typeof validator.max_stake === "number"
                 ? BigInt(validator.stake) >= BigInt(validator.max_stake)
                 : null,
           },

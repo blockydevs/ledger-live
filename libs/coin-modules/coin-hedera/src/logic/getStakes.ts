@@ -40,7 +40,7 @@ export async function getStakes({
     details: {
       stakedNodeId,
       overstaked:
-        typeof delegatedNode?.stake === "number"
+        typeof delegatedNode?.stake === "number" && typeof delegatedNode.max_stake === "number"
           ? BigInt(delegatedNode.stake) >= BigInt(delegatedNode.max_stake)
           : null,
     },

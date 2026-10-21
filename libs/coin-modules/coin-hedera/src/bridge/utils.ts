@@ -262,9 +262,10 @@ export const getSubAccounts = async ({
       token,
       balance,
       spendableBalance: balance,
-      creationDate: isERC20
-        ? new Date()
-        : new Date(Number.parseFloat(rawToken.created_timestamp) * 1000),
+      creationDate:
+        isERC20 || rawToken.created_timestamp === null
+          ? new Date()
+          : new Date(Number.parseFloat(rawToken.created_timestamp) * 1000),
       operations: [],
       operationsCount: 0,
       pendingOperations: [],

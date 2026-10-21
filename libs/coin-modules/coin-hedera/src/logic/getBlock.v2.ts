@@ -252,9 +252,13 @@ export async function getBlockV2({
       transactionId: mirrorTx.transaction_id,
       feesPayer: payerAccount,
       ...(item.type === "erc20" && {
-        gasConsumed: item.data.contractCallResult.gas_consumed,
+        ...(item.data.contractCallResult.gas_consumed !== null && {
+          gasConsumed: item.data.contractCallResult.gas_consumed,
+        }),
         gasLimit: item.data.contractCallResult.gas_limit,
-        gasUsed: item.data.contractCallResult.gas_used,
+        ...(item.data.contractCallResult.gas_used !== null && {
+          gasUsed: item.data.contractCallResult.gas_used,
+        }),
       }),
     };
 

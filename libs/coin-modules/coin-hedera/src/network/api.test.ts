@@ -1,6 +1,7 @@
 import { LedgerAPI4xx } from "@ledgerhq/live-network/errors";
 import network from "@ledgerhq/live-network";
 import BigNumber from "bignumber.js";
+import { HederaMirrorNodeResponseError } from "../errors";
 import { resolveConfig } from "../logic/utils";
 import { getMockedConfig } from "../test/fixtures/config.fixture";
 import { getMockResponse } from "../test/fixtures/network.fixture";
@@ -49,6 +50,14 @@ describe("apiClient", () => {
       expect(requestUrl).toContain("balance=true");
       expect(requestUrl).toContain("limit=100");
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws when the response has no accounts", async () => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({}));
+
+      await expect(
+        apiClient.getAccountsForPublicKey({ configOrCurrencyId: mockConfig, publicKey: "abc123" }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
     });
 
     it("should return empty array on LedgerAPI4xx error", async () => {
@@ -235,6 +244,19 @@ describe("apiClient", () => {
       const requestUrl = mockedNetwork.mock.calls[0][0].url;
       expect(requestUrl).toContain("timestamp=gte%3A1787236926.768102104");
     });
+
+    it("throws when the response has no transactions", async () => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({ links: { next: null } }));
+
+      await expect(
+        apiClient.getAccountTransactions({
+          configOrCurrencyId: mockConfig,
+          address: "0.0.1234",
+          pagingToken: null,
+          fetchAllPages: true,
+        }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
+    });
   });
 
   describe("getAccount", () => {
@@ -330,13 +352,34 @@ describe("apiClient", () => {
       expect(result.map(t => t.token_id)).toEqual(["0.0.1001", "0.0.1002"]);
       expect(mockedNetwork).toHaveBeenCalledTimes(2);
     });
+
+    it("stops paginating when the response has no links", async () => {
+      mockedNetwork.mockResolvedValueOnce(
+        getMockResponse({ tokens: [{ token_id: "0.0.1001", balance: 10 }] }),
+      );
+
+      const result = await apiClient.getAccountTokens({
+        configOrCurrencyId: mockConfig,
+        address: "0.0.1234",
+      });
+
+      expect(result.map(t => t.token_id)).toEqual(["0.0.1001"]);
+      expect(mockedNetwork).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws when the response has no tokens", async () => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({ links: { next: null } }));
+
+      await expect(
+        apiClient.getAccountTokens({ configOrCurrencyId: mockConfig, address: "0.0.1234" }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
+    });
   });
 
   describe("getNetworkFees", () => {
     it("should call the correct endpoint and return network fees", async () => {
       const mockedResults: HederaMirrorNetworkFees = {
         fees: [{ gas: 39, transaction_type: "ContractCall" }],
-        timestamp: "1758733200.632122898",
       };
 
       mockedNetwork.mockResolvedValueOnce(getMockResponse(mockedResults));
@@ -400,26 +443,12 @@ describe("apiClient", () => {
 
     it("should call the correct endpoint and return results for contract call", async () => {
       const mockedResults: HederaMirrorContractCallResult = {
-        contract_id: "0.0.4321",
-        block_gas_used: 100,
-        block_hash: "0xabc",
         gas_consumed: 200,
         gas_limit: 10000,
         gas_used: 150,
-        timestamp: "xxxxxxxxx",
       };
 
-      mockedNetwork.mockResolvedValueOnce(
-        getMockResponse({
-          contract_id: "0.0.4321",
-          block_gas_used: 100,
-          block_hash: "0xabc",
-          gas_consumed: 200,
-          gas_limit: 10000,
-          gas_used: 150,
-          timestamp: "xxxxxxxxx",
-        }),
-      );
+      mockedNetwork.mockResolvedValueOnce(getMockResponse(mockedResults));
 
       const result = await apiClient.getContractCallResult({
         configOrCurrencyId: mockConfig,
@@ -750,6 +779,18 @@ describe("apiClient", () => {
       ]);
       expect(mockedNetwork).toHaveBeenCalledTimes(3);
     });
+
+    it("throws when the response has no transactions", async () => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({ links: { next: null } }));
+
+      await expect(
+        apiClient.getTransactionsByTimestampRange({
+          configOrCurrencyId: mockConfig,
+          startTimestamp: "gte:1000.000000000",
+          endTimestamp: "lt:2000.000000000",
+        }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
+    });
   });
 
   describe("getNodes", () => {
@@ -834,6 +875,14 @@ describe("apiClient", () => {
       expect(result.nodes.map(tx => tx.node_id)).toEqual([0, 1]);
       expect(result.nextCursor).toBe("1");
       expect(mockedNetwork).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws when the response has no nodes", async () => {
+      mockedNetwork.mockResolvedValueOnce(getMockResponse({ links: { next: null } }));
+
+      await expect(
+        apiClient.getNodes({ configOrCurrencyId: mockConfig, fetchAllPages: true }),
+      ).rejects.toThrow(HederaMirrorNodeResponseError);
     });
   });
 });
