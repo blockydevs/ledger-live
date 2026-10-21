@@ -29,6 +29,7 @@ import {
   mergeTransactionsFromDifferentSources,
   toEntityId,
 } from "./utils";
+import * as guard from "./guards";
 
 function getCommonMirrorOperationData(
   rawTx: HederaMirrorTransaction,
@@ -169,11 +170,11 @@ async function processERC20TokenTransfer({
       value: new BigNumber(transfer.amount),
       extra: {
         ...commonData.extra,
-        ...(enrichedERC20Transfer.contractCallResult.gas_consumed !== null && {
+        ...(guard.isDefined(enrichedERC20Transfer.contractCallResult.gas_consumed) && {
           gasConsumed: enrichedERC20Transfer.contractCallResult.gas_consumed,
         }),
         gasLimit: enrichedERC20Transfer.contractCallResult.gas_limit,
-        ...(enrichedERC20Transfer.contractCallResult.gas_used !== null && {
+        ...(guard.isDefined(enrichedERC20Transfer.contractCallResult.gas_used) && {
           gasUsed: enrichedERC20Transfer.contractCallResult.gas_used,
         }),
       },

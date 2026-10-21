@@ -22,6 +22,7 @@ import type {
   HederaERC20TokenBalance,
 } from "../types";
 import { estimateMaxSpendable } from "./estimateMaxSpendable";
+import * as guard from "../logic/guards";
 
 interface CalculateAmountResult {
   amount: BigNumber;
@@ -202,10 +203,10 @@ export const getSubAccounts = async ({
       const rawBalance = erc20Tokens.find(
         t => t.contractAddress.toLowerCase() === token.contractAddress.toLowerCase(),
       );
-      balance = rawBalance === undefined ? null : new BigNumber(rawBalance.balance);
+      balance = guard.isDefined(rawBalance) ? new BigNumber(rawBalance.balance) : null;
     } else {
       const rawBalance = mirrorTokens.find(t => t.token_id === token.contractAddress)?.balance;
-      balance = rawBalance === undefined ? null : new BigNumber(rawBalance);
+      balance = guard.isDefined(rawBalance) ? new BigNumber(rawBalance) : null;
     }
 
     if (!balance) {
@@ -263,7 +264,7 @@ export const getSubAccounts = async ({
       balance,
       spendableBalance: balance,
       creationDate:
-        isERC20 || rawToken.created_timestamp === null
+        isERC20 || !guard.isDefined(rawToken.created_timestamp)
           ? new Date()
           : new Date(Number.parseFloat(rawToken.created_timestamp) * 1000),
       operations: [],
