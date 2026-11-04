@@ -1,15 +1,17 @@
 services:
   rippled:
-    image: xrpllabsofficial/xrpld:3.2.1@sha256:12352a54543e972ecf806eac4317bffdf4168131b889b9601a0a31d91d44a5ef
+    image: xrplf/xrpld:3.4.1@sha256:457f095d1948a354119187df962b60504a4791521f8225a28ba2345c34a6b0ce
     container_name: coin-tester-xrp
-    # The image's entrypoint copies /config/rippled.cfg into /etc/opt/ripple/rippled.cfg
-    # then execs `rippled --conf /etc/opt/ripple/rippled.cfg` with any args appended here.
-    # Pass only the standalone-mode flags.
+    # The image's entrypoint is the xrpld binary itself and its default
+    # command joins the public network, so `command` must name the config
+    # and the standalone-mode flags.
     command:
       - --standalone
       - --start
+      - --conf
+      - /etc/xrpld/xrpld.cfg
     volumes:
-      - ./rippled.cfg:/config/rippled.cfg:ro
+      - ./rippled.cfg:/etc/xrpld/xrpld.cfg:ro
     ports:
       - "5005:5005"
       - "6006:6006"
@@ -21,7 +23,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "xrpld server_info 2>/dev/null | grep -qE '\"server_state\" : \"(full|proposing|validating)\"'",
+          "xrpld --conf /etc/xrpld/xrpld.cfg server_info 2>/dev/null | grep -qE '\"server_state\" : \"(full|proposing|validating)\"'",
         ]
       interval: 3s
       timeout: 5s
