@@ -3,11 +3,10 @@ import { setupServer } from "msw/node";
 import { Scenario, ScenarioTransaction } from "@ledgerhq/coin-tester/main";
 import type { Account } from "@ledgerhq/types-live";
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
-import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
-import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAssetsStore";
-import { XRP, XRP_LOCAL_RPC, RECIPIENT, makeXrpAccount } from "../fixtures";
+import { XRP, RECIPIENT, makeXrpAccount } from "../fixtures";
 import { buildXrpSigner } from "../signer";
-import { getBridges } from "../helpers";
+import { getBridges, setLocalXrpConfig } from "../helpers";
+import { installTokenStore } from "../tokens";
 import { fundAccount, spawnRippled, killRippled, waitForOperationInclusion } from "../rippled";
 
 global.console = require("console");
@@ -86,11 +85,7 @@ export const scenarioXrp: Scenario<GenericTransaction, Account> = {
   name: "Ledger Live XRP — basic Payment scenarios",
 
   setup: async () => {
-    setCryptoAssetsStore({
-      findTokenById: async () => undefined,
-      findTokenByAddressInCurrency: async () => undefined,
-      getTokensSyncHash: async () => "",
-    });
+    installTokenStore([]);
 
     await spawnRippled();
 
@@ -104,18 +99,7 @@ export const scenarioXrp: Scenario<GenericTransaction, Account> = {
       derivationMode: "",
     });
 
-    const localConfig = {
-      status: { type: "active" as const },
-      name: "XRP",
-      unit: { name: "XRP", code: "XRP", magnitude: 6 },
-      node: XRP_LOCAL_RPC,
-    };
-    LiveConfig.setConfig({
-      config_currency_ripple: {
-        type: "object",
-        default: localConfig,
-      },
-    });
+    setLocalXrpConfig(["iou", "mpt"]);
 
     // Fund the test account with 50 XRP — covers the four sends and keeps
     // the final balance just above the 10 XRP base reserve.

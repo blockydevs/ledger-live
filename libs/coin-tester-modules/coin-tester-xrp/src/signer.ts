@@ -6,7 +6,7 @@ import type { XrpSigner } from "@ledgerhq/live-common/families/xrp/types";
  * Prepended to the encoded transaction blob before hashing with SHA-512Half.
  * @see https://xrpl.org/docs/concepts/transactions/#signing-and-submitting-transactions
  */
-const TX_SIGN_PREFIX = "53545800";
+export const TX_SIGN_PREFIX = "53545800";
 
 /**
  * Builds a deterministic software signer implementing `XrpSigner`.

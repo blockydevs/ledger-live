@@ -2,8 +2,9 @@ import path from "path";
 import chalk from "chalk";
 import * as compose from "docker-compose";
 import { encode } from "ripple-binary-codec";
-import { deriveAddress, deriveKeypair, sign } from "ripple-keypairs";
+import { deriveAddress, deriveKeypair, generateSeed, sign } from "ripple-keypairs";
 import { XRP_LOCAL_RPC, GENESIS_SEED } from "./fixtures";
+import { TX_SIGN_PREFIX } from "./signer";
 
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 
@@ -61,62 +62,87 @@ async function getNextSequence(address: string): Promise<number> {
   return res.account_data.Sequence;
 }
 
+/** A key pair that signs in-process, outside the coin module under test. */
+export type XrplWallet = { address: string; publicKey: string; privateKey: string };
+
+export function walletFromSeed(seed: string): XrplWallet {
+  const { publicKey, privateKey } = deriveKeypair(seed);
+  return { address: deriveAddress(publicKey), publicKey, privateKey };
+}
+
+export function newWallet(): XrplWallet {
+  return walletFromSeed(generateSeed({ algorithm: "ecdsa-secp256k1" }));
+}
+
+export type TxMeta = { TransactionResult: string; [field: string]: unknown };
+
 /**
- * Funds `address` with `xrpAmount` XRP by sending a Payment from the genesis
- * "masterpassphrase" account, then closes the ledger so the recipient is
- * spendable in subsequent ledger queries.
+ * Fills `Sequence`, `Fee`, `LastLedgerSequence` and `SigningPubKey`, signs `tx` with `wallet`,
+ * submits it and closes the ledger. Throws unless the validated result is `tesSUCCESS`.
  */
-export async function fundAccount(address: string, xrpAmount: number): Promise<string> {
-  const { publicKey, privateKey } = deriveKeypair(GENESIS_SEED);
-  const senderAddress = deriveAddress(publicKey);
-  const sequence = await getNextSequence(senderAddress);
-  const currentLedger = await getCurrentLedgerIndex();
-
-  const tx = {
-    TransactionType: "Payment" as const,
-    Account: senderAddress,
-    Destination: address,
-    Amount: String(Math.trunc(xrpAmount * 1_000_000)),
+export async function signAndSubmit(
+  wallet: XrplWallet,
+  tx: Record<string, unknown>,
+): Promise<{ hash: string; meta: TxMeta }> {
+  const filled = {
     Fee: "10",
-    Flags: 2147483648,
-    Sequence: sequence,
-    LastLedgerSequence: currentLedger + 20,
-    SigningPubKey: publicKey,
+    Flags: 0,
+    ...tx,
+    Account: wallet.address,
+    Sequence: await getNextSequence(wallet.address),
+    LastLedgerSequence: (await getCurrentLedgerIndex()) + 20,
+    SigningPubKey: wallet.publicKey,
   };
-
-  const encoded = encode(tx);
-  const signature = sign("53545800" + encoded, privateKey);
-  const signedBlob = encode({ ...tx, TxnSignature: signature });
-
+  const signature = sign(TX_SIGN_PREFIX + encode(filled), wallet.privateKey);
   const submit = await rpcCall<{
     engine_result: string;
     engine_result_message: string;
     tx_json: { hash: string };
-  }>("submit", { tx_blob: signedBlob });
+  }>("submit", { tx_blob: encode({ ...filled, TxnSignature: signature }) });
 
   if (submit.engine_result !== "tesSUCCESS" && submit.engine_result !== "terQUEUED") {
-    throw new Error(`Funding payment rejected: ${submit.engine_result_message}`);
+    throw new Error(
+      `${String(tx.TransactionType)} rejected: ${submit.engine_result} ${submit.engine_result_message}`,
+    );
   }
 
-  await waitForOperationInclusion(submit.tx_json.hash);
-  return submit.tx_json.hash;
+  const meta = await waitForValidation(submit.tx_json.hash);
+  if (meta.TransactionResult !== "tesSUCCESS") {
+    throw new Error(`${String(tx.TransactionType)} failed on-chain: ${meta.TransactionResult}`);
+  }
+  return { hash: submit.tx_json.hash, meta };
+}
+
+/** Funds `address` with `xrpAmount` XRP from the genesis account. */
+export async function fundAccount(address: string, xrpAmount: number): Promise<string> {
+  const { hash } = await signAndSubmit(walletFromSeed(GENESIS_SEED), {
+    TransactionType: "Payment",
+    Destination: address,
+    Amount: String(Math.trunc(xrpAmount * 1_000_000)),
+  });
+  return hash;
 }
 
 /**
- * Validates a pending submission in one shot: `ledger_accept` blocks until
- * the open ledger is closed and every queued tx is validated, after which
- * a single `tx` lookup is enough to read the result.
+ * Closes the open ledger, which validates every queued tx, and returns the tx metadata.
+ * `ledger_accept` blocks until the close is done, so one `tx` lookup is enough.
  */
-export async function waitForOperationInclusion(hash: string): Promise<void> {
+async function waitForValidation(hash: string): Promise<TxMeta> {
   await closeLedger();
-  const res = await rpcCall<{ validated?: boolean; meta?: { TransactionResult: string } }>("tx", {
+  const res = await rpcCall<{ validated?: boolean; meta?: TxMeta }>("tx", {
     transaction: hash,
     binary: false,
   });
-  if (!res.validated) {
+  if (!res.validated || !res.meta) {
     throw new Error(`tx ${hash} was not validated after ledger_accept`);
   }
-  if (res.meta && res.meta.TransactionResult !== "tesSUCCESS") {
-    throw new Error(`tx ${hash} failed on-chain: ${res.meta.TransactionResult}`);
+  return res.meta;
+}
+
+/** Validates a tx broadcast by the bridge. Throws unless its result is `tesSUCCESS`. */
+export async function waitForOperationInclusion(hash: string): Promise<void> {
+  const meta = await waitForValidation(hash);
+  if (meta.TransactionResult !== "tesSUCCESS") {
+    throw new Error(`tx ${hash} failed on-chain: ${meta.TransactionResult}`);
   }
 }
