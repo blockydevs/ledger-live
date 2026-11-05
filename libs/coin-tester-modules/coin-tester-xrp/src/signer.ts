@@ -1,5 +1,6 @@
-import { deriveAddress, deriveKeypair, generateSeed, sign } from "ripple-keypairs";
+import { sign } from "ripple-keypairs";
 import type { XrpSigner } from "@ledgerhq/live-common/families/xrp/types";
+import { newWallet, type XrplWallet } from "./rippled";
 
 /**
  * XRP transaction signing prefix (single-account signing).
@@ -9,13 +10,11 @@ import type { XrpSigner } from "@ledgerhq/live-common/families/xrp/types";
 export const TX_SIGN_PREFIX = "53545800";
 
 /**
- * Builds a deterministic software signer implementing `XrpSigner`.
+ * Builds a software signer implementing `XrpSigner` for `wallet`.
  * Uses secp256k1 (the XRP default) regardless of the `ed25519` flag.
  */
-export function buildXrpSigner(): XrpSigner {
-  const seed = generateSeed({ algorithm: "ecdsa-secp256k1" });
-  const { publicKey, privateKey } = deriveKeypair(seed);
-  const address = deriveAddress(publicKey);
+export function buildXrpSigner(wallet: XrplWallet = newWallet()): XrpSigner {
+  const { publicKey, privateKey, address } = wallet;
 
   return {
     async getAddress(_path: string, _display?: boolean, _chainCode?: boolean, _ed25519?: boolean) {

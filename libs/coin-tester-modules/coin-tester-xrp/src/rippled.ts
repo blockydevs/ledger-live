@@ -3,8 +3,17 @@ import chalk from "chalk";
 import * as compose from "docker-compose";
 import { encode } from "ripple-binary-codec";
 import { deriveAddress, deriveKeypair, generateSeed, sign } from "ripple-keypairs";
-import { XRP_LOCAL_RPC, GENESIS_SEED } from "./fixtures";
 import { TX_SIGN_PREFIX } from "./signer";
+
+export const XRP_LOCAL_RPC = "http://127.0.0.1:5005";
+
+/**
+ * The XRPL family seed for the genesis "masterpassphrase" account, which
+ * holds the full 100B XRP supply at the start of a `--standalone --start`
+ * network. Decodes to address `rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh`.
+ */
+export const GENESIS_SEED = "snoPBrXtMeMyMHUVTgbuqAfg1SUTb";
+export const GENESIS_ADDRESS = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh";
 
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 
@@ -145,4 +154,28 @@ export async function waitForOperationInclusion(hash: string): Promise<void> {
   if (meta.TransactionResult !== "tesSUCCESS") {
     throw new Error(`tx ${hash} failed on-chain: ${meta.TransactionResult}`);
   }
+}
+
+/** The `balance` of `holder`'s `currency` trust line to `issuer`, or `undefined` if the line does not exist. */
+export async function getTrustLineBalance(
+  holder: string,
+  currency: string,
+  issuer: string,
+): Promise<string | undefined> {
+  const { lines } = await rpcCall<{ lines: { currency: string; balance: string }[] }>(
+    "account_lines",
+    { account: holder, peer: issuer, ledger_index: "validated" },
+  );
+
+  return lines.find(line => line.currency === currency)?.balance;
+}
+
+/** The next `Sequence` of `address`: it grows by one with each transaction the account submits. */
+export async function getAccountSequence(address: string): Promise<number> {
+  const { account_data } = await rpcCall<{ account_data: { Sequence: number } }>("account_info", {
+    account: address,
+    ledger_index: "current",
+  });
+
+  return account_data.Sequence;
 }

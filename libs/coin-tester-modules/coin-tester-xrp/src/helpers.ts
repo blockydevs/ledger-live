@@ -9,7 +9,7 @@ import type { XrpSigner } from "@ledgerhq/live-common/families/xrp/types";
 import { registerCoinModules } from "@ledgerhq/live-common/coin-modules/registry";
 import { coinModuleLoaders } from "@ledgerhq/live-common/coin-modules/loaders";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
-import { XRP_LOCAL_RPC } from "./fixtures";
+import { fundAccount, newWallet, XRP_LOCAL_RPC, type XrplWallet } from "./rippled";
 
 registerCoinModules(coinModuleLoaders);
 
@@ -70,4 +70,11 @@ export function syncAccount(
       complete: () => resolve(synced),
     });
   });
+}
+
+export async function newFundedWallet(xrp = 100): Promise<XrplWallet> {
+  const wallet = newWallet();
+  await fundAccount(wallet.address, xrp);
+
+  return wallet;
 }

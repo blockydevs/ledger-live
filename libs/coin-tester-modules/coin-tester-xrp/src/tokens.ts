@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAssetsStore";
 import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import {
@@ -11,6 +12,18 @@ export const IOU_MAGNITUDE = 38;
 
 const NETWORK = XRP.id;
 
+export function iouAmount(value: string): BigNumber {
+  return new BigNumber(value).shiftedBy(IOU_MAGNITUDE);
+}
+
+/** The 40-hex form of an XRPL currency code, lowercase. A 3-character code sits at bytes 12–14. */
+function toCurrencyHex(code: string): string {
+  if (code.length !== 3) return code.toLowerCase();
+  const ascii = Buffer.from(code, "ascii").toString("hex");
+
+  return "00".repeat(12) + ascii + "00".repeat(5);
+}
+
 /**
  * A CAL entry for an IOU. `code` is the canonical currency coin-xrp reports: a 3-character
  * code as written, case kept, or 40 uppercase hex characters.
@@ -18,7 +31,9 @@ const NETWORK = XRP.id;
 export function makeIouToken(code: string, issuer: string): TokenCurrency {
   return {
     type: "TokenCurrency",
-    id: TokenCurrencyIdSchema.parse(`${NETWORK}/iou/${code}:${issuer}`),
+    id: TokenCurrencyIdSchema.parse(
+      `${NETWORK}/iou/${toCurrencyHex(code)}:${issuer.toLowerCase()}`,
+    ),
     contractAddress: issuer,
     tokenIdentifier: code,
     parentCurrencyId: CryptoCurrencyIdSchema.parse(NETWORK),
@@ -40,7 +55,9 @@ export function makeMptToken(
 ): TokenCurrency {
   return {
     type: "TokenCurrency",
-    id: TokenCurrencyIdSchema.parse(`${NETWORK}/mpt/${issuanceId}:${issuer}`),
+    id: TokenCurrencyIdSchema.parse(
+      `${NETWORK}/mpt/${issuanceId.toLowerCase()}:${issuer.toLowerCase()}`,
+    ),
     contractAddress: issuer,
     tokenIdentifier: issuanceId,
     parentCurrencyId: CryptoCurrencyIdSchema.parse(NETWORK),

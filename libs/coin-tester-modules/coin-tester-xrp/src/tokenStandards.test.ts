@@ -1,4 +1,3 @@
-import BigNumber from "bignumber.js";
 import type { Account, AccountBridge } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
@@ -13,25 +12,19 @@ import {
   openTrustLine,
   TF_MPT_CAN_TRANSFER,
 } from "./local-tx";
-import { fundAccount, killRippled, newWallet, spawnRippled, type XrplWallet } from "./rippled";
+import { fundAccount, newWallet, type XrplWallet } from "./rippled";
 import { buildXrpSigner } from "./signer";
-import { installTokenStore, IOU_MAGNITUDE, makeIouToken, makeMptToken } from "./tokens";
+import { installTokenStore, iouAmount, makeIouToken, makeMptToken } from "./tokens";
 
 global.console = require("console");
 jest.setTimeout(600_000);
-
-["exit", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1", "SIGUSR2", "uncaughtException"].forEach(e =>
-  process.on(e, async () => {
-    await killRippled();
-  }),
-);
 
 const MPT_ASSET_SCALE = 2;
 const HELD_IOU_UPPER = "10";
 const HELD_IOU_LOWER = "20";
 const HELD_MPT = "500";
 
-type HeldTokens = { usdUpper: TokenCurrency; usdLower: TokenCurrency; mpt: TokenCurrency };
+type ListedTokens = { usdUpper: TokenCurrency; mpt: TokenCurrency };
 
 function balancesByTokenId(account: Account): Record<string, string> {
   return Object.fromEntries(
@@ -39,18 +32,15 @@ function balancesByTokenId(account: Account): Record<string, string> {
   );
 }
 
-const iouUnits = (value: string) => new BigNumber(value).shiftedBy(IOU_MAGNITUDE).toFixed();
-
 describe("XRP token standards", () => {
   let accountBridge: AccountBridge<GenericTransaction>;
   let stopRemoteGuard: () => void;
   let holder: XrplWallet;
   let iouIssuer: XrplWallet;
-  let tokens: HeldTokens;
+  let tokens: ListedTokens;
 
   beforeAll(async () => {
     stopRemoteGuard = forbidRemoteRequests();
-    await spawnRippled();
     setLocalXrpConfig();
     ({ accountBridge } = await getBridges(buildXrpSigner()));
 
@@ -78,15 +68,13 @@ describe("XRP token standards", () => {
 
     tokens = {
       usdUpper: makeIouToken("USD", iouIssuer.address),
-      usdLower: makeIouToken("usd", iouIssuer.address),
       mpt: makeMptToken(issuanceId, mptIssuer.address, "MPT", MPT_ASSET_SCALE),
     };
     installTokenStore(Object.values(tokens));
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     stopRemoteGuard?.();
-    await killRippled();
   });
 
   async function syncHolder(enabledTokenStandards?: XrpTokenStandard[]): Promise<Account> {
@@ -100,7 +88,7 @@ describe("XRP token standards", () => {
       store.findTokenByAddressInCurrency(issuer, network, reference);
 
     expect(await lookup(iouIssuer.address, "ripple", "USD")).toBe(tokens.usdUpper);
-    expect(await lookup(iouIssuer.address, "ripple", "usd")).toBe(tokens.usdLower);
+    expect(await lookup(iouIssuer.address, "ripple", "usd")).toBeUndefined();
     expect(await lookup(iouIssuer.address, "ripple", "Usd")).toBeUndefined();
     expect(await lookup(iouIssuer.address, "ripple_testnet", "USD")).toBeUndefined();
     expect(await lookup(holder.address, "ripple", "USD")).toBeUndefined();
@@ -109,7 +97,9 @@ describe("XRP token standards", () => {
     ).toBeUndefined();
 
     expect(await store.findTokenById(tokens.usdUpper.id)).toBe(tokens.usdUpper);
-    expect(await store.findTokenById(tokens.usdUpper.id.toLowerCase())).toBeUndefined();
+    expect(tokens.usdUpper.id).toBe(
+      `ripple/iou/0000000000000000000000005553440000000000:${iouIssuer.address.toLowerCase()}`,
+    );
   });
 
   it("with enabledTokenStandards unset, no token sub-account exists", async () => {
@@ -119,12 +109,11 @@ describe("XRP token standards", () => {
     expect(account.subAccounts).toEqual([]);
   });
 
-  it('with ["iou"], only the two IOU sub-accounts exist', async () => {
+  it('with ["iou"], only the listed IOU sub-account exists', async () => {
     const account = await syncHolder(["iou"]);
 
     expect(balancesByTokenId(account)).toEqual({
-      [tokens.usdUpper.id]: iouUnits(HELD_IOU_UPPER),
-      [tokens.usdLower.id]: iouUnits(HELD_IOU_LOWER),
+      [tokens.usdUpper.id]: iouAmount(HELD_IOU_UPPER).toFixed(),
     });
   });
 
@@ -132,8 +121,7 @@ describe("XRP token standards", () => {
     const account = await syncHolder(["iou", "mpt"]);
 
     expect(balancesByTokenId(account)).toEqual({
-      [tokens.usdUpper.id]: iouUnits(HELD_IOU_UPPER),
-      [tokens.usdLower.id]: iouUnits(HELD_IOU_LOWER),
+      [tokens.usdUpper.id]: iouAmount(HELD_IOU_UPPER).toFixed(),
       [tokens.mpt.id]: HELD_MPT,
     });
   });

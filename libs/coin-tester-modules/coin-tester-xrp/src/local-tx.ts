@@ -8,6 +8,11 @@ import { signAndSubmit, type XrplWallet } from "./rippled";
 
 /** XRPL flags combine with `+`: `|` turns a value with bit 31 set into a negative number. */
 export const TF_SET_NO_RIPPLE = 0x00020000;
+const TF_SET_FREEZE = 0x00100000;
+
+export const ASF_REQUIRE_DEST = 1;
+export const ASF_DEFAULT_RIPPLE = 8;
+export const ASF_ALLOW_TRUSTLINE_CLAWBACK = 16;
 
 export const TF_MPT_CAN_LOCK = 0x00000002;
 export const TF_MPT_CAN_TRANSFER = 0x00000020;
@@ -25,6 +30,46 @@ export async function openTrustLine(
     TransactionType: "TrustSet",
     LimitAmount: { currency, issuer, value: limit },
     Flags: TF_SET_NO_RIPPLE,
+  });
+}
+
+/** The holder sets its limit back to 0, as Ledger Live's opt-out does. A line at 0 balance is deleted. */
+export async function closeTrustLine(
+  holder: XrplWallet,
+  { currency, issuer }: { currency: string; issuer: string },
+): Promise<void> {
+  await openTrustLine(holder, { currency, issuer, limit: "0" });
+}
+
+export async function enableAccountFlag(wallet: XrplWallet, flag: number): Promise<void> {
+  await signAndSubmit(wallet, { TransactionType: "AccountSet", SetFlag: flag });
+}
+
+/** `transferRate` is in billionths: 1_250_000_000 charges 25 % on each holder-to-holder transfer. */
+export async function setTransferRate(issuer: XrplWallet, transferRate: number): Promise<void> {
+  await signAndSubmit(issuer, { TransactionType: "AccountSet", TransferRate: transferRate });
+}
+
+/** Needs `ASF_ALLOW_TRUSTLINE_CLAWBACK`, set before any trust line to the issuer exists. */
+export async function clawbackIou(
+  issuer: XrplWallet,
+  { holder, currency, value }: { holder: string; currency: string; value: string },
+): Promise<void> {
+  await signAndSubmit(issuer, {
+    TransactionType: "Clawback",
+    // In a Clawback, `Amount.issuer` is the holder.
+    Amount: { currency, issuer: holder, value },
+  });
+}
+
+export async function freezeTrustLine(
+  issuer: XrplWallet,
+  { holder, currency }: { holder: string; currency: string },
+): Promise<void> {
+  await signAndSubmit(issuer, {
+    TransactionType: "TrustSet",
+    LimitAmount: { currency, issuer: holder, value: "0" },
+    Flags: TF_SET_FREEZE,
   });
 }
 

@@ -5,6 +5,9 @@ const esmDeps = ["ky", "@noble\\+", "@scure\\+"];
 const config: Config = {
   testEnvironment: "node",
   setupFilesAfterEnv: ["@ledgerhq/wallet-framework-test-setup"],
+  globalSetup: "<rootDir>/src/globalSetup.ts",
+  globalTeardown: "<rootDir>/src/globalTeardown.ts",
+  maxWorkers: 1,
   transform: {
     "^.+\\.(t|j)sx?$": [
       "@swc/jest",
