@@ -2,10 +2,10 @@ import BigNumber from "bignumber.js";
 import { Scenario, ScenarioTransaction } from "@ledgerhq/coin-tester/main";
 import { forbidRemoteRequests } from "@ledgerhq/coin-tester/localOnly";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
-import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
+import type { Account } from "@ledgerhq/types-live";
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
 import { makeXrpAccount } from "../fixtures";
-import { getBridges, newFundedWallet, setLocalXrpConfig } from "../helpers";
+import { getBridges, createFundedWallet, setLocalXrpConfig } from "../helpers";
 import {
   authorizeMpt,
   clawbackMpt,
@@ -19,6 +19,7 @@ import {
 import { getMptBalance, waitForOperationInclusion, type XrplWallet } from "../rippled";
 import { buildXrpSigner } from "../signer";
 import { installTokenStore, makeMptToken } from "../tokens";
+import { countOperations, expectSentByHolder, getSubAccount } from "./shared";
 
 global.console = require("console");
 jest.setTimeout(600_000);
@@ -40,35 +41,13 @@ let mptAId: string;
 let mptBId: string;
 let step = 0;
 
+const ISSUE_STEP = 3;
+const CLAWBACK_STEP = 4;
+const OPT_OUT_STEP = 5;
+
 /** MPT amounts are integers in base units. */
-function units(value: number): BigNumber {
+function toMptAmount(value: number): BigNumber {
   return new BigNumber(value);
-}
-
-function getSubAccount(account: Account, id: string): TokenAccount {
-  const found = account.subAccounts?.find(sub => sub.id === id);
-  if (!found) throw new Error(`no sub-account ${id}`);
-
-  return found;
-}
-
-function getFeesOperation(account: Account, hash: string): Operation {
-  const found = account.operations.find(op => op.hash === hash);
-  if (!found) throw new Error(`no parent operation ${hash}`);
-
-  return found;
-}
-
-/** Asserts the holder sent `sent` and paid its fee in XRP on the parent account. */
-function expectSentByHolder(previous: Account, current: Account, sent: Operation): void {
-  expect(sent.type).toBe("OUT");
-  expect(sent.hasFailed).toBe(false);
-  expect(sent.senders).toEqual([holder.address]);
-  expect(sent.recipients).toContain(recipient.address);
-  const fees = getFeesOperation(current, sent.hash);
-  expect(fees.type).toBe("FEES");
-  expect(fees.value).toStrictEqual(fees.fee);
-  expect(current.balance).toStrictEqual(previous.balance.minus(fees.fee));
 }
 
 function makeTransactions(): XrpScenarioTransaction[] {
@@ -80,7 +59,9 @@ function makeTransactions(): XrpScenarioTransaction[] {
     recipient: issuer.address,
     expect: (previous, current) => {
       const [latest] = current.operations;
+      expect(current.operations.length - previous.operations.length).toBe(1);
       expect(latest.type).toBe("OPT_IN");
+      expect(latest.hasFailed).toBe(false);
       expect(current.subAccounts).toHaveLength(1);
       expect(getSubAccount(current, mptAId).balance.toFixed()).toBe("0");
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.fee));
@@ -95,7 +76,9 @@ function makeTransactions(): XrpScenarioTransaction[] {
     recipient: issuer.address,
     expect: (previous, current) => {
       const [latest] = current.operations;
+      expect(current.operations.length - previous.operations.length).toBe(1);
       expect(latest.type).toBe("OPT_IN");
+      expect(latest.hasFailed).toBe(false);
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.fee));
       expect(current.subAccounts).toHaveLength(2);
       expect(getSubAccount(current, mptBId).balance.toFixed()).toBe("0");
@@ -108,7 +91,7 @@ function makeTransactions(): XrpScenarioTransaction[] {
     assetReference: issuanceA,
     assetOwner: issuer.address,
     recipient: recipient.address,
-    amount: units(1000),
+    amount: toMptAmount(1000),
     expect: async (previous, current) => {
       for (const [id, held] of [
         [mptAId, 10_000],
@@ -117,18 +100,16 @@ function makeTransactions(): XrpScenarioTransaction[] {
         const [received] = getSubAccount(previous, id).operations;
         expect(received.type).toBe("IN");
         expect(received.senders).toContain(issuer.address);
-        expect(getSubAccount(previous, id).balance).toStrictEqual(units(held));
+        expect(getSubAccount(previous, id).balance).toStrictEqual(toMptAmount(held));
       }
 
       expect(current.subAccounts).toHaveLength(2);
-      const mptA = getSubAccount(current, mptAId);
-      expect(mptA.balance).toStrictEqual(units(8750));
-      const [sent] = mptA.operations;
-      expectSentByHolder(previous, current, sent);
+      expect(getSubAccount(current, mptAId).balance).toStrictEqual(toMptAmount(8750));
+      const sent = expectSentByHolder(previous, current, mptAId, { holder, recipient });
       // An op value is the holder's debit, transfer fee included: balance history depends on it.
-      expect(sent.value).toStrictEqual(units(1250));
+      expect(sent.value).toStrictEqual(toMptAmount(1250));
       expect(await getMptBalance(recipient.address, issuanceA)).toBe("1000");
-      expect(getSubAccount(current, mptBId).balance).toStrictEqual(units(5000));
+      expect(getSubAccount(current, mptBId).balance).toStrictEqual(toMptAmount(5000));
     },
   };
 
@@ -143,16 +124,14 @@ function makeTransactions(): XrpScenarioTransaction[] {
       const [clawedBack] = getSubAccount(previous, mptAId).operations;
       expect(clawedBack.type).toBe("OUT");
       expect(clawedBack.recipients).toContain(issuer.address);
-      expect(clawedBack.value).toStrictEqual(units(500));
-      expect(getSubAccount(previous, mptAId).balance).toStrictEqual(units(8250));
+      expect(clawedBack.value).toStrictEqual(toMptAmount(500));
+      expect(getSubAccount(previous, mptAId).balance).toStrictEqual(toMptAmount(8250));
 
       expect(current.subAccounts).toHaveLength(2);
-      const mptA = getSubAccount(current, mptAId);
-      const [sent] = mptA.operations;
-      expectSentByHolder(previous, current, sent);
-      expect(sent.value).toStrictEqual(units(8250));
-      expect(mptA.balance.toFixed()).toBe("0");
-      // 8250 debited under a 25 % fee delivers 6600.
+      const sent = expectSentByHolder(previous, current, mptAId, { holder, recipient });
+      expect(sent.value).toStrictEqual(toMptAmount(8250));
+      expect(getSubAccount(current, mptAId).balance.toFixed()).toBe("0");
+      // 1000 already held + 6600 delivered (8250 / 1.25).
       expect(await getMptBalance(recipient.address, issuanceA)).toBe("7600");
     },
   };
@@ -163,7 +142,7 @@ function makeTransactions(): XrpScenarioTransaction[] {
     assetReference: issuanceB,
     assetOwner: issuer.address,
     recipient: recipient.address,
-    amount: units(1000),
+    amount: toMptAmount(1000),
     expect: async (previous, current) => {
       const [optOut] = previous.operations;
       expect(optOut.type).toBe("OPT_OUT");
@@ -173,14 +152,12 @@ function makeTransactions(): XrpScenarioTransaction[] {
       // The opt-out adds nothing to the A history and keeps what was there.
       const mptA = getSubAccount(previous, mptAId);
       expect(mptA.balance.toFixed()).toBe("0");
-      expect(mptA.operations[0].value).toStrictEqual(units(8250));
+      expect(mptA.operations[0].value).toStrictEqual(toMptAmount(8250));
 
       expect(current.subAccounts).toHaveLength(2);
-      const mptB = getSubAccount(current, mptBId);
-      expect(mptB.balance).toStrictEqual(units(4000));
-      const [sent] = mptB.operations;
-      expectSentByHolder(previous, current, sent);
-      expect(sent.value).toStrictEqual(units(1000));
+      expect(getSubAccount(current, mptBId).balance).toStrictEqual(toMptAmount(4000));
+      const sent = expectSentByHolder(previous, current, mptBId, { holder, recipient });
+      expect(sent.value).toStrictEqual(toMptAmount(1000));
       expect(await getMptBalance(recipient.address, issuanceB)).toBe("1000");
       expect(getSubAccount(current, mptAId).balance.toFixed()).toBe("0");
     },
@@ -194,9 +171,9 @@ export const scenarioXrpMpt: Scenario<GenericTransaction, Account> = {
 
   setup: async () => {
     stopRemoteGuard = forbidRemoteRequests();
-    holder = await newFundedWallet();
-    issuer = await newFundedWallet();
-    recipient = await newFundedWallet();
+    holder = await createFundedWallet();
+    issuer = await createFundedWallet();
+    recipient = await createFundedWallet();
 
     issuanceA = await createMptIssuance(issuer, {
       assetScale: ASSET_SCALE,
@@ -210,8 +187,18 @@ export const scenarioXrpMpt: Scenario<GenericTransaction, Account> = {
     await authorizeMpt(recipient, issuanceA);
     await authorizeMpt(recipient, issuanceB);
 
-    const mptA = makeMptToken(issuanceA, issuer.address, "MPTA", ASSET_SCALE);
-    const mptB = makeMptToken(issuanceB, issuer.address, "MPTB", ASSET_SCALE);
+    const mptA = makeMptToken({
+      issuanceId: issuanceA,
+      issuer: issuer.address,
+      ticker: "MPTA",
+      assetScale: ASSET_SCALE,
+    });
+    const mptB = makeMptToken({
+      issuanceId: issuanceB,
+      issuer: issuer.address,
+      ticker: "MPTB",
+      assetScale: ASSET_SCALE,
+    });
     installTokenStore([mptA, mptB]);
     setLocalXrpConfig(["iou", "mpt"]);
 
@@ -242,28 +229,31 @@ export const scenarioXrpMpt: Scenario<GenericTransaction, Account> = {
 
   beforeEach: async () => {
     step += 1;
-    if (step === 3) {
+    if (step === ISSUE_STEP) {
       await issue(issuer, holder.address, { mpt_issuance_id: issuanceA, value: "10000" });
       await issue(issuer, holder.address, { mpt_issuance_id: issuanceB, value: "5000" });
     }
 
-    if (step === 4) {
-      await clawbackMpt(issuer, { holder: holder.address, issuanceId: issuanceA, value: "500" });
+    if (step === CLAWBACK_STEP) {
+      await clawbackMpt(issuer, {
+        holder: holder.address,
+        issuanceId: issuanceA,
+        value: "500",
+      });
     }
 
-    if (step === 5) {
+    if (step === OPT_OUT_STEP) {
       await unauthorizeMpt(holder, issuanceA);
     }
   },
 
   afterAll: account => {
     expect(account.subAccounts).toHaveLength(2);
-    expect(getSubAccount(account, mptBId).balance).toStrictEqual(units(4000));
+    expect(getSubAccount(account, mptBId).balance).toStrictEqual(toMptAmount(4000));
     expect(getSubAccount(account, mptAId).balance.toFixed()).toBe("0");
-    const count = (type: string) => account.operations.filter(op => op.type === type).length;
-    expect(count("OPT_IN")).toBe(2);
-    expect(count("OPT_OUT")).toBe(1);
-    expect(count("FEES")).toBe(3);
+    expect(countOperations(account, "OPT_IN")).toBe(2);
+    expect(countOperations(account, "OPT_OUT")).toBe(1);
+    expect(countOperations(account, "FEES")).toBe(3);
   },
 
   teardown: () => {

@@ -6,14 +6,13 @@ import { getCoinFrameworkAccountBridge } from "@ledgerhq/live-common/bridge/gene
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
 import xrpResolver from "@ledgerhq/live-common/families/xrp/getAddress";
 import type { XrpSigner } from "@ledgerhq/live-common/families/xrp/types";
+import type { XrpCoinConfig, XrpTokenStandard } from "@ledgerhq/coin-xrp/config";
 import { registerCoinModules } from "@ledgerhq/live-common/coin-modules/registry";
 import { coinModuleLoaders } from "@ledgerhq/live-common/coin-modules/loaders";
 import { LiveConfig } from "@ledgerhq/live-config/LiveConfig";
-import { fundAccount, newWallet, XRP_LOCAL_RPC, type XrplWallet } from "./rippled";
+import { fundAccount, makeWallet, XRP_LOCAL_RPC, type XrplWallet } from "./rippled";
 
 registerCoinModules(coinModuleLoaders);
-
-export type XrpTokenStandard = "iou" | "mpt";
 
 /** The bridges are keyed by coin family, not by currency id. */
 const FAMILY = "xrp";
@@ -30,9 +29,9 @@ export async function getBridges(signer: XrpSigner): Promise<{
   const getAddress = xrpResolver(context);
 
   return {
+    getAddress,
     currencyBridge: await getCoinFrameworkCurrencyBridge(FAMILY, "local", { context, getAddress }),
     accountBridge: await getCoinFrameworkAccountBridge(FAMILY, "local", { context, getAddress }),
-    getAddress,
   };
 }
 
@@ -50,7 +49,7 @@ export function setLocalXrpConfig(enabledTokenStandards?: XrpTokenStandard[]): v
         unit: { name: "XRP", code: "XRP", magnitude: 6 },
         node: XRP_LOCAL_RPC,
         ...(enabledTokenStandards ? { enabledTokenStandards } : {}),
-      },
+      } satisfies XrpCoinConfig,
     },
   });
 }
@@ -72,8 +71,8 @@ export function syncAccount(
   });
 }
 
-export async function newFundedWallet(xrp = 100): Promise<XrplWallet> {
-  const wallet = newWallet();
+export async function createFundedWallet(xrp = 100): Promise<XrplWallet> {
+  const wallet = makeWallet();
   await fundAccount(wallet.address, xrp);
 
   return wallet;

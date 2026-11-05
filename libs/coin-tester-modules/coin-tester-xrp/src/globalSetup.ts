@@ -1,6 +1,8 @@
 import { killRippled, spawnRippled } from "./rippled";
 
-const cleanup = () => killRippled().catch(() => {});
+function cleanup(): Promise<void> {
+  return killRippled().catch(() => {});
+}
 
 export default async function globalSetup(): Promise<void> {
   await killRippled();

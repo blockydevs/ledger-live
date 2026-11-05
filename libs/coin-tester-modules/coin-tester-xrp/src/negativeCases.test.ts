@@ -5,7 +5,7 @@ import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-co
 import { forbidRemoteRequests } from "@ledgerhq/coin-tester/localOnly";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { makeXrpAccount } from "./fixtures";
-import { getBridges, newFundedWallet, setLocalXrpConfig, syncAccount } from "./helpers";
+import { getBridges, createFundedWallet, setLocalXrpConfig, syncAccount } from "./helpers";
 import {
   ASF_DEFAULT_RIPPLE,
   ASF_REQUIRE_DEST,
@@ -20,14 +20,16 @@ import {
   TF_MPT_CAN_LOCK,
   TF_MPT_CAN_TRANSFER,
 } from "./local-tx";
-import { getAccountSequence, newWallet, type XrplWallet } from "./rippled";
+import { getNextSequence, makeWallet, type XrplWallet } from "./rippled";
 import { buildXrpSigner } from "./signer";
-import { installTokenStore, iouAmount, makeIouToken, makeMptToken } from "./tokens";
+import { installTokenStore, toIouAmount, makeIouToken, makeMptToken } from "./tokens";
 
 global.console = require("console");
 jest.setTimeout(600_000);
 
 type Wallets = { holder: XrplWallet; issuer: XrplWallet; recipient: XrplWallet };
+
+type MptWallets = Wallets & { issuanceId: string };
 
 type SyncedHolder = {
   accountBridge: AccountBridge<GenericTransaction>;
@@ -42,9 +44,9 @@ type SyncedHolder = {
  * limit, `null` for no line.
  */
 async function createWallets(recipientLimit: string | null = "1000"): Promise<Wallets> {
-  const holder = await newFundedWallet();
-  const issuer = await newFundedWallet();
-  const recipient = await newFundedWallet();
+  const holder = await createFundedWallet();
+  const issuer = await createFundedWallet();
+  const recipient = await createFundedWallet();
   // Without it, a holder-to-recipient payment cannot ripple through the issuer.
   await enableAccountFlag(issuer, ASF_DEFAULT_RIPPLE);
 
@@ -73,14 +75,18 @@ async function syncHolder(holder: XrplWallet, token: TokenCurrency): Promise<Syn
   // Without the sub-account, the send would go out in XRP and a no-error case would pass for nothing.
   expect(account.subAccounts?.map(sub => sub.id)).toContain(subAccountId);
 
-  return { accountBridge, account, token, subAccountId, signTransaction };
+  return {
+    accountBridge,
+    account,
+    token,
+    subAccountId,
+    signTransaction,
+  };
 }
 
 function syncIouHolder({ holder, issuer }: Wallets): Promise<SyncedHolder> {
   return syncHolder(holder, makeIouToken("USD", issuer.address));
 }
-
-type MptWallets = Wallets & { issuanceId: string };
 
 /**
  * The holder holds 1000 of an issuance with `flags` and asset scale 0. `isRecipientOptedIn` false
@@ -95,11 +101,11 @@ async function createMptWallets({
   transferFee?: number;
   isRecipientOptedIn?: boolean;
 } = {}): Promise<MptWallets> {
-  const holder = await newFundedWallet();
-  const issuer = await newFundedWallet();
-  const recipient = await newFundedWallet();
+  const holder = await createFundedWallet();
+  const issuer = await createFundedWallet();
+  const recipient = await createFundedWallet();
 
-  const issuanceId = await createMptIssuance(issuer, { assetScale: 0, flags, transferFee });
+  const issuanceId = await createMptIssuance(issuer, { flags, transferFee, assetScale: 0 });
   await authorizeMpt(holder, issuanceId);
   await issue(issuer, holder.address, { mpt_issuance_id: issuanceId, value: "1000" });
   if (isRecipientOptedIn) await authorizeMpt(recipient, issuanceId);
@@ -108,7 +114,9 @@ async function createMptWallets({
 }
 
 function syncMptHolder({ holder, issuer, issuanceId }: MptWallets): Promise<SyncedHolder> {
-  return syncHolder(holder, makeMptToken(issuanceId, issuer.address, "MPT", 0));
+  const token = makeMptToken({ issuanceId, issuer: issuer.address, ticker: "MPT", assetScale: 0 });
+
+  return syncHolder(holder, token);
 }
 
 /** Also asserts that the status check signed nothing and put nothing on the ledger. */
@@ -124,12 +132,12 @@ async function getSendStatus(
     assetReference: token.tokenIdentifier,
     assetOwner: token.contractAddress,
   });
-  const sequenceBefore = await getAccountSequence(account.freshAddress);
+  const sequenceBefore = await getNextSequence(account.freshAddress);
   const prepared = await accountBridge.prepareTransaction(account, transaction);
   const status = await accountBridge.getTransactionStatus(account, prepared);
 
   expect(signTransaction).not.toHaveBeenCalled();
-  expect(await getAccountSequence(account.freshAddress)).toBe(sequenceBefore);
+  expect(await getNextSequence(account.freshAddress)).toBe(sequenceBefore);
 
   return status;
 }
@@ -150,7 +158,7 @@ describe("XRP refused IOU sends", () => {
     await freezeTrustLine(wallets.issuer, { holder: wallets.holder.address, currency: "USD" });
     const synced = await syncIouHolder(wallets);
 
-    const status = await getSendStatus(synced, wallets.recipient.address, iouAmount("1"));
+    const status = await getSendStatus(synced, wallets.recipient.address, toIouAmount("1"));
 
     expect(status.errors.amount?.name).toBe("XrpTokenFrozen");
   });
@@ -160,7 +168,7 @@ describe("XRP refused IOU sends", () => {
     await freezeTrustLine(wallets.issuer, { holder: wallets.holder.address, currency: "USD" });
     const synced = await syncIouHolder(wallets);
 
-    const status = await getSendStatus(synced, wallets.issuer.address, iouAmount("1"));
+    const status = await getSendStatus(synced, wallets.issuer.address, toIouAmount("1"));
 
     expect(status.errors).toEqual({});
   });
@@ -169,7 +177,7 @@ describe("XRP refused IOU sends", () => {
     const wallets = await createWallets(null);
     const synced = await syncIouHolder(wallets);
 
-    const status = await getSendStatus(synced, wallets.recipient.address, iouAmount("1"));
+    const status = await getSendStatus(synced, wallets.recipient.address, toIouAmount("1"));
 
     expect(status.errors.recipient?.name).toBe("XrpTokenCannotReceive");
   });
@@ -178,7 +186,7 @@ describe("XRP refused IOU sends", () => {
     const wallets = await createWallets("5");
     const synced = await syncIouHolder(wallets);
 
-    const status = await getSendStatus(synced, wallets.recipient.address, iouAmount("6"));
+    const status = await getSendStatus(synced, wallets.recipient.address, toIouAmount("6"));
 
     expect(status.errors.amount?.name).toBe("XrpTokenAmountNotDeliverable");
   });
@@ -189,7 +197,7 @@ describe("XRP refused IOU sends", () => {
     const synced = await syncIouHolder(wallets);
 
     // 9 USD under a 25 % rate debits 11.25 of the 10 held.
-    const status = await getSendStatus(synced, wallets.recipient.address, iouAmount("9"));
+    const status = await getSendStatus(synced, wallets.recipient.address, toIouAmount("9"));
 
     expect(status.errors.amount?.name).toBe("NotEnoughBalance");
   });
@@ -198,7 +206,7 @@ describe("XRP refused IOU sends", () => {
     const wallets = await createWallets();
     const synced = await syncIouHolder(wallets);
 
-    const status = await getSendStatus(synced, newWallet().address, iouAmount("1"));
+    const status = await getSendStatus(synced, makeWallet().address, toIouAmount("1"));
 
     expect(status.errors.recipient?.name).toBe("XrpTokenCannotReceive");
   });
@@ -208,7 +216,7 @@ describe("XRP refused IOU sends", () => {
     await enableAccountFlag(wallets.recipient, ASF_REQUIRE_DEST);
     const synced = await syncIouHolder(wallets);
 
-    const status = await getSendStatus(synced, wallets.recipient.address, iouAmount("1"));
+    const status = await getSendStatus(synced, wallets.recipient.address, toIouAmount("1"));
 
     expect(status.errors.transaction?.name).toBe("XrpDestinationTagRequired");
   });

@@ -16149,6 +16149,9 @@ importers:
       '@ledgerhq/coin-tester':
         specifier: workspace:^
         version: link:../../coin-tester
+      '@ledgerhq/coin-xrp':
+        specifier: link:../../../../coin-modules/libs/coin-modules/coin-xrp
+        version: link:../../../../coin-modules/libs/coin-modules/coin-xrp
       '@ledgerhq/ledger-wallet-framework':
         specifier: workspace:^
         version: link:../../ledger-wallet-framework

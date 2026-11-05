@@ -8,11 +8,11 @@ import {
 import { XRP } from "./fixtures";
 
 /** coin-xrp scales every IOU amount by 1e38 (`IOU_DECIMALS`). */
-export const IOU_MAGNITUDE = 38;
+const IOU_MAGNITUDE = 38;
 
 const NETWORK = XRP.id;
 
-export function iouAmount(value: string): BigNumber {
+export function toIouAmount(value: string): BigNumber {
   return new BigNumber(value).shiftedBy(IOU_MAGNITUDE);
 }
 
@@ -29,11 +29,13 @@ function toCurrencyHex(code: string): string {
  * code as written, case kept, or 40 uppercase hex characters.
  */
 export function makeIouToken(code: string, issuer: string): TokenCurrency {
+  const id = TokenCurrencyIdSchema.parse(
+    `${NETWORK}/iou/${toCurrencyHex(code)}:${issuer.toLowerCase()}`,
+  );
+
   return {
+    id,
     type: "TokenCurrency",
-    id: TokenCurrencyIdSchema.parse(
-      `${NETWORK}/iou/${toCurrencyHex(code)}:${issuer.toLowerCase()}`,
-    ),
     contractAddress: issuer,
     tokenIdentifier: code,
     parentCurrencyId: CryptoCurrencyIdSchema.parse(NETWORK),
@@ -47,23 +49,30 @@ export function makeIouToken(code: string, issuer: string): TokenCurrency {
 }
 
 /** A CAL entry for an MPT issuance. Its magnitude is the issuance `AssetScale`. */
-export function makeMptToken(
-  issuanceId: string,
-  issuer: string,
-  ticker: string,
-  assetScale: number,
-): TokenCurrency {
+export function makeMptToken({
+  issuanceId,
+  issuer,
+  ticker,
+  assetScale,
+}: {
+  issuanceId: string;
+  issuer: string;
+  ticker: string;
+  assetScale: number;
+}): TokenCurrency {
+  const id = TokenCurrencyIdSchema.parse(
+    `${NETWORK}/mpt/${issuanceId.toLowerCase()}:${issuer.toLowerCase()}`,
+  );
+
   return {
+    id,
+    ticker,
     type: "TokenCurrency",
-    id: TokenCurrencyIdSchema.parse(
-      `${NETWORK}/mpt/${issuanceId.toLowerCase()}:${issuer.toLowerCase()}`,
-    ),
     contractAddress: issuer,
     tokenIdentifier: issuanceId,
     parentCurrencyId: CryptoCurrencyIdSchema.parse(NETWORK),
     tokenType: "mpt",
     name: ticker,
-    ticker,
     delisted: false,
     disableCountervalue: true,
     units: [{ name: ticker, code: ticker, magnitude: assetScale }],
@@ -76,13 +85,15 @@ export function makeMptToken(
  */
 export function installTokenStore(tokens: TokenCurrency[]): void {
   setCryptoAssetsStore({
-    findTokenByAddressInCurrency: async (address, currencyId, tokenIdentifier) =>
-      tokens.find(
-        token =>
-          token.parentCurrencyId === currencyId &&
-          token.contractAddress === address &&
-          token.tokenIdentifier === tokenIdentifier,
-      ),
+    findTokenByAddressInCurrency: async (address, currencyId, tokenIdentifier) => {
+      return tokens.find(token => {
+        const isSameNetwork = token.parentCurrencyId === currencyId;
+        const isSameIssuer = token.contractAddress === address;
+        const isSameReference = token.tokenIdentifier === tokenIdentifier;
+
+        return isSameNetwork && isSameIssuer && isSameReference;
+      });
+    },
     findTokenById: async (id: string) => tokens.find(token => token.id === id),
     getTokensSyncHash: async () => "",
   });

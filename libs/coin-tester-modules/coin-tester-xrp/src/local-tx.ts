@@ -7,7 +7,7 @@ import { signAndSubmit, type XrplWallet } from "./rippled";
  */
 
 /** XRPL flags combine with `+`: `|` turns a value with bit 31 set into a negative number. */
-export const TF_SET_NO_RIPPLE = 0x00020000;
+const TF_SET_NO_RIPPLE = 0x00020000;
 const TF_SET_FREEZE = 0x00100000;
 
 export const ASF_REQUIRE_DEST = 1;
@@ -20,8 +20,8 @@ export const TF_MPT_CAN_CLAWBACK = 0x00000040;
 const TF_MPT_LOCK = 0x00000001;
 const TF_MPT_UNAUTHORIZE = 0x00000001;
 
-export type IouAmount = { currency: string; issuer: string; value: string };
-export type MptAmount = { mpt_issuance_id: string; value: string };
+type IouAmount = { currency: string; issuer: string; value: string };
+type MptAmount = { mpt_issuance_id: string; value: string };
 
 /** The holder opens a trust line to `issuer` for `currency`, up to `limit` whole units. */
 export async function openTrustLine(
@@ -106,6 +106,7 @@ export async function createMptIssuance(
   if (typeof issuanceId !== "string") {
     throw new Error("MPTokenIssuanceCreate metadata has no mpt_issuance_id");
   }
+
   return issuanceId;
 }
 

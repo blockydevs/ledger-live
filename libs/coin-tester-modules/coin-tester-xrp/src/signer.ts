@@ -1,19 +1,12 @@
 import { sign } from "ripple-keypairs";
 import type { XrpSigner } from "@ledgerhq/live-common/families/xrp/types";
-import { newWallet, type XrplWallet } from "./rippled";
-
-/**
- * XRP transaction signing prefix (single-account signing).
- * Prepended to the encoded transaction blob before hashing with SHA-512Half.
- * @see https://xrpl.org/docs/concepts/transactions/#signing-and-submitting-transactions
- */
-export const TX_SIGN_PREFIX = "53545800";
+import { makeWallet, TX_SIGN_PREFIX, type XrplWallet } from "./rippled";
 
 /**
  * Builds a software signer implementing `XrpSigner` for `wallet`.
  * Uses secp256k1 (the XRP default) regardless of the `ed25519` flag.
  */
-export function buildXrpSigner(wallet: XrplWallet = newWallet()): XrpSigner {
+export function buildXrpSigner(wallet: XrplWallet = makeWallet()): XrpSigner {
   const { publicKey, privateKey, address } = wallet;
 
   return {

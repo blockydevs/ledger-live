@@ -1,10 +1,10 @@
 import { Scenario, ScenarioTransaction } from "@ledgerhq/coin-tester/main";
 import { forbidRemoteRequests } from "@ledgerhq/coin-tester/localOnly";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
-import type { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
+import type { Account } from "@ledgerhq/types-live";
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
 import { makeXrpAccount } from "../fixtures";
-import { getBridges, newFundedWallet, setLocalXrpConfig } from "../helpers";
+import { getBridges, createFundedWallet, setLocalXrpConfig } from "../helpers";
 import {
   ASF_ALLOW_TRUSTLINE_CLAWBACK,
   ASF_DEFAULT_RIPPLE,
@@ -17,7 +17,8 @@ import {
 } from "../local-tx";
 import { getTrustLineBalance, waitForOperationInclusion, type XrplWallet } from "../rippled";
 import { buildXrpSigner } from "../signer";
-import { installTokenStore, iouAmount, makeIouToken } from "../tokens";
+import { installTokenStore, toIouAmount, makeIouToken } from "../tokens";
+import { countOperations, expectSentByHolder, getSubAccount } from "./shared";
 
 global.console = require("console");
 jest.setTimeout(600_000);
@@ -36,31 +37,9 @@ let usdUpperId: string;
 let usdLowerId: string;
 let step = 0;
 
-function getSubAccount(account: Account, id: string): TokenAccount {
-  const found = account.subAccounts?.find(sub => sub.id === id);
-  if (!found) throw new Error(`no sub-account ${id}`);
-
-  return found;
-}
-
-function getFeesOperation(account: Account, hash: string): Operation {
-  const found = account.operations.find(op => op.hash === hash);
-  if (!found) throw new Error(`no parent operation ${hash}`);
-
-  return found;
-}
-
-/** Asserts the holder sent `sent` and paid its fee in XRP on the parent account. */
-function expectSentByHolder(previous: Account, current: Account, sent: Operation): void {
-  expect(sent.type).toBe("OUT");
-  expect(sent.hasFailed).toBe(false);
-  expect(sent.senders).toEqual([holder.address]);
-  expect(sent.recipients).toContain(recipient.address);
-  const fees = getFeesOperation(current, sent.hash);
-  expect(fees.type).toBe("FEES");
-  expect(fees.value).toStrictEqual(fees.fee);
-  expect(current.balance).toStrictEqual(previous.balance.minus(fees.fee));
-}
+const ISSUE_STEP = 3;
+const CLAWBACK_STEP = 4;
+const OPT_OUT_STEP = 5;
 
 function makeTransactions(): XrpScenarioTransaction[] {
   const optInUsdUpper: XrpScenarioTransaction = {
@@ -69,10 +48,12 @@ function makeTransactions(): XrpScenarioTransaction[] {
     assetReference: "USD",
     assetOwner: issuer.address,
     recipient: issuer.address,
-    amount: iouAmount("1000"),
+    amount: toIouAmount("1000"),
     expect: (previous, current) => {
       const [latest] = current.operations;
+      expect(current.operations.length - previous.operations.length).toBe(1);
       expect(latest.type).toBe("OPT_IN");
+      expect(latest.hasFailed).toBe(false);
       expect(current.subAccounts).toHaveLength(1);
       expect(getSubAccount(current, usdUpperId).balance.toFixed()).toBe("0");
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.fee));
@@ -85,16 +66,17 @@ function makeTransactions(): XrpScenarioTransaction[] {
     assetReference: "usd",
     assetOwner: issuer.address,
     recipient: issuer.address,
-    amount: iouAmount("1000"),
+    amount: toIouAmount("1000"),
     expect: (previous, current) => {
       const [latest] = current.operations;
+      expect(current.operations.length - previous.operations.length).toBe(1);
       expect(latest.type).toBe("OPT_IN");
+      expect(latest.hasFailed).toBe(false);
       expect(current.balance).toStrictEqual(previous.balance.minus(latest.fee));
       expect(current.subAccounts).toHaveLength(2);
       expect(getSubAccount(current, usdLowerId).balance.toFixed()).toBe("0");
-      expect(getSubAccount(current, usdUpperId).balance).toStrictEqual(
-        getSubAccount(previous, usdUpperId).balance,
-      );
+      const usdUpperBalance = getSubAccount(previous, usdUpperId).balance;
+      expect(getSubAccount(current, usdUpperId).balance).toStrictEqual(usdUpperBalance);
     },
   };
 
@@ -104,7 +86,7 @@ function makeTransactions(): XrpScenarioTransaction[] {
     assetReference: "USD",
     assetOwner: issuer.address,
     recipient: recipient.address,
-    amount: iouAmount("10"),
+    amount: toIouAmount("10"),
     expect: async (previous, current) => {
       for (const [id, held] of [
         [usdUpperId, "100"],
@@ -113,18 +95,16 @@ function makeTransactions(): XrpScenarioTransaction[] {
         const [received] = getSubAccount(previous, id).operations;
         expect(received.type).toBe("IN");
         expect(received.senders).toContain(issuer.address);
-        expect(getSubAccount(previous, id).balance).toStrictEqual(iouAmount(held));
+        expect(getSubAccount(previous, id).balance).toStrictEqual(toIouAmount(held));
       }
 
       expect(current.subAccounts).toHaveLength(2);
-      const usdUpper = getSubAccount(current, usdUpperId);
-      expect(usdUpper.balance).toStrictEqual(iouAmount("87.5"));
-      const [sent] = usdUpper.operations;
-      expectSentByHolder(previous, current, sent);
+      expect(getSubAccount(current, usdUpperId).balance).toStrictEqual(toIouAmount("87.5"));
+      const sent = expectSentByHolder(previous, current, usdUpperId, { holder, recipient });
       // An op value is the holder's debit, transfer fee included: balance history depends on it.
-      expect(sent.value).toStrictEqual(iouAmount("12.5"));
+      expect(sent.value).toStrictEqual(toIouAmount("12.5"));
       expect(await getTrustLineBalance(recipient.address, "USD", issuer.address)).toBe("10");
-      expect(getSubAccount(current, usdLowerId).balance).toStrictEqual(iouAmount("50"));
+      expect(getSubAccount(current, usdLowerId).balance).toStrictEqual(toIouAmount("50"));
     },
   };
 
@@ -139,15 +119,13 @@ function makeTransactions(): XrpScenarioTransaction[] {
       const [clawedBack] = getSubAccount(previous, usdUpperId).operations;
       expect(clawedBack.type).toBe("OUT");
       expect(clawedBack.recipients).toContain(issuer.address);
-      expect(clawedBack.value).toStrictEqual(iouAmount("5"));
-      expect(getSubAccount(previous, usdUpperId).balance).toStrictEqual(iouAmount("82.5"));
+      expect(clawedBack.value).toStrictEqual(toIouAmount("5"));
+      expect(getSubAccount(previous, usdUpperId).balance).toStrictEqual(toIouAmount("82.5"));
 
       expect(current.subAccounts).toHaveLength(2);
-      const usdUpper = getSubAccount(current, usdUpperId);
-      const [sent] = usdUpper.operations;
-      expectSentByHolder(previous, current, sent);
-      expect(sent.value).toStrictEqual(iouAmount("82.5"));
-      expect(usdUpper.balance.toFixed()).toBe("0");
+      const sent = expectSentByHolder(previous, current, usdUpperId, { holder, recipient });
+      expect(sent.value).toStrictEqual(toIouAmount("82.5"));
+      expect(getSubAccount(current, usdUpperId).balance.toFixed()).toBe("0");
       expect(await getTrustLineBalance(recipient.address, "USD", issuer.address)).toBe("76");
     },
   };
@@ -158,7 +136,7 @@ function makeTransactions(): XrpScenarioTransaction[] {
     assetReference: "usd",
     assetOwner: issuer.address,
     recipient: recipient.address,
-    amount: iouAmount("10"),
+    amount: toIouAmount("10"),
     expect: async (previous, current) => {
       const [optOut] = previous.operations;
       expect(optOut.type).toBe("OPT_OUT");
@@ -168,14 +146,12 @@ function makeTransactions(): XrpScenarioTransaction[] {
       // The opt-out adds nothing to the USD history and keeps what was there.
       const usdUpper = getSubAccount(previous, usdUpperId);
       expect(usdUpper.balance.toFixed()).toBe("0");
-      expect(usdUpper.operations[0].value).toStrictEqual(iouAmount("82.5"));
+      expect(usdUpper.operations[0].value).toStrictEqual(toIouAmount("82.5"));
 
       expect(current.subAccounts).toHaveLength(2);
-      const usdLower = getSubAccount(current, usdLowerId);
-      expect(usdLower.balance).toStrictEqual(iouAmount("37.5"));
-      const [sent] = usdLower.operations;
-      expectSentByHolder(previous, current, sent);
-      expect(sent.value).toStrictEqual(iouAmount("12.5"));
+      expect(getSubAccount(current, usdLowerId).balance).toStrictEqual(toIouAmount("37.5"));
+      const sent = expectSentByHolder(previous, current, usdLowerId, { holder, recipient });
+      expect(sent.value).toStrictEqual(toIouAmount("12.5"));
       expect(await getTrustLineBalance(recipient.address, "usd", issuer.address)).toBe("10");
       expect(getSubAccount(current, usdUpperId).balance.toFixed()).toBe("0");
     },
@@ -189,9 +165,9 @@ export const scenarioXrpIou: Scenario<GenericTransaction, Account> = {
 
   setup: async () => {
     stopRemoteGuard = forbidRemoteRequests();
-    holder = await newFundedWallet();
-    issuer = await newFundedWallet();
-    recipient = await newFundedWallet();
+    holder = await createFundedWallet();
+    issuer = await createFundedWallet();
+    recipient = await createFundedWallet();
 
     // Clawback can be allowed only before the issuer has any trust line.
     await enableAccountFlag(issuer, ASF_DEFAULT_RIPPLE);
@@ -233,7 +209,7 @@ export const scenarioXrpIou: Scenario<GenericTransaction, Account> = {
 
   beforeEach: async () => {
     step += 1;
-    if (step === 3) {
+    if (step === ISSUE_STEP) {
       await issue(issuer, holder.address, {
         currency: "USD",
         issuer: issuer.address,
@@ -242,23 +218,22 @@ export const scenarioXrpIou: Scenario<GenericTransaction, Account> = {
       await issue(issuer, holder.address, { currency: "usd", issuer: issuer.address, value: "50" });
     }
 
-    if (step === 4) {
+    if (step === CLAWBACK_STEP) {
       await clawbackIou(issuer, { holder: holder.address, currency: "USD", value: "5" });
     }
 
-    if (step === 5) {
+    if (step === OPT_OUT_STEP) {
       await closeTrustLine(holder, { currency: "USD", issuer: issuer.address });
     }
   },
 
   afterAll: account => {
     expect(account.subAccounts).toHaveLength(2);
-    expect(getSubAccount(account, usdLowerId).balance).toStrictEqual(iouAmount("37.5"));
+    expect(getSubAccount(account, usdLowerId).balance).toStrictEqual(toIouAmount("37.5"));
     expect(getSubAccount(account, usdUpperId).balance.toFixed()).toBe("0");
-    const count = (type: string) => account.operations.filter(op => op.type === type).length;
-    expect(count("OPT_IN")).toBe(2);
-    expect(count("OPT_OUT")).toBe(1);
-    expect(count("FEES")).toBe(3);
+    expect(countOperations(account, "OPT_IN")).toBe(2);
+    expect(countOperations(account, "OPT_OUT")).toBe(1);
+    expect(countOperations(account, "FEES")).toBe(3);
   },
 
   teardown: () => {
