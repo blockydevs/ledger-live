@@ -19,13 +19,18 @@ export async function craftTransaction({
   feeConfiguration: FeeConfiguration | null;
   viewKey?: string;
 }): Promise<CraftedTransaction> {
-  const tvks = "data" in txIntent && "records" in txIntent.data ? txIntent.data.tvks : undefined;
+  const recordsData = "data" in txIntent && "records" in txIntent.data ? txIntent.data : null;
+  const tvks = recordsData?.tvks;
   const intent = mapTransactionIntentToSdkIntent(txIntent);
 
-  if ("records" in intent && intent.records.length > 1) {
+  if (recordsData) {
+    const recordsCount = recordsData.records.length;
+    const isTxWithNestedCalls = recordsCount > 1;
+    // one root tvk plus one per nested transition, see bridge/signOperation getTvks
+    const expectedTvksCount = isTxWithNestedCalls ? recordsCount + 1 : 0;
     invariant(
-      tvks && tvks.length > 0,
-      "aleo: tvks are required for transactions with nested calls",
+      recordsData.tvks.length === expectedTvksCount,
+      `aleo: expected ${expectedTvksCount} tvks for ${recordsCount} records, got ${recordsData.tvks.length}`,
     );
   }
 
