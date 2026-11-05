@@ -170,6 +170,20 @@ export async function getTrustLineBalance(
   return lines.find(line => line.currency === currency)?.balance;
 }
 
+/** The base-unit balance of `holder`'s MPToken for `issuanceId`, or `undefined` if it holds none. */
+export async function getMptBalance(
+  holder: string,
+  issuanceId: string,
+): Promise<string | undefined> {
+  const { account_objects } = await rpcCall<{
+    account_objects: { MPTokenIssuanceID: string; MPTAmount?: string }[];
+  }>("account_objects", { account: holder, type: "mptoken", ledger_index: "validated" });
+  const mpToken = account_objects.find(object => object.MPTokenIssuanceID === issuanceId);
+
+  // MPTAmount is omitted at 0
+  return mpToken && (mpToken.MPTAmount ?? "0");
+}
+
 /** The next `Sequence` of `address`: it grows by one with each transaction the account submits. */
 export async function getAccountSequence(address: string): Promise<number> {
   const { account_data } = await rpcCall<{ account_data: { Sequence: number } }>("account_info", {

@@ -17,6 +17,8 @@ export const ASF_ALLOW_TRUSTLINE_CLAWBACK = 16;
 export const TF_MPT_CAN_LOCK = 0x00000002;
 export const TF_MPT_CAN_TRANSFER = 0x00000020;
 export const TF_MPT_CAN_CLAWBACK = 0x00000040;
+const TF_MPT_LOCK = 0x00000001;
+const TF_MPT_UNAUTHORIZE = 0x00000001;
 
 export type IouAmount = { currency: string; issuer: string; value: string };
 export type MptAmount = { mpt_issuance_id: string; value: string };
@@ -112,5 +114,39 @@ export async function authorizeMpt(holder: XrplWallet, issuanceId: string): Prom
   await signAndSubmit(holder, {
     TransactionType: "MPTokenAuthorize",
     MPTokenIssuanceID: issuanceId,
+  });
+}
+
+/** The holder opts out, as Ledger Live's opt-out does. Its MPToken must hold 0. */
+export async function unauthorizeMpt(holder: XrplWallet, issuanceId: string): Promise<void> {
+  await signAndSubmit(holder, {
+    TransactionType: "MPTokenAuthorize",
+    MPTokenIssuanceID: issuanceId,
+    Flags: TF_MPT_UNAUTHORIZE,
+  });
+}
+
+/** Needs `TF_MPT_CAN_LOCK` on the issuance. */
+export async function lockMpt(
+  issuer: XrplWallet,
+  { holder, issuanceId }: { holder: string; issuanceId: string },
+): Promise<void> {
+  await signAndSubmit(issuer, {
+    TransactionType: "MPTokenIssuanceSet",
+    MPTokenIssuanceID: issuanceId,
+    Holder: holder,
+    Flags: TF_MPT_LOCK,
+  });
+}
+
+/** Needs `TF_MPT_CAN_CLAWBACK` on the issuance. `value` is in base units. */
+export async function clawbackMpt(
+  issuer: XrplWallet,
+  { holder, issuanceId, value }: { holder: string; issuanceId: string; value: string },
+): Promise<void> {
+  await signAndSubmit(issuer, {
+    TransactionType: "Clawback",
+    Amount: { mpt_issuance_id: issuanceId, value },
+    Holder: holder,
   });
 }
