@@ -149,6 +149,40 @@ export type AleoTransactionIntentData =
 
 export type AleoTransactionIntent = TransactionIntent<MemoNotSupported, AleoTransactionIntentData>;
 
+type AleoApiPrivateInputs = { recordCommitments?: string[]; tvks?: string[] };
+
+export type AleoApiPrivateRootIntentData =
+  | ({ type: typeof TRANSACTION_TYPE.TRANSFER_PRIVATE } & AleoApiPrivateInputs)
+  | ({ type: typeof TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC } & AleoApiPrivateInputs)
+  | ({
+      type: typeof TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE;
+      programId: string;
+    } & AleoApiPrivateInputs)
+  | ({
+      type: typeof TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC;
+      programId: string;
+    } & AleoApiPrivateInputs);
+
+// API-facing intent data (ADR-047 §2). Private roots carry record commitments, never decrypted
+// records. Omit `recordCommitments` to get the module's selection back.
+export type AleoApiTransactionIntentData =
+  | TxDataNotSupported
+  | AleoApiPrivateRootIntentData
+  | { type: typeof TRANSACTION_TYPE.TRANSFER_TOKEN_PUBLIC; programId: string }
+  | { type: typeof TRANSACTION_TYPE.CONVERT_TOKEN_PUBLIC_TO_PRIVATE; programId: string }
+  | { type: typeof TRANSACTION_TYPE.BOND_PUBLIC; withdrawal: string }
+  | { type: "fee_public"; executionId: string; priorityFee?: bigint }
+  | { type: "fee_private"; executionId: string; priorityFee?: bigint; recordCommitment: string };
+
+export type AleoApiTransactionIntent = TransactionIntent<
+  MemoNotSupported,
+  AleoApiTransactionIntentData
+>;
+
+// A `type` alias: the framework types `details` as `Record<string, unknown>`, and an interface
+// has no implicit index signature.
+export type AleoCraftDetails = { recordCommitments: string[]; feeRecordCommitment?: string };
+
 export interface SignedAleoTransaction {
   authorization: string;
   feeAuthorization: string | null;

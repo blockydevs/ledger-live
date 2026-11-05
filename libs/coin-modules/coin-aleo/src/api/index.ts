@@ -9,13 +9,18 @@ import type {
   MemoNotSupported,
   Page,
   Stake,
-  TransactionIntent,
   BalanceOptions,
   Validator,
 } from "@ledgerhq/coin-module-framework/api/index";
 import { craftTransactionData } from "@ledgerhq/coin-module-framework/logic/craftTransactionData";
 import { rejectBalanceOptions } from "@ledgerhq/coin-module-framework/api/getBalance/rejectBalanceOptions";
-import { FEE_INTENT_TYPES } from "../constants";
+import { NotEnoughBalance } from "@ledgerhq/ledger-wallet-framework/errors";
+import {
+  FEE_INTENT_TYPES,
+  MAX_PRIVATE_RECORDS_PER_TRANSACTION,
+  MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION,
+} from "../constants";
+import { AleoFeeRecordInsufficientBalance } from "../errors";
 import {
   broadcast,
   combine,
@@ -34,18 +39,29 @@ import {
   getTransactionType,
   resolvePrivacyContext,
 } from "../logic/utils";
+import {
+  getPrivateRootApiData,
+  mapPrivateFeeApiIntent,
+  mapPrivateRootApiIntent,
+  mapPublicApiIntent,
+} from "../logic/mapApiTransactionIntent";
+import { resolveRecords } from "../logic/resolveRecords";
+import { selectRecords } from "../logic/selectRecords";
 import type {
+  AleoApiPrivateRootIntentData,
+  AleoApiTransactionIntent,
+  AleoApiTransactionIntentData,
   AleoContext,
   AleoCoinConfig,
+  AleoCraftDetails,
   AleoRegistration,
-  AleoTransactionIntentData,
 } from "../types";
 import { listOperations } from "../logic/listOperations";
 
 type AleoCoinModuleImpl = CoinModuleImpl<
   AleoCoinConfig,
   MemoNotSupported,
-  AleoTransactionIntentData
+  AleoApiTransactionIntentData
 >;
 
 function requireViewKey(context: AleoContext, action: string): string {
@@ -54,6 +70,124 @@ function requireViewKey(context: AleoContext, action: string): string {
     throw new Error(`aleo: a view key is required to ${action}`);
   }
   return viewKey;
+}
+
+function getRootBaseFee(
+  config: AleoCoinConfig,
+  txIntent: AleoApiTransactionIntent,
+  options?: { customFees?: FeeEstimation },
+): bigint {
+  if (options?.customFees) return options.customFees.value;
+  return estimateFees({
+    configOrCurrencyId: config,
+    transactionType: getTransactionType(txIntent),
+  }).value;
+}
+
+async function craftFeeIntent(
+  context: AleoContext,
+  config: AleoCoinConfig,
+  txIntent: AleoApiTransactionIntent,
+): Promise<CraftedTransaction> {
+  // txIntent.amount -> base fee
+  // txIntent.data.priorityFee -> priority fee (defaults to 0)
+  // both should match max_base_fee/max_priority_fee from the FeeConfiguration of the root intent
+  if (txIntent.type !== "fee_private") {
+    return craftTransaction({
+      config,
+      txIntent: mapPublicApiIntent(txIntent),
+      feeConfiguration: null,
+      ...(context.viewKey && { viewKey: context.viewKey }),
+    });
+  }
+
+  requireViewKey(context, "craft a private fee transaction");
+  const { provableId, viewKey } = resolvePrivacyContext(context);
+  const data = "data" in txIntent ? txIntent.data : undefined;
+  invariant(data?.type === "fee_private", "aleo: intent data is required for fee_private");
+
+  const { records, total } = await resolveRecords({
+    config,
+    provableId,
+    viewKey,
+    commitments: [data.recordCommitment],
+    pool: { type: "native" },
+    maxRecords: 1,
+  });
+
+  if (total.lt((txIntent.amount + (data.priorityFee ?? 0n)).toString())) {
+    throw new AleoFeeRecordInsufficientBalance();
+  }
+
+  return craftTransaction({
+    config,
+    txIntent: mapPrivateFeeApiIntent(txIntent, records[0]),
+    feeConfiguration: null,
+    viewKey,
+  });
+}
+
+async function craftPrivateRoot(
+  context: AleoContext,
+  config: AleoCoinConfig,
+  txIntent: AleoApiTransactionIntent,
+  privateData: AleoApiPrivateRootIntentData,
+  maxBaseFee: bigint,
+): Promise<CraftedTransaction> {
+  requireViewKey(context, "craft a private transaction");
+  const { provableId, viewKey } = resolvePrivacyContext(context);
+  const programId = "programId" in privateData ? privateData.programId : undefined;
+
+  if (privateData.recordCommitments === undefined) {
+    const { amountRecords, feeRecord } = await selectRecords({
+      config,
+      provableId,
+      viewKey,
+      type: getTransactionType(txIntent),
+      amount: txIntent.amount,
+      ...(programId !== undefined && { programId }),
+      fee: maxBaseFee,
+      isFeeSponsored: config.isFeeSponsored,
+    });
+    const details: AleoCraftDetails = {
+      recordCommitments: amountRecords.map(record => record.commitment),
+      ...(feeRecord && { feeRecordCommitment: feeRecord.commitment }),
+    };
+    return { transaction: "0x", details };
+  }
+
+  const { records, total } = await resolveRecords({
+    config,
+    provableId,
+    viewKey,
+    commitments: privateData.recordCommitments,
+    pool: programId !== undefined ? { type: "token", programId } : { type: "native" },
+    maxRecords:
+      programId !== undefined
+        ? MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION
+        : MAX_PRIVATE_RECORDS_PER_TRANSACTION,
+  });
+
+  const tvks = privateData.tvks ?? [];
+  const expectedTvks = records.length > 1 ? records.length + 1 : 0;
+  invariant(
+    tvks.length === expectedTvks,
+    `aleo: expected ${expectedTvks} tvks for ${records.length} records, received ${tvks.length}`,
+  );
+  if (total.lt(txIntent.amount.toString())) throw new NotEnoughBalance();
+
+  const crafted = await craftTransaction({
+    config,
+    txIntent: mapPrivateRootApiIntent(txIntent, records),
+    feeConfiguration: buildFeeConfigurationForRootIntent({
+      isPrivate: true,
+      maxBaseFee,
+      maxPriorityFee: 0n,
+    }),
+    viewKey,
+  });
+  const details: AleoCraftDetails = { recordCommitments: privateData.recordCommitments };
+  return { ...crafted, details };
 }
 
 // currencyId is captured here (it can't live on the Context). The logic functions are shared with
@@ -95,63 +229,41 @@ export function createApi(currencyId: string) {
     },
     craftTransaction: async (
       context: AleoContext,
-      txIntent: TransactionIntent<MemoNotSupported, AleoTransactionIntentData>,
+      txIntent: AleoApiTransactionIntent,
       options?: { customFees?: FeeEstimation },
     ): Promise<CraftedTransaction> => {
       invariant(!txIntent.useAllAmount, "aleo: useAllAmount is not supported");
 
       const config = await context.config();
-      const isFeeIntent = FEE_INTENT_TYPES.has(txIntent.type);
-      const isPrivateIntent = "data" in txIntent && "records" in txIntent.data;
-      const isPrivateFeeIntent = txIntent.type === "fee_private";
 
-      if (isFeeIntent) {
+      if (FEE_INTENT_TYPES.has(txIntent.type)) {
         invariant(!config.isFeeSponsored, "aleo: fee craft is not needed when fees are sponsored");
         invariant(!options?.customFees, "aleo: customFees is not supported for fee intents");
+        return craftFeeIntent(context, config, txIntent);
+      }
 
-        if (isPrivateFeeIntent) {
-          requireViewKey(context, "craft a private fee transaction");
-        }
+      const maxBaseFee = getRootBaseFee(config, txIntent, options);
+      const privateData = getPrivateRootApiData(txIntent);
 
-        // txIntent.amount -> base fee
-        // txIntent.data.priorityFee -> priority fee (defaults to 0)
-        // both should match max_base_fee/max_priority_fee from the FeeConfiguration of the root intent
+      if (!privateData) {
+        const maxPriorityFee =
+          ("data" in txIntent && "priorityFee" in txIntent.data
+            ? txIntent.data.priorityFee
+            : undefined) ?? 0n;
+
         return craftTransaction({
           config,
-          txIntent,
-          feeConfiguration: null,
+          txIntent: mapPublicApiIntent(txIntent),
+          feeConfiguration: buildFeeConfigurationForRootIntent({
+            isPrivate: false,
+            maxBaseFee,
+            maxPriorityFee,
+          }),
           ...(context.viewKey && { viewKey: context.viewKey }),
         });
       }
 
-      if (isPrivateIntent) {
-        requireViewKey(context, "craft a private transaction");
-      }
-
-      const maxBaseFee = options?.customFees
-        ? options.customFees.value
-        : estimateFees({
-            configOrCurrencyId: config,
-            transactionType: getTransactionType(txIntent),
-          }).value;
-
-      const maxPriorityFee =
-        ("data" in txIntent && "priorityFee" in txIntent.data
-          ? txIntent.data.priorityFee
-          : undefined) ?? 0n;
-
-      const feeConfiguration = buildFeeConfigurationForRootIntent({
-        isPrivate: isPrivateIntent,
-        maxBaseFee,
-        maxPriorityFee,
-      });
-
-      return craftTransaction({
-        config,
-        txIntent,
-        feeConfiguration,
-        ...(context.viewKey && { viewKey: context.viewKey }),
-      });
+      return craftPrivateRoot(context, config, txIntent, privateData, maxBaseFee);
     },
     estimateFees: async (context: AleoContext, intent, _options?): Promise<FeeEstimation> => {
       const config = await context.config();
