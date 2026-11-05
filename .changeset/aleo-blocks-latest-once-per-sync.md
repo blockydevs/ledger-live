@@ -2,4 +2,4 @@
 "@ledgerhq/coin-aleo": patch
 ---
 
-Fetch the latest block once per account sync instead of twice.
+Reuse the public sync's block height in the private sync, so a combined sync fetches the latest block once instead of twice.

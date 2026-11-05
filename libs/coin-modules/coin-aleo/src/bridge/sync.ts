@@ -357,7 +357,7 @@ export async function performPrivateSync({
   });
 
   const blockHeight =
-    freshBlockHeight ?? (await lastBlock(config))?.height ?? initialAccount.blockHeight ?? 0;
+    freshBlockHeight ?? (await lastBlock(config))?.height ?? initialAccount.blockHeight;
 
   // When the public sync ran from scratch (e.g. CAL change), reset private cursor to 0
   // so all records are re-fetched and patchPublicOperations can re-patch the full history.
