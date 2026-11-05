@@ -9,8 +9,10 @@ import { signAndSubmit, type XrplWallet } from "./rippled";
 /** XRPL flags combine with `+`: `|` turns a value with bit 31 set into a negative number. */
 const TF_SET_NO_RIPPLE = 0x00020000;
 const TF_SET_FREEZE = 0x00100000;
+const TF_SET_DEEP_FREEZE = 0x00400000;
 
 export const ASF_REQUIRE_DEST = 1;
+export const ASF_GLOBAL_FREEZE = 7;
 export const ASF_DEFAULT_RIPPLE = 8;
 export const ASF_ALLOW_TRUSTLINE_CLAWBACK = 16;
 
@@ -64,14 +66,15 @@ export async function clawbackIou(
   });
 }
 
+/** A deep freeze also stops the line from receiving. It needs the plain freeze in the same TrustSet. */
 export async function freezeTrustLine(
   issuer: XrplWallet,
-  { holder, currency }: { holder: string; currency: string },
+  { holder, currency, isDeep = false }: { holder: string; currency: string; isDeep?: boolean },
 ): Promise<void> {
   await signAndSubmit(issuer, {
     TransactionType: "TrustSet",
     LimitAmount: { currency, issuer: holder, value: "0" },
-    Flags: TF_SET_FREEZE,
+    Flags: isDeep ? TF_SET_FREEZE + TF_SET_DEEP_FREEZE : TF_SET_FREEZE,
   });
 }
 
@@ -127,15 +130,15 @@ export async function unauthorizeMpt(holder: XrplWallet, issuanceId: string): Pr
   });
 }
 
-/** Needs `TF_MPT_CAN_LOCK` on the issuance. */
+/** Needs `TF_MPT_CAN_LOCK` on the issuance. Without `holder`, it locks the whole issuance. */
 export async function lockMpt(
   issuer: XrplWallet,
-  { holder, issuanceId }: { holder: string; issuanceId: string },
+  { holder, issuanceId }: { holder?: string; issuanceId: string },
 ): Promise<void> {
   await signAndSubmit(issuer, {
     TransactionType: "MPTokenIssuanceSet",
     MPTokenIssuanceID: issuanceId,
-    Holder: holder,
+    ...(holder === undefined ? {} : { Holder: holder }),
     Flags: TF_MPT_LOCK,
   });
 }

@@ -50,12 +50,12 @@ One issuer creates issuance A, with a 25 % transfer fee and clawback, and issuan
 
 ### Refused sends (`src/negativeCases.test.ts`)
 
-Each case asserts the `coin-xrp` status error. It also asserts that the signer was not called and that the account `Sequence` did not change.
+Each case asserts the `coin-xrp` status error. For a freeze or a lock, it also asserts the synced sub-account: the full balance, a spendable balance of 0 and `xrpResources.isLocked`. Each case also asserts that the signer was not called and that the account `Sequence` did not change.
 
 | Token | Cases |
 | --- | --- |
-| IOU | frozen line, frozen line paying the issuer (no error), recipient without a trust line, recipient limit too low, amount plus transfer rate above the balance, recipient account missing, destination tag required |
-| MPT | locked holder, locked holder paying the issuer (no error), recipient without an MPToken, locked recipient, amount plus transfer fee above the balance, issuance without `CanTransfer` |
+| IOU | frozen line, deep frozen line, globally frozen issuer, frozen line paying the issuer (no error), recipient without a trust line, recipient limit too low, amount plus transfer rate above the balance, recipient account missing, destination tag required |
+| MPT | locked holder, locked issuance, locked holder paying the issuer (no error), recipient without an MPToken, locked recipient, amount plus transfer fee above the balance, issuance without `CanTransfer` |
 
 ### Token standards (`src/tokenStandards.test.ts`)
 

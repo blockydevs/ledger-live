@@ -2,12 +2,14 @@ import BigNumber from "bignumber.js";
 import type { Account, AccountBridge, TransactionStatusCommon } from "@ledgerhq/types-live";
 import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
+import type { XrpTokenAccount } from "@ledgerhq/live-common/families/xrp/types";
 import { forbidRemoteRequests } from "@ledgerhq/coin-tester/localOnly";
 import { encodeTokenAccountId } from "@ledgerhq/ledger-wallet-framework/account";
 import { makeXrpAccount } from "./fixtures";
 import { getBridges, createFundedWallet, setLocalXrpConfig, syncAccount } from "./helpers";
 import {
   ASF_DEFAULT_RIPPLE,
+  ASF_GLOBAL_FREEZE,
   ASF_REQUIRE_DEST,
   authorizeMpt,
   createMptIssuance,
@@ -119,6 +121,14 @@ function syncMptHolder({ holder, issuer, issuanceId }: MptWallets): Promise<Sync
   return syncHolder(holder, token);
 }
 
+/** The sync reads the freeze or lock from the ledger: the whole balance stays, none of it is spendable. */
+function expectLockedSubAccount({ account, subAccountId }: SyncedHolder, held: BigNumber): void {
+  const sub = account.subAccounts?.find(({ id }) => id === subAccountId) as XrpTokenAccount;
+  expect(sub.balance).toStrictEqual(held);
+  expect(sub.spendableBalance.toFixed()).toBe("0");
+  expect(sub.xrpResources?.isLocked).toBe(true);
+}
+
 /** Also asserts that the status check signed nothing and put nothing on the ledger. */
 async function getSendStatus(
   { accountBridge, account, token, subAccountId, signTransaction }: SyncedHolder,
@@ -142,6 +152,28 @@ async function getSendStatus(
   return status;
 }
 
+const IOU_FREEZES: [string, (wallets: Wallets) => Promise<void>][] = [
+  [
+    "frozen line",
+    ({ issuer, holder }) => freezeTrustLine(issuer, { holder: holder.address, currency: "USD" }),
+  ],
+  [
+    "deep frozen line",
+    ({ issuer, holder }) => {
+      return freezeTrustLine(issuer, { holder: holder.address, currency: "USD", isDeep: true });
+    },
+  ],
+  ["globally frozen issuer", ({ issuer }) => enableAccountFlag(issuer, ASF_GLOBAL_FREEZE)],
+];
+
+const MPT_LOCKS: [string, (wallets: MptWallets) => Promise<void>][] = [
+  [
+    "locked holder",
+    ({ issuer, holder, issuanceId }) => lockMpt(issuer, { holder: holder.address, issuanceId }),
+  ],
+  ["locked issuance", ({ issuer, issuanceId }) => lockMpt(issuer, { issuanceId })],
+];
+
 describe("XRP refused IOU sends", () => {
   let stopRemoteGuard: () => void;
 
@@ -153,10 +185,11 @@ describe("XRP refused IOU sends", () => {
     stopRemoteGuard?.();
   });
 
-  it("frozen line refuses the send", async () => {
+  it.each(IOU_FREEZES)("%s locks the balance and refuses the send", async (_, freeze) => {
     const wallets = await createWallets();
-    await freezeTrustLine(wallets.issuer, { holder: wallets.holder.address, currency: "USD" });
+    await freeze(wallets);
     const synced = await syncIouHolder(wallets);
+    expectLockedSubAccount(synced, toIouAmount("10"));
 
     const status = await getSendStatus(synced, wallets.recipient.address, toIouAmount("1"));
 
@@ -233,11 +266,11 @@ describe("XRP refused MPT sends", () => {
     stopRemoteGuard?.();
   });
 
-  it("locked holder refuses the send", async () => {
+  it.each(MPT_LOCKS)("%s locks the balance and refuses the send", async (_, lock) => {
     const wallets = await createMptWallets({ flags: TF_MPT_CAN_TRANSFER + TF_MPT_CAN_LOCK });
-    const { issuer, holder, issuanceId } = wallets;
-    await lockMpt(issuer, { holder: holder.address, issuanceId });
+    await lock(wallets);
     const synced = await syncMptHolder(wallets);
+    expectLockedSubAccount(synced, new BigNumber(1000));
 
     const status = await getSendStatus(synced, wallets.recipient.address, new BigNumber(1));
 
