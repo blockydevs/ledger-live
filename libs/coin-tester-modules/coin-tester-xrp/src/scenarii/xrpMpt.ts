@@ -19,7 +19,14 @@ import {
 import { getMptBalance, waitForOperationInclusion, type XrplWallet } from "../rippled";
 import { buildXrpSigner } from "../signer";
 import { installTokenStore, makeMptToken } from "../tokens";
-import { countOperations, expectSentByHolder, expectTokenOperation, getSubAccount } from "./shared";
+import {
+  countOperations,
+  expectOptedOutByHolder,
+  expectSentByHolder,
+  expectTokenOperation,
+  getSubAccount,
+  OPT_OUT_MODE,
+} from "./shared";
 
 global.console = require("console");
 jest.setTimeout(600_000);
@@ -168,7 +175,35 @@ function makeTransactions(): XrpScenarioTransaction[] {
     },
   };
 
-  return [optInA, optInB, sendA, sendMaxA, sendBAfterOptOut];
+  const redeemB: XrpScenarioTransaction = {
+    name: "Send max B to the issuer",
+    subAccountId: mptBId,
+    assetReference: issuanceB,
+    assetOwner: issuer.address,
+    recipient: issuer.address,
+    useAllAmount: true,
+    expect: async (previous, current) => {
+      const sent = expectSentByHolder(previous, current, mptBId, { holder, recipient: issuer });
+      expect(sent.value).toStrictEqual(toMptAmount(4000));
+      expect(getSubAccount(current, mptBId).balance.toFixed()).toBe("0");
+      expect(await getMptBalance(holder.address, issuanceB)).toBe("0");
+    },
+  };
+
+  const optOutB: XrpScenarioTransaction = {
+    name: "Opt out of B",
+    mode: OPT_OUT_MODE,
+    assetReference: issuanceB,
+    assetOwner: issuer.address,
+    recipient: issuer.address,
+    expect: async (previous, current) => {
+      expectOptedOutByHolder(previous, current, mptBId, holder);
+      expect(current.subAccounts).toHaveLength(2);
+      expect(await getMptBalance(holder.address, issuanceB)).toBeUndefined();
+    },
+  };
+
+  return [optInA, optInB, sendA, sendMaxA, sendBAfterOptOut, redeemB, optOutB];
 }
 
 export const scenarioXrpMpt: Scenario<GenericTransaction, Account> = {
@@ -254,11 +289,11 @@ export const scenarioXrpMpt: Scenario<GenericTransaction, Account> = {
 
   afterAll: account => {
     expect(account.subAccounts).toHaveLength(2);
-    expect(getSubAccount(account, mptBId).balance).toStrictEqual(toMptAmount(4000));
+    expect(getSubAccount(account, mptBId).balance.toFixed()).toBe("0");
     expect(getSubAccount(account, mptAId).balance.toFixed()).toBe("0");
     expect(countOperations(account, "OPT_IN")).toBe(2);
-    expect(countOperations(account, "OPT_OUT")).toBe(1);
-    expect(countOperations(account, "FEES")).toBe(3);
+    expect(countOperations(account, "OPT_OUT")).toBe(2);
+    expect(countOperations(account, "FEES")).toBe(4);
   },
 
   teardown: () => {

@@ -41,12 +41,14 @@ One issuer issues `USD` and `usd`, two codes that differ only by case. The issue
 | 3 | Send 10 `USD` | one `IN` op for each issued token, from the issuer to the holder only, with the issued value. The `OUT` value is 12.5, transfer fee included. The recipient line holds 10. |
 | 4 | Send max `USD` after a clawback of 5 | the clawback shows as an `OUT` to the issuer. The send empties the sub-account. |
 | 5 | Send 10 `usd` after an opt-out of `USD` made outside Ledger Live | `OPT_OUT` on the parent account. The `USD` history stays. |
+| 6 | Send max `usd` to the issuer | the issuer pays no transfer rate: the `OUT` value is 37.5 and the line holds 0. |
+| 7 | Opt out of `usd` through Ledger Live | one `OPT_OUT` on the parent account, 10 drops. The line is deleted. The `usd` sub-account stays at 0 with its history and without `xrpResources`. |
 
 Each send also asserts the `FEES` op on the parent account: one new op, 10 drops, with the token `OUT` op as its only sub-operation. Each token op names exactly one sender and one recipient.
 
 ### MPT tokens (`src/scenarii/xrpMpt.ts`)
 
-One issuer creates issuance A, with a 25 % transfer fee and clawback, and issuance B, with neither. The steps are the same as the IOU scenario: opt in to A and B, send A, send max A after a clawback, send B after an opt-out of A made outside Ledger Live.
+One issuer creates issuance A, with a 25 % transfer fee and clawback, and issuance B, with neither. The steps are the same as the IOU scenario: opt in to A and B, send A, send max A after a clawback, send B after an opt-out of A made outside Ledger Live, send max B to the issuer, opt out of B through Ledger Live. B has no transfer fee, so only the IOU scenario shows that a payment to the issuer pays no fee.
 
 ### Refused sends (`src/negativeCases.test.ts`)
 
@@ -84,6 +86,6 @@ The holder holds `USD`, `usd` and one MPT. Only `USD` and the MPT are in the tok
 
 ## Limitations
 
-Escrow, checks, AMM and multisig are not exercised. Opt-out through Ledger Live is not exercised: the scenarios make the opt-out outside Ledger Live.
+Escrow, checks, AMM and multisig are not exercised.
 
 `coin-xrp` keeps a short-lived in-memory recipient cache; if this scenario becomes flaky when sending to a freshly-created account, consider bypassing the cache in the test setup (test-only) so pre-flight checks always hit `account_info` directly.

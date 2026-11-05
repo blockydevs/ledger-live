@@ -1,8 +1,13 @@
 import BigNumber from "bignumber.js";
 import type { Account, Operation, OperationType, TokenAccount } from "@ledgerhq/types-live";
+import type { GenericTransaction } from "@ledgerhq/live-common/bridge/generic-coin-framework/types";
+import type { XrpTokenAccount } from "@ledgerhq/live-common/families/xrp/types";
 import type { XrplWallet } from "../rippled";
 
 const TX_FEE_DROPS = new BigNumber(10);
+
+/** The XRP family accepts this mode, but the generic transaction type does not list it. */
+export const OPT_OUT_MODE = "optOut" as GenericTransaction["mode"];
 
 export function getSubAccount(account: Account, id: string): TokenAccount {
   const found = account.subAccounts?.find(sub => sub.id === id);
@@ -64,4 +69,29 @@ export function expectSentByHolder(
   expect(current.balance).toStrictEqual(previous.balance.minus(fees.fee));
 
   return sent;
+}
+
+/**
+ * Asserts one new `OPT_OUT` from `holder` on the parent account, fee paid in XRP. The sub-account of
+ * the removed token stays at 0 with its history, and no longer has `xrpResources`.
+ */
+export function expectOptedOutByHolder(
+  previous: Account,
+  current: Account,
+  subAccountId: string,
+  holder: XrplWallet,
+): void {
+  const [optOut] = current.operations;
+  expect(current.operations.length - previous.operations.length).toBe(1);
+  expect(optOut.type).toBe("OPT_OUT");
+  expect(optOut.hasFailed).toBe(false);
+  expect(optOut.senders).toStrictEqual([holder.address]);
+  expect(optOut.fee).toStrictEqual(TX_FEE_DROPS);
+  expect(current.balance).toStrictEqual(previous.balance.minus(optOut.fee));
+
+  const sub = getSubAccount(current, subAccountId) as XrpTokenAccount;
+  expect(sub.balance.toFixed()).toBe("0");
+  expect(sub.xrpResources).toBeUndefined();
+  const previousOperationIds = getSubAccount(previous, subAccountId).operations.map(({ id }) => id);
+  expect(sub.operations.map(({ id }) => id)).toStrictEqual(previousOperationIds);
 }

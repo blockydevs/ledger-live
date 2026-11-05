@@ -18,7 +18,14 @@ import {
 import { getTrustLineBalance, waitForOperationInclusion, type XrplWallet } from "../rippled";
 import { buildXrpSigner } from "../signer";
 import { installTokenStore, toIouAmount, makeIouToken } from "../tokens";
-import { countOperations, expectSentByHolder, expectTokenOperation, getSubAccount } from "./shared";
+import {
+  countOperations,
+  expectOptedOutByHolder,
+  expectSentByHolder,
+  expectTokenOperation,
+  getSubAccount,
+  OPT_OUT_MODE,
+} from "./shared";
 
 global.console = require("console");
 jest.setTimeout(600_000);
@@ -162,7 +169,44 @@ function makeTransactions(): XrpScenarioTransaction[] {
     },
   };
 
-  return [optInUsdUpper, optInUsdLower, sendUsdUpper, sendMaxUsdUpper, sendUsdLowerAfterOptOut];
+  const redeemUsdLower: XrpScenarioTransaction = {
+    name: "Send max usd to the issuer",
+    subAccountId: usdLowerId,
+    assetReference: "usd",
+    assetOwner: issuer.address,
+    recipient: issuer.address,
+    useAllAmount: true,
+    expect: async (previous, current) => {
+      const sent = expectSentByHolder(previous, current, usdLowerId, { holder, recipient: issuer });
+      // A payment to the issuer pays no transfer rate, so send max leaves no dust.
+      expect(sent.value).toStrictEqual(toIouAmount("37.5"));
+      expect(getSubAccount(current, usdLowerId).balance.toFixed()).toBe("0");
+      expect(await getTrustLineBalance(holder.address, "usd", issuer.address)).toBe("0");
+    },
+  };
+
+  const optOutUsdLower: XrpScenarioTransaction = {
+    name: "Opt out of usd",
+    mode: OPT_OUT_MODE,
+    assetReference: "usd",
+    assetOwner: issuer.address,
+    recipient: issuer.address,
+    expect: async (previous, current) => {
+      expectOptedOutByHolder(previous, current, usdLowerId, holder);
+      expect(current.subAccounts).toHaveLength(2);
+      expect(await getTrustLineBalance(holder.address, "usd", issuer.address)).toBeUndefined();
+    },
+  };
+
+  return [
+    optInUsdUpper,
+    optInUsdLower,
+    sendUsdUpper,
+    sendMaxUsdUpper,
+    sendUsdLowerAfterOptOut,
+    redeemUsdLower,
+    optOutUsdLower,
+  ];
 }
 
 export const scenarioXrpIou: Scenario<GenericTransaction, Account> = {
@@ -234,11 +278,11 @@ export const scenarioXrpIou: Scenario<GenericTransaction, Account> = {
 
   afterAll: account => {
     expect(account.subAccounts).toHaveLength(2);
-    expect(getSubAccount(account, usdLowerId).balance).toStrictEqual(toIouAmount("37.5"));
+    expect(getSubAccount(account, usdLowerId).balance.toFixed()).toBe("0");
     expect(getSubAccount(account, usdUpperId).balance.toFixed()).toBe("0");
     expect(countOperations(account, "OPT_IN")).toBe(2);
-    expect(countOperations(account, "OPT_OUT")).toBe(1);
-    expect(countOperations(account, "FEES")).toBe(3);
+    expect(countOperations(account, "OPT_OUT")).toBe(2);
+    expect(countOperations(account, "FEES")).toBe(4);
   },
 
   teardown: () => {
