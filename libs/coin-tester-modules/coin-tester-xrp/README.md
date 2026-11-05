@@ -38,11 +38,11 @@ One issuer issues `USD` and `usd`, two codes that differ only by case. The issue
 | --- | --- | --- |
 | 1 | Opt in to `USD` | `OPT_IN` on the parent account, one sub-account at 0. |
 | 2 | Opt in to `usd` | a second sub-account. The `USD` sub-account does not change. |
-| 3 | Send 10 `USD` | the `IN` ops of the issued tokens. The `OUT` value is 12.5, transfer fee included. The recipient line holds 10. |
+| 3 | Send 10 `USD` | one `IN` op for each issued token, from the issuer to the holder only, with the issued value. The `OUT` value is 12.5, transfer fee included. The recipient line holds 10. |
 | 4 | Send max `USD` after a clawback of 5 | the clawback shows as an `OUT` to the issuer. The send empties the sub-account. |
 | 5 | Send 10 `usd` after an opt-out of `USD` made outside Ledger Live | `OPT_OUT` on the parent account. The `USD` history stays. |
 
-Each send also asserts the `FEES` op on the parent account: one new op, 10 drops.
+Each send also asserts the `FEES` op on the parent account: one new op, 10 drops, with the token `OUT` op as its only sub-operation. Each token op names exactly one sender and one recipient.
 
 ### MPT tokens (`src/scenarii/xrpMpt.ts`)
 

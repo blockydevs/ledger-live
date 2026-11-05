@@ -22,6 +22,23 @@ export function countOperations(account: Account, type: OperationType): number {
   return account.operations.filter(op => op.type === type).length;
 }
 
+/** Asserts a successful token op of `value`, from `from` to `to` and no one else. */
+export function expectTokenOperation(
+  operation: Operation,
+  {
+    type,
+    from,
+    to,
+    value,
+  }: { type: OperationType; from: XrplWallet; to: XrplWallet; value: BigNumber },
+): void {
+  expect(operation.type).toBe(type);
+  expect(operation.hasFailed).toBe(false);
+  expect(operation.senders).toStrictEqual([from.address]);
+  expect(operation.recipients).toStrictEqual([to.address]);
+  expect(operation.value).toStrictEqual(value);
+}
+
 /**
  * Asserts the latest op of `subAccountId` is one new `OUT` from `holder` to `recipient`, with its
  * fee paid in XRP on the parent account. Returns that op.
@@ -36,16 +53,14 @@ export function expectSentByHolder(
   const sub = getSubAccount(current, subAccountId);
   expect(sub.operations.length - previousSub.operations.length).toBe(1);
   const [sent] = sub.operations;
-  expect(sent.type).toBe("OUT");
-  expect(sent.hasFailed).toBe(false);
-  expect(sent.senders).toStrictEqual([holder.address]);
-  expect(sent.recipients).toStrictEqual([recipient.address]);
+  expectTokenOperation(sent, { type: "OUT", from: holder, to: recipient, value: sent.value });
 
   const fees = getFeesOperation(current, sent.hash);
   expect(current.operations.length - previous.operations.length).toBe(1);
   expect(fees.type).toBe("FEES");
   expect(fees.fee).toStrictEqual(TX_FEE_DROPS);
   expect(fees.value).toStrictEqual(fees.fee);
+  expect(fees.subOperations?.map(({ id }) => id)).toStrictEqual([sent.id]);
   expect(current.balance).toStrictEqual(previous.balance.minus(fees.fee));
 
   return sent;

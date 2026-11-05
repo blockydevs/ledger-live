@@ -18,7 +18,7 @@ import {
 import { getTrustLineBalance, waitForOperationInclusion, type XrplWallet } from "../rippled";
 import { buildXrpSigner } from "../signer";
 import { installTokenStore, toIouAmount, makeIouToken } from "../tokens";
-import { countOperations, expectSentByHolder, getSubAccount } from "./shared";
+import { countOperations, expectSentByHolder, expectTokenOperation, getSubAccount } from "./shared";
 
 global.console = require("console");
 jest.setTimeout(600_000);
@@ -92,10 +92,11 @@ function makeTransactions(): XrpScenarioTransaction[] {
         [usdUpperId, "100"],
         [usdLowerId, "50"],
       ]) {
-        const [received] = getSubAccount(previous, id).operations;
-        expect(received.type).toBe("IN");
-        expect(received.senders).toContain(issuer.address);
-        expect(getSubAccount(previous, id).balance).toStrictEqual(toIouAmount(held));
+        const issued = getSubAccount(previous, id);
+        expect(issued.operations).toHaveLength(1);
+        const value = toIouAmount(held);
+        expectTokenOperation(issued.operations[0], { type: "IN", from: issuer, to: holder, value });
+        expect(issued.balance).toStrictEqual(value);
       }
 
       expect(current.subAccounts).toHaveLength(2);
@@ -117,9 +118,13 @@ function makeTransactions(): XrpScenarioTransaction[] {
     useAllAmount: true,
     expect: async (previous, current) => {
       const [clawedBack] = getSubAccount(previous, usdUpperId).operations;
-      expect(clawedBack.type).toBe("OUT");
-      expect(clawedBack.recipients).toContain(issuer.address);
-      expect(clawedBack.value).toStrictEqual(toIouAmount("5"));
+      // A clawback shows as the holder paying the issuer.
+      expectTokenOperation(clawedBack, {
+        type: "OUT",
+        from: holder,
+        to: issuer,
+        value: toIouAmount("5"),
+      });
       expect(getSubAccount(previous, usdUpperId).balance).toStrictEqual(toIouAmount("82.5"));
 
       expect(current.subAccounts).toHaveLength(2);
