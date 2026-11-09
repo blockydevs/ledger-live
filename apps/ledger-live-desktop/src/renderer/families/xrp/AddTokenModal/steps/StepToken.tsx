@@ -1,10 +1,14 @@
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { XRP_DEV_TOKENS } from "@ledgerhq/live-common/families/xrp/devTokens";
-import { getMaxTrustLimitForToken } from "@ledgerhq/live-common/families/xrp/logicPublic";
+import {
+  MAX_TRUST_LIMIT_VALUE,
+  getIssuerFeeForToken,
+  isMaxTrustLimitValue,
+} from "@ledgerhq/live-common/families/xrp/logicPublic";
 import { formatAddress } from "@ledgerhq/live-common/utils/addressUtils";
 import { Transaction, XrpTokenAccount } from "@ledgerhq/live-common/families/xrp/types";
 import { TokenCurrency } from "@domain/entity-currency-token";
@@ -17,6 +21,7 @@ import FirstLetterIcon from "~/renderer/components/FirstLetterIcon";
 import InputCurrency from "~/renderer/components/InputCurrency";
 import Label from "~/renderer/components/Label";
 import Select from "~/renderer/components/Select";
+import Switch from "~/renderer/components/Switch";
 import Text from "~/renderer/components/Text";
 import ToolTip from "~/renderer/components/Tooltip";
 import Alert from "~/renderer/components/Alert";
@@ -34,18 +39,34 @@ export function findDevToken(transaction: Transaction) {
   });
 }
 
-// Null when the node fails: the limit then has to be typed in
-async function fetchMaxLimit(currencyId: string, token: TokenCurrency): Promise<BigNumber | null> {
+// Null when the node fails: the row is then left out
+async function fetchIssuerFee(token: TokenCurrency): Promise<string | null> {
   try {
-    return await getMaxTrustLimitForToken(
-      currencyId,
-      token.contractAddress,
-      token.tokenIdentifier ?? "",
-    );
-  } catch (maxLimitError) {
-    logger.critical(maxLimitError);
+    return await getIssuerFeeForToken(token);
+  } catch (issuerFeeError) {
+    logger.critical(issuerFeeError);
     return null;
   }
+}
+
+function useIssuerFee(token: TokenCurrency | undefined): string | null {
+  const [issuerFee, setIssuerFee] = useState<{ tokenId: string; percent: string | null } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!token) return;
+    let isCurrent = true;
+    fetchIssuerFee(token).then(percent => {
+      if (isCurrent) setIssuerFee({ percent, tokenId: token.id });
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [token]);
+
+  return issuerFee && issuerFee.tokenId === token?.id ? issuerFee.percent : null;
 }
 
 function renderToken(option: { data: TokenCurrency }) {
@@ -75,15 +96,13 @@ export default function StepToken({
   warning,
   error,
   t,
-  maxLimit,
-  setMaxLimit,
   action,
   tokenAccount,
 }: StepProps) {
   invariant(account && transaction, "account and transaction required");
 
   const bridge = useAccountBridge<Transaction>(account, parentAccount);
-  const selectedTokenId = useRef<string | null>(null);
+  const [isLimitTyped, setIsLimitTyped] = useState(false);
 
   // A removed token keeps its token account, for its history, but no resources: it can be added again
   const heldTokenIds = useMemo(() => {
@@ -104,39 +123,34 @@ export default function StepToken({
   const selectedToken = tokenAccount?.token ?? findDevToken(transaction);
   const isIou = selectedToken?.tokenType === "iou";
   const hasLimitInput = isIou && action !== "remove";
-  // Every TrustSet sets No Ripple, so an edit also turns rippling off
-  const isRippling = (tokenAccount as XrpTokenAccount | undefined)?.xrpResources?.isRippling;
 
-  // An edit starts from the current limit, so Max is only offered
-  useEffect(() => {
-    if (action !== "edit" || !tokenAccount || maxLimit) return;
+  const isMaxLimit = isMaxTrustLimitValue(transaction.amount);
 
-    fetchMaxLimit(account.currency.id, tokenAccount.token).then(setMaxLimit);
-  }, [account.currency.id, action, maxLimit, setMaxLimit, tokenAccount]);
+  const isRippling = transaction.noRipple === false;
+
+  const issuerFee = useIssuerFee(action === "remove" ? undefined : selectedToken);
+
+  const isUntypedZeroLimit = error?.name === "XrpTrustLimitZero" && !isLimitTyped;
+  const visibleError = isUntypedZeroLimit ? undefined : error;
 
   // An IOU's limit is the transaction amount, prefilled with Max. An MPToken has no limit
   const onChange = useCallback(
-    async (token?: TokenCurrency | null) => {
+    (token?: TokenCurrency | null) => {
       if (!token?.tokenIdentifier) return;
-      selectedTokenId.current = token.id;
+      setIsLimitTyped(false);
 
-      const max =
-        token.tokenType === "iou" ? await fetchMaxLimit(account.currency.id, token) : null;
-
-      // A later choice wins over this one's slower Max
-      if (selectedTokenId.current !== token.id) return;
-      setMaxLimit(max);
+      const limit = token.tokenType === "iou" ? MAX_TRUST_LIMIT_VALUE : new BigNumber(0);
 
       // The currency code or MPT issuance id is the tokenIdentifier: the name is only for display
       onUpdateTransaction(tx => {
         return bridge.updateTransaction(tx, {
           assetReference: token.tokenIdentifier,
           assetOwner: token.contractAddress,
-          amount: max ?? new BigNumber(0),
+          amount: limit,
         });
       });
     },
-    [account.currency.id, bridge, onUpdateTransaction, setMaxLimit],
+    [bridge, onUpdateTransaction],
   );
 
   const onLimitChange = useCallback(
@@ -146,11 +160,23 @@ export default function StepToken({
     [bridge, onUpdateTransaction],
   );
 
+  const onCustomLimit = useCallback(() => {
+    setIsLimitTyped(false);
+    onLimitChange(new BigNumber(0));
+  }, [onLimitChange]);
+
+  const onRipplingChange = useCallback(
+    (isChecked: boolean) => {
+      onUpdateTransaction(tx => bridge.updateTransaction(tx, { noRipple: !isChecked }));
+    },
+    [bridge, onUpdateTransaction],
+  );
+
   return (
     <Box flow={1}>
       <TrackScreen category="XRP add token" name="Step 1" />
-      {warning && !error ? <ErrorBanner error={warning} warning /> : null}
-      {error ? <ErrorBanner error={error} /> : null}
+      {warning && !visibleError ? <ErrorBanner error={warning} warning /> : null}
+      {visibleError ? <ErrorBanner error={visibleError} /> : null}
       <Box flow={1} mb={4}>
         <Select
           value={selectedToken}
@@ -165,31 +191,54 @@ export default function StepToken({
           isDisabled={!!tokenAccount}
         />
       </Box>
+      {selectedToken && issuerFee !== null ? (
+        <Box horizontal alignItems="center" justifyContent="space-between" mb={4}>
+          <ToolTip content={<Trans i18nKey="xrp.addToken.steps.token.issuerFeeTooltip" />}>
+            <Box horizontal alignItems="center" color="neutral.c70">
+              <Text fontSize={3} mr={1}>
+                <Trans i18nKey="xrp.addToken.steps.token.issuerFee" />
+              </Text>
+              <InfoCircle size={12} />
+            </Box>
+          </ToolTip>
+          <Text ff="Inter|SemiBold" fontSize={3} color="neutral.c100">
+            {`${issuerFee}%`}
+          </Text>
+        </Box>
+      ) : null}
       {hasLimitInput && selectedToken ? (
         <Box flow={1} mb={4}>
           <Label>
             <Trans i18nKey="xrp.addToken.steps.token.limitLabel" />
           </Label>
-          <InputCurrency
-            defaultUnit={selectedToken.units[0]}
-            value={transaction.amount}
-            onChange={onLimitChange}
-            renderRight={
-              maxLimit?.gt(0) ? (
-                <Button small mr={1} onClick={() => onLimitChange(maxLimit)}>
+          {isMaxLimit ? (
+            <Box
+              horizontal
+              alignItems="center"
+              justifyContent="space-between"
+              data-testid="xrp-trust-limit-max"
+            >
+              <Text ff="Inter|SemiBold" fontSize={4} color="neutral.c100">
+                <Trans i18nKey="xrp.addToken.steps.token.limitMaximum" />
+              </Text>
+              <Button small outline onClick={onCustomLimit}>
+                <Trans i18nKey="xrp.addToken.steps.token.limitCustom" />
+              </Button>
+            </Box>
+          ) : (
+            <InputCurrency
+              defaultUnit={selectedToken.units[0]}
+              value={transaction.amount}
+              onChange={onLimitChange}
+              onInput={() => setIsLimitTyped(true)}
+              renderRight={
+                <Button small mr={1} onClick={() => onLimitChange(MAX_TRUST_LIMIT_VALUE)}>
                   <Trans i18nKey="xrp.addToken.steps.token.limitMax" />
                 </Button>
-              ) : null
-            }
-          />
-          {isRippling ? (
-            <Alert type="warning" mt={2}>
-              <Trans
-                i18nKey="xrp.tokenAccount.rippling.turnOff"
-                values={{ token: selectedToken.name }}
-              />
-            </Alert>
-          ) : (
+              }
+            />
+          )}
+          <Box horizontal alignItems="center" justifyContent="space-between" mt={3}>
             <ToolTip
               content={
                 <Trans
@@ -200,12 +249,23 @@ export default function StepToken({
             >
               <Box horizontal alignItems="center" color="neutral.c70">
                 <Text fontSize={3} mr={1}>
-                  <Trans i18nKey="xrp.tokenAccount.rippling.keepOff" />
+                  <Trans i18nKey="xrp.tokenAccount.rippling.allow" />
                 </Text>
                 <InfoCircle size={12} />
               </Box>
             </ToolTip>
-          )}
+            <Box data-testid="xrp-rippling-switch">
+              <Switch isChecked={isRippling} onChange={onRipplingChange} />
+            </Box>
+          </Box>
+          {isRippling ? (
+            <Alert type="warning" mt={2}>
+              <Trans
+                i18nKey="xrp.tokenAccount.rippling.explanation"
+                values={{ token: selectedToken.name }}
+              />
+            </Alert>
+          ) : null}
         </Box>
       ) : null}
       <Alert type="primary">

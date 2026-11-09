@@ -8072,6 +8072,14 @@
       "title": "Enter a trust limit above 0",
       "description": "To remove the token, use Remove token instead."
     },
+    "XrpTrustLimitTooHigh": {
+      "title": "Trust limit is above the maximum",
+      "description": "An XRP Ledger token limit holds at most 9999999999999999e80. Select Max instead."
+    },
+    "XrpAccountNotActivated": {
+      "title": "Activate your XRP account first",
+      "description": "Receive at least {{amount}} to activate your account. You can then add a token."
+    },
     "XrpTokenNotHeld": {
       "title": "You don't hold this token",
       "description": "There is nothing to remove."
@@ -11337,6 +11345,10 @@
           "selectLabel": "Choose a token",
           "limitLabel": "Trust limit",
           "limitMax": "Max",
+          "limitMaximum": "Maximum",
+          "limitCustom": "Set a custom limit",
+          "issuerFee": "Issuer fee",
+          "issuerFeeTooltip": "The share of each transfer between holders that the issuer takes.",
           "info": "Adding a token sends a transaction that pays a network fee and reserves XRP while you hold the token. It appears in your transaction history."
         },
         "connectDevice": {
@@ -11387,6 +11399,7 @@
       "removeDisabled": "Send your whole balance of this token before removing it.",
       "trustLimit": "Trust limit",
       "trustLimitTooltip": "The most of this token your account accepts to hold.",
+      "trustLimitMax": "Maximum",
       "limitZero": {
         "title": "Your trust limit is 0",
         "description": "You can't receive more {{token}}. The token stays in your account, and keeps its XRP reserved, until your balance is 0. It's removed, and its reserve freed, once you send your whole balance."
@@ -11394,9 +11407,8 @@
       "rippling": {
         "title": "Rippling is on",
         "description": "Other people's payments can pass through your account and swap your {{token}} for the same currency from another issuer you trust. Edit the limit to turn rippling off.",
-        "keepOff": "Rippling stays off for this token",
         "explanation": "With rippling on, other people's payments could pass through your account and swap your {{token}} for the same currency from another issuer.",
-        "turnOff": "Rippling is on for this token. This transaction turns it off, so other people's payments can no longer pass through your account and swap your {{token}} for the same currency from another issuer."
+        "allow": "Allow rippling"
       },
       "removed": {
         "title": "You no longer hold this token",

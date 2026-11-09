@@ -35,11 +35,13 @@ export type XrpTokenAccountRaw = TokenAccountRaw & { xrpResources?: XrpTokenReso
 // MPTokenAuthorize for an MPT. "optOut" removes a held token.
 type XrpTransactionMode = "send" | "changeTrust" | "optOut";
 
-// An opt-in or an opt-out names its token here, without a token account
+// An opt-in or an opt-out names its token here, without a token account. `noRipple: false` lets
+// rippling through the trust line; any other value blocks it
 type XrpOptInFields = {
   mode?: XrpTransactionMode;
   assetReference?: string;
   assetOwner?: string;
+  noRipple?: boolean;
 };
 
 export type Transaction = TransactionCommon &

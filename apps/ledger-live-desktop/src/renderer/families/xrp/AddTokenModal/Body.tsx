@@ -83,8 +83,6 @@ function Body({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
   const [optimisticOperation, setOptimisticOperation] = useState<Operation | null>(null);
   const [transactionError, setTransactionError] = useState<Error | null>(null);
   const [signed, setSigned] = useState(false);
-  // Kept here, not in StepToken: a retry remounts the step, which would drop the Max button
-  const [maxLimit, setMaxLimit] = useState<BigNumber | null>(null);
 
   const dispatch = useDispatch();
   const bridge = useAccountBridge<XrpTransaction>(params.account, undefined);
@@ -105,7 +103,11 @@ function Body({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
 
     const baseTransaction = bridge.createTransaction(params.account);
     const token: TokenCurrency | undefined = tokenAccount?.token;
-    const limit = (tokenAccount as XrpTokenAccount | undefined)?.xrpResources?.limit;
+
+    const xrpResources = (tokenAccount as XrpTokenAccount | undefined)?.xrpResources;
+    const limit = xrpResources?.limit;
+
+    // An edit resends the line's rippling state: a TrustSet without it blocks rippling
     const transaction = bridge.updateTransaction(baseTransaction, {
       mode: action === "remove" ? "optOut" : "changeTrust",
       ...(token && {
@@ -113,6 +115,7 @@ function Body({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
         assetOwner: token.contractAddress,
         amount: action === "edit" && limit ? limit : new BigNumber(0),
       }),
+      ...(action === "edit" && { noRipple: !xrpResources?.isRippling }),
     });
 
     return { transaction, account: params.account, parentAccount: undefined };
@@ -178,8 +181,6 @@ function Body({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
     setSigned,
     t,
     bridgePending,
-    maxLimit,
-    setMaxLimit,
     action,
     tokenAccount,
     title: t(`${ACTION_I18N[action]}.title`),

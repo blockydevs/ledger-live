@@ -4,6 +4,7 @@ import { setCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAs
 import { getXrpEnabledTokenStandards } from "../config";
 import { getTokenStates } from "@ledgerhq/coin-xrp/logic-public";
 import {
+  buildIntentData,
   buildTokenAccountShapes,
   computeIntentType,
   describeOptimisticOperation,
@@ -102,6 +103,26 @@ describe("computeIntentType", () => {
 
   it("throws on any other mode", () => {
     expect(() => computeIntentType({ mode: "delegate" })).toThrow("Unsupported transaction mode");
+  });
+});
+
+describe("buildIntentData", () => {
+  it("lets rippling through a changeTrust only when noRipple is false", () => {
+    expect(buildIntentData({ mode: "changeTrust", noRipple: false })).toEqual({
+      type: "changeTrust",
+      noRipple: false,
+    });
+  });
+
+  it.each([true, undefined])("blocks rippling on a changeTrust when noRipple is %s", noRipple => {
+    expect(buildIntentData({ mode: "changeTrust", noRipple })).toEqual({
+      type: "changeTrust",
+      noRipple: true,
+    });
+  });
+
+  it.each([undefined, "send", "optOut"])("carries no data for the mode %s", mode => {
+    expect(buildIntentData({ mode, noRipple: false })).toEqual({ type: "none" });
   });
 });
 

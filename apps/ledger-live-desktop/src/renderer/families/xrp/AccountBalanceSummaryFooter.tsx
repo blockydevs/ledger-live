@@ -1,10 +1,12 @@
 import React from "react";
+import type { BigNumber } from "bignumber.js";
 import styled from "styled-components";
 import { Trans, useTranslation } from "react-i18next";
 import { Account, TokenAccount } from "@ledgerhq/types-live";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import { getParentAccount } from "@ledgerhq/live-common/account/helpers";
 import { XrpTokenAccount } from "@ledgerhq/live-common/families/xrp/types";
+import { isMaxTrustLimitValue } from "@ledgerhq/live-common/families/xrp/logicPublic";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { openModal } from "~/renderer/actions/modals";
 import { accountsSelector } from "~/renderer/reducers/accounts";
@@ -59,9 +61,12 @@ const AccountBalanceSummaryFooter = ({ account }: { account: Account | TokenAcco
   const { limit, isLocked, isRippling } = xrpResources;
   if (!limit && !isLocked) return null;
 
-  const formattedLimit = limit
-    ? formatCurrencyUnit(unit, limit, { showCode: true, discreet, locale })
-    : null;
+  function formatLimit(value: BigNumber) {
+    if (isMaxTrustLimitValue(value)) return t("xrp.tokenAccount.trustLimitMax");
+
+    return formatCurrencyUnit(unit, value, { showCode: true, discreet, locale });
+  }
+  const formattedLimit = limit ? formatLimit(limit) : null;
 
   return (
     <Box>

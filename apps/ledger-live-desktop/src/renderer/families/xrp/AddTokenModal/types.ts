@@ -1,5 +1,4 @@
 import { TFunction } from "i18next";
-import { BigNumber } from "bignumber.js";
 import { Device } from "@ledgerhq/live-common/hw/actions/types";
 import { Step } from "~/renderer/components/Stepper";
 import { Account, Operation, TokenAccount } from "@ledgerhq/types-live";
@@ -37,8 +36,6 @@ export type StepProps = {
   onOperationBroadcasted: (a: Operation) => void;
   setSigned: (a: boolean) => void;
   bridgePending: boolean;
-  maxLimit: BigNumber | null;
-  setMaxLimit: (a: BigNumber | null) => void;
   action: TokenAction;
   tokenAccount: TokenAccount | undefined;
 };

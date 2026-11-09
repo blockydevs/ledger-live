@@ -6,6 +6,7 @@ import type { BridgeApi } from "@ledgerhq/ledger-wallet-framework/api/types";
 import type { Account } from "@ledgerhq/types-live";
 import { getCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAssetsStore";
 import { getTokenStates } from "@ledgerhq/coin-xrp/logic-public";
+import type { XrpTxData } from "@ledgerhq/coin-xrp/types";
 import { buildContext } from "../../../bridge/generic-coin-framework/api/context";
 import { getXrpEnabledTokenStandards } from "../config";
 import type { XrpTokenResources } from "../types";
@@ -74,6 +75,13 @@ export const computeIntentType = (transaction: Record<string, unknown>): string 
   throw new Error(`Unsupported transaction mode: ${JSON.stringify(mode)}`);
 };
 
+// A TrustSet blocks rippling unless the transaction asks for it: a missing choice keeps it blocked
+export const buildIntentData = (transaction: Record<string, unknown>): XrpTxData => {
+  if (transaction.mode !== "changeTrust") return { type: "none" };
+
+  return { type: "changeTrust", noRipple: transaction.noRipple !== false };
+};
+
 /**
  * Each held token's trust limit and lock, keyed by token id: one issuer can issue several tokens,
  * so its address, the tokens' contractAddress, does not tell them apart.
@@ -101,6 +109,7 @@ export const buildTokenAccountShapes = async (currency: CryptoCurrency, address:
 
 const xrpBridgeApi = (currency: CryptoCurrency): BridgeApi => {
   return {
+    buildIntentData,
     buildTokenAccountShapes: (address: string) => buildTokenAccountShapes(currency, address),
     computeIntentType,
     describeOptimisticOperation,
