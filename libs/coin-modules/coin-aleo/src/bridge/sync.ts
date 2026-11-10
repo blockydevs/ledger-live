@@ -274,6 +274,8 @@ export function createPublicSyncObservable(
  *   sync cycle. The combined-sync emission spreads the private shape last, so it
  *   must carry the fresh staking values or it would clobber them with the stale
  *   initialAccount ones — same reasoning as freshTransparentBalance.
+ * @param freshBlockHeight - The block height fetched by the current public sync
+ *   cycle, so `blocks/latest` is called once per sync.
  */
 export async function performPrivateSync({
   info,
@@ -285,6 +287,7 @@ export async function performPrivateSync({
   signal,
   publicSubAccounts,
   freshSyncHash,
+  freshBlockHeight,
 }: {
   info: AccountShapeInfo<AleoAccount>;
   syncConfig: SyncConfig;
@@ -295,6 +298,7 @@ export async function performPrivateSync({
   signal?: AbortSignal;
   publicSubAccounts?: TokenAccount[];
   freshSyncHash?: string;
+  freshBlockHeight?: number;
 }): Promise<Partial<AleoAccount> | null> {
   const { initialAccount, address, derivationMode, currency } = info;
   invariant(initialAccount, "aleo: performPrivateSync requires initialAccount");
@@ -352,8 +356,8 @@ export async function performPrivateSync({
     customData: viewKey,
   });
 
-  const latestBlock = await lastBlock(config);
-  const blockHeight = latestBlock?.height ?? initialAccount?.blockHeight ?? 0;
+  const blockHeight =
+    freshBlockHeight ?? (await lastBlock(config))?.height ?? initialAccount.blockHeight;
 
   // When the public sync ran from scratch (e.g. CAL change), reset private cursor to 0
   // so all records are re-fetched and patchPublicOperations can re-patch the full history.
@@ -619,6 +623,7 @@ export function createPrivateSyncObservable(
   publicSubAccounts?: TokenAccount[],
   freshSyncHash?: string,
   freshStakingPosition?: AleoStakingResources,
+  freshBlockHeight?: number,
 ): Observable<Partial<AleoAccount>> {
   const { initialAccount } = info;
   const currencyId = info.currency.id;
@@ -655,6 +660,7 @@ export function createPrivateSyncObservable(
       ...(onProgress !== undefined && { onProgress }),
       ...(publicSubAccounts !== undefined && { publicSubAccounts }),
       ...(freshSyncHash !== undefined && { freshSyncHash }),
+      ...(freshBlockHeight !== undefined && { freshBlockHeight }),
     })
       .then(result => {
         releaseLock();
@@ -757,6 +763,7 @@ export function buildSyncObservables(
               publicResult.subAccounts,
               publicResult.syncHash,
               publicResult.aleoResources,
+              publicResult.blockHeight,
             ),
           ),
         ),

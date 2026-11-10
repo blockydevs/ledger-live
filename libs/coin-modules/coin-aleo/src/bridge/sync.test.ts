@@ -2314,6 +2314,27 @@ describe("sync.ts", () => {
       // second emission: private result (has lastPrivateSyncDate, updated balance)
       expect(second.aleoResources?.lastPrivateSyncDate).toBeInstanceOf(Date);
       expect(second.aleoResources?.privateBalance).toEqual(new BigNumber(5000));
+      expect(second.blockHeight).toBe(100);
+      expect(mockLastBlock).toHaveBeenCalledTimes(1);
+      expect(mockLastBlock).toHaveBeenCalledWith(mockConfig);
+    });
+
+    it("private-only sync fetches the latest block once", async () => {
+      const configuredProvableApi = {
+        ...mockAleoResources.provableApi!,
+        scannerStatus: { percentage: 100, synced: true },
+      };
+      mockAccessProvableApi.mockResolvedValue(configuredProvableApi);
+
+      const { syncs } = buildSyncObservables(baseInfo, {
+        paginationConfig: {},
+        syncType: SYNC_TYPE_SHIELDED,
+      });
+      const [result] = await collectAll(syncs[0]);
+
+      expect(mockLastBlock).toHaveBeenCalledTimes(1);
+      expect(mockLastBlock).toHaveBeenCalledWith(mockConfig);
+      expect(result.blockHeight).toBe(100);
     });
 
     it("public+private sync keeps the freshly-fetched staking position in the private emission", async () => {
