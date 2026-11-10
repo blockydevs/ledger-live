@@ -149,6 +149,46 @@ export type AleoTransactionIntentData =
 
 export type AleoTransactionIntent = TransactionIntent<MemoNotSupported, AleoTransactionIntentData>;
 
+type RecordCommitmentsInput = {
+  recordCommitments?: string[];
+  tvks?: string[];
+  // never: keeps these apart from the variants that carry decrypted records
+  records?: never;
+};
+
+export type AleoRecordCommitmentsData =
+  | ({
+      type:
+        | typeof TRANSACTION_TYPE.TRANSFER_PRIVATE
+        | typeof TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC;
+    } & RecordCommitmentsInput)
+  | ({
+      type:
+        | typeof TRANSACTION_TYPE.TRANSFER_TOKEN_PRIVATE
+        | typeof TRANSACTION_TYPE.CONVERT_TOKEN_PRIVATE_TO_PUBLIC;
+      programId: string;
+    } & RecordCommitmentsInput);
+
+/**
+ * What API clients send. On top of the decrypted records the bridge passes, a private intent can
+ * carry record commitments, or nothing to get the module's record selection back (ADR-047 §3).
+ */
+export type AleoApiTransactionIntentData =
+  | AleoTransactionIntentData
+  | AleoRecordCommitmentsData
+  | {
+      type: "fee_private";
+      priorityFee?: bigint;
+      executionId: string;
+      recordCommitment: string;
+      record?: never;
+    };
+
+export type AleoApiTransactionIntent = TransactionIntent<
+  MemoNotSupported,
+  AleoApiTransactionIntentData
+>;
+
 export interface SignedAleoTransaction {
   authorization: string;
   feeAuthorization: string | null;
