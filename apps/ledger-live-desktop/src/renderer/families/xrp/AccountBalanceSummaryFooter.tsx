@@ -4,6 +4,7 @@ import { IconButton, Tooltip, TooltipContent, TooltipTrigger } from "@ledgerhq/l
 import { Information, PenEdit } from "@ledgerhq/lumen-ui-react/symbols";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import { getParentAccount } from "@ledgerhq/live-common/account/helpers";
+import { isMaxTrustLimitValue } from "@ledgerhq/live-common/families/xrp/logicPublic";
 import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import { useDispatch, useSelector } from "LLD/hooks/redux";
 import { openModal } from "~/renderer/actions/modals";
@@ -11,7 +12,7 @@ import { accountsSelector } from "~/renderer/reducers/accounts";
 import { localeSelector } from "~/renderer/reducers/settings";
 import Discreet, { useDiscreetMode } from "~/renderer/components/Discreet";
 import { useAccountUnit } from "~/renderer/hooks/useAccountUnit";
-import { getXrpResources, hasTokenStandardEnabled } from "./utils";
+import { formatLongTrustLimit, getXrpResources, hasTokenStandardEnabled } from "./utils";
 
 const AccountBalanceSummaryFooter = ({ account }: { account: Account | TokenAccount }) => {
   const discreet = useDiscreetMode();
@@ -34,6 +35,8 @@ const AccountBalanceSummaryFooter = ({ account }: { account: Account | TokenAcco
 
   const editLabel = t("xrp.tokenAccount.editSettings");
 
+  const isMaxLimit = isMaxTrustLimitValue(limit);
+
   return (
     <div className="mt-20 flex items-center border-t border-muted-subtle px-32 pt-32">
       <div className="flex flex-[0.125_0_auto] flex-col gap-4">
@@ -43,18 +46,28 @@ const AccountBalanceSummaryFooter = ({ account }: { account: Account | TokenAcco
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex cursor-help text-muted">
+              <span
+                className="inline-flex cursor-help text-muted"
+                data-testid="xrp-trust-limit-info"
+              >
                 <Information size={12} />
               </span>
             </TooltipTrigger>
             <TooltipContent>
               <Trans i18nKey="xrp.tokenAccount.trustLimitTooltip" />
+              {isMaxLimit ? (
+                <>
+                  {" "}
+                  <Trans i18nKey="xrp.tokenAccount.trustLimitMaxTooltip" />
+                </>
+              ) : null}
             </TooltipContent>
           </Tooltip>
         </div>
         <span className="heading-5-semi-bold text-base">
           <Discreet>
-            {formatCurrencyUnit(unit, limit, { showCode: true, discreet, locale })}
+            {formatLongTrustLimit(limit, unit, locale) ??
+              formatCurrencyUnit(unit, limit, { showCode: true, discreet, locale })}
           </Discreet>
         </span>
       </div>
