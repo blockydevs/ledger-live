@@ -21,19 +21,37 @@ import {
   getValidators,
   lastBlock,
   register,
+  resolvePrivateRecords,
+  selectPrivateRecords,
 } from "../logic";
 import {
   buildFeeConfigurationForRootIntent,
   getTransactionType,
   resolvePrivacyContext,
+  validateRecordsCount,
 } from "../logic/utils";
-import type { AleoContext } from "../types";
+import { mockUnspentRecord1, mockUnspentRecord2 } from "../__tests__/fixtures/account.fixture";
+import { MAX_PRIVATE_RECORDS_PER_TRANSACTION } from "../constants";
+import type {
+  AleoApiTransactionIntent,
+  AleoContext,
+  AleoTransactionIntent,
+  FeeConfiguration,
+} from "../types";
 import { createApi } from "./index";
 import { listOperations } from "../logic/listOperations";
 
 jest.mock("../logic");
 jest.mock("../logic/utils");
 jest.mock("../logic/listOperations");
+
+const actualUtils = jest.requireActual<typeof import("../logic/utils")>("../logic/utils");
+
+function pickIntentBase(intent: AleoTransactionIntent) {
+  const { intentType, asset, sender, recipient, amount, type } = intent;
+
+  return { intentType, asset, sender, recipient, amount, type };
+}
 
 describe("createApi", () => {
   const api = createApi("aleo");
@@ -56,9 +74,12 @@ describe("createApi", () => {
   const mockedGetValidators = jest.mocked(getValidators);
   const mockedLastBlock = jest.mocked(lastBlock);
   const mockedRegister = jest.mocked(register);
+  const mockedSelectPrivateRecords = jest.mocked(selectPrivateRecords);
+  const mockedResolvePrivateRecords = jest.mocked(resolvePrivateRecords);
   const mockedGetTransactionType = jest.mocked(getTransactionType);
   const mockedBuildFeeConfigurationForRootIntent = jest.mocked(buildFeeConfigurationForRootIntent);
   const mockedResolvePrivacyContext = jest.mocked(resolvePrivacyContext);
+  const mockedValidateRecordsCount = jest.mocked(validateRecordsCount);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -353,6 +374,256 @@ describe("createApi", () => {
       );
 
       expect(mockedCraftTransaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("craftTransaction with record commitments", () => {
+    const privacyContext: AleoContext = {
+      ...context,
+      viewKey: "AViewKey1test",
+      provableId: "uuid1field",
+    };
+    const feePayingContext: AleoContext = {
+      ...privacyContext,
+      config: async () => ({ ...mockConfig, isFeeSponsored: false }),
+    };
+    const transferPrivateBase = pickIntentBase(mockTxIntentTransferPrivate);
+    const selectionIntent: AleoApiTransactionIntent = {
+      ...transferPrivateBase,
+      data: { type: "transfer_private" },
+    };
+    const tokenSelectionIntent: AleoApiTransactionIntent = {
+      ...transferPrivateBase,
+      type: "transfer_token_private",
+      data: { type: "transfer_token_private", programId: "token_a.aleo" },
+    };
+    function makeCraftingIntent(recordCommitments: string[], tvks?: string[]) {
+      return {
+        ...transferPrivateBase,
+        data: { type: "transfer_private", recordCommitments, ...(tvks && { tvks }) },
+      } satisfies AleoApiTransactionIntent;
+    }
+    const selection = { recordCommitments: ["a", "b"], feeRecordCommitment: "c" };
+
+    beforeEach(() => {
+      mockedGetTransactionType.mockReturnValue("transfer_private");
+      mockedValidateRecordsCount.mockImplementation(actualUtils.validateRecordsCount);
+      mockedSelectPrivateRecords.mockResolvedValue(selection);
+      mockedResolvePrivateRecords.mockResolvedValue([
+        mockUnspentRecord1.decryptedData,
+        mockUnspentRecord2.decryptedData,
+      ]);
+    });
+
+    describe("selection call", () => {
+      it("returns the module's selection and the 0x placeholder without crafting", async () => {
+        const result = await api.craftTransaction(feePayingContext, selectionIntent);
+
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledTimes(1);
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledWith({
+          config: { ...mockConfig, isFeeSponsored: false },
+          provableId: "uuid1field",
+          viewKey: "AViewKey1test",
+          programId: "credits.aleo",
+          amount: selectionIntent.amount,
+          fee: 1234n,
+        });
+        expect(mockedCraftTransaction).not.toHaveBeenCalled();
+        expect(result).toEqual({ transaction: "0x", details: selection });
+      });
+
+      it("ignores tvks sent without recordCommitments", async () => {
+        await api.craftTransaction(feePayingContext, {
+          ...selectionIntent,
+          data: { type: "transfer_private", tvks: ["tvk"] },
+        });
+
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledTimes(1);
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledWith(
+          expect.objectContaining({ programId: "credits.aleo", amount: selectionIntent.amount }),
+        );
+        expect(mockedResolvePrivateRecords).not.toHaveBeenCalled();
+      });
+
+      it("targets the customFees value for the fee record", async () => {
+        await api.craftTransaction(feePayingContext, selectionIntent, {
+          customFees: { value: 9999n },
+        });
+
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledTimes(1);
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledWith(
+          expect.objectContaining({ fee: 9999n }),
+        );
+      });
+
+      it("selects from the token program and asks no fee record when fees are sponsored", async () => {
+        mockedSelectPrivateRecords.mockResolvedValue({ recordCommitments: ["t"] });
+
+        const result = await api.craftTransaction(privacyContext, tokenSelectionIntent);
+
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledTimes(1);
+        expect(mockedSelectPrivateRecords).toHaveBeenCalledWith(
+          expect.objectContaining({ programId: "token_a.aleo", fee: null }),
+        );
+        expect(result).toEqual({ transaction: "0x", details: { recordCommitments: ["t"] } });
+      });
+    });
+
+    describe("crafting call", () => {
+      it("resolves the commitments to decrypted records under a private fee configuration, and returns them in details", async () => {
+        const tvks = ["tvk0", "tvk1", "tvk2"];
+        const privateFeeConfiguration = {
+          function_name: "fee_private",
+          max_base_fee: "1234",
+          max_priority_fee: "0",
+        } satisfies FeeConfiguration;
+        mockedBuildFeeConfigurationForRootIntent.mockReturnValueOnce(privateFeeConfiguration);
+
+        const result = await api.craftTransaction(
+          privacyContext,
+          makeCraftingIntent(["a", "b"], tvks),
+        );
+
+        expect(mockedBuildFeeConfigurationForRootIntent).toHaveBeenCalledTimes(1);
+        expect(mockedBuildFeeConfigurationForRootIntent).toHaveBeenCalledWith({
+          isPrivate: true,
+          maxBaseFee: 1234n,
+          maxPriorityFee: 0n,
+        });
+        expect(mockedResolvePrivateRecords).toHaveBeenCalledTimes(1);
+        expect(mockedResolvePrivateRecords).toHaveBeenCalledWith({
+          config: mockConfig,
+          provableId: "uuid1field",
+          viewKey: "AViewKey1test",
+          programId: "credits.aleo",
+          commitments: ["a", "b"],
+        });
+        expect(mockedCraftTransaction).toHaveBeenCalledTimes(1);
+        expect(mockedCraftTransaction).toHaveBeenCalledWith({
+          config: mockConfig,
+          viewKey: "AViewKey1test",
+          txIntent: {
+            ...transferPrivateBase,
+            data: {
+              type: "transfer_private",
+              records: [mockUnspentRecord1.decryptedData, mockUnspentRecord2.decryptedData],
+              tvks,
+            },
+          },
+          feeConfiguration: privateFeeConfiguration,
+        });
+        expect(mockedSelectPrivateRecords).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          transaction: "crafted_tx",
+          details: { recordCommitments: ["a", "b"] },
+        });
+      });
+
+      it("accepts one record without tvks", async () => {
+        mockedResolvePrivateRecords.mockResolvedValue([mockUnspentRecord1.decryptedData]);
+
+        await api.craftTransaction(privacyContext, makeCraftingIntent(["a"]));
+
+        expect(mockedCraftTransaction).toHaveBeenCalledTimes(1);
+        expect(mockedCraftTransaction).toHaveBeenCalledWith(
+          expect.objectContaining({
+            txIntent: expect.objectContaining({
+              data: {
+                type: "transfer_private",
+                records: [mockUnspentRecord1.decryptedData],
+                tvks: [],
+              },
+            }),
+          }),
+        );
+      });
+
+      it.each([
+        ["an empty list", [], "aleo: at least one record is required for transfer_private"],
+        [
+          "more records than a transaction spends",
+          Array.from({ length: MAX_PRIVATE_RECORDS_PER_TRANSACTION + 1 }, (_, index) => `${index}`),
+          `aleo: too many records for transfer_private (max: ${MAX_PRIVATE_RECORDS_PER_TRANSACTION})`,
+        ],
+        ["duplicates", ["a", "b", "a", "a"], /aleo: recordCommitments has duplicates: a$/],
+      ])(
+        "throws for recordCommitments with %s, before fetching any record",
+        async (_label, recordCommitments, message) => {
+          await expect(
+            api.craftTransaction(privacyContext, makeCraftingIntent(recordCommitments)),
+          ).rejects.toThrow(message);
+
+          expect(mockedResolvePrivateRecords).not.toHaveBeenCalled();
+          expect(mockedCraftTransaction).not.toHaveBeenCalled();
+        },
+      );
+    });
+
+    it("keeps a private root intent with decrypted records on the existing path", async () => {
+      await api.craftTransaction(privacyContext, mockTxIntentTransferPrivate);
+
+      expect(mockedSelectPrivateRecords).not.toHaveBeenCalled();
+      expect(mockedResolvePrivateRecords).not.toHaveBeenCalled();
+      expect(mockedCraftTransaction).toHaveBeenCalledTimes(1);
+      expect(mockedCraftTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({ txIntent: mockTxIntentTransferPrivate }),
+      );
+    });
+
+    it("keeps an intent whose data type differs from its type on the existing path, without selecting records", async () => {
+      const mismatchedIntent: AleoApiTransactionIntent = {
+        ...transferPrivateBase,
+        data: { type: "convert_private_to_public" },
+      };
+
+      await api.craftTransaction(privacyContext, mismatchedIntent);
+
+      expect(mockedSelectPrivateRecords).not.toHaveBeenCalled();
+      expect(mockedResolvePrivateRecords).not.toHaveBeenCalled();
+      expect(mockedCraftTransaction).toHaveBeenCalledTimes(1);
+      expect(mockedCraftTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({ txIntent: mismatchedIntent }),
+      );
+    });
+
+    it("fee_private: resolves recordCommitment to the decrypted fee record", async () => {
+      mockedResolvePrivateRecords.mockResolvedValue([mockUnspentRecord2.decryptedData]);
+      const feePrivateBase = pickIntentBase(mockTxIntentFeePrivate);
+      const feeIntent: AleoApiTransactionIntent = {
+        ...feePrivateBase,
+        data: {
+          type: "fee_private",
+          executionId: "exec-id",
+          priorityFee: 6000n,
+          recordCommitment: "c",
+        },
+      };
+
+      await api.craftTransaction(feePayingContext, feeIntent);
+
+      expect(mockedResolvePrivateRecords).toHaveBeenCalledTimes(1);
+      expect(mockedResolvePrivateRecords).toHaveBeenCalledWith({
+        config: { ...mockConfig, isFeeSponsored: false },
+        provableId: "uuid1field",
+        viewKey: "AViewKey1test",
+        programId: "credits.aleo",
+        commitments: ["c"],
+      });
+      expect(mockedCraftTransaction).toHaveBeenCalledTimes(1);
+      expect(mockedCraftTransaction).toHaveBeenCalledWith({
+        config: { ...mockConfig, isFeeSponsored: false },
+        feeConfiguration: null,
+        viewKey: "AViewKey1test",
+        txIntent: {
+          ...feePrivateBase,
+          data: {
+            type: "fee_private",
+            executionId: "exec-id",
+            priorityFee: 6000n,
+            record: mockUnspentRecord2.decryptedData,
+          },
+        },
+      });
     });
   });
 

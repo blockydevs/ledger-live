@@ -9,13 +9,12 @@ import type {
   MemoNotSupported,
   Page,
   Stake,
-  TransactionIntent,
   BalanceOptions,
   Validator,
 } from "@ledgerhq/coin-module-framework/api/index";
 import { craftTransactionData } from "@ledgerhq/coin-module-framework/logic/craftTransactionData";
 import { rejectBalanceOptions } from "@ledgerhq/coin-module-framework/api/getBalance/rejectBalanceOptions";
-import { FEE_INTENT_TYPES } from "../constants";
+import { FEE_INTENT_TYPES, PRIVATE_TRANSACTION_TYPES, PROGRAM_ID } from "../constants";
 import {
   broadcast,
   combine,
@@ -27,26 +26,36 @@ import {
   getValidators,
   lastBlock,
   register,
+  resolvePrivateRecords,
+  selectPrivateRecords,
   validateAddress,
 } from "../logic";
 import {
   buildFeeConfigurationForRootIntent,
   getTransactionType,
   resolvePrivacyContext,
+  validateRecordsCount,
 } from "../logic/utils";
 import type {
   AleoContext,
+  AleoApiTransactionIntent,
+  AleoApiTransactionIntentData,
   AleoCoinConfig,
+  AleoRecordCommitmentsData,
   AleoRegistration,
-  AleoTransactionIntentData,
+  AleoTransactionIntent,
 } from "../types";
 import { listOperations } from "../logic/listOperations";
 
 type AleoCoinModuleImpl = CoinModuleImpl<
   AleoCoinConfig,
   MemoNotSupported,
-  AleoTransactionIntentData
+  AleoApiTransactionIntentData
 >;
+
+// The selection call returns no payload to sign (ADR-047 §3): coin-service rejects an empty
+// `rawTransaction`, so the placeholder is an empty hex string instead.
+const SELECTION_PLACEHOLDER_TRANSACTION = "0x";
 
 function requireViewKey(context: AleoContext, action: string): string {
   const { viewKey } = context;
@@ -54,6 +63,43 @@ function requireViewKey(context: AleoContext, action: string): string {
     throw new Error(`aleo: a view key is required to ${action}`);
   }
   return viewKey;
+}
+
+function isPrivateRootWithoutRecords(
+  txIntent: AleoApiTransactionIntent,
+): txIntent is AleoApiTransactionIntent & { data: AleoRecordCommitmentsData } {
+  if (!("data" in txIntent)) return false;
+
+  const isPrivateRoot = PRIVATE_TRANSACTION_TYPES.has(txIntent.type);
+  const hasMatchingData = txIntent.data.type === txIntent.type;
+  const hasDecryptedRecords = "records" in txIntent.data;
+
+  return isPrivateRoot && hasMatchingData && !hasDecryptedRecords;
+}
+
+function getProgramId(data: AleoRecordCommitmentsData): string {
+  return "programId" in data ? data.programId : PROGRAM_ID.CREDITS;
+}
+
+async function withDecryptedFeeRecord(
+  context: AleoContext,
+  config: AleoCoinConfig,
+  txIntent: AleoApiTransactionIntent,
+): Promise<AleoTransactionIntent> {
+  if (!("data" in txIntent) || !("recordCommitment" in txIntent.data)) {
+    return txIntent;
+  }
+
+  const { recordCommitment, ...data } = txIntent.data;
+
+  const records = await resolvePrivateRecords({
+    ...resolvePrivacyContext(context),
+    config,
+    programId: PROGRAM_ID.CREDITS,
+    commitments: [recordCommitment],
+  });
+
+  return { ...txIntent, data: { ...data, record: records[0] } };
 }
 
 // currencyId is captured here (it can't live on the Context). The logic functions are shared with
@@ -95,14 +141,14 @@ export function createApi(currencyId: string) {
     },
     craftTransaction: async (
       context: AleoContext,
-      txIntent: TransactionIntent<MemoNotSupported, AleoTransactionIntentData>,
+      txIntent: AleoApiTransactionIntent,
       options?: { customFees?: FeeEstimation },
     ): Promise<CraftedTransaction> => {
       invariant(!txIntent.useAllAmount, "aleo: useAllAmount is not supported");
 
       const config = await context.config();
       const isFeeIntent = FEE_INTENT_TYPES.has(txIntent.type);
-      const isPrivateIntent = "data" in txIntent && "records" in txIntent.data;
+      const isPrivateIntent = PRIVATE_TRANSACTION_TYPES.has(txIntent.type);
       const isPrivateFeeIntent = txIntent.type === "fee_private";
 
       if (isFeeIntent) {
@@ -116,9 +162,11 @@ export function createApi(currencyId: string) {
         // txIntent.amount -> base fee
         // txIntent.data.priorityFee -> priority fee (defaults to 0)
         // both should match max_base_fee/max_priority_fee from the FeeConfiguration of the root intent
+        const feeIntent = await withDecryptedFeeRecord(context, config, txIntent);
+
         return craftTransaction({
           config,
-          txIntent,
+          txIntent: feeIntent,
           feeConfiguration: null,
           ...(context.viewKey && { viewKey: context.viewKey }),
         });
@@ -145,6 +193,54 @@ export function createApi(currencyId: string) {
         maxBaseFee,
         maxPriorityFee,
       });
+
+      if (isPrivateRootWithoutRecords(txIntent)) {
+        const { recordCommitments, tvks = [], ...data } = txIntent.data;
+
+        const privacyContext = resolvePrivacyContext(context);
+
+        const programId = getProgramId(txIntent.data);
+
+        if (!recordCommitments) {
+          const selection = await selectPrivateRecords({
+            ...privacyContext,
+            config,
+            programId,
+            amount: txIntent.amount,
+            fee: config.isFeeSponsored ? null : maxBaseFee,
+          });
+
+          return { transaction: SELECTION_PLACEHOLDER_TRANSACTION, details: selection };
+        }
+
+        validateRecordsCount(txIntent.data.type, recordCommitments.length);
+
+        const duplicates = new Set(
+          recordCommitments.filter(
+            (commitment, index) => recordCommitments.indexOf(commitment) !== index,
+          ),
+        );
+        invariant(
+          duplicates.size === 0,
+          `aleo: recordCommitments has duplicates: ${[...duplicates].join(", ")}`,
+        );
+
+        const records = await resolvePrivateRecords({
+          ...privacyContext,
+          config,
+          programId,
+          commitments: recordCommitments,
+        });
+
+        const crafted = await craftTransaction({
+          config,
+          feeConfiguration,
+          txIntent: { ...txIntent, data: { ...data, records, tvks } },
+          ...(context.viewKey && { viewKey: context.viewKey }),
+        });
+
+        return { ...crafted, details: { recordCommitments } };
+      }
 
       return craftTransaction({
         config,

@@ -6,6 +6,7 @@ export { getAccountInfo } from "./getAccountInfo";
 export { getBalance } from "./getBalance";
 export { getStakes } from "./getStakes";
 export { getValidators } from "./getValidators";
+export { resolvePrivateRecords, selectPrivateRecords } from "./privateRecords";
 export { estimateNetRate } from "./utils";
 export { lastBlock } from "./lastBlock";
 export { register } from "./register";

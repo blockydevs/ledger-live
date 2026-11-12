@@ -34,6 +34,7 @@ import {
   MICROCREDITS_PER_CREDIT,
   MIN_BOND_AMOUNT_MICROCREDITS,
   MIN_DELEGATOR_STAKE_MICROCREDITS,
+  PRIVATE_TRANSACTION_TYPES,
   PRIVATE_TRANSFER_FUNCTIONS,
   PROGRAM_ID,
   SINGLE_CALL_SIGNING_TIME,
@@ -831,11 +832,7 @@ export function isPublicTransaction(transaction: Transaction): transaction is Tr
 }
 
 export function isPrivateTransaction(transaction: Transaction): transaction is TransactionPrivate {
-  return (
-    transaction.mode === TRANSACTION_TYPE.CONVERT_PRIVATE_TO_PUBLIC ||
-    transaction.mode === TRANSACTION_TYPE.TRANSFER_PRIVATE ||
-    isPrivateTokenTransaction(transaction)
-  );
+  return PRIVATE_TRANSACTION_TYPES.has(transaction.mode);
 }
 
 export function isPrivateDestination(transaction: Transaction): boolean {
@@ -942,7 +939,10 @@ export function hasSpecificIntentData<Type extends AleoTransactionIntentData["ty
   return "data" in txIntent && txIntent.data.type === expectedType;
 }
 
-function validateRecordsCount(transactionType: Transaction["mode"], recordsCount: number): void {
+export function validateRecordsCount(
+  transactionType: Transaction["mode"],
+  recordsCount: number,
+): void {
   const isTokenTx = isTokenTransaction({ mode: transactionType });
   const maxRecords = isTokenTx
     ? MAX_PRIVATE_TOKEN_RECORDS_PER_TRANSACTION

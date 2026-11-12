@@ -157,7 +157,7 @@ describe("craftTransaction", () => {
         feeConfiguration: mockFeeConfiguration,
         viewKey: mockViewKey,
       }),
-    ).rejects.toThrow("aleo: tvks are required for transactions with nested calls");
+    ).rejects.toThrow("aleo: expected 3 tvks for 2 records, got 0");
 
     expect(sdkClient.createRequestFromIntent).not.toHaveBeenCalled();
   });
@@ -184,4 +184,35 @@ describe("craftTransaction", () => {
       expect.objectContaining({ tvks: expect.anything() }),
     );
   });
+
+  it.each([
+    ["one record with a tvk", [mockUnspentRecord1.decryptedData], ["tvk0"], 0],
+    [
+      "two records with two tvks",
+      [mockUnspentRecord1.decryptedData, mockUnspentRecord2.decryptedData],
+      MOCK_MULTI_RECORD_TVKS.slice(0, 2),
+      3,
+    ],
+  ])(
+    "should throw for %s before calling the SDK",
+    async (_label, records, tvks, expectedTvksCount) => {
+      const txIntent: AleoTransactionIntent = {
+        ...mockTxIntentTransferPrivate,
+        data: { type: TRANSACTION_TYPE.TRANSFER_PRIVATE, records, tvks },
+      };
+
+      await expect(
+        craftTransaction({
+          config: mockConfig,
+          txIntent,
+          feeConfiguration: mockFeeConfiguration,
+          viewKey: mockViewKey,
+        }),
+      ).rejects.toThrow(
+        `aleo: expected ${expectedTvksCount} tvks for ${records.length} records, got ${tvks.length}`,
+      );
+
+      expect(sdkClient.createRequestFromIntent).not.toHaveBeenCalled();
+    },
+  );
 });

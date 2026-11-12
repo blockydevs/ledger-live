@@ -83,6 +83,38 @@ describe("createApi", () => {
         Buffer.from("transfer_private").toString("hex"),
       );
     });
+
+    it("selects a record for a private root intent sent without records, then crafts it from its commitment", async () => {
+      const intent = {
+        ...mockTxIntentTransferPublic,
+        type: TRANSACTION_TYPE.TRANSFER_PRIVATE,
+        amount: 1n,
+      };
+
+      const selection = await api.craftTransaction(privacyContext, {
+        ...intent,
+        data: { type: TRANSACTION_TYPE.TRANSFER_PRIVATE },
+      });
+
+      expect(selection).toEqual({
+        transaction: "0x",
+        details: { recordCommitments: [expect.any(String)] },
+      });
+
+      const recordCommitments = selection.details?.recordCommitments;
+      invariant(Array.isArray(recordCommitments), "guard: selection returns recordCommitments");
+
+      const crafted = await api.craftTransaction(privacyContext, {
+        ...intent,
+        data: { type: TRANSACTION_TYPE.TRANSFER_PRIVATE, recordCommitments, tvks: [] },
+      });
+
+      const preparedRequest = fromHex<PreparedRequestResponse>(crafted.transaction);
+      expect(preparedRequest.function_name.toLowerCase()).toContain(
+        Buffer.from("transfer_private").toString("hex"),
+      );
+      expect(crafted.details).toEqual({ recordCommitments });
+    });
   });
 
   describe("combine", () => {
