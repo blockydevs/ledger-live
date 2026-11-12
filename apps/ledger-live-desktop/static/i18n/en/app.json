@@ -3248,7 +3248,9 @@
           "validator": {
             "title": "Staking Providers"
           },
-          "connectDevice": { "title": "Device" },
+          "connectDevice": {
+            "title": "Device"
+          },
           "confirmation": {
             "title": "Confirmation",
             "success": {
@@ -4313,12 +4315,16 @@
           "title": "Settings",
           "limit": "Trust limit",
           "max": "Max",
-          "limitInfo": "The trust limit is the most {{token}} your account accepts to hold."
+          "limitInfo": "The trust limit is the most {{token}} your account accepts to hold.",
+          "maxLimitInfo": "The maximum permitted trust limit is {{mantissa}} × 10<exponent>{{exponent}}</exponent>.",
+          "maximum": "Maximum"
         },
         "review": {
           "title": "Review",
           "token": "Token",
-          "issuer": "Issuer"
+          "issuer": "Issuer",
+          "issuerFee": "Issuer fee",
+          "issuerFeeTooltip": "The share of each transfer between holders that the issuer takes."
         },
         "connectDevice": {
           "title": "Device"
@@ -4348,7 +4354,8 @@
     "tokenAccount": {
       "editSettings": "Edit settings",
       "trustLimit": "Trust limit",
-      "trustLimitTooltip": "The most of this token your account accepts to hold."
+      "trustLimitTooltip": "The most of this token your account accepts to hold.",
+      "trustLimitMaxTooltip": "This is the maximum permitted trust limit."
     },
     "rippling": {
       "label": "Rippling",
@@ -8955,6 +8962,14 @@
     "CurrencyRegionRestrictedError": {
       "title": "{{currencyName}} is not available in your region",
       "description": "Access to {{currencyName}} is restricted in your region."
+    },
+    "XrpAccountNotActivated": {
+      "title": "Activate your XRP account first",
+      "description": "Receive at least {{amount}} to activate your account. You can then add a token."
+    },
+    "XrpTrustLimitTooHigh": {
+      "title": "Trust limit is above the maximum",
+      "description": "An XRP Ledger token limit holds at most 9999999999999999e80. Select Max instead."
     }
   },
   "cryptoOrg": {
@@ -10457,7 +10472,9 @@
             "info": "This claims all ALEO whose unbonding period has elapsed back to your account.",
             "claimableAmountLabel": "Claimable amount"
           },
-          "connectDevice": { "title": "Device" },
+          "connectDevice": {
+            "title": "Device"
+          },
           "confirmation": {
             "title": "Confirmation",
             "success": {

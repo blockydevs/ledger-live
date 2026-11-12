@@ -111,11 +111,16 @@ export function makeChangeTrustTransaction(
   account: Account,
   tokenAccount: TokenAccount | undefined,
 ): Transaction {
-  const currentLimit = getXrpResources(tokenAccount)?.limit;
+  const xrpResources = getXrpResources(tokenAccount);
 
+  // An edit resends the line's rippling state: a TrustSet without it blocks rippling
   return bridge.updateTransaction(bridge.createTransaction(account), {
     mode: "changeTrust",
-    ...(tokenAccount && { ...toAssetFields(tokenAccount.token), amount: currentLimit }),
+    ...(tokenAccount && {
+      ...toAssetFields(tokenAccount.token),
+      amount: xrpResources?.limit,
+      noRipple: !xrpResources?.isRippling,
+    }),
   });
 }
 
@@ -129,7 +134,6 @@ export default function Body({ stepId, onClose, onChangeStepId, params }: Props)
   const [token, setToken] = useState<TokenCurrency | undefined>(
     tokenAccount?.token ?? params.token,
   );
-  const [isRippling, setIsRippling] = useState(getXrpResources(tokenAccount)?.isRippling ?? false);
   const [optimisticOperation, setOptimisticOperation] = useState<Operation | undefined>();
   const [transactionError, setTransactionError] = useState<Error | null>(null);
   const [signed, setSigned] = useState(false);
@@ -180,6 +184,15 @@ export default function Body({ stepId, onClose, onChangeStepId, params }: Props)
     if (params.token) applyToken(params.token);
   }, [tokenAccount, params.token, applyToken]);
 
+  const isRippling = transaction?.noRipple === false;
+
+  const onChangeRippling = useCallback(
+    (isChecked: boolean) => {
+      updateTransaction(tx => bridge.updateTransaction(tx, { noRipple: !isChecked }));
+    },
+    [bridge, updateTransaction],
+  );
+
   const handleRetry = useCallback(() => {
     setTransactionError(null);
     setSigned(false);
@@ -227,10 +240,9 @@ export default function Body({ stepId, onClose, onChangeStepId, params }: Props)
     action,
     token,
     onChangeToken,
-    maxLimit: getMaxLimit(token),
     isRippling,
     tokenAccount,
-    onChangeRippling: setIsRippling,
+    onChangeRippling,
     onRetry: handleRetry,
     onUpdateTransaction: updateTransaction,
     onTransactionError: handleTransactionError,

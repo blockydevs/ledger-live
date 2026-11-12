@@ -94,7 +94,6 @@ describe("xrp AddTokenModal Body", () => {
 
     await pick(rlusd);
 
-    expect(stepper().maxLimit?.toNumber()).toBe(5000);
     expect(stepper().transaction).toMatchObject({
       assetReference: rlusd.tokenIdentifier,
       assetOwner: rlusd.contractAddress,
@@ -121,14 +120,13 @@ describe("xrp AddTokenModal Body", () => {
     expect(stepper().transaction?.assetReference).toBe(rlusd.tokenIdentifier);
   });
 
-  it("keeps the current limit of an edited token and shows its Max", async () => {
+  it("keeps the current limit of an edited token", async () => {
     mockGetMaxTrustLimit.mockReturnValue(new BigNumber(5000));
     renderBody({ tokenAccount: XRP_IOU_TOKEN_ACCOUNT });
 
     await act(async () => {});
 
     expect(stepper().action).toBe("edit");
-    expect(stepper().maxLimit?.toNumber()).toBe(5000);
     expect(stepper().transaction?.amount).toEqual(new BigNumber(1000));
   });
 

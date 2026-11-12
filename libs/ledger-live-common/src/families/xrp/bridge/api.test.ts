@@ -8,6 +8,7 @@ import type { Account, SyncConfig, TokenAccount } from "@ledgerhq/types-live";
 import { buildSubAccounts } from "../../../bridge/generic-coin-framework/buildSubAccounts";
 import { buildOptimisticOperation } from "../../../bridge/generic-coin-framework/utils";
 import xrpBridgeApi, {
+  buildIntentData,
   buildTokenAccountShapes,
   describeOptimisticOperation,
   getAssetFromToken,
@@ -245,6 +246,26 @@ describe("buildTokenAccountShapes", () => {
     getAccountInfoMock.mockRejectedValue(new Error("node down"));
 
     await expect(buildTokenAccountShapes(ripple, "rAddress")).rejects.toThrow("node down");
+  });
+});
+
+describe("buildIntentData", () => {
+  it("lets rippling through a changeTrust only when noRipple is false", () => {
+    expect(buildIntentData({ mode: "changeTrust", noRipple: false })).toEqual({
+      type: "changeTrust",
+      noRipple: false,
+    });
+  });
+
+  it.each([true, undefined])("blocks rippling on a changeTrust when noRipple is %s", noRipple => {
+    expect(buildIntentData({ mode: "changeTrust", noRipple })).toEqual({
+      type: "changeTrust",
+      noRipple: true,
+    });
+  });
+
+  it.each([undefined, "send", "optOut"])("carries no data for the mode %s", mode => {
+    expect(buildIntentData({ mode, noRipple: false })).toEqual({ type: "none" });
   });
 });
 

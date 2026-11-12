@@ -3,6 +3,7 @@ import BigNumber from "bignumber.js";
 import type { TokenAccount } from "@ledgerhq/types-live";
 import { getXrpEnabledTokenStandards } from "@ledgerhq/live-common/families/xrp/config";
 import { getParentAccount } from "@ledgerhq/live-common/account/helpers";
+import { MAX_TRUST_LIMIT_VALUE } from "@ledgerhq/live-common/families/xrp/logicPublic";
 import { fireEvent, render, screen } from "tests/testSetup";
 import { useAccountUnit } from "~/renderer/hooks/useAccountUnit";
 import AccountBalanceSummaryFooter from "./AccountBalanceSummaryFooter";
@@ -10,6 +11,8 @@ import {
   XRP_ACCOUNT,
   XRP_IOU_TOKEN_ACCOUNT,
   XRP_MPT_TOKEN_ACCOUNT,
+  XRP_TOKEN,
+  makeXrpTokenAccount,
 } from "./__mocks__/account.mock";
 import { xrpIouToken } from "./__mocks__/currency.mock";
 
@@ -86,5 +89,40 @@ describe("xrp AccountBalanceSummaryFooter", () => {
     renderFooter(iouAccount);
 
     expect(screen.queryByTestId("xrp-edit-token-settings")).toBeNull();
+  });
+
+  it("shows the protocol maximum in scientific notation", () => {
+    jest.mocked(useAccountUnit).mockReturnValue(XRP_TOKEN.units[0]);
+    renderFooter(makeXrpTokenAccount({ limit: MAX_TRUST_LIMIT_VALUE }));
+
+    expect(screen.getByText(/^9\.99e95 /)).toBeVisible();
+  });
+
+  it("shows a limit above 16 integer digits in scientific notation", () => {
+    jest.mocked(useAccountUnit).mockReturnValue(XRP_TOKEN.units[0]);
+    renderFooter(makeXrpTokenAccount({ limit: MAX_TRUST_LIMIT_VALUE.shiftedBy(-1) }));
+
+    expect(screen.getByText(/^9\.999999999999999e94 /)).toBeVisible();
+  });
+
+  it("leaves the maximum sentence out of the tooltip of a lower trust limit", async () => {
+    const { user } = renderFooter(iouAccount);
+
+    await user.hover(screen.getByTestId("xrp-trust-limit-info"));
+
+    expect(
+      await screen.findAllByText(/The most of this token your account accepts/),
+    ).not.toHaveLength(0);
+    expect(screen.queryByText(/maximum permitted trust limit/)).not.toBeInTheDocument();
+  });
+
+  it("says in the tooltip that a maximum trust limit is the maximum", async () => {
+    const { user } = renderFooter(makeXrpTokenAccount({ limit: MAX_TRUST_LIMIT_VALUE }));
+
+    await user.hover(screen.getByTestId("xrp-trust-limit-info"));
+
+    expect(
+      await screen.findAllByText(/This is the maximum permitted trust limit\./),
+    ).not.toHaveLength(0);
   });
 });
