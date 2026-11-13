@@ -1,45 +1,12 @@
 import React from "react";
 import { ScrollView } from "react-native";
-import { Banner, Box, Button, Text } from "@ledgerhq/lumen-ui-rnative";
+import { Banner, Box, Button } from "@ledgerhq/lumen-ui-rnative";
 import { TrackScreen } from "@shared/analytics-react";
 import CurrencyUnitValue from "~/components/CurrencyUnitValue";
 import SafeAreaView from "~/components/SafeAreaView";
 import { useTranslation } from "~/context/Locale";
+import { ErrorBanner, Row, Value } from "../ReviewRows";
 import { type Props, useReviewViewModel } from "./useReviewViewModel";
-
-function Row({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
-  return (
-    <Box lx={{ flexDirection: "row", justifyContent: "space-between", gap: "s16" }}>
-      <Text typography="body2" lx={{ color: "muted" }}>
-        {label}
-      </Text>
-      <Box lx={{ flexShrink: 1, alignItems: "flex-end" }}>{children}</Box>
-    </Box>
-  );
-}
-
-function Value({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <Text typography="body2SemiBold" lx={{ color: "base", textAlign: "right" }}>
-      {children}
-    </Text>
-  );
-}
-
-function ErrorBanner({ error, warning }: Readonly<{ error: Error; warning?: boolean }>) {
-  const { t, i18n } = useTranslation();
-  const values = { ...error, message: error.message };
-  const titleKey = `errors.${error.name}.title`;
-  const descriptionKey = `errors.${error.name}.description`;
-
-  return (
-    <Banner
-      appearance={warning ? "warning" : "error"}
-      title={t(i18n.exists(titleKey) ? titleKey : "errors.generic.title", values)}
-      description={i18n.exists(descriptionKey) ? t(descriptionKey, values) : undefined}
-    />
-  );
-}
 
 export default function Review(props: Props) {
   const { t } = useTranslation();

@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { FlatList, LayoutChangeEvent } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { useSelector, useDispatch } from "~/context/hooks";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Account, AccountLike, TokenAccount } from "@ledgerhq/types-live";
 import { Flex } from "@ledgerhq/native-ui";
 import debounce from "lodash/debounce";
@@ -34,6 +34,7 @@ import SectionTitle from "../WalletCentricSections/SectionTitle";
 import OperationsHistorySection from "../WalletCentricSections/OperationsHistory";
 import EmptyAccountCard from "./EmptyAccountCard";
 import useAccountActions from "./hooks/useAccountActions";
+import { isAccountRoute } from "./isAccountRoute";
 import type { AccountsNavigatorParamList } from "~/components/RootNavigator/types/AccountsNavigator";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import type {
@@ -58,8 +59,21 @@ function AccountScreen({ route }: Props) {
   const { account, parentAccount } = useAccountScreen(route);
   const navigation =
     useNavigation<RootNavigationComposite<StackNavigatorNavigation<BaseNavigatorStackParamList>>>();
+  const isFocused = useIsFocused();
 
   useEffect(() => {
+    // A token account that disappears, e.g. once removed, hands over to its parent account
+    if (!account && parentAccount) {
+      if (!isFocused) return;
+
+      const { routes, index } = navigation.getState();
+      const isParentBelow = isAccountRoute(routes[index - 1], parentAccount.id);
+
+      if (isParentBelow) navigation.goBack();
+      else navigation.replace(ScreenName.Account, { accountId: parentAccount.id });
+      return;
+    }
+
     if (!account) {
       navigation.navigate(NavigatorName.Base, {
         screen: NavigatorName.Main,
@@ -71,7 +85,7 @@ function AccountScreen({ route }: Props) {
         },
       });
     }
-  }, [account, navigation]);
+  }, [account, isFocused, navigation, parentAccount]);
   if (!account) return null;
 
   return <AccountScreenInner account={account} parentAccount={parentAccount || undefined} />;
