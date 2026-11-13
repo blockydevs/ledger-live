@@ -1,5 +1,5 @@
 import type { TokenCurrency } from "@domain/entity-currency-token";
-import type BigNumber from "bignumber.js";
+import BigNumber from "bignumber.js";
 import type { Account, AccountBridge, AccountLike } from "@ledgerhq/types-live";
 import { getAssetFromToken } from "@ledgerhq/live-common/families/xrp/bridge/api";
 import type {
@@ -47,21 +47,53 @@ export function getTokenFirstScreen(token: TokenCurrency) {
   return token.tokenType === "iou" ? ScreenName.XrpAddTokenSettings : ScreenName.XrpAddTokenReview;
 }
 
+function toAssetFields(token: TokenCurrency) {
+  const asset = getAssetFromToken(token);
+  if (!asset || !("assetReference" in asset)) return {};
+
+  return { assetReference: asset.assetReference, assetOwner: asset.assetOwner };
+}
+
 export function makeChangeTrustTransaction(
   bridge: AccountBridge<Transaction>,
   account: Account,
   token: TokenCurrency,
   amount: BigNumber,
 ): Transaction {
-  const asset = getAssetFromToken(token);
-  const assetFields =
-    asset && "assetReference" in asset
-      ? { assetReference: asset.assetReference, assetOwner: asset.assetOwner }
-      : {};
-
   return bridge.updateTransaction(bridge.createTransaction(account), {
     mode: "changeTrust",
-    ...assetFields,
+    ...toAssetFields(token),
     amount,
   });
+}
+
+export function makeOptOutTransaction(
+  bridge: AccountBridge<Transaction>,
+  account: Account,
+  token: TokenCurrency,
+): Transaction {
+  return bridge.updateTransaction(bridge.createTransaction(account), {
+    mode: "optOut",
+    ...toAssetFields(token),
+    amount: new BigNumber(0),
+  });
+}
+
+// An opt-out is a pending row of the XRP account, named by its asset fields
+export function hasPendingRemoval(account: Account, token: TokenCurrency): boolean {
+  return account.pendingOperations.some(operation => {
+    const raw = operation.transactionRaw;
+    if (operation.type !== "OPT_OUT" || !raw) return false;
+
+    const isSameReference = "assetReference" in raw && raw.assetReference === token.tokenIdentifier;
+    const isSameOwner = "assetOwner" in raw && raw.assetOwner === token.contractAddress;
+
+    return isSameReference && isSameOwner;
+  });
+}
+
+export function readStringField(error: Error | undefined, field: string): string | undefined {
+  const value = (error as Record<string, unknown> | undefined)?.[field];
+
+  return typeof value === "string" ? value : undefined;
 }

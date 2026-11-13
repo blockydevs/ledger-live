@@ -1646,6 +1646,18 @@
       "title": "{{amount}} will be locked on your account while this token is added.",
       "description": "You'll get it back when you remove the token."
     },
+    "XrpOptOutTokenFrozen": {
+      "title": "This token is frozen",
+      "description": "Its issuer froze {{assetCode}}. You can remove it once the issuer unfreezes it."
+    },
+    "XrpOptOutTokenInEscrow": {
+      "title": "Part of this token is in escrow",
+      "description": "Finish or cancel the escrow before removing this token."
+    },
+    "XrpOptOutIncomplete": {
+      "title": "This token can't be removed yet",
+      "description": "The XRP Ledger would keep the token on your account, and its reserve locked."
+    },
     "HederaMemoExceededSizeError": {
       "title": "Invalid memo size, maximum allowed is 100 characters"
     },
@@ -8352,6 +8364,44 @@
       "success": {
         "title": "{{token}} added",
         "text": "It appears in your account with a balance of 0 after the next sync."
+      }
+    },
+    "removeToken": {
+      "cta": "Remove",
+      "disabled": {
+        "pending": {
+          "title": "Removal pending",
+          "description": "This token is being removed. It leaves your account once the removal is confirmed."
+        },
+        "frozen": {
+          "title": "This token is frozen",
+          "description": "Its issuer froze it. You can remove it once the issuer unfreezes it."
+        }
+      },
+      "steps": {
+        "review": {
+          "title": "Remove token",
+          "token": "Token",
+          "issuer": "Issuer",
+          "unlockedAmount": "Unlocked amount",
+          "networkFees": "Network fees",
+          "info": "Removing this token releases its reserve. You can add it again later.",
+          "deviceLimit": "Your device will show a trust limit of 0. That's how a token is removed.",
+          "balanceBlocked": "You still hold {{balance}}. Send your balance before removing this token.",
+          "balanceBlockedNoAmount": "You still hold this token. Send your balance before removing this token.",
+          "send": "Send"
+        },
+        "selectDevice": {
+          "title": "Select device"
+        },
+        "connectDevice": {
+          "title": "Connect device"
+        }
+      },
+      "success": {
+        "title": "{{token}} removed",
+        "text": "{{amount}} will be available again once the removal is confirmed.",
+        "textNoReserve": "It leaves your account after the next sync."
       }
     },
     "tokenSettings": {

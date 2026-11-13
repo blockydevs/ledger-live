@@ -5,7 +5,12 @@ import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import { getXrpEnabledTokenStandards } from "@ledgerhq/live-common/families/xrp/config";
 import { render, screen } from "@tests/test-renderer";
 import SubAccountsList from "../SubAccountsList";
-import { XRP_ACCOUNT, XRP_ACCOUNT_WITH_TOKEN } from "~/families/xrp/__mocks__/account.mock";
+import {
+  XRP_ACCOUNT,
+  XRP_ACCOUNT_WITH_TOKEN,
+  makePendingOptOut,
+} from "~/families/xrp/__mocks__/account.mock";
+import { xrpIouToken } from "~/families/xrp/__mocks__/currency.mock";
 
 jest.mock("@ledgerhq/live-common/families/xrp/config", () => {
   return {
@@ -62,6 +67,13 @@ describe("SubAccountsList", () => {
 
     expect(screen.getByText("Tokens (1)")).toBeVisible();
     expect(screen.getByTestId(ADD_TOKEN_BUTTON)).toBeVisible();
+  });
+
+  it("hides a token of an XRP account whose removal is pending", () => {
+    renderList({ ...XRP_ACCOUNT_WITH_TOKEN, pendingOperations: [makePendingOptOut(xrpIouToken)] });
+
+    expect(screen.getByText("You can add tokens to your XRP account.")).toBeVisible();
+    expect(screen.queryByText("Tokens (1)")).toBeNull();
   });
 
   it("keeps the sub-account wording and no add-token action when every standard is off", () => {
