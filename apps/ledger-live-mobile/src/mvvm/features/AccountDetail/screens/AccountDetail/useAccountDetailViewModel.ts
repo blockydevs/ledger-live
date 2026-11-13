@@ -7,6 +7,7 @@ import { formatAddress } from "@ledgerhq/live-common/utils/addressUtils";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
 import { useMaybeAccountName } from "~/reducers/wallet";
 import { NavigatorName, ScreenName } from "~/const";
+import { getManageAssetsScreen } from "~/screens/AccountSettings/getManageAssetsScreen";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import type {
   RootNavigationComposite,
@@ -35,6 +36,7 @@ export type AccountDetailViewModel = Readonly<{
   onSettingsHidden: () => void;
   onChangeName: () => void;
   onViewAdvancedLogs: () => void;
+  onManageAssets?: () => void;
   onConfirmRemove: () => void;
   onSettingsEvent: AccountSettingsEventHandler;
 }>;
@@ -89,17 +91,24 @@ export function useAccountDetailViewModel(): AccountDetailViewModel {
     setIsSettingsOpen(true);
   }, [onSettingsOpened]);
   const onCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
-  const screenToOpenAfterSettings = useRef<SettingsScreen | undefined>(undefined);
-  const openSettingsScreen = useCallback((screen: SettingsScreen) => {
-    screenToOpenAfterSettings.current = screen;
+  const openAfterSettings = useRef<(() => void) | undefined>(undefined);
+  const closeSettingsThenOpen = useCallback((open: () => void) => {
+    openAfterSettings.current = open;
     setIsSettingsOpen(false);
   }, []);
   const onSettingsHidden = useCallback(() => {
-    const screen = screenToOpenAfterSettings.current;
-    screenToOpenAfterSettings.current = undefined;
-    if (!screen || !mainAccount) return;
-    stackNavigation.navigate(screen, { accountId: mainAccount.id });
-  }, [mainAccount, stackNavigation]);
+    const open = openAfterSettings.current;
+    openAfterSettings.current = undefined;
+    open?.();
+  }, []);
+  const openSettingsScreen = useCallback(
+    (screen: SettingsScreen) => {
+      if (!mainAccount) return;
+      const accountId = mainAccount.id;
+      closeSettingsThenOpen(() => stackNavigation.navigate(screen, { accountId }));
+    },
+    [closeSettingsThenOpen, mainAccount, stackNavigation],
+  );
   const onChangeName = useCallback(
     () => openSettingsScreen(ScreenName.AccountDetailEditName),
     [openSettingsScreen],
@@ -108,6 +117,14 @@ export function useAccountDetailViewModel(): AccountDetailViewModel {
     () => openSettingsScreen(ScreenName.AccountDetailAdvancedLogs),
     [openSettingsScreen],
   );
+  const manageAssetsScreen = mainAccount && getManageAssetsScreen(mainAccount);
+  const onManageAssets = useMemo(() => {
+    if (!manageAssetsScreen || !mainAccount) return undefined;
+    const accountId = mainAccount.id;
+
+    return () =>
+      closeSettingsThenOpen(() => navigation.navigate(manageAssetsScreen, { accountId }));
+  }, [closeSettingsThenOpen, mainAccount, manageAssetsScreen, navigation]);
 
   const onConfirmRemove = useCallback(() => {
     setIsSettingsOpen(false);
@@ -125,6 +142,7 @@ export function useAccountDetailViewModel(): AccountDetailViewModel {
     onSettingsHidden,
     onChangeName,
     onViewAdvancedLogs,
+    onManageAssets,
     onConfirmRemove,
     onSettingsEvent,
   };

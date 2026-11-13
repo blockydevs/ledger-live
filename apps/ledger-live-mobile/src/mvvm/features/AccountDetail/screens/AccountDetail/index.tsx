@@ -28,6 +28,7 @@ export default function AccountDetail() {
     onSettingsHidden,
     onChangeName,
     onViewAdvancedLogs,
+    onManageAssets,
     onConfirmRemove,
     onSettingsEvent,
   } = useAccountDetailViewModel();
@@ -63,6 +64,7 @@ export default function AccountDetail() {
         accountName={accountName}
         onClose={onCloseSettings}
         onChangeName={onChangeName}
+        onManageAssets={onManageAssets}
         onViewAdvancedLogs={onViewAdvancedLogs}
         account={account}
         onConfirmRemove={onConfirmRemove}

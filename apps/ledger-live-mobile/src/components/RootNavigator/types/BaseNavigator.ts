@@ -353,6 +353,7 @@ export type BaseNavigatorStackParamList = {
   // Xrp
   [NavigatorName.XrpAddTokenFlow]: NavigatorScreenParams<XrpAddTokenFlowParamList>;
   [NavigatorName.XrpRemoveTokenFlow]: NavigatorScreenParams<XrpRemoveTokenFlowParamList>;
+  [ScreenName.XrpManageAssets]: { accountId: string };
 
   // Hedera
   [NavigatorName.HederaAssociateTokenFlow]: NavigatorScreenParams<HederaAssociateTokenFlowParamList>;

@@ -61,12 +61,11 @@ export function useReviewViewModel() {
 
     navigation.navigate(ScreenName.XrpRemoveTokenSelectDevice, {
       accountId: xrpAccount.id,
-      tokenAccountId,
       token,
       transaction,
       status,
     });
-  }, [xrpAccount.id, navigation, status, token, tokenAccountId, transaction]);
+  }, [xrpAccount.id, navigation, status, token, transaction]);
 
   const statusErrors = Object.values(status.errors);
   const isBalanceNotZero = statusErrors.some(error => error.name === BALANCE_NOT_ZERO);

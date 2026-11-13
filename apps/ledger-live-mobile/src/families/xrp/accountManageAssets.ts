@@ -1,0 +1,9 @@
+import type { Account } from "@ledgerhq/types-live";
+import { getXrpEnabledTokenStandards } from "@ledgerhq/live-common/families/xrp/config";
+import { ScreenName } from "~/const";
+
+export default function getManageAssetsScreen(account: Account) {
+  const isTokenStandardEnabled = getXrpEnabledTokenStandards(account.currency.id).length > 0;
+
+  return isTokenStandardEnabled ? ScreenName.XrpManageAssets : undefined;
+}

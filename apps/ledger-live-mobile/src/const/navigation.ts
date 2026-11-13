@@ -611,6 +611,7 @@ export enum ScreenName {
   XrpRemoveTokenConnectDevice = "XrpRemoveTokenConnectDevice",
   XrpRemoveTokenValidationError = "XrpRemoveTokenValidationError",
   XrpRemoveTokenValidationSuccess = "XrpRemoveTokenValidationSuccess",
+  XrpManageAssets = "XrpManageAssets",
   HederaDelegationSummary = "HederaDelegationSummary",
   HederaDelegationSelectValidator = "HederaDelegationSelectValidator",
   HederaDelegationSelectDevice = "HederaDelegationSelectDevice",
