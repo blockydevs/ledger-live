@@ -1,5 +1,5 @@
-import React, { useCallback, useContext } from "react";
-import { NavigationContainerRefContext, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { SyncOneAccountOnMount } from "@ledgerhq/live-common/bridge/react/index";
 import { Box } from "@ledgerhq/lumen-ui-rnative";
 import { TrackScreen } from "@shared/analytics-react";
@@ -14,7 +14,6 @@ import type {
 import { ScreenName } from "~/const";
 import { useTranslation } from "~/context/Locale";
 import { readStringField } from "../utils";
-import { getLeaveTokenScreenAction } from "./getLeaveTokenScreenAction";
 import type { XrpRemoveTokenFlowParamList } from "./types";
 
 type Props = BaseComposite<
@@ -25,20 +24,12 @@ export default function ValidationSuccess() {
   const { t } = useTranslation();
   const navigation = useNavigation<Props["navigation"]>();
   const route = useRoute<Props["route"]>();
-  const { accountId, tokenAccountId, token, result, status } = route.params;
+  const { accountId, token, result, status } = route.params;
   const unlockedAmount = readStringField(status.warnings.reserve, "amount");
-  const navigationContainer = useContext(NavigationContainerRefContext);
 
   const onClose = useCallback(() => {
-    const baseNavigation =
-      navigation.getParent<StackNavigatorNavigation<BaseNavigatorStackParamList>>();
-    const rootState = navigationContainer?.getRootState();
-    const leaveTokenScreen =
-      rootState && getLeaveTokenScreenAction(rootState, tokenAccountId, accountId);
-
-    if (leaveTokenScreen) baseNavigation.dispatch(leaveTokenScreen);
-    baseNavigation.pop();
-  }, [accountId, navigation, navigationContainer, tokenAccountId]);
+    navigation.getParent<StackNavigatorNavigation<BaseNavigatorStackParamList>>().pop();
+  }, [navigation]);
 
   const onViewDetails = useCallback(() => {
     navigation.navigate(ScreenName.OperationDetails, { accountId, operation: result });

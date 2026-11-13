@@ -1938,6 +1938,7 @@
     "title": "Account settings",
     "menu": {
       "changeName": "Change name",
+      "manageAssets": "Manage assets",
       "viewAdvancedLogs": "View advanced logs",
       "viewExplorer": "View in explorer",
       "removeAccount": "Remove account from portfolio"
@@ -8366,18 +8367,24 @@
         "text": "It appears in your account with a balance of 0 after the next sync."
       }
     },
-    "removeToken": {
-      "cta": "Remove",
-      "disabled": {
-        "pending": {
-          "title": "Removal pending",
-          "description": "This token is being removed. It leaves your account once the removal is confirmed."
-        },
-        "frozen": {
-          "title": "This token is frozen",
-          "description": "Its issuer froze it. You can remove it once the issuer unfreezes it."
-        }
+    "manageAssets": {
+      "title": "Manage assets",
+      "empty": "This account has no tokens yet.",
+      "tokenType": "Token type",
+      "iou": "Trust Line (IOU)",
+      "mpt": "Multi Purpose Token",
+      "issuer": "Issuer",
+      "delete": "Delete",
+      "confirm": {
+        "title": "Are you sure you want to delete {{token}}?",
+        "description": "This asset will be removed from your portfolio, and you won't be able to receive it anymore. The locked amount will be released to your {{account}} account."
       },
+      "balanceBlocked": {
+        "title": "Empty your {{token}} balance to remove it",
+        "description": "Send or swap your remaining {{token}} balance to remove this asset."
+      }
+    },
+    "removeToken": {
       "steps": {
         "review": {
           "title": "Remove token",

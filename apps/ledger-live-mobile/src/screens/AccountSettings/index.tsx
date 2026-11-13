@@ -11,6 +11,9 @@ import AccountNameRow from "./AccountNameRow";
 import DeleteAccountRow from "./DeleteAccountRow";
 import DeleteAccountModal from "./DeleteAccountModal";
 import AccountAdvancedLogsRow from "./AccountAdvancedLogsRow";
+import { getManageAssetsScreen } from "./getManageAssetsScreen";
+import SettingsRow from "~/components/SettingsRow";
+import { Trans } from "~/context/Locale";
 import SettingsNavigationScrollView from "../Settings/SettingsNavigationScrollView";
 import type { AccountSettingsNavigatorParamList } from "~/components/RootNavigator/types/AccountSettingsNavigator";
 import { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
@@ -57,11 +60,21 @@ function AccountSettings({ navigation, route }: NavigationProps) {
   if (!account) return null;
 
   const mainAccount = getMainAccount(account, parentAccount);
+  const manageAssetsScreen = getManageAssetsScreen(mainAccount);
 
   return (
     <SettingsNavigationScrollView>
       <TrackScreen category="Account Settings" />
       <AccountNameRow account={mainAccount} navigation={navigation} />
+      {manageAssetsScreen ? (
+        <SettingsRow
+          event="AccountManageAssetsRow"
+          testID="account-manage-assets-row"
+          title={<Trans i18nKey="accountDetailSettings.menu.manageAssets" />}
+          arrowRight
+          onPress={() => navigation.navigate(manageAssetsScreen, { accountId: mainAccount.id })}
+        />
+      ) : null}
       <AccountAdvancedLogsRow account={mainAccount} navigation={navigation} />
       <DeleteAccountRow onPress={onPress} />
       <DeleteAccountModal

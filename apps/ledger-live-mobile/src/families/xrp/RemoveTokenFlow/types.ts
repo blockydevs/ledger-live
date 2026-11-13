@@ -6,7 +6,6 @@ import { ScreenName } from "~/const";
 
 type SignParams = {
   accountId: string;
-  tokenAccountId: string;
   token: TokenCurrency;
   parentId?: string;
   transaction: Transaction;
@@ -15,7 +14,7 @@ type SignParams = {
 
 export type XrpRemoveTokenFlowParamList = {
   [ScreenName.XrpRemoveTokenReview]: {
-    /** The token account: FabActions overrides `accountId` and `parentId` with these anyway */
+    /** The token account */
     accountId: string;
     parentId: string;
     token: TokenCurrency;

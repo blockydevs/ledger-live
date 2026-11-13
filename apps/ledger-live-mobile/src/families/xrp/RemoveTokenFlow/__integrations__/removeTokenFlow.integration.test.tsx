@@ -2,7 +2,6 @@ import React from "react";
 import { Text } from "react-native";
 import BigNumber from "bignumber.js";
 import { Observable } from "rxjs";
-import type { InitialState } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import type { Account, SignOperationEvent } from "@ledgerhq/types-live";
 import type { XrpTokenAccount } from "@ledgerhq/live-common/families/xrp/types";
@@ -64,7 +63,6 @@ jest.mock("@ledgerhq/live-common/bridge/index", () => {
 });
 
 const OuterStack = createNativeStackNavigator();
-const InnerStack = createNativeStackNavigator();
 
 const RESERVE_RELEASE = makeNamedError("XrpReserveRelease", { amount: "0.2 XRP" });
 
@@ -100,21 +98,12 @@ function AccountStub({ route }: { route: { params?: { accountId?: string } } }) 
   return <Text testID={`account-screen-${route.params?.accountId}`}>Account</Text>;
 }
 
-function AccountsNavigatorStub() {
-  return (
-    <InnerStack.Navigator screenOptions={{ headerShown: false }}>
-      <InnerStack.Screen name={ScreenName.Account} component={AccountStub} />
-    </InnerStack.Navigator>
-  );
-}
-
 function RemoveTokenFlowHarness() {
   return (
     <OuterStack.Navigator screenOptions={{ headerShown: false }}>
       <OuterStack.Screen name={NavigatorName.XrpRemoveTokenFlow} component={component} />
       <OuterStack.Screen name={NavigatorName.SendFunds} component={SendFundsStub} />
       <OuterStack.Screen name={ScreenName.Account} component={AccountStub} />
-      <OuterStack.Screen name={NavigatorName.Accounts} component={AccountsNavigatorStub} />
     </OuterStack.Navigator>
   );
 }
@@ -141,37 +130,29 @@ function renderReview(tokenAccount: XrpTokenAccount) {
   });
 }
 
-type Route = InitialState["routes"][number];
-
-const TOKEN_ACCOUNT = makeTokenAccount(xrpIouToken, 0);
-const PARENT_ACCOUNT_ROUTE = { name: ScreenName.Account, params: { accountId: XRP_ACCOUNT.id } };
-const TOKEN_ACCOUNT_ROUTE = {
-  name: ScreenName.Account,
-  params: { accountId: TOKEN_ACCOUNT.id, parentId: XRP_ACCOUNT.id },
-};
-
-function renderSuccessAbove(routesBelow: Route[]) {
+function renderSuccessAboveAccountScreen() {
   const successParams = {
     accountId: XRP_ACCOUNT.id,
-    tokenAccountId: TOKEN_ACCOUNT.id,
     token: xrpIouToken,
     deviceId: "mock",
     transaction: {},
     status: { errors: {}, warnings: {} },
     result: { id: "op-1" },
   };
-  const flowRoute = {
-    name: NavigatorName.XrpRemoveTokenFlow,
-    state: {
-      index: 0,
-      routes: [{ name: ScreenName.XrpRemoveTokenValidationSuccess, params: successParams }],
+  const routes = [
+    { name: ScreenName.Account, params: { accountId: XRP_ACCOUNT.id } },
+    {
+      name: NavigatorName.XrpRemoveTokenFlow,
+      state: {
+        index: 0,
+        routes: [{ name: ScreenName.XrpRemoveTokenValidationSuccess, params: successParams }],
+      },
     },
-  };
-  const routes = [...routesBelow, flowRoute];
+  ];
 
   return render(<RemoveTokenFlowHarness />, {
-    navigationInitialState: { index: routes.length - 1, routes },
-    overrideInitialState: overrideWithAccounts({ ...XRP_ACCOUNT, subAccounts: [TOKEN_ACCOUNT] }),
+    navigationInitialState: { index: 1, routes },
+    overrideInitialState: overrideWithAccounts(XRP_ACCOUNT),
   });
 }
 
@@ -303,36 +284,12 @@ describe("XRP RemoveTokenFlow (integration)", () => {
     await waitFor(() => expect(screen.getByText("Retry")).toBeVisible(), { timeout: 15000 });
   });
 
-  describe("closing the success screen", () => {
-    it("goes back to the XRP account screen right below the token screen", async () => {
-      const { user } = renderSuccessAbove([PARENT_ACCOUNT_ROUTE, TOKEN_ACCOUNT_ROUTE]);
+  it("closes the success screen back to the screen below the flow", async () => {
+    const { user } = renderSuccessAboveAccountScreen();
 
-      await user.press(await screen.findByTestId("enabled-success-close-button"));
+    await user.press(await screen.findByTestId("enabled-success-close-button"));
 
-      expect(await screen.findAllByTestId(`account-screen-${XRP_ACCOUNT.id}`)).toHaveLength(1);
-      expect(screen.queryByTestId(`account-screen-${TOKEN_ACCOUNT.id}`)).toBeNull();
-    });
-
-    it("puts the XRP account screen in place of a token screen opened on its own", async () => {
-      const { user } = renderSuccessAbove([TOKEN_ACCOUNT_ROUTE]);
-
-      await user.press(await screen.findByTestId("enabled-success-close-button"));
-
-      expect(await screen.findByTestId(`account-screen-${XRP_ACCOUNT.id}`)).toBeVisible();
-      expect(screen.queryByTestId(`account-screen-${TOKEN_ACCOUNT.id}`)).toBeNull();
-    });
-
-    it("leaves a token screen of the navigator below the flow", async () => {
-      const accountsRoute = {
-        name: NavigatorName.Accounts,
-        state: { index: 1, routes: [PARENT_ACCOUNT_ROUTE, TOKEN_ACCOUNT_ROUTE] },
-      };
-      const { user } = renderSuccessAbove([accountsRoute]);
-
-      await user.press(await screen.findByTestId("enabled-success-close-button"));
-
-      expect(await screen.findAllByTestId(`account-screen-${XRP_ACCOUNT.id}`)).toHaveLength(1);
-      expect(screen.queryByTestId(`account-screen-${TOKEN_ACCOUNT.id}`)).toBeNull();
-    });
+    expect(await screen.findByTestId(`account-screen-${XRP_ACCOUNT.id}`)).toBeVisible();
+    expect(screen.queryByTestId("enabled-success-close-button")).toBeNull();
   });
 });
