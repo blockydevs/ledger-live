@@ -60,12 +60,16 @@ export default function SubAccountsList({
   const [account, setAccount] = useState<TokenAccount | typeof undefined>();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const blacklistedTokenIds = useSelector(blacklistedTokenIdsSelector);
-  const subAccounts = listSubAccounts(parentAccount).filter(subAccount => {
-    return !blacklistedTokenIds.includes(getAccountCurrency(subAccount).id);
-  });
-
   const family = parentAccount.currency.family;
   const specific = perFamilySubAccountList[family as keyof typeof perFamilySubAccountList];
+  const isSubAccountHidden =
+    specific && "isSubAccountHidden" in specific ? specific.isSubAccountHidden : null;
+
+  const subAccounts = listSubAccounts(parentAccount).filter(subAccount => {
+    const isBlacklisted = blacklistedTokenIds.includes(getAccountCurrency(subAccount).id);
+
+    return !isBlacklisted && !isSubAccountHidden?.(parentAccount, subAccount);
+  });
 
   const hasSpecificTokenWording = specific && specific.hasSpecificTokenWording;
 

@@ -606,6 +606,12 @@ export enum ScreenName {
   XrpAddTokenConnectDevice = "XrpAddTokenConnectDevice",
   XrpAddTokenValidationError = "XrpAddTokenValidationError",
   XrpAddTokenValidationSuccess = "XrpAddTokenValidationSuccess",
+  XrpRemoveTokenReview = "XrpRemoveTokenReview",
+  XrpRemoveTokenSelectDevice = "XrpRemoveTokenSelectDevice",
+  XrpRemoveTokenConnectDevice = "XrpRemoveTokenConnectDevice",
+  XrpRemoveTokenValidationError = "XrpRemoveTokenValidationError",
+  XrpRemoveTokenValidationSuccess = "XrpRemoveTokenValidationSuccess",
+  XrpManageAssets = "XrpManageAssets",
   HederaDelegationSummary = "HederaDelegationSummary",
   HederaDelegationSelectValidator = "HederaDelegationSelectValidator",
   HederaDelegationSelectDevice = "HederaDelegationSelectDevice",
@@ -858,6 +864,7 @@ export enum NavigatorName {
   // Aptos
   // Xrp
   XrpAddTokenFlow = "XrpAddTokenFlow",
+  XrpRemoveTokenFlow = "XrpRemoveTokenFlow",
   // Hedera
   HederaAssociateTokenFlow = "HederaAssociateTokenFlow",
   HederaDelegationFlow = "HederaDelegationFlow",

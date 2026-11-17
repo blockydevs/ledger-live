@@ -8,18 +8,12 @@ import { useRampCatalog } from "@ledgerhq/live-common/platform/providers/RampCat
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
 import type { BaseComposite, StackNavigatorProps } from "~/components/RootNavigator/types/helpers";
 import { NavigatorName, ScreenName } from "~/const";
-import { makeChangeTrustTransaction } from "../utils";
+import { makeChangeTrustTransaction, readStringField } from "../utils";
 import type { XrpAddTokenFlowParamList } from "./types";
 
 export type Props = BaseComposite<
   StackNavigatorProps<XrpAddTokenFlowParamList, ScreenName.XrpAddTokenReview>
 >;
-
-function readField(error: Error | undefined, field: string): string | undefined {
-  const value = (error as Record<string, unknown> | undefined)?.[field];
-
-  return typeof value === "string" ? value : undefined;
-}
 
 export function useReviewViewModel({ navigation, route }: Props) {
   const { account } = useAccountScreen(route);
@@ -100,8 +94,8 @@ export function useReviewViewModel({ navigation, route }: Props) {
     isContinueDisabled: bridgePending || statusErrors.length > 0 || !!bridgeError,
     isContinueLoading: bridgePending,
     notEnoughXrp: notEnoughXrp && {
-      minimumAmount: readField(notEnoughXrp, "minimumAmount"),
-      lockedAmount: readField(status.warnings.reserve, "amount"),
+      minimumAmount: readStringField(notEnoughXrp, "minimumAmount"),
+      lockedAmount: readStringField(status.warnings.reserve, "amount"),
     },
   };
 }
