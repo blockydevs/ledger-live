@@ -5304,6 +5304,19 @@
           "notice": "Sync required"
         }
       },
+      "recipient": {
+        "selfTransfer": {
+          "title": "Self transfer",
+          "toPrivate": {
+            "action": "Send to private balance",
+            "label": "Private balance"
+          },
+          "toPublic": {
+            "action": "Send to public balance",
+            "label": "Public balance"
+          }
+        }
+      },
       "title": "Send {{currency}}",
       "selectAddress": "Select address",
       "available": "Available {{amount}}",

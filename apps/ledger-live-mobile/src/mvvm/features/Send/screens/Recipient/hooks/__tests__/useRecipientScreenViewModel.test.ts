@@ -287,5 +287,22 @@ describe("useRecipientScreenViewModel", () => {
         expect.objectContaining({ address, isSelfTransfer }),
       );
     });
+
+    it.each([
+      ["ALEO1SELF", "Private balance"],
+      ["aleo1someoneelse", undefined],
+    ])("labels %s as %s", (address, displayLabel) => {
+      const { result } = renderHook(() => useRecipientScreenViewModel());
+      if (!result.current.ready) {
+        throw new Error("Expected a ready recipient screen");
+      }
+      const viewModel = result.current;
+
+      act(() => {
+        viewModel.onAddressSelected(address);
+      });
+
+      expect(setRecipient).toHaveBeenCalledWith(expect.objectContaining({ address, displayLabel }));
+    });
   });
 });
