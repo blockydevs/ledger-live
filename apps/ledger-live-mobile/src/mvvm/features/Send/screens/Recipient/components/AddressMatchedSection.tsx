@@ -52,6 +52,7 @@ export function AddressMatchedSection({ viewModel }: AddressMatchedSectionProps)
             recipient={suggestion.recipient}
             description={suggestion.description}
             contact={suggestion.contact}
+            selfTransferTarget={suggestion.selfTransferTarget}
             isReady={suggestion.isReady}
             showActions={suggestion.showActions}
             hasAddressBook={suggestion.hasAddressBook}
@@ -65,10 +66,11 @@ export function AddressMatchedSection({ viewModel }: AddressMatchedSectionProps)
             onDismissUnsupportedNetwork={suggestion.onDismissUnsupportedNetwork}
           />
         ) : suggestion.kind === "matched-ledger-accounts" ? (
-          suggestion.matchedAccounts.map(({ account }) => (
+          suggestion.matchedAccounts.map(({ account, accountName }) => (
             <AccountRowWithBalance
               key={account.id}
               account={account}
+              customName={accountName}
               onSelect={() => suggestion.onSelect(account.freshAddress)}
               showSendTo
               disabled={suggestion.isDisabled}

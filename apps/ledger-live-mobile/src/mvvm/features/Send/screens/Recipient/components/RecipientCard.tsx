@@ -1,6 +1,7 @@
 import { ContactIdSchema } from "@domain/entity-contact";
 import { ContactAvatar, useContactDisplayName } from "@features/platform-contacts";
 import type { MatchedContact } from "@ledgerhq/live-common/flows/send/recipient/types";
+import type { BalanceTypeSelfTransferTarget } from "@ledgerhq/live-common/bridge/descriptor/types";
 import {
   Box,
   Button,
@@ -14,7 +15,7 @@ import {
   CardLeading,
   Spot,
 } from "@ledgerhq/lumen-ui-rnative";
-import { Wallet } from "@ledgerhq/lumen-ui-rnative/symbols";
+import { UserCheck, UserLock, Wallet } from "@ledgerhq/lumen-ui-rnative/symbols";
 import React from "react";
 import { AddContactAction } from "./AddContactAction";
 import { equalCardActionWidth } from "./equalCardActionWidth";
@@ -23,6 +24,7 @@ type RecipientCardProps = Readonly<{
   recipient: string;
   description?: string;
   contact?: MatchedContact;
+  selfTransferTarget?: BalanceTypeSelfTransferTarget;
   isReady: boolean;
   showActions: boolean;
   hasAddressBook: boolean;
@@ -40,6 +42,7 @@ export function RecipientCard({
   recipient,
   description,
   contact,
+  selfTransferTarget,
   isReady,
   showActions,
   hasAddressBook,
@@ -53,6 +56,11 @@ export function RecipientCard({
   onDismissUnsupportedNetwork,
 }: RecipientCardProps) {
   const getDisplayName = useContactDisplayName();
+  let spotIcon = Wallet;
+  if (selfTransferTarget) {
+    spotIcon = selfTransferTarget.isDestinationPublic ? UserCheck : UserLock;
+  }
+
   return (
     <Card type="info" testID="send-recipient-card" lx={{ marginHorizontal: "s8" }}>
       <CardHeader lx={showActions ? undefined : { paddingBottom: "s16" }}>
@@ -66,7 +74,7 @@ export function RecipientCard({
               testID="send-recipient-card-avatar"
             />
           ) : (
-            <Spot icon={Wallet} />
+            <Spot icon={spotIcon} />
           )}
           <CardContent>
             <CardContentTitle

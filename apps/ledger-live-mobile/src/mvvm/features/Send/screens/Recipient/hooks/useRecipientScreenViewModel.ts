@@ -14,10 +14,14 @@ import type { Memo } from "@ledgerhq/live-common/flows/send/types";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { ScreenName } from "~/const";
+import { useTranslation } from "~/context/Locale";
 import { useSendFlowTrackingProperties } from "../../../hooks/useSendFlowTrackingProperties";
 import { useSendFlowActions, useSendFlowData } from "../../../context/SendFlowContext";
 import type { SendFlowNavigationProp } from "../../../types";
-import { getAccountSelfTransferTarget } from "../../../utils/selfTransferTarget";
+import {
+  getAccountSelfTransferTarget,
+  matchSelfTransferTarget,
+} from "../../../utils/selfTransferTarget";
 
 type RecipientScreenViewModelBase = Readonly<{
   ready: false;
@@ -41,6 +45,7 @@ export type ReadyRecipientScreenViewModel = Readonly<{
 export type RecipientScreenViewModel = RecipientScreenViewModelBase | ReadyRecipientScreenViewModel;
 
 export function useRecipientScreenViewModel(): RecipientScreenViewModel {
+  const { t } = useTranslation();
   const { state, uiConfig, recipientSearch } = useSendFlowData();
   const { transaction } = useSendFlowActions();
   const navigation = useNavigation<SendFlowNavigationProp>();
@@ -109,15 +114,16 @@ export function useRecipientScreenViewModel(): RecipientScreenViewModel {
       const selfTransferTarget = account
         ? getAccountSelfTransferTarget(account, state.transaction.transaction, parentAccount)
         : null;
+      const matchedSelfTransferTarget = matchSelfTransferTarget(selfTransferTarget, address);
 
       transaction.setRecipient({
         address,
         ensName,
         memo: memo ?? (state.recipient?.address === address ? state.recipient.memo : undefined),
-        displayLabel: undefined,
-        isSelfTransfer:
-          selfTransferTarget !== null &&
-          selfTransferTarget.address.toLowerCase() === address.toLowerCase(),
+        displayLabel: matchedSelfTransferTarget
+          ? t(`send.newSendFlow.${matchedSelfTransferTarget.translationKey}.label`)
+          : undefined,
+        isSelfTransfer: matchedSelfTransferTarget !== null,
       });
 
       if (goToNextStep) {
@@ -131,6 +137,7 @@ export function useRecipientScreenViewModel(): RecipientScreenViewModel {
       transaction,
       state.transaction.transaction,
       state.recipient,
+      t,
       recipientSearch,
       goToAmount,
     ],
