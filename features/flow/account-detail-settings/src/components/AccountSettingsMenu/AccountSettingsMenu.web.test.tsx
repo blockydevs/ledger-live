@@ -37,6 +37,32 @@ describe("AccountSettingsMenu (Web)", () => {
     expect(handlers.onRemoveAccount).toHaveBeenCalledTimes(1);
   });
 
+  describe("Manage assets", () => {
+    it("is hidden without a handler", () => {
+      renderMenu();
+
+      expect(screen.queryByTestId("account-settings-manage-assets")).toBeNull();
+    });
+
+    it("shows and calls its handler when clicked", async () => {
+      const onManageAssets = jest.fn();
+      render(
+        <AccountSettingsMenu
+          accountName="XRP 1"
+          onChangeName={jest.fn()}
+          onManageAssets={onManageAssets}
+          onViewAdvancedLogs={jest.fn()}
+          onRemoveAccount={jest.fn()}
+        />,
+        { wrapper: I18nWrapper },
+      );
+
+      expect(screen.getByText("Manage assets")).toBeVisible();
+      await userEvent.setup().click(screen.getByTestId("account-settings-manage-assets"));
+      expect(onManageAssets).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("View in explorer", () => {
     it("is hidden without an explorer URL", () => {
       renderMenu();

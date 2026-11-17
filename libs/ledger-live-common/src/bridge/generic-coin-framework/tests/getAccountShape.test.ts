@@ -416,6 +416,25 @@ describe("genericGetAccountShape", () => {
       ]);
     });
 
+    it("drops a token missing from a balance that lists every token", async () => {
+      getBridgeApiMock.mockImplementationOnce(() => ({
+        ...defaultBridgeApi(),
+        balanceListsEveryToken: true,
+        getAssetFromToken: () => ({
+          type: "token",
+          assetReference: "0xgone",
+          assetOwner: "addr1",
+          name: "Gone",
+        }),
+      }));
+
+      await callWithSubAccountToken();
+
+      expect(buildSubAccountsMock.mock.calls[0][0].allTokenAssetsBalances).toEqual([
+        { asset: heldAsset, value: 500n },
+      ]);
+    });
+
     it("does not fail the whole sync when getAssetFromToken throws for a sub-account", async () => {
       getBridgeApiMock.mockImplementationOnce(() => ({
         ...defaultBridgeApi(),

@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
+import type { Account, Operation } from "@ledgerhq/types-live";
 import type { XrpTokenAccount } from "@ledgerhq/live-common/families/xrp/types";
 import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import { xrpIouToken, xrpTestnetCurrency } from "./currency.mock";
@@ -32,5 +32,29 @@ export const XRP_REMOVED_TOKEN_ACCOUNT: XrpTokenAccount = genTokenAccount(
 export function overrideWithAccounts(...accounts: Account[]) {
   return <S extends { accounts: { active: unknown[] } }>(state: S): S => {
     return { ...state, accounts: { ...state.accounts, active: accounts } };
+  };
+}
+
+export function makePendingOptOut(token: typeof xrpIouToken): Operation {
+  return {
+    id: "pending-opt-out",
+    hash: "",
+    type: "OPT_OUT",
+    value: new BigNumber(0),
+    fee: new BigNumber(12),
+    senders: [],
+    recipients: [],
+    blockHeight: null,
+    blockHash: null,
+    accountId: XRP_ACCOUNT.id,
+    date: new Date(),
+    extra: {},
+    transactionRaw: {
+      family: "xrp",
+      amount: "0",
+      recipient: "",
+      assetReference: token.tokenIdentifier,
+      assetOwner: token.contractAddress,
+    } as Operation["transactionRaw"],
   };
 }

@@ -70,6 +70,7 @@ import type { InternetComputerNeuronManageFlowParamList } from "../../../familie
 import type { TronVoteFlowParamList } from "../../../families/tron/VoteFlow/types";
 import type { HederaAssociateTokenFlowParamList } from "../../../families/hedera/AssociateTokenFlow/types";
 import type { XrpAddTokenFlowParamList } from "../../../families/xrp/AddTokenFlow/types";
+import type { XrpRemoveTokenFlowParamList } from "../../../families/xrp/RemoveTokenFlow/types";
 import type { CantonOnboardAccountParamList } from "../../../families/canton/Onboard/types";
 import type { ConcordiumOnboardAccountParamList } from "../../../families/concordium/Onboard/types";
 import type { HederaDelegationFlowParamList } from "../../../families/hedera/DelegationFlow/types";
@@ -351,6 +352,8 @@ export type BaseNavigatorStackParamList = {
 
   // Xrp
   [NavigatorName.XrpAddTokenFlow]: NavigatorScreenParams<XrpAddTokenFlowParamList>;
+  [NavigatorName.XrpRemoveTokenFlow]: NavigatorScreenParams<XrpRemoveTokenFlowParamList>;
+  [ScreenName.XrpManageAssets]: { accountId: string };
 
   // Hedera
   [NavigatorName.HederaAssociateTokenFlow]: NavigatorScreenParams<HederaAssociateTokenFlowParamList>;

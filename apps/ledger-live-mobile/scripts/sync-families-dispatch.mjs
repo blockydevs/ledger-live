@@ -21,6 +21,7 @@ const dirContent = await fs.promises.readdir(path.join(basePath, "families"), {
 const families = dirContent.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
 
 const targets = [
+  "accountManageAssets",
   "operationDetails",
   "accountActions",
   "TransactionConfirmFields",

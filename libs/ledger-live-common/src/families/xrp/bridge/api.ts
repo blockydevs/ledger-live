@@ -8,6 +8,7 @@ import type {
 } from "@ledgerhq/ledger-wallet-framework/api/types";
 import { getCryptoAssetsStore } from "@ledgerhq/ledger-wallet-framework/cryptoAssetsStore";
 import type { XrpAccountInfo } from "@ledgerhq/coin-xrp/types";
+import type { OperationType } from "@ledgerhq/types-live";
 import { getCoinModuleApi } from "../../../bridge/generic-coin-framework/api";
 import { buildContext } from "../../../bridge/generic-coin-framework/api/context";
 import { getXrpEnabledTokenStandards } from "../config";
@@ -108,14 +109,31 @@ export async function buildTokenAccountShapes(
 
 /**
  * A `changeTrust` amount is a trust limit, not XRP: the pending row records 0. It is an `OPT_IN`
- * even when it edits the limit of a held token, as sync records every own limit above 0.
+ * even when it edits the limit of a held token, as sync records every own limit above 0. An
+ * `optOut` moves no token either, so its `OPT_OUT` row records 0 too.
  */
+const TOKEN_MODE_OPERATION_TYPES: ReadonlyMap<string, OperationType> = new Map([
+  ["changeTrust", "OPT_IN"],
+  ["optOut", "OPT_OUT"],
+]);
+
 export function describeOptimisticOperation(
   mode: string,
 ): OptimisticOperationDescriptor | undefined {
-  if (mode !== "changeTrust") return undefined;
+  const type = TOKEN_MODE_OPERATION_TYPES.get(mode);
+  if (!type) return undefined;
 
-  return { type: "OPT_IN", value: new BigNumber(0) };
+  return { type, value: new BigNumber(0) };
+}
+
+const XRP_INTENT_TYPES = new Set(["send", "changeTrust", "optOut"]);
+
+// The generic default throws on `optOut`, a mode only XRP knows
+export function computeIntentType({ mode }: Record<string, unknown>): string {
+  if (!mode) return "Payment";
+  if (typeof mode === "string" && XRP_INTENT_TYPES.has(mode)) return mode;
+
+  throw new Error(`Unsupported transaction mode: ${String(mode)}`);
 }
 
 export default function xrpBridgeApi(currency: CryptoCurrency): BridgeApi {
@@ -123,6 +141,7 @@ export default function xrpBridgeApi(currency: CryptoCurrency): BridgeApi {
 
   return {
     getAssetFromToken,
+    computeIntentType,
     describeOptimisticOperation,
     balanceListsEveryToken: true,
     exactAssetMatch: true,

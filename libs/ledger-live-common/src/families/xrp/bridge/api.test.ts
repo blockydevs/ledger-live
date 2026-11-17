@@ -9,6 +9,7 @@ import { buildSubAccounts } from "../../../bridge/generic-coin-framework/buildSu
 import { buildOptimisticOperation } from "../../../bridge/generic-coin-framework/utils";
 import xrpBridgeApi, {
   buildTokenAccountShapes,
+  computeIntentType,
   describeOptimisticOperation,
   getAssetFromToken,
   getTokenFromAsset,
@@ -309,8 +310,45 @@ describe("describeOptimisticOperation", () => {
     expect(operation.subOperations).toBeUndefined();
   });
 
+  it("records an opt-out as OPT_OUT with a 0 value on the XRP account", () => {
+    // `optOut` is XRP's own mode, outside the generic mode list
+    const optOut = { ...makeTrustSet("USD"), mode: "optOut", amount: new BigNumber(0) } as never;
+
+    const operation = buildOptimisticOperation(
+      account,
+      optOut,
+      undefined,
+      describeOptimisticOperation,
+    );
+
+    expect(operation).toMatchObject({ type: "OPT_OUT", accountId: "xrpAccount" });
+    expect(operation.value.toFixed()).toBe("0");
+    expect(operation.subOperations).toBeUndefined();
+    expect(operation.transactionRaw).toMatchObject({ assetReference: "USD", assetOwner: ISSUER });
+  });
+
   it("keeps the generic description of a send", () => {
     expect(describeOptimisticOperation("send")).toBeUndefined();
+  });
+});
+
+describe("computeIntentType", () => {
+  it("sends a transaction without a mode as a Payment", () => {
+    expect(computeIntentType({})).toBe("Payment");
+  });
+
+  it.each(["send", "changeTrust", "optOut"])("passes the %s mode through", mode => {
+    expect(computeIntentType({ mode })).toBe(mode);
+  });
+
+  it("refuses a mode XRP doesn't know", () => {
+    expect(() => computeIntentType({ mode: "delegate" })).toThrow(
+      "Unsupported transaction mode: delegate",
+    );
+  });
+
+  it("is the bridge's intent type", () => {
+    expect(xrpBridgeApi(ripple).computeIntentType).toBe(computeIntentType);
   });
 });
 

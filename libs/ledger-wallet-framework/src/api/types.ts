@@ -256,6 +256,7 @@ export type BridgeApi = {
    * becomes newly listed (or no longer blacklisted): that is the only case where the stored
    * history misses the operations a sub-account needs. Otherwise the sync resumes from its
    * watermark, as the from-scratch walk would rebuild the same sub-accounts at a far higher cost.
+   * A stored token missing from `getBalance` is gone, so its sub-account is dropped.
    * Ignored when the family declares `balanceOptions`, whose scan depends on the sync hash.
    */
   balanceListsEveryToken?: boolean;
