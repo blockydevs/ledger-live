@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { setEnv } from "@shared/env";
 import BigNumber from "bignumber.js";
@@ -17,6 +18,10 @@ import {
 } from "@tests/test-renderer";
 import type { Account } from "@ledgerhq/types-live";
 import type { State } from "~/reducers/types";
+import type {
+  AmountFooterRowProps,
+  CustomSendFlow,
+} from "~/screens/SendFunds/utils/customSendFlow";
 import { SendFlowOrchestrator } from "../SendFlowOrchestrator";
 import { SEND_FLOW_CONFIG } from "../constants";
 import { RecipientScreen } from "../screens/Recipient";
@@ -72,6 +77,27 @@ type RenderForAccountOptions = Readonly<{
   contactsEnabled?: boolean;
   contacts?: State["contacts"]["contacts"];
 }>;
+
+let mockEvmSendFlow: CustomSendFlow | null = null;
+
+jest.mock("~/screens/SendFunds/utils/customSendFlow", () => {
+  const actual = jest.requireActual<typeof import("~/screens/SendFunds/utils/customSendFlow")>(
+    "~/screens/SendFunds/utils/customSendFlow",
+  );
+
+  return {
+    ...actual,
+    getCustomSendFlow: (family: string) => {
+      return family === "evm" && mockEvmSendFlow
+        ? mockEvmSendFlow
+        : actual.getCustomSendFlow(family);
+    },
+  };
+});
+
+function TestAmountFooterRow({ account, transaction }: AmountFooterRowProps) {
+  return <Text testID="family-footer-row">{`${account.id} ${transaction.amount.toFixed()}`}</Text>;
+}
 
 jest.mock("LLM/features/Contacts/hooks/useContactsAddressValidationAdapter", () => ({
   useContactsAddressValidationAdapter: () => ({
@@ -603,6 +629,42 @@ describe("Send flow integration tests", () => {
         "You can't add a Bitcoin address to your contacts yet. We're adding more cryptos over time.",
       ),
     ).toBeVisible();
+  });
+
+  describe("Family amount footer row", () => {
+    afterEach(() => {
+      mockEvmSendFlow = null;
+    });
+
+    it("should render the family row under the network fees and follow the amount", async () => {
+      mockEvmSendFlow = { screens: [], AmountFooterRow: TestAmountFooterRow };
+      const { user } = renderForAccount(accountEthereum);
+      await driveToAmount(user, { recipient: VALID_ETHEREUM_RECIPIENT });
+
+      const testIdsInOrder = screen.root
+        .findAll(node => typeof node.props.testID === "string")
+        .map(node => node.props.testID as string);
+      expect(testIdsInOrder.indexOf("send-network-fees-value")).toBeGreaterThan(-1);
+      expect(testIdsInOrder.indexOf("family-footer-row")).toBeGreaterThan(
+        testIdsInOrder.indexOf("send-network-fees-value"),
+      );
+
+      await user.press(screen.getByTestId("send-quick-actions-half"));
+      await flushTimers();
+
+      const halfBalance = accountEthereum.spendableBalance.dividedBy(2).integerValue();
+      expect(screen.getByTestId("family-footer-row")).toHaveTextContent(
+        `${accountEthereum.id} ${halfBalance.toFixed()}`,
+      );
+    });
+
+    it("should add no row for a family without one", async () => {
+      const { user } = renderForAccount(accountEthereum);
+      await driveToAmount(user, { recipient: VALID_ETHEREUM_RECIPIENT });
+
+      expect(screen.getByTestId("send-network-fees-value")).toBeVisible();
+      expect(screen.queryByTestId("family-footer-row")).not.toBeOnTheScreen();
+    });
   });
 
   describe("Stellar (memo flow)", () => {
