@@ -7,6 +7,7 @@ import type { AleoAccount, AleoUnspentRecord } from "@ledgerhq/live-common/famil
 import { render, screen } from "@tests/test-renderer";
 import { QuickAmountSelector } from "../QuickAmountSelector";
 import { ALEO_ACCOUNT_1 } from "../../__mocks__/account.mock";
+import { makeRecord } from "../../__mocks__/record.mock";
 import { urls } from "~/utils/urls";
 import CurrencyUnitValue from "~/components/CurrencyUnitValue";
 
@@ -33,10 +34,6 @@ jest.mock("~/logic/keyboardVisible", () => ({
 }));
 
 const mockUpdateTransaction = jest.fn();
-
-function makeRecord(microcredits: string): AleoUnspentRecord {
-  return { microcredits } as unknown as AleoUnspentRecord;
-}
 
 function makeAccount(records: AleoUnspentRecord[]): AleoAccount {
   return {

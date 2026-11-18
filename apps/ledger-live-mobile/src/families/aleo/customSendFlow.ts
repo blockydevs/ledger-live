@@ -5,6 +5,7 @@ import type {
   CustomSendFlowScreen,
 } from "~/screens/SendFunds/utils/customSendFlow";
 import { BalanceSelectionScreen, BalanceSelectionHeaderTitle } from "./Send/BalanceSelectionScreen";
+import { BalanceTypeSync } from "./Send/BalanceTypeSync";
 import { MandatoryPrivateSyncScreen } from "./Send/MandatoryPrivateSyncScreen";
 import { QuickAmountSelector } from "./Send/QuickAmountSelector";
 import { SendAmountFooterRow } from "./Send/SendAmountFooterRow";
@@ -32,6 +33,7 @@ const aleoSendFlow = {
   SummaryToSection,
   AfterAmountInput: QuickAmountSelector,
   AmountFooterRow: SendAmountFooterRow,
+  BalanceTypeSync,
   hideSummaryTotalSection: true,
   showAllDigits: true,
   buildSendEntrypoint: ({ account, parentAccount, recipient, skipRecipientStep }) => ({

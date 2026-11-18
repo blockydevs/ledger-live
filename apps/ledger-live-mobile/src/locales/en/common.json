@@ -12031,6 +12031,14 @@
         "lastUpdate": "Last update: {{label}}",
         "recently": "recently"
       },
+      "balanceTypeSync": {
+        "title": "Refreshing your private balance",
+        "progress": "{{percentage}}%",
+        "errorTitle": "Private sync failed",
+        "errorDescription": "Something went wrong, please try again",
+        "recordLimitTitle": "You can send up to {{amount}}",
+        "recordLimitDescription": "Your balance is split across several records, and one transaction can use a maximum of {{maxRecords}}. To send more, make multiple transactions."
+      },
       "mandatoryPrivateSync": {
         "title": "Syncing your private balance ({{percentage}}%)",
         "desc": "Please wait",
