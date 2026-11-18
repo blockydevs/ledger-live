@@ -27,6 +27,9 @@ import {
 } from "./hw/getViewKey/index";
 import {
   getClaimableStakingBalance,
+  getMaxPrivateRecordsForAccount,
+  getRecordLimitedAmount,
+  getSendingAccount,
   getStrategyConfig,
   getUnbondingDisplayState,
   getUnstakingBalance,
@@ -586,6 +589,54 @@ export const useAleoPrivateSync = ({
 
   return { isSyncing, progress, error, start, stop };
 };
+
+type AleoRecordLimit = Readonly<{
+  account: AleoAccount | AleoTokenAccount;
+  amount: BigNumber;
+  maxRecords: number;
+}>;
+
+export function useAleoSendRecordLimit({
+  subAccountId,
+  onComplete,
+}: Readonly<{
+  subAccountId: string | null | undefined;
+  onComplete: () => void;
+}>): Readonly<{
+  recordLimit: AleoRecordLimit | null;
+  onAccountUpdated: (syncedAccount: Account) => void;
+}> {
+  const [recordLimit, setRecordLimit] = useState<AleoRecordLimit | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const onAccountUpdated = useCallback(
+    (syncedAccount: Account) => {
+      if (!isMountedRef.current) return;
+      if (!isAleoAccount(syncedAccount) || !syncedAccount.aleoResources?.provableApi) return;
+      const sendingAccount = getSendingAccount(syncedAccount, subAccountId);
+      const amount = sendingAccount ? getRecordLimitedAmount(sendingAccount) : null;
+      if (sendingAccount && amount) {
+        setRecordLimit({
+          account: sendingAccount,
+          amount,
+          maxRecords: getMaxPrivateRecordsForAccount(sendingAccount),
+        });
+        return;
+      }
+      onComplete();
+    },
+    [subAccountId, onComplete],
+  );
+
+  return { recordLimit, onAccountUpdated };
+}
 
 export interface UseAleoValidatorsResult {
   validators: AleoValidator[];

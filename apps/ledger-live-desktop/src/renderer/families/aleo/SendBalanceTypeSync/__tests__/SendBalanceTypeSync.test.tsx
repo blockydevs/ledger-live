@@ -112,42 +112,12 @@ describe("SendBalanceTypeSync", () => {
     expect(mockOnComplete).not.toHaveBeenCalled();
   });
 
-  it("does not move on when the sync finishes after the flow is closed", () => {
-    const { unmount } = renderSync(privateTransaction);
-
-    unmount();
-    completeSync(withRecords([ONE_ALEO]));
-
-    expect(mockOnComplete).not.toHaveBeenCalled();
-  });
-
   it("moves on once synced when one transaction can use every record", () => {
     renderSync(privateTransaction);
 
     completeSync(withRecords(Array.from({ length: 14 }, () => ONE_ALEO)));
 
     expect(mockOnComplete).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not count zero-value records against the limit", () => {
-    renderSync(privateTransaction);
-
-    completeSync(withRecords([...Array.from({ length: 14 }, () => ONE_ALEO), 0, 0]));
-
-    expect(mockOnComplete).toHaveBeenCalledTimes(1);
-  });
-
-  it("waits for the sync error instead of moving on with the records a scanner reset keeps", () => {
-    const syncedAccount = withRecords([ONE_ALEO]);
-    const resetAccount: AleoAccount = {
-      ...syncedAccount,
-      aleoResources: { ...syncedAccount.aleoResources!, provableApi: null },
-    };
-    renderSync(privateTransaction);
-
-    completeSync(resetAccount);
-
-    expect(mockOnComplete).not.toHaveBeenCalled();
   });
 
   it("warns how much one transaction can send when the records exceed the limit", async () => {

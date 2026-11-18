@@ -11,9 +11,9 @@ import BigNumber from "bignumber.js";
 import type { Account, Operation, OperationType } from "@ledgerhq/types-live";
 import type { CryptoCurrency } from "@domain/entity-currency-crypto";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
-import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
+import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import type { Transaction } from "../../generated/types";
-import type { AleoAccount, AleoUnspentRecord } from "./types";
+import type { AleoAccount, AleoTokenAccount, AleoUnspentRecord } from "./types";
 import { aleoPrivateSyncProgress$ } from "./privateSyncProgress";
 import {
   MANDATORY_SYNC_POLLING_DELAY,
@@ -27,6 +27,7 @@ import {
   useAleoLiveBlockHeight,
   useAleoPrivateSync,
   useAleoQuickAmountSelector,
+  useAleoSendRecordLimit,
   useAleoStakingPosition,
   useAleoUnbondingState,
   useAleoValidators,
@@ -39,6 +40,7 @@ import { getSyncSkipUnderPriority, useAccountSyncState, useBridgeSync } from "..
 import { createTestStore, createWrapper } from "../../__tests__/test-helpers/testUtils";
 import { aleoApi } from "./state-manager/api";
 import { ALEO_ACCOUNT_1, makeAleoAccount } from "./__mocks__/account.mock";
+import { aleoTokenCurrency } from "./__mocks__/currency.mock";
 
 const mockCreateAction = jest.fn();
 const mockUseHook = jest.fn();
@@ -1240,11 +1242,98 @@ describe("useAleoPrivateSync", () => {
   });
 });
 
-describe("useAleoQuickAmountSelector", () => {
-  function makeRecord(microcredits: string): AleoUnspentRecord {
-    return { microcredits } as unknown as AleoUnspentRecord;
-  }
+function makeRecord(microcredits: string): AleoUnspentRecord {
+  return { microcredits } as unknown as AleoUnspentRecord;
+}
 
+describe("useAleoSendRecordLimit", () => {
+  const onComplete = jest.fn();
+
+  const syncedWithRecords = (microcredits: string[]): AleoAccount => {
+    const account = makeAleoAccount(100, true);
+    return {
+      ...account,
+      aleoResources: {
+        ...account.aleoResources!,
+        unspentPrivateRecords: microcredits.map(makeRecord),
+      },
+    };
+  };
+
+  const renderRecordLimit = (subAccountId?: string) =>
+    renderHook(() => useAleoSendRecordLimit({ subAccountId, onComplete }));
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("moves on when one transaction can use every record", () => {
+    const { result } = renderRecordLimit();
+
+    act(() => result.current.onAccountUpdated(syncedWithRecords(["10"])));
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(result.current.recordLimit).toBeNull();
+  });
+
+  it("holds the flow with the amount one transaction can send when the records exceed the limit", () => {
+    const account = syncedWithRecords([...Array.from({ length: 14 }, () => "10"), "5"]);
+    const { result } = renderRecordLimit();
+
+    act(() => result.current.onAccountUpdated(account));
+
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(result.current.recordLimit).toEqual({
+      account,
+      amount: new BigNumber(140),
+      maxRecords: 14,
+    });
+  });
+
+  it("checks the targeted token account against the token limit", () => {
+    const tokenAccount: AleoTokenAccount = {
+      ...(genTokenAccount(0, ALEO_ACCOUNT_1, aleoTokenCurrency) as AleoTokenAccount),
+      unspentPrivateRecords: Array.from({ length: 14 }, () => makeRecord("10")),
+    };
+    const { result } = renderRecordLimit(tokenAccount.id);
+
+    act(() =>
+      result.current.onAccountUpdated({ ...syncedWithRecords([]), subAccounts: [tokenAccount] }),
+    );
+
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(result.current.recordLimit).toEqual({
+      account: tokenAccount,
+      amount: new BigNumber(130),
+      maxRecords: 13,
+    });
+  });
+
+  it("waits for the sync error instead of moving on with the records a scanner reset keeps", () => {
+    const syncedAccount = syncedWithRecords(["10"]);
+    const resetAccount: AleoAccount = {
+      ...syncedAccount,
+      aleoResources: { ...syncedAccount.aleoResources!, provableApi: null },
+    };
+    const { result } = renderRecordLimit();
+
+    act(() => result.current.onAccountUpdated(resetAccount));
+
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("ignores a sync that finishes after the step is left", () => {
+    const { result, unmount } = renderRecordLimit();
+    const { onAccountUpdated } = result.current;
+
+    unmount();
+    onAccountUpdated(syncedWithRecords(["10"]));
+
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+});
+
+describe("useAleoQuickAmountSelector", () => {
   function makeAccountWithRecords(records: AleoUnspentRecord[]): AleoAccount {
     return {
       ...ALEO_ACCOUNT_1,

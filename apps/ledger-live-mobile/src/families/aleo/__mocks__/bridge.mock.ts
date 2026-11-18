@@ -1,6 +1,6 @@
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import BigNumber from "bignumber.js";
-import type { AccountLike, OperationType, SignOperationEvent } from "@ledgerhq/types-live";
+import type { Account, AccountLike, OperationType, SignOperationEvent } from "@ledgerhq/types-live";
 import { ALEO_ACCOUNT_1 } from "./account.mock";
 
 export type MockTransactionStatus = {
@@ -32,6 +32,7 @@ const DEFAULT_TRANSACTION = {
 let transaction: object = DEFAULT_TRANSACTION;
 let operationType: OperationType = "OUT";
 let status: MockTransactionStatus = DEFAULT_TRANSACTION_STATUS;
+let privateSync = new Subject<(account: Account) => Account>();
 
 const signedOperation = () => ({
   signature: "sig",
@@ -65,6 +66,10 @@ const baseImplementations = {
       });
       subscriber.complete();
     }),
+  sync: () => {
+    privateSync = new Subject<(account: Account) => Account>();
+    return privateSync.asObservable();
+  },
 };
 
 export const aleoAccountBridge = {
@@ -76,6 +81,7 @@ export const aleoAccountBridge = {
   getStuckAccountAndOperation: () => null,
   isAccountEmpty: () => false,
   signOperation: jest.fn(baseImplementations.signOperation),
+  sync: jest.fn(baseImplementations.sync),
   broadcast: async ({ signedOperation: signed }: { signedOperation: { operation: unknown } }) =>
     signed.operation,
 };
@@ -110,6 +116,16 @@ export function resetAleoBridgeMock(
     fn.mockReset();
     fn.mockImplementation(implementation as never);
   }
+}
+
+/** Ends the running private sync with the account the scanner returned. */
+export function completePrivateSync(syncedAccount: Account) {
+  privateSync.next(() => syncedAccount);
+  privateSync.complete();
+}
+
+export function failPrivateSync(error: Error) {
+  privateSync.error(error);
 }
 
 /** Overrides the default status for every subsequent `getTransactionStatus`. */
