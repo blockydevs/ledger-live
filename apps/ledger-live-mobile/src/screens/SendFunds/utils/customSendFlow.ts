@@ -47,6 +47,13 @@ export type AmountFooterRowProps = {
   transaction: Transaction;
 };
 
+export type BalanceTypeSyncProps = {
+  account: Account;
+  transaction: Transaction;
+  onComplete: () => void;
+  onClose: () => void;
+};
+
 type InitialScreenNavParams = {
   navigation: SendFundsNavigation;
   account: AccountLike;
@@ -79,6 +86,8 @@ export type CustomSendFlow = {
   AfterAmountInput?: ComponentType<AfterAmountInputProps>;
   /** Extra row rendered on the new send flow's Amount step, right under the network fees. */
   AmountFooterRow?: ComponentType<AmountFooterRowProps>;
+  /** Step after every balance type pick on the new send flow; the flow continues only once `onComplete` is called. */
+  BalanceTypeSync?: ComponentType<BalanceTypeSyncProps>;
   /** Suppresses the generic Amount + Fees "Total" row on the Summary screen (e.g. when the family renders its own inside SendRowsFee). */
   hideSummaryTotalSection?: boolean;
   /** Forces full, unrounded precision on amounts in the send flow instead of the default significant-digits rounding (e.g. the "total available" balance on the Amount screen). */

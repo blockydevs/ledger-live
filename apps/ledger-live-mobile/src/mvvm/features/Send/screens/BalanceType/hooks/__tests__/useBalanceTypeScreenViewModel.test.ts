@@ -5,6 +5,7 @@ import { sendFeatures } from "@ledgerhq/live-common/bridge/descriptor/send/featu
 import type { BalanceTypeOption } from "@ledgerhq/live-common/bridge/descriptor/types";
 import { trackPage } from "@shared/analytics";
 import { ScreenName } from "~/const";
+import { getCustomSendFlow } from "~/screens/SendFunds/utils/customSendFlow";
 import { useSendFlowActions, useSendFlowData } from "../../../../context/SendFlowContext";
 import {
   useBalanceTypeScreenViewModel,
@@ -31,6 +32,7 @@ jest.mock("@features/platform-market-countervalues", () => ({
   ...jest.requireActual("@features/platform-market-countervalues"),
   useCalculateCountervalueCallback: jest.fn(() => (_from: unknown, value: unknown) => value),
 }));
+jest.mock("~/screens/SendFunds/utils/customSendFlow", () => ({ getCustomSendFlow: jest.fn() }));
 jest.mock("../../../../hooks/useSendFlowTrackingProperties", () => ({
   useSendFlowTrackingProperties: jest.fn(() => ({ flow: "send" })),
 }));
@@ -48,6 +50,11 @@ const mockedUseSendFlowData = jest.mocked(useSendFlowData);
 const mockedUseSendFlowActions = jest.mocked(useSendFlowActions);
 const mockedGetBalanceTypeConfig = jest.mocked(sendFeatures.getBalanceTypeConfig);
 const mockedTrackPage = jest.mocked(trackPage);
+const mockedGetCustomSendFlow = jest.mocked(getCustomSendFlow);
+
+function MockBalanceTypeSync() {
+  return null;
+}
 
 const PUBLIC_POOL: BalanceTypeOption = {
   id: "public",
@@ -121,6 +128,7 @@ function getReadyViewModel(result: { current: BalanceTypeScreenViewModel }) {
 describe("useBalanceTypeScreenViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedGetCustomSendFlow.mockReturnValue(null);
     mockedUseNavigation.mockReturnValue({ navigate: mockNavigate } as never);
     mockedUseSendFlowActions.mockReturnValue({
       transaction: { updateTransaction: mockUpdateTransaction, setTransaction: mockSetTransaction },
@@ -238,6 +246,36 @@ describe("useBalanceTypeScreenViewModel", () => {
 
     expect(mockResetRecipient).not.toHaveBeenCalled();
     expect(mockUpdateTransaction).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith(ScreenName.SendFlowRecipient);
+  });
+
+  it.each([
+    ["no selected pool", null],
+    ["the same pool selected", "private"],
+  ])(
+    "GIVEN a family with a balance type sync and %s WHEN a pool is selected THEN the sync step opens",
+    (_, selectedPool) => {
+      mockedGetCustomSendFlow.mockReturnValue({
+        screens: [],
+        BalanceTypeSync: MockBalanceTypeSync,
+      });
+      mockFlowState({ transaction: { id: "tx1", pool: selectedPool ?? undefined } });
+
+      const { result } = renderViewModel();
+      act(() => getReadyViewModel(result).onSelect("private"));
+
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledWith(ScreenName.SendFlowBalanceTypeSync);
+    },
+  );
+
+  it("GIVEN a family with custom send screens but no balance type sync WHEN a pool is selected THEN the recipient step opens", () => {
+    mockedGetCustomSendFlow.mockReturnValue({ screens: [] });
+
+    const { result } = renderViewModel();
+    act(() => getReadyViewModel(result).onSelect("private"));
+
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith(ScreenName.SendFlowRecipient);
   });
 
