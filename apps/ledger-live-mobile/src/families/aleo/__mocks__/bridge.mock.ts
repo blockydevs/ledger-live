@@ -34,7 +34,7 @@ let operationType: OperationType = "OUT";
 let status: MockTransactionStatus = DEFAULT_TRANSACTION_STATUS;
 let privateSync = new Subject<(account: Account) => Account>();
 
-const signedOperation = () => ({
+export const signedOperation = () => ({
   signature: "sig",
   operation: {
     id: "op-1",
