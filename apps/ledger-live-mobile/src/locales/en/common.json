@@ -379,6 +379,10 @@
       "title": "Already staking with {{bondedValidator}}. Unstake before changing validator.",
       "description": "Aleo allows one validator per account. Unstake from {{bondedValidator}} before staking elsewhere."
     },
+    "AleoAmountTooLargeForTransaction": {
+      "title": "Amount too large for one transaction",
+      "description": "Your private records can't cover this amount in a single transaction. Try a smaller amount."
+    },
     "AleoBondAmountTooLow": {
       "title": "You must stake at least {{minAmount}} at a time.",
       "description": "The minimum staking amount is {{minAmount}}."
@@ -387,6 +391,14 @@
       "title": "This validator is not accepting new delegators.",
       "description": "This validator is not accepting new delegators. Choose an open validator to continue."
     },
+    "AleoFeeRecordInsufficientBalance": {
+      "title": "No private record can cover the network fee.",
+      "description": "Select a different record for the transfer amount or top up your balance with additional funds."
+    },
+    "AleoFeeRecordRequired": {
+      "title": "Another private record is required to cover the network fee.",
+      "description": "Top up your balance if needed. One private record is used for the transfer amount, and you must have another record that can cover the network fee."
+    },
     "AleoNoClaimableUnbondedFunds": {
       "title": "No unbonded ALEO to claim yet",
       "description": "Unbonded ALEO becomes claimable once its unbonding period has elapsed. Come back once it has."
@@ -394,6 +406,10 @@
     "AleoStakeAmountTooLow": {
       "title": "Staking requires a total of at least {{minAmount}}.",
       "description": "You must have at least {{minAmount}} staked in total."
+    },
+    "AleoTwoRecordsRequired": {
+      "title": "Private send requires at least two records.",
+      "description": "You need one record for the transfer amount and another one to cover the network fee."
     },
     "AleoUnbondingValidator": {
       "title": "This validator is unbonding.",
