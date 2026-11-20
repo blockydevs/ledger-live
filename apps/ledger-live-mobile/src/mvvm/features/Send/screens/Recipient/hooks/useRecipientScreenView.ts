@@ -30,6 +30,7 @@ import { useSendFlowTracking } from "../../../context/SendFlowTrackingContext";
 import { getRecipientResolution } from "../../../utils/contactTracking";
 import { getActiveWarningsTrackingProperties } from "../../../utils/tracking";
 import { getMessageIds } from "../../../utils/messageTracking";
+import { getAccountSelfTransferTarget } from "../../../utils/selfTransferTarget";
 import { useDoNotAskAgainSkipMemo } from "../../../hooks/useDoNotAskAgainSkipMemo";
 import { useContactsFeatureIntroductionViewModel } from "./useContactsFeatureIntroductionViewModel";
 import { useAddressValidation } from "./useAddressValidation";
@@ -95,6 +96,11 @@ export function useRecipientScreenView({
     config,
   );
   const sendFlowTrackingProperties = useSendFlowTrackingProperties();
+
+  const selfTransferTarget = useMemo(
+    () => getAccountSelfTransferTarget(account, transaction, parentAccount),
+    [account, transaction, parentAccount],
+  );
 
   const { result, isLoading } = useAddressValidation({
     searchValue: recipientSearch.value,
@@ -389,6 +395,7 @@ export function useRecipientScreenView({
     searchValue: recipientSearch.value,
     isLoading: !shouldHideRegularSearchState && isLoading,
     result,
+    selfTransferTarget,
     mainAccount,
     hasAddressBook,
     addressBookFamilyName: mainAccount.currency.name,

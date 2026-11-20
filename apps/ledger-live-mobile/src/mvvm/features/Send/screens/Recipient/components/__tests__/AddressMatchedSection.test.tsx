@@ -1,3 +1,4 @@
+import type { BalanceTypeSelfTransferTarget } from "@ledgerhq/live-common/bridge/descriptor/types";
 import type { AddressSearchResult } from "@ledgerhq/live-common/flows/send/recipient/types";
 import React from "react";
 import { fireEvent, render as renderWithoutI18n, screen } from "@testing-library/react-native";
@@ -90,7 +91,7 @@ jest.mock("@ledgerhq/lumen-ui-rnative", () => {
     ListItemLeading: Container,
     ListItemTitle: Label,
     ListItemTrailing: Container,
-    Spot: () => null,
+    Spot: ({ icon: Icon }: { icon?: React.ComponentType }) => (Icon ? <Icon /> : null),
     Subheader: Container,
     SubheaderRow: Container,
     SubheaderTitle: Label,
@@ -99,11 +100,18 @@ jest.mock("@ledgerhq/lumen-ui-rnative", () => {
   };
 });
 
-jest.mock("@ledgerhq/lumen-ui-rnative/symbols", () => ({
-  ChevronRight: () => null,
-  LedgerLogo: () => null,
-  Wallet: () => null,
-}));
+jest.mock("@ledgerhq/lumen-ui-rnative/symbols", () => {
+  const RN = jest.requireActual<typeof import("react-native")>("react-native");
+  const Icon = (name: string) => () => <RN.View testID={`icon-${name}`} />;
+
+  return {
+    ChevronRight: () => null,
+    LedgerLogo: () => null,
+    UserCheck: Icon("UserCheck"),
+    UserLock: Icon("UserLock"),
+    Wallet: Icon("Wallet"),
+  };
+});
 
 const address = "0x95f98055ag77xe7csuz15e36";
 
@@ -132,8 +140,10 @@ function AddressMatchedSectionContainer({
   addressBookFamilyName = "Ethereum",
   onSelect = jest.fn(),
   onAddContact = jest.fn(),
+  selfTransferTarget,
 }: Readonly<{
   result: AddressSearchResult;
+  selfTransferTarget?: BalanceTypeSelfTransferTarget;
   isContactsFeatureEnabled?: boolean;
   hasAddressBook?: boolean;
   addressBookFamilyName?: string;
@@ -142,6 +152,7 @@ function AddressMatchedSectionContainer({
 }>) {
   const viewModel = useAddressMatchedSectionViewModel({
     searchResult: result,
+    selfTransferTarget,
     searchValue: address,
     onSelect,
     isAddressComplete: true,
@@ -257,5 +268,58 @@ describe("AddressMatchedSection", () => {
       screen.getByText('send.newSendFlow.addressBookUnsupported.description {"family":"Solana"}'),
     ).toBeVisible();
     expect(screen.getByText("common.gotit")).toBeVisible();
+  });
+
+  describe("with a self-transfer target", () => {
+    const toPrivateTarget: BalanceTypeSelfTransferTarget = {
+      address: address.toUpperCase(),
+      translationKey: "recipient.selfTransfer.toPrivate",
+      isDestinationPublic: false,
+    };
+    const poolLabel = "send.newSendFlow.recipient.selfTransfer.toPrivate.label";
+
+    it("names the recipient card after the pool when the address is the target", () => {
+      render(
+        <AddressMatchedSectionContainer
+          result={{ ...searchResult, resolvedAddress: address }}
+          selfTransferTarget={toPrivateTarget}
+          isContactsFeatureEnabled
+        />,
+      );
+
+      expect(screen.getByText(poolLabel)).toBeVisible();
+    });
+
+    it.each([
+      [false, "icon-UserLock"],
+      [true, "icon-UserCheck"],
+    ])(
+      "shows the pool icon on the recipient card when the destination is public: %s",
+      (isDestinationPublic, iconTestId) => {
+        render(
+          <AddressMatchedSectionContainer
+            result={{ ...searchResult, resolvedAddress: address }}
+            selfTransferTarget={{ ...toPrivateTarget, isDestinationPublic }}
+            isContactsFeatureEnabled
+          />,
+        );
+
+        expect(screen.getByTestId(iconTestId)).toBeOnTheScreen();
+        expect(screen.queryByTestId("icon-Wallet")).not.toBeOnTheScreen();
+      },
+    );
+
+    it("keeps the address on the recipient card for another address", () => {
+      render(
+        <AddressMatchedSectionContainer
+          result={{ ...searchResult, resolvedAddress: address }}
+          selfTransferTarget={{ ...toPrivateTarget, address: "0xother" }}
+          isContactsFeatureEnabled
+        />,
+      );
+
+      expect(screen.getByText(address)).toBeVisible();
+      expect(screen.getByTestId("icon-Wallet")).toBeOnTheScreen();
+    });
   });
 });

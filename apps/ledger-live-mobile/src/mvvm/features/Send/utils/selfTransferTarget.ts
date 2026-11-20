@@ -13,6 +13,13 @@ export function getAccountSelfTransferTarget(
   return balanceTypeConfig?.getSelfTransferTarget({ account, parentAccount, transaction }) ?? null;
 }
 
+export function matchSelfTransferTarget(
+  target: BalanceTypeSelfTransferTarget | null,
+  address: string,
+): BalanceTypeSelfTransferTarget | null {
+  return target?.address.toLowerCase() === address.toLowerCase() ? target : null;
+}
+
 export function applyRecipientSelfTransferState<T extends object>({
   account,
   transaction,
@@ -32,9 +39,7 @@ export function applyRecipientSelfTransferState<T extends object>({
     parentAccount,
     transaction,
   });
-  const isSelfTransfer =
-    selfTransferTarget !== null &&
-    selfTransferTarget.address.toLowerCase() === recipient.toLowerCase();
+  const isSelfTransfer = matchSelfTransferTarget(selfTransferTarget, recipient) !== null;
 
   return {
     ...transaction,

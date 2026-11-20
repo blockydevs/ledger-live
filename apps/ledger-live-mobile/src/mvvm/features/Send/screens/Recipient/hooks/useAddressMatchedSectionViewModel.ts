@@ -1,3 +1,4 @@
+import type { BalanceTypeSelfTransferTarget } from "@ledgerhq/live-common/bridge/descriptor/types";
 import { getRecipientMatchPresentation } from "@ledgerhq/live-common/flows/send/recipient/utils/getRecipientMatchPresentation";
 import type {
   AddressSearchResult,
@@ -10,10 +11,12 @@ import { formatAddress } from "@ledgerhq/live-common/utils/addressUtils";
 import { useFeature } from "@features/platform-feature-flags";
 import { useTranslation } from "~/context/Locale";
 import { useContactDisplayName } from "@features/platform-contacts";
+import { matchSelfTransferTarget } from "../../../utils/selfTransferTarget";
 import { useFormatRelativeDate } from "./useFormatRelativeDate";
 
 type UseAddressMatchedSectionViewModelProps = Readonly<{
   searchResult: AddressSearchResult;
+  selfTransferTarget?: BalanceTypeSelfTransferTarget | null;
   searchValue: string;
   onSelect: (address: string, ensName?: string) => void;
   isSanctioned?: boolean;
@@ -52,6 +55,7 @@ type RecipientCardSuggestion = Readonly<{
   recipient: string;
   description?: string;
   contact?: MatchedContact;
+  selfTransferTarget?: BalanceTypeSelfTransferTarget;
   isReady: boolean;
   showActions: boolean;
   hasAddressBook: boolean;
@@ -79,6 +83,7 @@ export type AddressMatchedSectionViewModel = Readonly<{
 
 export function useAddressMatchedSectionViewModel({
   searchResult,
+  selfTransferTarget = null,
   searchValue,
   onSelect,
   isSanctioned = false,
@@ -98,6 +103,10 @@ export function useAddressMatchedSectionViewModel({
     useFeature("newSendFlowFirstInteractionBanner")?.enabled ?? false;
   const addressMatchedLabel = t("send.newSendFlow.addressMatched");
   const recipientAddress = searchResult.resolvedAddress ?? searchValue;
+  const matchedSelfTransferTarget = matchSelfTransferTarget(selfTransferTarget, recipientAddress);
+  const selfTransferLabel = matchedSelfTransferTarget
+    ? t(`send.newSendFlow.${matchedSelfTransferTarget.translationKey}.label`)
+    : undefined;
   const shouldShowErrorRecipientCard =
     isContactsFeatureEnabled && isAddressComplete && (hasBridgeError || isSanctioned);
 
@@ -179,11 +188,12 @@ export function useAddressMatchedSectionViewModel({
         addressMatchedLabel,
         suggestion: {
           kind: "recipient-card",
-          recipient: presentation.ensName ?? presentation.recipientAddress,
+          recipient: selfTransferLabel ?? presentation.ensName ?? presentation.recipientAddress,
           description: presentation.ensName
             ? presentation.recipientAddress
             : getAlreadyUsedDescription(presentation.matchedRecentAddress?.lastUsedAt),
           contact: presentation.matchedContact,
+          selfTransferTarget: matchedSelfTransferTarget ?? undefined,
           isReady: presentation.isReady,
           showActions: !hasBridgeError,
           hasAddressBook,
@@ -244,7 +254,11 @@ export function useAddressMatchedSectionViewModel({
         suggestion: {
           kind: "matched-ledger-accounts",
           address: presentation.address,
-          matchedAccounts: presentation.matchedAccounts,
+          matchedAccounts: presentation.matchedAccounts.map(matchedAccount =>
+            matchSelfTransferTarget(matchedSelfTransferTarget, matchedAccount.account.freshAddress)
+              ? { ...matchedAccount, accountName: selfTransferLabel }
+              : matchedAccount,
+          ),
           matchedRecentAddress: presentation.matchedRecentAddress,
           isDisabled: presentation.isDisabled,
           onSelect: (address: string) =>

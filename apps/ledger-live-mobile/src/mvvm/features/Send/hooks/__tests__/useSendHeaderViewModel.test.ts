@@ -664,4 +664,58 @@ describe("useSendHeaderViewModel", () => {
       expect(mockGoBack).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("recipient on the amount step", () => {
+    const ADDRESS = "0x1234567890abcdef1234567890abcdef12345678";
+
+    const mockAmountStep = (recipient: Record<string, unknown>) => {
+      mockedUseCurrentSendFlowStep.mockReturnValue([
+        SEND_FLOW_STEP.AMOUNT,
+        {
+          id: SEND_FLOW_STEP.AMOUNT,
+          addressInput: true,
+          canGoBack: true,
+          showTitle: true,
+          showHeaderRight: true,
+        },
+      ]);
+      mockedUseSendFlowData.mockReturnValue({
+        uiConfig: { recipientSupportsDomain: true },
+        recipientSearch: mockRecipientSearch,
+        state: {
+          account: {
+            account: mockAccount,
+            parentAccount: null,
+            currency: { ...mockAccount.currency, id: "ethereum" },
+          },
+          transaction: { transaction: { recipient: ADDRESS }, status: {} },
+          recipient,
+        },
+      } as never);
+    };
+
+    it("shows the formatted address when the recipient has no label", () => {
+      mockAmountStep({ address: ADDRESS });
+
+      const { result } = renderHook(() => useSendHeaderViewModel());
+
+      expect(result.current.formattedAddress).toBe("0x123456...12345678");
+    });
+
+    it("shows the label of a self-transfer recipient", () => {
+      mockAmountStep({ address: ADDRESS, displayLabel: "Private balance", isSelfTransfer: true });
+
+      const { result } = renderHook(() => useSendHeaderViewModel());
+
+      expect(result.current.formattedAddress).toBe("Private balance");
+    });
+
+    it("ignores a label set for another address", () => {
+      mockAmountStep({ address: "0xother", displayLabel: "Private balance" });
+
+      const { result } = renderHook(() => useSendHeaderViewModel());
+
+      expect(result.current.formattedAddress).toBe("0x123456...12345678");
+    });
+  });
 });
