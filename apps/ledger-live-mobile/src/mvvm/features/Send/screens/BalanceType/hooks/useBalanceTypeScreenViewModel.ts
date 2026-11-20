@@ -5,13 +5,14 @@ import type { SendFlowState } from "@ledgerhq/live-common/flows/send/types";
 import { sendFeatures } from "@ledgerhq/live-common/bridge/descriptor/send/features";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import { useAccountBridgeOrNull } from "@ledgerhq/live-common/bridge/useAccountBridge";
-import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
+import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
 import { useCalculateCountervalueCallback } from "@features/platform-market-countervalues";
 import { useSelector } from "~/context/hooks";
 import { useLocale } from "~/context/Locale";
 import { ScreenName } from "~/const";
 import { counterValueCurrencySelector, discreetModeSelector } from "~/reducers/settings";
 import { useMaybeAccountUnit } from "LLM/hooks/useAccountUnit";
+import { getCustomSendFlow } from "~/screens/SendFunds/utils/customSendFlow";
 import { useSendFlowActions, useSendFlowData } from "../../../context/SendFlowContext";
 import { useSendFlowTrackingProperties } from "../../../hooks/useSendFlowTrackingProperties";
 import type { SendFlowNavigationProp } from "../../../types";
@@ -55,6 +56,10 @@ export function useBalanceTypeScreenViewModel(): BalanceTypeScreenViewModel {
   const { account, parentAccount } = state.account;
   const { transaction } = state.transaction;
 
+  const mainAccount = account ? getMainAccount(account, parentAccount ?? undefined) : undefined;
+  const family = mainAccount?.currency.family;
+  const hasBalanceTypeSync = Boolean(family && getCustomSendFlow(family)?.BalanceTypeSync);
+
   const bridge = useAccountBridgeOrNull<FlowTransaction>(account, parentAccount);
   const unit = useMaybeAccountUnit(account ?? undefined);
   const trackingProperties = useSendFlowTrackingProperties();
@@ -90,7 +95,9 @@ export function useBalanceTypeScreenViewModel(): BalanceTypeScreenViewModel {
         });
       }
 
-      navigation.navigate(ScreenName.SendFlowRecipient);
+      navigation.navigate(
+        hasBalanceTypeSync ? ScreenName.SendFlowBalanceTypeSync : ScreenName.SendFlowRecipient,
+      );
     },
     [
       account,
@@ -100,6 +107,7 @@ export function useBalanceTypeScreenViewModel(): BalanceTypeScreenViewModel {
       resetRecipient,
       transactionActions,
       navigation,
+      hasBalanceTypeSync,
     ],
   );
 

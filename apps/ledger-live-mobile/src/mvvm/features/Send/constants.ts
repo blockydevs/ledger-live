@@ -8,6 +8,7 @@ import TransparentHeaderNavigationOptions from "~/navigation/TransparentHeaderNa
 // to avoid stacking a native modal over the Gorhom bottom sheet portal
 export const SEND_FLOW_STEP_ORDER: readonly SendFlowStep[] = [
   SEND_FLOW_STEP.BALANCE_TYPE,
+  SEND_FLOW_STEP.BALANCE_TYPE_SYNC,
   SEND_FLOW_STEP.RECIPIENT,
   SEND_FLOW_STEP.AMOUNT,
   SEND_FLOW_STEP.CUSTOM_FEES,
@@ -31,8 +32,12 @@ export const SEND_STEP_CONFIGS: Record<SendFlowStep, SendStepConfig> = {
   [SEND_FLOW_STEP.BALANCE_TYPE_SYNC]: {
     id: SEND_FLOW_STEP.BALANCE_TYPE_SYNC,
     canGoBack: false,
+    screenName: ScreenName.SendFlowBalanceTypeSync,
     showHeaderRight: false,
     showTitle: false,
+    screenOptions: {
+      headerShown: false,
+    },
   },
   [SEND_FLOW_STEP.RECIPIENT]: {
     id: SEND_FLOW_STEP.RECIPIENT,
