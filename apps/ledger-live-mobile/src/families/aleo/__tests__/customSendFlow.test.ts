@@ -1,5 +1,6 @@
 import aleoSendFlow from "../customSendFlow";
 import { SendAmountFooterRow } from "../Send/SendAmountFooterRow";
+import { BalanceTypeSync } from "../Send/BalanceTypeSync";
 import { ScreenName } from "~/const";
 import { ALEO_ACCOUNT_1 } from "../__mocks__/account.mock";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
@@ -21,6 +22,10 @@ describe("Aleo customSendFlow", () => {
 
   it("puts the estimated signing time under the network fees on the Amount step", () => {
     expect(aleoSendFlow.AmountFooterRow).toBe(SendAmountFooterRow);
+  });
+
+  it("syncs the private balance right after the balance type pick", () => {
+    expect(aleoSendFlow.BalanceTypeSync).toBe(BalanceTypeSync);
   });
 
   describe("buildSendEntrypoint", () => {

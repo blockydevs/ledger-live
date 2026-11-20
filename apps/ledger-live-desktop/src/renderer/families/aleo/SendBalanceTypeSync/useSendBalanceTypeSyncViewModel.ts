@@ -1,28 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import BigNumber from "bignumber.js";
-import type { Account } from "@ledgerhq/types-live";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/currencies/index";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
-import {
-  getMaxPrivateRecordsForAccount,
-  isAleoAccount,
-  selectPrivateRecordsForAmount,
-  sumPrivateRecords,
-} from "@ledgerhq/live-common/families/aleo/utils";
-import type {
-  AleoAccount,
-  AleoTokenAccount,
-  Transaction,
-} from "@ledgerhq/live-common/families/aleo/types";
+import { useAleoSendRecordLimit } from "@ledgerhq/live-common/families/aleo/react";
+import type { AleoAccount, Transaction } from "@ledgerhq/live-common/families/aleo/types";
 import { useSelector } from "LLD/hooks/redux";
 import { discreetModeSelector, localeSelector } from "~/renderer/reducers/settings";
 import { useAleoPrivateSync } from "../hooks/useAleoPrivateSync";
-
-type RecordLimit = Readonly<{
-  account: AleoAccount | AleoTokenAccount;
-  amount: BigNumber;
-}>;
 
 export type SendBalanceTypeSyncViewModel =
   | Readonly<{ status: "syncing"; title: string; progressLabel: string }>
@@ -43,32 +26,6 @@ export type SendBalanceTypeSyncViewModel =
       onContinue: () => void;
     }>;
 
-function getSendingAccount(
-  syncedAccount: Account,
-  transaction: Transaction,
-): AleoAccount | AleoTokenAccount | null {
-  const sendingAccount = transaction.subAccountId
-    ? syncedAccount.subAccounts?.find(subAccount => subAccount.id === transaction.subAccountId)
-    : syncedAccount;
-  return sendingAccount && isAleoAccount(sendingAccount) ? sendingAccount : null;
-}
-
-function getRecordLimitedAmount(account: AleoAccount | AleoTokenAccount): BigNumber | null {
-  const unspentRecords =
-    (account.type === "TokenAccount"
-      ? account.unspentPrivateRecords
-      : account.aleoResources?.unspentPrivateRecords) ?? [];
-  const maxRecords = getMaxPrivateRecordsForAccount(account);
-  const spendableRecordCount = unspentRecords.filter(record =>
-    new BigNumber(record.microcredits).isGreaterThan(0),
-  ).length;
-  if (spendableRecordCount <= maxRecords) return null;
-
-  return sumPrivateRecords(
-    selectPrivateRecordsForAmount({ unspentRecords, targetAmount: null, maxRecords }),
-  );
-}
-
 export function useSendBalanceTypeSyncViewModel({
   account,
   transaction,
@@ -83,30 +40,10 @@ export function useSendBalanceTypeSyncViewModel({
   const { t } = useTranslation();
   const locale = useSelector(localeSelector);
   const discreet = useSelector(discreetModeSelector);
-  const [recordLimit, setRecordLimit] = useState<RecordLimit | null>(null);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  const onAccountUpdated = useCallback(
-    (syncedAccount: Account) => {
-      if (!isMountedRef.current) return;
-      if (!isAleoAccount(syncedAccount) || !syncedAccount.aleoResources?.provableApi) return;
-      const sendingAccount = getSendingAccount(syncedAccount, transaction);
-      const amount = sendingAccount ? getRecordLimitedAmount(sendingAccount) : null;
-      if (sendingAccount && amount) {
-        setRecordLimit({ account: sendingAccount, amount });
-        return;
-      }
-      onComplete();
-    },
-    [transaction, onComplete],
-  );
+  const { recordLimit, onAccountUpdated } = useAleoSendRecordLimit({
+    subAccountId: transaction.subAccountId,
+    onComplete,
+  });
 
   const { progress, error, start } = useAleoPrivateSync({
     account,
@@ -135,7 +72,7 @@ export function useSendBalanceTypeSyncViewModel({
         amount: formatCurrencyUnit(unit, recordLimit.amount, { showCode: true, locale, discreet }),
       }),
       description: t("aleo.send.balanceTypeSync.recordLimitDescription", {
-        maxRecords: getMaxPrivateRecordsForAccount(recordLimit.account),
+        maxRecords: recordLimit.maxRecords,
       }),
       continueLabel: t("common.continue"),
       onContinue: onComplete,
