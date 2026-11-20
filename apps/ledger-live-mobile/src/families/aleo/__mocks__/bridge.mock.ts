@@ -54,7 +54,7 @@ const signedOperation = () => ({
 const baseImplementations = {
   createTransaction: (_account: AccountLike) => transaction,
   updateTransaction: (tx: object, patch: object) => ({ ...tx, ...patch }),
-  getTransactionStatus: async () => status,
+  getTransactionStatus: async (_account: AccountLike, _transaction: unknown) => status,
   signOperation: () =>
     new Observable<SignOperationEvent>(subscriber => {
       subscriber.next({ type: "device-signature-requested" });
