@@ -7,6 +7,12 @@ import {
   AleoFeeRecordRequired,
   AleoTwoRecordsRequired,
 } from "@ledgerhq/live-common/families/aleo/errors";
+import type {
+  AleoAccount,
+  AleoTokenAccount,
+  Transaction,
+} from "@ledgerhq/live-common/families/aleo/types";
+import { getMainAccount } from "@ledgerhq/live-common/account/index";
 import { SEND_FLOW_STEP, type SendFlowStep } from "@ledgerhq/live-common/flows/send/types";
 import type { StepRegistry } from "@ledgerhq/live-common/flows/wizard/types";
 import { act, renderWithReactQuery, screen } from "@tests/test-renderer";
@@ -16,9 +22,14 @@ import { SEND_FLOW_CONFIG } from "LLM/features/Send/constants";
 import { AmountScreen } from "LLM/features/Send/screens/Amount";
 import { BalanceTypeScreen } from "LLM/features/Send/screens/BalanceType";
 import { BalanceTypeSyncScreen } from "LLM/features/Send/screens/BalanceTypeSync";
+import { ConfirmationScreen } from "LLM/features/Send/screens/Confirmation";
 import { RecipientScreen } from "LLM/features/Send/screens/Recipient";
 import { SignatureScreen } from "LLM/features/Send/screens/Signature";
-import { ALEO_ACCOUNT_2, makeAleoAccount } from "../../__mocks__/account.mock";
+import {
+  ALEO_ACCOUNT_2,
+  ALEO_TOKEN_ACCOUNT_1,
+  makeAleoAccount,
+} from "../../__mocks__/account.mock";
 import {
   aleoAccountBridge,
   mockTransactionStatus,
@@ -57,15 +68,27 @@ jest.mock("LLM/features/Contacts/hooks/useContactsAddressValidationAdapter", () 
 jest.mock("LLM/components/DeviceIntentExecutor", () => {
   const actual = jest.requireActual("LLM/components/DeviceIntentExecutor");
   const ReactModule = jest.requireActual("react");
-  const { View } = jest.requireActual("react-native");
+  const { signedOperation } = jest.requireActual("../../__mocks__/bridge.mock");
   return {
     ...actual,
-    DeviceIntentExecutor: () =>
-      ReactModule.createElement(View, { testID: "device-intent-executor" }),
+    DeviceIntentExecutor: ({
+      onIntentJobStateChanged,
+    }: {
+      onIntentJobStateChanged: (jobState: { type: "signed"; signedOperation: unknown }) => void;
+    }) => {
+      const hasSignedRef = ReactModule.useRef(false);
+      ReactModule.useEffect(() => {
+        if (hasSignedRef.current) return;
+        hasSignedRef.current = true;
+        onIntentJobStateChanged({ type: "signed", signedOperation: signedOperation() });
+      }, [onIntentJobStateChanged]);
+      return null;
+    },
   };
 });
 
 const ONE_ALEO = 1_000_000;
+const ONE_USAD = 1_000_000;
 
 const aleoAccount = makeAleoAccount({
   transparentBalance: new BigNumber(5 * ONE_ALEO),
@@ -77,6 +100,15 @@ const aleoAccount = makeAleoAccount({
 const OWN_ADDRESS = aleoAccount.freshAddress;
 const THIRD_PARTY_ADDRESS = ALEO_ACCOUNT_2.freshAddress;
 
+const tokenAccount: AleoTokenAccount = {
+  ...ALEO_TOKEN_ACCOUNT_1,
+  transparentBalance: new BigNumber(5 * ONE_USAD),
+  privateBalance: new BigNumber(3 * ONE_USAD),
+  unspentPrivateRecords: [makeRecord(2 * ONE_USAD), makeRecord(ONE_USAD)],
+};
+const tokenParentAccount: AleoAccount = { ...aleoAccount, subAccounts: [tokenAccount] };
+const tokenSendParams = { account: tokenAccount, parentAccount: tokenParentAccount };
+
 const stepRegistry: StepRegistry<SendFlowStep> = {
   [SEND_FLOW_STEP.BALANCE_TYPE]: BalanceTypeScreen,
   [SEND_FLOW_STEP.BALANCE_TYPE_SYNC]: BalanceTypeSyncScreen,
@@ -86,19 +118,25 @@ const stepRegistry: StepRegistry<SendFlowStep> = {
   [SEND_FLOW_STEP.CUSTOM_FEES]: () => null,
   [SEND_FLOW_STEP.COIN_CONTROL]: () => null,
   [SEND_FLOW_STEP.SIGNATURE]: SignatureScreen,
-  [SEND_FLOW_STEP.CONFIRMATION]: () => null,
+  [SEND_FLOW_STEP.CONFIRMATION]: ConfirmationScreen,
   [SEND_FLOW_STEP.PAY_SUCCESS]: () => null,
 };
 
 const HostStack = createNativeStackNavigator();
 
-function renderSend() {
+function renderSend(
+  initParams: { account: AleoAccount | AleoTokenAccount; parentAccount?: AleoAccount } = {
+    account: aleoAccount,
+  },
+) {
+  const mainAccount = getMainAccount(initParams.account, initParams.parentAccount);
+
   return renderWithReactQuery(
     <HostStack.Navigator screenOptions={{ headerShown: false }}>
       <HostStack.Screen name="SendHost">
         {() => (
           <SendFlowOrchestrator
-            initParams={{ account: aleoAccount }}
+            initParams={initParams}
             onClose={() => {}}
             stepRegistry={stepRegistry}
             flowConfig={SEND_FLOW_CONFIG}
@@ -109,7 +147,7 @@ function renderSend() {
     {
       overrideInitialState: (state: State) => ({
         ...state,
-        accounts: { ...state.accounts, active: [aleoAccount] },
+        accounts: { ...state.accounts, active: [mainAccount] },
       }),
     },
   );
@@ -117,9 +155,11 @@ function renderSend() {
 
 type User = ReturnType<typeof renderSend>["user"];
 
-async function flushTimers() {
+const MIN_BROADCAST_DURATION_MS = 3000;
+
+async function flushTimers(ms = 600) {
   await act(async () => {
-    await jest.advanceTimersByTimeAsync(600);
+    await jest.advanceTimersByTimeAsync(ms);
   });
 }
 
@@ -128,10 +168,14 @@ async function pickPublic(user: User) {
   await screen.findByPlaceholderText(/^Enter address/);
 }
 
-async function pickPrivate(user: User) {
+async function startPrivateSync(user: User, syncedAccount: AleoAccount) {
   await user.press(await screen.findByText("Private balance"));
   await screen.findByText("Refreshing your private balance");
-  act(() => mockLatestSyncOptions?.onAccountUpdated?.(aleoAccount));
+  act(() => mockLatestSyncOptions?.onAccountUpdated?.(syncedAccount));
+}
+
+async function pickPrivate(user: User, syncedAccount: AleoAccount = aleoAccount) {
+  await startPrivateSync(user, syncedAccount);
   await screen.findByPlaceholderText(/^Enter address/);
 }
 
@@ -155,9 +199,10 @@ async function backToBalanceType(user: User) {
   await screen.findByText("Public balance");
 }
 
-async function reviewHalf(user: User) {
+async function sendHalf(user: User) {
   await user.press(await screen.findByText("50%"));
   await user.press(screen.getByText("Review"));
+  await flushTimers(MIN_BROADCAST_DURATION_MS);
 }
 
 function lastCheckedTransaction() {
@@ -171,70 +216,70 @@ describe("Aleo new send flow (integration)", () => {
   });
 
   describe("native send modes", () => {
-    it("should reach signing with a public transfer to a third party", async () => {
+    it("should complete a public transfer to a third party", async () => {
       const { user } = renderSend();
 
       await pickPublic(user);
       await sendTo(user, THIRD_PARTY_ADDRESS);
-      await reviewHalf(user);
+      await sendHalf(user);
 
-      expect(await screen.findByTestId("device-intent-executor")).toBeOnTheScreen();
+      expect(await screen.findByText("Transaction signed")).toBeOnTheScreen();
       expect(lastCheckedTransaction()).toMatchObject({
         mode: "transfer_public",
         recipient: THIRD_PARTY_ADDRESS,
       });
     });
 
-    it("should reach signing with a private transfer to a third party", async () => {
+    it("should complete a private transfer to a third party", async () => {
       const { user } = renderSend();
 
       await pickPrivate(user);
       await sendTo(user, THIRD_PARTY_ADDRESS);
-      await reviewHalf(user);
+      await sendHalf(user);
 
-      expect(await screen.findByTestId("device-intent-executor")).toBeOnTheScreen();
+      expect(await screen.findByText("Transaction signed")).toBeOnTheScreen();
       expect(lastCheckedTransaction()).toMatchObject({
         mode: "transfer_private",
         recipient: THIRD_PARTY_ADDRESS,
       });
     });
 
-    it("should reach signing with a public to private conversion from the self transfer row", async () => {
+    it("should complete a public to private conversion from the self transfer row", async () => {
       const { user } = renderSend();
 
       await pickPublic(user);
       await user.press(await screen.findByText("Send to private balance"));
-      await reviewHalf(user);
+      await sendHalf(user);
 
-      expect(await screen.findByTestId("device-intent-executor")).toBeOnTheScreen();
+      expect(await screen.findByText("Transaction signed")).toBeOnTheScreen();
       expect(lastCheckedTransaction()).toMatchObject({
         mode: "convert_public_to_private",
         recipient: OWN_ADDRESS,
       });
     });
 
-    it("should reach signing with a public to private conversion from a typed own address", async () => {
+    it("should complete a public to private conversion from a typed own address", async () => {
       const { user } = renderSend();
 
       await pickPublic(user);
       await sendTo(user, OWN_ADDRESS);
-      await reviewHalf(user);
+      await sendHalf(user);
 
-      expect(await screen.findByTestId("device-intent-executor")).toBeOnTheScreen();
+      expect(await screen.findByText("Transaction signed")).toBeOnTheScreen();
       expect(lastCheckedTransaction()).toMatchObject({
         mode: "convert_public_to_private",
         recipient: OWN_ADDRESS,
       });
     });
 
-    it("should reach signing with a private to public conversion from the self transfer row", async () => {
+    it("should complete a private to public conversion from the self transfer row", async () => {
       const { user } = renderSend();
 
       await pickPrivate(user);
       await user.press(await screen.findByText("Send to public balance"));
-      await reviewHalf(user);
+      await sendHalf(user);
 
-      expect(await screen.findByTestId("device-intent-executor")).toBeOnTheScreen();
+      expect(await screen.findByText("Transaction signed")).toBeOnTheScreen();
       expect(lastCheckedTransaction()).toMatchObject({
         mode: "convert_private_to_public",
         recipient: OWN_ADDRESS,
@@ -328,6 +373,83 @@ describe("Aleo new send flow (integration)", () => {
         mode: "convert_public_to_private",
         recipient: OWN_ADDRESS,
       });
+    });
+  });
+
+  describe("token account", () => {
+    it("should offer the token's own public and private balances", async () => {
+      renderSend(tokenSendParams);
+
+      expect(await screen.findByText("5 USAD")).toBeVisible();
+      expect(screen.getByText("3 USAD")).toBeVisible();
+    });
+
+    it.each<{
+      name: string;
+      pickBalance: (user: User) => Promise<void>;
+      pickRecipient: (user: User) => Promise<void>;
+      mode: Transaction["mode"];
+      recipient: string;
+    }>([
+      {
+        name: "a public token transfer to a third party",
+        pickBalance: pickPublic,
+        pickRecipient: user => sendTo(user, THIRD_PARTY_ADDRESS),
+        mode: "transfer_public",
+        recipient: THIRD_PARTY_ADDRESS,
+      },
+      {
+        name: "a private token transfer to a third party",
+        pickBalance: user => pickPrivate(user, tokenParentAccount),
+        pickRecipient: user => sendTo(user, THIRD_PARTY_ADDRESS),
+        mode: "transfer_private",
+        recipient: THIRD_PARTY_ADDRESS,
+      },
+      {
+        name: "a public to private token conversion",
+        pickBalance: pickPublic,
+        pickRecipient: async user => user.press(await screen.findByText("Send to private balance")),
+        mode: "convert_token_public_to_private",
+        recipient: OWN_ADDRESS,
+      },
+      {
+        name: "a private to public token conversion",
+        pickBalance: user => pickPrivate(user, tokenParentAccount),
+        pickRecipient: async user => user.press(await screen.findByText("Send to public balance")),
+        mode: "convert_token_private_to_public",
+        recipient: OWN_ADDRESS,
+      },
+    ])("should complete $name", async ({ pickBalance, pickRecipient, mode, recipient }) => {
+      const { user } = renderSend(tokenSendParams);
+
+      await pickBalance(user);
+      await pickRecipient(user);
+      await sendHalf(user);
+
+      expect(await screen.findByText("Transaction signed")).toBeOnTheScreen();
+      expect(lastCheckedTransaction()).toMatchObject({
+        mode,
+        subAccountId: tokenAccount.id,
+        recipient,
+      });
+    });
+
+    it("should cap a private token send at its 13 largest records, in the token ticker", async () => {
+      const tokenWithFourteenRecords: AleoTokenAccount = {
+        ...tokenAccount,
+        unspentPrivateRecords: Array.from({ length: 14 }, (_, index) =>
+          makeRecord((index + 1) * ONE_USAD),
+        ),
+      };
+      const { user } = renderSend(tokenSendParams);
+
+      await startPrivateSync(user, {
+        ...tokenParentAccount,
+        subAccounts: [tokenWithFourteenRecords],
+      });
+
+      expect(await screen.findByText("You can send up to 104 USAD")).toBeVisible();
+      expect(screen.getByText(/one transaction can use a maximum of 13\./)).toBeVisible();
     });
   });
 });

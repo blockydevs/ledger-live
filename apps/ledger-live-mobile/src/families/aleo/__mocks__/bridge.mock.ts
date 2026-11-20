@@ -33,7 +33,7 @@ let transaction: object = DEFAULT_TRANSACTION;
 let operationType: OperationType = "OUT";
 let status: MockTransactionStatus = DEFAULT_TRANSACTION_STATUS;
 
-const signedOperation = () => ({
+export const signedOperation = () => ({
   signature: "sig",
   operation: {
     id: "op-1",
