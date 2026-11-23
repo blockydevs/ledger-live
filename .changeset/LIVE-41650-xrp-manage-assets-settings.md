@@ -5,4 +5,4 @@
 "live-mobile": minor
 ---
 
-Add an optional Manage assets item to the account settings, and open XRP Manage assets from it on LWD
+Add an optional Manage assets item to the account settings, and open XRP Manage assets from it on LWD and LWM

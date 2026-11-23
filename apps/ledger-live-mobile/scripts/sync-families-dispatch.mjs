@@ -36,6 +36,7 @@ const targets = [
   "AccountDetailBalanceSummary",
   "SubAccountList",
   "AddAssetAction",
+  "ManageAssetsAction",
   "Confirmation",
   "ReceiveConfirmationPostAlert",
   "ReceiveConfirmationTokenAlert",
