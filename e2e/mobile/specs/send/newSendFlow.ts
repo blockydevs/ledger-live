@@ -5,7 +5,6 @@ import { setTeamOwner } from "@e2e/helpers/allure/allure-helper";
 import { declareBroadcastAccounts } from "@e2e/helpers/exclusiveLock";
 import { beforeAllFunction, SendTestOptions } from "@e2e/specs/send/send";
 
-/** Signs on the device, then checks the broadcast operation from the confirmation screen. */
 async function signAndCheckOperation(transaction: TransactionType, accountLabel: string) {
   await app.newSend.waitForSignature();
   await app.speculos.signSendTransaction(transaction);
@@ -104,10 +103,6 @@ export function runNewSendFlowTest(
   });
 }
 
-/**
- * New send flow for a coin with a balance type step (e.g. Aleo public or private balance): the
- * balance is picked first, then the recipient and the amount as in `runNewSendFlowTest`.
- */
 export function runNewSendFlowBalanceTypeTest(
   transaction: TransactionType,
   balanceTypeOptionId: string,

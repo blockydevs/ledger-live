@@ -6,6 +6,15 @@ import type { TokenAccount } from "@ledgerhq/types-live";
 import { NavigatorName, ScreenName } from "~/const";
 import { useOpenSendFlow } from "../useOpenSendFlow";
 
+const usdt = {
+  type: "TokenCurrency",
+  id: "ethereum/erc20/usd_tether__erc20_",
+  parentCurrencyId: "ethereum",
+  tokenType: "erc20",
+  ticker: "USDT",
+  units: [{ name: "Tether USD", code: "USDT", magnitude: 6 }],
+} as unknown as TokenCurrency;
+
 const mockNavigate = jest.fn();
 const mockOpenDrawer = jest.fn();
 const mockGetCustomSendFlow = jest.fn();
@@ -333,14 +342,6 @@ describe("useOpenSendFlow", () => {
 
   it("opens the new send flow for a token account selected without its parent when the store has the parent", () => {
     const currency = getCryptoCurrencyById("ethereum");
-    const usdt = {
-      type: "TokenCurrency",
-      id: "ethereum/erc20/usd_tether__erc20_",
-      parentCurrencyId: currency.id,
-      tokenType: "erc20",
-      ticker: "USDT",
-      units: [{ name: "Tether USD", code: "USDT", magnitude: 6 }],
-    } as unknown as TokenCurrency;
     const parentAccount = genAccount("token-parent-in-store", { currency });
     const tokenAccount = genTokenAccount(0, parentAccount, usdt);
     const { result } = renderHook(
@@ -374,6 +375,44 @@ describe("useOpenSendFlow", () => {
         fromMAD: true,
         source: "Asset Detail",
       },
+    });
+  });
+
+  it("prefills the legacy recipient for a token account selected without its parent when the store has the parent", async () => {
+    const currency = getCryptoCurrencyById("ethereum");
+    const parentAccount = genAccount("legacy-token-parent-in-store", { currency });
+    const tokenAccount = genTokenAccount(0, parentAccount, usdt);
+    const recipient = "0x1ad23b2cf8d2e0591ea417eb82f7cd9746c53034";
+    const { result } = renderHook(
+      () =>
+        useOpenSendFlow({
+          currency,
+          recipient,
+          sourceScreenName: "Contact Detail",
+        }),
+      {
+        overrideInitialState: state => ({
+          ...state,
+          accounts: { ...state.accounts, active: [parentAccount] },
+        }),
+      },
+    );
+
+    act(() => result.current.handleOpenSendFlow());
+    const onAccountSelected = mockOpenDrawer.mock.calls[0][0].onAccountSelected;
+    await act(async () => {
+      onAccountSelected(tokenAccount);
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.SendFunds, {
+        screen: ScreenName.SendSelectRecipient,
+        params: expect.objectContaining({
+          accountId: tokenAccount.id,
+          parentId: parentAccount.id,
+          transaction: expect.objectContaining({ recipient, subAccountId: tokenAccount.id }),
+        }),
+      });
     });
   });
 
