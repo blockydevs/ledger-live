@@ -38,6 +38,18 @@ describe("AccountSettingsSheet (Native)", () => {
     expect(props.onViewAdvancedLogs).toHaveBeenCalledTimes(1);
   });
 
+  it("forwards Manage assets", async () => {
+    const onEvent = jest.fn();
+    const onManageAssets = jest.fn();
+    const { user } = renderSheet({ onEvent, onManageAssets });
+
+    await user.press(screen.getByTestId("account-settings-manage-assets"));
+
+    expect(onManageAssets).toHaveBeenCalledTimes(1);
+    expect(onEvent).toHaveBeenCalledTimes(1);
+    expect(onEvent).toHaveBeenCalledWith("manageAssets");
+  });
+
   it("asks for confirmation before removing the account", async () => {
     const { props, user } = renderSheet();
 

@@ -69,6 +69,20 @@ export function importLLDCoinFamily<
   return familyPromiseCache[name] as Promise<LLDCoinFamily<A, T, TS, O>>;
 }
 
+type PromiseWithUseHints<F> = Promise<F> & Partial<Readonly<{ status: string; value: F }>>;
+
+// Reads the use() hint: the family once its import is fulfilled, undefined while pending or rejected.
+export function getLoadedLLDCoinFamily<
+  A extends Account,
+  T extends TransactionCommon,
+  TS extends TransactionStatusCommon,
+  O extends Operation,
+>(name: string): LLDCoinFamily<A, T, TS, O> | undefined {
+  const promise: PromiseWithUseHints<LLDCoinFamily<A, T, TS, O>> = importLLDCoinFamily(name);
+
+  return promise.status === "fulfilled" ? promise.value : undefined;
+}
+
 // Invalidate a cached family so the next call retries (e.g. after a persistent load failure).
 export function clearLLDCoinFamilyCache(name: string): void {
   delete familyPromiseCache[name];

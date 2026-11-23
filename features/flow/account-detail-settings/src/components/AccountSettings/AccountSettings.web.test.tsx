@@ -18,7 +18,10 @@ const account: AccountSettingsAccount = {
 
 function renderSettings(
   overrides: Partial<AccountSettingsAdapter<AccountSettingsAccount>> = {},
-  settingsAccount: AccountSettingsAccount = account,
+  {
+    settingsAccount = account,
+    onManageAssets,
+  }: { settingsAccount?: AccountSettingsAccount; onManageAssets?: () => void } = {},
 ) {
   const adapter: AccountSettingsAdapter<AccountSettingsAccount> = {
     isNameEditDisabled: false,
@@ -36,6 +39,7 @@ function renderSettings(
       adapter={adapter}
       isOpen
       onClose={onClose}
+      onManageAssets={onManageAssets}
       testID="settings"
     />,
     { wrapper: I18nWrapper },
@@ -85,7 +89,7 @@ describe("AccountSettings (Web)", () => {
   });
 
   it("leaves an empty xpub out of the logs", async () => {
-    const { user } = renderSettings({}, { ...account, xpub: "" });
+    const { user } = renderSettings({}, { settingsAccount: { ...account, xpub: "" } });
 
     await user.click(screen.getByTestId("account-settings-advanced-logs"));
 
@@ -97,10 +101,12 @@ describe("AccountSettings (Web)", () => {
     const { user } = renderSettings(
       {},
       {
-        ...account,
-        currency: {
-          ...account.currency,
-          explorerViews: [{ address: "https://explorer.test/address/$address" }],
+        settingsAccount: {
+          ...account,
+          currency: {
+            ...account.currency,
+            explorerViews: [{ address: "https://explorer.test/address/$address" }],
+          },
         },
       },
     );
@@ -136,5 +142,18 @@ describe("AccountSettings (Web)", () => {
     renderSettings();
 
     expect(screen.queryByTestId("account-settings-view-explorer")).toBeNull();
+  });
+
+  it("closes, then opens Manage assets", async () => {
+    const onManageAssets = jest.fn();
+    const { onClose, user } = renderSettings({}, { onManageAssets });
+
+    await user.click(screen.getByTestId("account-settings-manage-assets"));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onManageAssets).toHaveBeenCalledTimes(1);
+    expect(onClose.mock.invocationCallOrder[0]).toBeLessThan(
+      onManageAssets.mock.invocationCallOrder[0],
+    );
   });
 });
