@@ -5,6 +5,17 @@ import { setTeamOwner } from "@e2e/helpers/allure/allure-helper";
 import { declareBroadcastAccounts } from "@e2e/helpers/exclusiveLock";
 import { beforeAllFunction, SendTestOptions } from "@e2e/specs/send/send";
 
+/** Signs on the device, then checks the broadcast operation from the confirmation screen. */
+async function signAndCheckOperation(transaction: TransactionType, accountLabel: string) {
+  await app.newSend.waitForSignature();
+  await app.speculos.signSendTransaction(transaction);
+  await app.newSend.tapViewTransaction();
+  await app.operationDetails.waitForOperationDetails();
+  await app.operationDetails.checkAccount(accountLabel);
+  await app.operationDetails.checkRecipientAddress(transaction.accountToCredit);
+  await app.operationDetails.checkTransactionType("OUT");
+}
+
 export const beforeAllTokenFunction = async (
   transaction: TransactionType,
   options?: SendTestOptions,
@@ -58,13 +69,7 @@ export function runNewSendFlowTokenTest(
         transaction.memoTag,
       );
       await app.newSend.setAmountAndReviewNewFlow(transaction.amount);
-      await app.newSend.waitForSignature();
-      await app.speculos.signSendTransaction(transaction);
-      await app.newSend.tapViewTransaction();
-      await app.operationDetails.waitForOperationDetails();
-      await app.operationDetails.checkAccount(transaction.accountToDebit.currency.name);
-      await app.operationDetails.checkRecipientAddress(transaction.accountToCredit);
-      await app.operationDetails.checkTransactionType("OUT");
+      await signAndCheckOperation(transaction, transaction.accountToDebit.currency.name);
     });
   });
 }
@@ -94,13 +99,43 @@ export function runNewSendFlowTest(
         transaction.memoTag,
       );
       await app.newSend.setAmountAndReviewNewFlow(transaction.amount);
-      await app.newSend.waitForSignature();
-      await app.speculos.signSendTransaction(transaction);
-      await app.newSend.tapViewTransaction();
-      await app.operationDetails.waitForOperationDetails();
-      await app.operationDetails.checkAccount(transaction.accountToDebit.accountName);
-      await app.operationDetails.checkRecipientAddress(transaction.accountToCredit);
-      await app.operationDetails.checkTransactionType("OUT");
+      await signAndCheckOperation(transaction, transaction.accountToDebit.accountName);
+    });
+  });
+}
+
+/**
+ * New send flow for a coin with a balance type step (e.g. Aleo public or private balance): the
+ * balance is picked first, then the recipient and the amount as in `runNewSendFlowTest`.
+ */
+export function runNewSendFlowBalanceTypeTest(
+  transaction: TransactionType,
+  balanceTypeOptionId: string,
+  tmsLinks: string[],
+  tags: string[],
+  options?: SendTestOptions,
+) {
+  declareBroadcastAccounts(transaction.accountToDebit);
+  setTeamOwner(coinTeamOwner(transaction.accountToDebit.currency.id), {
+    folder: sendFolder(transaction.accountToDebit),
+    scenario: SendScenario.TRANSACTION,
+  });
+  tmsLinks.forEach(tmsLink => $TmsLink(tmsLink));
+  tags.forEach(tag => $Tag(tag));
+  describe("Send - new flow - balance type", () => {
+    beforeAll(async () => {
+      await beforeAllFunction(transaction, options);
+    });
+
+    it(`[${transaction.accountToDebit.currency.testLabel}] - Send from the ${balanceTypeOptionId} balance`, async () => {
+      await app.send.navigateToSendScreen(transaction.accountToDebit.accountName);
+      await app.newSend.pickBalanceTypeWithoutSync(balanceTypeOptionId);
+      await app.newSend.setRecipientAndContinueNewFlow(
+        transaction.accountToCredit.address,
+        transaction.memoTag,
+      );
+      await app.newSend.setAmountAndReviewNewFlow(transaction.amount);
+      await signAndCheckOperation(transaction, transaction.accountToDebit.accountName);
     });
   });
 }
@@ -192,14 +227,8 @@ export function runNewSendMemoTest(
         transaction.memoTag,
       );
       await app.newSend.setAmountAndReviewNewFlow(transaction.amount);
-      await app.newSend.waitForSignature();
       // Speculos asserts the memo is displayed on the device review screen.
-      await app.speculos.signSendTransaction(transaction);
-      await app.newSend.tapViewTransaction();
-      await app.operationDetails.waitForOperationDetails();
-      await app.operationDetails.checkAccount(transaction.accountToDebit.accountName);
-      await app.operationDetails.checkRecipientAddress(transaction.accountToCredit);
-      await app.operationDetails.checkTransactionType("OUT");
+      await signAndCheckOperation(transaction, transaction.accountToDebit.accountName);
     });
 
     if (broadcastWithoutMemo) {
@@ -210,13 +239,10 @@ export function runNewSendMemoTest(
           noMemoTransaction.memoTag,
         );
         await app.newSend.setAmountAndReviewNewFlow(noMemoTransaction.amount);
-        await app.newSend.waitForSignature();
-        await app.speculos.signSendTransaction(noMemoTransaction);
-        await app.newSend.tapViewTransaction();
-        await app.operationDetails.waitForOperationDetails();
-        await app.operationDetails.checkAccount(noMemoTransaction.accountToDebit.accountName);
-        await app.operationDetails.checkRecipientAddress(noMemoTransaction.accountToCredit);
-        await app.operationDetails.checkTransactionType("OUT");
+        await signAndCheckOperation(
+          noMemoTransaction,
+          noMemoTransaction.accountToDebit.accountName,
+        );
       });
     }
   });

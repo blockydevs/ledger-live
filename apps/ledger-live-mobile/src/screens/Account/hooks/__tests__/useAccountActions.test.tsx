@@ -1,3 +1,6 @@
+import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
+import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
+import type { AccountLike } from "@ledgerhq/types-live";
 import { renderHook, withReadOnlyDisabled } from "@tests/test-renderer";
 import { NavigatorName, ScreenName } from "~/const";
 import { ALEO_ACCOUNT_1 } from "~/families/aleo/__mocks__/account.mock";
@@ -7,6 +10,10 @@ const mockIsNewSendFlowEnabled = jest.fn();
 
 jest.mock("LLM/features/Send/hooks/useNewSendFlowFeature", () => ({
   useNewSendFlowFeature: () => ({ isEnabledForFamily: mockIsNewSendFlowEnabled }),
+}));
+jest.mock("@ledgerhq/live-common/families/tezos/staking", () => ({
+  ...jest.requireActual("@ledgerhq/live-common/families/tezos/staking"),
+  getAccountDelegationSync: () => ({ sendShouldWarnDelegation: true }),
 }));
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual<typeof import("@react-navigation/native")>("@react-navigation/native"),
@@ -33,8 +40,8 @@ jest.mock("LLM/hooks/useStake/useStake", () => ({
   }),
 }));
 
-function renderSendAction() {
-  const { result } = renderHook(() => useAccountActions({ account: ALEO_ACCOUNT_1 }), {
+function renderSendAction(account: AccountLike = ALEO_ACCOUNT_1) {
+  const { result } = renderHook(() => useAccountActions({ account }), {
     overrideInitialState: withReadOnlyDisabled,
   });
   return result.current.mainActions.find(action => action.id === "send");
@@ -60,6 +67,21 @@ describe("useAccountActions", () => {
     expect(renderSendAction()?.navigationParams).toEqual([
       NavigatorName.SendFunds,
       expect.objectContaining({ screen: ScreenName.AleoSendBalanceSelection }),
+    ]);
+  });
+
+  it("GIVEN the new send flow WHEN a delegating Tezos account sends THEN the delegation warning still shows first", () => {
+    mockIsNewSendFlowEnabled.mockReturnValue(true);
+    const tezosAccount = genAccount("account-actions-tezos", {
+      currency: getCryptoCurrencyById("tezos"),
+    });
+
+    const sendAction = renderSendAction(tezosAccount);
+
+    expect(sendAction?.confirmModalProps).toMatchObject({ id: "TezosDelegateSendWarning" });
+    expect(sendAction?.navigationParams).toEqual([
+      NavigatorName.SendFlow,
+      { params: { account: tezosAccount, parentAccount: undefined } },
     ]);
   });
 });

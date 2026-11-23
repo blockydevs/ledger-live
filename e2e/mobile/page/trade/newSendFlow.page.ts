@@ -14,6 +14,7 @@ const trxAmount = (text: string): number => {
 };
 
 export default class NewSendFlowPage {
+  private readonly balanceTypeOption = (optionId: string) => byId(`balance-type-${optionId}`);
   private readonly recipientInput = byId("recipient-input");
   private readonly skipMemoContent = byId("send-skip-memo-content");
   private readonly skipMemoConfirm = byId("send-skip-memo-confirm");
@@ -74,6 +75,12 @@ export default class NewSendFlowPage {
     await app.account.goToAccountByName(parentAccountName);
     await app.account.navigateToTokenInAccount(tokenAccount);
     await app.account.tapSend();
+  }
+
+  @Step("Pick the {{0}} balance, which needs no sync")
+  async pickBalanceTypeWithoutSync(optionId: string) {
+    await this.balanceTypeOption(optionId).tap();
+    await this.recipientInput.waitVisible();
   }
 
   @Step("Fill recipient address and continue: {{{0}}}")

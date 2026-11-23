@@ -32,6 +32,8 @@ import { useOpenStakeDrawer } from "LLM/features/Stake";
 import { useOpenReceiveDrawer } from "LLM/features/Receive";
 import { useModularDrawerController } from "LLM/features/ModularDrawer";
 import { useOpenSwap } from "LLM/features/Swap";
+import { useNewSendFlowFeature } from "LLM/features/Send/hooks/useNewSendFlowFeature";
+import { useOpenSendFlow } from "LLM/features/Send/hooks/useOpenSendFlow";
 
 type useAssetActionsProps = {
   currency?: CryptoCurrency | TokenCurrency;
@@ -116,6 +118,20 @@ export default function useAssetActions({ currency, accounts }: useAssetActionsP
   const { openDrawer } = useModularDrawerController();
 
   const familySendFlow = family ? getCustomSendFlow(family) : null;
+
+  const { isEnabledForFamily } = useNewSendFlowFeature();
+  const shouldOpenNewSendFlow = isEnabledForFamily(family, parentCurrencyId);
+  const { handleOpenSendFlow, openSendFlowForAccount } = useOpenSendFlow({
+    currency,
+    sourceScreenName: route.name,
+  });
+  const handleNewSendFlowPress = useCallback(() => {
+    if (defaultAccount) {
+      openSendFlowForAccount(defaultAccount, parentAccount);
+      return;
+    }
+    handleOpenSendFlow();
+  }, [defaultAccount, handleOpenSendFlow, openSendFlowForAccount, parentAccount]);
 
   const familyAccountActions = family
     ? perFamilyAccountActions[family as keyof typeof perFamilyAccountActions]
@@ -268,7 +284,14 @@ export default function useAssetActions({ currency, accounts }: useAssetActionsP
                     id: "send",
                     label: t("transfer.send.title"),
                     Icon: iconSend,
-                    navigationParams: [NavigatorName.SendFunds, getScreenDescriptor()] as const,
+                    ...(shouldOpenNewSendFlow
+                      ? { customHandler: handleNewSendFlowPress }
+                      : {
+                          navigationParams: [
+                            NavigatorName.SendFunds,
+                            getScreenDescriptor(),
+                          ] as const,
+                        }),
                     disabled: areAccountsBalanceEmpty,
                     modalOnDisabledClick: {
                       component: ZeroBalanceDisabledModalContent,
@@ -314,6 +337,8 @@ export default function useAssetActions({ currency, accounts }: useAssetActionsP
     accountCurrency?.ticker,
     familySendFlow,
     familyAccountActions,
+    shouldOpenNewSendFlow,
+    handleNewSendFlowPress,
     handleOpenStakeDrawer,
     handleOpenReceiveDrawer,
     handleOpenSwap,
