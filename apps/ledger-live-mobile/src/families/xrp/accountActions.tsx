@@ -3,11 +3,11 @@ import type { AccountLike } from "@ledgerhq/types-live";
 import type { ActionButtonEvent, NavigationParamsType } from "~/components/FabActions";
 import { NavigatorName, ScreenName } from "~/const";
 import { i18n } from "~/context/Locale";
-import { getManageableTokenAccounts } from "./utils";
+import manageAssetsAction from "./ManageAssetsAction";
 
 function getMainActions({ account }: { account: AccountLike }): ActionButtonEvent[] {
   if (account.type !== "Account") return [];
-  if (getManageableTokenAccounts(account).length === 0) return [];
+  if (!manageAssetsAction.canManage(account)) return [];
 
   return [
     {
