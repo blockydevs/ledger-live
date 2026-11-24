@@ -74,7 +74,7 @@ export function runNewSendFlowTokenTest(
 }
 
 export type NewSendFlowTestOptions = SendTestOptions & {
-  /** Set it for coins with balance pools: the flow then starts on the balance step. */
+  /** Set it for coins with balance pools: picks the public balance, the one that needs no sync. */
   publicBalance?: boolean;
 };
 
