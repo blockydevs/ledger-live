@@ -12,6 +12,7 @@ import type {
   AleoTokenAccount,
   Transaction,
 } from "@ledgerhq/live-common/families/aleo/types";
+import type { SignedOperation } from "@ledgerhq/types-live";
 import { getMainAccount } from "@ledgerhq/live-common/account/index";
 import { SEND_FLOW_STEP, type SendFlowStep } from "@ledgerhq/live-common/flows/send/types";
 import type { StepRegistry } from "@ledgerhq/live-common/flows/wizard/types";
@@ -53,7 +54,7 @@ jest.mock("LLM/features/Contacts/hooks/useContactsAddressValidationAdapter", () 
   }),
 }));
 
-type SignedJobState = Readonly<{ type: "signed"; signedOperation: unknown }>;
+type SignedJobState = Readonly<{ type: "signed"; signedOperation: SignedOperation }>;
 
 let mockOnIntentJobStateChanged: ((jobState: SignedJobState) => void) | null = null;
 
@@ -84,9 +85,9 @@ const THIRD_PARTY_ADDRESS = ALEO_ACCOUNT_2.freshAddress;
 
 const tokenAccount: AleoTokenAccount = {
   ...ALEO_TOKEN_ACCOUNT_1,
-  transparentBalance: new BigNumber(5 * ONE_USAD),
-  privateBalance: new BigNumber(3 * ONE_USAD),
-  unspentPrivateRecords: [makeRecord(2 * ONE_USAD), makeRecord(ONE_USAD)],
+  transparentBalance: new BigNumber(7 * ONE_USAD),
+  privateBalance: new BigNumber(4 * ONE_USAD),
+  unspentPrivateRecords: [makeRecord(3 * ONE_USAD), makeRecord(ONE_USAD)],
 };
 const tokenParentAccount: AleoAccount = { ...aleoAccount, subAccounts: [tokenAccount] };
 const tokenSendParams = { account: tokenAccount, parentAccount: tokenParentAccount };
@@ -181,8 +182,11 @@ async function backToBalanceType(user: User) {
 }
 
 async function signOnDevice() {
+  const onSigned = mockOnIntentJobStateChanged;
+  if (!onSigned)
+    throw new Error("signOnDevice: the signature step never mounted the device executor");
   await act(async () => {
-    mockOnIntentJobStateChanged?.({ type: "signed", signedOperation: signedOperation() });
+    onSigned({ type: "signed", signedOperation: signedOperation() });
     await jest.runOnlyPendingTimersAsync();
   });
 }
@@ -354,8 +358,8 @@ describe("Aleo new send flow (integration)", () => {
     it("should offer the token's own public and private balances", async () => {
       renderSend(tokenSendParams);
 
-      expect(await screen.findByText("5 USAD")).toBeVisible();
-      expect(screen.getByText("3 USAD")).toBeVisible();
+      expect(await screen.findByText("7 USAD")).toBeVisible();
+      expect(screen.getByText("4 USAD")).toBeVisible();
     });
 
     it.each<{
