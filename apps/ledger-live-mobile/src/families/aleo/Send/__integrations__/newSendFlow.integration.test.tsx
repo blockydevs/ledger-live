@@ -191,6 +191,22 @@ async function signOnDevice() {
   });
 }
 
+async function sendToPrivateBalance(user: User) {
+  await user.press(await screen.findByText("Send to private balance"));
+}
+
+async function sendToPublicBalance(user: User) {
+  await user.press(await screen.findByText("Send to public balance"));
+}
+
+type SendCase = {
+  name: string;
+  pickBalance: (user: User) => Promise<void>;
+  pickRecipient: (user: User) => Promise<void>;
+  mode: Transaction["mode"];
+  recipient: string;
+};
+
 async function sendHalf(user: User) {
   await user.press(await screen.findByText("50%"));
   await user.press(screen.getByText("Review"));
@@ -208,60 +224,44 @@ describe("Aleo new send flow (integration)", () => {
   });
 
   describe("native send modes", () => {
-    it("should complete a public transfer to a third party", async () => {
-      const { user } = renderSend();
-
-      await pickPublic(user);
-      await sendTo(user, THIRD_PARTY_ADDRESS);
-      await sendHalf(user);
-
-      expect(await screen.findByText("Transaction signed")).toBeVisible();
-      expect(lastCheckedTransaction()).toMatchObject({
+    it.each<SendCase>([
+      {
+        name: "a public transfer to a third party",
+        pickBalance: pickPublic,
+        pickRecipient: user => sendTo(user, THIRD_PARTY_ADDRESS),
         mode: "transfer_public",
         recipient: THIRD_PARTY_ADDRESS,
-      });
-    });
-
-    it("should complete a private transfer to a third party", async () => {
-      const { user } = renderSend();
-
-      await pickPrivate(user);
-      await sendTo(user, THIRD_PARTY_ADDRESS);
-      await sendHalf(user);
-
-      expect(await screen.findByText("Transaction signed")).toBeVisible();
-      expect(lastCheckedTransaction()).toMatchObject({
+      },
+      {
+        name: "a private transfer to a third party",
+        pickBalance: user => pickPrivate(user),
+        pickRecipient: user => sendTo(user, THIRD_PARTY_ADDRESS),
         mode: "transfer_private",
         recipient: THIRD_PARTY_ADDRESS,
-      });
-    });
-
-    it("should complete a public to private conversion from the self transfer row", async () => {
-      const { user } = renderSend();
-
-      await pickPublic(user);
-      await user.press(await screen.findByText("Send to private balance"));
-      await sendHalf(user);
-
-      expect(await screen.findByText("Transaction signed")).toBeVisible();
-      expect(lastCheckedTransaction()).toMatchObject({
+      },
+      {
+        name: "a public to private conversion from the self transfer row",
+        pickBalance: pickPublic,
+        pickRecipient: sendToPrivateBalance,
         mode: "convert_public_to_private",
         recipient: OWN_ADDRESS,
-      });
-    });
-
-    it("should complete a private to public conversion from the self transfer row", async () => {
+      },
+      {
+        name: "a private to public conversion from the self transfer row",
+        pickBalance: user => pickPrivate(user),
+        pickRecipient: sendToPublicBalance,
+        mode: "convert_private_to_public",
+        recipient: OWN_ADDRESS,
+      },
+    ])("should complete $name", async ({ pickBalance, pickRecipient, mode, recipient }) => {
       const { user } = renderSend();
 
-      await pickPrivate(user);
-      await user.press(await screen.findByText("Send to public balance"));
+      await pickBalance(user);
+      await pickRecipient(user);
       await sendHalf(user);
 
       expect(await screen.findByText("Transaction signed")).toBeVisible();
-      expect(lastCheckedTransaction()).toMatchObject({
-        mode: "convert_private_to_public",
-        recipient: OWN_ADDRESS,
-      });
+      expect(lastCheckedTransaction()).toMatchObject({ mode, recipient });
     });
   });
 
@@ -315,7 +315,7 @@ describe("Aleo new send flow (integration)", () => {
       const { user } = renderSend();
 
       await pickPublic(user);
-      await user.press(await screen.findByText("Send to private balance"));
+      await sendToPrivateBalance(user);
       await screen.findByText("Review");
       expect(lastCheckedTransaction()).toMatchObject({
         mode: "convert_public_to_private",
@@ -362,13 +362,7 @@ describe("Aleo new send flow (integration)", () => {
       expect(screen.getByText("4 USAD")).toBeVisible();
     });
 
-    it.each<{
-      name: string;
-      pickBalance: (user: User) => Promise<void>;
-      pickRecipient: (user: User) => Promise<void>;
-      mode: Transaction["mode"];
-      recipient: string;
-    }>([
+    it.each<SendCase>([
       {
         name: "a public token transfer to a third party",
         pickBalance: pickPublic,
@@ -386,14 +380,14 @@ describe("Aleo new send flow (integration)", () => {
       {
         name: "a public to private token conversion",
         pickBalance: pickPublic,
-        pickRecipient: async user => user.press(await screen.findByText("Send to private balance")),
+        pickRecipient: sendToPrivateBalance,
         mode: "convert_token_public_to_private",
         recipient: OWN_ADDRESS,
       },
       {
         name: "a private to public token conversion",
         pickBalance: user => pickPrivate(user, tokenParentAccount),
-        pickRecipient: async user => user.press(await screen.findByText("Send to public balance")),
+        pickRecipient: sendToPublicBalance,
         mode: "convert_token_private_to_public",
         recipient: OWN_ADDRESS,
       },
