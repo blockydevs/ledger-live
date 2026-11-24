@@ -189,6 +189,26 @@ describe("useRecipientScreenContentViewModel", () => {
     });
   });
 
+  it("resolves a self transfer as the user's own account even after an external address was typed", () => {
+    mockedUseRecipientScreenView.mockReturnValue({
+      ...(recipientViewModel as object),
+      selfTransferTarget: {
+        address: "own-private-pool",
+        translationKey: "recipient.selfTransfer.toPrivate",
+        isDestinationPublic: false,
+      },
+    } as never);
+    const { result } = renderViewModel();
+
+    act(() => {
+      result.current.selfTransferSectionViewModel?.onPress();
+    });
+
+    expect(setRecipientResolution).toHaveBeenCalledWith("my account", "my account");
+    expect(setRecipientResolution).not.toHaveBeenCalledWith("unknown address", "external address");
+    expect(handleAddressSelect).toHaveBeenCalledWith("own-private-pool");
+  });
+
   it("tracks and forwards matched-address selection", () => {
     renderViewModel();
     const { onSelect } = mockedUseAddressMatchedSectionViewModel.mock.calls[0][0];

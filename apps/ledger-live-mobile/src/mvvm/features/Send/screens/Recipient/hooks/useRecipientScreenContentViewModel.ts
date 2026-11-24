@@ -198,9 +198,18 @@ export function useRecipientScreenContentViewModel({
     onAddContact();
   }, [onAddContact, recipient.recipientResolution.addressAlreadyUsed, trackingProperties]);
 
+  // The row also shows next to a typed address, whose resolution must not be kept for a self transfer.
+  const handleSelfTransfer = useCallback(
+    (address: string) => {
+      setRecipientResolution("my account", "my account");
+      handleAddressSelect(address);
+    },
+    [handleAddressSelect, setRecipientResolution],
+  );
+
   const selfTransferSectionViewModel = useSelfTransferSectionViewModel({
     target: recipient.selfTransferTarget,
-    onAddressSelected: handleAddressSelect,
+    onAddressSelected: handleSelfTransfer,
   });
 
   const addressMatchedSectionViewModel = useAddressMatchedSectionViewModel({
