@@ -66,15 +66,15 @@ export const RecipientScreenView = ({ viewModel }: RecipientScreenViewProps) => 
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          {isLoading && !showMatched && <LoadingState />}
-
           {showInitialState && clipboardAddress && (
             <PasteFromClipboard address={clipboardAddress} onPaste={handlePasteFromClipboard} />
           )}
 
-          {showInitialState && selfTransferSectionViewModel && (
+          {selfTransferSectionViewModel && (
             <SelfTransferSection viewModel={selfTransferSectionViewModel} />
           )}
+
+          {isLoading && !showMatched && <LoadingState />}
 
           {showInitialState && showEmptyContactsState && <RecipientEmptyContactsState />}
 
