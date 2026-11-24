@@ -21,6 +21,7 @@ import {
 } from "../../../utils/messageTracking";
 import { useAddressMatchedSectionViewModel } from "./useAddressMatchedSectionViewModel";
 import { useRecipientScreenView } from "./useRecipientScreenView";
+import { useSelfTransferSectionViewModel } from "./useSelfTransferSectionViewModel";
 import { useSettleRecipientInputFocus } from "./useSettleRecipientInputFocus";
 
 export type UseRecipientScreenContentViewModelProps = Readonly<{
@@ -197,8 +198,23 @@ export function useRecipientScreenContentViewModel({
     onAddContact();
   }, [onAddContact, recipient.recipientResolution.addressAlreadyUsed, trackingProperties]);
 
+  // The row also shows next to a typed address, whose resolution must not be kept for a self transfer.
+  const handleSelfTransfer = useCallback(
+    (address: string) => {
+      setRecipientResolution("my account", "my account");
+      handleAddressSelect(address);
+    },
+    [handleAddressSelect, setRecipientResolution],
+  );
+
+  const selfTransferSectionViewModel = useSelfTransferSectionViewModel({
+    target: recipient.selfTransferTarget,
+    onAddressSelected: handleSelfTransfer,
+  });
+
   const addressMatchedSectionViewModel = useAddressMatchedSectionViewModel({
     searchResult: recipient.result,
+    selfTransferTarget: recipient.selfTransferTarget,
     searchValue: recipient.searchValue,
     onSelect: handleMatchedAddress,
     isSanctioned: recipient.showSanctionedBanner,
@@ -241,7 +257,8 @@ export function useRecipientScreenContentViewModel({
     recipient.showContactsList ||
     recipient.showEmptyContactsState ||
     recipient.featureIntroduction.isOpen ||
-    Boolean(recipient.clipboardAddress);
+    Boolean(recipient.clipboardAddress) ||
+    selfTransferSectionViewModel !== null;
 
   useSettleRecipientInputFocus(hasContent);
 
@@ -260,6 +277,7 @@ export function useRecipientScreenContentViewModel({
     shouldShowErrorBanner,
     keyboardBehavior,
     addressMatchedSectionViewModel,
+    selfTransferSectionViewModel,
   };
 }
 

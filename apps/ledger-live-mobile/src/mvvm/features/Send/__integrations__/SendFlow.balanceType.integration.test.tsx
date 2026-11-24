@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import BigNumber from "bignumber.js";
+import { UserLock } from "@ledgerhq/lumen-ui-rnative/symbols";
 import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import { sendFeatures } from "@ledgerhq/live-common/bridge/descriptor/send/features";
@@ -17,7 +18,7 @@ import {
 import type { StepRegistry } from "@ledgerhq/live-common/flows/wizard/types";
 import type { CryptoOrTokenCurrency } from "@domain/entity-currency";
 import type { Account } from "@ledgerhq/types-live";
-import { act, renderWithReactQuery, screen } from "@tests/test-renderer";
+import { act, renderWithReactQuery, screen, within } from "@tests/test-renderer";
 import { i18n } from "~/context/Locale";
 import type { State } from "~/reducers/types";
 import { SendFlowOrchestrator } from "../SendFlowOrchestrator";
@@ -241,7 +242,7 @@ describe("Send flow balance type step", () => {
     await user.press(await screen.findByText("Public pool"));
     await user.paste(await screen.findByPlaceholderText(/^Enter address/), RECIPIENT);
     await flushTimers();
-    await user.press(await screen.findByText(/^Send to /));
+    await user.press(await screen.findByTestId("new-send-flow-address-confirm"));
     await screen.findByText("Review");
 
     await user.press(screen.getByLabelText("Back"));
@@ -257,7 +258,7 @@ describe("Send flow balance type step", () => {
     await user.press(await screen.findByText("Public pool"));
     await user.paste(await screen.findByPlaceholderText(/^Enter address/), RECIPIENT);
     await flushTimers();
-    await user.press(await screen.findByText(/^Send to /));
+    await user.press(await screen.findByTestId("new-send-flow-address-confirm"));
     await screen.findByText("Review");
 
     await user.press(screen.getByLabelText("Back"));
@@ -274,5 +275,153 @@ describe("Send flow balance type step", () => {
     expect(await screen.findByPlaceholderText(/^Enter address/)).toBeVisible();
     expect(screen.queryByText("Select balance")).not.toBeOnTheScreen();
     expect(screen.queryByLabelText("Back")).not.toBeOnTheScreen();
+  });
+
+  describe("with a self-transfer target", () => {
+    const buildSelfTransferPatch = jest.fn(({ isSelfTransfer }: { isSelfTransfer: boolean }) => ({
+      selfTransfer: isSelfTransfer,
+    }));
+
+    beforeEach(() => {
+      buildSelfTransferPatch.mockClear();
+      jest.mocked(sendFeatures.getBalanceTypeConfig).mockImplementation(currency => {
+        if (!isPoolCurrency(currency)) return null;
+        return {
+          ...mockBalanceTypeConfig,
+          getSelfTransferTarget: () => ({
+            address: poolAccount.freshAddress,
+            translationKey: "recipient.selfTransfer.toPrivate",
+            isDestinationPublic: false,
+          }),
+          buildSelfTransferPatch,
+        };
+      });
+    });
+
+    it("should send to the other pool from the self transfer row and show it on the amount step", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+      expect(await screen.findByText("Self transfer")).toBeVisible();
+      expect(
+        within(screen.getByTestId("self-transfer-section")).UNSAFE_getByType(UserLock),
+      ).toBeTruthy();
+      await user.press(screen.getByText("Send to private balance"));
+
+      expect(await screen.findByText("Review")).toBeVisible();
+      expect(screen.getByDisplayValue("Private balance")).toBeVisible();
+      expect(buildSelfTransferPatch).toHaveBeenCalledWith(
+        expect.objectContaining({ isSelfTransfer: true }),
+      );
+    });
+
+    describe("when the target needs a memo", () => {
+      beforeEach(() => {
+        jest.spyOn(sendFeatures, "hasMemoForRecipient").mockImplementation(isPoolCurrency);
+      });
+
+      afterEach(() => {
+        jest.mocked(sendFeatures.hasMemoForRecipient).mockRestore();
+      });
+
+      it("should ask to skip the memo from the self transfer row like a typed address", async () => {
+        const { user } = renderSend(poolAccount);
+
+        await user.press(await screen.findByText("Public pool"));
+        await user.press(await screen.findByText("Send to private balance"));
+
+        expect(await screen.findByText(/^Do you want to send without a/)).toBeVisible();
+        expect(screen.queryByText("Review")).not.toBeOnTheScreen();
+      });
+    });
+
+    it("should flag a typed own pool address as a self transfer", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+      await user.paste(
+        await screen.findByPlaceholderText(/^Enter address/),
+        poolAccount.freshAddress,
+      );
+      await flushTimers();
+      await user.press(await screen.findByTestId("new-send-flow-address-confirm"));
+
+      expect(await screen.findByText("Review")).toBeVisible();
+      expect(screen.getByDisplayValue("Private balance")).toBeVisible();
+      expect(buildSelfTransferPatch).toHaveBeenCalledWith(
+        expect.objectContaining({ isSelfTransfer: true }),
+      );
+    });
+
+    it("should keep the self transfer row next to a typed address that matches", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+      await user.paste(await screen.findByPlaceholderText(/^Enter address/), RECIPIENT);
+      await flushTimers();
+
+      expect(await screen.findByTestId("new-send-flow-address-confirm")).toBeVisible();
+      expect(screen.getByTestId("self-transfer-button")).toBeVisible();
+    });
+
+    it("should send to the other pool from the self transfer row after an address was typed", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+      await user.paste(await screen.findByPlaceholderText(/^Enter address/), RECIPIENT);
+      await flushTimers();
+      await screen.findByTestId("new-send-flow-address-confirm");
+      await user.press(screen.getByTestId("self-transfer-button"));
+
+      expect(await screen.findByText("Review")).toBeVisible();
+      expect(screen.getByDisplayValue("Private balance")).toBeVisible();
+      expect(buildSelfTransferPatch).toHaveBeenCalledWith(
+        expect.objectContaining({ isSelfTransfer: true }),
+      );
+    });
+
+    it("should keep the self transfer row next to an invalid address error", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+      await user.paste(await screen.findByPlaceholderText(/^Enter address/), "not-an-address");
+      await flushTimers();
+
+      expect(screen.getByTestId("self-transfer-button")).toBeVisible();
+      expect(screen.queryByTestId("new-send-flow-address-confirm")).not.toBeOnTheScreen();
+    });
+
+    it("should clear the self transfer when another address is chosen", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+      await user.press(await screen.findByText("Send to private balance"));
+      await screen.findByText("Review");
+
+      await user.press(screen.getByLabelText("Back"));
+      const addressInput = await screen.findByDisplayValue(poolAccount.freshAddress);
+      await user.clear(addressInput);
+      await user.paste(addressInput, RECIPIENT);
+      await flushTimers();
+      const sendToRecipient = await screen.findByTestId("new-send-flow-address-confirm");
+      buildSelfTransferPatch.mockClear();
+      await user.press(sendToRecipient);
+
+      expect(await screen.findByText("Review")).toBeVisible();
+      expect(screen.queryByDisplayValue("Private balance")).not.toBeOnTheScreen();
+      expect(buildSelfTransferPatch).toHaveBeenCalledWith(
+        expect.objectContaining({ isSelfTransfer: false }),
+      );
+      expect(buildSelfTransferPatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ isSelfTransfer: true }),
+      );
+    });
+
+    it("should not offer a self transfer for a coin without balance pools", async () => {
+      renderSend(bitcoinAccount);
+
+      expect(await screen.findByPlaceholderText(/^Enter address/)).toBeVisible();
+      expect(screen.queryByText("Self transfer")).not.toBeOnTheScreen();
+    });
   });
 });

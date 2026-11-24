@@ -12,6 +12,7 @@ import { PasteFromClipboard } from "./PasteFromClipboard";
 import { ContactAddressPicker } from "@features/flow-pay-contact";
 import { RecipientContactsList } from "./RecipientContactsList";
 import { RecipientEmptyContactsState } from "./RecipientEmptyContactsState";
+import { SelfTransferSection } from "./SelfTransferSection";
 import { ValidationBanner } from "./ValidationBanner";
 
 type RecipientScreenViewProps = Readonly<{
@@ -27,6 +28,7 @@ export const RecipientScreenView = ({ viewModel }: RecipientScreenViewProps) => 
     shouldShowErrorBanner,
     keyboardBehavior,
     addressMatchedSectionViewModel,
+    selfTransferSectionViewModel,
   } = viewModel;
   const {
     isLoading,
@@ -64,11 +66,15 @@ export const RecipientScreenView = ({ viewModel }: RecipientScreenViewProps) => 
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          {isLoading && !showMatched && <LoadingState />}
-
           {showInitialState && clipboardAddress && (
             <PasteFromClipboard address={clipboardAddress} onPaste={handlePasteFromClipboard} />
           )}
+
+          {selfTransferSectionViewModel && (
+            <SelfTransferSection viewModel={selfTransferSectionViewModel} />
+          )}
+
+          {isLoading && !showMatched && <LoadingState />}
 
           {showInitialState && showEmptyContactsState && <RecipientEmptyContactsState />}
 
