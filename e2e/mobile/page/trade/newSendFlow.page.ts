@@ -78,7 +78,7 @@ export default class NewSendFlowPage {
   }
 
   @Step("Pick the {{0}} balance, which needs no sync")
-  async pickBalanceTypeWithoutSync(optionId: string) {
+  async pickBalanceTypeWithoutSync(optionId: "public") {
     await this.balanceTypeOption(optionId).tap();
     await this.recipientInput.waitVisible();
   }

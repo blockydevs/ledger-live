@@ -1,19 +1,27 @@
 import { act, renderHook, waitFor, withFlagOverrides } from "@tests/test-renderer";
 import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
-import type { TokenCurrency } from "@domain/entity-currency-token";
+import { TokenCurrencyIdSchema, type TokenCurrency } from "@domain/entity-currency-token";
 import type { TokenAccount } from "@ledgerhq/types-live";
 import { NavigatorName, ScreenName } from "~/const";
 import { useOpenSendFlow } from "../useOpenSendFlow";
 
-const usdt = {
+const usdt: TokenCurrency = {
   type: "TokenCurrency",
-  id: "ethereum/erc20/usd_tether__erc20_",
-  parentCurrencyId: "ethereum",
+  id: TokenCurrencyIdSchema.parse("ethereum/erc20/usd_tether__erc20_"),
+  contractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+  parentCurrencyId: getCryptoCurrencyById("ethereum").id,
   tokenType: "erc20",
+  name: "Tether USD",
   ticker: "USDT",
   units: [{ name: "Tether USD", code: "USDT", magnitude: 6 }],
-} as unknown as TokenCurrency;
+};
+
+function tokenAccountWithParentInStore(parentId: string) {
+  const currency = getCryptoCurrencyById("ethereum");
+  const parentAccount = genAccount(parentId, { currency });
+  return { currency, parentAccount, tokenAccount: genTokenAccount(0, parentAccount, usdt) };
+}
 
 const mockNavigate = jest.fn();
 const mockOpenDrawer = jest.fn();
@@ -341,9 +349,8 @@ describe("useOpenSendFlow", () => {
   });
 
   it("opens the new send flow for a token account selected without its parent when the store has the parent", () => {
-    const currency = getCryptoCurrencyById("ethereum");
-    const parentAccount = genAccount("token-parent-in-store", { currency });
-    const tokenAccount = genTokenAccount(0, parentAccount, usdt);
+    const { currency, parentAccount, tokenAccount } =
+      tokenAccountWithParentInStore("token-parent-in-store");
     const { result } = renderHook(
       () =>
         useOpenSendFlow({
@@ -364,6 +371,7 @@ describe("useOpenSendFlow", () => {
     );
 
     act(() => result.current.handleOpenSendFlow());
+    expect(mockOpenDrawer).toHaveBeenCalledTimes(1);
     const onAccountSelected = mockOpenDrawer.mock.calls[0][0].onAccountSelected;
     act(() => onAccountSelected(tokenAccount));
 
@@ -379,9 +387,9 @@ describe("useOpenSendFlow", () => {
   });
 
   it("prefills the legacy recipient for a token account selected without its parent when the store has the parent", async () => {
-    const currency = getCryptoCurrencyById("ethereum");
-    const parentAccount = genAccount("legacy-token-parent-in-store", { currency });
-    const tokenAccount = genTokenAccount(0, parentAccount, usdt);
+    const { currency, parentAccount, tokenAccount } = tokenAccountWithParentInStore(
+      "legacy-token-parent-in-store",
+    );
     const recipient = "0x1ad23b2cf8d2e0591ea417eb82f7cd9746c53034";
     const { result } = renderHook(
       () =>
@@ -399,12 +407,14 @@ describe("useOpenSendFlow", () => {
     );
 
     act(() => result.current.handleOpenSendFlow());
+    expect(mockOpenDrawer).toHaveBeenCalledTimes(1);
     const onAccountSelected = mockOpenDrawer.mock.calls[0][0].onAccountSelected;
     await act(async () => {
       onAccountSelected(tokenAccount);
     });
 
     await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.SendFunds, {
         screen: ScreenName.SendSelectRecipient,
         params: expect.objectContaining({

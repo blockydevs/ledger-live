@@ -105,7 +105,7 @@ export function runNewSendFlowTest(
 
 export function runNewSendFlowBalanceTypeTest(
   transaction: TransactionType,
-  balanceTypeOptionId: string,
+  balanceTypeOptionId: "public",
   tmsLinks: string[],
   tags: string[],
   options?: SendTestOptions,
