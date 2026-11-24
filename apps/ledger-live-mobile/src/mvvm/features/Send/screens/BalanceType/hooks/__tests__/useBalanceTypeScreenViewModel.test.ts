@@ -6,6 +6,7 @@ import type { BalanceTypeOption } from "@ledgerhq/live-common/bridge/descriptor/
 import { trackPage } from "@shared/analytics";
 import { ScreenName } from "~/const";
 import { useSendFlowActions, useSendFlowData } from "../../../../context/SendFlowContext";
+import { isSendBalanceTypeSyncRequired } from "../../../../utils/familySendSlots";
 import {
   useBalanceTypeScreenViewModel,
   type BalanceTypeScreenViewModel,
@@ -16,6 +17,9 @@ jest.mock("@react-navigation/native", () => ({
   useNavigation: jest.fn(),
 }));
 jest.mock("../../../../context/SendFlowContext");
+jest.mock("../../../../utils/familySendSlots", () => ({
+  isSendBalanceTypeSyncRequired: jest.fn(() => false),
+}));
 jest.mock("@ledgerhq/live-common/bridge/useAccountBridge", () => ({
   useAccountBridgeOrNull: jest.fn((account: { id: string } | null) => {
     return account ? { updateTransaction: mockBridgeUpdateTransaction } : null;
@@ -47,6 +51,7 @@ const mockedUseNavigation = jest.mocked(useNavigation);
 const mockedUseSendFlowData = jest.mocked(useSendFlowData);
 const mockedUseSendFlowActions = jest.mocked(useSendFlowActions);
 const mockedGetBalanceTypeConfig = jest.mocked(sendFeatures.getBalanceTypeConfig);
+const mockedIsSendBalanceTypeSyncRequired = jest.mocked(isSendBalanceTypeSyncRequired);
 const mockedTrackPage = jest.mocked(trackPage);
 
 const PUBLIC_POOL: BalanceTypeOption = {
@@ -121,6 +126,7 @@ function getReadyViewModel(result: { current: BalanceTypeScreenViewModel }) {
 describe("useBalanceTypeScreenViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedIsSendBalanceTypeSyncRequired.mockReturnValue(false);
     mockedUseNavigation.mockReturnValue({ navigate: mockNavigate } as never);
     mockedUseSendFlowActions.mockReturnValue({
       transaction: { updateTransaction: mockUpdateTransaction, setTransaction: mockSetTransaction },

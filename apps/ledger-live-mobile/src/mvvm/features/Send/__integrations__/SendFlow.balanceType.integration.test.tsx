@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Pressable, Text, View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import BigNumber from "bignumber.js";
 import { UserLock } from "@ledgerhq/lumen-ui-rnative/symbols";
@@ -30,6 +31,13 @@ import { CustomFeesScreen } from "../screens/CustomFees";
 import { CoinControlScreen } from "../screens/CoinControl";
 import { ConfirmationScreen } from "../screens/Confirmation";
 import { PaySuccessScreen } from "../screens/PaySuccess";
+import type { SendBalanceTypeSync, SendBalanceTypeSyncProps } from "../utils/familySendSlots";
+
+jest.mock("~/generated/SendBalanceTypeSync", () => ({ __esModule: true, default: {} }));
+
+const familySyncSlots: Record<string, SendBalanceTypeSync> = jest.requireMock(
+  "~/generated/SendBalanceTypeSync",
+).default;
 
 jest.mock("LLM/features/Contacts/hooks/useContactsAddressValidationAdapter", () => ({
   useContactsAddressValidationAdapter: () => {
@@ -94,6 +102,27 @@ const HostStack = createNativeStackNavigator();
 
 function isPoolCurrency(currency: CryptoOrTokenCurrency | undefined) {
   return currency?.id === ethereum.id;
+}
+
+function TestBalanceTypeSync({
+  account,
+  transaction,
+  onComplete,
+  onClose,
+}: SendBalanceTypeSyncProps) {
+  const pool = (transaction as PoolTransaction).balancePool;
+
+  return (
+    <View>
+      <Text>{`Syncing ${account.id} for the ${pool} pool`}</Text>
+      <Pressable onPress={onComplete}>
+        <Text>Finish sync</Text>
+      </Pressable>
+      <Pressable onPress={onClose}>
+        <Text>Cancel sync</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 function SendPage({ initParams }: { initParams: SendFlowInitParams }) {
@@ -275,6 +304,67 @@ describe("Send flow balance type step", () => {
     expect(await screen.findByPlaceholderText(/^Enter address/)).toBeVisible();
     expect(screen.queryByText("Select balance")).not.toBeOnTheScreen();
     expect(screen.queryByLabelText("Back")).not.toBeOnTheScreen();
+  });
+
+  describe("with a family balance type sync", () => {
+    const isSyncRequired = jest.fn(({ transaction }: { transaction: object }) => {
+      return (transaction as PoolTransaction).balancePool === "private";
+    });
+
+    beforeEach(() => {
+      isSyncRequired.mockClear();
+      familySyncSlots.evm = { isRequired: isSyncRequired, Component: TestBalanceTypeSync };
+    });
+
+    afterEach(() => {
+      delete familySyncSlots.evm;
+    });
+
+    it("should show the family sync with the account and the picked pool before the recipient step", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Private pool"));
+
+      expect(
+        await screen.findByText(`Syncing ${poolAccount.id} for the private pool`),
+      ).toBeVisible();
+      expect(screen.queryByPlaceholderText(/^Enter address/)).not.toBeOnTheScreen();
+    });
+
+    it("should continue to the recipient step and go back to the balance type step when the sync completes", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Private pool"));
+      await user.press(await screen.findByText("Finish sync"));
+
+      expect(await screen.findByPlaceholderText(/^Enter address/)).toBeVisible();
+
+      await user.press(screen.getByLabelText("Back"));
+
+      expect(await screen.findByText("Select balance")).toBeVisible();
+      expect(screen.queryByText("Finish sync")).not.toBeOnTheScreen();
+    });
+
+    it("should stay on the balance type step when the sync closes", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Private pool"));
+      await user.press(await screen.findByText("Cancel sync"));
+
+      expect(screen.queryByText("Cancel sync")).not.toBeOnTheScreen();
+      expect(screen.getByText("Select balance")).toBeVisible();
+      expect(screen.queryByPlaceholderText(/^Enter address/)).not.toBeOnTheScreen();
+    });
+
+    it("should go straight to the recipient step when the family needs no sync for the pick", async () => {
+      const { user } = renderSend(poolAccount);
+
+      await user.press(await screen.findByText("Public pool"));
+
+      expect(await screen.findByPlaceholderText(/^Enter address/)).toBeVisible();
+      expect(isSyncRequired).toHaveBeenCalled();
+      expect(screen.queryByText("Finish sync")).not.toBeOnTheScreen();
+    });
   });
 
   describe("with a self-transfer target", () => {
