@@ -73,11 +73,16 @@ export function runNewSendFlowTokenTest(
   });
 }
 
+export type NewSendFlowTestOptions = SendTestOptions & {
+  /** Set it for coins with balance pools: the flow then starts on the balance step. */
+  publicBalance?: boolean;
+};
+
 export function runNewSendFlowTest(
   transaction: TransactionType,
   tmsLinks: string[],
   tags: string[],
-  options?: SendTestOptions,
+  options?: NewSendFlowTestOptions,
 ) {
   declareBroadcastAccounts(transaction.accountToDebit);
   setTeamOwner(coinTeamOwner(transaction.accountToDebit.currency.id), {
@@ -91,40 +96,10 @@ export function runNewSendFlowTest(
       await beforeAllFunction(transaction, options);
     });
 
-    it(`[${transaction.accountToDebit.currency.testLabel}] - Send`, async () => {
+    const balance = options?.publicBalance ? " from the public balance" : "";
+    it(`[${transaction.accountToDebit.currency.testLabel}] - Send${balance}`, async () => {
       await app.send.navigateToSendScreen(transaction.accountToDebit.accountName);
-      await app.newSend.setRecipientAndContinueNewFlow(
-        transaction.accountToCredit.address,
-        transaction.memoTag,
-      );
-      await app.newSend.setAmountAndReviewNewFlow(transaction.amount);
-      await signAndCheckOperation(transaction, transaction.accountToDebit.accountName);
-    });
-  });
-}
-
-export function runNewSendFlowBalanceTypeTest(
-  transaction: TransactionType,
-  balanceTypeOptionId: "public",
-  tmsLinks: string[],
-  tags: string[],
-  options?: SendTestOptions,
-) {
-  declareBroadcastAccounts(transaction.accountToDebit);
-  setTeamOwner(coinTeamOwner(transaction.accountToDebit.currency.id), {
-    folder: sendFolder(transaction.accountToDebit),
-    scenario: SendScenario.TRANSACTION,
-  });
-  tmsLinks.forEach(tmsLink => $TmsLink(tmsLink));
-  tags.forEach(tag => $Tag(tag));
-  describe("Send - new flow - balance type", () => {
-    beforeAll(async () => {
-      await beforeAllFunction(transaction, options);
-    });
-
-    it(`[${transaction.accountToDebit.currency.testLabel}] - Send from the ${balanceTypeOptionId} balance`, async () => {
-      await app.send.navigateToSendScreen(transaction.accountToDebit.accountName);
-      await app.newSend.pickBalanceTypeWithoutSync(balanceTypeOptionId);
+      if (options?.publicBalance) await app.newSend.selectPublicBalance();
       await app.newSend.setRecipientAndContinueNewFlow(
         transaction.accountToCredit.address,
         transaction.memoTag,

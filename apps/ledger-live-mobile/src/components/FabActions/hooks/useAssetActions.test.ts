@@ -1,6 +1,6 @@
 import { act, renderHook, withFlagOverrides } from "@tests/test-renderer";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
-import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
+import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import type { State } from "~/reducers/types";
 import { NavigatorName, ScreenName } from "~/const";
 import useAssetActions from "./useAssetActions";
@@ -173,6 +173,28 @@ describe("useAssetActions - new send flow", () => {
     expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.SendFlow, {
       params: expect.objectContaining({ account: ALEO_ACCOUNT_1, parentAccount: undefined }),
+    });
+  });
+
+  it("opens the new send flow with the parent for the only token account of an enabled family", () => {
+    const tokenAccount = genTokenAccount(0, ALEO_ACCOUNT_1, aleoTokenCurrency);
+    const parentAccount = { ...ALEO_ACCOUNT_1, subAccounts: [tokenAccount] };
+    const { result } = renderHook(
+      () => useAssetActions({ currency: aleoTokenCurrency, accounts: [tokenAccount] }),
+      {
+        overrideInitialState: withNewSendFlowForAleo(state => ({
+          ...withSingleAccount(state),
+          accounts: { active: [parentAccount] },
+        })),
+      },
+    );
+    const sendAction = result.current.mainActions.find(a => a.id === "send");
+
+    act(() => sendAction?.customHandler?.());
+
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.SendFlow, {
+      params: expect.objectContaining({ account: tokenAccount, parentAccount }),
     });
   });
 

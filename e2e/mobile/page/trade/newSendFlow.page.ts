@@ -14,7 +14,7 @@ const trxAmount = (text: string): number => {
 };
 
 export default class NewSendFlowPage {
-  private readonly balanceTypeOption = (optionId: string) => byId(`balance-type-${optionId}`);
+  private readonly publicBalanceOption = byId("balance-type-public");
   private readonly recipientInput = byId("recipient-input");
   private readonly skipMemoContent = byId("send-skip-memo-content");
   private readonly skipMemoConfirm = byId("send-skip-memo-confirm");
@@ -77,9 +77,9 @@ export default class NewSendFlowPage {
     await app.account.tapSend();
   }
 
-  @Step("Pick the {{0}} balance, which needs no sync")
-  async pickBalanceTypeWithoutSync(optionId: "public") {
-    await this.balanceTypeOption(optionId).tap();
+  @Step("Select the public balance")
+  async selectPublicBalance() {
+    await this.publicBalanceOption.tap();
     await this.recipientInput.waitVisible();
   }
 

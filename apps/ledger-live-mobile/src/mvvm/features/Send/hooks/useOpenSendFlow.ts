@@ -11,7 +11,7 @@ import type { AssetCategory } from "@domain/api-aggregated-assets";
 import type { CryptoOrTokenCurrency } from "@domain/entity-currency";
 import type { Account, AccountLike } from "@ledgerhq/types-live";
 import { NavigatorName, ScreenName } from "~/const";
-import { useSelector } from "~/context/hooks";
+import { useStore } from "~/context/hooks";
 import { accountsSelector } from "~/reducers/accounts";
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import type { SendFundsNavigatorStackParamList } from "~/components/RootNavigator/types/SendFundsNavigator";
@@ -46,7 +46,7 @@ export function useOpenSendFlow({
 }: UseOpenSendFlowProps) {
   const navigation = useNavigation<NativeStackNavigationProp<BaseNavigatorStackParamList>>();
   const { openDrawer } = useModularDrawerController();
-  const accounts = useSelector(accountsSelector);
+  const store = useStore();
   const { isEnabledForFamily, getFamilyFromAccount, getCurrencyIdFromAccount } =
     useNewSendFlowFeature();
 
@@ -124,7 +124,7 @@ export function useOpenSendFlow({
       const parentAccount =
         selectedParentAccount ??
         (account.type === "TokenAccount"
-          ? accounts.find(candidate => candidate.id === account.parentId)
+          ? accountsSelector(store.getState()).find(candidate => candidate.id === account.parentId)
           : undefined);
 
       if (account.type === "TokenAccount" && !parentAccount) {
@@ -175,7 +175,7 @@ export function useOpenSendFlow({
       void navigateToLegacyRecipient(account, parentAccount, prefilledRecipient, skipRecipientStep);
     },
     [
-      accounts,
+      store,
       getCurrencyIdFromAccount,
       getFamilyFromAccount,
       isEnabledForFamily,
