@@ -1,15 +1,24 @@
-import { renderHook } from "@tests/test-renderer";
+import { act, renderHook, withFlagOverrides } from "@tests/test-renderer";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
-import { genAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
+import { genAccount, genTokenAccount } from "@ledgerhq/ledger-wallet-framework/mocks/account";
 import type { State } from "~/reducers/types";
-import { ScreenName } from "~/const";
+import { NavigatorName, ScreenName } from "~/const";
 import useAssetActions from "./useAssetActions";
 import { getCustomSendFlow } from "~/screens/SendFunds/utils/customSendFlow";
 import { aleoTokenCurrency } from "~/families/aleo/__mocks__/currency.mock";
 
+const mockNavigate = jest.fn();
+const mockOpenDrawer = jest.fn();
+
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
   useRoute: () => ({ name: "Asset", key: "asset-key", params: {} }),
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+
+jest.mock("LLM/features/ModularDrawer", () => ({
+  ...jest.requireActual("LLM/features/ModularDrawer"),
+  useModularDrawerController: () => ({ openDrawer: mockOpenDrawer }),
 }));
 
 jest.mock("@ledgerhq/live-common/exchange/swap/hooks/index", () => ({
@@ -136,5 +145,72 @@ describe("useAssetActions - custom send flow", () => {
 
     expect(result.current.mainActions.find(a => a.id === "send")).toBeUndefined();
     expect(result.current.mainActions.find(a => a.id === "receive")).toBeUndefined();
+  });
+});
+
+const withNewSendFlowForAleo = (withAccounts: (state: State) => State) =>
+  withFlagOverrides(
+    { newSendFlow: { enabled: true, params: { families: ["aleo"], excludedCurrencyIds: [] } } },
+    withAccounts,
+  );
+
+describe("useAssetActions - new send flow", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetCustomSendFlow.mockReturnValue(null);
+  });
+
+  it("opens the new send flow for the only account of an enabled family", () => {
+    const { result } = renderHook(
+      () => useAssetActions({ currency: currencyAleo, accounts: [ALEO_ACCOUNT_1] }),
+      { overrideInitialState: withNewSendFlowForAleo(withSingleAccount) },
+    );
+    const sendAction = result.current.mainActions.find(a => a.id === "send");
+
+    act(() => sendAction?.customHandler?.());
+
+    expect(sendAction?.navigationParams).toBeUndefined();
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.SendFlow, {
+      params: expect.objectContaining({ account: ALEO_ACCOUNT_1, parentAccount: undefined }),
+    });
+  });
+
+  it("opens the new send flow with the parent for the only token account of an enabled family", () => {
+    const tokenAccount = genTokenAccount(0, ALEO_ACCOUNT_1, aleoTokenCurrency);
+    const parentAccount = { ...ALEO_ACCOUNT_1, subAccounts: [tokenAccount] };
+    const { result } = renderHook(
+      () => useAssetActions({ currency: aleoTokenCurrency, accounts: [tokenAccount] }),
+      {
+        overrideInitialState: withNewSendFlowForAleo(state => ({
+          ...withSingleAccount(state),
+          accounts: { active: [parentAccount] },
+        })),
+      },
+    );
+    const sendAction = result.current.mainActions.find(a => a.id === "send");
+
+    act(() => sendAction?.customHandler?.());
+
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith(NavigatorName.SendFlow, {
+      params: expect.objectContaining({ account: tokenAccount, parentAccount }),
+    });
+  });
+
+  it("asks for the account first when an enabled family has several accounts", () => {
+    const { result } = renderHook(
+      () => useAssetActions({ currency: currencyAleo, accounts: [ALEO_ACCOUNT_1, ALEO_ACCOUNT_2] }),
+      { overrideInitialState: withNewSendFlowForAleo(withTwoAccounts) },
+    );
+    const sendAction = result.current.mainActions.find(a => a.id === "send");
+
+    act(() => sendAction?.customHandler?.());
+
+    expect(mockOpenDrawer).toHaveBeenCalledTimes(1);
+    expect(mockOpenDrawer).toHaveBeenCalledWith(
+      expect.objectContaining({ flow: "send", currencies: [currencyAleo.id] }),
+    );
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

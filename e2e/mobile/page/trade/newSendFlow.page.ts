@@ -14,6 +14,7 @@ const trxAmount = (text: string): number => {
 };
 
 export default class NewSendFlowPage {
+  private readonly publicBalanceOption = byId("balance-type-public");
   private readonly recipientInput = byId("recipient-input");
   private readonly skipMemoContent = byId("send-skip-memo-content");
   private readonly skipMemoConfirm = byId("send-skip-memo-confirm");
@@ -74,6 +75,12 @@ export default class NewSendFlowPage {
     await app.account.goToAccountByName(parentAccountName);
     await app.account.navigateToTokenInAccount(tokenAccount);
     await app.account.tapSend();
+  }
+
+  @Step("Select the public balance")
+  async selectPublicBalance() {
+    await this.publicBalanceOption.tap();
+    await this.recipientInput.waitVisible();
   }
 
   @Step("Fill recipient address and continue: {{{0}}}")
