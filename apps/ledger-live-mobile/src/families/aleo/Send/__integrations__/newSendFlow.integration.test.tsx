@@ -123,12 +123,15 @@ async function pickPrivate(user: User) {
   await screen.findByPlaceholderText(/^Enter address/);
 }
 
+// The self transfer row reads "Send to private balance"; a matched address row reads "Send to <address>".
+const MATCHED_ADDRESS_ROW = /^Send to (?!private balance$|public balance$)/;
+
 async function sendTo(user: User, address: string) {
   const input = await screen.findByPlaceholderText(/^Enter address/);
   await user.clear(input);
   await user.paste(input, address);
   await flushTimers();
-  await user.press(await screen.findByText(/^Send to /));
+  await user.press(await screen.findByText(MATCHED_ADDRESS_ROW));
   await screen.findByText("Review");
 }
 
