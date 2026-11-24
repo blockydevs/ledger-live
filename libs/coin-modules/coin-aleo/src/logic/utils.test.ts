@@ -154,6 +154,8 @@ import {
   getMinBondAmount,
   isValidatorBondable,
   isFirstBondPending,
+  getRecordLimitedAmount,
+  getSendingAccount,
 } from "./utils";
 
 jest.mock("../config");
@@ -3533,6 +3535,62 @@ describe("getMaxPrivateRecordsForAccount", () => {
 
   it("returns 13 for an Aleo token account", () => {
     expect(getMaxPrivateRecordsForAccount(getMockedTokenAccount())).toBe(13);
+  });
+});
+
+describe("getSendingAccount", () => {
+  it("returns the main account when no sub account is targeted", () => {
+    const account = getMockedAccount();
+
+    expect(getSendingAccount(account, undefined)).toBe(account);
+  });
+
+  it("returns the targeted token account", () => {
+    const tokenAccount = getMockedTokenAccount();
+    const account = getMockedAccount({ subAccounts: [tokenAccount] });
+
+    expect(getSendingAccount(account, tokenAccount.id)).toBe(tokenAccount);
+  });
+
+  it("returns null when the targeted token account is missing", () => {
+    expect(getSendingAccount(getMockedAccount(), "missing-token-account")).toBeNull();
+  });
+});
+
+describe("getRecordLimitedAmount", () => {
+  const makeRecords = (microcredits: string[]) =>
+    microcredits.map((value, i) => ({
+      ...mockUnspentRecord1,
+      commitment: `r${i}`,
+      microcredits: value,
+    }));
+  const withRecords = (microcredits: string[]) =>
+    getMockedAccount({
+      aleoResources: { ...mockAleoResources, unspentPrivateRecords: makeRecords(microcredits) },
+    });
+
+  it("returns null when one transaction can use every record", () => {
+    expect(getRecordLimitedAmount(withRecords(Array.from({ length: 14 }, () => "10")))).toBeNull();
+  });
+
+  it("does not count zero-value records against the limit", () => {
+    const records = [...Array.from({ length: 14 }, () => "10"), "0", "0"];
+
+    expect(getRecordLimitedAmount(withRecords(records))).toBeNull();
+  });
+
+  it("sums the largest records one transaction can use when there are more", () => {
+    const records = [...Array.from({ length: 14 }, () => "10"), "5"];
+
+    expect(getRecordLimitedAmount(withRecords(records))).toEqual(new BigNumber(140));
+  });
+
+  it("applies the token limit to a token account", () => {
+    const tokenAccount = getMockedTokenAccount(undefined, {
+      unspentPrivateRecords: makeRecords(Array.from({ length: 14 }, () => "10")),
+    });
+
+    expect(getRecordLimitedAmount(tokenAccount)).toEqual(new BigNumber(130));
   });
 });
 

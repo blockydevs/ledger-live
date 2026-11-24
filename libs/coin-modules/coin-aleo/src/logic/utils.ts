@@ -1676,6 +1676,31 @@ export function selectPrivateRecordsForAmount({
   return [];
 }
 
+export function getSendingAccount(
+  account: AleoAccount,
+  subAccountId: string | null | undefined,
+): AleoAccount | AleoTokenAccount | null {
+  if (!subAccountId) return account;
+  return getAleoSubAccount(account, subAccountId) ?? null;
+}
+
+/** What one transaction can send when the private balance spans more records than it can use; `null` when it can use them all. */
+export function getRecordLimitedAmount(account: AleoAccount | AleoTokenAccount): BigNumber | null {
+  const unspentRecords =
+    (account.type === "TokenAccount"
+      ? account.unspentPrivateRecords
+      : account.aleoResources?.unspentPrivateRecords) ?? [];
+  const maxRecords = getMaxPrivateRecordsForAccount(account);
+  const spendableRecordCount = unspentRecords.filter(record =>
+    new BigNumber(record.microcredits).isGreaterThan(0),
+  ).length;
+  if (spendableRecordCount <= maxRecords) return null;
+
+  return sumPrivateRecords(
+    selectPrivateRecordsForAmount({ unspentRecords, targetAmount: null, maxRecords }),
+  );
+}
+
 // Helper function to get estimated signing time based on the number of records being signed.
 export const getEstimatedSigningTime = (
   recordCount: number,
