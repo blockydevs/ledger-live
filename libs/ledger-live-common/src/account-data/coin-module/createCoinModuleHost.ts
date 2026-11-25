@@ -27,7 +27,7 @@ import {
 } from "../../coin-modules/registry";
 import { addressFromKey } from "../../account/accountDescriptor";
 
-// A currency with no configuration (MultiversX is configured as `multiversx`, not `elrond`) is left to the next source.
+// A currency with no configuration is left to the next source.
 function configurationOf(currencyId: string): Promise<CurrencyConfig> {
   try {
     return Promise.resolve(getCurrencyConfiguration(currencyId));

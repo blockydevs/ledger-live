@@ -10,5 +10,6 @@
   "hedera": true,
   "near": true,
   "stacks": true,
-  "cosmos": true
+  "cosmos": true,
+  "multiversx": true
 }

@@ -154,6 +154,39 @@ describe("craftTransaction", () => {
     expect(tx.value).toBe("0");
   });
 
+  it("uses the intent's sequence as the nonce instead of the network nonce", async () => {
+    const api = makeApi(7);
+    const result = await craftTransaction(api, { ...nativeIntent(), sequence: 9n });
+
+    expect(JSON.parse(result.transaction).nonce).toBe(9);
+    expect(api.getAccountNonce).not.toHaveBeenCalled();
+  });
+
+  it("keeps the legacy field order, with data before chainID", async () => {
+    const intent: TransactionIntent = {
+      intentType: "transaction",
+      type: "send",
+      sender: SENDER,
+      recipient: RECIPIENT,
+      amount: 500n,
+      asset: { type: "esdt", assetReference: "USDC-c76f1f" },
+    };
+    const result = await craftTransaction(makeApi(3), intent);
+
+    expect(Object.keys(JSON.parse(result.transaction))).toEqual([
+      "nonce",
+      "value",
+      "receiver",
+      "sender",
+      "gasPrice",
+      "gasLimit",
+      "data",
+      "chainID",
+      "version",
+      "options",
+    ]);
+  });
+
   it("throws for invalid sender address", async () => {
     const api = makeApi();
     const intent = nativeIntent();

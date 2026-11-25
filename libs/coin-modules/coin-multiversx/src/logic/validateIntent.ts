@@ -5,17 +5,61 @@ import type {
   TransactionIntent,
   TransactionValidation,
 } from "@ledgerhq/coin-module-framework/api/index";
+import { formatCurrencyUnit } from "@ledgerhq/coin-module-framework/currencies";
 import {
   AmountRequired,
+  FeeTooHigh,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
   RecipientRequired,
 } from "@ledgerhq/ledger-wallet-framework/errors";
 import { isValidAddress } from "./validateAddress";
-import { estimateFees } from "./transaction/estimateFees";
-import { NotEnoughEGLDForFees } from "../errors";
+import { estimateFees, getCustomGasLimit } from "./transaction/estimateFees";
+import { getMoveBalanceGas } from "./transaction/computeFee";
+import { buildTransactionPayload } from "./transaction/craftTransaction";
+import {
+  MultiversXDelegationBelowMinimumError,
+  MultiversXGasLimitTooLow,
+  MultiversXMinDelegatedAmountError,
+  MultiversXMinUndelegatedAmountError,
+  NotEnoughEGLDForFees,
+} from "../errors";
 import { MIN_DELEGATION_AMOUNT } from "../constants";
+
+/**
+ * The amount staked with `contract`, the figure the legacy rule reads off
+ * `multiversxResources.delegations[].userActiveStake`. `validateIntent` gets no account, so the
+ * caller looks it up (`api/index.ts` derives it from `getStakes`).
+ */
+export type GetActiveStake = (address: string, contract: string) => Promise<bigint | undefined>;
+
+const EGLD_UNIT = { name: "EGLD", code: "EGLD", magnitude: 18 };
+const MIN_DELEGATION = BigInt(MIN_DELEGATION_AMOUNT.toFixed(0));
+const FORMATTED_MIN_DELEGATION = formatCurrencyUnit(EGLD_UNIT, MIN_DELEGATION_AMOUNT, {
+  showCode: true,
+});
+
+const STAKING_TYPES = new Set([
+  "delegate",
+  "reDelegateRewards",
+  "unDelegate",
+  "claimRewards",
+  "withdraw",
+  "stake.createAccount",
+  "stake.undelegate",
+  "stake.withdraw",
+]);
+
+// The legacy bridge lets these modes carry a zero amount.
+const ZERO_AMOUNT_TYPES = new Set([
+  "unDelegate",
+  "stake.undelegate",
+  "withdraw",
+  "stake.withdraw",
+  "reDelegateRewards",
+  "claimRewards",
+]);
 
 function findNativeBalance(balances: Balance[]): bigint {
   const b = balances.find(b => b.asset.type === "native");
@@ -32,20 +76,6 @@ function findEsdtBalance(balances: Balance[], assetReference: string): bigint {
   return b ? b.value : 0n;
 }
 
-const STAKING_TYPES = new Set([
-  "delegate",
-  "reDelegateRewards",
-  "unDelegate",
-  "claimRewards",
-  "withdraw",
-  "stake.createAccount",
-  "stake.undelegate",
-  "stake.withdraw",
-]);
-
-const MIN_DELEGATION = BigInt(MIN_DELEGATION_AMOUNT.toFixed(0));
-
-/** ESDT asset reference if this intent is a token transfer, else undefined. */
 function getEsdtReference(
   intent: TransactionIntent | StakingTransactionIntent,
 ): string | undefined {
@@ -61,11 +91,10 @@ function validateRecipient(
   intent: TransactionIntent | StakingTransactionIntent,
   txType: string,
   assetType: string,
-  isClaimRewards: boolean,
   isStaking: boolean,
 ): Error | undefined {
   const recipientRequired =
-    !isClaimRewards &&
+    txType !== "claimRewards" &&
     txType !== "reDelegateRewards" &&
     txType !== "withdraw" &&
     txType !== "stake.withdraw";
@@ -81,136 +110,110 @@ function validateRecipient(
   return undefined;
 }
 
-/** ESDT transfer: token amount vs token balance, fees vs native spendable. */
-function validateEsdtSpend(
-  amount: bigint,
-  esdtAvailable: bigint,
-  estimatedFees: bigint,
-  nativeSpendable: bigint,
-  isClaimRewards: boolean,
-): { errors: Record<string, Error>; totalSpent: bigint } {
-  const errors: Record<string, Error> = {};
-  if (!isClaimRewards && amount <= 0n) {
-    errors.amount = new AmountRequired();
-  } else if (amount > esdtAvailable) {
-    errors.amount = new NotEnoughBalance();
-  }
-  if (estimatedFees > nativeSpendable) {
-    // Token amount is covered but there isn't enough native EGLD for fees — use the
-    // dedicated error the UI/i18n expects (matches the legacy bridge getTransactionStatus).
-    errors.gasPrice = new NotEnoughEGLDForFees();
-  }
-  return { errors, totalSpent: estimatedFees };
-}
-
-/** Native EGLD transfer or staking op: amount rules + native spendable check. */
-function validateNativeSpend(
-  amount: bigint,
-  txType: string,
-  assetType: string,
-  estimatedFees: bigint,
-  nativeSpendable: bigint,
-  isClaimRewards: boolean,
-  isStaking: boolean,
-): { errors: Record<string, Error>; totalSpent: bigint } {
-  const errors: Record<string, Error> = {};
-  const isDelegate = txType === "delegate" || txType === "stake.createAccount";
-  const isUndelegate = txType === "unDelegate" || txType === "stake.undelegate";
-
-  if (!isClaimRewards && !isStaking && amount <= 0n) {
-    errors.amount = new AmountRequired();
-  }
-  if ((isDelegate || isUndelegate) && amount < MIN_DELEGATION) {
-    errors.amount = new AmountRequired();
-  }
-
-  // delegate / stake.createAccount move `amount` EGLD to the staking contract,
-  // so they consume amount + fees. unDelegate / claimRewards / reDelegate /
-  // withdraw carry value 0 and only consume fees.
-  const consumesNativeAmount = (assetType === "native" && !isStaking) || isDelegate;
-  const spends = consumesNativeAmount ? amount + estimatedFees : estimatedFees;
-  if (!errors.amount && spends > nativeSpendable) {
-    errors.amount = new NotEnoughBalance();
-  }
-  return { errors, totalSpent: spends };
-}
-
 /**
- * Validate a MultiversX transaction intent.
+ * Validates a MultiversX transaction intent with the rules, error types and error keys of the legacy
+ * `getTransactionStatus`: the desktop staking flows enable their continue button on the error count
+ * and render the `amount` key, so a rule missing here lets a doomed transaction through silently.
  *
- * Rules:
- * - recipient required and valid for send/delegate
- * - amount > 0 for send and ESDT transfers (claimRewards amount may be 0)
- * - for native: amount + fees <= spendable
- * - for ESDT: token amount <= esdt balance AND fees (native) <= native spendable
- * - for staking delegate/unDelegate: amount >= MIN_DELEGATION_AMOUNT (1 EGLD)
- * - claimRewards with amount 0 is valid
+ * Two legacy rules have no counterpart: `FeeNotLoaded` (the fee is always estimated here) and
+ * `MultiversXDecimalsLimitReached`, which tests the decimals of a fee in base units — an integer —
+ * and so never fires.
  */
 export async function validateIntent(
   intent: TransactionIntent | StakingTransactionIntent,
   balances: Balance[],
   customFees?: FeeEstimation,
+  getActiveStake?: GetActiveStake,
 ): Promise<TransactionValidation> {
+  const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
 
   const txType = (intent as StakingTransactionIntent).type ?? "";
   const assetType = intent.asset.type;
-  const isClaimRewards = txType === "claimRewards";
   const isStaking = STAKING_TYPES.has(txType);
+  const isDelegate = txType === "delegate" || txType === "stake.createAccount";
+  const isUndelegate = txType === "unDelegate" || txType === "stake.undelegate";
 
-  // Use the provided fee when present, otherwise estimate it — the balance checks
-  // (and native send-max below) need a real fee, not 0.
+  // The network rejects a transaction whose gas limit does not cover its move-balance cost.
+  const customGasLimit = getCustomGasLimit(customFees?.parameters);
+  const gasLimitTooLow =
+    customGasLimit !== undefined &&
+    customGasLimit < getMoveBalanceGas(buildTransactionPayload(intent).data);
+  if (gasLimitTooLow) errors.gasLimit = new MultiversXGasLimitTooLow();
+
+  // The balance checks (and native send-max below) need a real fee, not 0.
   const providedFees = customFees?.value;
   const estimatedFees =
     providedFees !== undefined && providedFees > 0n
       ? providedFees
-      : (await estimateFees(intent, customFees?.parameters)).value;
+      : (await estimateFees(intent, gasLimitTooLow ? undefined : customFees?.parameters)).value;
 
-  const errors: Record<string, Error> = {};
-  const recipientError = validateRecipient(intent, txType, assetType, isClaimRewards, isStaking);
+  const recipientError = validateRecipient(intent, txType, assetType, isStaking);
   if (recipientError) errors.recipient = recipientError;
 
   const nativeSpendable = findNativeBalance(balances);
   const esdtReference = getEsdtReference(intent);
   const useAllAmount = (intent as TransactionIntent).useAllAmount === true;
 
-  // Effective amount — send-max resolves to the full token balance (ESDT) or the
-  // native spendable minus fees. The resolved amount is returned so callers craft
-  // with it.
+  // Send-max resolves to the full token balance (ESDT) or the native spendable minus fees; the
+  // resolved amount is returned so callers craft with it.
   let amount = intent.amount;
-  let spend: { errors: Record<string, Error>; totalSpent: bigint };
-
-  if (esdtReference) {
-    const esdtAvailable = findEsdtBalance(balances, esdtReference);
-    if (useAllAmount) amount = esdtAvailable;
-    spend = validateEsdtSpend(
-      amount,
-      esdtAvailable,
-      estimatedFees,
-      nativeSpendable,
-      isClaimRewards,
-    );
-  } else {
-    if (useAllAmount && assetType === "native" && !isStaking) {
-      amount = nativeSpendable > estimatedFees ? nativeSpendable - estimatedFees : 0n;
-    }
-    spend = validateNativeSpend(
-      amount,
-      txType,
-      assetType,
-      estimatedFees,
-      nativeSpendable,
-      isClaimRewards,
-      isStaking,
-    );
+  if (useAllAmount && esdtReference) {
+    amount = findEsdtBalance(balances, esdtReference);
+  } else if (useAllAmount && assetType === "native" && !isStaking) {
+    amount = nativeSpendable > estimatedFees ? nativeSpendable - estimatedFees : 0n;
   }
-  Object.assign(errors, spend.errors);
 
-  return {
-    errors,
-    warnings,
-    estimatedFees,
-    amount,
-    totalSpent: spend.totalSpent,
-  };
+  if (amount <= 0n && !useAllAmount && !ZERO_AMOUNT_TYPES.has(txType)) {
+    errors.amount = new AmountRequired();
+  }
+
+  let totalSpent: bigint;
+  if (esdtReference) {
+    totalSpent = estimatedFees;
+    if (!errors.amount && amount > findEsdtBalance(balances, esdtReference)) {
+      errors.amount = new NotEnoughBalance();
+    }
+  } else {
+    const consumesNativeAmount = (assetType === "native" && !isStaking) || isDelegate;
+    totalSpent = consumesNativeAmount ? amount + estimatedFees : estimatedFees;
+
+    if (!isStaking && amount / 10n < estimatedFees) {
+      warnings.feeTooHigh = new FeeTooHigh();
+    }
+
+    if (!errors.amount && amount < MIN_DELEGATION) {
+      if (isDelegate) {
+        errors.amount = new MultiversXMinDelegatedAmountError("", {
+          formattedAmount: FORMATTED_MIN_DELEGATION,
+        });
+      } else if (isUndelegate) {
+        errors.amount = new MultiversXMinUndelegatedAmountError("", {
+          formattedAmount: FORMATTED_MIN_DELEGATION,
+        });
+      }
+    }
+
+    // Unless the whole delegation is undelegated, what remains must stay at the minimum.
+    if (!errors.amount && isUndelegate && intent.recipient && getActiveStake) {
+      const activeStake = (await getActiveStake(intent.sender, intent.recipient)) ?? 0n;
+      const remaining = activeStake - amount;
+      if (remaining > 0n && remaining < MIN_DELEGATION) {
+        errors.amount = new MultiversXDelegationBelowMinimumError("", {
+          formattedAmount: FORMATTED_MIN_DELEGATION,
+        });
+      }
+    }
+  }
+
+  // The fee shortfall goes on `amount`, the key the desktop flows render.
+  const spentNative = esdtReference ? estimatedFees : totalSpent;
+  if (!errors.amount && spentNative > nativeSpendable) {
+    errors.amount =
+      esdtReference || (isStaking && !isDelegate)
+        ? new NotEnoughEGLDForFees()
+        : new NotEnoughBalance();
+  }
+
+  return { errors, warnings, estimatedFees, amount, totalSpent };
 }

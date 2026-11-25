@@ -7,6 +7,7 @@ import {
   simulatorGet,
 } from "./chainSimulator";
 import { MULTIVERSX_API_URL, MULTIVERSX_DELEGATION_API_URL } from "./fixtures";
+import { addressToHex, decodeBigUint, queryProvider } from "./staking";
 
 /**
  * Indexer bridging the api.multiversx.com-style aggregator API (what coin-multiversx
@@ -36,12 +37,42 @@ interface TrackedTx {
   esdtIdentifier?: string;
   /** Decoded ESDT amount (decimal string) for the token sub-account operation value. */
   tokenValue?: string;
+  /** Set when the tx calls a staking provider: the endpoint called (`delegate`, `withdraw`...). */
+  stakingFunction?: string;
+  /** EGLD moved by the tx's smart-contract results, gas refunds excluded. */
+  operations: { sender: string; receiver: string; value: string }[];
 }
 
+const STAKING_FUNCTIONS = new Set([
+  "delegate",
+  "unDelegate",
+  "claimRewards",
+  "reDelegateRewards",
+  "withdraw",
+]);
+
 let trackedTxs: TrackedTx[] = [];
+let providers: string[] = [];
+let historyRequestsAfter: number[] = [];
 
 export function resetIndexer(): void {
   trackedTxs = [];
+  providers = [];
+  historyRequestsAfter = [];
+}
+
+/** The `after` timestamp of each native history request since the last `clearHistoryRequests`. */
+export function readHistoryRequestsAfter(): number[] {
+  return [...historyRequestsAfter];
+}
+
+export function clearHistoryRequests(): void {
+  historyRequestsAfter = [];
+}
+
+/** Make the delegation API serve `contract` and the history tag calls to it as staking. */
+export function registerProvider(contract: string): void {
+  providers.push(contract);
 }
 
 // --- Gateway response shapes (subset we read) ---
@@ -68,8 +99,18 @@ interface GatewayTxResponse {
       fee?: string;
       data?: string;
       gasLimit?: number;
+      logs?: { events?: { identifier: string }[] };
+      smartContractResults?: {
+        sender: string;
+        receiver: string;
+        value: number | string;
+        isRefund?: boolean;
+      }[];
     };
   };
+}
+interface GatewayBlocksByRoundResponse {
+  data: { blocks: { round: number; shard: number; timestamp: number }[] };
 }
 interface GatewaySendResponse {
   data: { txHash: string };
@@ -111,6 +152,16 @@ async function trackBroadcastTx(txHash: string): Promise<void> {
   if (!tx) return;
 
   const esdt = decodeEsdtTransfer(tx.data);
+  const calledFunction = Buffer.from(tx.data ?? "", "base64")
+    .toString("utf8")
+    .split("@")[0];
+  const stakingFunction =
+    providers.includes(tx.receiver) && STAKING_FUNCTIONS.has(calledFunction)
+      ? calledFunction
+      : undefined;
+  // The gateway keeps a contract-rejected tx at "success" and reports the rejection as a
+  // `signalError` event; the aggregator API marks it failed.
+  const rejected = tx.logs?.events?.some(e => e.identifier === "signalError");
 
   trackedTxs.push({
     txHash,
@@ -118,7 +169,7 @@ async function trackBroadcastTx(txHash: string): Promise<void> {
     receiver: tx.receiver,
     value: tx.value ?? "0",
     fee: tx.fee ?? "0",
-    status: tx.status ?? "success",
+    status: rejected ? "fail" : (tx.status ?? "success"),
     round: tx.round ?? 0,
     miniBlockHash: tx.miniblockHash ?? "",
     timestamp: tx.timestamp,
@@ -127,6 +178,14 @@ async function trackBroadcastTx(txHash: string): Promise<void> {
     data: tx.data,
     esdtIdentifier: esdt?.identifier,
     tokenValue: esdt?.value,
+    stakingFunction,
+    operations: (tx.smartContractResults ?? [])
+      .filter(scr => !scr.isRefund && BigInt(scr.value ?? 0) > 0n)
+      .map(({ sender, receiver, value }) => ({
+        sender,
+        receiver,
+        value: BigInt(value).toString(),
+      })),
   });
 }
 
@@ -134,7 +193,7 @@ async function trackBroadcastTx(txHash: string): Promise<void> {
 function toApiTransaction(tx: TrackedTx): Record<string, unknown> {
   // For ESDT transfers the aggregator exposes a decoded `action`; the coin module's
   // operation mapper reads the transferred amount from `action.arguments.transfers`.
-  const action =
+  const esdtAction =
     tx.esdtIdentifier && tx.tokenValue
       ? {
           category: "esdt",
@@ -142,6 +201,12 @@ function toApiTransaction(tx: TrackedTx): Record<string, unknown> {
           arguments: { transfers: [{ token: tx.esdtIdentifier, value: tx.tokenValue }] },
         }
       : undefined;
+  const action = tx.stakingFunction ? { category: "stake", name: tx.stakingFunction } : esdtAction;
+  const operations = tx.operations.map(op => ({
+    ...op,
+    action: "transfer",
+    type: "egld",
+  }));
 
   return {
     txHash: tx.txHash,
@@ -158,6 +223,7 @@ function toApiTransaction(tx: TrackedTx): Record<string, unknown> {
     ...(tx.data ? { data: tx.data } : {}),
     ...(tx.tokenValue ? { tokenValue: tx.tokenValue } : {}),
     ...(action ? { action } : {}),
+    ...(operations.length ? { operations } : {}),
   };
 }
 
@@ -169,6 +235,79 @@ function txsForAddress(address: string, after: number): TrackedTx[] {
 
 function esdtTxsForAddress(address: string, token: string, after: number): TrackedTx[] {
   return txsForAddress(address, after).filter(tx => tx.esdtIdentifier === token);
+}
+
+/** A delegation API provider entry; only the contract is real, the rest is display data. */
+function toApiProvider(contract: string) {
+  return {
+    contract,
+    address: contract,
+    owner: contract,
+    serviceFee: "0.1",
+    maxDelegationCap: "0",
+    initialOwnerFunds: "1250000000000000000000",
+    totalActiveStake: "0",
+    totalUnstaked: "0",
+    maxDelegateAmountAllowed: "0",
+    apr: "0",
+    aprValue: 0,
+    explorerURL: "",
+    automaticActivation: false,
+    changeableServiceFee: false,
+    checkCapOnRedelegate: false,
+    createdNonce: 0,
+    featured: false,
+    numNodes: 0,
+    numUsers: 0,
+    ownerBelowRequiredBalanceThreshold: false,
+    unBondPeriod: 10,
+    withDelegationCap: false,
+    identity: {
+      key: "coin-tester",
+      name: "Coin tester provider",
+      avatar: "",
+      description: "",
+      twitter: "",
+      url: "",
+    },
+  };
+}
+
+interface GatewayNetworkConfigResponse {
+  data: { config: { erd_round_duration: number; erd_rounds_per_epoch: number } };
+}
+
+/** The delegation API entry for `address` at `contract`, or null when nothing is staked there. */
+async function readDelegation(address: string, contract: string) {
+  const arg = [addressToHex(address)];
+  const [[active], [claimable], [unBondable], undelegated, config] = await Promise.all([
+    queryProvider(contract, "getUserActiveStake", arg),
+    queryProvider(contract, "getClaimableRewards", arg),
+    queryProvider(contract, "getUserUnBondable", arg),
+    queryProvider(contract, "getUserUnDelegatedList", arg),
+    simulatorGet<GatewayNetworkConfigResponse>("/network/config"),
+  ]);
+  const { erd_round_duration = 0, erd_rounds_per_epoch = 0 } = config?.data.config ?? {};
+  const secondsPerEpoch = (erd_round_duration * erd_rounds_per_epoch) / 1000;
+  // The contract lists unbonding entries as (amount, epochs left) pairs.
+  const userUndelegatedList = [];
+  for (let i = 0; i + 1 < undelegated.length; i += 2) {
+    userUndelegatedList.push({
+      amount: decodeBigUint(undelegated[i]).toString(),
+      seconds: Number(decodeBigUint(undelegated[i + 1])) * secondsPerEpoch,
+    });
+  }
+  const userActiveStake = decodeBigUint(active);
+  const claimableRewards = decodeBigUint(claimable);
+  if (!userActiveStake && !claimableRewards && !userUndelegatedList.length) return null;
+  return {
+    address,
+    contract,
+    userActiveStake: userActiveStake.toString(),
+    claimableRewards: claimableRewards.toString(),
+    userUnBondable: decodeBigUint(unBondable).toString(),
+    userUndelegatedList,
+  };
 }
 
 /**
@@ -211,6 +350,7 @@ export function initMswHandlers(): () => void {
       const url = new URL(request.url);
       const token = url.searchParams.get("token");
       const after = Number(url.searchParams.get("after") ?? "0");
+      if (!token) historyRequestsAfter.push(after);
       const from = Number(url.searchParams.get("from") ?? "0");
       const size = Number(url.searchParams.get("size") ?? "50");
       const list = token ? esdtTxsForAddress(address, token, after) : txsForAddress(address, after);
@@ -229,6 +369,7 @@ export function initMswHandlers(): () => void {
       const order = url.searchParams.get("order") === "asc" ? "asc" : "desc";
       const before = url.searchParams.get("before");
       const after = url.searchParams.get("after");
+      historyRequestsAfter.push(Number(after ?? "0"));
 
       let list = trackedTxs.filter(tx => tx.sender === address || tx.receiver === address);
       if (before !== null) list = list.filter(tx => tx.timestamp <= Number(before));
@@ -244,6 +385,21 @@ export function initMswHandlers(): () => void {
 
       const page = sorted.slice(from, from + size).map(toApiTransaction);
       return HttpResponse.json(page);
+    }),
+
+    // --- Round lookup: the timestamp an incremental sync resumes from ---
+    http.get(`${MULTIVERSX_API_URL}/rounds/:shard/:round`, async ({ params }) => {
+      const res = await simulatorGet<GatewayBlocksByRoundResponse>(
+        `/blocks/by-round/${String(params.round)}`,
+      );
+      const blocks = res?.data.blocks ?? [];
+      const block = blocks.find(b => b.shard === Number(params.shard)) ?? blocks[0];
+      if (!block) return new HttpResponse(null, { status: 404 });
+      return HttpResponse.json({
+        round: block.round,
+        shard: block.shard,
+        timestamp: block.timestamp,
+      });
     }),
 
     // --- ESDT token balances ---
@@ -303,10 +459,17 @@ export function initMswHandlers(): () => void {
       return HttpResponse.json({ data: { txHash } });
     }),
 
-    // --- Delegation API: no staking in this tester ---
-    http.get(`${MULTIVERSX_DELEGATION_API_URL}/providers`, () => HttpResponse.json([])),
-    http.get(`${MULTIVERSX_DELEGATION_API_URL}/accounts/:address/delegations`, () =>
-      HttpResponse.json([]),
+    // --- Delegation API: the registered providers, read live off their contracts ---
+    http.get(`${MULTIVERSX_DELEGATION_API_URL}/providers`, () =>
+      HttpResponse.json(providers.map(toApiProvider)),
+    ),
+    http.get(
+      `${MULTIVERSX_DELEGATION_API_URL}/accounts/:address/delegations`,
+      async ({ params }) => {
+        const address = String(params.address);
+        const delegations = await Promise.all(providers.map(c => readDelegation(address, c)));
+        return HttpResponse.json(delegations.filter(d => d !== null));
+      },
     ),
   );
 

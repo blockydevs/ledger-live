@@ -196,7 +196,7 @@ describe("listOperations", () => {
     await expect(listOperations(api, ADDR, { minHeight: 0 })).rejects.toThrow("token history down");
   });
 
-  it("decodes the unbonded amount for an unDelegate operation (details.amount)", async () => {
+  it("decodes the unbonded amount for an unDelegate operation (details.familyExtra.amount)", async () => {
     const UNDELEG = {
       ...TX_STUB,
       txHash: "undeleg1",
@@ -210,7 +210,7 @@ describe("listOperations", () => {
 
     expect(op.type).toBe("UNDELEGATE");
     expect(op.value).toBe(0n); // fee-excluded
-    expect(op.details?.amount).toBe("1000000000000000000");
+    expect(op.details?.familyExtra).toEqual({ amount: "1000000000000000000" });
   });
 
   it("computes a claimRewards operation value as reward minus fee", async () => {
@@ -324,5 +324,60 @@ describe("listOperations", () => {
     const esdtOps = result.items.filter(op => op.asset.type === "esdt");
     expect(esdtOps).toHaveLength(1);
     expect(esdtOps[0].asset).toMatchObject({ type: "esdt", assetReference: "USDC-c76f1f" });
+  });
+
+  describe("incremental sync", () => {
+    it("fetches native and token history only from the round of the newest stored operation", async () => {
+      const getHistory = jest.fn().mockResolvedValue([]);
+      const getESDTTransactionsForAddress = jest.fn().mockResolvedValue([]);
+      const getRound = jest.fn().mockResolvedValue({ round: 499, timestamp: 1700003000 });
+      const api = makeApi({
+        getHistory,
+        getRound,
+        getESDTTransactionsForAddress,
+        getESDTTokensForAddress: jest.fn().mockResolvedValue([{ identifier: "USDC-c76f1f" }]),
+      });
+
+      await listOperations(api, ADDR, { minHeight: 500 });
+
+      // minHeight is the round after the newest stored operation, which may not exist yet.
+      expect(getRound).toHaveBeenCalledWith(499);
+      expect(getHistory).toHaveBeenCalledWith(ADDR, 1700002940);
+      expect(getESDTTransactionsForAddress).toHaveBeenCalledWith(ADDR, "USDC-c76f1f", 1700002940);
+    });
+
+    it("keeps every operation of the resume round, even several sharing a timestamp", async () => {
+      const atBoundary = { ...TX_STUB, round: 500, timestamp: 1700003000 };
+      const api = makeApi({
+        getRound: jest.fn().mockResolvedValue({ round: 499, timestamp: 1700002994 }),
+        getHistory: jest.fn().mockResolvedValue([
+          { ...atBoundary, txHash: "a" },
+          { ...atBoundary, txHash: "b" },
+          { ...TX_STUB, round: 499, timestamp: 1700002994, txHash: "older" },
+        ]),
+      });
+
+      const result = await listOperations(api, ADDR, { minHeight: 500 });
+
+      expect(result.items.map(op => op.tx.hash).sort()).toEqual(["a", "b"]);
+    });
+
+    it("fetches the whole history for a sync from scratch", async () => {
+      const getHistory = jest.fn().mockResolvedValue([]);
+      const getRound = jest.fn();
+      await listOperations(makeApi({ getHistory, getRound }), ADDR, { minHeight: 0 });
+
+      expect(getRound).not.toHaveBeenCalled();
+      expect(getHistory).toHaveBeenCalledWith(ADDR, 0);
+    });
+
+    it("falls back to the whole history when the resume round cannot be read", async () => {
+      const getHistory = jest.fn().mockResolvedValue([]);
+      const api = makeApi({ getHistory, getRound: jest.fn().mockRejectedValue(new Error("404")) });
+
+      await listOperations(api, ADDR, { minHeight: 500 });
+
+      expect(getHistory).toHaveBeenCalledWith(ADDR, 0);
+    });
   });
 });

@@ -15,7 +15,7 @@ const RECIPIENT = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqplllst77y4
 describe("createApi factory (integration)", () => {
   const api = createApi();
   const context = createMockMultiversXContext({
-    ...multiversxDefaults.multiversx,
+    ...multiversxDefaults.elrond,
     apiEndpoint: API_ENDPOINT,
     delegationApiEndpoint: DELEGATION_API_ENDPOINT,
   });

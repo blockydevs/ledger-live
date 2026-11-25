@@ -25,8 +25,11 @@ export default coinConfig;
 export const setCoinConfig = coinConfig.setCoinConfig.bind(coinConfig);
 export const getCoinConfig = coinConfig.getCoinConfig.bind(coinConfig);
 
+// Keyed by currency id (`config_currency_elrond`); the legacy bridge reads its endpoints from env vars.
 export const multiversxDefaults = {
-  multiversx: {
+  elrond: {
+    apiEndpoint: "https://elrond.coin.ledger.com",
+    delegationApiEndpoint: "https://delegations-elrond.coin.ledger.com",
     status: {
       type: "active",
       features: [

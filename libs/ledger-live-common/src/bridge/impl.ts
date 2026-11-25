@@ -56,8 +56,12 @@ import {
 //
 // config_stacks_generic_bridge=false falls back to the legacy bridge for incident recovery
 // (LIVE-36417); same restart / clearBridgeCache("stacks") caveat as Casper.
+//
+// config_multiversx_generic_bridge defaults to false until QA's non-regression pass, then stays the
+// kill switch (LIVE-36244).
 const genericBridgeConfigKeys: Record<string, string> = {
   casper: "config_casper_generic_bridge",
+  multiversx: "config_multiversx_generic_bridge",
   near: "config_near_generic_bridge",
   stacks: "config_stacks_generic_bridge",
 };

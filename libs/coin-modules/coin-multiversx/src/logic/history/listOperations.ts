@@ -115,7 +115,7 @@ function getEGLDOperationValue(tx: MultiversXApiTransaction, address: string): B
   if (mode !== "send") {
     // delegate / unDelegate / reDelegateRewards map to DELEGATE/UNDELEGATE ops whose
     // fee the adapter re-adds, so value excludes it (the staked principal is surfaced
-    // via details.amount). withdraw is not fee-re-added and keeps the fee-only value.
+    // via details.familyExtra.amount). withdraw is not fee-re-added and keeps the fee-only value.
     if (mode === "delegate" || mode === "unDelegate" || mode === "reDelegateRewards") {
       return new BigNumber(0);
     }
@@ -184,7 +184,11 @@ function egldOpToFramework(
       date: new Date((tx.timestamp ?? 0) * 1000),
       failed: hasFailed,
     },
-    ...(delegationAmount.isZero() ? {} : { details: { amount: delegationAmount.toString() } }),
+    // `familyExtra` is the only `details` key the generic bridge hands to the family's
+    // `fromOperationExtraRaw`, which revives it as `Operation.extra.amount` for the operation details.
+    ...(delegationAmount.isZero()
+      ? {}
+      : { details: { familyExtra: { amount: delegationAmount.toString() } } }),
   };
 }
 
@@ -229,20 +233,47 @@ function esdtOpToFramework(
   };
 }
 
+// Rounds are time slots every shard shares, so the round of the newest stored operation bounds the
+// history by time. That round, `minHeight - 1`, always exists: `minHeight` itself is often a round the
+// chain has not produced yet when a sync follows a broadcast. The margin covers clock skew between
+// shards; the `minHeight` filter below drops what it over-fetches, so no operation is lost.
+const RESUME_MARGIN_SECONDS = 60;
+
+/** The `after` timestamp (seconds) to fetch history from: 0 fetches it all. */
+async function resolveStartAt(
+  api: MultiversXNetworkApi,
+  options: ListOperationsOptions,
+): Promise<number> {
+  if (options.cursor) {
+    // Guard against a non-numeric cursor — a NaN startAt would propagate to `after=NaN` in the
+    // network calls and break sync.
+    const parsedCursor = Number.parseInt(options.cursor, 10);
+    return Number.isNaN(parsedCursor) ? 0 : parsedCursor;
+  }
+  if (options.minHeight > 0) {
+    try {
+      const { timestamp } = await api.getRound(options.minHeight - 1);
+      return Math.max(0, timestamp - RESUME_MARGIN_SECONDS);
+    } catch {
+      // An unknown round costs a full fetch, as before, rather than a gap.
+      return 0;
+    }
+  }
+  return 0;
+}
+
 /**
  * List operations for a MultiversX address.
  * Merges native EGLD operations and ESDT token operations.
- * Cursor is a unix timestamp (seconds) used as the `after` parameter.
+ * Cursor is a unix timestamp (seconds) used as the `after` parameter. Without one, an incremental
+ * sync's `minHeight` sets it, so only the history since the last stored operation is fetched.
  */
 export async function listOperations(
   api: MultiversXNetworkApi,
   address: string,
   options: ListOperationsOptions,
 ): Promise<Page<Operation>> {
-  // Guard against a non-numeric cursor — a NaN startAt would propagate to
-  // `after=NaN` in the network calls and break sync.
-  const parsedCursor = options.cursor ? Number.parseInt(options.cursor, 10) : 0;
-  const startAt = Number.isNaN(parsedCursor) ? 0 : parsedCursor;
+  const startAt = await resolveStartAt(api, options);
 
   // Let network failures propagate — swallowing them would let sync "succeed"
   // with an incomplete/empty history (silent data loss) instead of retrying.

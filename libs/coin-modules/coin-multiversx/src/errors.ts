@@ -38,6 +38,14 @@ export class NotEnoughEGLDForFees extends Error {
   }
 }
 
+export class MultiversXGasLimitTooLow extends Error {
+  override name = "MultiversXGasLimitTooLow";
+  constructor(message?: string, fields?: Record<string, unknown>) {
+    super(message || "MultiversXGasLimitTooLow");
+    if (fields) Object.assign(this, fields);
+  }
+}
+
 export class MultiversXRoundNotFinal extends Error {
   override name = "MultiversXRoundNotFinal";
 }

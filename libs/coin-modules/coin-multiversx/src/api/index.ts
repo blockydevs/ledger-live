@@ -20,6 +20,7 @@ import type {
   Validator,
 } from "@ledgerhq/coin-module-framework/api/index";
 import { craftTransactionData } from "@ledgerhq/coin-module-framework/logic/craftTransactionData";
+import { log } from "@ledgerhq/logs";
 import { type MultiversXCoinConfig, type MultiversXContext } from "../config";
 import { createNetworkApi } from "../network/api";
 import { broadcast } from "../logic/transaction/broadcast";
@@ -83,6 +84,7 @@ export function createApi() {
       options?: BalanceOptions,
     ): Promise<Balance[]> => {
       const api = await resolveApi(context);
+      // One call returns every ESDT, so there is nothing for options to narrow or extend.
       return rejectBalanceOptions(() => getBalance(api, address), options);
     },
     lastBlock: async (context: MultiversXContext) => {
@@ -117,13 +119,24 @@ export function createApi() {
       const api = await resolveApi(context);
       return getStakes(api, address, options?.cursor);
     },
-    validateIntent: (
-      _context: MultiversXContext,
+    validateIntent: async (
+      context: MultiversXContext,
       intent: TransactionIntent | StakingTransactionIntent,
       balances: Balance[],
       options?: { customFees?: FeeEstimation },
     ): Promise<TransactionValidation> => {
-      return validateIntent(intent, balances, options?.customFees);
+      // A failed lookup skips the remaining-stake rule, as the legacy bridge does for an unknown delegation.
+      const getActiveStake = async (address: string, contract: string) => {
+        try {
+          const { items } = await getStakes(await resolveApi(context), address);
+          return items.find(stake => stake.state === "active" && stake.delegate === contract)
+            ?.amountDeposited;
+        } catch (error) {
+          log("multiversx/validateIntent", "active stake lookup failed", { error: String(error) });
+          return undefined;
+        }
+      };
+      return validateIntent(intent, balances, options?.customFees, getActiveStake);
     },
     getNextSequence: async (context: MultiversXContext, address: string): Promise<bigint> => {
       const api = await resolveApi(context);
