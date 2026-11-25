@@ -1,7 +1,4 @@
-import {
-  hasMinimumDelegableBalance,
-  randomizeProviders,
-} from "@ledgerhq/live-common/families/multiversx/helpers";
+import { hasMinimumDelegableBalance } from "@ledgerhq/live-common/families/multiversx/helpers";
 import type { MultiversXAccount } from "@ledgerhq/live-common/families/multiversx/types";
 import { IconsLegacy } from "@ledgerhq/native-ui";
 import React from "react";
@@ -10,7 +7,6 @@ import { Trans } from "~/context/Locale";
 import type { Account } from "@ledgerhq/types-live";
 import type { ActionButtonEvent, NavigationParamsType } from "~/components/FabActions";
 
-import { getCurrentMultiversXPreloadData } from "@ledgerhq/coin-multiversx/preload";
 import { ParamListBase, RouteProp } from "@react-navigation/native";
 import { NavigatorName, ScreenName } from "~/const";
 import { getStakeLabelLocaleBased } from "~/helpers/getStakeLabelLocaleBased";
@@ -38,12 +34,6 @@ const getMainActions = ({
   const delegationEnabled = hasMinimumDelegableBalance(account);
   const label = getStakeLabelLocaleBased();
 
-  /*
-   * Get a list of all the providers, randomize, and also the screen, conditionally, based on existing amount of delegations.
-   */
-  const preloaded = getCurrentMultiversXPreloadData();
-  const validators = randomizeProviders(preloaded.validators);
-
   const isFirstTimeFlow =
     account.multiversxResources && account.multiversxResources.delegations.length === 0;
   const screen = isFirstTimeFlow
@@ -68,7 +58,6 @@ const getMainActions = ({
           screen,
           params: {
             account,
-            validators,
             source: parentRoute,
             skipStartedStep: !isFirstTimeFlow,
           },
