@@ -11,7 +11,8 @@ import { buildContext } from "../../../bridge/generic-coin-framework/api/context
 import { CHAIN_ID } from "@ledgerhq/coin-multiversx/constants";
 import { MULTIVERSX_CURRENCY_ID } from "../constants";
 import { extractTokenId } from "@ledgerhq/coin-multiversx/logic";
-import type { Account } from "@ledgerhq/types-live";
+import type { Account, Operation } from "@ledgerhq/types-live";
+import { isMultiversXOperationExtra } from "../types";
 import type { MultiversXDeviceSignOptions } from "../signer";
 import type { CryptoCurrency } from "@domain/entity-currency-crypto";
 import type { TokenCurrency } from "@domain/entity-currency-token";
@@ -131,6 +132,18 @@ export async function buildAccountShape(address: string): Promise<FamilyAccountS
   return { multiversxResources: { nonce, delegations, isGuarded } };
 }
 
+/**
+ * Moves the called smart contract from the operation extra to `Operation.contract`, where the
+ * legacy bridge puts it and the staking operation details look up the validator.
+ */
+export function adaptOperations(_address: string, operations: Operation[]): Operation[] {
+  return operations.map(operation => {
+    if (!isMultiversXOperationExtra(operation.extra) || !operation.extra.contract) return operation;
+    const { contract, ...extra } = operation.extra;
+    return { ...operation, contract, extra };
+  });
+}
+
 export default function multiversxBridge(currency: CryptoCurrency): BridgeApi {
   return {
     getTokenFromAsset: (asset: AssetInfo) => getTokenFromAsset(currency, asset),
@@ -139,6 +152,7 @@ export default function multiversxBridge(currency: CryptoCurrency): BridgeApi {
     buildAccountShape,
     describeOptimisticOperation,
     getDeviceSignOptions,
+    adaptOperations,
     stakingSupported: true,
   };
 }

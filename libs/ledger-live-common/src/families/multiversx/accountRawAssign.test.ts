@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import type { MultiversXAccount, MultiversXResources } from "@ledgerhq/coin-multiversx/types";
 import type { Account, AccountRaw } from "@ledgerhq/types-live";
 import accountRawAssign from "./accountRawAssign";
@@ -42,5 +43,18 @@ describe("multiversx accountRawAssign", () => {
     accountRawAssign.assignFromAccountRaw(JSON.parse(JSON.stringify(raw)), restored);
 
     expect(restored.multiversxResources).toEqual(resources);
+  });
+
+  it("brings back the called contract of a stored operation, with or without an amount", () => {
+    const CONTRACT = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqplllst77y4l";
+
+    expect(accountRawAssign.fromOperationExtraRaw({ contract: CONTRACT })).toEqual({
+      contract: CONTRACT,
+    });
+    expect(
+      accountRawAssign.fromOperationExtraRaw(
+        accountRawAssign.toOperationExtraRaw({ amount: new BigNumber(5), contract: CONTRACT }),
+      ),
+    ).toEqual({ amount: new BigNumber(5), contract: CONTRACT });
   });
 });

@@ -210,7 +210,21 @@ describe("listOperations", () => {
 
     expect(op.type).toBe("UNDELEGATE");
     expect(op.value).toBe(0n); // fee-excluded
-    expect(op.details?.familyExtra).toEqual({ amount: "1000000000000000000" });
+    expect(op.details?.familyExtra).toEqual({
+      amount: "1000000000000000000",
+      contract: UNDELEG.receiver,
+    });
+  });
+
+  it("names no contract for a transfer to a wallet address", async () => {
+    const WALLET = "erd1qyu5wthldzr8wx5c9ucg8kjagg0jfs53s8nr3zpz3hypefsdd8ssycr6th";
+    const api = makeApi({
+      getHistory: jest.fn().mockResolvedValue([{ ...TX_STUB, receiver: WALLET }]),
+    });
+    const op = (await listOperations(api, ADDR, { minHeight: 0 })).items[0];
+
+    expect(op.type).toBe("OUT");
+    expect(op.details).toBeUndefined();
   });
 
   it("computes a claimRewards operation value as reward minus fee", async () => {

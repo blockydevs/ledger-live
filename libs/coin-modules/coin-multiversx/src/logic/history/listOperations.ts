@@ -3,6 +3,7 @@ import type {
   Operation,
   Page,
 } from "@ledgerhq/coin-module-framework/api/index";
+import { Address } from "@multiversx/sdk-core";
 import BigNumber from "bignumber.js";
 import type { MultiversXNetworkApi } from "../../network/api";
 import type {
@@ -147,6 +148,16 @@ function getESDTOperationValue(tx: MultiversXApiTransaction, tokenIdentifier?: s
   }
 }
 
+/** The receiver when it is a smart contract, which the legacy bridge sets on `Operation.contract`. */
+function getCalledContract(tx: MultiversXApiTransaction): string | undefined {
+  if (!tx.receiver) return undefined;
+  try {
+    return Address.newFromBech32(tx.receiver).isSmartContract() ? tx.receiver : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function egldOpToFramework(
   tx: MultiversXApiTransaction,
   address: string,
@@ -156,6 +167,11 @@ function egldOpToFramework(
   const fee = new BigNumber(tx.fee ?? 0);
   const hasFailed = !tx.status || tx.status === "fail" || tx.status === "invalid";
   const delegationAmount = getStakingAmount(tx, address);
+  const contract = getCalledContract(tx);
+  const familyExtra = {
+    ...(delegationAmount.isZero() ? {} : { amount: delegationAmount.toString() }),
+    ...(contract ? { contract } : {}),
+  };
 
   let value: BigNumber;
   if (hasFailed) {
@@ -185,10 +201,9 @@ function egldOpToFramework(
       failed: hasFailed,
     },
     // `familyExtra` is the only `details` key the generic bridge hands to the family's
-    // `fromOperationExtraRaw`, which revives it as `Operation.extra.amount` for the operation details.
-    ...(delegationAmount.isZero()
-      ? {}
-      : { details: { familyExtra: { amount: delegationAmount.toString() } } }),
+    // `fromOperationExtraRaw`: it revives `amount` as `Operation.extra.amount`, and the bridge's
+    // `adaptOperations` moves `contract` to `Operation.contract`, both read by the operation details.
+    ...(Object.keys(familyExtra).length === 0 ? {} : { details: { familyExtra } }),
   };
 }
 

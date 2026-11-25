@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
+import BigNumber from "bignumber.js";
 import type { AssetInfo } from "@ledgerhq/coin-module-framework/api/types";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import type { TokenCurrency } from "@domain/entity-currency-token";
-import type { Account, CryptoAssetsStore } from "@ledgerhq/types-live";
+import type { Account, CryptoAssetsStore, Operation } from "@ledgerhq/types-live";
 import {
+  adaptOperations,
   buildAccountShape,
   computeIntentType,
   describeOptimisticOperation,
@@ -100,6 +102,25 @@ describe("multiversx bridge", () => {
       await expect(buildAccountShape("erd1address")).resolves.toEqual({
         multiversxResources: { nonce: 0, delegations: [], isGuarded: false },
       });
+    });
+  });
+
+  describe("adaptOperations", () => {
+    const CONTRACT = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqplllst77y4l";
+    const amount = new BigNumber("1000000000000000000");
+
+    it("moves the called contract from the extra to the operation, as the legacy bridge sets it", () => {
+      const operation = { id: "op", extra: { amount, contract: CONTRACT } } as unknown as Operation;
+
+      expect(adaptOperations("erd1address", [operation])).toEqual([
+        { id: "op", contract: CONTRACT, extra: { amount } },
+      ]);
+    });
+
+    it("keeps an operation that called no contract as it is", () => {
+      const operation = { id: "op", extra: { amount } } as unknown as Operation;
+
+      expect(adaptOperations("erd1address", [operation])).toEqual([operation]);
     });
   });
 
