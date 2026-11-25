@@ -5,6 +5,7 @@ import type {
 import { GAS, GAS_PRICE, MIN_GAS_LIMIT } from "../../constants";
 import { getFees } from "../../network/sdk";
 import type { Transaction } from "../../types";
+import { MultiversXGasLimitTooLow } from "../../errors";
 import { buildTransactionPayload } from "./craftTransaction";
 import { estimateFees } from "./estimateFees";
 
@@ -89,4 +90,10 @@ describe("estimateFees", () => {
       expect(fee.parameters).toEqual({ gasLimit });
     },
   );
+
+  it("rejects a caller-supplied gas limit below the move-balance cost", async () => {
+    await expect(estimateFees(esdtIntent, { gasLimit: 1n })).rejects.toBeInstanceOf(
+      MultiversXGasLimitTooLow,
+    );
+  });
 });

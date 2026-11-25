@@ -15,7 +15,7 @@ import {
 import type { MultiversXProtocolTransaction } from "../../types";
 import type { MultiversXNetworkApi } from "../../network/api";
 import { isValidAddress } from "../validateAddress";
-import { computeFee } from "./computeFee";
+import { computeFee, getCustomGasLimit } from "./computeFee";
 
 // MultiversX transaction `data` must be base64-encoded, and hex amounts must be
 // even-length so the protocol parses them correctly (see src/encode.ts).
@@ -151,9 +151,8 @@ export async function craftTransaction(
     throw new Error(`Invalid recipient address: ${receiver}`);
   }
 
-  const providedGasLimit = customFees?.parameters?.gasLimit;
-  const effectiveGasLimit =
-    typeof providedGasLimit === "bigint" ? Number(providedGasLimit.toString()) : gasLimit;
+  const customGasLimit = getCustomGasLimit(customFees?.parameters);
+  const effectiveGasLimit = customGasLimit === undefined ? gasLimit : Number(customGasLimit);
 
   const tx: MultiversXProtocolTransaction = {
     nonce,

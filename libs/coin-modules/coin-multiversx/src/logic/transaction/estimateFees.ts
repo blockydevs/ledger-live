@@ -3,16 +3,8 @@ import type {
   StakingTransactionIntent,
   TransactionIntent,
 } from "@ledgerhq/coin-module-framework/api/index";
-import { computeFee } from "./computeFee";
+import { computeFee, getCustomGasLimit } from "./computeFee";
 import { buildTransactionPayload } from "./craftTransaction";
-
-/** The caller's gas limit, `undefined` when it set none; an invalid value throws. */
-export function getCustomGasLimit(
-  parameters: FeeEstimation["parameters"] | undefined,
-): bigint | undefined {
-  const gasLimit = parameters?.gasLimit;
-  return gasLimit === undefined || gasLimit === null ? undefined : BigInt(String(gasLimit));
-}
 
 /** The fee on the gas limit and `data` that `craftTransaction` puts on the wire for this intent. */
 export async function estimateFees(

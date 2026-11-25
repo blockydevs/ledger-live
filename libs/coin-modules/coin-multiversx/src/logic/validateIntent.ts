@@ -15,8 +15,8 @@ import {
   RecipientRequired,
 } from "@ledgerhq/ledger-wallet-framework/errors";
 import { isValidAddress } from "./validateAddress";
-import { estimateFees, getCustomGasLimit } from "./transaction/estimateFees";
-import { getMoveBalanceGas } from "./transaction/computeFee";
+import { estimateFees } from "./transaction/estimateFees";
+import { getCustomGasLimit, getMoveBalanceGas } from "./transaction/computeFee";
 import { buildTransactionPayload } from "./transaction/craftTransaction";
 import {
   MultiversXDelegationBelowMinimumError,
@@ -207,8 +207,7 @@ export async function validateIntent(
   }
 
   // The fee shortfall goes on `amount`, the key the desktop flows render.
-  const spentNative = esdtReference ? estimatedFees : totalSpent;
-  if (!errors.amount && spentNative > nativeSpendable) {
+  if (!errors.amount && totalSpent > nativeSpendable) {
     errors.amount =
       esdtReference || (isStaking && !isDelegate)
         ? new NotEnoughEGLDForFees()

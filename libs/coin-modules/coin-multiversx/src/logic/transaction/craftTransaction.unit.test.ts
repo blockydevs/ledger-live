@@ -187,6 +187,19 @@ describe("craftTransaction", () => {
     ]);
   });
 
+  it.each([600_000n, 600_000, "600000"])(
+    "crafts with the caller's gas limit (%p)",
+    async gasLimit => {
+      const result = await craftTransaction(makeApi(), nativeIntent(), {
+        value: 1n,
+        parameters: { gasLimit },
+      });
+
+      expect(JSON.parse(result.transaction).gasLimit).toBe(600_000);
+      expect(result.details).toEqual({ gasLimit: 600_000, estimatedFee: "1" });
+    },
+  );
+
   it("throws for invalid sender address", async () => {
     const api = makeApi();
     const intent = nativeIntent();

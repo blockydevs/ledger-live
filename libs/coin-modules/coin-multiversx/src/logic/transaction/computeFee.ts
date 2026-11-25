@@ -1,3 +1,5 @@
+import type { FeeEstimation } from "@ledgerhq/coin-module-framework/api/index";
+import { MultiversXGasLimitTooLow } from "../../errors";
 import { GAS_PER_DATA_BYTE, GAS_PRICE, GAS_PRICE_MODIFIER, MIN_GAS_LIMIT } from "../../constants";
 
 const MODIFIED_GAS_PRICE = BigInt(Math.round(GAS_PRICE * GAS_PRICE_MODIFIER));
@@ -15,7 +17,17 @@ export function getMoveBalanceGas(data: string | undefined): bigint {
 export function computeFee(gasLimit: bigint, data: string | undefined): bigint {
   const moveBalanceGas = getMoveBalanceGas(data);
   if (gasLimit < moveBalanceGas) {
-    throw new Error(`Gas limit ${gasLimit} is below the move-balance cost ${moveBalanceGas}`);
+    throw new MultiversXGasLimitTooLow(
+      `Gas limit ${gasLimit} is below the move-balance cost ${moveBalanceGas}`,
+    );
   }
   return moveBalanceGas * BigInt(GAS_PRICE) + (gasLimit - moveBalanceGas) * MODIFIED_GAS_PRICE;
+}
+
+/** The caller's gas limit, `undefined` when it set none; an invalid value throws. */
+export function getCustomGasLimit(
+  parameters: FeeEstimation["parameters"] | undefined,
+): bigint | undefined {
+  const gasLimit = parameters?.gasLimit;
+  return gasLimit === undefined || gasLimit === null ? undefined : BigInt(String(gasLimit));
 }
