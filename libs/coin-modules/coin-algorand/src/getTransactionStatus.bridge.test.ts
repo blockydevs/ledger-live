@@ -11,11 +11,7 @@ import {
 } from "@ledgerhq/ledger-wallet-framework/errors";
 import BigNumber from "bignumber.js";
 import { setCoinConfig } from "./config";
-import {
-  AlgorandASANotOptInInRecipient,
-  AlgorandMemoExceededSizeError,
-  ClaimRewardsFeesWarning,
-} from "./errors";
+import { AlgorandASANotOptInInRecipient, AlgorandMemoExceededSizeError } from "./errors";
 import { getTransactionStatus } from "./getTransactionStatus";
 import { getAccount } from "./network";
 import { mockAlgorandConfig } from "./test/context";
@@ -320,38 +316,6 @@ describe("getTransactionStatus (legacy bridge)", () => {
           assetId: "algorand/asa/31231",
           amount: new BigNumber(0),
         }),
-      );
-
-      expect(status.errors.amount).toBeInstanceOf(NotEnoughBalance);
-    });
-  });
-
-  describe("claimReward", () => {
-    it("reports no error when the fees can be paid", async () => {
-      const status = await getTransactionStatus(
-        buildAccount({ rewards: "5000" }),
-        buildTransaction({ mode: "claimReward", amount: new BigNumber(0) }),
-      );
-
-      expect({ errors: status.errors, warnings: status.warnings }).toEqual({
-        errors: {},
-        warnings: {},
-      });
-    });
-
-    it("warns when the fees exceed the pending rewards", async () => {
-      const status = await getTransactionStatus(
-        buildAccount({ rewards: "10" }),
-        buildTransaction({ mode: "claimReward", amount: new BigNumber(0) }),
-      );
-
-      expect(status.warnings.claimReward).toBeInstanceOf(ClaimRewardsFeesWarning);
-    });
-
-    it("reports NotEnoughBalance when the spendable balance cannot pay the fees", async () => {
-      const status = await getTransactionStatus(
-        buildAccount({ balance: "100000", nbAssets: 0, tokenBalance: null }),
-        buildTransaction({ mode: "claimReward", amount: new BigNumber(0) }),
       );
 
       expect(status.errors.amount).toBeInstanceOf(NotEnoughBalance);

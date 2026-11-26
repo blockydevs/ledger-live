@@ -5,7 +5,6 @@ export interface AlgoAccount {
   round: number;
   address: string;
   balance: BigNumber;
-  pendingRewards: BigNumber;
   assets: AlgoAsset[];
 }
 

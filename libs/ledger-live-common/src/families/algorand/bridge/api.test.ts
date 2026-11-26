@@ -51,9 +51,9 @@ describe("Algorand bridge api", () => {
     expect(computeIntentType({ mode })).toBe(intentType);
   });
 
-  it("rejects the claimReward mode, which only the legacy bridge supports", () => {
-    expect(() => computeIntentType({ mode: "claimReward" })).toThrow(
-      "Unsupported Algorand transaction mode: claimReward",
+  it("rejects an unsupported mode", () => {
+    expect(() => computeIntentType({ mode: "unsupported" })).toThrow(
+      "Unsupported Algorand transaction mode: unsupported",
     );
   });
 

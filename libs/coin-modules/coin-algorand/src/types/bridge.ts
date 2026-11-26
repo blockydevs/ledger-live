@@ -21,12 +21,10 @@ export const AlgorandOperationTypeEnum = {
 };
 
 export type AlgorandResourcesBridge = {
-  rewards: BigNumber;
   nbAssets: number;
 };
 
 export type AlgorandResourcesRaw = {
-  rewards: string;
   nbAssets: number;
 };
 

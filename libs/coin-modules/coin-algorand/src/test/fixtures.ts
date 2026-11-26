@@ -42,13 +42,11 @@ export const buildAccount = ({
   balance = "1167089",
   tokenBalance = "5000000",
   nbAssets = 1,
-  rewards = "0",
 }: {
   address?: string;
   balance?: string;
   tokenBalance?: string | null;
   nbAssets?: number;
-  rewards?: string;
 } = {}): AlgorandAccount =>
   ({
     type: "Account",
@@ -58,7 +56,7 @@ export const buildAccount = ({
     balance: new BigNumber(balance),
     spendableBalance: new BigNumber(balance),
     subAccounts: tokenBalance === null ? [] : [buildTokenAccount(address, tokenBalance)],
-    algorandResources: { nbAssets, rewards: new BigNumber(rewards) },
+    algorandResources: { nbAssets },
   }) as unknown as AlgorandAccount;
 
 export const buildTransaction = (overrides: Partial<Transaction> = {}): Transaction =>
@@ -82,6 +80,5 @@ export const buildNetworkAccount = (
   round: 50000000,
   address,
   balance: new BigNumber(balance),
-  pendingRewards: new BigNumber(0),
   assets: assets.map(assetId => ({ assetId, balance: new BigNumber(1) })),
 });

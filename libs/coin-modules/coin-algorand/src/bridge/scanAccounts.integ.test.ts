@@ -121,7 +121,6 @@ describe("Algorand currency bridge scanAccounts (integration)", () => {
       spendableIsAmount: isValidAmount(used.spendableBalance),
       balanceIsPositive: used.balance.gt(0),
       spendableWithinBalance: used.spendableBalance.lte(used.balance),
-      rewardsAreAmount: isValidAmount(used.algorandResources.rewards),
       nbAssetsIsPositive: used.algorandResources.nbAssets > 0,
       blockHeightIsPositive: used.blockHeight > 0,
     }).toEqual({
@@ -129,7 +128,6 @@ describe("Algorand currency bridge scanAccounts (integration)", () => {
       spendableIsAmount: true,
       balanceIsPositive: true,
       spendableWithinBalance: true,
-      rewardsAreAmount: true,
       nbAssetsIsPositive: true,
       blockHeightIsPositive: true,
     });

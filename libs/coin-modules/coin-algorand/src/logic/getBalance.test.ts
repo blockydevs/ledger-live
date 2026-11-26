@@ -15,7 +15,6 @@ describe("getBalance", () => {
   it("should return native balance for account with no assets", async () => {
     mockGetAccount.mockResolvedValue({
       balance: new BigNumber("1000000"),
-      pendingRewards: new BigNumber("0"),
       assets: [],
     });
 
@@ -33,7 +32,6 @@ describe("getBalance", () => {
   it("should include ASA token balances", async () => {
     mockGetAccount.mockResolvedValue({
       balance: new BigNumber("2000000"),
-      pendingRewards: new BigNumber("0"),
       assets: [
         { assetId: "123", balance: new BigNumber("500"), isFrozen: false },
         { assetId: "456", balance: new BigNumber("1000"), isFrozen: false },
@@ -63,7 +61,6 @@ describe("getBalance", () => {
   it("should calculate correct locked amount based on number of assets", async () => {
     mockGetAccount.mockResolvedValue({
       balance: new BigNumber("5000000"),
-      pendingRewards: new BigNumber("0"),
       assets: [
         { assetId: "1", balance: new BigNumber("100"), isFrozen: false },
         { assetId: "2", balance: new BigNumber("200"), isFrozen: false },
@@ -82,7 +79,6 @@ describe("getBalance", () => {
   it("should handle zero balance account", async () => {
     mockGetAccount.mockResolvedValue({
       balance: new BigNumber("0"),
-      pendingRewards: new BigNumber("0"),
       assets: [],
     });
 
@@ -95,7 +91,6 @@ describe("getBalance", () => {
   it("should handle large balances", async () => {
     mockGetAccount.mockResolvedValue({
       balance: new BigNumber("1000000000000"), // 1M ALGO
-      pendingRewards: new BigNumber("0"),
       assets: [],
     });
 

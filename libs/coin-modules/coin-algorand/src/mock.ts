@@ -7,7 +7,6 @@ import type { AlgorandAccount, AlgorandOperation } from "./types";
 function setAlgorandResources(account: Account): Account {
   /** format algorandResources given the new delegations */
   (account as AlgorandAccount).algorandResources = {
-    rewards: account.balance.multipliedBy(0.01),
     nbAssets: account.subAccounts?.length ?? 0,
   };
   return account;
@@ -85,16 +84,12 @@ function genAccountEnhanceOperations(account: Account, rng: Prando): Account {
 }
 
 /**
- * Update spendable balance for the account based on delegation data
+ * Update spendable balance for the account
  * @memberof algorand/mock
  * @param {Account} account
  */
 function postSyncAccount(account: Account): Account {
-  const algorandResources = (account as AlgorandAccount).algorandResources || {
-    rewards: undefined,
-  };
-  const rewards = algorandResources.rewards || new BigNumber(0);
-  account.spendableBalance = account.balance.plus(rewards);
+  account.spendableBalance = account.balance;
   return account;
 }
 
@@ -114,7 +109,6 @@ function postScanAccount(
 ): Account {
   if (isEmpty) {
     (account as AlgorandAccount).algorandResources = {
-      rewards: new BigNumber(0),
       nbAssets: account.subAccounts?.length ?? 0,
     };
     account.operations = [];

@@ -36,7 +36,6 @@ export const getAccount = async (
     round: data.round,
     address: data.address,
     balance: new BigNumber(data.amount),
-    pendingRewards: new BigNumber(data["pending-rewards"]),
     assets,
   };
 };

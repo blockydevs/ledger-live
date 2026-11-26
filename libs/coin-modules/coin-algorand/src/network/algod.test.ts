@@ -45,8 +45,6 @@ describe("algod", () => {
       expect(result.address).toBe("ALGO_ADDRESS");
       expect(result.balance).toBeInstanceOf(BigNumber);
       expect(result.balance.toString()).toBe("10000000");
-      expect(result.pendingRewards).toBeInstanceOf(BigNumber);
-      expect(result.pendingRewards.toString()).toBe("5000");
       expect(result.assets).toHaveLength(2);
       expect(result.assets[0]).toEqual({
         assetId: "12345",

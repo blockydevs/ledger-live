@@ -15,11 +15,7 @@ import BigNumber from "bignumber.js";
 import invariant from "invariant";
 
 import { computeAlgoMaxSpendable, isAmountValid, recipientHasAsset } from "./bridgeLogic";
-import {
-  AlgorandASANotOptInInRecipient,
-  AlgorandMemoExceededSizeError,
-  ClaimRewardsFeesWarning,
-} from "./errors";
+import { AlgorandASANotOptInInRecipient, AlgorandMemoExceededSizeError } from "./errors";
 
 import { validateMemo } from "./logic/validateMemo";
 import { extractTokenId } from "./tokens";
@@ -140,18 +136,6 @@ export const getTransactionStatus: AccountBridge<
 
       if (algoSpendableBalance.lt(estimatedFees)) {
         errors.amount = new NotEnoughBalance();
-      }
-
-      break;
-    }
-
-    case "claimReward": {
-      if (algoSpendableBalance.lt(totalSpent)) {
-        errors.amount = new NotEnoughBalance();
-      }
-
-      if (estimatedFees.gt(algorandResources.rewards)) {
-        warnings.claimReward = new ClaimRewardsFeesWarning();
       }
 
       break;

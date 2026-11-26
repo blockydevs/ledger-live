@@ -73,7 +73,6 @@ describe("bridgeLogic", () => {
       ["send", 0, "900000"],
       ["send", 2, "700000"],
       ["optIn", 2, "600000"],
-      ["claimReward", 1, "800000"],
     ] as const)(
       "keeps the base reserve for a %s with %i assets",
       (mode, nbAccountAssets, expected) => {

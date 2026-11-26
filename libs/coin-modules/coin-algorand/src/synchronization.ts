@@ -238,7 +238,7 @@ export const getAccountShape: GetAccountShape<AlgorandAccount> = async (info, sy
     derivationMode,
   });
 
-  const { round, balance, pendingRewards, assets } = await getAccount(getCoinConfig(), address);
+  const { round, balance, assets } = await getAccount(getCoinConfig(), address);
 
   const nbAssets = assets.length;
 
@@ -281,7 +281,6 @@ export const getAccountShape: GetAccountShape<AlgorandAccount> = async (info, sy
     operationsCount: operations.length,
     subAccounts: subAccounts || [],
     algorandResources: {
-      rewards: pendingRewards,
       nbAssets,
     },
   };

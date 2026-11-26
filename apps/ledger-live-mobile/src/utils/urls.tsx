@@ -121,7 +121,6 @@ export const urls = {
     "https://www.ledger.com/staking-ethereum?utm_source=ledger_live_mobile&utm_medium=self_referral&utm_content=ethereum",
   seiAssociationWarning: "https://support.ledger.com/article/Sei-SEI",
   cardanoStaking: "https://support.ledger.com/article/7880073204253-zd",
-  algorandStaking: "https://support.ledger.com/article/360015897740-zd",
   polkadotStaking: "https://support.ledger.com/article/360018131260-zd",
   multiversxStaking: "https://support.ledger.com/article/360016750819-zd",
   minaStaking:

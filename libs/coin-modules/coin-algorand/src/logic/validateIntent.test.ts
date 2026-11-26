@@ -28,7 +28,6 @@ describe("validateIntent", () => {
     jest.clearAllMocks();
     mockGetAccount.mockResolvedValue({
       balance: new BigNumber("1000000"),
-      pendingRewards: new BigNumber("0"),
       assets: [],
     });
   });
@@ -160,7 +159,6 @@ describe("validateIntent", () => {
     it("should validate token transfer with sufficient balance", async () => {
       mockGetAccount.mockResolvedValue({
         balance: new BigNumber("1000000"),
-        pendingRewards: new BigNumber("0"),
         assets: [{ assetId: "123", amount: new BigNumber("1000") }],
       });
 
@@ -191,7 +189,6 @@ describe("validateIntent", () => {
     it("should error when token balance is insufficient", async () => {
       mockGetAccount.mockResolvedValue({
         balance: new BigNumber("1000000"),
-        pendingRewards: new BigNumber("0"),
         assets: [{ assetId: "123", amount: new BigNumber("100") }],
       });
 
@@ -222,7 +219,6 @@ describe("validateIntent", () => {
     it("should error when recipient has not opted in to ASA token", async () => {
       mockGetAccount.mockResolvedValue({
         balance: new BigNumber("1000000"),
-        pendingRewards: new BigNumber("0"),
         assets: [], // Recipient has no assets - not opted in
       });
 
@@ -253,7 +249,6 @@ describe("validateIntent", () => {
     it("should error when recipient has opted in to different ASA token", async () => {
       mockGetAccount.mockResolvedValue({
         balance: new BigNumber("1000000"),
-        pendingRewards: new BigNumber("0"),
         assets: [{ assetId: "456", amount: new BigNumber("1000") }], // Different token
       });
 
@@ -313,7 +308,6 @@ describe("validateIntent", () => {
     it("should error when sending less than minimum to new account", async () => {
       mockGetAccount.mockResolvedValue({
         balance: new BigNumber("0"),
-        pendingRewards: new BigNumber("0"),
         assets: [],
       });
 

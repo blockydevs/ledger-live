@@ -46,7 +46,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("10000000"),
-          pendingRewards: new BigNumber("5000"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([]);
@@ -65,7 +64,6 @@ describe("Synchronization", () => {
         expect(result.xpub).toBe("ALGO_ADDRESS");
         expect(result.blockHeight).toBe(50000000);
         expect(result.balance.toString()).toBe("10000000");
-        expect(result.algorandResources?.rewards.toString()).toBe("5000");
         expect(result.algorandResources?.nbAssets).toBe(0);
       });
 
@@ -73,7 +71,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("1000000"), // 1 ALGO
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([]);
@@ -96,7 +93,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("1000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [
             { assetId: "1", balance: new BigNumber("100") },
             { assetId: "2", balance: new BigNumber("200") },
@@ -126,7 +122,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -170,7 +165,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -209,7 +203,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -251,7 +244,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -291,7 +283,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [{ assetId: "12345", balance: new BigNumber("0") }],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -332,7 +323,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -373,7 +363,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [{ assetId: "12345", balance: new BigNumber("400") }],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -417,7 +406,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [{ assetId: "12345", balance: new BigNumber("500") }],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -457,7 +445,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber(10),
-          pendingRewards: new BigNumber(0),
           assets: [
             { assetId: "1", balance: new BigNumber(4) },
             { assetId: "2", balance: new BigNumber(5) },
@@ -503,7 +490,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber(10),
-          pendingRewards: new BigNumber(0),
           assets: [
             { assetId: "1", balance: new BigNumber(4) },
             { assetId: "2", balance: new BigNumber(5) },
@@ -541,7 +527,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000100,
           balance: new BigNumber("6000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         jest.spyOn(network, "getAllAccountTransactions").mockResolvedValue([
@@ -591,7 +576,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000100,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [],
         } as never);
         const getAllAccountTransactionsSpy = jest
@@ -625,7 +609,6 @@ describe("Synchronization", () => {
         jest.spyOn(network, "getAccount").mockResolvedValue({
           round: 50000000,
           balance: new BigNumber("5000000"),
-          pendingRewards: new BigNumber("0"),
           assets: [
             { assetId: "1", balance: new BigNumber("100") },
             { assetId: "2", balance: new BigNumber("200") },

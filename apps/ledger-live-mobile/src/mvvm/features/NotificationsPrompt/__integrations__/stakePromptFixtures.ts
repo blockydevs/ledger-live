@@ -4,7 +4,6 @@ import { NavigatorName, ScreenName } from "~/const";
 
 export type AccountKey =
   | "aleo"
-  | "algorand"
   | "cardano"
   | "celo"
   | "cosmos"
@@ -45,9 +44,6 @@ export type MobileFamilyFlowExport = StakePromptCase["familyExportKey"];
 export const accountsByKey = {
   aleo: genAccount("notifications-prompt-aleo", {
     currency: getCryptoCurrencyById("aleo"),
-  }),
-  algorand: genAccount("notifications-prompt-algorand", {
-    currency: getCryptoCurrencyById("algorand"),
   }),
   cardano: genAccount("notifications-prompt-cardano", {
     currency: getCryptoCurrencyById("cardano"),
@@ -132,17 +128,6 @@ export const stakePromptCases: StakePromptCase[] = [
     accountKey: "aleo",
     operationType: "UNBOND",
     transaction: { family: "aleo", mode: "unbond_public" },
-  },
-  {
-    label: "Algorand claim rewards",
-    bucket: "revoke/claim/lifecycle",
-    flowName: NavigatorName.AlgorandClaimRewardsFlow,
-    familyExportKey: "AlgorandClaimRewardsFlow",
-    successScreenName: ScreenName.AlgorandClaimRewardsValidationSuccess,
-    errorScreenName: ScreenName.AlgorandClaimRewardsValidationError,
-    accountKey: "algorand",
-    operationType: "REWARD",
-    transaction: { family: "algorand", mode: "claimRewards" },
   },
   {
     label: "Cardano delegation",

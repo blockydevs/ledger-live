@@ -105,7 +105,6 @@ export const urls = {
     "https://www.ledger.com/staking/staking-tezos?utm_source=ledger_live_desktop&utm_medium=self_referral&utm_content=tezos",
   stakingPolkadot: "https://support.ledger.com/article/360018131260-zd",
   cardanoStakingRewards: "https://support.ledger.com/article/7880073204253-zd",
-  algorandStakingRewards: "https://support.ledger.com/article/360015897740-zd",
   nearStakingRewards: "https://support.ledger.com/article/360020450619-zd",
   // TODO: change to LL sui link
   suiStakingRewards: "",

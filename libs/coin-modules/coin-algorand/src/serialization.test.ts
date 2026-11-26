@@ -18,7 +18,6 @@ describe("serialization", () => {
     it("should assign algorandResources to account raw", () => {
       const account = {
         algorandResources: {
-          rewards: new BigNumber("5000000"),
           nbAssets: 3,
         },
       } as AlgorandAccount;
@@ -28,9 +27,7 @@ describe("serialization", () => {
       assignToAccountRaw(account as Account, accountRaw);
 
       const algorandRaw = accountRaw as AlgorandAccountRaw;
-      expect(algorandRaw.algorandResources).not.toBeUndefined();
-      expect(algorandRaw.algorandResources?.rewards).toBe("5000000");
-      expect(algorandRaw.algorandResources?.nbAssets).toBe(3);
+      expect(algorandRaw.algorandResources).toEqual({ nbAssets: 3 });
     });
 
     it("should not assign if algorandResources is undefined", () => {
@@ -42,30 +39,12 @@ describe("serialization", () => {
       const algorandRaw = accountRaw as AlgorandAccountRaw;
       expect(algorandRaw.algorandResources).toBeUndefined();
     });
-
-    it("should handle zero rewards", () => {
-      const account = {
-        algorandResources: {
-          rewards: new BigNumber("0"),
-          nbAssets: 0,
-        },
-      } as AlgorandAccount;
-
-      const accountRaw = {} as AccountRaw;
-
-      assignToAccountRaw(account as Account, accountRaw);
-
-      const algorandRaw = accountRaw as AlgorandAccountRaw;
-      expect(algorandRaw.algorandResources?.rewards).toBe("0");
-      expect(algorandRaw.algorandResources?.nbAssets).toBe(0);
-    });
   });
 
   describe("assignFromAccountRaw", () => {
     it("should assign algorandResources from account raw", () => {
       const accountRaw = {
         algorandResources: {
-          rewards: "10000000",
           nbAssets: 5,
         },
       } as AlgorandAccountRaw;
@@ -75,10 +54,23 @@ describe("serialization", () => {
       assignFromAccountRaw(accountRaw as AccountRaw, account);
 
       const algorandAccount = account as AlgorandAccount;
-      expect(algorandAccount.algorandResources).not.toBeUndefined();
-      expect(algorandAccount.algorandResources?.rewards).toBeInstanceOf(BigNumber);
-      expect(algorandAccount.algorandResources?.rewards.toString()).toBe("10000000");
-      expect(algorandAccount.algorandResources?.nbAssets).toBe(5);
+      expect(algorandAccount.algorandResources).toEqual({ nbAssets: 5 });
+    });
+
+    it("should drop the rewards of an account raw stored by a previous version", () => {
+      const accountRaw = {
+        algorandResources: {
+          rewards: "0",
+          nbAssets: 2,
+        },
+      } as unknown as AlgorandAccountRaw;
+
+      const account = {} as Account;
+
+      assignFromAccountRaw(accountRaw as AccountRaw, account);
+
+      const algorandAccount = account as AlgorandAccount;
+      expect(algorandAccount.algorandResources).toEqual({ nbAssets: 2 });
     });
 
     it("should not assign if algorandResources is undefined", () => {
@@ -96,7 +88,6 @@ describe("serialization", () => {
     it("should preserve data through toRaw and fromRaw", () => {
       const originalAccount = {
         algorandResources: {
-          rewards: new BigNumber("7500000"),
           nbAssets: 10,
         },
       } as AlgorandAccount;
@@ -108,10 +99,7 @@ describe("serialization", () => {
       assignFromAccountRaw(accountRaw, restoredAccount);
 
       const restored = restoredAccount as AlgorandAccount;
-      expect(restored.algorandResources?.rewards.toString()).toBe(
-        originalAccount.algorandResources.rewards.toString(),
-      );
-      expect(restored.algorandResources?.nbAssets).toBe(originalAccount.algorandResources.nbAssets);
+      expect(restored.algorandResources).toEqual(originalAccount.algorandResources);
     });
   });
 

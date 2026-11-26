@@ -16,7 +16,6 @@ describe("buildOptimisticOperation", () => {
       spendableBalance: new BigNumber(balance),
       balance: new BigNumber(balance),
       algorandResources: {
-        rewards: new BigNumber("0"),
         nbAssets: subAccounts.length,
       },
       subAccounts,

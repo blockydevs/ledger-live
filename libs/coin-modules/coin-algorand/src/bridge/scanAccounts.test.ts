@@ -141,7 +141,6 @@ const serveChain = () => {
           round: 50000000,
           address,
           balance: new BigNumber("1167089"),
-          pendingRewards: new BigNumber("4242"),
           assets: [
             { assetId: ASSET_ID, balance: new BigNumber("4000") },
             { assetId: "31231", balance: new BigNumber("0") },
@@ -151,7 +150,6 @@ const serveChain = () => {
           round: 50000000,
           address,
           balance: new BigNumber(0),
-          pendingRewards: new BigNumber(0),
           assets: [],
         },
   );
@@ -233,18 +231,14 @@ describe("currencyBridge.scanAccounts", () => {
     ]);
   });
 
-  it("reports the balance, the spendable balance and the pending rewards", async () => {
+  it("reports the balance and the spendable balance", async () => {
     const [funded, empty] = await scan();
 
     expect({
-      funded: [
-        funded.balance.toString(),
-        funded.spendableBalance.toString(),
-        funded.algorandResources.rewards.toString(),
-      ],
+      funded: [funded.balance.toString(), funded.spendableBalance.toString()],
       empty: [empty.balance.toString(), empty.spendableBalance.toString()],
     }).toEqual({
-      funded: ["1167089", "867089", "4242"],
+      funded: ["1167089", "867089"],
       empty: ["0", "0"],
     });
   });

@@ -113,7 +113,6 @@ describe("Algorand on the generic adapter", () => {
       address: SENDER,
       round: 1000,
       balance: new BigNumber(1_000_000),
-      pendingRewards: new BigNumber(0),
       assets: [{ assetId: ASA_ID, balance: new BigNumber(500) }],
     });
     jest.mocked(getAccountTransactions).mockResolvedValue({
