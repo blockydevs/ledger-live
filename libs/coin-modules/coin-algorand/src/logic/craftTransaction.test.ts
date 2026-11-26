@@ -292,6 +292,22 @@ describe("craftApiTransaction", () => {
     expect((result.details as { txPayload: { type: string } }).txPayload.type).toBe("pay");
   });
 
+  it("should craft an opt-in without an asset reference as a 0-ALGO self-payment", async () => {
+    const intent: TransactionIntent<AlgorandMemo> = {
+      intentType: "transaction",
+      type: "optIn",
+      sender: "SENDER_ADDR",
+      recipient: "SENDER_ADDR",
+      amount: 0n,
+      asset: { type: "native" },
+    };
+
+    const crafted = craftApiTransaction(mockAlgorandContext, intent);
+
+    // LIVE-35920 flips this to: await expect(crafted).rejects.toThrow();
+    await expect(crafted).resolves.toMatchObject({ details: { txPayload: { type: "pay" } } });
+  });
+
   it("should throw for non-send transaction intents", async () => {
     const intent = {
       intentType: "other",

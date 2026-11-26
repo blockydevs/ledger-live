@@ -114,6 +114,31 @@ describe("validateIntent", () => {
       // 10 ALGO - 0.1 ALGO locked - 0.001 ALGO fees = 9.899 ALGO
       expect(result.amount).toBe(9899000n);
     });
+
+    it("should accept a zero-amount max send when the balance is exactly locked + fees", async () => {
+      const fees = 1000n;
+      const locked = 100000n;
+      const intent: TransactionIntent<AlgorandMemo> = {
+        intentType: "transaction",
+        type: "send",
+        sender: validSender,
+        recipient: validRecipient,
+        amount: 0n,
+        asset: { type: "native" },
+        useAllAmount: true,
+      };
+
+      const result = await validateIntent(
+        mockAlgorandContext,
+        intent,
+        [{ locked, value: locked + fees, asset: { type: "native" } }],
+        { value: fees },
+      );
+
+      expect(result.amount).toBe(0n);
+      // LIVE-35920 flips this to: expect(result.errors.amount?.message).toBe("NotEnoughBalance");
+      expect(result.errors.amount).toBeUndefined();
+    });
   });
 
   describe("token transfer validation", () => {

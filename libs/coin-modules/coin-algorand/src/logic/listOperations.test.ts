@@ -377,13 +377,9 @@ describe("listOperations", () => {
 
     const { items } = await listOperations(mockAlgorandContext, address, { order: "desc" });
 
-    expect(items[0].details).toEqual({
-      memo: {
-        type: "string",
-        kind: "note",
-        value: "Test memo",
-      },
-    });
+    // LIVE-35921 flips this to: const memo = "Test memo";
+    const memo = { type: "string", kind: "note", value: "Test memo" };
+    expect(items[0].details).toEqual({ memo });
   });
 
   it("should create a separate reward operation for rewards credited to the observed account", async () => {
