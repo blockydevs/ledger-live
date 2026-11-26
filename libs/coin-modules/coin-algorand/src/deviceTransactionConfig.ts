@@ -4,7 +4,7 @@ import { getAccountCurrency } from "@ledgerhq/ledger-wallet-framework/account";
 import type { CommonDeviceTransactionField as DeviceTransactionField } from "@ledgerhq/ledger-wallet-framework/transaction/common";
 import type { TokenCurrency } from "@ledgerhq/ledger-wallet-framework/types";
 import { AccountLike } from "@ledgerhq/types-live";
-import { extractTokenId } from "./tokens";
+import { addPrefixToken, extractTokenId } from "./tokens";
 import type { AlgorandTransaction, Transaction, TransactionStatus } from "./types";
 
 export type ExtraDeviceTransactionField = {
@@ -75,7 +75,9 @@ async function getDeviceTransactionConfig({
   transaction: AlgorandTransaction;
   status: TransactionStatus;
 }): Promise<Array<DeviceTransactionField>> {
-  const { mode, assetId } = transaction;
+  const { mode, assetReference } = transaction;
+  const assetId =
+    transaction.assetId ?? (assetReference ? addPrefixToken(assetReference) : undefined);
   const { estimatedFees } = status;
   let fields: Array<DeviceTransactionField> = [];
 

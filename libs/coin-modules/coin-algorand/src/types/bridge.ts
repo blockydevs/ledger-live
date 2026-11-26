@@ -36,6 +36,11 @@ export type AlgorandTransaction = TransactionCommon & {
   fees: BigNumber | null | undefined;
   assetId: string | null | undefined;
   memo: string | null | undefined;
+  nonce?: BigNumber | null | undefined;
+  memoType?: string | null | undefined;
+  memoValue?: string | null | undefined;
+  assetReference?: string | undefined;
+  assetOwner?: string | undefined;
 };
 
 export type AlgorandTransactionRaw = TransactionCommonRaw & {
@@ -44,6 +49,11 @@ export type AlgorandTransactionRaw = TransactionCommonRaw & {
   fees: string | null | undefined;
   assetId: string | null | undefined;
   memo: string | null | undefined;
+  nonce?: string | null | undefined;
+  memoType?: string | null | undefined;
+  memoValue?: string | null | undefined;
+  assetReference?: string | undefined;
+  assetOwner?: string | undefined;
 };
 
 export type TransactionStatus = TransactionStatusCommon;

@@ -131,7 +131,7 @@ function convertToOperation(tx: AlgoTransaction, address: string, feesOnly = fal
     id: tx.id,
     type,
     value,
-    asset,
+    asset: asset.type === "asa" ? { ...asset, assetOwner: address } : asset,
     senders,
     recipients,
     tx: {

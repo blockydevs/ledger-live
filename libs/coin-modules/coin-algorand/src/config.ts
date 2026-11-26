@@ -32,5 +32,7 @@ export const algorandDefaults = {
     },
     name: "Algorand",
     unit: { name: "ALGO", code: "ALGO", magnitude: 6 },
+    node: "https://algorand.coin.ledger.com/ps2/v2",
+    indexer: "https://algorand.coin.ledger.com/idx2/v2",
   },
 } satisfies Record<string, CurrencyConfig & Partial<AlgorandCoinConfig>>;

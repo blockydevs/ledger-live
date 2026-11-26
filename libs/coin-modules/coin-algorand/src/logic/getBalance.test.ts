@@ -51,11 +51,11 @@ describe("getBalance", () => {
       },
       {
         value: 500n,
-        asset: { type: "asa", assetReference: "123" },
+        asset: { type: "asa", assetReference: "123", assetOwner: "ALGO_ADDRESS" },
       },
       {
         value: 1000n,
-        asset: { type: "asa", assetReference: "456" },
+        asset: { type: "asa", assetReference: "456", assetOwner: "ALGO_ADDRESS" },
       },
     ]);
   });

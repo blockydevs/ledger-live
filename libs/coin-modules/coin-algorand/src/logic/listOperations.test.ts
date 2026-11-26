@@ -154,7 +154,7 @@ describe("listOperations", () => {
 
     expect(items[0].type).toBe("OUT");
     expect(items[0].value).toBe(100n);
-    expect(items[0].asset).toEqual({ type: "asa", assetReference: "12345" });
+    expect(items[0].asset).toEqual({ type: "asa", assetReference: "12345", assetOwner: address });
   });
 
   it("should use the clawback source as the ASA sender", async () => {
@@ -778,7 +778,7 @@ describe("listOperations", () => {
         {
           type: "OUT",
           value: 42n,
-          asset: { type: "asa", assetReference: "31566704" },
+          asset: { type: "asa", assetReference: "31566704", assetOwner: address },
           tx: { fees: 1000n, feesPayer: "ROOT_SENDER" },
         },
       ],

@@ -224,5 +224,56 @@ describe("transaction", () => {
       expect(restored.memo).toBe(original.memo);
       expect(restored.assetId).toBe(original.assetId);
     });
+
+    it("should preserve the generic adapter fields", () => {
+      const original: AlgorandTransaction = {
+        family: "algorand",
+        mode: "optIn",
+        amount: new BigNumber(0),
+        recipient: "SOME_ADDRESS",
+        fees: new BigNumber("1000"),
+        memo: undefined,
+        assetId: undefined,
+        nonce: new BigNumber(0),
+        memoType: "note",
+        memoValue: "hello",
+        assetReference: "31566704",
+        assetOwner: "SOME_ADDRESS",
+      };
+
+      const restored = transactionModule.fromTransactionRaw(
+        transactionModule.toTransactionRaw(original),
+      );
+
+      expect(restored).toEqual(original);
+    });
+
+    it("should write no nonce key for a transaction without nonce", () => {
+      const transaction: AlgorandTransaction = {
+        family: "algorand",
+        mode: "send",
+        amount: new BigNumber("1000000"),
+        recipient: "RECIPIENT_ADDRESS",
+        fees: new BigNumber("1000"),
+        memo: undefined,
+        assetId: undefined,
+      };
+
+      expect(transactionModule.toTransactionRaw(transaction)).not.toHaveProperty("nonce");
+    });
+
+    it("should revive a transaction without nonce with a zero nonce", () => {
+      const raw: AlgorandTransactionRaw = {
+        family: "algorand",
+        mode: "send",
+        amount: "1000000",
+        recipient: "RECIPIENT_ADDRESS",
+        fees: "1000",
+        memo: undefined,
+        assetId: undefined,
+      };
+
+      expect(transactionModule.fromTransactionRaw(raw).nonce).toEqual(new BigNumber(0));
+    });
   });
 });

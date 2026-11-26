@@ -46,6 +46,13 @@ const fromTransactionRaw = (tr: AlgorandTransactionRaw): AlgorandTransaction => 
     memo: tr.memo,
     mode: tr.mode,
     assetId: tr.assetId,
+    // Algorand has no account sequence: a missing nonce would send the generic `signOperation`
+    // into `getNextSequence`, which coin-algorand does not implement.
+    nonce: tr.nonce ? new BigNumber(tr.nonce) : new BigNumber(0),
+    memoType: tr.memoType,
+    memoValue: tr.memoValue,
+    assetReference: tr.assetReference,
+    assetOwner: tr.assetOwner,
   };
 };
 
@@ -58,6 +65,11 @@ const toTransactionRaw = (t: AlgorandTransaction): AlgorandTransactionRaw => {
     memo: t.memo,
     mode: t.mode,
     assetId: t.assetId,
+    ...(t.nonce ? { nonce: t.nonce.toFixed() } : {}),
+    memoType: t.memoType,
+    memoValue: t.memoValue,
+    assetReference: t.assetReference,
+    assetOwner: t.assetOwner,
   };
 };
 
