@@ -7,7 +7,10 @@ import { FlatList, View } from "react-native";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import type { Transaction as MultiversXTransaction } from "@ledgerhq/live-common/families/multiversx/types";
 
-import { useSearchValidators } from "@ledgerhq/live-common/families/multiversx/react";
+import {
+  useMultiversXRandomizedValidators,
+  useSearchValidators,
+} from "@ledgerhq/live-common/families/multiversx/react";
 
 import type { onSelectType, PickValidatorPropsType } from "./types";
 
@@ -25,7 +28,8 @@ const PickValidator = (props: PickValidatorPropsType) => {
   const [search, setSearch] = useState("");
 
   const { route, navigation } = props;
-  const { account, validators, transaction } = route.params;
+  const { account, transaction } = route.params;
+  const validators = useMultiversXRandomizedValidators();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const bridge = useAccountBridge<MultiversXTransaction>(account);
@@ -44,14 +48,13 @@ const PickValidator = (props: PickValidatorPropsType) => {
       if (validator && transaction) {
         navigation.navigate(ScreenName.MultiversXDelegationValidator, {
           account,
-          validators,
           transaction: bridge.updateTransaction(transaction as MultiversXTransaction, {
             recipient: validator.contract,
           }),
         });
       }
     },
-    [navigation, bridge, account, transaction, validators],
+    [navigation, bridge, account, transaction],
   );
 
   /*

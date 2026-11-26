@@ -1,11 +1,37 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
+import BigNumber from "bignumber.js";
 import type { AssetInfo } from "@ledgerhq/coin-module-framework/api/types";
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
 import type { TokenCurrency } from "@domain/entity-currency-token";
-import type { CryptoAssetsStore } from "@ledgerhq/types-live";
-import { getAssetFromToken, getTokenFromAsset, computeIntentType } from "./api";
+import type { Account, CryptoAssetsStore, Operation } from "@ledgerhq/types-live";
+import {
+  adaptOperations,
+  buildAccountShape,
+  computeIntentType,
+  describeOptimisticOperation,
+  getAssetFromToken,
+  getDeviceSignOptions,
+  getTokenFromAsset,
+} from "./api";
 
 jest.mock("@ledgerhq/ledger-wallet-framework/cryptoAssetsStore");
+
+const mockGetAccountDetails = jest.fn();
+const mockGetAccountDelegations = jest.fn();
+jest.mock("@ledgerhq/coin-multiversx/network/api", () => ({
+  createNetworkApi: () => ({
+    getAccountDetails: mockGetAccountDetails,
+    getAccountDelegations: mockGetAccountDelegations,
+  }),
+}));
+jest.mock("../../../bridge/generic-coin-framework/api/context", () => ({
+  buildContext: () => ({
+    config: async () => ({
+      apiEndpoint: "https://api",
+      delegationApiEndpoint: "https://delegations",
+    }),
+  }),
+}));
 
 const mockToken = {
   id: "elrond/esdt/555344432d633736663166",
@@ -29,6 +55,9 @@ describe("multiversx bridge", () => {
       [{ mode: "claimRewards" }, "claimRewards"],
       [{ mode: "withdraw" }, "withdraw"],
       [{ mode: "reDelegateRewards" }, "reDelegateRewards"],
+      [{ mode: "undelegate" }, "unDelegate"],
+      [{ mode: "claimReward" }, "claimRewards"],
+      [{ mode: "compoundReward" }, "reDelegateRewards"],
     ])("maps %o to %s", (transaction, expected) => {
       expect(computeIntentType(transaction)).toBe(expected);
     });
@@ -37,6 +66,108 @@ describe("multiversx bridge", () => {
       expect(() => computeIntentType({ mode: "swap" })).toThrow(
         "Unsupported MultiversX transaction mode: swap",
       );
+    });
+  });
+
+  describe("buildAccountShape", () => {
+    it("keeps every delegation with its own unbonding entries, and the guardian flag", async () => {
+      const delegations = [
+        {
+          contract: "erd1contract1",
+          userActiveStake: "2000000000000000000",
+          claimableRewards: "1000",
+          userUndelegatedList: [
+            { amount: "1000000000000000000", seconds: 3600 },
+            { amount: "500000000000000000", seconds: 7200 },
+          ],
+        },
+        {
+          contract: "erd1contract2",
+          userActiveStake: "1000000000000000000",
+          userUndelegatedList: [],
+        },
+      ];
+      mockGetAccountDetails.mockResolvedValue({ balance: "1", nonce: 42, isGuarded: true });
+      mockGetAccountDelegations.mockResolvedValue(delegations);
+
+      await expect(buildAccountShape("erd1address")).resolves.toEqual({
+        multiversxResources: { nonce: 42, delegations, isGuarded: true },
+      });
+    });
+
+    it("yields an empty delegation list for an account that does not stake", async () => {
+      mockGetAccountDetails.mockResolvedValue({ balance: "1", nonce: 0, isGuarded: false });
+      mockGetAccountDelegations.mockResolvedValue([]);
+
+      await expect(buildAccountShape("erd1address")).resolves.toEqual({
+        multiversxResources: { nonce: 0, delegations: [], isGuarded: false },
+      });
+    });
+  });
+
+  describe("adaptOperations", () => {
+    const CONTRACT = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqplllst77y4l";
+    const amount = new BigNumber("1000000000000000000");
+
+    it("moves the called contract from the extra to the operation, as the legacy bridge sets it", () => {
+      const operation = { id: "op", extra: { amount, contract: CONTRACT } } as unknown as Operation;
+
+      expect(adaptOperations("erd1address", [operation])).toEqual([
+        { id: "op", contract: CONTRACT, extra: { amount } },
+      ]);
+    });
+
+    it("keeps an operation that called no contract as it is", () => {
+      const operation = { id: "op", extra: { amount } } as unknown as Operation;
+
+      expect(adaptOperations("erd1address", [operation])).toEqual([operation]);
+    });
+  });
+
+  describe("describeOptimisticOperation", () => {
+    it.each([
+      ["unDelegate", "UNDELEGATE"],
+      ["claimRewards", "REWARD"],
+      ["reDelegateRewards", "DELEGATE"],
+      ["compoundReward", "DELEGATE"],
+    ])("files %s under %s, as the synced history does", (mode, type) => {
+      expect(describeOptimisticOperation(mode)).toEqual({ type });
+    });
+
+    it.each(["send", "delegate", "undelegate", "claimReward", "withdraw"])(
+      "keeps the generic type for %s",
+      mode => {
+        expect(describeOptimisticOperation(mode)).toBeUndefined();
+      },
+    );
+  });
+
+  describe("getDeviceSignOptions", () => {
+    const tokenAccount = {
+      id: "token-account",
+      type: "TokenAccount",
+      token: {
+        ...mockToken,
+        ticker: "USDC",
+        ledgerSignature: "3045022100abcdef",
+      },
+    };
+    const account = { id: "egld-account", subAccounts: [tokenAccount] } as unknown as Account;
+
+    it("hands the ESDT metadata to the signer for a token transfer", () => {
+      expect(getDeviceSignOptions({ subAccountId: "token-account" }, account)).toEqual({
+        esdt: {
+          ticker: "USDC",
+          identifier: "555344432d633736663166",
+          decimals: 6,
+          chainId: "1",
+          ledgerSignature: "3045022100abcdef",
+        },
+      });
+    });
+
+    it("hands nothing over for a native transfer", () => {
+      expect(getDeviceSignOptions({ subAccountId: null }, account)).toBeUndefined();
     });
   });
 

@@ -11,7 +11,12 @@ describe("estimation recipient of every generic-coin-framework family", () => {
     const extensions = await loadBridgeExtensionsForFamily(family);
     const getEstimationRecipient =
       extensions.getEstimationRecipient ?? defaultBridgeExtensions.getEstimationRecipient;
-    const currencyId = family === "evm" ? "ethereum" : family === "xrp" ? "ripple" : family;
+    const currencyIdByFamily: Record<string, string> = {
+      evm: "ethereum",
+      xrp: "ripple",
+      multiversx: "elrond",
+    };
+    const currencyId = currencyIdByFamily[family] ?? family;
     const account = genAccount("estimation", { currency: getCryptoCurrencyById(currencyId) });
 
     expect(() => getEstimationRecipient(account)).not.toThrow();

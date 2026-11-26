@@ -26,7 +26,7 @@ import styles from "./styles";
  */
 
 const Delegations = (props: DelegationsPropsType) => {
-  const { delegations, validators, account, onDrawer } = props;
+  const { delegations, account, onDrawer } = props;
   const { t } = useTranslation();
 
   const zeroBalance = account.spendableBalance.isZero();
@@ -51,9 +51,9 @@ const Delegations = (props: DelegationsPropsType) => {
 
     navigation.navigate(NavigatorName.MultiversXDelegationFlow, {
       screen,
-      params: { validators, account },
+      params: { account },
     });
-  }, [navigation, account, delegations, validators]);
+  }, [navigation, account, delegations]);
 
   /*
    * Get the total amount of rewards, cumulated, from all active delegations.

@@ -132,12 +132,7 @@ const Body = (props: BodyPropsType) => {
 
       <Rewards account={account} delegations={delegations} />
 
-      <Delegations
-        onDrawer={onDrawer}
-        delegations={delegations}
-        account={account}
-        validators={validators}
-      />
+      <Delegations onDrawer={onDrawer} delegations={delegations} account={account} />
 
       <Unbondings onDrawer={onDrawer} delegations={delegations} account={account} />
     </View>

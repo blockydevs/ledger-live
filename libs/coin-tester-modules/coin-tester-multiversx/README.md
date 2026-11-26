@@ -42,7 +42,20 @@ Requires Docker. The coin module must be built first (`pnpm --filter coin-multiv
   `GenericTransaction` in `helpers.ts`; the generic-adapter path drives the Alpaca `createApi`
   through the generic coin framework. Both share one scenario and one local signer.
 - **Covered**:
-  - Both strategies: send native EGLD, send-max EGLD, send ESDT, send-all ESDT (tokens). No staking.
+  - Both strategies: send native EGLD, send-max EGLD, send ESDT, send-all ESDT (tokens).
+  - Both strategies: delegate, claim rewards, undelegate and withdraw with a staking provider opened
+    in `setup()` (`staking.ts`). The scenario sends the MultiversX mode names, as the staking flows
+    do. `reDelegateRewards` is not covered: a provider without validator nodes earns no rewards, so
+    the contract rejects it.
+  - Generic-adapter strategy: the device handshake before each signature (`setAddress`, then
+    `provideESDTInfo` for a token, then the signature), recorded by `recordingDevice.ts` under the
+    family's real signer.
+  - Both strategies: once the account holds operations, a sync reads only the native history since
+    the newest of them.
+- **Staking**: the delegation API is served from the provider contract's views (`vm-values`), and
+  the history tags calls to the provider as `stake` actions with their smart-contract results as
+  `operations`. The gateway keeps a contract-rejected transaction at `success`; the indexer reports
+  it as `fail`, as the aggregator API does.
 - **ESDT funding**: `setup()` advances past the ESDT enable epoch, issues a fungible token from a
   throwaway account (to register it in the ESDT system contract), then credits the scenario account
   via `set-state pairs` (the `ELRONDesdt<id>` trie key with an `ESDigest` protobuf value) — so the
@@ -51,7 +64,8 @@ Requires Docker. The coin module must be built first (`pnpm --filter coin-multiv
 ### Required live-common wiring for the generic-adapter strategy
 
 The generic coin framework resolves the coin's Alpaca API + bridge helpers from a registry.
-The tester passes a custom local signer, so `loadSigner` is not needed, but these were added:
+The tester passes the family's signer (`families/multiversx/signer.ts`) over a recording device, so
+`loadSigner` is not used, but these were added:
 
 - `libs/ledger-live-common/src/families/multiversx/coinModuleApi.ts` — `createLocalMultiversXApi`
   wrapping `@ledgerhq/coin-multiversx/api`'s `createApi`.

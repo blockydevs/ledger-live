@@ -1018,6 +1018,9 @@
     "MultiversXDelegationBelowMinimumError": {
       "title": "Remaining delegation can't be less than {{formattedAmount}}"
     },
+    "MultiversXGasLimitTooLow": {
+      "title": "Gas limit is too low for this transaction. Please increase it"
+    },
     "NotEnoughVTHO": {
       "title": "Sorry, insufficient VTHO funds",
       "description": "Please make sure the account has enough VTHO."

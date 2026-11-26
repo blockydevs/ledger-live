@@ -429,10 +429,7 @@ export const stakePromptCases: StakePromptCase[] = [
     accountKey: "multiversx",
     operationType: "DELEGATE",
     transaction: { family: "elrond", mode: "delegate", recipient: "erd-validator" },
-    params: {
-      validators: [{ contract: "erd-validator", identity: { name: "MultiversX validator" } }],
-      source: stakePromptSource,
-    },
+    params: { source: stakePromptSource },
   },
   {
     label: "MultiversX undelegation",

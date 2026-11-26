@@ -64,6 +64,18 @@ const nativeIntent: TransactionIntent = {
   asset: { type: "native" },
 };
 
+async function captureActiveStakeLookup() {
+  jest.mocked(validateIntent).mockResolvedValueOnce({
+    errors: {},
+    warnings: {},
+    estimatedFees: 0n,
+    amount: 0n,
+    totalSpent: 0n,
+  });
+  await createApi().validateIntent(createMockMultiversXContext(), nativeIntent, [], undefined);
+  return jest.mocked(validateIntent).mock.calls[0][3]!;
+}
+
 describe("createApi", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -242,7 +254,7 @@ describe("createApi", () => {
     expect(result).toEqual(page);
   });
 
-  it("delegates validateIntent to the logic function (intent, balances, customFees — no network api)", async () => {
+  it("delegates validateIntent to the logic function, with an active-stake lookup", async () => {
     const validation = {
       errors: {},
       warnings: {},
@@ -256,8 +268,37 @@ describe("createApi", () => {
 
     const result = await api.validateIntent(context, nativeIntent, [], undefined);
 
-    expect(validateIntent).toHaveBeenCalledWith(nativeIntent, [], undefined);
+    expect(validateIntent).toHaveBeenCalledWith(nativeIntent, [], undefined, expect.any(Function));
     expect(result).toEqual(validation);
+  });
+
+  describe("active-stake lookup handed to validateIntent", () => {
+    const CONTRACT = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzllls8a5w6u";
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("returns the active stake deposited with the contract", async () => {
+      jest.mocked(getStakes).mockResolvedValueOnce({
+        items: [
+          { delegate: CONTRACT, state: "deactivating", amountDeposited: 7n },
+          { delegate: CONTRACT, state: "active", amountDeposited: 5n },
+        ],
+      } as Awaited<ReturnType<typeof getStakes>>);
+      const getActiveStake = await captureActiveStakeLookup();
+
+      await expect(getActiveStake(SENDER, CONTRACT)).resolves.toBe(5n);
+      expect(getStakes).toHaveBeenCalledTimes(1);
+      expect(getStakes).toHaveBeenCalledWith(mockNetworkApi, SENDER);
+    });
+
+    it("returns undefined rather than failing validation when the delegation API fails", async () => {
+      jest.mocked(getStakes).mockRejectedValueOnce(new Error("503"));
+      const getActiveStake = await captureActiveStakeLookup();
+
+      await expect(getActiveStake(SENDER, CONTRACT)).resolves.toBeUndefined();
+    });
   });
 
   it("delegates getNextSequence to the logic function (network api, address)", async () => {

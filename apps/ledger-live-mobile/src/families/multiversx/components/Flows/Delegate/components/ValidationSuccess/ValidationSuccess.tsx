@@ -13,6 +13,7 @@ import type { StackNavigatorNavigation } from "~/components/RootNavigator/types/
 import type { BaseNavigatorStackParamList } from "~/components/RootNavigator/types/BaseNavigator";
 import styles from "./styles";
 import { useAccountScreen } from "LLM/hooks/useAccountScreen";
+import { useMultiversXPreloadData } from "@ledgerhq/live-common/families/multiversx/react";
 
 /*
  * Handle the component declaration.
@@ -24,6 +25,7 @@ const ValidationSuccess = ({ navigation, route }: ValidationSuccessPropsType) =>
 
   const { colors } = useTheme();
   const { account } = useAccountScreen(route);
+  const { validators } = useMultiversXPreloadData();
   const { ticker } = getAccountCurrency(account);
 
   const parent = useMemo<StackNavigatorNavigation<BaseNavigatorStackParamList>>(
@@ -33,9 +35,9 @@ const ValidationSuccess = ({ navigation, route }: ValidationSuccessPropsType) =>
 
   const validator = useMemo(() => {
     const voteAccAddress = route.params.transaction.recipient;
-    const chosenValidator = route.params.validators.find(v => v.contract === voteAccAddress);
+    const chosenValidator = validators.find(v => v.contract === voteAccAddress);
     return chosenValidator?.identity?.name ?? voteAccAddress;
-  }, [route.params.transaction, route.params.validators]);
+  }, [route.params.transaction, validators]);
   const source = route.params.source?.name ?? "unknown";
 
   useEffect(() => {

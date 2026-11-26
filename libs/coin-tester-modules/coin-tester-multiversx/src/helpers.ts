@@ -14,6 +14,7 @@ import { MIN_GAS_LIMIT } from "@ledgerhq/coin-multiversx/constants";
 import type { MultiversXSigner as LegacyMultiversXSigner } from "@ledgerhq/coin-multiversx/signer";
 import type { Transaction } from "@ledgerhq/coin-multiversx/types";
 import type { MultiversXSigner } from "./signer";
+import { buildRecordingDevice, type DeviceCommand } from "./recordingDevice";
 
 // Populate the coin-module registry so the generic coin framework can resolve
 // multiversx's local API, bridge API and validate-address fn.
@@ -23,13 +24,18 @@ export interface MultiversXBridges {
   currencyBridge: CurrencyBridge;
   accountBridge: AccountBridge<GenericTransaction>;
   getAddress: GetAddressFn;
+  /** The recording device; absent for the legacy strategy, whose handshake is a no-op here. */
+  device?: { readCommands: () => DeviceCommand[]; clearCommands: () => void };
 }
 
-/** Map a GenericTransaction onto the legacy MultiversX transaction (send + ESDT only). */
+/**
+ * Map a GenericTransaction onto the legacy MultiversX transaction. The scenarios use the MultiversX
+ * mode names, which both bridges understand.
+ */
 function genericToMultiversxTransaction(gt: GenericTransaction): Transaction {
   return {
     family: "multiversx",
-    mode: "send",
+    mode: (gt.mode ?? "send") as Transaction["mode"],
     amount: gt.amount ?? new BigNumber(0),
     recipient: gt.recipient,
     useAllAmount: gt.useAllAmount ?? false,
@@ -138,14 +144,22 @@ export async function getBridges(
     };
   }
 
-  const context: SignerContext<MultiversXSigner> = (_deviceId, fn) => fn(signer);
+  // The family's own signer runs over a recording device, so the handshake it performs before each
+  // signature is what the scenarios assert.
+  const { device, readCommands, clearCommands } = buildRecordingDevice(signer);
+  const context: SignerContext<typeof device> = (_deviceId, fn) => fn(device);
   const getAddress: GetAddressFn = (deviceId, { path, verify }) =>
-    context(deviceId, s => s.getAddress(path, { verify }));
+    context(deviceId, d =>
+      d
+        .getAddress(path, verify ?? false)
+        .then(({ address, publicKey }) => ({ address, publicKey, path })),
+    );
   const customSigner = { context, getAddress };
 
   return {
     currencyBridge: await getCoinFrameworkCurrencyBridge("multiversx", "local", customSigner),
     accountBridge: await getCoinFrameworkAccountBridge("multiversx", "local", customSigner),
     getAddress,
+    device: { readCommands, clearCommands },
   };
 }

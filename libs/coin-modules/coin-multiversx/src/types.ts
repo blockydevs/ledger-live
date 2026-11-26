@@ -228,17 +228,20 @@ export type MultiversXOperationRaw = OperationRaw<MultiversXOperationExtraRaw>;
 
 export type MultiversXOperationExtra = {
   amount?: BigNumber;
+  /** The smart contract the transaction called, set on `Operation.contract` by the generic bridge. */
+  contract?: string;
 };
 
 export function isMultiversXOperationExtra(op: OperationExtra): op is MultiversXOperationExtra {
-  return op !== null && typeof op === "object" && "amount" in op;
+  return op !== null && typeof op === "object" && ("amount" in op || "contract" in op);
 }
 
 export type MultiversXOperationExtraRaw = {
   amount?: string;
+  contract?: string;
 };
 export function isMultiversXOperationExtraRaw(
   op: OperationExtraRaw,
 ): op is MultiversXOperationExtraRaw {
-  return op !== null && typeof op === "object" && "amount" in op;
+  return op !== null && typeof op === "object" && ("amount" in op || "contract" in op);
 }

@@ -30,7 +30,7 @@ import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 const PickAmount = (props: PickAmountPropsType) => {
   const { colors } = useTheme();
   const { navigation, route } = props;
-  const { account, validators } = route.params;
+  const { account } = route.params;
 
   const unit = useAccountUnit(account);
   const { locale } = useSettings();
@@ -127,10 +127,9 @@ const PickAmount = (props: PickAmountPropsType) => {
   const onContinue = useCallback(() => {
     navigation.navigate(ScreenName.MultiversXDelegationValidator, {
       account,
-      validators,
       transaction: bridge.updateTransaction(transaction, { amount }),
     });
-  }, [account, validators, bridge, amount, navigation, transaction]);
+  }, [account, bridge, amount, navigation, transaction]);
 
   /*
    * Track all callback reference updates and run the effect conditionally.

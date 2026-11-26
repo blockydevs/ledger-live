@@ -18,6 +18,7 @@ import { Transaction as MultiversXTransaction } from "@ledgerhq/live-common/fami
 import BigNumber from "bignumber.js";
 
 import { MULTIVERSX_LEDGER_VALIDATOR_ADDRESS } from "@ledgerhq/live-common/families/multiversx/constants";
+import { useMultiversXPreloadData } from "@ledgerhq/live-common/families/multiversx/react";
 
 import CurrencyUnitValue from "~/components/CurrencyUnitValue";
 import Button from "~/components/Button";
@@ -41,7 +42,8 @@ import { useAccountUnit } from "LLM/hooks/useAccountUnit";
 
 const SetDelegation = (props: SetDelegationPropsType) => {
   const { navigation, route } = props;
-  const { account, validators } = route.params;
+  const { account } = route.params;
+  const { validators } = useMultiversXPreloadData();
   const { colors } = useTheme();
 
   const currency = getAccountCurrency(account);
@@ -112,10 +114,9 @@ const SetDelegation = (props: SetDelegationPropsType) => {
       accountId: account.id,
       transaction,
       status,
-      validators: validators,
       source: route.params.source,
     });
-  }, [status, account, navigation, transaction, route.params.source, validators]);
+  }, [status, account, navigation, transaction, route.params.source]);
 
   /*
    * Callback function to be called when wanting to change the transaction amount.
@@ -125,12 +126,11 @@ const SetDelegation = (props: SetDelegationPropsType) => {
     if (transaction) {
       navigation.navigate(ScreenName.MultiversXDelegationAmount, {
         account,
-        validators,
         transaction,
         validatorName: chosenValidatorName,
       });
     }
-  }, [transaction, account, validators, navigation, chosenValidatorName]);
+  }, [transaction, account, navigation, chosenValidatorName]);
 
   /*
    * Callback function to be called when wanting to change the validator.
@@ -139,10 +139,9 @@ const SetDelegation = (props: SetDelegationPropsType) => {
   const onChangeValidator = useCallback(() => {
     navigation.navigate(ScreenName.MultiversXDelegationValidatorList, {
       account,
-      validators,
       transaction,
     });
-  }, [account, navigation, transaction, validators]);
+  }, [account, navigation, transaction]);
 
   /*
    * Run the callback when there's a change in the transaction, received from the route parameters.

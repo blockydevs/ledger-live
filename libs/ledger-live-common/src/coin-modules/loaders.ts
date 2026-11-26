@@ -350,6 +350,14 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
       import("@ledgerhq/coin-multiversx/deviceTransactionConfig").then(m => m.default),
     loadMockBridge: () => import("../families/multiversx/bridge/mock").then(m => m.default),
     loadBridgeApi: () => import("../families/multiversx/bridge/api").then(m => m.default),
+    loadSigner: () => import("../families/multiversx/signer").then(m => m.default),
+    loadAccountRawAssign: () =>
+      import("../families/multiversx/accountRawAssign").then(m => m.default),
+    loadBridgeExtensions: () =>
+      import("../families/multiversx/bridgeExtensions").then(m => m.default),
+    // Kept on FullSync while the generic bridge is behind `config_multiversx_generic_bridge`: served
+    // here, the balance would leave the legacy path whatever the key says.
+    localApiServesAccountData: false,
   },
   {
     family: "near",

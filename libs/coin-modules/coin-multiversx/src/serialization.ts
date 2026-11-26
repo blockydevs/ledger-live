@@ -55,6 +55,9 @@ export function fromOperationExtraRaw(extraRaw: OperationExtraRaw) {
   if (extraRaw.amount) {
     extra.amount = new BigNumber(extraRaw.amount);
   }
+  if (extraRaw.contract) {
+    extra.contract = extraRaw.contract;
+  }
   return extra;
 }
 
@@ -67,6 +70,9 @@ export function toOperationExtraRaw(extra: OperationExtra) {
 
   if (extra.amount) {
     extraRaw.amount = extra.amount.toString();
+  }
+  if (extra.contract) {
+    extraRaw.contract = extra.contract;
   }
   return extraRaw;
 }

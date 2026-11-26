@@ -54,6 +54,9 @@ export function makeEsdtToken(identifier: string, decimals: number): TokenCurren
     delisted: false,
     disableCountervalue: false,
     units: [{ name: ticker, code: ticker, magnitude: decimals }],
+    // Stands for the CAL signature app-multiversx checks before naming the token; the recording
+    // device does not verify it, but the signer refuses to send ESDT metadata without one.
+    ledgerSignature: "3045022100" + "00".repeat(32) + "0220" + "00".repeat(32),
   } as TokenCurrency;
 }
 

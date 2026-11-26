@@ -15,6 +15,7 @@ import {
 import type { MultiversXProtocolTransaction } from "../../types";
 import type { MultiversXNetworkApi } from "../../network/api";
 import { isValidAddress } from "../validateAddress";
+import { computeFee, getCustomGasLimit } from "./computeFee";
 
 // MultiversX transaction `data` must be base64-encoded, and hex amounts must be
 // even-length so the protocol parses them correctly (see src/encode.ts).
@@ -53,26 +54,15 @@ function buildWithdrawData(): string {
 }
 
 /**
- * Craft a MultiversX unsigned transaction from a TransactionIntent or StakingTransactionIntent.
- *
- * Returns a JSON-serialized MultiversXProtocolTransaction (version 2, options 0b0001).
+ * What a transaction intent puts on the wire, minus the nonce and network fields: shared by
+ * `craftTransaction` and `estimateFees`, so the fee is priced on the exact `data` that gets signed.
  */
-export async function craftTransaction(
-  api: MultiversXNetworkApi,
-  intent: TransactionIntent | StakingTransactionIntent,
-  customFees?: FeeEstimation,
-): Promise<CraftedTransaction> {
-  if (!isValidAddress(intent.sender)) {
-    throw new Error(`Invalid sender address: ${intent.sender}`);
-  }
-
-  // Fetch nonce and chainID together — chainID is read from the network config
-  // rather than hardcoded so crafting works on any network (mainnet/devnet/testnet).
-  const [nonce, { chainID }] = await Promise.all([
-    api.getAccountNonce(intent.sender),
-    api.getNetworkConfig(),
-  ]);
-
+export function buildTransactionPayload(intent: TransactionIntent | StakingTransactionIntent): {
+  receiver: string;
+  value: string;
+  data: string | undefined;
+  gasLimit: number;
+} {
   // Staking intents leave `value` at 0 (except delegate) and only override the
   // receiver/data/gasLimit; native and ESDT transfers set `value` explicitly.
   let receiver = intent.recipient;
@@ -125,6 +115,35 @@ export async function craftTransaction(
     throw new Error(`Unsupported asset type: ${assetType}`);
   }
 
+  return { receiver, value, data, gasLimit };
+}
+
+/**
+ * Craft a MultiversX unsigned transaction from a TransactionIntent or StakingTransactionIntent.
+ *
+ * Returns a JSON-serialized MultiversXProtocolTransaction (version 2, options 0b0001).
+ */
+export async function craftTransaction(
+  api: MultiversXNetworkApi,
+  intent: TransactionIntent | StakingTransactionIntent,
+  customFees?: FeeEstimation,
+): Promise<CraftedTransaction> {
+  if (!isValidAddress(intent.sender)) {
+    throw new Error(`Invalid sender address: ${intent.sender}`);
+  }
+
+  // chainID comes from the network config so crafting works on any network. The nonce comes from the
+  // intent when the caller set it: the generic bridge accounts for pending operations there, which
+  // the network nonce does not see until they are mined.
+  const [nonce, { chainID }] = await Promise.all([
+    typeof intent.sequence === "bigint" && intent.sequence >= 0n
+      ? Number(intent.sequence)
+      : api.getAccountNonce(intent.sender),
+    api.getNetworkConfig(),
+  ]);
+
+  const { receiver, value, data, gasLimit } = buildTransactionPayload(intent);
+
   // Reject a missing/invalid receiver before producing an unsigned tx — send and
   // unDelegate take the recipient verbatim, so a bad address would otherwise
   // serialize into a malformed transaction rejected on broadcast.
@@ -132,9 +151,8 @@ export async function craftTransaction(
     throw new Error(`Invalid recipient address: ${receiver}`);
   }
 
-  const providedGasLimit = customFees?.parameters?.gasLimit;
-  const effectiveGasLimit =
-    typeof providedGasLimit === "bigint" ? Number(providedGasLimit.toString()) : gasLimit;
+  const customGasLimit = getCustomGasLimit(customFees?.parameters);
+  const effectiveGasLimit = customGasLimit === undefined ? gasLimit : Number(customGasLimit);
 
   const tx: MultiversXProtocolTransaction = {
     nonce,
@@ -143,17 +161,18 @@ export async function craftTransaction(
     sender: intent.sender,
     gasPrice: GAS_PRICE,
     gasLimit: effectiveGasLimit,
+    // Same field order as the legacy `buildTransaction`: the device signs these JSON bytes as sent.
+    ...(data ? { data } : {}),
     chainID,
     version: TRANSACTION_VERSION_DEFAULT,
     options: TRANSACTION_OPTIONS_TX_HASH_SIGN,
-    ...(data ? { data } : {}),
   };
 
   return {
     transaction: JSON.stringify(tx),
     details: {
       gasLimit: effectiveGasLimit,
-      estimatedFee: String(customFees?.value ?? BigInt(effectiveGasLimit) * BigInt(GAS_PRICE)),
+      estimatedFee: String(customFees?.value ?? computeFee(BigInt(effectiveGasLimit), data)),
     },
   };
 }

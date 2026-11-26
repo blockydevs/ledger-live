@@ -152,8 +152,9 @@ describe("validateIntent", () => {
       asset: { type: "esdt", assetReference: "USDC-c76f1f" },
     };
     const result = await validateIntent(intent, esdtBalances, FEES);
-    expect(result.errors.gasPrice?.name).toBe("NotEnoughEGLDForFees");
-    expect(Object.keys(result.errors)).not.toContain("amount"); // token amount is sufficient
+    // On `amount`, the key the desktop flows render (the legacy bridge reports it there too).
+    expect(result.errors.amount?.name).toBe("NotEnoughEGLDForFees");
+    expect(result.errors.gasPrice).toBeUndefined();
   });
 
   it("errors for ESDT when token balance insufficient", async () => {
@@ -171,5 +172,112 @@ describe("validateIntent", () => {
     };
     const result = await validateIntent(intent, esdtBalances, FEES);
     expect(Object.keys(result.errors)).toContain("amount");
+  });
+
+  describe("legacy getTransactionStatus parity", () => {
+    const ONE_EGLD = 1000000000000000000n;
+    function stakingIntent(type: string, amount: bigint): StakingTransactionIntent {
+      return {
+        intentType: "staking",
+        type,
+        sender: SENDER,
+        recipient: RECIPIENT,
+        amount,
+        asset: { type: "native" },
+      } as unknown as StakingTransactionIntent;
+    }
+
+    it("asks for an amount on a zero delegation before checking the minimum", async () => {
+      const result = await validateIntent(stakingIntent("delegate", 0n), NATIVE_BALANCES, FEES);
+      expect(result.errors.amount?.name).toBe("AmountRequired");
+    });
+
+    it.each([
+      ["delegate", "MultiversXMinDelegatedAmountError"],
+      ["unDelegate", "MultiversXMinUndelegatedAmountError"],
+    ])("tells how much a %s needs at least", async (type, errorName) => {
+      const result = await validateIntent(
+        stakingIntent(type, ONE_EGLD / 2n),
+        NATIVE_BALANCES,
+        FEES,
+      );
+      expect(result.errors.amount?.name).toBe(errorName);
+      expect(result.errors.amount).toMatchObject({
+        formattedAmount: expect.stringMatching(/^1\sEGLD$/),
+      });
+    });
+
+    it("blocks an undelegation that leaves less than the minimum delegated", async () => {
+      const getActiveStake = jest.fn().mockResolvedValue(ONE_EGLD + ONE_EGLD / 2n);
+
+      const result = await validateIntent(
+        stakingIntent("unDelegate", ONE_EGLD),
+        NATIVE_BALANCES,
+        FEES,
+        getActiveStake,
+      );
+
+      expect(getActiveStake).toHaveBeenCalledWith(SENDER, RECIPIENT);
+      expect(result.errors.amount?.name).toBe("MultiversXDelegationBelowMinimumError");
+      expect(result.errors.amount).toMatchObject({
+        formattedAmount: expect.stringMatching(/^1\sEGLD$/),
+      });
+    });
+
+    it("lets the whole delegation be undelegated", async () => {
+      const getActiveStake = jest.fn().mockResolvedValue(ONE_EGLD + ONE_EGLD / 2n);
+
+      const result = await validateIntent(
+        stakingIntent("unDelegate", ONE_EGLD + ONE_EGLD / 2n),
+        NATIVE_BALANCES,
+        FEES,
+        getActiveStake,
+      );
+
+      expect(result.errors).toEqual({});
+    });
+
+    it("reports a custom gas limit below the move-balance cost on the gasLimit key", async () => {
+      const result = await validateIntent(makeNativeIntent(), NATIVE_BALANCES, {
+        value: 0n,
+        parameters: { gasLimit: 49999n },
+      });
+
+      expect(result.errors.gasLimit?.name).toBe("MultiversXGasLimitTooLow");
+      expect(result.estimatedFees).toBeGreaterThan(0n);
+    });
+
+    it("accepts a custom gas limit covering the move-balance cost", async () => {
+      const result = await validateIntent(makeNativeIntent(), NATIVE_BALANCES, {
+        value: 0n,
+        parameters: { gasLimit: 50000n },
+      });
+
+      expect(result.errors).toEqual({});
+    });
+
+    it("warns when the fee is out of proportion with a plain send", async () => {
+      const result = await validateIntent(
+        makeNativeIntent(100000000000000n),
+        NATIVE_BALANCES,
+        FEES,
+      );
+      expect(result.warnings.feeTooHigh?.name).toBe("FeeTooHigh");
+    });
+
+    it("does not warn about the fee of a staking operation", async () => {
+      const result = await validateIntent(stakingIntent("claimRewards", 0n), NATIVE_BALANCES, FEES);
+      expect(result.warnings).toEqual({});
+    });
+
+    it.each([
+      ["delegate", ONE_EGLD * 10n, "NotEnoughBalance"],
+      ["claimRewards", 0n, "NotEnoughEGLDForFees"],
+      ["withdraw", 0n, "NotEnoughEGLDForFees"],
+    ])("reports a shortfall on %s as %s on the amount key", async (type, amount, errorName) => {
+      const poor: Balance[] = [{ value: 10n, asset: { type: "native" } }];
+      const result = await validateIntent(stakingIntent(type, amount), poor, FEES);
+      expect(result.errors.amount?.name).toBe(errorName);
+    });
   });
 });
