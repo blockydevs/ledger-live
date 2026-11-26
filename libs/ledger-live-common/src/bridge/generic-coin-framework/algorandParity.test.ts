@@ -1,5 +1,4 @@
 import { getCryptoCurrencyById } from "@domain/entity-currency-crypto";
-import type { TokenCurrency } from "@domain/entity-currency-token";
 import { createApi } from "@ledgerhq/coin-algorand/api";
 import type { AlgorandContext } from "@ledgerhq/coin-algorand/config";
 import {
@@ -10,6 +9,7 @@ import {
 import network from "@ledgerhq/live-network";
 import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
+import { ASA_ID, asaToken } from "../../families/algorand/__mocks__/asa.mock";
 import { applyMemoToTransaction } from "../descriptor/send/memo";
 import { getCoinModuleApi } from "./api";
 import { buildSubAccounts } from "./buildSubAccounts";
@@ -27,23 +27,11 @@ jest.mock("./api", () => ({ getCoinModuleApi: jest.fn() }));
 
 const SENDER = "SENDER_ADDRESS";
 const RECIPIENT = "RECIPIENT_ADDRESS";
-const ASA_ID = "31566704";
 const currency = getCryptoCurrencyById("algorand");
 const context = {
   config: async () => ({ node: "https://node.test", indexer: "https://indexer.test" }),
   logger: jest.fn(),
 } as unknown as AlgorandContext;
-
-const asaToken = {
-  type: "TokenCurrency",
-  id: `algorand/asa/${ASA_ID}`,
-  contractAddress: ASA_ID,
-  parentCurrencyId: currency.id,
-  tokenType: "asa",
-  name: "USDC",
-  ticker: "USDC",
-  units: [{ name: "USDC", code: "USDC", magnitude: 6 }],
-} as unknown as TokenCurrency;
 
 const asaSubAccount = {
   type: "TokenAccount",
@@ -99,16 +87,15 @@ describe("Algorand on the generic adapter", () => {
     expect(intent.memo).toEqual({ type: "none" });
   });
 
-  it("sends an ASA as the native asset", async () => {
+  it("sends an ASA as an ASA owned by the sender", async () => {
     const intent = await prepareAndCaptureIntent(
       makeSendTransaction({ subAccountId: asaSubAccount.id }),
     );
 
-    // LIVE-35919 flips this to: expect(intent.asset).toEqual({ type: "asa", assetReference: ASA_ID, assetOwner: SENDER });
-    expect(intent.asset).toEqual({ type: "native" });
+    expect(intent.asset).toEqual({ type: "asa", assetReference: ASA_ID, assetOwner: SENDER });
   });
 
-  it("resolves the local API to the coin service on 0.0.0.0:3000", async () => {
+  it("resolves the local API to the node of the configuration", async () => {
     const { getCoinModuleApi: resolveApi } = jest.requireActual<typeof import("./api")>("./api");
     jest.mocked(network).mockRejectedValue(new Error("offline"));
 
@@ -116,13 +103,12 @@ describe("Algorand on the generic adapter", () => {
 
     await expect(api.lastBlock(context)).rejects.toThrow("offline");
 
-    // LIVE-35919 flips this to: expect.stringMatching(/^https:\/\/node\.test\//)
-    const url = expect.stringMatching(/^http:\/\/0\.0\.0\.0:3000\//);
+    const url = expect.stringMatching(/^https:\/\/node\.test\//);
     expect(network).toHaveBeenCalledTimes(1);
     expect(network).toHaveBeenCalledWith(expect.objectContaining({ url }));
   });
 
-  it("builds the ASA sub-account from its balance, with an empty history", async () => {
+  it("builds the ASA sub-account from its balance and its history", async () => {
     jest.mocked(getAccount).mockResolvedValue({
       address: SENDER,
       round: 1000,
@@ -173,8 +159,7 @@ describe("Algorand on the generic adapter", () => {
     });
 
     expect(subAccounts).toEqual([
-      // LIVE-35919 flips this to: operationsCount: 1
-      expect.objectContaining({ balance: new BigNumber(500), operationsCount: 0 }),
+      expect.objectContaining({ balance: new BigNumber(500), operationsCount: 1 }),
     ]);
   });
 });
